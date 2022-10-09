@@ -1,0 +1,271 @@
+// SPDX-License-Identifier: BUSL-1.1
+// Gearbox. Generalized leverage protocol that allows to take leverage and then use it across other DeFi protocols and platforms in a composable way.
+// (c) Gearbox.fi, 2021
+pragma solidity ^0.8.10;
+
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+
+import { WETHMock } from "../mocks/token/WETHMock.sol";
+import { LidoMock } from "../mocks/integrations/LidoMock.sol";
+
+import { AggregatorV3Interface } from "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
+import { PriceFeedConfig } from "@gearbox-protocol/core-v2/contracts/oracles/PriceOracle.sol";
+import { TokenType } from "../../integrations/TokenType.sol";
+import { IWETH } from "@gearbox-protocol/core-v2/contracts/interfaces/external/IWETH.sol";
+import { CheatCodes, HEVM_ADDRESS } from "@gearbox-protocol/core-v2/contracts/test/lib/cheatCodes.sol";
+import { ITokenTestSuite } from "@gearbox-protocol/core-v2/contracts/test/interfaces/ITokenTestSuite.sol";
+import { WstETHV1Mock } from "../mocks/integrations/WstETHV1Mock.sol";
+
+// MOCKS
+import { Tokens } from "../config/Tokens.sol";
+import { ERC20Mock } from "@gearbox-protocol/core-v2/contracts/test/mocks/token/ERC20Mock.sol";
+import { cERC20Mock } from "../mocks/token/cERC20Mock.sol";
+import { PriceFeedMock } from "@gearbox-protocol/core-v2/contracts/test/mocks/oracles/PriceFeedMock.sol";
+import "../lib/constants.sol";
+import "@gearbox-protocol/core-v2/contracts/test/lib/test.sol";
+import { TokensData, TestToken } from "../config/TokensData.sol";
+import { TokensDataLive } from "../config/TokensDataLive.sol";
+import { TokensTestSuiteHelper } from "@gearbox-protocol/core-v2/contracts/test/suites/TokensTestSuiteHelper.sol";
+import { IstETH } from "../../integrations/lido/IstETH.sol";
+
+struct TokenData {
+    Tokens id;
+    address addr;
+    string symbol;
+    TokenType tokenType;
+}
+
+address constant LDO_DONOR = 0x3e40D73EB977Dc6a537aF587D48316feE66E9C8c;
+
+contract TokensTestSuite is DSTest, TokensTestSuiteHelper {
+    using SafeERC20 for IERC20;
+
+    mapping(Tokens => address) public addressOf;
+    mapping(Tokens => TokenType) public tokenTypes;
+
+    mapping(Tokens => string) public symbols;
+    mapping(Tokens => uint256) public prices;
+
+    mapping(address => Tokens) public tokenIndexes;
+
+    uint256 public tokenCount;
+
+    bool public mockTokens;
+
+    constructor() {
+        TokenData[] memory td;
+
+        if (block.chainid == 1337) {
+            uint8 networkId;
+
+            try evm.envInt("ETH_FORK_NETWORK_ID") returns (int256 val) {
+                networkId = uint8(uint256(val));
+            } catch {
+                networkId = 1;
+            }
+
+            TokensDataLive tdd = new TokensDataLive(networkId);
+            td = tdd.getTokenData();
+            mockTokens = false;
+        } else {
+            TokensData tdd = new TokensData();
+            td = tdd.getTokenData();
+            emit log_uint(td.length);
+
+            mockTokens = true;
+        }
+
+        uint256 len = td.length;
+
+        unchecked {
+            for (uint256 i; i < len; ++i) {
+                addressOf[td[i].id] = td[i].addr;
+                tokenIndexes[td[i].addr] = td[i].id;
+                symbols[td[i].id] = td[i].symbol;
+                tokenTypes[td[i].id] = td[i].tokenType;
+
+                evm.label(td[i].addr, td[i].symbol);
+            }
+        }
+
+        wethToken = addressOf[Tokens.WETH];
+        tokenCount = len;
+
+        emit log_address(wethToken);
+    }
+
+    // function mint(
+    //     address token,
+    //     address to,
+    //     uint256 amount
+    // ) public override {
+    //     Tokens index = tokenIndexes[token];
+    //     require(index != Tokens.NO_TOKEN, "No token with such address");
+    //     mint(index, to, amount);
+    // }
+
+    function balanceOf(Tokens t, address holder)
+        public
+        view
+        returns (uint256 balance)
+    {
+        balance = IERC20(addressOf[t]).balanceOf(holder);
+    }
+
+    // function approve(
+    //     Tokens t,
+    //     address holder,
+    //     address targetContract
+    // ) public {
+    //     approve(t, holder, targetContract, type(uint256).max);
+    // }
+
+    // function approve(
+    //     Tokens t,
+    //     address holder,
+    //     address targetContract,
+    //     uint256 amount
+    // ) public {
+    //     evm.prank(holder);
+    //     IERC20(addressOf[t]).approve(targetContract, amount);
+    // }
+
+    // function allowance(
+    //     Tokens t,
+    //     address holder,
+    //     address targetContract
+    // ) external view returns (uint256) {
+    //     return IERC20(addressOf[t]).allowance(holder, targetContract);
+    // }
+
+    function burn(
+        Tokens t,
+        address from,
+        uint256 amount
+    ) external {
+        if (tokenTypes[t] != TokenType.NORMAL_TOKEN && mockTokens) {
+            revert("tokenTestSuite: Trying to burn a non-normal token");
+        }
+        ERC20Mock(addressOf[t]).burn(from, amount);
+    }
+
+    function mint(
+        address token,
+        address to,
+        uint256 amount
+    ) public override {
+        _mint(token, to, amount, false);
+    }
+
+    function mintWithTotalSupply(
+        address token,
+        address to,
+        uint256 amount
+    ) external {
+        _mint(token, to, amount, true);
+    }
+
+    function mint(
+        Tokens t,
+        address to,
+        uint256 amount
+    ) public {
+        _mint(addressOf[t], to, amount, false);
+    }
+
+    function mintWithTotalSupply(
+        Tokens t,
+        address to,
+        uint256 amount
+    ) public {
+        _mint(addressOf[t], to, amount, true);
+    }
+
+    function _mint(
+        address token,
+        address to,
+        uint256 amount,
+        bool adjust
+    ) internal {
+        if (mockTokens) {
+            if (token == addressOf[Tokens.WETH]) {
+                evm.deal(address(this), amount);
+                IWETH(wethToken).deposit{ value: amount }();
+                IERC20(token).transfer(to, amount);
+            } else if (token == addressOf[Tokens.STETH]) {
+                evm.deal(address(this), amount);
+                LidoMock(payable(token)).submit{ value: amount }(address(this));
+                IERC20(token).transfer(to, amount);
+            } else if (tokenTypes[tokenIndexes[token]] == TokenType.C_TOKEN) {
+                address underlying = cERC20Mock(token).underlying();
+                mint(tokenIndexes[underlying], address(this), amount);
+                IERC20(underlying).approve(token, amount);
+                cERC20Mock(token).mint(address(this), amount);
+                IERC20(token).transfer(to, amount);
+            } else {
+                // dealToken(token, to, amount, adjust);
+                ERC20Mock(token).mint(address(this), amount);
+                IERC20(token).transfer(to, amount);
+            }
+        } else {
+            if (token == addressOf[Tokens.LDO]) {
+                evm.prank(LDO_DONOR);
+                IERC20(token).transfer(to, amount);
+            } else if (token == addressOf[Tokens.STETH]) {
+                address stETH = addressOf[Tokens.STETH];
+                evm.deal(to, amount);
+
+                evm.prank(to);
+                IstETH(payable(stETH)).submit{ value: amount }(to);
+            } else {
+                dealToken(token, to, amount, adjust);
+            }
+        }
+    }
+
+    function approve(
+        Tokens t,
+        address holder,
+        address targetContract
+    ) public {
+        approve(t, holder, targetContract, type(uint256).max);
+    }
+
+    function approve(
+        Tokens t,
+        address holder,
+        address targetContract,
+        uint256 amount
+    ) public {
+        evm.startPrank(holder);
+        IERC20(addressOf[t]).safeApprove(targetContract, 0);
+        IERC20(addressOf[t]).safeApprove(targetContract, amount);
+        evm.stopPrank();
+    }
+
+    // function approveMany(
+    //     Tokens[] memory tokensToApprove,
+    //     address holder,
+    //     Contracts targetContract
+    // ) public {
+    //     uint256 len = tokensToApprove.length;
+    //     unchecked {
+    //         for (uint256 i; i < len; ++i) {
+    //             approve(
+    //                 tokensToApprove[i],
+    //                 holder,
+    //                 supportedContracts.addressOf(targetContract)
+    //             );
+    //         }
+    //     }
+    // }
+
+    function allowance(
+        Tokens t,
+        address holder,
+        address targetContract
+    ) external view returns (uint256) {
+        return IERC20(addressOf[t]).allowance(holder, targetContract);
+    }
+}

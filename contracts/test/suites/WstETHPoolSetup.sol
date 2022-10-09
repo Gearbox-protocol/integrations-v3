@@ -1,0 +1,80 @@
+// SPDX-License-Identifier: BUSL-1.1
+// Gearbox Protocol. Generalized leverage for DeFi protocols
+// (c) Gearbox Holdings, 2021
+pragma solidity ^0.8.10;
+
+import { Tokens } from "../config/Tokens.sol";
+import { ITokenTestSuite } from "@gearbox-protocol/core-v2/contracts/test/interfaces/ITokenTestSuite.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+
+import { IAddressProvider } from "@gearbox-protocol/core-v2/contracts/interfaces/IAddressProvider.sol";
+import { PoolService } from "@gearbox-protocol/core-v2/contracts/pool/PoolService.sol";
+import { ACL } from "@gearbox-protocol/core-v2/contracts/core/ACL.sol";
+import { ContractsRegister } from "@gearbox-protocol/core-v2/contracts/core/ContractsRegister.sol";
+import { LinearInterestRateModel } from "@gearbox-protocol/core-v2/contracts/pool/LinearInterestRateModel.sol";
+import { IPoolService } from "@gearbox-protocol/core-v2/contracts/interfaces/IPoolService.sol";
+import { IwstETH } from "../../integrations/lido/IwstETH.sol";
+import "../lib/constants.sol";
+
+uint256 constant U_OPTIMAL = 70_00;
+uint256 constant R_BASE = 0;
+uint256 constant R_SLOPE_1 = 4_00;
+uint256 constant R_SLOPE_2 = 60_00;
+uint256 constant EXPECTED_LIQUIDITY_LIMIT = 10_000 * WAD;
+uint256 constant WITHDRAW_FEE = 1_00;
+
+/// @title WstETHPoolSetup
+/// @notice Setup and add wstETH pool to the system
+contract WstETHPoolSetup {
+    CheatCodes evm = CheatCodes(HEVM_ADDRESS);
+
+    constructor(
+        address addressProvider,
+        address wstETH,
+        ITokenTestSuite tokensTestSuite,
+        address root
+    ) {
+        LinearInterestRateModel linearModel = new LinearInterestRateModel(
+            U_OPTIMAL,
+            R_BASE,
+            R_SLOPE_1,
+            R_SLOPE_2
+        );
+
+        PoolService pool = new PoolService(
+            addressProvider,
+            wstETH,
+            address(linearModel),
+            EXPECTED_LIQUIDITY_LIMIT
+        );
+
+        ContractsRegister cr = ContractsRegister(
+            IAddressProvider(addressProvider).getContractsRegister()
+        );
+
+        evm.prank(root);
+        pool.setWithdrawFee(WITHDRAW_FEE);
+
+        evm.prank(root);
+        cr.addPool(address(pool));
+
+        uint256 poolLiquidityAmount = EXPECTED_LIQUIDITY_LIMIT / 3;
+
+        uint256 wrappedAmount = IwstETH(wstETH).getStETHByWstETH(
+            poolLiquidityAmount
+        );
+
+        address stETH = IwstETH(wstETH).stETH();
+
+        tokensTestSuite.mint(stETH, address(this), wrappedAmount);
+
+        tokensTestSuite.approve(stETH, address(this), wstETH);
+
+        uint256 updatedPoolLiquidityAmount = IwstETH(wstETH).wrap(
+            wrappedAmount
+        );
+        IwstETH(wstETH).approve(address(pool), type(uint256).max);
+
+        pool.addLiquidity(updatedPoolLiquidityAmount, address(this), 0);
+    }
+}
