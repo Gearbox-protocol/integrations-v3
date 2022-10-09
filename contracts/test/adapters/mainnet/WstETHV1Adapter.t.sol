@@ -30,7 +30,10 @@ contract LiveWstETHV1AdapterTest is DSTest, LiveEnvHelper {
     }
 
     /// @dev [WSTETHA-1]: Credit account for wsteth CM can be opened
-    function test_live_WSTETHA_01_credit_account_can_be_opened() public liveOnly {
+    function test_live_WSTETHA_01_credit_account_can_be_opened()
+        public
+        liveOnly
+    {
         CreditFacade cf = lts.creditFacades(Tokens.wstETH);
         CreditManager cm = lts.creditManagers(Tokens.wstETH);
 
