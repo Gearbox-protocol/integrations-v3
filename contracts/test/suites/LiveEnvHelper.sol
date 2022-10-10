@@ -27,7 +27,7 @@ contract LiveEnvHelper {
         }
     }
 
-    function _setUp() public liveOnly {
+    function _setUp() public virtual liveOnly {
         lts = new LiveEnvTestSuite();
         MAINNET_CONFIGURATOR = lts.ROOT_ADDRESS();
         tokenTestSuite = lts.tokenTestSuite();
