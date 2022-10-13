@@ -10,7 +10,7 @@ import { IDataCompressor } from "@gearbox-protocol/core-v2/contracts/interfaces/
 import { CreditManagerData } from "@gearbox-protocol/core-v2/contracts/libraries/Types.sol";
 
 import { AddressProvider } from "@gearbox-protocol/core-v2/contracts/core/AddressProvider.sol";
-import { PoolService } from "@gearbox-protocol/core-v2/contracts/pool/PoolService.sol";
+
 import { ACL } from "@gearbox-protocol/core-v2/contracts/core/ACL.sol";
 import { ContractsRegister } from "@gearbox-protocol/core-v2/contracts/core/ContractsRegister.sol";
 import { PriceOracle } from "@gearbox-protocol/core-v2/contracts/oracles/PriceOracle.sol";

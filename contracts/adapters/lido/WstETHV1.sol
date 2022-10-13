@@ -9,7 +9,7 @@ import { ReentrancyGuard } from "@openzeppelin/contracts/security/ReentrancyGuar
 import { AbstractAdapter } from "@gearbox-protocol/core-v2/contracts/adapters/AbstractAdapter.sol";
 
 // INTERFACES
-import { IstETH } from "../../integrations/lido/IstETH.sol";
+
 import { IAdapter, AdapterType } from "@gearbox-protocol/core-v2/contracts/interfaces/adapters/IAdapter.sol";
 
 import { IwstETH } from "../../integrations/lido/IwstETH.sol";

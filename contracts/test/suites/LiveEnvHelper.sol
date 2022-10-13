@@ -5,7 +5,7 @@ pragma solidity ^0.8.10;
 import { LiveEnvTestSuite } from "./LiveEnvTestSuite.sol";
 import { CheatCodes, HEVM_ADDRESS } from "@gearbox-protocol/core-v2/contracts/test/lib/cheatCodes.sol";
 import { Tokens } from "../config/Tokens.sol";
-import { ITokenTestSuite } from "@gearbox-protocol/core-v2/contracts/test/interfaces/ITokenTestSuite.sol";
+
 import { SupportedContracts, Contracts } from "../config/SupportedContracts.sol";
 import { IUniswapV2Router02 } from "../../integrations/uniswap/IUniswapV2Router02.sol";
 import { MultiCall } from "@gearbox-protocol/core-v2/contracts/interfaces/ICreditFacade.sol";

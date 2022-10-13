@@ -3,7 +3,6 @@
 // (c) Gearbox Holdings, 2021
 pragma solidity ^0.8.10;
 
-import { IAdapter } from "@gearbox-protocol/core-v2/contracts/interfaces/adapters/IAdapter.sol";
 import { ICurveV1Adapter } from "./ICurveV1Adapter.sol";
 import { ICurvePool3Assets } from "../../../integrations/curve/ICurvePool_3.sol";
 

@@ -3,8 +3,6 @@
 // (c) Gearbox Holdings, 2021
 pragma solidity ^0.8.10;
 
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-
 import { ICreditManagerV2, ICreditManagerV2Events } from "@gearbox-protocol/core-v2/contracts/interfaces/ICreditManagerV2.sol";
 import { ICreditFacadeEvents } from "@gearbox-protocol/core-v2/contracts/interfaces/ICreditFacade.sol";
 import { IAdapterExceptions } from "@gearbox-protocol/core-v2/contracts/interfaces/adapters/IAdapter.sol";
