@@ -92,7 +92,7 @@ Contains price feeds for Curve 2-,3- and 4-asset pool LP tokens. For more inform
 
 Contains the price feed for wstETH, which computes the price based on stETH price and wstETH contract's withdrawal rate. Similar to Yearn price feed, see [documentation](https://dev.gearbox.fi/docs/documentation/oracle/yearn-pricefeed) for more information.
 
-### Yearn
+#### Yearn
 
 Contains a price feed for Yearn vault shares. For more information on price feed implementation, see [documentation](https://dev.gearbox.fi/docs/documentation/oracle/yearn-pricefeed).
 
