@@ -5,7 +5,7 @@ pragma solidity ^0.8.10;
 
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { PriceFeedMock } from "@gearbox-protocol/core-v2/contracts/test/mocks/oracles/PriceFeedMock.sol";
-import { PriceFeedConfig } from "@gearbox-protocol/core-v2/contracts/oracles/PriceOracle.sol";
+
 import { AggregatorV3Interface } from "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
 
 import { Tokens } from "./Tokens.sol";

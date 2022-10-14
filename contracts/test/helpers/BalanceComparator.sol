@@ -3,11 +3,11 @@
 // (c) Gearbox.fi, 2021
 pragma solidity ^0.8.10;
 import { Tokens } from "../suites/TokensTestSuite.sol";
-import { ITokenTestSuite } from "@gearbox-protocol/core-v2/contracts/test/interfaces/ITokenTestSuite.sol";
+
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 // TEST
-import "@gearbox-protocol/core-v2/contracts/test/lib/test.sol";
+
 import "../lib/constants.sol";
 import { TokensTestSuite } from "../suites/TokensTestSuite.sol";
 

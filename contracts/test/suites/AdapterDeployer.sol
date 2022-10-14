@@ -12,7 +12,6 @@ import { SupportedContracts } from "../config/SupportedContracts.sol";
 import { Adapter } from "@gearbox-protocol/core-v2/contracts/factories/CreditManagerFactoryBase.sol";
 
 import { AdapterType } from "@gearbox-protocol/core-v2/contracts/interfaces/adapters/IAdapter.sol";
-import { UNIVERSAL_CONTRACT } from "@gearbox-protocol/core-v2/contracts/libraries/Constants.sol";
 
 import "@gearbox-protocol/core-v2/contracts/test/lib/test.sol";
 import { CheatCodes, HEVM_ADDRESS } from "@gearbox-protocol/core-v2/contracts/test/lib/cheatCodes.sol";

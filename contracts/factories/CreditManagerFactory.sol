@@ -5,18 +5,12 @@ pragma solidity ^0.8.10;
 
 import { CreditManagerFactoryBase } from "@gearbox-protocol/core-v2/contracts/factories/CreditManagerFactoryBase.sol";
 
-import { ContractsRegister } from "@gearbox-protocol/core-v2/contracts/core/ContractsRegister.sol";
 import { PriceOracle } from "@gearbox-protocol/core-v2/contracts/oracles/PriceOracle.sol";
 
 import { IConvexV1BaseRewardPoolAdapter } from "../interfaces/adapters/convex/IConvexV1BaseRewardPoolAdapter.sol";
 import { IConvexV1BoosterAdapter } from "../interfaces/adapters/convex/IConvexV1BoosterAdapter.sol";
 
-import { PoolService } from "@gearbox-protocol/core-v2/contracts/pool/PoolService.sol";
-import { CreditManager } from "@gearbox-protocol/core-v2/contracts/credit/CreditManager.sol";
-import { CreditFacade } from "@gearbox-protocol/core-v2/contracts/credit/CreditFacade.sol";
 import { CreditConfigurator, CreditManagerOpts } from "@gearbox-protocol/core-v2/contracts/credit/CreditConfigurator.sol";
-
-import { ContractUpgrader } from "@gearbox-protocol/core-v2/contracts/support/ContractUpgrader.sol";
 
 import "@gearbox-protocol/core-v2/contracts/interfaces/adapters/IAdapter.sol";
 import { Adapter } from "@gearbox-protocol/core-v2/contracts/factories/CreditManagerFactoryBase.sol";

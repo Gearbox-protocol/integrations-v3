@@ -21,7 +21,7 @@ import { IAddressProvider } from "@gearbox-protocol/core-v2/contracts/interfaces
 import { IPriceOracleV2 } from "@gearbox-protocol/core-v2/contracts/interfaces/IPriceOracle.sol";
 
 // CONSTANTS
-import { RAY } from "@gearbox-protocol/core-v2/contracts/libraries/Constants.sol";
+
 import { PERCENTAGE_FACTOR } from "@gearbox-protocol/core-v2/contracts/libraries/PercentageMath.sol";
 import { DEFAULT_FEE_INTEREST, DEFAULT_FEE_LIQUIDATION, DEFAULT_LIQUIDATION_PREMIUM, LEVERAGE_DECIMALS, ALLOWANCE_THRESHOLD, UNIVERSAL_CONTRACT } from "@gearbox-protocol/core-v2/contracts/libraries/Constants.sol";
 

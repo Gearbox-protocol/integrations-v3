@@ -3,7 +3,7 @@
 // (c) Gearbox.fi, 2021
 pragma solidity ^0.8.10;
 import { Tokens } from "../config/Tokens.sol";
-import { AggregatorV3Interface } from "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
+
 import { PriceFeedDataLive } from "../config/PriceFeedDataLive.sol";
 import { PriceFeedConfig } from "@gearbox-protocol/core-v2/contracts/oracles/PriceOracle.sol";
 import { ZeroPriceFeed } from "@gearbox-protocol/core-v2/contracts/oracles/ZeroPriceFeed.sol";
@@ -17,11 +17,9 @@ import { CurveLP2PriceFeed } from "../../oracles/curve/CurveLP2PriceFeed.sol";
 import { CurveLP3PriceFeed } from "../../oracles/curve/CurveLP3PriceFeed.sol";
 import { CurveLP4PriceFeed } from "../../oracles/curve/CurveLP4PriceFeed.sol";
 
-import { ICurveRegistry } from "../../integrations/curve/ICurveRegistry.sol";
 import { IYVault } from "../../integrations/yearn/IYVault.sol";
 import { IwstETH } from "../../integrations/lido/IwstETH.sol";
 
-import "@gearbox-protocol/core-v2/contracts/test/lib/test.sol";
 import { CheatCodes, HEVM_ADDRESS } from "@gearbox-protocol/core-v2/contracts/test/lib/cheatCodes.sol";
 
 import { TokensTestSuite } from "./TokensTestSuite.sol";
