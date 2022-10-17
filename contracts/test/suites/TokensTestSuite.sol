@@ -64,7 +64,6 @@ contract TokensTestSuite is DSTest, TokensTestSuiteHelper {
         } else {
             TokensData tdd = new TokensData();
             td = tdd.getTokenData();
-            emit log_uint(td.length);
 
             mockTokens = true;
         }
@@ -84,8 +83,6 @@ contract TokensTestSuite is DSTest, TokensTestSuiteHelper {
 
         wethToken = addressOf[Tokens.WETH];
         tokenCount = len;
-
-        emit log_address(wethToken);
     }
 
     // function mint(
@@ -237,22 +234,22 @@ contract TokensTestSuite is DSTest, TokensTestSuiteHelper {
         evm.stopPrank();
     }
 
-    // function approveMany(
-    //     Tokens[] memory tokensToApprove,
-    //     address holder,
-    //     Contracts targetContract
-    // ) public {
-    //     uint256 len = tokensToApprove.length;
-    //     unchecked {
-    //         for (uint256 i; i < len; ++i) {
-    //             approve(
-    //                 tokensToApprove[i],
-    //                 holder,
-    //                 supportedContracts.addressOf(targetContract)
-    //             );
-    //         }
-    //     }
-    // }
+    function approveMany(
+        Tokens[] memory tokensToApprove,
+        address holder,
+        address target
+    ) public {
+        uint256 len = tokensToApprove.length;
+        unchecked {
+            for (uint256 i; i < len; ++i) {
+                approve(
+                    tokensToApprove[i],
+                    holder,
+                    target
+                );
+            }
+        }
+    }
 
     function allowance(
         Tokens t,
