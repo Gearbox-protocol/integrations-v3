@@ -78,7 +78,7 @@ Contains interfaces for third-party contracts that adapters implement or otherwi
 
 ### Multicall
 
-Contains helper libraries that construct Gearbox compatible multicalls with a convenient interface. Multicall libraries are implemented for all supported adapters.
+Contains helper libraries that construct Gearbox-compatible multicalls with a convenient interface. Multicall libraries are implemented for all supported adapters.
 
 ### Oracles
 
