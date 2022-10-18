@@ -5,23 +5,7 @@ pragma solidity ^0.8.10;
 
 import { IAdapter } from "@gearbox-protocol/core-v2/contracts/interfaces/adapters/IAdapter.sol";
 
-interface ILidoV1AdapterEvents {
-    event NewLimit(uint256 _limit);
-}
-
-interface ILidoV1AdapterExceptions {
-    error LimitIsOverException();
-}
-
-interface ILidoV1Adapter is
-    IAdapter,
-    ILidoV1AdapterEvents,
-    ILidoV1AdapterExceptions
-{
-    /// @dev Set a new deposit limit
-    /// @param _limit New value for the limit
-    function setLimit(uint256 _limit) external;
-
+interface ILidoV1Adapter is IAdapter {
     /// @dev Sends an order to stake ETH in Lido and receive stETH (sending WETH through the gateway)
     /// @param amount The amount of ETH to deposit in Lido
     /// @notice Since Gearbox only uses WETH as collateral, the amount has to be passed explicitly
