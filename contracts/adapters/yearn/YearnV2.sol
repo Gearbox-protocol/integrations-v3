@@ -47,7 +47,7 @@ contract YearnV2Adapter is AbstractAdapter, IYearnV2Adapter, ReentrancyGuard {
 
         if (balance > 1) {
             unchecked {
-                shares = _deposit(creditAccount, balance - 1, true);
+                shares = _deposit(creditAccount, balance, true);
             } // F:[AYV2-4]}
         }
     }
@@ -124,7 +124,7 @@ contract YearnV2Adapter is AbstractAdapter, IYearnV2Adapter, ReentrancyGuard {
 
         if (balance > 1) {
             unchecked {
-                value = _withdraw(creditAccount, balance - 1, true);
+                value = _withdraw(creditAccount, balance, true);
             } // F:[AYV2-7]
         }
     }
