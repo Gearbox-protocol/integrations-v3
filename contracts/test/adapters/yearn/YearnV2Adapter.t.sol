@@ -81,12 +81,12 @@ contract YearnV2AdapterTest is DSTest, AdapterTestHelper {
         uint256 initialDAIbalance;
         (creditAccount, initialDAIbalance) = _openTestCreditAccount();
 
-        yAmount = ((initialDAIbalance * WAD) / PRICE_PER_SHARE);
+        yAmount = (((initialDAIbalance - 1) * WAD) / PRICE_PER_SHARE);
 
         evm.prank(USER);
         adapter.deposit();
 
-        expectBalance(Tokens.DAI, creditAccount, 0);
+        expectBalance(Tokens.DAI, creditAccount, 1);
         expectBalance(yvDAI, creditAccount, yAmount);
 
         expectTokenIsEnabled(Tokens.DAI, false);
@@ -193,7 +193,7 @@ contract YearnV2AdapterTest is DSTest, AdapterTestHelper {
 
             bytes memory expectedCallData = abi.encodeWithSignature(
                 "deposit(uint256)",
-                initialDAIbalance
+                initialDAIbalance - 1
             );
 
             if (multicall) {
@@ -227,12 +227,12 @@ contract YearnV2AdapterTest is DSTest, AdapterTestHelper {
                 evm.prank(USER);
                 adapter.deposit();
             }
-            expectBalance(Tokens.DAI, creditAccount, 0);
+            expectBalance(Tokens.DAI, creditAccount, 1);
 
             expectBalance(
                 yvDAI,
                 creditAccount,
-                (initialDAIbalance * WAD) / PRICE_PER_SHARE
+                ((initialDAIbalance - 1) * WAD) / PRICE_PER_SHARE
             );
 
             expectAllowance(Tokens.DAI, creditAccount, address(yearnV2Mock), 1);
@@ -398,7 +398,7 @@ contract YearnV2AdapterTest is DSTest, AdapterTestHelper {
 
             bytes memory expectedCallData = abi.encodeWithSignature(
                 "withdraw(uint256)",
-                yAmount
+                yAmount - 1
             );
 
             if (multicall) {
@@ -436,10 +436,10 @@ contract YearnV2AdapterTest is DSTest, AdapterTestHelper {
             expectBalance(
                 Tokens.DAI,
                 creditAccount,
-                (yAmount * PRICE_PER_SHARE) / WAD
+                ((yAmount - 1) * PRICE_PER_SHARE) / WAD + 1
             );
 
-            expectBalance(yvDAI, creditAccount, 0);
+            expectBalance(yvDAI, creditAccount, 1);
 
             // There is not need to approve yVault to itself, so nothing in terms of allowance should be done
             expectAllowance(yvDAI, creditAccount, address(yearnV2Mock), 0);
@@ -506,7 +506,7 @@ contract YearnV2AdapterTest is DSTest, AdapterTestHelper {
             expectBalance(
                 Tokens.DAI,
                 creditAccount,
-                ((amount) * PRICE_PER_SHARE) / WAD
+                ((amount) * PRICE_PER_SHARE) / WAD + 1
             );
 
             // +1 cause it keeps from deposit there
@@ -581,7 +581,7 @@ contract YearnV2AdapterTest is DSTest, AdapterTestHelper {
             expectBalance(
                 Tokens.DAI,
                 creditAccount,
-                ((amount) * PRICE_PER_SHARE) / WAD
+                ((amount) * PRICE_PER_SHARE) / WAD + 1
             );
 
             // +1 cause it keeps from deposit there
@@ -661,7 +661,7 @@ contract YearnV2AdapterTest is DSTest, AdapterTestHelper {
             expectBalance(
                 Tokens.DAI,
                 creditAccount,
-                ((amount) * PRICE_PER_SHARE) / WAD
+                ((amount) * PRICE_PER_SHARE) / WAD + 1
             );
 
             // +1 cause it keeps from deposit there
