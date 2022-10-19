@@ -94,6 +94,14 @@ contract BalanceComparator is DSTest {
         address holder,
         BalanceBackup[] memory savedSnapshots
     ) public {
+        compareAllSnapshots(holder, savedSnapshots, 0);
+    }
+
+    function compareAllSnapshots(
+        address holder,
+        BalanceBackup[] memory savedSnapshots,
+        uint256 expectedError
+    ) public {
         uint256 len = savedSnapshots.length;
         unchecked {
             for (uint256 i; i < len; ++i) {
@@ -111,18 +119,40 @@ contract BalanceComparator is DSTest {
                     Tokens t = tokensToTrack[i];
                     string memory stage = stages[j];
 
-                    assertEq(
-                        savedBalances[stage][t][holder],
-                        savedBalances[stage][t][COMPARE_WITH],
-                        string(
-                            abi.encodePacked(
-                                "Balances are not equal for ",
-                                stage,
-                                " for ",
-                                tokenTestSuite.symbols(t)
+                    if (expectedError == 0) {
+                        assertEq(
+                            savedBalances[stage][t][holder],
+                            savedBalances[stage][t][COMPARE_WITH],
+                            string(
+                                abi.encodePacked(
+                                    "Balances are not equal for ",
+                                    stage,
+                                    " for ",
+                                    tokenTestSuite.symbols(t)
+                                )
                             )
-                        )
-                    );
+                        );
+                    } else {
+                        uint256 diff = savedBalances[stage][t][holder] >
+                            savedBalances[stage][t][COMPARE_WITH]
+                            ? savedBalances[stage][t][holder] -
+                                savedBalances[stage][t][COMPARE_WITH]
+                            : savedBalances[stage][t][COMPARE_WITH] -
+                                savedBalances[stage][t][holder];
+
+                        assertLe(
+                            diff,
+                            expectedError,
+                            string(
+                                abi.encodePacked(
+                                    "Balance diff larger than expected error for ",
+                                    stage,
+                                    " for ",
+                                    tokenTestSuite.symbols(t)
+                                )
+                            )
+                        );
+                    }
                 }
             }
         }
