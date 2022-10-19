@@ -19,6 +19,8 @@ import { ILidoV1Adapter } from "../../interfaces/adapters/lido/ILidoV1Adapter.so
 import { ACLTrait } from "@gearbox-protocol/core-v2/contracts/core/ACLTrait.sol";
 import { LidoV1Gateway } from "./LidoV1_WETHGateway.sol";
 
+uint256 constant LIDO_STETH_LIMIT = 20000 ether;
+
 /// @title LidoV1 adapter
 /// @dev Implements logic for interacting with the Lido contract through the gateway
 contract LidoV1Adapter is
@@ -35,6 +37,9 @@ contract LidoV1Adapter is
 
     /// @dev Address of Gearbox treasury
     address public immutable treasury;
+
+    /// @dev The amount of WETH that can be deposited through this adapter
+    uint256 public limit;
 
     AdapterType public constant _gearboxAdapterType = AdapterType.LIDO_V1;
     uint16 public constant _gearboxAdapterVersion = 1;
@@ -59,9 +64,11 @@ contract LidoV1Adapter is
 
         weth = ap.getWethToken(); // F:[LDOV1-1]
         treasury = ap.getTreasuryContract(); // F:[LDOV1-1]
+        limit = LIDO_STETH_LIMIT; // F:[LDOV1-1]
     }
 
     /// @dev Sends an order to stake ETH in Lido and receive stETH (sending WETH through the gateway)
+    /// - Checks that the transaction isn't over the limit and decreases the limit by the amount
     /// - Executes a safe allowance fast check call to gateway's `submit`, passing the Gearbox treasury as referral
     /// @param amount The amount of ETH to deposit in Lido
     /// @notice Fast check parameters:
@@ -107,6 +114,11 @@ contract LidoV1Adapter is
         address creditAccount,
         bool disableTokenIn
     ) internal returns (uint256 result) {
+        if (amount > limit) revert LimitIsOverException(); // F:[LDOV1-5]
+
+        unchecked {
+            limit -= amount; // F:[LDOV1-5]
+        }
         result = abi.decode(
             _safeExecuteFastCheck(
                 creditAccount,
@@ -122,6 +134,17 @@ contract LidoV1Adapter is
             ),
             (uint256)
         ); // F:[LDOV1-3,4]
+    }
+
+    /// @dev Set a new deposit limit
+    /// @param _limit New value for the limit
+    function setLimit(uint256 _limit)
+        external
+        override
+        configuratorOnly // F:[LDOV1-6]
+    {
+        limit = _limit; // F:[LDOV1-7]
+        emit NewLimit(_limit); // F:[LDOV1-7]
     }
 
     /// @dev Get a number of shares corresponding to the specified ETH amount

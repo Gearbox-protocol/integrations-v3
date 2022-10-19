@@ -3,7 +3,8 @@
 // (c) Gearbox Holdings, 2021
 pragma solidity ^0.8.10;
 
-import { LidoV1Adapter } from "../../../adapters/lido/LidoV1.sol";
+import { LidoV1Adapter, LIDO_STETH_LIMIT } from "../../../adapters/lido/LidoV1.sol";
+import { ILidoV1AdapterEvents, ILidoV1AdapterExceptions } from "../../../interfaces/adapters/lido/ILidoV1Adapter.sol";
 import { LidoV1Gateway } from "../../../adapters/lido/LidoV1_WETHGateway.sol";
 import { LidoMock, ILidoMockEvents } from "../../mocks/integrations/LidoMock.sol";
 
@@ -27,7 +28,9 @@ uint256 constant STETH_TOTAL_SHARES = WAD;
 contract LidoV1AdapterTest is
     DSTest,
     AdapterTestHelper,
-    ILidoMockEvents
+    ILidoMockEvents,
+    ILidoV1AdapterEvents,
+    ILidoV1AdapterExceptions
 {
     LidoMock public lidoV1Mock;
     LidoV1Gateway public lidoV1Gateway;
@@ -93,6 +96,12 @@ contract LidoV1AdapterTest is
             lidoV1Adapter.treasury(),
             cft.addressProvider().getTreasuryContract(),
             "Treasury address incorrect"
+        );
+
+        assertEq(
+            lidoV1Adapter.limit(),
+            LIDO_STETH_LIMIT,
+            "Limit is set incorrect"
         );
     }
 
@@ -205,6 +214,9 @@ contract LidoV1AdapterTest is
 
             setUp();
 
+            evm.prank(CONFIGURATOR);
+            lidoV1Adapter.setLimit(RAY);
+
             (
                 address creditAccount,
                 uint256 initialWETHamount
@@ -279,5 +291,49 @@ contract LidoV1AdapterTest is
             expectTokenIsEnabled(Tokens.WETH, false);
             expectTokenIsEnabled(Tokens.STETH, true);
         }
+    }
+
+    /// @dev [LDOV1-5]: submit and submitAll correctly update the limit and revert on violating it
+    function test_LDOV1_05_submit_updates_limit_and_reverts_on_limit_exceeded()
+        public
+    {
+        _openTestCreditAccount();
+
+        evm.prank(CONFIGURATOR);
+        lidoV1Adapter.setLimit(2 * WAD);
+
+        evm.prank(USER);
+        lidoV1Adapter.submit(WAD);
+
+        assertEq(lidoV1Adapter.limit(), WAD, "New limit was set incorrectly");
+
+        evm.expectRevert(LimitIsOverException.selector);
+        evm.prank(USER);
+        lidoV1Adapter.submit(WAD + 1);
+
+        evm.expectRevert(LimitIsOverException.selector);
+        evm.prank(USER);
+        lidoV1Adapter.submitAll();
+    }
+
+    /// @dev [LDOV1-6]: setLimit reverts if called by Non-configurator
+    function test_LDOV1_06_submit_updates_limit_and_reverts_on_limit_exceeded()
+        public
+    {
+        evm.expectRevert(CallerNotConfiguratorException.selector);
+        lidoV1Adapter.setLimit(0);
+    }
+
+    /// @dev [LDOV1-7]: setLimit updates limit properly
+    function test_LDOV1_07_submit_updates_limit_properly(uint256 amount)
+        public
+    {
+        evm.expectEmit(false, false, false, true);
+        emit NewLimit(amount);
+
+        evm.prank(CONFIGURATOR);
+        lidoV1Adapter.setLimit(amount);
+
+        assertEq(lidoV1Adapter.limit(), amount, "Incorrect limit set");
     }
 }
