@@ -9,7 +9,7 @@ contract TokensDataLive {
         TokenData[] memory td;
 
         if (networkId == 1) {
-            td = new TokenData[](57);
+            td = new TokenData[](58);
             td[0] = TokenData({
                 id: Tokens._1INCH,
                 addr: 0x111111111117dC0aa78b770fA6A738034120C302,
@@ -246,43 +246,43 @@ contract TokensDataLive {
             });
             td[39] = TokenData({
                 id: Tokens.stkcvx3Crv,
-                addr: 0x2eD0f32d7C8b0f7EA7E40277C62Fb9C5DE092003,
+                addr: 0xbAc7a431146aeAf3F57A16b9954f332Fd292F270,
                 symbol: "stkcvx3Crv",
                 tokenType: TokenType.CONVEX_STAKED_TOKEN
             });
             td[40] = TokenData({
                 id: Tokens.stkcvxcrvFRAX,
-                addr: 0xE36cbd724F500353C23297789A5f88fe3d920523,
+                addr: 0x276187f24D41745513cbE2Bd5dFC33a4d8CDc9ed,
                 symbol: "stkcvxcrvFRAX",
                 tokenType: TokenType.CONVEX_STAKED_TOKEN
             });
             td[41] = TokenData({
                 id: Tokens.stkcvxsteCRV,
-                addr: 0x2210aa245Bf766eE99325c607807A08e636B5173,
+                addr: 0xe15B7D80a51e1fe54aC355CaBE848Efce5289BDB,
                 symbol: "stkcvxsteCRV",
                 tokenType: TokenType.CONVEX_STAKED_TOKEN
             });
             td[42] = TokenData({
                 id: Tokens.stkcvxFRAX3CRV,
-                addr: 0x2AF29502110080081FDF726dfBf61ABE3bA9Ef3C,
+                addr: 0xaF314b088B53835d5cF4e4CB81beABa5934a61fe,
                 symbol: "stkcvxFRAX3CRV",
                 tokenType: TokenType.CONVEX_STAKED_TOKEN
             });
             td[43] = TokenData({
                 id: Tokens.stkcvxLUSD3CRV,
-                addr: 0x77e6290D1779B606235407fdf37A14D94D0DFB40,
+                addr: 0x0A1D4A25d0390899b90bCD22E1Ef155003EA76d7,
                 symbol: "stkcvxLUSD3CRV",
                 tokenType: TokenType.CONVEX_STAKED_TOKEN
             });
             td[44] = TokenData({
                 id: Tokens.stkcvxcrvPlain3andSUSD,
-                addr: 0xd622AD90386BBf0310668175f76eD958030E3635,
+                addr: 0x7e1992A7F28dAA5f6a2d34e2cd40f962f37B172C,
                 symbol: "stkcvxcrvPlain3andSUSD",
                 tokenType: TokenType.CONVEX_STAKED_TOKEN
             });
             td[45] = TokenData({
                 id: Tokens.stkcvxgusd3CRV,
-                addr: 0x074f66aE6e28f7e01DFe598ECbfbd3034cf3De47,
+                addr: 0x34fB99abBAFb4e87e256960D572664c6ADc301B8,
                 symbol: "stkcvxgusd3CRV",
                 tokenType: TokenType.CONVEX_STAKED_TOKEN
             });
@@ -347,13 +347,19 @@ contract TokensDataLive {
                 tokenType: TokenType.DIESEL_LP_TOKEN
             });
             td[56] = TokenData({
+                id: Tokens.dwstETH,
+                addr: 0x2158034dB06f06dcB9A786D2F1F8c38781bA779d,
+                symbol: "dwstETH",
+                tokenType: TokenType.DIESEL_LP_TOKEN
+            });
+            td[57] = TokenData({
                 id: Tokens.GEAR,
                 addr: 0xBa3335588D9403515223F109EdC4eB7269a9Ab5D,
                 symbol: "GEAR",
                 tokenType: TokenType.GEAR_TOKEN
             });
         } else if (networkId == 2) {
-            td = new TokenData[](57);
+            td = new TokenData[](58);
             td[0] = TokenData({
                 id: Tokens._1INCH,
                 addr: 0xC69D4e2940950bf26977b421BDB9a06F40D37db4,
@@ -668,29 +674,35 @@ contract TokensDataLive {
             });
             td[52] = TokenData({
                 id: Tokens.dDAI,
-                addr: 0x7c68cc65e16d31439E9d0003845593E0468FD705,
+                addr: 0x1726d8a1d3193D7C5A301Bb64b025cBD91BA791c,
                 symbol: "dDAI",
                 tokenType: TokenType.DIESEL_LP_TOKEN
             });
             td[53] = TokenData({
                 id: Tokens.dUSDC,
-                addr: 0x7A55367bFc419555e4718E79E75B9C54DDF19956,
+                addr: 0x5bBDBDa8cE49B152ae48FB37F2397A5EBF35d59C,
                 symbol: "dUSDC",
                 tokenType: TokenType.DIESEL_LP_TOKEN
             });
             td[54] = TokenData({
                 id: Tokens.dWBTC,
-                addr: 0x2104EE41BAB9B7037af76ce42E92dAf00EbA880F,
+                addr: 0xd7f208de8d5b5301e7018dcc6D312A4305382330,
                 symbol: "dWBTC",
                 tokenType: TokenType.DIESEL_LP_TOKEN
             });
             td[55] = TokenData({
                 id: Tokens.dWETH,
-                addr: 0x83884503a412654788352090E8bd80A07C57e843,
+                addr: 0xfb906E19E71ED61bcb5eA0E11d77941A058eafBD,
                 symbol: "dWETH",
                 tokenType: TokenType.DIESEL_LP_TOKEN
             });
             td[56] = TokenData({
+                id: Tokens.dwstETH,
+                addr: 0xAB20D04aF0f79aB21cC66431F6BAc03b74003d4d,
+                symbol: "dwstETH",
+                tokenType: TokenType.DIESEL_LP_TOKEN
+            });
+            td[57] = TokenData({
                 id: Tokens.GEAR,
                 addr: 0x52555B61b8c1243C63682F75eB28214d7A62F221,
                 symbol: "GEAR",

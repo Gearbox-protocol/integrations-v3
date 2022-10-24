@@ -21,7 +21,7 @@ import { IAddressProvider } from "@gearbox-protocol/core-v2/contracts/interfaces
 import { IPriceOracleV2 } from "@gearbox-protocol/core-v2/contracts/interfaces/IPriceOracle.sol";
 
 // CONSTANTS
-
+import { RAY } from "@gearbox-protocol/core-v2/contracts/libraries/Constants.sol";
 import { PERCENTAGE_FACTOR } from "@gearbox-protocol/core-v2/contracts/libraries/PercentageMath.sol";
 import { DEFAULT_FEE_INTEREST, DEFAULT_FEE_LIQUIDATION, DEFAULT_LIQUIDATION_PREMIUM, LEVERAGE_DECIMALS, ALLOWANCE_THRESHOLD, UNIVERSAL_CONTRACT } from "@gearbox-protocol/core-v2/contracts/libraries/Constants.sol";
 
@@ -60,6 +60,8 @@ contract CreditManagerLiveMock is ICreditManagerV2, ACLTrait {
     /// @dev used to protect against reentrancy. Bool is gas-optimal,
     /// since there are other non-zero values packed into the same slot
     bool private entered;
+
+    bool public emergencyLiquidation;
 
     /// @dev The maximal number of enabled tokens on a single Credit Account
     uint8 public override maxAllowedEnabledTokenLength = 12;
@@ -178,6 +180,11 @@ contract CreditManagerLiveMock is ICreditManagerV2, ACLTrait {
     modifier creditConfiguratorOnly() {
         if (msg.sender != creditConfigurator)
             revert CreditConfiguratorOnlyException();
+        _;
+    }
+
+    modifier whenNotPausedOrEmergency() {
+        require(!paused() || emergencyLiquidation, "Pausable: paused");
         _;
     }
 
@@ -303,6 +310,13 @@ contract CreditManagerLiveMock is ICreditManagerV2, ACLTrait {
         // Checks that the Credit Account exists for the borrower
         address creditAccount = getCreditAccountOrRevert(borrower); // F:[CM-6, 9, 10]
 
+        // Sets borrower's Credit Account to zero address in the map
+        // This needs to be done before other actions, to prevent inconsistent state
+        // in the middle of closing transaction - e.g., _transferAssetsTo can be used to report a lower
+        // value of a CA to third parties before the end of the function execution, since it
+        // gives up control flow when some assets are already removed from the account
+        delete creditAccounts[borrower]; // F:[CM-9]
+
         // Makes all computations needed to close credit account
         uint256 amountToPool;
         uint256 borrowedAmount;
@@ -383,9 +397,6 @@ contract CreditManagerLiveMock is ICreditManagerV2, ACLTrait {
 
         // Returns Credit Account to the factory
         _accountFactory.returnCreditAccount(creditAccount); // F:[CM-9]
-
-        // Sets borrower's Credit Account to zero address in the map
-        delete creditAccounts[borrower]; // F:[CM-9]
     }
 
     /// @dev Manages debt size for borrower:
@@ -426,10 +437,7 @@ contract CreditManagerLiveMock is ICreditManagerV2, ACLTrait {
             newBorrowedAmount = borrowedAmount + amount;
 
             // Computes the new cumulative index to keep the interest
-            // unchanged with different principal. For newBorrowedAmount larger that 10*22,
-            // overflow is possible, since the numerator has two RAY-format numbers multiplied.
-            // In this case, newBorrowedAmount is shifted 54 bits right, which can produce a
-            // very small error, but prevents the overflow
+            // unchanged with different principal
 
             newCumulativeIndex = _calcNewCumulativeIndex(
                 borrowedAmount,
@@ -603,7 +611,7 @@ contract CreditManagerLiveMock is ICreditManagerV2, ACLTrait {
     function transferAccountOwnership(address from, address to)
         external
         override
-        whenNotPaused // F:[CM-5]
+        whenNotPausedOrEmergency // F:[CM-5]
         nonReentrant
         creditFacadeOnly // F:[CM-2]
     {
@@ -626,7 +634,7 @@ contract CreditManagerLiveMock is ICreditManagerV2, ACLTrait {
     )
         external
         override
-        whenNotPaused // F:[CM-5]
+        whenNotPausedOrEmergency // F:[CM-5]
         nonReentrant
     {
         // This function can only be called by connected adapters (must be a correct adapter/contract pair),
@@ -700,7 +708,7 @@ contract CreditManagerLiveMock is ICreditManagerV2, ACLTrait {
     )
         external
         override
-        whenNotPaused // F:[CM-5]
+        whenNotPausedOrEmergency // F:[CM-5]
         nonReentrant
         returns (bytes memory)
     {
@@ -737,6 +745,7 @@ contract CreditManagerLiveMock is ICreditManagerV2, ACLTrait {
     function checkAndEnableToken(address creditAccount, address token)
         external
         override
+        whenNotPausedOrEmergency
         adaptersOrCreditFacadeOnly // F:[CM-3]
         nonReentrant
     {
@@ -800,7 +809,7 @@ contract CreditManagerLiveMock is ICreditManagerV2, ACLTrait {
     function checkAndOptimizeEnabledTokens(address creditAccount)
         external
         override
-        creditFacadeOnly // F: [CM-2]
+        adaptersOrCreditFacadeOnly // F: [CM-2]
     {
         _checkAndOptimizeEnabledTokens(creditAccount);
     }
@@ -896,18 +905,52 @@ contract CreditManagerLiveMock is ICreditManagerV2, ACLTrait {
     function disableToken(address creditAccount, address token)
         external
         override
+        whenNotPausedOrEmergency // F:[CM-5]
         adaptersOrCreditFacadeOnly // F:[CM-3]
         nonReentrant
+        returns (bool)
     {
-        _disableToken(creditAccount, token);
+        return _disableToken(creditAccount, token);
     }
 
     /// @dev IMPLEMENTATION: disableToken
-    function _disableToken(address creditAccount, address token) internal {
+    function _disableToken(address creditAccount, address token)
+        internal
+        returns (bool wasChanged)
+    {
         // The enabled token mask encodes all enabled tokens as 1,
         // therefore the corresponding bit is set to 0 to disable it
         uint256 tokenMask = tokenMasksMap(token);
-        enabledTokensMap[creditAccount] &= ~tokenMask; // F:[CM-46]
+        if (enabledTokensMap[creditAccount] & tokenMask != 0) {
+            enabledTokensMap[creditAccount] &= ~tokenMask; // F:[CM-46]
+            wasChanged = true;
+        }
+    }
+
+    /// @dev Checks if the contract is paused; if true, checks that the caller is emergency liquidator
+    /// and temporarily enables a special emergencyLiquidator mode to allow liquidation.
+    /// @notice Some whenNotPausedOrEmergency functions in CreditManager need to be executable to perform
+    /// multicalls during liquidations. emergencyLiquidation mode is enabled temporarily
+    /// (for the span of a single multicall) to override
+    /// the paused state and allow a special privileged role to liquidate unhealthy positions, if the
+    /// contracts are paused due to an emergency.
+    /// @notice To save gas, emergency liquidation setting is skipped when the CM is not paused.
+    ///
+    ///
+    /// @param caller Address of CreditFacade caller
+    /// @param state True to enable and false to disable emergencyLiqudation mde
+    /// @return True if contract paused otherwise false. If the contract is not paused, there is no need
+    /// to call this function to disable the emergencyLiquidation mode.
+    function checkEmergencyPausable(address caller, bool state)
+        external
+        creditFacadeOnly // F:[CM-2]
+        returns (bool)
+    {
+        bool pausable = paused(); // F: [CM-67]
+        if (pausable && canLiquidateWhilePaused[caller]) {
+            emergencyLiquidation = state; // F: [CM-67]
+        }
+        return pausable; // F: [CM-67]
     }
 
     //
@@ -1089,6 +1132,9 @@ contract CreditManagerLiveMock is ICreditManagerV2, ACLTrait {
             } else {
                 // PAUSED CASE
                 totalFunds = totalValue; // F: [CM-43]
+                amountToPool +=
+                    (totalValue * slot1.feeLiquidation) /
+                    PERCENTAGE_FACTOR; // F:[CM-43]
             }
 
             // If there are any funds left after all respective payments (this
@@ -1515,13 +1561,5 @@ contract CreditManagerLiveMock is ICreditManagerV2, ACLTrait {
     {
         creditConfigurator = _creditConfigurator; // F:[CM-58]
         emit NewConfigurator(_creditConfigurator); // F:[CM-58]
-    }
-
-    function checkEmergencyPausable(address caller, bool state)
-        external
-        creditFacadeOnly
-        returns (bool)
-    {
-        return false;
     }
 }

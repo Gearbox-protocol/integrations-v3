@@ -4,7 +4,6 @@
 pragma solidity ^0.8.10;
 
 import { Tokens } from "./Tokens.sol";
-
 import { Contracts } from "./SupportedContracts.sol";
 
 struct ChainlinkPriceFeedData {

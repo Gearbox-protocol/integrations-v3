@@ -93,7 +93,7 @@ contract SupportedContracts is ISupportedContracts {
             });
             cd[5] = ContractData({
                 id: Contracts.CURVE_STETH_GATEWAY,
-                addr: 0x0c304D4cff4C562BcF09e198a30611a853d1Cad8,
+                addr: 0xEf0D72C594b28252BF7Ea2bfbF098792430815b1,
                 name: "CURVE_STETH_GATEWAY"
             });
             cd[6] = ContractData({
@@ -198,7 +198,7 @@ contract SupportedContracts is ISupportedContracts {
             });
             cd[26] = ContractData({
                 id: Contracts.LIDO_STETH_GATEWAY,
-                addr: 0x55045Eaae19d92680E02231e4Ce7bBEB4814ca64,
+                addr: 0x6f4b4aB5142787c05b7aB9A9692A0f46b997C29D,
                 name: "LIDO_STETH_GATEWAY"
             });
             cd[27] = ContractData({
