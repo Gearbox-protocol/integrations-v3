@@ -8,6 +8,10 @@ Gearbox Protocol allows anyone to take DeFi-native leverage and then use it acro
 
 _Some compare composable leverage as a primitive to DeFi-native prime brokerage._
 
+
+
+_Some compare composable leverage as a primitive to DeFi-native prime brokerage._
+
 ## Currently supported protocols
 
 - Uniswap V2 (swaps only);
