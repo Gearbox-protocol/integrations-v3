@@ -1,3 +1,7 @@
+// SPDX-License-Identifier: BUSL-1.1
+// Gearbox. Generalized leverage protocol that allows to take leverage and then use it across other DeFi protocols and platforms in a composable way.
+// (c) Gearbox Holdings, 2022
+
 import { Tokens } from "./Tokens.sol";
 import { TokenData } from "../suites/TokensTestSuite.sol";
 import { TokenType } from "../../integrations/TokenType.sol";
