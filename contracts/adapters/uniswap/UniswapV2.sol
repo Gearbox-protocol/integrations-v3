@@ -8,7 +8,7 @@ import { ReentrancyGuard } from "@openzeppelin/contracts/security/ReentrancyGuar
 
 import { AbstractAdapter } from "@gearbox-protocol/core-v2/contracts/adapters/AbstractAdapter.sol";
 import { IUniswapV2Router02 } from "../../integrations/uniswap/IUniswapV2Router02.sol";
-import { IUniswapV2Adapter } from "../../interfaces/adapters/uniswap/IUniswapV2Adapter.sol";
+import { IUniswapV2Adapter } from "../../interfaces/uniswap/IUniswapV2Adapter.sol";
 import { IAdapter, AdapterType } from "@gearbox-protocol/core-v2/contracts/interfaces/adapters/IAdapter.sol";
 
 import { RAY } from "@gearbox-protocol/core-v2/contracts/libraries/Constants.sol";

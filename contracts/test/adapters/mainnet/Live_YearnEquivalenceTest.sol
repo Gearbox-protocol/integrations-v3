@@ -7,7 +7,7 @@ import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import { ICreditFacade } from "@gearbox-protocol/core-v2/contracts/interfaces/ICreditFacade.sol";
 import { IYVault } from "../../../integrations/yearn/IYVault.sol";
-import { IYearnV2Adapter } from "../../../interfaces/adapters/yearn/IYearnV2Adapter.sol";
+import { IYearnV2Adapter } from "../../../interfaces/yearn/IYearnV2Adapter.sol";
 
 import { Tokens } from "../../config/Tokens.sol";
 import { Contracts } from "../../config/SupportedContracts.sol";
@@ -152,10 +152,10 @@ contract Live_YearnEquivalenceTest is DSTest, LiveEnvHelper {
         creditAccount = lts.creditManagers(Tokens.DAI).getCreditAccountOrRevert(
                 USER
             );
-        
+
         if (token != tokenTestSuite.addressOf(Tokens.DAI)) {
             tokenTestSuite.mint(token, creditAccount, amount);
-        } 
+        }
     }
 
     function prepareComparator(address vaultAdapter)
@@ -210,13 +210,19 @@ contract Live_YearnEquivalenceTest is DSTest, LiveEnvHelper {
                 USER,
                 yearnVaults[i] == Contracts.YEARN_DAI_VAULT
                     ? minAmount * 2
-                    : 3000 * 10 ** IERC20Metadata(IYearnV2Adapter(vaultAdapter).token()).decimals()
+                    : 3000 *
+                        10 **
+                            IERC20Metadata(
+                                IYearnV2Adapter(vaultAdapter).token()
+                            ).decimals()
             );
 
             compareBehavior(
                 supportedContracts.addressOf(yearnVaults[i]),
                 USER,
-                10 ** IERC20Metadata(IYearnV2Adapter(vaultAdapter).token()).decimals(),
+                10 **
+                    IERC20Metadata(IYearnV2Adapter(vaultAdapter).token())
+                        .decimals(),
                 comparator
             );
 
@@ -229,13 +235,18 @@ contract Live_YearnEquivalenceTest is DSTest, LiveEnvHelper {
 
             address creditAccount = openCreditAccountWithUnderlying(
                 IYearnV2Adapter(vaultAdapter).token(),
-                3000 * 10 ** IERC20Metadata(IYearnV2Adapter(vaultAdapter).token()).decimals()
+                3000 *
+                    10 **
+                        IERC20Metadata(IYearnV2Adapter(vaultAdapter).token())
+                            .decimals()
             );
 
             compareBehavior(
                 lts.getAdapter(Tokens.DAI, yearnVaults[i]),
                 creditAccount,
-                10 ** IERC20Metadata(IYearnV2Adapter(vaultAdapter).token()).decimals(),
+                10 **
+                    IERC20Metadata(IYearnV2Adapter(vaultAdapter).token())
+                        .decimals(),
                 comparator
             );
 

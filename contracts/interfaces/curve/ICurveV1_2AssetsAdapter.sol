@@ -4,6 +4,6 @@
 pragma solidity ^0.8.10;
 
 import { ICurveV1Adapter } from "./ICurveV1Adapter.sol";
-import { ICurvePool2Assets } from "../../../integrations/curve/ICurvePool_2.sol";
+import { ICurvePool2Assets } from "../../integrations/curve/ICurvePool_2.sol";
 
 interface ICurveV1_2AssetsAdapter is ICurveV1Adapter, ICurvePool2Assets {}

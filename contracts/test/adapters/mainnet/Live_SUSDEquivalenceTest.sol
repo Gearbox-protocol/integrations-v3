@@ -6,7 +6,7 @@ pragma solidity ^0.8.10;
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { ICreditFacade } from "@gearbox-protocol/core-v2/contracts/interfaces/ICreditFacade.sol";
 import { ICurvePool4Assets } from "../../../integrations/curve/ICurvePool_4.sol";
-import { ICurveV1_4AssetsAdapter } from "../../../interfaces/adapters/curve/ICurveV1_4AssetsAdapter.sol";
+import { ICurveV1_4AssetsAdapter } from "../../../interfaces/curve/ICurveV1_4AssetsAdapter.sol";
 import { Tokens } from "../../config/Tokens.sol";
 import { Contracts } from "../../config/SupportedContracts.sol";
 
@@ -139,8 +139,12 @@ contract Live_CurveSusdEquivalenceTest is DSTest, LiveEnvHelper {
         bool isAdapter
     ) internal {
         if (isAdapter) {
-            ICurveV1_4AssetsAdapter pool = ICurveV1_4AssetsAdapter(curvePoolAddr);
-            ICurveV1_4AssetsAdapter deposit = ICurveV1_4AssetsAdapter(curveDepositAddr);
+            ICurveV1_4AssetsAdapter pool = ICurveV1_4AssetsAdapter(
+                curvePoolAddr
+            );
+            ICurveV1_4AssetsAdapter deposit = ICurveV1_4AssetsAdapter(
+                curveDepositAddr
+            );
 
             evm.prank(USER);
             pool.add_liquidity_one_coin(100 * WAD, 0, 50 * WAD);
@@ -150,14 +154,14 @@ contract Live_CurveSusdEquivalenceTest is DSTest, LiveEnvHelper {
             );
 
             evm.prank(USER);
-            pool.exchange_all(0, 1, RAY / 2 / 10 ** 12);
+            pool.exchange_all(0, 1, RAY / 2 / 10**12);
             comparator.takeSnapshot(
                 "after_exchange_all",
                 accountToSaveBalances
             );
 
             evm.prank(USER);
-            pool.add_all_liquidity_one_coin(1, RAY * 10 ** 12 / 2 );
+            pool.add_all_liquidity_one_coin(1, (RAY * 10**12) / 2);
             comparator.takeSnapshot(
                 "after_add_all_liquidity_one_coin",
                 accountToSaveBalances
@@ -180,25 +184,42 @@ contract Live_CurveSusdEquivalenceTest is DSTest, LiveEnvHelper {
                 accountToSaveBalances
             );
 
-            uint256 balanceToSwap = tokenTestSuite.balanceOf(Tokens.DAI, accountToSaveBalances) - 1;
+            uint256 balanceToSwap = tokenTestSuite.balanceOf(
+                Tokens.DAI,
+                accountToSaveBalances
+            ) - 1;
             evm.prank(USER);
-            pool.exchange(0, 1, balanceToSwap, balanceToSwap / (2 * 10 ** 12));
+            pool.exchange(0, 1, balanceToSwap, balanceToSwap / (2 * 10**12));
             comparator.takeSnapshot(
                 "after_exchange_all",
                 accountToSaveBalances
             );
-            
-            balanceToSwap = tokenTestSuite.balanceOf(Tokens.USDC, accountToSaveBalances) - 1;
+
+            balanceToSwap =
+                tokenTestSuite.balanceOf(Tokens.USDC, accountToSaveBalances) -
+                1;
             evm.prank(USER);
-            pool.add_liquidity([0, balanceToSwap, 0, 0], balanceToSwap * 10 ** 12 / 2);
+            pool.add_liquidity(
+                [0, balanceToSwap, 0, 0],
+                (balanceToSwap * 10**12) / 2
+            );
             comparator.takeSnapshot(
                 "after_add_all_liquidity_one_coin",
                 accountToSaveBalances
             );
 
-            balanceToSwap = tokenTestSuite.balanceOf(Tokens.crvPlain3andSUSD, accountToSaveBalances) - 1;
+            balanceToSwap =
+                tokenTestSuite.balanceOf(
+                    Tokens.crvPlain3andSUSD,
+                    accountToSaveBalances
+                ) -
+                1;
             evm.prank(USER);
-            deposit.remove_liquidity_one_coin(balanceToSwap, 0, balanceToSwap / 2);
+            deposit.remove_liquidity_one_coin(
+                balanceToSwap,
+                0,
+                balanceToSwap / 2
+            );
             comparator.takeSnapshot(
                 "after_remove_all_liquidity_one_coin",
                 accountToSaveBalances
@@ -249,7 +270,6 @@ contract Live_CurveSusdEquivalenceTest is DSTest, LiveEnvHelper {
         public
         liveOnly
     {
-
         ICreditFacade creditFacade = lts.creditFacades(Tokens.DAI);
 
         (uint256 minAmount, ) = creditFacade.limits();

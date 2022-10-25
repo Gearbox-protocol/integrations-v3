@@ -4,6 +4,6 @@
 pragma solidity ^0.8.10;
 
 import { IAdapter } from "@gearbox-protocol/core-v2/contracts/interfaces/adapters/IAdapter.sol";
-import { IYVault } from "../../../integrations/yearn/IYVault.sol";
+import { IYVault } from "../../integrations/yearn/IYVault.sol";
 
 interface IYearnV2Adapter is IAdapter, IYVault {}

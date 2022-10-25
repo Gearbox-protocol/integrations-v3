@@ -7,7 +7,7 @@ import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { ICreditFacade } from "@gearbox-protocol/core-v2/contracts/interfaces/ICreditFacade.sol";
 import { IBaseRewardPool } from "../../../integrations/convex/IBaseRewardPool.sol";
 import { IBooster } from "../../../integrations/convex/IBooster.sol";
-import { IConvexV1BaseRewardPoolAdapter } from "../../../interfaces/adapters/convex/IConvexV1BaseRewardPoolAdapter.sol";
+import { IConvexV1BaseRewardPoolAdapter } from "../../../interfaces/convex/IConvexV1BaseRewardPoolAdapter.sol";
 
 import { Tokens } from "../../config/Tokens.sol";
 import { Contracts } from "../../config/SupportedContracts.sol";

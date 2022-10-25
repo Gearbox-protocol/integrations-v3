@@ -10,7 +10,7 @@ import { IBaseRewardPool } from "../../../integrations/convex/IBaseRewardPool.so
 
 import { IPriceOracleV2Ext } from "@gearbox-protocol/core-v2/contracts/interfaces/IPriceOracle.sol";
 
-import { IConvexV1BaseRewardPoolAdapterErrors } from "../../../interfaces/adapters/convex/IConvexV1BaseRewardPoolAdapter.sol";
+import { IConvexV1BaseRewardPoolAdapterErrors } from "../../../interfaces/convex/IConvexV1BaseRewardPoolAdapter.sol";
 
 import { ConvexV1BaseRewardPoolAdapter } from "../../../adapters/convex/ConvexV1_BaseRewardPool.sol";
 import { ConvexV1BoosterAdapter } from "../../../adapters/convex/ConvexV1_Booster.sol";

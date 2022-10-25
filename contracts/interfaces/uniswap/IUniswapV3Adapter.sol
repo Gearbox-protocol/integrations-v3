@@ -4,7 +4,7 @@
 pragma solidity ^0.8.10;
 
 import { IAdapter } from "@gearbox-protocol/core-v2/contracts/interfaces/adapters/IAdapter.sol";
-import { ISwapRouter } from "../../../integrations/uniswap/IUniswapV3.sol";
+import { ISwapRouter } from "../../integrations/uniswap/IUniswapV3.sol";
 
 interface IUniswapV3AdapterExceptions {
     error IncorrectPathLengthException();

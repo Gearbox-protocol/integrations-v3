@@ -5,7 +5,7 @@ pragma solidity ^0.8.10;
 
 import { MultiCall } from "@gearbox-protocol/core-v2/contracts/libraries/MultiCall.sol";
 import { ISwapRouter } from "../../integrations/uniswap/IUniswapV3.sol";
-import { IUniswapV3Adapter } from "../../interfaces/adapters/uniswap/IUniswapV3Adapter.sol";
+import { IUniswapV3Adapter } from "../../interfaces/uniswap/IUniswapV3Adapter.sol";
 
 interface UniswapV3_Multicaller {}
 

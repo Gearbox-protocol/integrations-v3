@@ -5,7 +5,7 @@ pragma solidity ^0.8.10;
 
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { ICreditFacade } from "@gearbox-protocol/core-v2/contracts/interfaces/ICreditFacade.sol";
-import { ILidoV1Adapter } from "../../../interfaces/adapters/lido/ILidoV1Adapter.sol";
+import { ILidoV1Adapter } from "../../../interfaces/lido/ILidoV1Adapter.sol";
 import { LidoV1Gateway } from "../../../adapters/lido/LidoV1_WETHGateway.sol";
 import { Tokens } from "../../config/Tokens.sol";
 import { Contracts } from "../../config/SupportedContracts.sol";
@@ -27,16 +27,10 @@ contract Live_LidoEquivalenceTest is DSTest, LiveEnvHelper {
     function setUp() public liveOnly {
         _setUp();
 
-        Tokens[2] memory tokensToTrack = [
-            Tokens.WETH,
-            Tokens.STETH
-        ];
+        Tokens[2] memory tokensToTrack = [Tokens.WETH, Tokens.STETH];
 
         // STAGES
-        string[2] memory stages = [
-            "after_submit",
-            "after_submitAll"
-        ];
+        string[2] memory stages = ["after_submit", "after_submitAll"];
 
         /// @notice Sets comparator for this equivalence test
 
@@ -77,7 +71,6 @@ contract Live_LidoEquivalenceTest is DSTest, LiveEnvHelper {
         address accountToSaveBalances,
         bool isAdapter
     ) internal {
-
         if (isAdapter) {
             ILidoV1Adapter lido = ILidoV1Adapter(lidoAddr);
 
@@ -95,7 +88,10 @@ contract Live_LidoEquivalenceTest is DSTest, LiveEnvHelper {
             lido.submit(WAD, DUMB_ADDRESS);
             comparator.takeSnapshot("after_submit", accountToSaveBalances);
 
-            uint256 balanceToSwap = tokenTestSuite.balanceOf(Tokens.WETH, accountToSaveBalances) - 1;
+            uint256 balanceToSwap = tokenTestSuite.balanceOf(
+                Tokens.WETH,
+                accountToSaveBalances
+            ) - 1;
             evm.prank(USER);
             lido.submit(balanceToSwap, DUMB_ADDRESS);
             comparator.takeSnapshot("after_submitAll", accountToSaveBalances);
@@ -135,9 +131,9 @@ contract Live_LidoEquivalenceTest is DSTest, LiveEnvHelper {
 
         evm.stopPrank();
 
-        creditAccount = lts.creditManagers(Tokens.WETH).getCreditAccountOrRevert(
-                USER
-            );
+        creditAccount = lts
+            .creditManagers(Tokens.WETH)
+            .getCreditAccountOrRevert(USER);
     }
 
     /// @dev [L-LDOET-1]: Lido adapter and normal account works identically
@@ -145,7 +141,6 @@ contract Live_LidoEquivalenceTest is DSTest, LiveEnvHelper {
         public
         liveOnly
     {
-
         ICreditFacade creditFacade = lts.creditFacades(Tokens.WETH);
 
         (uint256 minAmount, ) = creditFacade.limits();

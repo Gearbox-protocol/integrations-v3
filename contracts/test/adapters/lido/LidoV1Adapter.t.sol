@@ -4,7 +4,7 @@
 pragma solidity ^0.8.10;
 
 import { LidoV1Adapter, LIDO_STETH_LIMIT } from "../../../adapters/lido/LidoV1.sol";
-import { ILidoV1AdapterEvents, ILidoV1AdapterExceptions } from "../../../interfaces/adapters/lido/ILidoV1Adapter.sol";
+import { ILidoV1AdapterEvents, ILidoV1AdapterExceptions } from "../../../interfaces/lido/ILidoV1Adapter.sol";
 import { LidoV1Gateway } from "../../../adapters/lido/LidoV1_WETHGateway.sol";
 import { LidoMock, ILidoMockEvents } from "../../mocks/integrations/LidoMock.sol";
 

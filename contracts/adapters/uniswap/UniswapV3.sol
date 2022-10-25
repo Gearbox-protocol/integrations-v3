@@ -8,7 +8,7 @@ import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { ReentrancyGuard } from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 import { AbstractAdapter } from "@gearbox-protocol/core-v2/contracts/adapters/AbstractAdapter.sol";
-import { IUniswapV3Adapter } from "../../interfaces/adapters/uniswap/IUniswapV3Adapter.sol";
+import { IUniswapV3Adapter } from "../../interfaces/uniswap/IUniswapV3Adapter.sol";
 import { AdapterType } from "@gearbox-protocol/core-v2/contracts/interfaces/adapters/IAdapter.sol";
 import { ISwapRouter } from "../../integrations/uniswap/IUniswapV3.sol";
 import { BytesLib } from "../../integrations/uniswap/BytesLib.sol";

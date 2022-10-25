@@ -8,7 +8,7 @@ import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { ReentrancyGuard } from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import { AbstractAdapter } from "@gearbox-protocol/core-v2/contracts/adapters/AbstractAdapter.sol";
 import { IAdapter, AdapterType } from "@gearbox-protocol/core-v2/contracts/interfaces/adapters/IAdapter.sol";
-import { IYearnV2Adapter } from "../../interfaces/adapters/yearn/IYearnV2Adapter.sol";
+import { IYearnV2Adapter } from "../../interfaces/yearn/IYearnV2Adapter.sol";
 import { IYVault } from "../../integrations/yearn/IYVault.sol";
 
 /// @title Yearn adapter

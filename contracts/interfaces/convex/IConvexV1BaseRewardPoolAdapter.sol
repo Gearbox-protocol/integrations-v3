@@ -4,7 +4,7 @@
 pragma solidity ^0.8.10;
 
 import { IAdapter } from "@gearbox-protocol/core-v2/contracts/interfaces/adapters/IAdapter.sol";
-import { IBaseRewardPool } from "../../../integrations/convex/IBaseRewardPool.sol";
+import { IBaseRewardPool } from "../../integrations/convex/IBaseRewardPool.sol";
 
 interface IConvexV1BaseRewardPoolAdapterErrors {
     /// @dev Thrown when the adapter attempts to use a token not

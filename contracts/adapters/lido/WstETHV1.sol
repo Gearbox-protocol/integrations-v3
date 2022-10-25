@@ -13,7 +13,7 @@ import { AbstractAdapter } from "@gearbox-protocol/core-v2/contracts/adapters/Ab
 import { IAdapter, AdapterType } from "@gearbox-protocol/core-v2/contracts/interfaces/adapters/IAdapter.sol";
 
 import { IwstETH } from "../../integrations/lido/IwstETH.sol";
-import { IwstETHV1Adapter } from "../../interfaces/adapters/lido/IwstETHV1Adapter.sol";
+import { IwstETHV1Adapter } from "../../interfaces/lido/IwstETHV1Adapter.sol";
 import { TokenIsNotAddedToCreditManagerException } from "@gearbox-protocol/core-v2/contracts/interfaces/IErrors.sol";
 
 /// @title wstETH adapter

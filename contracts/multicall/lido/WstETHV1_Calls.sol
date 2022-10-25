@@ -4,7 +4,7 @@
 pragma solidity ^0.8.10;
 
 import { MultiCall } from "@gearbox-protocol/core-v2/contracts/libraries/MultiCall.sol";
-import { IwstETHV1Adapter } from "../../interfaces/adapters/lido/IwstETHV1Adapter.sol";
+import { IwstETHV1Adapter } from "../../interfaces/lido/IwstETHV1Adapter.sol";
 
 interface WstETHV1_Multicaller {}
 

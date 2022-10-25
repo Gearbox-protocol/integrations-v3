@@ -7,8 +7,8 @@ import { CreditManagerFactoryBase } from "@gearbox-protocol/core-v2/contracts/fa
 
 import { PriceOracle } from "@gearbox-protocol/core-v2/contracts/oracles/PriceOracle.sol";
 
-import { IConvexV1BaseRewardPoolAdapter } from "../interfaces/adapters/convex/IConvexV1BaseRewardPoolAdapter.sol";
-import { IConvexV1BoosterAdapter } from "../interfaces/adapters/convex/IConvexV1BoosterAdapter.sol";
+import { IConvexV1BaseRewardPoolAdapter } from "../interfaces/convex/IConvexV1BaseRewardPoolAdapter.sol";
+import { IConvexV1BoosterAdapter } from "../interfaces/convex/IConvexV1BoosterAdapter.sol";
 
 import { CreditConfigurator, CreditManagerOpts } from "@gearbox-protocol/core-v2/contracts/credit/CreditConfigurator.sol";
 

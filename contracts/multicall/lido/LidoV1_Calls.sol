@@ -4,7 +4,7 @@
 pragma solidity ^0.8.10;
 
 import { MultiCall } from "@gearbox-protocol/core-v2/contracts/libraries/MultiCall.sol";
-import { ILidoV1Adapter } from "../../interfaces/adapters/lido/ILidoV1Adapter.sol";
+import { ILidoV1Adapter } from "../../interfaces/lido/ILidoV1Adapter.sol";
 
 interface LidoV1_Multicaller {}
 

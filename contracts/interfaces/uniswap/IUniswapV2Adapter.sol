@@ -4,7 +4,7 @@
 pragma solidity ^0.8.10;
 
 import { IAdapter } from "@gearbox-protocol/core-v2/contracts/interfaces/adapters/IAdapter.sol";
-import { IUniswapV2Router02 } from "../../../integrations/uniswap/IUniswapV2Router02.sol";
+import { IUniswapV2Router02 } from "../../integrations/uniswap/IUniswapV2Router02.sol";
 
 interface IUniswapV2Adapter is IAdapter, IUniswapV2Router02 {
     /// @dev Sends an order to swap the entire token balance to another token using a Uniswap-compatible protocol

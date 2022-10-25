@@ -7,7 +7,7 @@ import { ICreditManagerV2Exceptions } from "@gearbox-protocol/core-v2/contracts/
 
 import { IUniswapV2Router02 } from "../../../integrations/uniswap/IUniswapV2Router02.sol";
 import { UniswapV2Adapter } from "../../../adapters/uniswap/UniswapV2.sol";
-import { IUniswapV2Adapter } from "../../../interfaces/adapters/uniswap/IUniswapV2Adapter.sol";
+import { IUniswapV2Adapter } from "../../../interfaces/uniswap/IUniswapV2Adapter.sol";
 import { UniswapV2Mock } from "../../mocks/integrations/UniswapV2Mock.sol";
 
 import { Tokens } from "../../suites/TokensTestSuite.sol";

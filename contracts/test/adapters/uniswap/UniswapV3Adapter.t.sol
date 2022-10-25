@@ -9,7 +9,7 @@ import { BytesLib } from "../../../integrations/uniswap/BytesLib.sol";
 
 import { ISwapRouter } from "../../../integrations/uniswap/IUniswapV3.sol";
 import { UniswapV3Adapter } from "../../../adapters/uniswap/UniswapV3.sol";
-import { IUniswapV3Adapter } from "../../../interfaces/adapters/uniswap/IUniswapV3Adapter.sol";
+import { IUniswapV3Adapter } from "../../../interfaces/uniswap/IUniswapV3Adapter.sol";
 import { UniswapV3Mock } from "../../mocks/integrations/UniswapV3Mock.sol";
 
 import { Tokens } from "../../suites/TokensTestSuite.sol";

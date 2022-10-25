@@ -6,7 +6,7 @@ pragma solidity ^0.8.10;
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { ICreditFacade } from "@gearbox-protocol/core-v2/contracts/interfaces/ICreditFacade.sol";
 import { ICurvePool2Assets } from "../../../integrations/curve/ICurvePool_2.sol";
-import { ICurveV1_2AssetsAdapter } from "../../../interfaces/adapters/curve/ICurveV1_2AssetsAdapter.sol";
+import { ICurveV1_2AssetsAdapter } from "../../../interfaces/curve/ICurveV1_2AssetsAdapter.sol";
 import { Tokens } from "../../config/Tokens.sol";
 import { Contracts } from "../../config/SupportedContracts.sol";
 
@@ -112,7 +112,9 @@ contract Live_MetapoolTest is DSTest, LiveEnvHelper {
         bool isAdapter
     ) internal {
         if (isAdapter) {
-            ICurveV1_2AssetsAdapter pool = ICurveV1_2AssetsAdapter(curvePoolAddr);
+            ICurveV1_2AssetsAdapter pool = ICurveV1_2AssetsAdapter(
+                curvePoolAddr
+            );
 
             evm.prank(USER);
             pool.add_liquidity_one_coin(100 * WAD, 1, 50 * WAD);
@@ -148,7 +150,6 @@ contract Live_MetapoolTest is DSTest, LiveEnvHelper {
                 "after_exchange_all_underlying",
                 accountToSaveBalances
             );
-
         } else {
             ICurvePool2Assets pool = ICurvePool2Assets(curvePoolAddr);
 
@@ -159,16 +160,23 @@ contract Live_MetapoolTest is DSTest, LiveEnvHelper {
                 accountToSaveBalances
             );
 
-            uint256 balanceToSwap = tokenTestSuite.balanceOf(Tokens._3Crv, accountToSaveBalances) - 1;
+            uint256 balanceToSwap = tokenTestSuite.balanceOf(
+                Tokens._3Crv,
+                accountToSaveBalances
+            ) - 1;
             evm.prank(USER);
             pool.exchange(1, 0, balanceToSwap, balanceToSwap / 2);
             comparator.takeSnapshot(
                 "after_exchange_all",
                 accountToSaveBalances
             );
-            
-            Tokens tokenZero = tokenTestSuite.tokenIndexes(pool.coins(uint256(0)));
-            balanceToSwap = tokenTestSuite.balanceOf(tokenZero, accountToSaveBalances) - 1;
+
+            Tokens tokenZero = tokenTestSuite.tokenIndexes(
+                pool.coins(uint256(0))
+            );
+            balanceToSwap =
+                tokenTestSuite.balanceOf(tokenZero, accountToSaveBalances) -
+                1;
             evm.prank(USER);
             pool.add_liquidity([balanceToSwap, 0], balanceToSwap / 2);
             comparator.takeSnapshot(
@@ -177,24 +185,26 @@ contract Live_MetapoolTest is DSTest, LiveEnvHelper {
             );
 
             Tokens lpToken = tokenTestSuite.tokenIndexes(address(pool));
-            balanceToSwap = tokenTestSuite.balanceOf(lpToken, accountToSaveBalances) - 1;
+            balanceToSwap =
+                tokenTestSuite.balanceOf(lpToken, accountToSaveBalances) -
+                1;
             evm.prank(USER);
             pool.remove_liquidity_one_coin(balanceToSwap, 0, balanceToSwap / 2);
             comparator.takeSnapshot(
                 "after_remove_all_liquidity_one_coin",
                 accountToSaveBalances
             );
-            balanceToSwap = tokenTestSuite.balanceOf(tokenZero, accountToSaveBalances) - 1;
+            balanceToSwap =
+                tokenTestSuite.balanceOf(tokenZero, accountToSaveBalances) -
+                1;
             evm.prank(USER);
             pool.exchange_underlying(0, 1, balanceToSwap, balanceToSwap / 2);
             comparator.takeSnapshot(
                 "after_exchange_all_underlying",
                 accountToSaveBalances
             );
-
         }
     }
-
 
     /// @dev Opens credit account for USER and make amount of desired token equal
     /// amounts for USER and CA to be able to launch test for both
@@ -388,5 +398,4 @@ contract Live_MetapoolTest is DSTest, LiveEnvHelper {
 
         comparator.compareAllSnapshots(creditAccount, savedBalanceSnapshots);
     }
-
 }

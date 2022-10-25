@@ -6,7 +6,7 @@ pragma solidity ^0.8.10;
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { ICreditFacade } from "@gearbox-protocol/core-v2/contracts/interfaces/ICreditFacade.sol";
 import { ICurvePool2Assets } from "../../../integrations/curve/ICurvePool_2.sol";
-import { ICurveV1_2AssetsAdapter } from "../../../interfaces/adapters/curve/ICurveV1_2AssetsAdapter.sol";
+import { ICurveV1_2AssetsAdapter } from "../../../interfaces/curve/ICurveV1_2AssetsAdapter.sol";
 import { Tokens } from "../../config/Tokens.sol";
 import { Contracts } from "../../config/SupportedContracts.sol";
 
@@ -112,7 +112,9 @@ contract Live_MetapoolTest is DSTest, LiveEnvHelper {
         bool isAdapter
     ) internal {
         if (isAdapter) {
-            ICurveV1_2AssetsAdapter pool = ICurveV1_2AssetsAdapter(curvePoolAddr);
+            ICurveV1_2AssetsAdapter pool = ICurveV1_2AssetsAdapter(
+                curvePoolAddr
+            );
 
             evm.prank(USER);
             pool.add_liquidity_one_coin(100 * WAD, 1, 50 * WAD);
@@ -122,33 +124,32 @@ contract Live_MetapoolTest is DSTest, LiveEnvHelper {
             );
 
             evm.prank(USER);
-            pool.exchange_all(1, 0, RAY / 2 / 10 ** 16);
+            pool.exchange_all(1, 0, RAY / 2 / 10**16);
             comparator.takeSnapshot(
                 "after_exchange_all",
                 accountToSaveBalances
             );
 
             evm.prank(USER);
-            pool.add_all_liquidity_one_coin(0, RAY * 10 ** 16 / 2 );
+            pool.add_all_liquidity_one_coin(0, (RAY * 10**16) / 2);
             comparator.takeSnapshot(
                 "after_add_all_liquidity_one_coin",
                 accountToSaveBalances
             );
 
             evm.prank(USER);
-            pool.remove_all_liquidity_one_coin(0, RAY / 2 / 10 ** 16);
+            pool.remove_all_liquidity_one_coin(0, RAY / 2 / 10**16);
             comparator.takeSnapshot(
                 "after_remove_all_liquidity_one_coin",
                 accountToSaveBalances
             );
 
             evm.prank(USER);
-            pool.exchange_all_underlying(0, 2, RAY * 10 ** 4 / 2);
+            pool.exchange_all_underlying(0, 2, (RAY * 10**4) / 2);
             comparator.takeSnapshot(
                 "after_exchange_all_underlying",
                 accountToSaveBalances
             );
-
         } else {
             ICurvePool2Assets pool = ICurvePool2Assets(curvePoolAddr);
 
@@ -159,37 +160,60 @@ contract Live_MetapoolTest is DSTest, LiveEnvHelper {
                 accountToSaveBalances
             );
 
-            uint256 balanceToSwap = tokenTestSuite.balanceOf(Tokens._3Crv, accountToSaveBalances) - 1;
+            uint256 balanceToSwap = tokenTestSuite.balanceOf(
+                Tokens._3Crv,
+                accountToSaveBalances
+            ) - 1;
             evm.prank(USER);
-            pool.exchange(1, 0, balanceToSwap, balanceToSwap / (2 * 10 ** 16));
+            pool.exchange(1, 0, balanceToSwap, balanceToSwap / (2 * 10**16));
             comparator.takeSnapshot(
                 "after_exchange_all",
                 accountToSaveBalances
             );
-            
-            balanceToSwap = tokenTestSuite.balanceOf(Tokens.GUSD, accountToSaveBalances) - 1;
+
+            balanceToSwap =
+                tokenTestSuite.balanceOf(Tokens.GUSD, accountToSaveBalances) -
+                1;
             evm.prank(USER);
-            pool.add_liquidity([balanceToSwap, 0], balanceToSwap * 10 ** 16 / 2);
+            pool.add_liquidity(
+                [balanceToSwap, 0],
+                (balanceToSwap * 10**16) / 2
+            );
             comparator.takeSnapshot(
                 "after_add_all_liquidity_one_coin",
                 accountToSaveBalances
             );
 
-            balanceToSwap = tokenTestSuite.balanceOf(Tokens.gusd3CRV, accountToSaveBalances) - 1;
+            balanceToSwap =
+                tokenTestSuite.balanceOf(
+                    Tokens.gusd3CRV,
+                    accountToSaveBalances
+                ) -
+                1;
             evm.prank(USER);
-            pool.remove_liquidity_one_coin(balanceToSwap, 0, balanceToSwap / (2 * 10 ** 16));
+            pool.remove_liquidity_one_coin(
+                balanceToSwap,
+                0,
+                balanceToSwap / (2 * 10**16)
+            );
             comparator.takeSnapshot(
                 "after_remove_all_liquidity_one_coin",
                 accountToSaveBalances
             );
-            balanceToSwap = tokenTestSuite.balanceOf(Tokens.GUSD, accountToSaveBalances) - 1;
+            balanceToSwap =
+                tokenTestSuite.balanceOf(Tokens.GUSD, accountToSaveBalances) -
+                1;
             evm.prank(USER);
-            pool.exchange_underlying(0, 2, balanceToSwap, balanceToSwap * 10 ** 4 / 2);
+            pool.exchange_underlying(
+                0,
+                2,
+                balanceToSwap,
+                (balanceToSwap * 10**4) / 2
+            );
             comparator.takeSnapshot(
                 "after_exchange_all_underlying",
                 accountToSaveBalances
             );
-
         }
     }
 

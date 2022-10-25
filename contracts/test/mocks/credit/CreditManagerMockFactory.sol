@@ -7,8 +7,8 @@ import { ContractsRegister } from "@gearbox-protocol/core-v2/contracts/core/Cont
 import { PriceOracle } from "@gearbox-protocol/core-v2/contracts/oracles/PriceOracle.sol";
 import { Adapter } from "../../../factories/CreditManagerFactory.sol";
 
-import { IConvexV1BaseRewardPoolAdapter } from "../../../interfaces/adapters/convex/IConvexV1BaseRewardPoolAdapter.sol";
-import { IConvexV1BoosterAdapter } from "../../../interfaces/adapters/convex/IConvexV1BoosterAdapter.sol";
+import { IConvexV1BaseRewardPoolAdapter } from "../../../interfaces/convex/IConvexV1BaseRewardPoolAdapter.sol";
+import { IConvexV1BoosterAdapter } from "../../../interfaces/convex/IConvexV1BoosterAdapter.sol";
 
 import { PoolService } from "@gearbox-protocol/core-v2/contracts/pool/PoolService.sol";
 import { CreditManagerLiveMock } from "./CreditManagerLiveMock.sol";

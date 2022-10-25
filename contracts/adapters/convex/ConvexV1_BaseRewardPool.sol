@@ -12,7 +12,7 @@ import { IBooster } from "../../integrations/convex/IBooster.sol";
 import { IBaseRewardPool } from "../../integrations/convex/IBaseRewardPool.sol";
 import { IRewards } from "../../integrations/convex/Interfaces.sol";
 import { AdapterType } from "@gearbox-protocol/core-v2/contracts/interfaces/adapters/IAdapter.sol";
-import { IConvexV1BaseRewardPoolAdapter } from "../../interfaces/adapters/convex/IConvexV1BaseRewardPoolAdapter.sol";
+import { IConvexV1BaseRewardPoolAdapter } from "../../interfaces/convex/IConvexV1BaseRewardPoolAdapter.sol";
 
 // EXCEPTIONS
 import { NotImplementedException } from "@gearbox-protocol/core-v2/contracts/interfaces/IErrors.sol";

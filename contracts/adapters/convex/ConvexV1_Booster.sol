@@ -7,7 +7,7 @@ import { ReentrancyGuard } from "@openzeppelin/contracts/security/ReentrancyGuar
 
 import { AbstractAdapter } from "@gearbox-protocol/core-v2/contracts/adapters/AbstractAdapter.sol";
 import { IBooster } from "../../integrations/convex/IBooster.sol";
-import { IConvexV1BaseRewardPoolAdapter } from "../../interfaces/adapters/convex/IConvexV1BaseRewardPoolAdapter.sol";
+import { IConvexV1BaseRewardPoolAdapter } from "../../interfaces/convex/IConvexV1BaseRewardPoolAdapter.sol";
 
 import { IAdapter, AdapterType } from "@gearbox-protocol/core-v2/contracts/interfaces/adapters/IAdapter.sol";
 

@@ -8,7 +8,7 @@ import { ICurvePool } from "../../integrations/curve/ICurvePool.sol";
 import { ICurvePool2Assets } from "../../integrations/curve/ICurvePool_2.sol";
 import { ICurvePool3Assets } from "../../integrations/curve/ICurvePool_3.sol";
 import { ICurvePool4Assets } from "../../integrations/curve/ICurvePool_4.sol";
-import { ICurveV1Adapter } from "../../interfaces/adapters/curve/ICurveV1Adapter.sol";
+import { ICurveV1Adapter } from "../../interfaces/curve/ICurveV1Adapter.sol";
 
 interface CurveV1Multicaller {}
 

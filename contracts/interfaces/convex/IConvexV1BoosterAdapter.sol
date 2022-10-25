@@ -4,7 +4,7 @@
 pragma solidity ^0.8.10;
 
 import { IAdapter } from "@gearbox-protocol/core-v2/contracts/interfaces/adapters/IAdapter.sol";
-import { IBooster } from "../../../integrations/convex/IBooster.sol";
+import { IBooster } from "../../integrations/convex/IBooster.sol";
 
 interface IConvexV1BoosterAdapter is IAdapter, IBooster {
     /// @dev Scans the Credit Manager's allowed contracts for Convex pool

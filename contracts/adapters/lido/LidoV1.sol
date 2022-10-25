@@ -15,7 +15,7 @@ import { IAdapter, AdapterType } from "@gearbox-protocol/core-v2/contracts/inter
 import { ICreditManagerV2 } from "@gearbox-protocol/core-v2/contracts/interfaces/ICreditManagerV2.sol";
 import { IPoolService } from "@gearbox-protocol/core-v2/contracts/interfaces/IPoolService.sol";
 
-import { ILidoV1Adapter } from "../../interfaces/adapters/lido/ILidoV1Adapter.sol";
+import { ILidoV1Adapter } from "../../interfaces/lido/ILidoV1Adapter.sol";
 import { ACLTrait } from "@gearbox-protocol/core-v2/contracts/core/ACLTrait.sol";
 import { LidoV1Gateway } from "./LidoV1_WETHGateway.sol";
 
