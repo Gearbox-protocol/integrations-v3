@@ -148,13 +148,7 @@ It is recommended to set `$ETH_MAINNET_BLOCK` or `$ETH_GOERLI_BLOCK` to run the 
 
 ## Licensing
 
-The primary license for Gearbox contracts is the Business Source License 1.1 (BUSL-1.1), see [LICENSE](https://github.com/Gearbox-protocol/gearbox-contracts/blob/master/LICENSE). The files licensed under the BUSL-1.1 have appropriate SPDX headers.
-
-###
-
-- The files in `contracts/adapters`, `contracts/interfaces` are licensed under GPL-2.0-or-later.
-- The files in `contracts/integrations` are either licensed under GPL-2.0-or-later or unlicensed (as indicated in their SPDX headers).
-- The files in `scripts`, `contracts/test`,`contracts/mocks` are unlicensed.
+The primary license for the Gearbox-protocol/integrations-v2 is the Business Source License 1.1 (BUSL-1.1), see [LICENSE](https://github.com/Gearbox-protocol/integrations-v2/blob/master/LICENSE). The files which are NOT licensed under the BUSL-1.1 have appropriate SPDX headers.
 
 ## Disclaimer
 
