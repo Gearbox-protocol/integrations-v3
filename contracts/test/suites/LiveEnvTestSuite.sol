@@ -98,6 +98,8 @@ contract LiveEnvTestSuite is CreditConfigLive {
 
                 CreditManagerData[] memory cmList = dc.getCreditManagersList();
 
+                bool mintedNFT = false;
+
                 for (uint256 i = 0; i < cmList.length; ++i) {
                     if (cmList[i].version == 2) {
                         Tokens underlyingT = tokenTestSuite.tokenIndexes(
@@ -117,6 +119,19 @@ contract LiveEnvTestSuite is CreditConfigLive {
                         string memory underlyingSymbol = tokenTestSuite.symbols(
                             underlyingT
                         );
+
+                        if (
+                            creditFacades[underlyingT].whitelisted() &&
+                            !mintedNFT
+                        ) {
+                            DegenNFT dnft = DegenNFT(
+                                creditFacades[underlyingT].degenNFT()
+                            );
+
+                            evm.prank(dnft.minter());
+                            dnft.mint(USER, 30);
+                            mintedNFT = true;
+                        }
 
                         evm.label(
                             cmList[i].creditFacade,

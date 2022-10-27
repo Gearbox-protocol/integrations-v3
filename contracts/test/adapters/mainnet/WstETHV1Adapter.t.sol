@@ -48,32 +48,4 @@ contract LiveWstETHV1AdapterTest is DSTest, LiveEnvHelper {
         cf.openCreditAccount(amount, USER, 300, 0);
         evm.stopPrank();
     }
-
-    /// @dev [WSTETHA-2]: pool works
-    function test_live_WSTETHA_02_pool_works() public liveOnly {
-        CreditManager cm = lts.creditManagers(Tokens.USDC);
-
-        PoolService ps = PoolService(cm.pool());
-
-        evm.prank(MAINNET_CONFIGURATOR);
-        ps.setExpectedLiquidityLimit(type(uint256).max);
-
-        emit log_uint(ps.calcLinearCumulative_RAY());
-        emit log_uint(ps.expectedLiquidityLimit());
-
-        tokenTestSuite.mint(Tokens.DAI, USER, 2 * RAY);
-
-        tokenTestSuite.approve(
-            Tokens.DAI,
-            USER,
-            address(ps),
-            type(uint256).max
-        );
-
-        evm.prank(USER);
-        ps.addLiquidity(RAY, USER, 0);
-
-        evm.prank(USER);
-        ps.addLiquidity(RAY, USER, 0);
-    }
 }
