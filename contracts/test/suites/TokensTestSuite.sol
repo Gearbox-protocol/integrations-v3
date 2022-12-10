@@ -22,6 +22,8 @@ import { TokensDataLive } from "../config/TokensDataLive.sol";
 import { TokensTestSuiteHelper } from "@gearbox-protocol/core-v2/contracts/test/suites/TokensTestSuiteHelper.sol";
 import { IstETH } from "../../integrations/lido/IstETH.sol";
 
+import "../lib/constants.sol";
+
 struct TokenData {
     Tokens id;
     address addr;
@@ -77,6 +79,8 @@ contract TokensTestSuite is DSTest, TokensTestSuiteHelper {
                 symbols[td[i].id] = td[i].symbol;
                 tokenTypes[td[i].id] = td[i].tokenType;
 
+                _flushAccounts(td[i].addr);
+
                 evm.label(td[i].addr, td[i].symbol);
             }
         }
@@ -94,6 +98,27 @@ contract TokensTestSuite is DSTest, TokensTestSuiteHelper {
     //     require(index != Tokens.NO_TOKEN, "No token with such address");
     //     mint(index, to, amount);
     // }
+
+    function _flushAccounts(address token) internal {
+        _flushAccount(token, DUMB_ADDRESS);
+        _flushAccount(token, DUMB_ADDRESS2);
+        _flushAccount(token, DUMB_ADDRESS3);
+        _flushAccount(token, DUMB_ADDRESS4);
+
+        _flushAccount(token, USER);
+        _flushAccount(token, LIQUIDATOR);
+        _flushAccount(token, FRIEND);
+        _flushAccount(token, FRIEND2);
+    }
+
+    function _flushAccount(address token, address account) internal {
+        uint256 balance = IERC20(token).balanceOf(account);
+
+        if (balance > 0) {
+            evm.prank(account);
+            IERC20(token).transfer(address(type(uint160).max), balance);
+        }
+    }
 
     function balanceOf(Tokens t, address holder)
         public
@@ -242,11 +267,7 @@ contract TokensTestSuite is DSTest, TokensTestSuiteHelper {
         uint256 len = tokensToApprove.length;
         unchecked {
             for (uint256 i; i < len; ++i) {
-                approve(
-                    tokensToApprove[i],
-                    holder,
-                    target
-                );
+                approve(tokensToApprove[i], holder, target);
             }
         }
     }

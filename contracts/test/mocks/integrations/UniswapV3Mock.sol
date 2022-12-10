@@ -11,6 +11,8 @@ import { ISwapRouter } from "../../../integrations/uniswap/IUniswapV3.sol";
 import { RAY } from "@gearbox-protocol/core-v2/contracts/libraries/Constants.sol";
 import "@gearbox-protocol/core-v2/contracts/test/lib/test.sol";
 
+import "hardhat/console.sol";
+
 uint256 constant ADDR_SIZE = 20;
 uint256 constant FEE_SIZE = 3;
 
@@ -236,10 +238,10 @@ contract UniswapV3Mock is ISwapRouter, DSTest {
     {
         (tokenA, , ) = path.decodeFirstPool();
 
-        if (path.hasMultiplePools()) {
+        while (path.hasMultiplePools()) {
             path = path.skipToken();
-        } else {
-            (, tokenB, ) = path.decodeFirstPool();
         }
+
+        (, tokenB, ) = path.decodeFirstPool();
     }
 }

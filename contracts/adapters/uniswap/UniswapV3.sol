@@ -8,7 +8,11 @@ import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { ReentrancyGuard } from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 import { AbstractAdapter } from "@gearbox-protocol/core-v2/contracts/adapters/AbstractAdapter.sol";
+import { IPoolService } from "@gearbox-protocol/core-v2/contracts/interfaces/IPoolService.sol";
+import { ICreditManagerV2 } from "@gearbox-protocol/core-v2/contracts/interfaces/ICreditManagerV2.sol";
+
 import { IUniswapV3Adapter } from "../../interfaces/uniswap/IUniswapV3Adapter.sol";
+import { IUniswapPathChecker } from "../../interfaces/uniswap/IUniswapPathChecker.sol";
 import { AdapterType } from "@gearbox-protocol/core-v2/contracts/interfaces/adapters/IAdapter.sol";
 import { ISwapRouter } from "../../integrations/uniswap/IUniswapV3.sol";
 import { BytesLib } from "../../integrations/uniswap/BytesLib.sol";
@@ -27,6 +31,9 @@ uint256 constant MIN_PATH_LENGTH = 2 * ADDR_SIZE + FEE_SIZE;
 /// @dev Number of bytes in path per single token
 uint256 constant ADDR_PLUS_FEE_LENGTH = ADDR_SIZE + FEE_SIZE;
 
+/// @dev Maximal allowed path length in bytes (3 hops)
+uint256 constant MAX_PATH_LENGTH = 4 * ADDR_SIZE + 3 * FEE_SIZE;
+
 /// @title UniswapV3 Router adapter
 contract UniswapV3Adapter is
     AbstractAdapter,
@@ -39,12 +46,19 @@ contract UniswapV3Adapter is
         AdapterType.UNISWAP_V3_ROUTER;
     uint16 public constant _gearboxAdapterVersion = 2;
 
+    /// @dev A contract used to perform sanity checks on paths
+    IUniswapPathChecker public immutable pathChecker;
+
     /// @dev Constructor
     /// @param _creditManager Address Credit manager
     /// @param _router Address of ISwapRouter
-    constructor(address _creditManager, address _router)
-        AbstractAdapter(_creditManager, _router)
-    {}
+    constructor(
+        address _creditManager,
+        address _router,
+        address _pathChecker
+    ) AbstractAdapter(_creditManager, _router) {
+        pathChecker = IUniswapPathChecker(_pathChecker);
+    }
 
     /// @notice Sends an order to swap `amountIn` of one token for as much as possible of another token
     /// - Makes a max allowance fast check call, replacing the recipient with the Credit Account
@@ -155,7 +169,12 @@ contract UniswapV3Adapter is
             msg.sender
         ); // F:[AUV3-1]
 
-        (address tokenIn, address tokenOut) = _extractTokens(params.path); // F:[AUV3-4]
+        (bool valid, address tokenIn, address tokenOut) = pathChecker
+            .parseUniV3Path(params.path);
+
+        if (!valid) {
+            revert InvalidPathException();
+        }
 
         ExactInputParams memory paramsUpdate = params; // F:[AUV3-4]
         paramsUpdate.recipient = creditAccount; // F:[AUV3-4]
@@ -193,7 +212,12 @@ contract UniswapV3Adapter is
             msg.sender
         ); // F:[AUV3-1]
 
-        (address tokenIn, address tokenOut) = _extractTokens(params.path); // F:[AUV3-5]
+        (bool valid, address tokenIn, address tokenOut) = pathChecker
+            .parseUniV3Path(params.path);
+
+        if (!valid) {
+            revert InvalidPathException();
+        }
 
         uint256 balanceInBefore = IERC20(tokenIn).balanceOf(creditAccount); // F:[AUV3-5]
 
@@ -277,7 +301,12 @@ contract UniswapV3Adapter is
             msg.sender
         ); // F:[AUV3-1]
 
-        (address tokenOut, address tokenIn) = _extractTokens(params.path); // F:[AUV3-7]
+        (bool valid, address tokenOut, address tokenIn) = pathChecker
+            .parseUniV3Path(params.path);
+
+        if (!valid) {
+            revert InvalidPathException();
+        }
 
         ExactOutputParams memory paramsUpdate = params; // F:[AUV3-7]
         paramsUpdate.recipient = creditAccount; // F:[AUV3-7]
@@ -296,22 +325,5 @@ contract UniswapV3Adapter is
             ),
             (uint256)
         ); // F:[AUV3-7]
-    }
-
-    /// @dev Returns the input and the output token of a specified path
-    /// @param path The swap path encoded according to the UniswapV3 standard
-    /// @notice Discards any extra bytes that are less than ADDR_PLUS_FEE_LENGTH
-    function _extractTokens(bytes memory path)
-        internal
-        pure
-        returns (address tokenA, address tokenB)
-    {
-        if (path.length < MIN_PATH_LENGTH)
-            revert IncorrectPathLengthException();
-        tokenA = path.toAddress(0);
-        tokenB = path.toAddress(
-            ((path.length - ADDR_SIZE) / ADDR_PLUS_FEE_LENGTH) *
-                ADDR_PLUS_FEE_LENGTH
-        );
     }
 }

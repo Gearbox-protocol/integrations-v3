@@ -7,9 +7,13 @@ import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { ReentrancyGuard } from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 import { AbstractAdapter } from "@gearbox-protocol/core-v2/contracts/adapters/AbstractAdapter.sol";
+import { IPoolService } from "@gearbox-protocol/core-v2/contracts/interfaces/IPoolService.sol";
+import { ICreditManagerV2 } from "@gearbox-protocol/core-v2/contracts/interfaces/ICreditManagerV2.sol";
+
 import { IUniswapV2Router02 } from "../../integrations/uniswap/IUniswapV2Router02.sol";
 import { IUniswapV2Adapter } from "../../interfaces/uniswap/IUniswapV2Adapter.sol";
 import { IAdapter, AdapterType } from "@gearbox-protocol/core-v2/contracts/interfaces/adapters/IAdapter.sol";
+import { IUniswapPathChecker } from "../../interfaces/uniswap/IUniswapPathChecker.sol";
 
 import { RAY } from "@gearbox-protocol/core-v2/contracts/libraries/Constants.sol";
 
@@ -26,12 +30,19 @@ contract UniswapV2Adapter is
         AdapterType.UNISWAP_V2_ROUTER;
     uint16 public constant _gearboxAdapterVersion = 2;
 
+    /// @dev A contract used to perform sanity checks on paths
+    IUniswapPathChecker public immutable pathChecker;
+
     /// @dev Constructor
     /// @param _creditManager Address Credit manager
     /// @param _router Address of IUniswapV2Router02
-    constructor(address _creditManager, address _router)
-        AbstractAdapter(_creditManager, _router)
-    {}
+    constructor(
+        address _creditManager,
+        address _router,
+        address _pathChecker
+    ) AbstractAdapter(_creditManager, _router) {
+        pathChecker = IUniswapPathChecker(_pathChecker);
+    }
 
     /**
      * @dev Sends an order to swap tokens to exact tokens using a Uniswap-compatible protocol
@@ -61,8 +72,12 @@ contract UniswapV2Adapter is
             msg.sender
         ); // F:[AUV2-1]
 
-        address tokenIn = path[0]; // F:[AUV2-2]
-        address tokenOut = path[path.length - 1]; // F:[AUV2-2]
+        (bool valid, address tokenIn, address tokenOut) = pathChecker
+            .parseUniV2Path(path); // F:[AUV2-2, UPC-3]
+
+        if (!valid) {
+            revert InvalidPathException(); // F:[AUV2-10]
+        }
 
         amounts = abi.decode(
             _executeMaxAllowanceFastCheck(
@@ -112,8 +127,12 @@ contract UniswapV2Adapter is
             msg.sender
         ); // F:[AUV2-1]
 
-        address tokenIn = path[0]; // F:[AUV2-3]
-        address tokenOut = path[path.length - 1]; // F:[AUV2-3]
+        (bool valid, address tokenIn, address tokenOut) = pathChecker
+            .parseUniV2Path(path); // F:[AUV2-3, UPC-3]
+
+        if (!valid) {
+            revert InvalidPathException(); // F:[AUV2-10]
+        }
 
         amounts = abi.decode(
             _executeMaxAllowanceFastCheck(
@@ -159,8 +178,17 @@ contract UniswapV2Adapter is
             msg.sender
         ); // F:[AUV2-1]
 
-        address tokenIn = path[0]; // F:[AUV2-4]
-        address tokenOut = path[path.length - 1]; // F:[AUV2-4]
+        address tokenIn;
+        address tokenOut;
+
+        {
+            bool valid;
+            (valid, tokenIn, tokenOut) = pathChecker.parseUniV2Path(path); // F:[AUV2-4, UPC-3]
+
+            if (!valid) {
+                revert InvalidPathException(); // F:[AUV2-10]
+            }
+        }
 
         uint256 balanceInBefore = IERC20(tokenIn).balanceOf(creditAccount); // F:[AUV2-4]
 
