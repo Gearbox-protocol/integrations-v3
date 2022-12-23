@@ -53,7 +53,7 @@ struct ExitPoolRequest {
     bool toInternalBalance;
 }
 
-interface IBalancerVaultGetters {
+interface IBalancerV2VaultGetters {
     function getPool(bytes32 poolId)
         external
         view
@@ -79,7 +79,7 @@ interface IBalancerVaultGetters {
         );
 }
 
-interface IBalancerV2Vault is IBalancerVaultGetters {
+interface IBalancerV2Vault is IBalancerV2VaultGetters {
     function batchSwap(
         SwapKind kind,
         BatchSwapStep[] memory swaps,
