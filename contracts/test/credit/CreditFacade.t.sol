@@ -2733,10 +2733,20 @@ contract CreditFacadeTest is
             DAI_ACCOUNT_AMOUNT
         );
 
-        UniswapV2Adapter adapter = new UniswapV2Adapter(
-            address(creditManager),
-            address(uniswapMock)
-        );
+        UniswapV2Adapter adapter;
+
+        {
+            address[] memory connectors = new address[](2);
+
+            connectors[0] = tokenTestSuite.addressOf(Tokens.USDC);
+            connectors[1] = tokenTestSuite.addressOf(Tokens.USDT);
+
+            adapter = new UniswapV2Adapter(
+                address(creditManager),
+                address(uniswapMock),
+                connectors
+            );
+        }
 
         evm.prank(CONFIGURATOR);
         creditConfigurator.allowContract(

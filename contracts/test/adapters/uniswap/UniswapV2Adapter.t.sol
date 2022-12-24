@@ -7,7 +7,7 @@ import { ICreditManagerV2Exceptions } from "@gearbox-protocol/core-v2/contracts/
 
 import { IUniswapV2Router02 } from "../../../integrations/uniswap/IUniswapV2Router02.sol";
 import { UniswapV2Adapter } from "../../../adapters/uniswap/UniswapV2.sol";
-import { IUniswapV2Adapter } from "../../../interfaces/uniswap/IUniswapV2Adapter.sol";
+import { IUniswapV2Adapter, IUniswapV2AdapterExceptions } from "../../../interfaces/uniswap/IUniswapV2Adapter.sol";
 import { UniswapV2Mock } from "../../mocks/integrations/UniswapV2Mock.sol";
 
 import { Tokens } from "../../suites/TokensTestSuite.sol";
@@ -18,7 +18,10 @@ import { AdapterTestHelper } from "../AdapterTestHelper.sol";
 
 /// @title UniswapV2AdapterTest
 /// @notice Designed for unit test purposes only
-contract UniswapV2AdapterTest is AdapterTestHelper {
+contract UniswapV2AdapterTest is
+    AdapterTestHelper,
+    IUniswapV2AdapterExceptions
+{
     IUniswapV2Adapter public adapter;
     UniswapV2Mock public uniswapMock;
     uint256 public deadline;
@@ -34,15 +37,39 @@ contract UniswapV2AdapterTest is AdapterTestHelper {
             RAY / DAI_WETH_RATE
         );
 
+        uniswapMock.setRate(
+            tokenTestSuite.addressOf(Tokens.DAI),
+            tokenTestSuite.addressOf(Tokens.USDC),
+            RAY
+        );
+
+        uniswapMock.setRate(
+            tokenTestSuite.addressOf(Tokens.USDC),
+            tokenTestSuite.addressOf(Tokens.USDT),
+            RAY
+        );
+
+        uniswapMock.setRate(
+            tokenTestSuite.addressOf(Tokens.USDT),
+            tokenTestSuite.addressOf(Tokens.WETH),
+            RAY / DAI_WETH_RATE
+        );
+
         tokenTestSuite.mint(
             Tokens.WETH,
             address(uniswapMock),
             (2 * DAI_ACCOUNT_AMOUNT) / DAI_WETH_RATE
         );
 
+        address[] memory connectors = new address[](2);
+
+        connectors[0] = tokenTestSuite.addressOf(Tokens.USDC);
+        connectors[1] = tokenTestSuite.addressOf(Tokens.USDT);
+
         adapter = new UniswapV2Adapter(
             address(creditManager),
-            address(uniswapMock)
+            address(uniswapMock),
+            connectors
         );
 
         evm.prank(CONFIGURATOR);
@@ -462,5 +489,102 @@ contract UniswapV2AdapterTest is AdapterTestHelper {
         for (uint256 i = 0; i < amounts0.length; i++) {
             assertEq(amounts0[i], amounts1[i]);
         }
+    }
+
+    /// @dev [AUV2-10]: Path validity checks are correct
+    function test_AUV2_10_path_validity_checks_are_correct() public {
+        _openTestCreditAccount();
+
+        address[] memory path = new address[](5);
+        path[0] = creditManager.underlying();
+        path[1] = tokenTestSuite.addressOf(Tokens.USDC);
+        path[2] = tokenTestSuite.addressOf(Tokens.USDT);
+        path[3] = tokenTestSuite.addressOf(Tokens.LINK);
+        path[4] = tokenTestSuite.addressOf(Tokens.WETH);
+
+        evm.expectRevert(InvalidPathException.selector);
+        evm.prank(USER);
+        adapter.swapExactTokensForTokens(
+            DAI_EXCHANGE_AMOUNT,
+            0,
+            path,
+            address(0),
+            deadline
+        );
+
+        evm.expectRevert(InvalidPathException.selector);
+        evm.prank(USER);
+        adapter.swapTokensForExactTokens(
+            DAI_EXCHANGE_AMOUNT / DAI_WETH_RATE / 2,
+            DAI_EXCHANGE_AMOUNT,
+            path,
+            address(0),
+            deadline
+        );
+
+        evm.expectRevert(InvalidPathException.selector);
+        evm.prank(USER);
+        adapter.swapAllTokensForTokens(
+            ((RAY / DAI_WETH_RATE) * 997) / 1000,
+            path,
+            _getUniswapDeadline()
+        );
+
+        path = new address[](4);
+        path[0] = creditManager.underlying();
+        path[1] = tokenTestSuite.addressOf(Tokens.USDC);
+        path[2] = tokenTestSuite.addressOf(Tokens.LINK);
+        path[3] = tokenTestSuite.addressOf(Tokens.WETH);
+
+        evm.expectRevert(InvalidPathException.selector);
+        evm.prank(USER);
+        adapter.swapExactTokensForTokens(
+            DAI_EXCHANGE_AMOUNT,
+            0,
+            path,
+            address(0),
+            deadline
+        );
+
+        evm.expectRevert(InvalidPathException.selector);
+        evm.prank(USER);
+        adapter.swapExactTokensForTokens(
+            DAI_EXCHANGE_AMOUNT,
+            0,
+            path,
+            address(0),
+            deadline
+        );
+
+        path = new address[](4);
+        path[0] = creditManager.underlying();
+        path[1] = tokenTestSuite.addressOf(Tokens.LINK);
+        path[2] = tokenTestSuite.addressOf(Tokens.USDT);
+        path[3] = tokenTestSuite.addressOf(Tokens.WETH);
+
+        evm.expectRevert(InvalidPathException.selector);
+        evm.prank(USER);
+        adapter.swapExactTokensForTokens(
+            DAI_EXCHANGE_AMOUNT,
+            0,
+            path,
+            address(0),
+            deadline
+        );
+
+        path = new address[](4);
+        path[0] = creditManager.underlying();
+        path[1] = tokenTestSuite.addressOf(Tokens.USDC);
+        path[2] = tokenTestSuite.addressOf(Tokens.USDT);
+        path[3] = tokenTestSuite.addressOf(Tokens.WETH);
+
+        evm.prank(USER);
+        adapter.swapExactTokensForTokens(
+            DAI_EXCHANGE_AMOUNT,
+            0,
+            path,
+            address(0),
+            deadline
+        );
     }
 }
