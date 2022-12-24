@@ -3,8 +3,6 @@
 // (c) Gearbox Holdings, 2022
 pragma solidity ^0.8.10;
 
-import { Path } from "../../integrations/uniswap/Path.sol";
-
 /// @dev The length of the bytes encoded address
 uint256 constant ADDR_SIZE = 20;
 
@@ -20,9 +18,7 @@ uint256 constant ADDR_PLUS_FEE_LENGTH = ADDR_SIZE + FEE_SIZE;
 /// @dev Maximal allowed path length in bytes (3 hops)
 uint256 constant MAX_PATH_LENGTH = 4 * ADDR_SIZE + 3 * FEE_SIZE;
 
-contract UniswapPathChecker {
-    using Path for bytes;
-
+abstract contract UniswapConnectorChecker {
     address public immutable connectorToken0;
     address public immutable connectorToken1;
     address public immutable connectorToken2;
@@ -33,6 +29,8 @@ contract UniswapPathChecker {
     address public immutable connectorToken7;
     address public immutable connectorToken8;
     address public immutable connectorToken9;
+
+    uint256 public immutable numConnectors;
 
     constructor(address[] memory _connectorTokensInit) {
         address[10] memory _connectorTokens;
@@ -54,6 +52,8 @@ contract UniswapPathChecker {
         connectorToken7 = _connectorTokens[7];
         connectorToken8 = _connectorTokens[8];
         connectorToken9 = _connectorTokens[9];
+
+        numConnectors = len;
     }
 
     function isConnector(address token) public view returns (bool) {
@@ -70,62 +70,30 @@ contract UniswapPathChecker {
             token == connectorToken9;
     }
 
-    function parseUniV2Path(address[] memory path)
+    function getConnectors()
         external
         view
-        returns (
-            bool valid,
-            address tokenIn,
-            address tokenOut
-        )
+        returns (address[] memory connectors)
     {
-        valid = true;
-        tokenIn = path[0];
-        tokenOut = path[path.length - 1];
+        uint256 len = numConnectors;
 
-        uint256 len = path.length;
+        connectors = new address[](len);
 
-        if (len > 4) {
-            valid = false;
-        }
-
-        for (uint256 i = 1; i < len - 1; ) {
-            if (!isConnector(path[i])) {
-                valid = false;
-            }
+        for (uint256 i = 0; i < len; ) {
+            if (i == 0) connectors[0] = connectorToken0;
+            if (i == 1) connectors[1] = connectorToken1;
+            if (i == 2) connectors[2] = connectorToken2;
+            if (i == 3) connectors[3] = connectorToken3;
+            if (i == 4) connectors[4] = connectorToken4;
+            if (i == 5) connectors[5] = connectorToken5;
+            if (i == 6) connectors[6] = connectorToken6;
+            if (i == 7) connectors[7] = connectorToken7;
+            if (i == 8) connectors[8] = connectorToken8;
+            if (i == 9) connectors[9] = connectorToken9;
 
             unchecked {
                 ++i;
             }
         }
-    }
-
-    function parseUniV3Path(bytes memory path)
-        external
-        view
-        returns (
-            bool valid,
-            address tokenIn,
-            address tokenOut
-        )
-    {
-        valid = true;
-
-        if (path.length < MIN_PATH_LENGTH || path.length > MAX_PATH_LENGTH)
-            valid = false;
-
-        (tokenIn, , ) = path.decodeFirstPool();
-
-        while (path.hasMultiplePools()) {
-            (, address midToken, ) = path.decodeFirstPool();
-
-            if (!isConnector(midToken)) {
-                valid = false;
-            }
-
-            path = path.skipToken();
-        }
-
-        (, tokenOut, ) = path.decodeFirstPool();
     }
 }

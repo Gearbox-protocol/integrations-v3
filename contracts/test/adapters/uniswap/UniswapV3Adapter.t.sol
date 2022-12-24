@@ -9,7 +9,6 @@ import { BytesLib } from "../../../integrations/uniswap/BytesLib.sol";
 
 import { ISwapRouter } from "../../../integrations/uniswap/IUniswapV3.sol";
 import { UniswapV3Adapter } from "../../../adapters/uniswap/UniswapV3.sol";
-import { UniswapPathChecker } from "../../../adapters/uniswap/UniswapPathChecker.sol";
 import { IUniswapV3Adapter, IUniswapV3AdapterExceptions } from "../../../interfaces/uniswap/IUniswapV3Adapter.sol";
 import { UniswapV3Mock } from "../../mocks/integrations/UniswapV3Mock.sol";
 
@@ -78,12 +77,10 @@ contract UniswapV3AdapterTest is
         connectors[0] = tokenTestSuite.addressOf(Tokens.USDC);
         connectors[1] = tokenTestSuite.addressOf(Tokens.USDT);
 
-        address pathChecker = address(new UniswapPathChecker(connectors));
-
         adapter = new UniswapV3Adapter(
             address(creditManager),
             address(uniswapMock),
-            pathChecker
+            connectors
         );
 
         evm.prank(CONFIGURATOR);

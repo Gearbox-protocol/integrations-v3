@@ -19,7 +19,6 @@ import { CheatCodes, HEVM_ADDRESS } from "@gearbox-protocol/core-v2/contracts/te
 // SIMPLE ADAPTERS
 import { UniswapV2Adapter } from "../../adapters/uniswap/UniswapV2.sol";
 import { UniswapV3Adapter } from "../../adapters/uniswap/UniswapV3.sol";
-import { UniswapPathChecker } from "../../adapters/uniswap/UniswapPathChecker.sol";
 import { YearnV2Adapter } from "../../adapters/yearn/YearnV2.sol";
 import { ConvexV1BoosterAdapter } from "../../adapters/convex/ConvexV1_Booster.sol";
 import { ConvexV1ClaimZapAdapter } from "../../adapters/convex/ConvexV1_ClaimZap.sol";
@@ -83,14 +82,17 @@ contract AdapterDeployer is AdapterData, DSTest {
         }
     }
 
-    function _deployUniswapPathChecker() internal {
-        address[] memory connectors = new address[](4);
+    function _getInitConnectors()
+        internal
+        view
+        returns (address[] memory connectors)
+    {
+        connectors = new address[](4);
+
         connectors[0] = tokenTestSuite.addressOf(Tokens.DAI);
         connectors[1] = tokenTestSuite.addressOf(Tokens.USDC);
         connectors[2] = tokenTestSuite.addressOf(Tokens.WETH);
         connectors[3] = tokenTestSuite.addressOf(Tokens.FRAX);
-
-        uniswapPathChecker = address(new UniswapPathChecker(connectors));
     }
 
     function getAdapters() external view returns (Adapter[] memory) {
@@ -109,15 +111,11 @@ contract AdapterDeployer is AdapterData, DSTest {
                     result.targetContract = supportedContracts.addressOf(cnt);
 
                     if (at == AdapterType.UNISWAP_V2_ROUTER) {
-                        if (uniswapPathChecker == address(0)) {
-                            _deployUniswapPathChecker();
-                        }
-
                         result.adapter = address(
                             new UniswapV2Adapter(
                                 creditManager,
                                 result.targetContract,
-                                uniswapPathChecker
+                                _getInitConnectors()
                             )
                         );
                     } else if (at == AdapterType.UNISWAP_V3_ROUTER) {
@@ -125,7 +123,7 @@ contract AdapterDeployer is AdapterData, DSTest {
                             new UniswapV3Adapter(
                                 creditManager,
                                 result.targetContract,
-                                uniswapPathChecker
+                                _getInitConnectors()
                             )
                         );
                     }

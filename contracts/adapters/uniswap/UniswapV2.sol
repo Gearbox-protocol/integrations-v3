@@ -7,6 +7,7 @@ import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { ReentrancyGuard } from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 import { AbstractAdapter } from "@gearbox-protocol/core-v2/contracts/adapters/AbstractAdapter.sol";
+import { UniswapConnectorChecker } from "./UniswapConnectorChecker.sol";
 import { IPoolService } from "@gearbox-protocol/core-v2/contracts/interfaces/IPoolService.sol";
 import { ICreditManagerV2 } from "@gearbox-protocol/core-v2/contracts/interfaces/ICreditManagerV2.sol";
 
@@ -23,6 +24,7 @@ import { NotImplementedException } from "@gearbox-protocol/core-v2/contracts/int
 /// @title UniswapV2 Router adapter
 contract UniswapV2Adapter is
     AbstractAdapter,
+    UniswapConnectorChecker,
     IUniswapV2Adapter,
     ReentrancyGuard
 {
@@ -30,19 +32,17 @@ contract UniswapV2Adapter is
         AdapterType.UNISWAP_V2_ROUTER;
     uint16 public constant _gearboxAdapterVersion = 2;
 
-    /// @dev A contract used to perform sanity checks on paths
-    IUniswapPathChecker public immutable pathChecker;
-
     /// @dev Constructor
     /// @param _creditManager Address Credit manager
     /// @param _router Address of IUniswapV2Router02
     constructor(
         address _creditManager,
         address _router,
-        address _pathChecker
-    ) AbstractAdapter(_creditManager, _router) {
-        pathChecker = IUniswapPathChecker(_pathChecker);
-    }
+        address[] memory _connectorTokensInit
+    )
+        AbstractAdapter(_creditManager, _router)
+        UniswapConnectorChecker(_connectorTokensInit)
+    {}
 
     /**
      * @dev Sends an order to swap tokens to exact tokens using a Uniswap-compatible protocol
@@ -72,8 +72,7 @@ contract UniswapV2Adapter is
             msg.sender
         ); // F:[AUV2-1]
 
-        (bool valid, address tokenIn, address tokenOut) = pathChecker
-            .parseUniV2Path(path); // F:[AUV2-2, UPC-3]
+        (bool valid, address tokenIn, address tokenOut) = _parseUniV2Path(path); // F:[AUV2-2, UPC-3]
 
         if (!valid) {
             revert InvalidPathException(); // F:[AUV2-10]
@@ -127,8 +126,7 @@ contract UniswapV2Adapter is
             msg.sender
         ); // F:[AUV2-1]
 
-        (bool valid, address tokenIn, address tokenOut) = pathChecker
-            .parseUniV2Path(path); // F:[AUV2-3, UPC-3]
+        (bool valid, address tokenIn, address tokenOut) = _parseUniV2Path(path); // F:[AUV2-3, UPC-3]
 
         if (!valid) {
             revert InvalidPathException(); // F:[AUV2-10]
@@ -183,7 +181,7 @@ contract UniswapV2Adapter is
 
         {
             bool valid;
-            (valid, tokenIn, tokenOut) = pathChecker.parseUniV2Path(path); // F:[AUV2-4, UPC-3]
+            (valid, tokenIn, tokenOut) = _parseUniV2Path(path); // F:[AUV2-4, UPC-3]
 
             if (!valid) {
                 revert InvalidPathException(); // F:[AUV2-10]
@@ -511,5 +509,39 @@ contract UniswapV2Adapter is
         returns (uint256[] memory amounts)
     {
         return IUniswapV2Router02(targetContract).getAmountsIn(amountOut, path); // F:[AUV2-9]
+    }
+
+    /// @dev Performs sanity checks on a Uniswap V2 path and returns the input and output tokens
+    /// @param path Path to check
+    /// @notice Sanity checks include path length not being more than 4 (more than 3 hops) and intermediary tokens
+    ///         being allowed as connectors
+    function _parseUniV2Path(address[] memory path)
+        internal
+        view
+        returns (
+            bool valid,
+            address tokenIn,
+            address tokenOut
+        )
+    {
+        valid = true;
+        tokenIn = path[0];
+        tokenOut = path[path.length - 1];
+
+        uint256 len = path.length;
+
+        if (len > 4) {
+            valid = false;
+        }
+
+        for (uint256 i = 1; i < len - 1; ) {
+            if (!isConnector(path[i])) {
+                valid = false;
+            }
+
+            unchecked {
+                ++i;
+            }
+        }
     }
 }

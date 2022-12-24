@@ -44,7 +44,6 @@ import { TargetContractMock } from "@gearbox-protocol/core-v2/contracts/test/moc
 
 import { UniswapV2Mock } from "../mocks/integrations/UniswapV2Mock.sol";
 import { UniswapV2Adapter } from "../../adapters/uniswap/UniswapV2.sol";
-import { UniswapPathChecker } from "../../adapters/uniswap/UniswapPathChecker.sol";
 
 // SUITES
 import { TokensTestSuite, Tokens } from "../suites/TokensTestSuite.sol";
@@ -2742,12 +2741,10 @@ contract CreditFacadeTest is
             connectors[0] = tokenTestSuite.addressOf(Tokens.USDC);
             connectors[1] = tokenTestSuite.addressOf(Tokens.USDT);
 
-            address pathChecker = address(new UniswapPathChecker(connectors));
-
             adapter = new UniswapV2Adapter(
                 address(creditManager),
                 address(uniswapMock),
-                pathChecker
+                connectors
             );
         }
 

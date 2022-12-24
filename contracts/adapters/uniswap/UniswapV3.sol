@@ -8,6 +8,7 @@ import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { ReentrancyGuard } from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 import { AbstractAdapter } from "@gearbox-protocol/core-v2/contracts/adapters/AbstractAdapter.sol";
+import { UniswapConnectorChecker } from "./UniswapConnectorChecker.sol";
 import { IPoolService } from "@gearbox-protocol/core-v2/contracts/interfaces/IPoolService.sol";
 import { ICreditManagerV2 } from "@gearbox-protocol/core-v2/contracts/interfaces/ICreditManagerV2.sol";
 
@@ -15,7 +16,7 @@ import { IUniswapV3Adapter } from "../../interfaces/uniswap/IUniswapV3Adapter.so
 import { IUniswapPathChecker } from "../../interfaces/uniswap/IUniswapPathChecker.sol";
 import { AdapterType } from "@gearbox-protocol/core-v2/contracts/interfaces/adapters/IAdapter.sol";
 import { ISwapRouter } from "../../integrations/uniswap/IUniswapV3.sol";
-import { BytesLib } from "../../integrations/uniswap/BytesLib.sol";
+import { Path } from "../../integrations/uniswap/Path.sol";
 
 import { RAY } from "@gearbox-protocol/core-v2/contracts/libraries/Constants.sol";
 
@@ -37,17 +38,15 @@ uint256 constant MAX_PATH_LENGTH = 4 * ADDR_SIZE + 3 * FEE_SIZE;
 /// @title UniswapV3 Router adapter
 contract UniswapV3Adapter is
     AbstractAdapter,
+    UniswapConnectorChecker,
     IUniswapV3Adapter,
     ReentrancyGuard
 {
-    using BytesLib for bytes;
+    using Path for bytes;
 
     AdapterType public constant _gearboxAdapterType =
         AdapterType.UNISWAP_V3_ROUTER;
     uint16 public constant _gearboxAdapterVersion = 2;
-
-    /// @dev A contract used to perform sanity checks on paths
-    IUniswapPathChecker public immutable pathChecker;
 
     /// @dev Constructor
     /// @param _creditManager Address Credit manager
@@ -55,10 +54,11 @@ contract UniswapV3Adapter is
     constructor(
         address _creditManager,
         address _router,
-        address _pathChecker
-    ) AbstractAdapter(_creditManager, _router) {
-        pathChecker = IUniswapPathChecker(_pathChecker);
-    }
+        address[] memory _connectorTokensInit
+    )
+        AbstractAdapter(_creditManager, _router)
+        UniswapConnectorChecker(_connectorTokensInit)
+    {}
 
     /// @notice Sends an order to swap `amountIn` of one token for as much as possible of another token
     /// - Makes a max allowance fast check call, replacing the recipient with the Credit Account
@@ -169,8 +169,9 @@ contract UniswapV3Adapter is
             msg.sender
         ); // F:[AUV3-1]
 
-        (bool valid, address tokenIn, address tokenOut) = pathChecker
-            .parseUniV3Path(params.path);
+        (bool valid, address tokenIn, address tokenOut) = _parseUniV3Path(
+            params.path
+        );
 
         if (!valid) {
             revert InvalidPathException();
@@ -212,8 +213,9 @@ contract UniswapV3Adapter is
             msg.sender
         ); // F:[AUV3-1]
 
-        (bool valid, address tokenIn, address tokenOut) = pathChecker
-            .parseUniV3Path(params.path);
+        (bool valid, address tokenIn, address tokenOut) = _parseUniV3Path(
+            params.path
+        );
 
         if (!valid) {
             revert InvalidPathException();
@@ -301,8 +303,9 @@ contract UniswapV3Adapter is
             msg.sender
         ); // F:[AUV3-1]
 
-        (bool valid, address tokenOut, address tokenIn) = pathChecker
-            .parseUniV3Path(params.path);
+        (bool valid, address tokenOut, address tokenIn) = _parseUniV3Path(
+            params.path
+        );
 
         if (!valid) {
             revert InvalidPathException();
@@ -325,5 +328,38 @@ contract UniswapV3Adapter is
             ),
             (uint256)
         ); // F:[AUV3-7]
+    }
+
+    /// @dev Performs sanity checks on a Uniswap V3 path and returns the input and output tokens
+    /// @param path Path to check
+    /// @notice Sanity checks include path length not being more than 3 hops and intermediary tokens
+    ///         being allowed as connectors
+    function _parseUniV3Path(bytes memory path)
+        internal
+        view
+        returns (
+            bool valid,
+            address tokenIn,
+            address tokenOut
+        )
+    {
+        valid = true;
+
+        if (path.length < MIN_PATH_LENGTH || path.length > MAX_PATH_LENGTH)
+            valid = false;
+
+        (tokenIn, , ) = path.decodeFirstPool();
+
+        while (path.hasMultiplePools()) {
+            (, address midToken, ) = path.decodeFirstPool();
+
+            if (!isConnector(midToken)) {
+                valid = false;
+            }
+
+            path = path.skipToken();
+        }
+
+        (, tokenOut, ) = path.decodeFirstPool();
     }
 }

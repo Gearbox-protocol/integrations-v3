@@ -7,7 +7,6 @@ import { ICreditManagerV2Exceptions } from "@gearbox-protocol/core-v2/contracts/
 
 import { IUniswapV2Router02 } from "../../../integrations/uniswap/IUniswapV2Router02.sol";
 import { UniswapV2Adapter } from "../../../adapters/uniswap/UniswapV2.sol";
-import { UniswapPathChecker } from "../../../adapters/uniswap/UniswapPathChecker.sol";
 import { IUniswapV2Adapter, IUniswapV2AdapterExceptions } from "../../../interfaces/uniswap/IUniswapV2Adapter.sol";
 import { UniswapV2Mock } from "../../mocks/integrations/UniswapV2Mock.sol";
 
@@ -67,12 +66,10 @@ contract UniswapV2AdapterTest is
         connectors[0] = tokenTestSuite.addressOf(Tokens.USDC);
         connectors[1] = tokenTestSuite.addressOf(Tokens.USDT);
 
-        address pathChecker = address(new UniswapPathChecker(connectors));
-
         adapter = new UniswapV2Adapter(
             address(creditManager),
             address(uniswapMock),
-            pathChecker
+            connectors
         );
 
         evm.prank(CONFIGURATOR);
