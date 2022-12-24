@@ -4,7 +4,7 @@
 
 Gearbox is a generalized leverage protocol. It has two sides to it: passive liquidity providers who earn low-risk APY by providing single-asset liquidity; and active farmers, firms, or even other protocols who borrow those assets to trade or farm with even x10 leverage.
 
-Gearbox Protocol allows anyone to take DeFi-native leverage and then use it across various (DeFi & more) protocols in a composable way. You take leverage with Gearbox and then use it on other protocols you already love: Uniswap, Curve, Convex, Lido, etc. For example, you can leverage trade on Uniswap, leverage farm on Yearn, make delta-neutral strategies, get Leverage-as-a-Service for your structured product, and more... Thanks to the Credit Accounts primitive! 
+Gearbox Protocol allows anyone to take DeFi-native leverage and then use it across various (DeFi & more) protocols in a composable way. You take leverage with Gearbox and then use it on other protocols you already love: Uniswap, Curve, Convex, Lido, etc. For example, you can leverage trade on Uniswap, leverage farm on Yearn, make delta-neutral strategies, get Leverage-as-a-Service for your structured product, and more... Thanks to the Credit Accounts primitive!
 
 _Some compare composable leverage as a primitive to DeFi-native prime brokerage._
 
@@ -35,40 +35,40 @@ This repository contains the smart contracts used to integrate third-party proto
 
 This directory contains code for third-party protocol adapters, as well as the required support contracts.
 
-Adapters are contracts that implement the interfaces of their respective third-party protocol counterparts (possibly with additional helper functions). 
+Adapters are contracts that implement the interfaces of their respective third-party protocol counterparts (possibly with additional helper functions).
 
 Functions in adapters implement necessary logic to route a call to the counterpart function (function with the same signature in the original protocol) through a Gearbox Credit Manager, allowing Credit Account owners to use familiar interfaces to manage their accounts.
 
 #### Convex
 
-1) `ConvexV1_BaseRewardPool.sol`. Adapter for Convex farming pools, where Convex LP tokens can be staked to receive CRV, CVX, and possibly additional rewards.
-2) `ConvexV1_Booster.sol`. Adapter for the Convex Booster contract, which can be used to wrap Curve LP tokens into Convex LP and stake them in Convex pools.
-3) `ConvexV1_ClaimZap.sol`. A contract analogous to the Convex ClaimZap, allowing users to claim rewards from multiple pools with a single call.
-4) `ConvexV1_StakedPositionToken.sol`. A contract implementing a phantom token, used to track amounts staked by users in Convex pools (since Convex does not mint tokens representing pool positions).
+1. `ConvexV1_BaseRewardPool.sol`. Adapter for Convex farming pools, where Convex LP tokens can be staked to receive CRV, CVX, and possibly additional rewards.
+2. `ConvexV1_Booster.sol`. Adapter for the Convex Booster contract, which can be used to wrap Curve LP tokens into Convex LP and stake them in Convex pools.
+3. `ConvexV1_ClaimZap.sol`. A contract analogous to the Convex ClaimZap, allowing users to claim rewards from multiple pools with a single call.
+4. `ConvexV1_StakedPositionToken.sol`. A contract implementing a phantom token, used to track amounts staked by users in Convex pools (since Convex does not mint tokens representing pool positions).
 
 #### Curve
 
-1) `CurveV1_Base.sol`. Generic adapter for Curve pools. Implements logic for swapping assets, adding liquidity (including adding liquidity in one coin), as well as several modes of removing liquidity (normal, one coin, imbalanced).
-2) `CurveV1_2.sol`, `CurveV1_3.sol`, `CurveV1_4.sol`. Interface adapters that expose functions with parameters dependent on N_COINS (such as `add_liquidity` or `remove_liquidity`). Note that main logic for these functions is still contained in `CurveV1_Base.sol` as an internal function.
-3) `CurveV1_DepositZap.sol`. Adapter for Curve deposit helper contracts. Required to support one-coin withdrawals for older Curve pools that don't have this functionality.
-4) `CurveV1_stETH.sol`. Adapter for the Curve stETH pool. Since the stETH pool uses native ETH, the adapter needs to interact with a gateway to convert WETH to stETH. As such, there are some differences in functioning that require a separate adapter.
-5) `CurveV1_stETHGateway.sol`. A gateway between the stETH pool adapter and the respective pool. Used to convert WETH to ETH (and back) as needed.
+1. `CurveV1_Base.sol`. Generic adapter for Curve pools. Implements logic for swapping assets, adding liquidity (including adding liquidity in one coin), as well as several modes of removing liquidity (normal, one coin, imbalanced).
+2. `CurveV1_2.sol`, `CurveV1_3.sol`, `CurveV1_4.sol`. Interface adapters that expose functions with parameters dependent on N_COINS (such as `add_liquidity` or `remove_liquidity`). Note that main logic for these functions is still contained in `CurveV1_Base.sol` as an internal function.
+3. `CurveV1_DepositZap.sol`. Adapter for Curve deposit helper contracts. Required to support one-coin withdrawals for older Curve pools that don't have this functionality.
+4. `CurveV1_stETH.sol`. Adapter for the Curve stETH pool. Since the stETH pool uses native ETH, the adapter needs to interact with a gateway to convert WETH to stETH. As such, there are some differences in functioning that require a separate adapter.
+5. `CurveV1_stETHGateway.sol`. A gateway between the stETH pool adapter and the respective pool. Used to convert WETH to ETH (and back) as needed.
 
 #### Lido
 
-1) `LidoV1.sol`. Adapter for the Lido stETH contract, which allows users to submit ETH and mint stETH. Interacts with a gateway instead of the original Lido contract, to convert WETH into native ETH.
-2) `LidoV1_WETHGateway.sol`. Gateway between the Lido adapter and the original contract, which converts WETH to native ETH before submitting for stETH.
-3) `WstETHV1.sol`. Adapter for the wstETH contract, which allows users to wrap their stETH into a non-rebase token.
-4) `WstETHGateway.sol`. Gateway for the Gearbox wstETH borrowing pool, which allows users to deposit stETH directly without pre-wrapping it.
+1. `LidoV1.sol`. Adapter for the Lido stETH contract, which allows users to submit ETH and mint stETH. Interacts with a gateway instead of the original Lido contract, to convert WETH into native ETH.
+2. `LidoV1_WETHGateway.sol`. Gateway between the Lido adapter and the original contract, which converts WETH to native ETH before submitting for stETH.
+3. `WstETHV1.sol`. Adapter for the wstETH contract, which allows users to wrap their stETH into a non-rebase token.
+4. `WstETHGateway.sol`. Gateway for the Gearbox wstETH borrowing pool, which allows users to deposit stETH directly without pre-wrapping it.
 
 #### Uniswap
 
-1) `UniswapV2.sol`. Adapter for the Uniswap V2 router, which allows users to swap tokens to other tokens. Does not support native ETH swaps or liquidity provision.
-2) `UniswapV3.sol`. Adapter for the Uniswap V3 router, which allows users to swap tokens to other tokens.
+1. `UniswapV2.sol`. Adapter for the Uniswap V2 router, which allows users to swap tokens to other tokens. Does not support native ETH swaps or liquidity provision.
+2. `UniswapV3.sol`. Adapter for the Uniswap V3 router, which allows users to swap tokens to other tokens.
 
 #### Yearn
 
-1) `YearnV2.sol`. Adapter for Yearn vaults, which allows users to deposit tokens and accrue yield.
+1. `YearnV2.sol`. Adapter for Yearn vaults, which allows users to deposit tokens and accrue yield.
 
 ### Factories
 
