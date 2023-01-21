@@ -70,6 +70,22 @@ contract BPTWeightedPriceFeedSetup {
     /// @dev Asset 7
     IERC20 public immutable asset7;
 
+    uint8 immutable decimals0;
+
+    uint8 immutable decimals1;
+
+    uint8 immutable decimals2;
+
+    uint8 immutable decimals3;
+
+    uint8 immutable decimals4;
+
+    uint8 immutable decimals5;
+
+    uint8 immutable decimals6;
+
+    uint8 immutable decimals7;
+
     /// @dev Index of the asset in the pool that is ranked 1st when ordered by ascending weights
     uint256 immutable index0;
 
@@ -142,12 +158,26 @@ contract BPTWeightedPriceFeedSetup {
         address[] memory priceFeeds
     ) {
         if (_balancerVault == address(0) || _balancerPool == address(0))
-            revert ZeroAddressException();
+            revert ZeroAddressException(); // F: [OBWLP-2]
 
-        balancerPool = IBalancerWeightedPool(_balancerPool);
-        balancerVault = IBalancerV2VaultGetters(_balancerVault);
+        {
+            uint256 len = priceFeeds.length;
 
-        poolId = balancerPool.getPoolId();
+            for (uint256 i = 0; i < len; ) {
+                if (priceFeeds[i] == address(0)) {
+                    revert ZeroAddressException(); // F: [OBWLP-2]
+                }
+
+                unchecked {
+                    ++i;
+                }
+            }
+        }
+
+        balancerPool = IBalancerWeightedPool(_balancerPool); // F: [OBWLP-1]
+        balancerVault = IBalancerV2VaultGetters(_balancerVault); // F: [OBWLP-1]
+
+        poolId = balancerPool.getPoolId(); // F: [OBWLP-1]
 
         (IERC20[] memory tokens, , ) = balancerVault.getPoolTokens(poolId);
 
@@ -170,53 +200,74 @@ contract BPTWeightedPriceFeedSetup {
             priceFeeds
         );
 
-        asset0 = tokens[0];
-        asset1 = tokens[1];
-        asset2 = numAssets >= 3 ? tokens[2] : IERC20(address(0));
-        asset3 = numAssets >= 4 ? tokens[3] : IERC20(address(0));
-        asset4 = numAssets >= 5 ? tokens[4] : IERC20(address(0));
-        asset5 = numAssets >= 6 ? tokens[5] : IERC20(address(0));
-        asset6 = numAssets >= 7 ? tokens[6] : IERC20(address(0));
-        asset7 = numAssets >= 8 ? tokens[7] : IERC20(address(0));
+        asset0 = tokens[0]; // F: [OBWLP-1]
+        asset1 = tokens[1]; // F: [OBWLP-1]
+        asset2 = numAssets >= 3 ? tokens[2] : IERC20(address(0)); // F: [OBWLP-1]
+        asset3 = numAssets >= 4 ? tokens[3] : IERC20(address(0)); // F: [OBWLP-1]
+        asset4 = numAssets >= 5 ? tokens[4] : IERC20(address(0)); // F: [OBWLP-1]
+        asset5 = numAssets >= 6 ? tokens[5] : IERC20(address(0)); // F: [OBWLP-1]
+        asset6 = numAssets >= 7 ? tokens[6] : IERC20(address(0)); // F: [OBWLP-1]
+        asset7 = numAssets >= 8 ? tokens[7] : IERC20(address(0)); // F: [OBWLP-1]
 
-        normalizedWeight0 = weights[0];
-        normalizedWeight1 = weights[1];
-        normalizedWeight2 = numAssets >= 3 ? weights[2] : 0;
-        normalizedWeight3 = numAssets >= 4 ? weights[3] : 0;
-        normalizedWeight4 = numAssets >= 5 ? weights[4] : 0;
-        normalizedWeight5 = numAssets >= 6 ? weights[5] : 0;
-        normalizedWeight6 = numAssets >= 7 ? weights[6] : 0;
-        normalizedWeight7 = numAssets >= 8 ? weights[7] : 0;
+        decimals0 = IERC20Metadata(address(tokens[0])).decimals(); // F: [OBWLP-1]
+        decimals1 = IERC20Metadata(address(tokens[1])).decimals(); // F: [OBWLP-1]
+        decimals2 = numAssets >= 3
+            ? IERC20Metadata(address(tokens[2])).decimals()
+            : 0; // F: [OBWLP-1]
+        decimals3 = numAssets >= 4
+            ? IERC20Metadata(address(tokens[3])).decimals()
+            : 0; // F: [OBWLP-1]
+        decimals4 = numAssets >= 5
+            ? IERC20Metadata(address(tokens[4])).decimals()
+            : 0; // F: [OBWLP-1]
+        decimals5 = numAssets >= 6
+            ? IERC20Metadata(address(tokens[5])).decimals()
+            : 0; // F: [OBWLP-1]
+        decimals6 = numAssets >= 7
+            ? IERC20Metadata(address(tokens[6])).decimals()
+            : 0; // F: [OBWLP-1]
+        decimals7 = numAssets >= 8
+            ? IERC20Metadata(address(tokens[7])).decimals()
+            : 0; // F: [OBWLP-1]
 
-        priceFeed0 = AggregatorV3Interface(priceFeeds[0]);
-        priceFeed1 = AggregatorV3Interface(priceFeeds[1]);
+        normalizedWeight0 = weights[0]; // F: [OBWLP-1]
+        normalizedWeight1 = weights[1]; // F: [OBWLP-1]
+        normalizedWeight2 = numAssets >= 3 ? weights[2] : 0; // F: [OBWLP-1]
+        normalizedWeight3 = numAssets >= 4 ? weights[3] : 0; // F: [OBWLP-1]
+        normalizedWeight4 = numAssets >= 5 ? weights[4] : 0; // F: [OBWLP-1]
+        normalizedWeight5 = numAssets >= 6 ? weights[5] : 0; // F: [OBWLP-1]
+        normalizedWeight6 = numAssets >= 7 ? weights[6] : 0; // F: [OBWLP-1]
+        normalizedWeight7 = numAssets >= 8 ? weights[7] : 0; // F: [OBWLP-1]
+
+        priceFeed0 = AggregatorV3Interface(priceFeeds[0]); // F: [OBWLP-1]
+        priceFeed1 = AggregatorV3Interface(priceFeeds[1]); // F: [OBWLP-1]
         priceFeed2 = numAssets >= 3
             ? AggregatorV3Interface(priceFeeds[2])
-            : AggregatorV3Interface(address(0));
+            : AggregatorV3Interface(address(0)); // F: [OBWLP-1]
         priceFeed3 = numAssets >= 4
             ? AggregatorV3Interface(priceFeeds[3])
-            : AggregatorV3Interface(address(0));
+            : AggregatorV3Interface(address(0)); // F: [OBWLP-1]
         priceFeed4 = numAssets >= 5
             ? AggregatorV3Interface(priceFeeds[4])
-            : AggregatorV3Interface(address(0));
+            : AggregatorV3Interface(address(0)); // F: [OBWLP-1]
         priceFeed5 = numAssets >= 6
             ? AggregatorV3Interface(priceFeeds[5])
-            : AggregatorV3Interface(address(0));
+            : AggregatorV3Interface(address(0)); // F: [OBWLP-1]
         priceFeed6 = numAssets >= 7
             ? AggregatorV3Interface(priceFeeds[6])
-            : AggregatorV3Interface(address(0));
+            : AggregatorV3Interface(address(0)); // F: [OBWLP-1]
         priceFeed7 = numAssets >= 8
             ? AggregatorV3Interface(priceFeeds[7])
-            : AggregatorV3Interface(address(0));
+            : AggregatorV3Interface(address(0)); // F: [OBWLP-1]
 
-        index0 = indices[0];
-        index1 = indices[1];
-        index2 = numAssets >= 3 ? indices[2] : 0;
-        index3 = numAssets >= 4 ? indices[3] : 0;
-        index4 = numAssets >= 5 ? indices[4] : 0;
-        index5 = numAssets >= 6 ? indices[5] : 0;
-        index6 = numAssets >= 7 ? indices[6] : 0;
-        index7 = numAssets >= 8 ? indices[7] : 0;
+        index0 = indices[0]; // F: [OBWLP-1]
+        index1 = indices[1]; // F: [OBWLP-1]
+        index2 = numAssets >= 3 ? indices[2] : 0; // F: [OBWLP-1]
+        index3 = numAssets >= 4 ? indices[3] : 0; // F: [OBWLP-1]
+        index4 = numAssets >= 5 ? indices[4] : 0; // F: [OBWLP-1]
+        index5 = numAssets >= 6 ? indices[5] : 0; // F: [OBWLP-1]
+        index6 = numAssets >= 7 ? indices[6] : 0; // F: [OBWLP-1]
+        index7 = numAssets >= 8 ? indices[7] : 0; // F: [OBWLP-1]
     }
 
     /// @dev Internal function that sorts tokens, weights and price feeds in the order of ascending weights,
@@ -280,8 +331,10 @@ contract BPTWeightedPriceFeedSetup {
                 while (data[i] < pVal) i++;
                 while (data[j] > pVal) j--;
                 if (i >= j) break;
-                (data[i], data[j]) = (data[j], data[i]);
-                (indices[i], indices[j]) = (indices[j], indices[i]);
+                if (data[i] != data[j]) {
+                    (data[i], data[j]) = (data[j], data[i]);
+                    (indices[i], indices[j]) = (indices[j], indices[i]);
+                }
                 i++;
                 j--;
             }

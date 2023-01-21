@@ -56,7 +56,7 @@ contract BPTWeightedPriceFeed is BPTWeightedPriceFeedSetup, LPPriceFeed {
         (, uint256[] memory balances, ) = balancerVault.getPoolTokens(poolId);
         uint256[] memory weights = _getWeightsArray();
 
-        balances = _alignBalanceArray(balances);
+        balances = _alignAndScaleBalanceArray(balances);
 
         _setLimiter(_computeInvariantOverSupply(balances, weights));
     }
@@ -75,8 +75,6 @@ contract BPTWeightedPriceFeed is BPTWeightedPriceFeedSetup, LPPriceFeed {
         uint256[] memory balances,
         uint256[] memory weights
     ) internal view returns (uint256) {
-        balances = _alignBalanceArray(balances);
-
         uint256 k = _computeInvariant(balances, weights);
         uint256 supply = _getBPTSupply();
 
@@ -96,10 +94,10 @@ contract BPTWeightedPriceFeed is BPTWeightedPriceFeedSetup, LPPriceFeed {
         uint256 len = balances.length;
 
         for (uint256 i = 0; i < len; ) {
-            if (i != len - 1 && weights[i] == weights[i + 1]) {
-                currentBase = currentBase.mulDown(balances[i]);
-            } else {
-                k = k.mulDown(currentBase.powDown(weights[i]));
+            currentBase = currentBase.mulDown(balances[i]);
+
+            if (i == len - 1 || weights[i] != weights[i + 1]) {
+                k = k.mulDown(currentBase.powDown(weights[i])); // F: [OBWLP-3,4]
                 currentBase = FixedPoint.ONE;
             }
 
@@ -110,7 +108,7 @@ contract BPTWeightedPriceFeed is BPTWeightedPriceFeedSetup, LPPriceFeed {
     }
 
     /// @dev Returns the balance array sorted in the order of increasing asset weights
-    function _alignBalanceArray(uint256[] memory balances)
+    function _alignAndScaleBalanceArray(uint256[] memory balances)
         internal
         view
         returns (uint256[] memory sortedBalances)
@@ -119,14 +117,20 @@ contract BPTWeightedPriceFeed is BPTWeightedPriceFeedSetup, LPPriceFeed {
 
         sortedBalances = new uint256[](len);
 
-        sortedBalances[0] = balances[index0];
-        sortedBalances[1] = balances[index1];
-        if (len >= 3) sortedBalances[2] = balances[index2];
-        if (len >= 4) sortedBalances[3] = balances[index3];
-        if (len >= 5) sortedBalances[4] = balances[index4];
-        if (len >= 6) sortedBalances[5] = balances[index5];
-        if (len >= 7) sortedBalances[6] = balances[index6];
-        if (len >= 8) sortedBalances[7] = balances[index7];
+        sortedBalances[0] = (balances[index0] * DECIMALS) / (10**decimals0);
+        sortedBalances[1] = (balances[index1] * DECIMALS) / (10**decimals1);
+        if (len >= 3)
+            sortedBalances[2] = (balances[index2] * DECIMALS) / (10**decimals2);
+        if (len >= 4)
+            sortedBalances[3] = (balances[index3] * DECIMALS) / (10**decimals3);
+        if (len >= 5)
+            sortedBalances[4] = (balances[index4] * DECIMALS) / (10**decimals4);
+        if (len >= 6)
+            sortedBalances[5] = (balances[index5] * DECIMALS) / (10**decimals5);
+        if (len >= 7)
+            sortedBalances[6] = (balances[index6] * DECIMALS) / (10**decimals6);
+        if (len >= 8)
+            sortedBalances[7] = (balances[index7] * DECIMALS) / (10**decimals7);
     }
 
     /// @dev Returns the price of a single BPT in USD (with 8 decimals)
@@ -153,13 +157,13 @@ contract BPTWeightedPriceFeed is BPTWeightedPriceFeedSetup, LPPriceFeed {
             );
             weights = _getWeightsArray();
 
-            balances = _alignBalanceArray(balances);
+            balances = _alignAndScaleBalanceArray(balances); // F: [OBWLP-3,4]
 
             invariantOverSupply = _computeInvariantOverSupply(
                 balances,
                 weights
             );
-            invariantOverSupply = _checkAndUpperBoundValue(invariantOverSupply);
+            invariantOverSupply = _checkAndUpperBoundValue(invariantOverSupply); // F: [OBWLP-5]
         }
 
         AggregatorV3Interface[] memory priceFeeds = _getPriceFeedsArray();
@@ -174,18 +178,18 @@ contract BPTWeightedPriceFeed is BPTWeightedPriceFeedSetup, LPPriceFeed {
                 startedAt,
                 updatedAt,
                 answeredInRound
-            ) = priceFeeds[i].latestRoundData();
+            ) = priceFeeds[i].latestRoundData(); // F: [OBWLP-3,4]
 
             answer = (answer * int256(DECIMALS)) / int256(USD_FEED_DECIMALS);
 
-            if (i != numAssets - 1 && weights[i] == weights[i + 1]) {
-                currentBase = currentBase.mulDown(
-                    uint256(answer).divDown(weights[i])
-                );
-            } else {
+            currentBase = currentBase.mulDown(
+                uint256(answer).divDown(weights[i])
+            );
+
+            if (i == numAssets - 1 || weights[i] != weights[i + 1]) {
                 weightedPrice = weightedPrice.mulDown(
                     currentBase.powDown(weights[i])
-                );
+                ); // F: [OBWLP-3,4]
                 currentBase = FixedPoint.ONE;
             }
 
@@ -194,13 +198,18 @@ contract BPTWeightedPriceFeed is BPTWeightedPriceFeedSetup, LPPriceFeed {
             }
         }
 
-        uint256 supply = _getBPTSupply();
+        answer = int256(invariantOverSupply.mulDown(weightedPrice)); // F: [OBWLP-3,4]
 
-        answer = int256(
-            invariantOverSupply.mulDown(weightedPrice.divDown(supply))
-        );
+        answer = (answer * int256(USD_FEED_DECIMALS)) / int256(DECIMALS); // F: [OBWLP-3,4]
+    }
 
-        answer = (answer * int256(USD_FEED_DECIMALS)) / int256(DECIMALS);
+    function getInvariantOverSupply() external view returns (uint256) {
+        (, uint256[] memory balances, ) = balancerVault.getPoolTokens(poolId);
+        uint256[] memory weights = _getWeightsArray();
+
+        balances = _alignAndScaleBalanceArray(balances);
+
+        return _computeInvariantOverSupply(balances, weights);
     }
 
     function _checkCurrentValueInBounds(uint256 _lowerBound, uint256 _uBound)
@@ -212,11 +221,11 @@ contract BPTWeightedPriceFeed is BPTWeightedPriceFeedSetup, LPPriceFeed {
         (, uint256[] memory balances, ) = balancerVault.getPoolTokens(poolId);
         uint256[] memory weights = _getWeightsArray();
 
-        balances = _alignBalanceArray(balances);
+        balances = _alignAndScaleBalanceArray(balances);
 
         uint256 ios = _computeInvariantOverSupply(balances, weights);
         if (ios < _lowerBound || ios > _uBound) {
-            return false;
+            return false; // F: [OBWLP-6]
         }
         return true;
     }
