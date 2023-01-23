@@ -368,6 +368,8 @@ contract BalancerVaultMock is IBalancerV2Vault {
                     amountsIn[i]
                 );
 
+                poolData[poolId].balances[i] += amountsIn[i];
+
                 uint256 rate = poolData[poolId].depositRatesRAY[
                     address(request.assets[i])
                 ];
@@ -411,6 +413,9 @@ contract BalancerVaultMock is IBalancerV2Vault {
                 address(this),
                 amountIn
             );
+
+            poolData[poolId].balances[tokenIndex] += amountIn;
+
             BPTMock(poolData[poolId].pool).mint(recipient, bptAmountOut);
         } else if (kind == JoinKind.ALL_TOKENS_IN_FOR_EXACT_BPT_OUT) {
             uint256 bptAmountOut = _allTokensInForExactBptOut(request.userData);
@@ -436,6 +441,8 @@ contract BalancerVaultMock is IBalancerV2Vault {
                     address(this),
                     amountIn
                 );
+
+                poolData[poolId].balances[i] += amountIn;
             }
 
             BPTMock(poolData[poolId].pool).mint(recipient, bptAmountOut);
@@ -515,6 +522,8 @@ contract BalancerVaultMock is IBalancerV2Vault {
             BPTMock(poolData[poolId].pool).burn(sender, bptAmountIn);
 
             IERC20(asset).transfer(recipient, amountOut);
+
+            poolData[poolId].balances[tokenIndex] -= amountOut;
         } else if (kind == ExitKind.EXACT_BPT_IN_FOR_TOKENS_OUT) {
             uint256 bptAmountIn = _exactBptInForTokensOut(request.userData);
 
@@ -535,6 +544,8 @@ contract BalancerVaultMock is IBalancerV2Vault {
                 );
 
                 IERC20(asset).transfer(recipient, amountOut);
+
+                poolData[poolId].balances[i] -= amountOut;
             }
 
             BPTMock(poolData[poolId].pool).burn(sender, bptAmountIn);
@@ -563,6 +574,8 @@ contract BalancerVaultMock is IBalancerV2Vault {
                 bptIn += (amountsOut[i] * RAY) / rate;
 
                 IERC20(asset).transfer(recipient, amountsOut[i]);
+
+                poolData[poolId].balances[i] -= amountsOut[i];
             }
 
             require(
