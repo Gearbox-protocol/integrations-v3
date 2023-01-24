@@ -287,7 +287,9 @@ for (let c of mainnetCreditManagers) {
   config += `cm.minBorrowedAmount = ${c.minAmount.toString()};`;
   config += `cm.maxBorrowedAmount = ${c.maxAmount.toString()};`;
   config += `cm.degenNFT = address(0);`;
+  config += `cm.blacklistHelper = address(0);`;
   config += `cm.expirable = false;`;
+  config += `cm.skipInit = false;`;
 
   config += c.collateralTokens
     .map(
