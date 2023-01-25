@@ -7,7 +7,8 @@ import { IAdapter } from "@gearbox-protocol/core-v2/contracts/interfaces/adapter
 import { ISwapRouter } from "../../integrations/uniswap/IUniswapV3.sol";
 
 interface IUniswapV3AdapterExceptions {
-    error IncorrectPathLengthException();
+    /// @dev Thrown when sanity checks on a Uniswap path fail
+    error InvalidPathException();
 }
 
 interface IUniswapV3Adapter is

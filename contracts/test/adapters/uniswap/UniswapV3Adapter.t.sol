@@ -9,7 +9,7 @@ import { BytesLib } from "../../../integrations/uniswap/BytesLib.sol";
 
 import { ISwapRouter } from "../../../integrations/uniswap/IUniswapV3.sol";
 import { UniswapV3Adapter } from "../../../adapters/uniswap/UniswapV3.sol";
-import { IUniswapV3Adapter } from "../../../interfaces/uniswap/IUniswapV3Adapter.sol";
+import { IUniswapV3Adapter, IUniswapV3AdapterExceptions } from "../../../interfaces/uniswap/IUniswapV3Adapter.sol";
 import { UniswapV3Mock } from "../../mocks/integrations/UniswapV3Mock.sol";
 
 import { Tokens } from "../../suites/TokensTestSuite.sol";
@@ -21,7 +21,11 @@ import { AdapterTestHelper } from "../AdapterTestHelper.sol";
 
 /// @title UniswapV3AdapterTest
 /// @notice Designed for unit test purposes only
-contract UniswapV3AdapterTest is DSTest, AdapterTestHelper {
+contract UniswapV3AdapterTest is
+    DSTest,
+    AdapterTestHelper,
+    IUniswapV3AdapterExceptions
+{
     using BytesLib for bytes;
 
     IUniswapV3Adapter public adapter;
@@ -38,15 +42,45 @@ contract UniswapV3AdapterTest is DSTest, AdapterTestHelper {
             DAI_WETH_RATE * RAY
         );
 
+        uniswapMock.setRate(
+            tokenTestSuite.addressOf(Tokens.DAI),
+            tokenTestSuite.addressOf(Tokens.USDC),
+            RAY
+        );
+
+        uniswapMock.setRate(
+            tokenTestSuite.addressOf(Tokens.WETH),
+            tokenTestSuite.addressOf(Tokens.USDC),
+            DAI_WETH_RATE * RAY
+        );
+
+        uniswapMock.setRate(
+            tokenTestSuite.addressOf(Tokens.USDC),
+            tokenTestSuite.addressOf(Tokens.USDT),
+            RAY
+        );
+
+        uniswapMock.setRate(
+            tokenTestSuite.addressOf(Tokens.USDT),
+            tokenTestSuite.addressOf(Tokens.WETH),
+            RAY / DAI_WETH_RATE
+        );
+
         tokenTestSuite.mint(
             Tokens.WETH,
             address(uniswapMock),
             (2 * DAI_ACCOUNT_AMOUNT) / DAI_WETH_RATE
         );
 
+        address[] memory connectors = new address[](2);
+
+        connectors[0] = tokenTestSuite.addressOf(Tokens.USDC);
+        connectors[1] = tokenTestSuite.addressOf(Tokens.USDT);
+
         adapter = new UniswapV3Adapter(
             address(creditManager),
-            address(uniswapMock)
+            address(uniswapMock),
+            connectors
         );
 
         evm.prank(CONFIGURATOR);
@@ -801,5 +835,123 @@ contract UniswapV3AdapterTest is DSTest, AdapterTestHelper {
 
         expectTokenIsEnabled(Tokens.WETH, true);
         expectTokenIsEnabled(Tokens.USDC, false);
+    }
+
+    function test_AUV3_09_path_validity_checks_are_correct() public {
+        _openTestCreditAccount();
+
+        ISwapRouter.ExactInputParams
+            memory exactInputParams = _getExactInputParams();
+
+        exactInputParams.path = bytes(
+            abi.encodePacked(creditManager.underlying())
+        )
+            .concat(bytes(abi.encodePacked(uint24(3000))))
+            .concat(
+                bytes(abi.encodePacked(tokenTestSuite.addressOf(Tokens.USDC)))
+            )
+            .concat(bytes(abi.encodePacked(uint24(3000))))
+            .concat(
+                bytes(abi.encodePacked(tokenTestSuite.addressOf(Tokens.USDT)))
+            )
+            .concat(bytes(abi.encodePacked(uint24(3000))))
+            .concat(
+                bytes(abi.encodePacked(tokenTestSuite.addressOf(Tokens.USDC)))
+            )
+            .concat(bytes(abi.encodePacked(uint24(3000))))
+            .concat(
+                bytes(abi.encodePacked(tokenTestSuite.addressOf(Tokens.WETH)))
+            );
+
+        evm.expectRevert(InvalidPathException.selector);
+        evm.prank(USER);
+        adapter.exactInput(exactInputParams);
+
+        IUniswapV3Adapter.ExactAllInputParams
+            memory exactAllInputParams = _getAllInputParams();
+
+        exactAllInputParams.path = bytes(
+            abi.encodePacked(creditManager.underlying())
+        )
+            .concat(bytes(abi.encodePacked(uint24(3000))))
+            .concat(
+                bytes(abi.encodePacked(tokenTestSuite.addressOf(Tokens.USDC)))
+            )
+            .concat(bytes(abi.encodePacked(uint24(3000))))
+            .concat(
+                bytes(abi.encodePacked(tokenTestSuite.addressOf(Tokens.USDT)))
+            )
+            .concat(bytes(abi.encodePacked(uint24(3000))))
+            .concat(
+                bytes(abi.encodePacked(tokenTestSuite.addressOf(Tokens.USDC)))
+            )
+            .concat(bytes(abi.encodePacked(uint24(3000))))
+            .concat(
+                bytes(abi.encodePacked(tokenTestSuite.addressOf(Tokens.WETH)))
+            );
+
+        evm.expectRevert(InvalidPathException.selector);
+        evm.prank(USER);
+        adapter.exactAllInput(exactAllInputParams);
+
+        ISwapRouter.ExactOutputParams
+            memory exactOutputParams = _getExactOutputParams();
+
+        exactOutputParams.path = bytes(
+            abi.encodePacked(creditManager.underlying())
+        )
+            .concat(bytes(abi.encodePacked(uint24(3000))))
+            .concat(
+                bytes(abi.encodePacked(tokenTestSuite.addressOf(Tokens.USDC)))
+            )
+            .concat(bytes(abi.encodePacked(uint24(3000))))
+            .concat(
+                bytes(abi.encodePacked(tokenTestSuite.addressOf(Tokens.USDT)))
+            )
+            .concat(bytes(abi.encodePacked(uint24(3000))))
+            .concat(
+                bytes(abi.encodePacked(tokenTestSuite.addressOf(Tokens.USDC)))
+            )
+            .concat(bytes(abi.encodePacked(uint24(3000))))
+            .concat(
+                bytes(abi.encodePacked(tokenTestSuite.addressOf(Tokens.WETH)))
+            );
+
+        evm.expectRevert(InvalidPathException.selector);
+        evm.prank(USER);
+        adapter.exactOutput(exactOutputParams);
+
+        exactInputParams.path = bytes(
+            abi.encodePacked(creditManager.underlying())
+        )
+            .concat(bytes(abi.encodePacked(uint24(3000))))
+            .concat(
+                bytes(abi.encodePacked(tokenTestSuite.addressOf(Tokens.LINK)))
+            )
+            .concat(bytes(abi.encodePacked(uint24(3000))))
+            .concat(
+                bytes(abi.encodePacked(tokenTestSuite.addressOf(Tokens.WETH)))
+            );
+
+        evm.expectRevert(InvalidPathException.selector);
+        evm.prank(USER);
+        adapter.exactInput(exactInputParams);
+
+        exactInputParams.path = bytes(
+            abi.encodePacked(creditManager.underlying())
+        )
+            .concat(bytes(abi.encodePacked(uint24(3000))))
+            .concat(
+                bytes(abi.encodePacked(tokenTestSuite.addressOf(Tokens.USDC)))
+            )
+            .concat(bytes(abi.encodePacked(uint24(3000))))
+            .concat(
+                bytes(abi.encodePacked(tokenTestSuite.addressOf(Tokens.WETH)))
+            );
+
+        exactInputParams.amountOutMinimum = 0;
+
+        evm.prank(USER);
+        adapter.exactInput(exactInputParams);
     }
 }

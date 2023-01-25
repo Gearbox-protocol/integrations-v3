@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: UNLICENSED
+// Gearbox. Generalized leverage protocol that allows to take leverage and then use it across other DeFi protocols and platforms in a composable way.
+// (c) Gearbox Holdings, 2022
 pragma solidity ^0.8.10;
 
 import { Tokens } from "./Tokens.sol";
@@ -21,8 +24,12 @@ struct CreditManagerHumanOpts {
     CollateralTokenHuman[] collateralTokens;
     /// @dev Address of DegenNFT, address(0) if whitelisted mode is not used
     address degenNFT;
+    /// @dev Address of BlacklistHelper, address(0) if the underlying is not blacklistable
+    address blacklistHelper;
     /// @dev Whether the Credit Manager is connected to an expirable pool (and the CreditFacade is expirable)
     bool expirable;
+    /// @dev Whether to skip normal initialization - used for new Credit Configurators that are deployed for existing CMs
+    bool skipInit;
     /// @dev Contracts which should become adapters
     Contracts[] contracts;
 }
@@ -37,7 +44,9 @@ contract CreditConfigLive {
         cm.minBorrowedAmount = 150000000000000000000000;
         cm.maxBorrowedAmount = 1000000000000000000000000;
         cm.degenNFT = address(0);
+        cm.blacklistHelper = address(0);
         cm.expirable = false;
+        cm.skipInit = false;
         cm.collateralTokens.push(
             CollateralTokenHuman({
                 token: Tokens.WETH,
@@ -277,7 +286,9 @@ contract CreditConfigLive {
         cm.minBorrowedAmount = 150000000000;
         cm.maxBorrowedAmount = 1000000000000;
         cm.degenNFT = address(0);
+        cm.blacklistHelper = address(0);
         cm.expirable = false;
+        cm.skipInit = false;
         cm.collateralTokens.push(
             CollateralTokenHuman({
                 token: Tokens.WETH,
@@ -517,7 +528,9 @@ contract CreditConfigLive {
         cm.minBorrowedAmount = 100000000000000000000;
         cm.maxBorrowedAmount = 600000000000000000000;
         cm.degenNFT = address(0);
+        cm.blacklistHelper = address(0);
         cm.expirable = false;
+        cm.skipInit = false;
         cm.collateralTokens.push(
             CollateralTokenHuman({
                 token: Tokens.STETH,
@@ -757,7 +770,9 @@ contract CreditConfigLive {
         cm.minBorrowedAmount = 100000000000000000000;
         cm.maxBorrowedAmount = 600000000000000000000;
         cm.degenNFT = address(0);
+        cm.blacklistHelper = address(0);
         cm.expirable = false;
+        cm.skipInit = false;
         cm.collateralTokens.push(
             CollateralTokenHuman({
                 token: Tokens.STETH,
@@ -1004,7 +1019,9 @@ contract CreditConfigLive {
         cm.minBorrowedAmount = 750000000;
         cm.maxBorrowedAmount = 5000000000;
         cm.degenNFT = address(0);
+        cm.blacklistHelper = address(0);
         cm.expirable = false;
+        cm.skipInit = false;
         cm.collateralTokens.push(
             CollateralTokenHuman({
                 token: Tokens.WETH,
