@@ -3,9 +3,9 @@
 // (c) Gearbox Holdings, 2022
 pragma solidity ^0.8.10;
 
-import { ICreditManagerV2Exceptions } from "@gearbox-protocol/core-v2/contracts/interfaces/ICreditManagerV2.sol";
+import { ICreditManagerV2, ICreditManagerV2Exceptions } from "@gearbox-protocol/core-v2/contracts/interfaces/ICreditManagerV2.sol";
 
-import { IBalancerV2Vault, PoolSpecialization, SingleSwap, FundManagement, SwapKind } from "../../../integrations/balancer/IBalancerV2Vault.sol";
+import { IBalancerV2Vault, PoolSpecialization, SingleSwap, BatchSwapStep, FundManagement, SwapKind, JoinKind, ExitKind, JoinPoolRequest, ExitPoolRequest } from "../../../integrations/balancer/IBalancerV2Vault.sol";
 import { IBalancerV2VaultAdapter, SingleSwapAll } from "../../../interfaces/balancer/IBalancerV2VaultAdapter.sol";
 import { IAsset } from "../../../integrations/balancer/IAsset.sol";
 import { BalancerV2VaultAdapter } from "../../../adapters/balancer/BalancerV2Vault.sol";
@@ -47,7 +47,7 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper {
             POOL_ID_1,
             tokenTestSuite.addressOf(Tokens.DAI),
             tokenTestSuite.addressOf(Tokens.USDC),
-            RAY
+            RAY / 1e12
         );
 
         balancerMock.setRate(
@@ -61,7 +61,7 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper {
             POOL_ID_1,
             tokenTestSuite.addressOf(Tokens.USDT),
             tokenTestSuite.addressOf(Tokens.USDC),
-            (99 * RAY) / 100
+            (99 * RAY) / (100 * 1e12)
         );
 
         balancerMock.setDepositRate(
@@ -73,7 +73,7 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper {
         balancerMock.setDepositRate(
             POOL_ID_1,
             tokenTestSuite.addressOf(Tokens.USDC),
-            RAY
+            RAY * 1e12
         );
 
         balancerMock.setDepositRate(
@@ -91,7 +91,7 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper {
         balancerMock.setWithdrawalRate(
             POOL_ID_1,
             tokenTestSuite.addressOf(Tokens.USDC),
-            RAY
+            RAY / 1e12
         );
 
         balancerMock.setWithdrawalRate(
@@ -105,6 +105,14 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper {
         tokenTestSuite.mint(Tokens.USDC, address(balancerMock), RAY);
 
         tokenTestSuite.mint(Tokens.USDT, address(balancerMock), RAY);
+
+        uint256[] memory balances = new uint256[](3);
+
+        balances[0] = 10000000 * WAD;
+        balances[1] = 10000000 * 1e6;
+        balances[2] = 10000000 * WAD;
+
+        balancerMock.setAssetBalances(POOL_ID_1, balances);
 
         (address bpt, ) = balancerMock.getPool(POOL_ID_1);
 
@@ -182,7 +190,7 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper {
 
         tokenTestSuite.mint(Tokens.WETH, address(balancerMock), RAY);
 
-        uint256[] memory balances = new uint256[](2);
+        balances = new uint256[](2);
 
         balances[0] = 10000000 * WAD;
         balances[1] = balances[0] / DAI_WETH_RATE;
@@ -230,10 +238,9 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper {
         deadline = _getUniswapDeadline();
     }
 
-    function _standardFundManagement(address creditAccount)
-        internal
-        returns (FundManagement memory)
-    {
+    function _standardFundManagement(
+        address creditAccount
+    ) internal returns (FundManagement memory) {
         return
             FundManagement({
                 sender: creditAccount,
@@ -241,6 +248,227 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper {
                 recipient: payable(creditAccount),
                 toInternalBalance: false
             });
+    }
+
+    function expectBatchSwapStackCalls(
+        address targetContract,
+        address borrower,
+        address creditAccount,
+        bytes memory callData,
+        IAsset[] memory assets,
+        int256[] memory limits,
+        bool multicall
+    ) internal {
+        if (multicall) {
+            evm.expectEmit(true, false, false, false);
+            emit MultiCallStarted(borrower);
+        }
+
+        for (uint256 i = 0; i < assets.length; ++i) {
+            if (limits[i] > 1) {
+                evm.expectCall(
+                    address(creditManager),
+                    abi.encodeWithSelector(
+                        ICreditManagerV2.approveCreditAccount.selector,
+                        multicall ? address(creditFacade) : USER,
+                        targetContract,
+                        assets[i],
+                        type(uint256).max
+                    )
+                );
+            }
+        }
+
+        evm.expectCall(
+            address(creditManager),
+            abi.encodeWithSelector(
+                ICreditManagerV2.executeOrder.selector,
+                multicall ? address(creditFacade) : USER,
+                targetContract,
+                callData
+            )
+        );
+
+        evm.expectEmit(true, true, false, false);
+        emit ExecuteOrder(
+            multicall ? address(creditFacade) : USER,
+            targetContract
+        );
+
+        for (uint256 i = 0; i < assets.length; ++i) {
+            if (limits[i] > 1) {
+                evm.expectCall(
+                    address(creditManager),
+                    abi.encodeWithSelector(
+                        ICreditManagerV2.approveCreditAccount.selector,
+                        multicall ? address(creditFacade) : USER,
+                        targetContract,
+                        assets[i],
+                        1
+                    )
+                );
+            }
+        }
+
+        for (uint256 i = 0; i < assets.length; ++i) {
+            if (limits[i] < -1) {
+                evm.expectCall(
+                    address(creditManager),
+                    abi.encodeWithSelector(
+                        ICreditManagerV2.checkAndEnableToken.selector,
+                        creditAccount,
+                        assets[i]
+                    )
+                );
+            }
+        }
+
+        if (!multicall) {
+            evm.expectCall(
+                address(creditManager),
+                abi.encodeWithSelector(
+                    ICreditManagerV2.fullCollateralCheck.selector,
+                    creditAccount
+                )
+            );
+        }
+    }
+
+    function expectJoinPoolStackCalls(
+        address targetContract,
+        address borrower,
+        address creditAccount,
+        bytes32 poolId,
+        bytes memory callData,
+        IAsset[] memory assets,
+        uint256[] memory maxAmountsIn,
+        bool multicall
+    ) internal {
+        if (multicall) {
+            evm.expectEmit(true, false, false, false);
+            emit MultiCallStarted(borrower);
+        }
+
+        for (uint256 i = 0; i < assets.length; ++i) {
+            if (maxAmountsIn[i] > 1) {
+                evm.expectCall(
+                    address(creditManager),
+                    abi.encodeWithSelector(
+                        ICreditManagerV2.approveCreditAccount.selector,
+                        multicall ? address(creditFacade) : USER,
+                        targetContract,
+                        assets[i],
+                        type(uint256).max
+                    )
+                );
+            }
+        }
+
+        (address pool, ) = balancerMock.getPool(poolId);
+
+        evm.expectCall(
+            address(creditManager),
+            abi.encodeWithSelector(
+                ICreditManagerV2.checkAndEnableToken.selector,
+                creditAccount,
+                pool
+            )
+        );
+
+        evm.expectCall(
+            address(creditManager),
+            abi.encodeWithSelector(
+                ICreditManagerV2.executeOrder.selector,
+                multicall ? address(creditFacade) : USER,
+                targetContract,
+                callData
+            )
+        );
+
+        evm.expectEmit(true, true, false, false);
+        emit ExecuteOrder(
+            multicall ? address(creditFacade) : USER,
+            targetContract
+        );
+
+        for (uint256 i = 0; i < assets.length; ++i) {
+            if (maxAmountsIn[i] > 1) {
+                evm.expectCall(
+                    address(creditManager),
+                    abi.encodeWithSelector(
+                        ICreditManagerV2.approveCreditAccount.selector,
+                        multicall ? address(creditFacade) : USER,
+                        targetContract,
+                        assets[i],
+                        1
+                    )
+                );
+            }
+        }
+
+        if (!multicall) {
+            evm.expectCall(
+                address(creditManager),
+                abi.encodeWithSelector(
+                    ICreditManagerV2.fullCollateralCheck.selector,
+                    creditAccount
+                )
+            );
+        }
+    }
+
+    function expectExitPoolStackCalls(
+        address targetContract,
+        address borrower,
+        address creditAccount,
+        bytes32 poolId,
+        bytes memory callData,
+        IAsset[] memory assets,
+        bool multicall
+    ) internal {
+        if (multicall) {
+            evm.expectEmit(true, false, false, false);
+            emit MultiCallStarted(borrower);
+        }
+
+        (address pool, ) = balancerMock.getPool(poolId);
+
+        evm.expectCall(
+            address(creditManager),
+            abi.encodeWithSelector(
+                ICreditManagerV2.executeOrder.selector,
+                multicall ? address(creditFacade) : USER,
+                targetContract,
+                callData
+            )
+        );
+
+        evm.expectEmit(true, true, false, false);
+        emit ExecuteOrder(
+            multicall ? address(creditFacade) : USER,
+            targetContract
+        );
+
+        for (uint256 i = 0; i < assets.length; ++i) {
+            evm.expectCall(
+                address(creditManager),
+                abi.encodeWithSelector(
+                    ICreditManagerV2.checkAndEnableToken.selector,
+                    creditAccount,
+                    assets[i]
+                )
+            );
+        }
+
+        if (!multicall) {
+            evm.expectCall(
+                address(creditManager),
+                abi.encodeWithSelector(
+                    ICreditManagerV2.fullCollateralCheck.selector,
+                    creditAccount
+                )
+            );
+        }
     }
 
     ///
@@ -439,7 +667,6 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper {
                     true
                 );
 
-                uint256 gas = gasleft();
                 evm.prank(USER);
                 adapter.swapAll(
                     singleSwapAllData,
@@ -465,6 +692,950 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper {
 
             expectTokenIsEnabled(Tokens.DAI, false);
             expectTokenIsEnabled(Tokens.WETH, true);
+        }
+    }
+
+    function test_ABV2_03_batchSwap_works_as_expected() public {
+        for (uint256 m = 0; m < 2; m++) {
+            for (uint256 st = 0; st < 3; ++st) {
+                // ST is swap type
+                // 0 = single swap from DAI to WETH
+                // 1 = parallel swap from DAI to WETH and USDC
+                // 2 = consecutive swap from WETH to DAI to USDC
+
+                bool multicall = m != 0;
+
+                setUp();
+                (
+                    address creditAccount,
+                    uint256 initialDAIBalance
+                ) = _openTestCreditAccount();
+
+                BatchSwapStep[] memory batchSteps;
+                IAsset[] memory assets;
+                int256[] memory limits;
+
+                if (st == 0) {
+                    batchSteps = new BatchSwapStep[](1);
+                    assets = new IAsset[](2);
+                    limits = new int256[](2);
+
+                    assets[0] = IAsset(tokenTestSuite.addressOf(Tokens.DAI));
+                    assets[1] = IAsset(tokenTestSuite.addressOf(Tokens.WETH));
+
+                    limits[0] = int256(DAI_EXCHANGE_AMOUNT);
+                    limits[1] = -int256(
+                        DAI_EXCHANGE_AMOUNT / (2 * DAI_WETH_RATE)
+                    );
+
+                    batchSteps[0] = BatchSwapStep({
+                        poolId: POOL_ID_2,
+                        assetInIndex: 0,
+                        assetOutIndex: 1,
+                        amount: DAI_EXCHANGE_AMOUNT,
+                        userData: ""
+                    });
+                } else if (st == 1) {
+                    batchSteps = new BatchSwapStep[](2);
+
+                    assets = new IAsset[](3);
+                    limits = new int256[](3);
+
+                    assets[0] = IAsset(tokenTestSuite.addressOf(Tokens.DAI));
+                    assets[1] = IAsset(tokenTestSuite.addressOf(Tokens.WETH));
+                    assets[2] = IAsset(tokenTestSuite.addressOf(Tokens.USDC));
+
+                    limits[0] = int256(DAI_EXCHANGE_AMOUNT * 2);
+                    limits[1] = -int256(
+                        DAI_EXCHANGE_AMOUNT / (2 * DAI_WETH_RATE)
+                    );
+                    limits[2] = -int256(DAI_EXCHANGE_AMOUNT / (2 * 1e12));
+
+                    batchSteps[0] = BatchSwapStep({
+                        poolId: POOL_ID_2,
+                        assetInIndex: 0,
+                        assetOutIndex: 1,
+                        amount: DAI_EXCHANGE_AMOUNT,
+                        userData: ""
+                    });
+
+                    batchSteps[1] = BatchSwapStep({
+                        poolId: POOL_ID_1,
+                        assetInIndex: 0,
+                        assetOutIndex: 2,
+                        amount: DAI_EXCHANGE_AMOUNT,
+                        userData: ""
+                    });
+                } else if (st == 2) {
+                    addCollateral(Tokens.WETH, WETH_ACCOUNT_AMOUNT);
+                    batchSteps = new BatchSwapStep[](2);
+
+                    assets = new IAsset[](3);
+                    limits = new int256[](3);
+
+                    assets[0] = IAsset(tokenTestSuite.addressOf(Tokens.DAI));
+                    assets[1] = IAsset(tokenTestSuite.addressOf(Tokens.WETH));
+                    assets[2] = IAsset(tokenTestSuite.addressOf(Tokens.USDC));
+
+                    limits[0] = 0;
+                    limits[1] = int256(WETH_EXCHANGE_AMOUNT);
+                    limits[2] =
+                        (-int256(WETH_EXCHANGE_AMOUNT * DAI_WETH_RATE)) /
+                        (2 * 1e12);
+
+                    batchSteps[0] = BatchSwapStep({
+                        poolId: POOL_ID_2,
+                        assetInIndex: 1,
+                        assetOutIndex: 0,
+                        amount: WETH_EXCHANGE_AMOUNT,
+                        userData: ""
+                    });
+
+                    batchSteps[1] = BatchSwapStep({
+                        poolId: POOL_ID_1,
+                        assetInIndex: 0,
+                        assetOutIndex: 2,
+                        amount: 0,
+                        userData: ""
+                    });
+                }
+
+                FundManagement memory fundManagement = FundManagement({
+                    sender: USER,
+                    fromInternalBalance: true,
+                    recipient: payable(USER),
+                    toInternalBalance: true
+                });
+
+                expectAllowance(
+                    Tokens.DAI,
+                    creditAccount,
+                    address(balancerMock),
+                    0
+                );
+
+                expectAllowance(
+                    Tokens.WETH,
+                    creditAccount,
+                    address(balancerMock),
+                    0
+                );
+
+                bytes memory expectedCallData = abi.encodeWithSelector(
+                    IBalancerV2Vault.batchSwap.selector,
+                    SwapKind.GIVEN_IN,
+                    batchSteps,
+                    assets,
+                    _standardFundManagement(creditAccount),
+                    limits,
+                    deadline
+                );
+
+                if (multicall) {
+                    expectBatchSwapStackCalls(
+                        address(balancerMock),
+                        USER,
+                        creditAccount,
+                        expectedCallData,
+                        assets,
+                        limits,
+                        true
+                    );
+
+                    executeOneLineMulticall(
+                        address(adapter),
+                        abi.encodeWithSelector(
+                            IBalancerV2Vault.batchSwap.selector,
+                            SwapKind.GIVEN_IN,
+                            batchSteps,
+                            assets,
+                            fundManagement,
+                            limits,
+                            deadline
+                        )
+                    );
+                } else {
+                    expectBatchSwapStackCalls(
+                        address(balancerMock),
+                        USER,
+                        creditAccount,
+                        expectedCallData,
+                        assets,
+                        limits,
+                        false
+                    );
+
+                    evm.prank(USER);
+                    adapter.batchSwap(
+                        SwapKind.GIVEN_IN,
+                        batchSteps,
+                        assets,
+                        fundManagement,
+                        limits,
+                        deadline
+                    );
+                }
+
+                if (st == 0) {
+                    expectBalance(
+                        Tokens.DAI,
+                        creditAccount,
+                        initialDAIBalance - DAI_EXCHANGE_AMOUNT
+                    );
+
+                    expectBalance(
+                        Tokens.WETH,
+                        creditAccount,
+                        ((DAI_EXCHANGE_AMOUNT / DAI_WETH_RATE) * 9950) / 10000
+                    );
+
+                    expectAllowance(
+                        Tokens.DAI,
+                        creditAccount,
+                        address(balancerMock),
+                        1
+                    );
+
+                    expectAllowance(
+                        Tokens.WETH,
+                        creditAccount,
+                        address(balancerMock),
+                        0
+                    );
+
+                    expectTokenIsEnabled(Tokens.WETH, true);
+                } else if (st == 1) {
+                    expectBalance(
+                        Tokens.DAI,
+                        creditAccount,
+                        initialDAIBalance - 2 * DAI_EXCHANGE_AMOUNT
+                    );
+
+                    expectBalance(
+                        Tokens.WETH,
+                        creditAccount,
+                        ((DAI_EXCHANGE_AMOUNT / DAI_WETH_RATE) * 9950) / 10000
+                    );
+
+                    expectBalance(
+                        Tokens.USDC,
+                        creditAccount,
+                        ((DAI_EXCHANGE_AMOUNT / 1e12) * 9950) / 10000
+                    );
+
+                    expectAllowance(
+                        Tokens.DAI,
+                        creditAccount,
+                        address(balancerMock),
+                        1
+                    );
+
+                    expectAllowance(
+                        Tokens.WETH,
+                        creditAccount,
+                        address(balancerMock),
+                        0
+                    );
+
+                    expectAllowance(
+                        Tokens.USDC,
+                        creditAccount,
+                        address(balancerMock),
+                        0
+                    );
+
+                    expectTokenIsEnabled(Tokens.WETH, true);
+                    expectTokenIsEnabled(Tokens.USDC, true);
+                } else if (st == 2) {
+                    expectBalance(
+                        Tokens.WETH,
+                        creditAccount,
+                        WETH_ACCOUNT_AMOUNT - WETH_EXCHANGE_AMOUNT
+                    );
+                    expectBalance(Tokens.DAI, creditAccount, initialDAIBalance);
+
+                    uint256 expectedAmount = (WETH_EXCHANGE_AMOUNT *
+                        DAI_WETH_RATE *
+                        9950) / 10000;
+                    expectedAmount = ((expectedAmount / 1e12) * 9950) / 10000;
+
+                    expectBalance(Tokens.USDC, creditAccount, expectedAmount);
+                    expectAllowance(
+                        Tokens.DAI,
+                        creditAccount,
+                        address(balancerMock),
+                        0
+                    );
+
+                    expectAllowance(
+                        Tokens.WETH,
+                        creditAccount,
+                        address(balancerMock),
+                        1
+                    );
+
+                    expectAllowance(
+                        Tokens.USDC,
+                        creditAccount,
+                        address(balancerMock),
+                        0
+                    );
+
+                    expectTokenIsEnabled(Tokens.USDC, true);
+                }
+            }
+        }
+    }
+
+    function test_ABV2_04_joinPool_works_as_expected() public {
+        for (uint256 m = 0; m < 2; m++) {
+            bool multicall = m != 0;
+
+            setUp();
+            (
+                address creditAccount,
+                uint256 initialDAIBalance
+            ) = _openTestCreditAccount();
+
+            addCollateral(Tokens.USDT, DAI_ACCOUNT_AMOUNT);
+
+            IAsset[] memory assets = new IAsset[](3);
+
+            assets[0] = IAsset(tokenTestSuite.addressOf(Tokens.DAI));
+            assets[1] = IAsset(tokenTestSuite.addressOf(Tokens.USDC));
+            assets[2] = IAsset(tokenTestSuite.addressOf(Tokens.USDT));
+
+            uint256[] memory maxAmountsIn = new uint256[](3);
+
+            maxAmountsIn[0] = DAI_EXCHANGE_AMOUNT;
+            maxAmountsIn[1] = 0;
+            maxAmountsIn[2] = DAI_EXCHANGE_AMOUNT;
+
+            JoinPoolRequest memory request;
+
+            {
+                bytes memory userData = abi.encode(
+                    JoinKind.EXACT_TOKENS_IN_FOR_BPT_OUT,
+                    maxAmountsIn,
+                    DAI_EXCHANGE_AMOUNT
+                );
+
+                request = JoinPoolRequest({
+                    assets: assets,
+                    maxAmountsIn: maxAmountsIn,
+                    userData: userData,
+                    fromInternalBalance: true
+                });
+            }
+
+            bytes memory passedCallData = abi.encodeWithSelector(
+                IBalancerV2Vault.joinPool.selector,
+                POOL_ID_1,
+                USER,
+                USER,
+                request
+            );
+
+            request.fromInternalBalance = false;
+
+            bytes memory expectedCallData = abi.encodeWithSelector(
+                IBalancerV2Vault.joinPool.selector,
+                POOL_ID_1,
+                creditAccount,
+                creditAccount,
+                request
+            );
+
+            request.fromInternalBalance = true;
+
+            if (multicall) {
+                expectJoinPoolStackCalls(
+                    address(balancerMock),
+                    USER,
+                    creditAccount,
+                    POOL_ID_1,
+                    expectedCallData,
+                    assets,
+                    maxAmountsIn,
+                    true
+                );
+
+                executeOneLineMulticall(address(adapter), passedCallData);
+            } else {
+                expectJoinPoolStackCalls(
+                    address(balancerMock),
+                    USER,
+                    creditAccount,
+                    POOL_ID_1,
+                    expectedCallData,
+                    assets,
+                    maxAmountsIn,
+                    false
+                );
+
+                evm.prank(USER);
+                adapter.joinPool(POOL_ID_1, USER, USER, request);
+            }
+
+            expectBalance(
+                Tokens.DAI,
+                creditAccount,
+                initialDAIBalance - DAI_EXCHANGE_AMOUNT
+            );
+            expectBalance(
+                Tokens.USDT,
+                creditAccount,
+                DAI_ACCOUNT_AMOUNT - DAI_EXCHANGE_AMOUNT
+            );
+
+            (address pool, ) = balancerMock.getPool(POOL_ID_1);
+
+            expectBalance(pool, creditAccount, DAI_EXCHANGE_AMOUNT * 2);
+
+            expectAllowance(
+                Tokens.DAI,
+                creditAccount,
+                address(balancerMock),
+                1
+            );
+
+            expectAllowance(
+                Tokens.USDT,
+                creditAccount,
+                address(balancerMock),
+                1
+            );
+
+            expectTokenIsEnabled(pool, true);
+        }
+    }
+
+    function test_ABV2_05_joinPoolSingleAsset_works_as_expected() public {
+        for (uint256 m = 0; m < 2; m++) {
+            bool multicall = m != 0;
+
+            setUp();
+            (
+                address creditAccount,
+                uint256 initialDAIBalance
+            ) = _openTestCreditAccount();
+
+            expectAllowance(
+                Tokens.DAI,
+                creditAccount,
+                address(balancerMock),
+                0
+            );
+
+            bytes memory passedCallData = abi.encodeWithSelector(
+                IBalancerV2VaultAdapter.joinPoolSingleAsset.selector,
+                POOL_ID_1,
+                tokenTestSuite.addressOf(Tokens.DAI),
+                DAI_EXCHANGE_AMOUNT,
+                DAI_EXCHANGE_AMOUNT / 2
+            );
+
+            IAsset[] memory assets = new IAsset[](3);
+
+            assets[0] = IAsset(tokenTestSuite.addressOf(Tokens.DAI));
+            assets[1] = IAsset(tokenTestSuite.addressOf(Tokens.USDC));
+            assets[2] = IAsset(tokenTestSuite.addressOf(Tokens.USDT));
+
+            uint256[] memory maxAmountsIn = new uint256[](3);
+
+            maxAmountsIn[0] = DAI_EXCHANGE_AMOUNT;
+
+            JoinPoolRequest memory request;
+
+            {
+                bytes memory userData = abi.encode(
+                    JoinKind.EXACT_TOKENS_IN_FOR_BPT_OUT,
+                    maxAmountsIn,
+                    DAI_EXCHANGE_AMOUNT / 2
+                );
+
+                request = JoinPoolRequest({
+                    assets: assets,
+                    maxAmountsIn: maxAmountsIn,
+                    userData: userData,
+                    fromInternalBalance: false
+                });
+            }
+
+            bytes memory expectedCallData = abi.encodeWithSelector(
+                IBalancerV2Vault.joinPool.selector,
+                POOL_ID_1,
+                creditAccount,
+                creditAccount,
+                request
+            );
+
+            (address pool, ) = balancerMock.getPool(POOL_ID_1);
+
+            if (multicall) {
+                expectMulticallStackCalls(
+                    address(adapter),
+                    address(balancerMock),
+                    USER,
+                    expectedCallData,
+                    tokenTestSuite.addressOf(Tokens.DAI),
+                    pool,
+                    true
+                );
+
+                executeOneLineMulticall(address(adapter), passedCallData);
+            } else {
+                expectFastCheckStackCalls(
+                    address(adapter),
+                    address(balancerMock),
+                    USER,
+                    expectedCallData,
+                    tokenTestSuite.addressOf(Tokens.DAI),
+                    pool,
+                    true
+                );
+
+                evm.startPrank(USER);
+                adapter.joinPoolSingleAsset(
+                    POOL_ID_1,
+                    IAsset(tokenTestSuite.addressOf(Tokens.DAI)),
+                    DAI_EXCHANGE_AMOUNT,
+                    DAI_EXCHANGE_AMOUNT / 2
+                );
+                evm.stopPrank();
+            }
+
+            expectBalance(
+                Tokens.DAI,
+                creditAccount,
+                initialDAIBalance - DAI_EXCHANGE_AMOUNT
+            );
+
+            expectBalance(pool, creditAccount, DAI_EXCHANGE_AMOUNT);
+
+            expectAllowance(
+                Tokens.DAI,
+                creditAccount,
+                address(balancerMock),
+                1
+            );
+
+            expectTokenIsEnabled(pool, true);
+        }
+    }
+
+    function test_ABV2_06_joinPoolSingleAssetAll_works_as_expected() public {
+        for (uint256 m = 0; m < 2; m++) {
+            bool multicall = m != 0;
+
+            setUp();
+            (
+                address creditAccount,
+                uint256 initialDAIBalance
+            ) = _openTestCreditAccount();
+
+            expectAllowance(
+                Tokens.DAI,
+                creditAccount,
+                address(balancerMock),
+                0
+            );
+
+            bytes memory passedCallData = abi.encodeWithSelector(
+                IBalancerV2VaultAdapter.joinPoolSingleAssetAll.selector,
+                POOL_ID_1,
+                tokenTestSuite.addressOf(Tokens.DAI),
+                RAY / 2
+            );
+
+            IAsset[] memory assets = new IAsset[](3);
+
+            assets[0] = IAsset(tokenTestSuite.addressOf(Tokens.DAI));
+            assets[1] = IAsset(tokenTestSuite.addressOf(Tokens.USDC));
+            assets[2] = IAsset(tokenTestSuite.addressOf(Tokens.USDT));
+
+            uint256[] memory maxAmountsIn = new uint256[](3);
+
+            maxAmountsIn[0] = initialDAIBalance - 1;
+
+            JoinPoolRequest memory request;
+
+            {
+                bytes memory userData = abi.encode(
+                    JoinKind.EXACT_TOKENS_IN_FOR_BPT_OUT,
+                    maxAmountsIn,
+                    (initialDAIBalance - 1) / 2
+                );
+
+                request = JoinPoolRequest({
+                    assets: assets,
+                    maxAmountsIn: maxAmountsIn,
+                    userData: userData,
+                    fromInternalBalance: false
+                });
+            }
+
+            bytes memory expectedCallData = abi.encodeWithSelector(
+                IBalancerV2Vault.joinPool.selector,
+                POOL_ID_1,
+                creditAccount,
+                creditAccount,
+                request
+            );
+
+            (address pool, ) = balancerMock.getPool(POOL_ID_1);
+
+            if (multicall) {
+                expectMulticallStackCalls(
+                    address(adapter),
+                    address(balancerMock),
+                    USER,
+                    expectedCallData,
+                    tokenTestSuite.addressOf(Tokens.DAI),
+                    pool,
+                    true
+                );
+
+                executeOneLineMulticall(address(adapter), passedCallData);
+            } else {
+                expectFastCheckStackCalls(
+                    address(adapter),
+                    address(balancerMock),
+                    USER,
+                    expectedCallData,
+                    tokenTestSuite.addressOf(Tokens.DAI),
+                    pool,
+                    true
+                );
+
+                evm.startPrank(USER);
+                adapter.joinPoolSingleAssetAll(
+                    POOL_ID_1,
+                    IAsset(tokenTestSuite.addressOf(Tokens.DAI)),
+                    RAY / 2
+                );
+                evm.stopPrank();
+            }
+
+            expectBalance(Tokens.DAI, creditAccount, 1);
+
+            expectBalance(pool, creditAccount, initialDAIBalance - 1);
+
+            expectAllowance(
+                Tokens.DAI,
+                creditAccount,
+                address(balancerMock),
+                1
+            );
+
+            expectTokenIsEnabled(pool, true);
+        }
+    }
+
+    function test_ABV2_07_exitPool_works_as_expected() public {
+        for (uint256 m = 0; m < 2; m++) {
+            bool multicall = m != 0;
+
+            setUp();
+            (
+                address creditAccount,
+                uint256 initialDAIBalance
+            ) = _openTestCreditAccount();
+
+            balancerMock.mintBPT(POOL_ID_1, creditAccount, 50000 * WAD);
+
+            IAsset[] memory assets = new IAsset[](3);
+
+            assets[0] = IAsset(tokenTestSuite.addressOf(Tokens.DAI));
+            assets[1] = IAsset(tokenTestSuite.addressOf(Tokens.USDC));
+            assets[2] = IAsset(tokenTestSuite.addressOf(Tokens.USDT));
+
+            uint256[] memory minAmountsOut = new uint256[](3);
+
+            minAmountsOut[0] = 9000 * WAD;
+            minAmountsOut[1] = 9000 * 1e6;
+            minAmountsOut[2] = 9000 * WAD;
+
+            ExitPoolRequest memory request;
+
+            {
+                bytes memory userData = abi.encode(
+                    ExitKind.EXACT_BPT_IN_FOR_TOKENS_OUT,
+                    30000 * WAD
+                );
+
+                request = ExitPoolRequest({
+                    assets: assets,
+                    minAmountsOut: minAmountsOut,
+                    userData: userData,
+                    toInternalBalance: true
+                });
+            }
+
+            bytes memory passedCallData = abi.encodeWithSelector(
+                IBalancerV2Vault.exitPool.selector,
+                POOL_ID_1,
+                USER,
+                USER,
+                request
+            );
+
+            request.toInternalBalance = false;
+
+            bytes memory expectedCallData = abi.encodeWithSelector(
+                IBalancerV2Vault.exitPool.selector,
+                POOL_ID_1,
+                creditAccount,
+                creditAccount,
+                request
+            );
+
+            request.toInternalBalance = true;
+
+            if (multicall) {
+                expectExitPoolStackCalls(
+                    address(balancerMock),
+                    USER,
+                    creditAccount,
+                    POOL_ID_1,
+                    expectedCallData,
+                    assets,
+                    true
+                );
+
+                executeOneLineMulticall(address(adapter), passedCallData);
+            } else {
+                expectExitPoolStackCalls(
+                    address(balancerMock),
+                    USER,
+                    creditAccount,
+                    POOL_ID_1,
+                    expectedCallData,
+                    assets,
+                    false
+                );
+
+                evm.prank(USER);
+                adapter.exitPool(POOL_ID_1, USER, payable(USER), request);
+            }
+
+            expectBalance(
+                Tokens.DAI,
+                creditAccount,
+                initialDAIBalance + 10000 * WAD
+            );
+            expectBalance(Tokens.USDT, creditAccount, 10000 * WAD);
+            expectBalance(Tokens.USDC, creditAccount, 10000 * 1e6);
+
+            (address pool, ) = balancerMock.getPool(POOL_ID_1);
+
+            expectBalance(pool, creditAccount, 20000 * WAD);
+
+            expectTokenIsEnabled(Tokens.DAI, true);
+            expectTokenIsEnabled(Tokens.USDC, true);
+            expectTokenIsEnabled(Tokens.USDT, true);
+        }
+    }
+
+    function test_ABV2_08_exitPoolSingleAsset_works_as_expected() public {
+        for (uint256 m = 0; m < 2; m++) {
+            bool multicall = m != 0;
+
+            setUp();
+            (
+                address creditAccount,
+                uint256 initialDAIBalance
+            ) = _openTestCreditAccount();
+
+            balancerMock.mintBPT(POOL_ID_1, creditAccount, DAI_ACCOUNT_AMOUNT);
+
+            bytes memory passedCallData = abi.encodeWithSelector(
+                IBalancerV2VaultAdapter.exitPoolSingleAsset.selector,
+                POOL_ID_1,
+                tokenTestSuite.addressOf(Tokens.USDT),
+                DAI_EXCHANGE_AMOUNT,
+                DAI_EXCHANGE_AMOUNT / 2
+            );
+
+            IAsset[] memory assets = new IAsset[](3);
+
+            assets[0] = IAsset(tokenTestSuite.addressOf(Tokens.DAI));
+            assets[1] = IAsset(tokenTestSuite.addressOf(Tokens.USDC));
+            assets[2] = IAsset(tokenTestSuite.addressOf(Tokens.USDT));
+
+            uint256[] memory minAmountsOut = new uint256[](3);
+
+            minAmountsOut[2] = DAI_EXCHANGE_AMOUNT / 2;
+
+            ExitPoolRequest memory request;
+
+            {
+                bytes memory userData = abi.encode(
+                    ExitKind.EXACT_BPT_IN_FOR_ONE_TOKEN_OUT,
+                    DAI_EXCHANGE_AMOUNT,
+                    2
+                );
+
+                request = ExitPoolRequest({
+                    assets: assets,
+                    minAmountsOut: minAmountsOut,
+                    userData: userData,
+                    toInternalBalance: false
+                });
+            }
+
+            bytes memory expectedCallData = abi.encodeWithSelector(
+                IBalancerV2Vault.exitPool.selector,
+                POOL_ID_1,
+                creditAccount,
+                creditAccount,
+                request
+            );
+
+            (address pool, ) = balancerMock.getPool(POOL_ID_1);
+
+            if (multicall) {
+                expectMulticallStackCalls(
+                    address(adapter),
+                    address(balancerMock),
+                    USER,
+                    expectedCallData,
+                    pool,
+                    tokenTestSuite.addressOf(Tokens.USDT),
+                    true,
+                    false
+                );
+
+                executeOneLineMulticall(address(adapter), passedCallData);
+            } else {
+                expectFastCheckStackCalls(
+                    address(adapter),
+                    address(balancerMock),
+                    USER,
+                    expectedCallData,
+                    pool,
+                    tokenTestSuite.addressOf(Tokens.USDT),
+                    true,
+                    false
+                );
+
+                evm.startPrank(USER);
+                adapter.exitPoolSingleAsset(
+                    POOL_ID_1,
+                    IAsset(tokenTestSuite.addressOf(Tokens.USDT)),
+                    DAI_EXCHANGE_AMOUNT,
+                    DAI_EXCHANGE_AMOUNT / 2
+                );
+                evm.stopPrank();
+            }
+
+            expectBalance(Tokens.USDT, creditAccount, DAI_EXCHANGE_AMOUNT);
+
+            expectBalance(
+                pool,
+                creditAccount,
+                DAI_ACCOUNT_AMOUNT - DAI_EXCHANGE_AMOUNT
+            );
+
+            expectTokenIsEnabled(Tokens.USDT, true);
+        }
+    }
+
+    function test_ABV2_09_exitPoolSingleAssetAll_works_as_expected() public {
+        for (uint256 m = 0; m < 2; m++) {
+            bool multicall = m != 0;
+
+            setUp();
+            (
+                address creditAccount,
+                uint256 initialDAIBalance
+            ) = _openTestCreditAccount();
+
+            balancerMock.mintBPT(POOL_ID_1, creditAccount, DAI_ACCOUNT_AMOUNT);
+
+            bytes memory passedCallData = abi.encodeWithSelector(
+                IBalancerV2VaultAdapter.exitPoolSingleAssetAll.selector,
+                POOL_ID_1,
+                tokenTestSuite.addressOf(Tokens.USDT),
+                RAY / 2
+            );
+
+            IAsset[] memory assets = new IAsset[](3);
+
+            assets[0] = IAsset(tokenTestSuite.addressOf(Tokens.DAI));
+            assets[1] = IAsset(tokenTestSuite.addressOf(Tokens.USDC));
+            assets[2] = IAsset(tokenTestSuite.addressOf(Tokens.USDT));
+
+            uint256[] memory minAmountsOut = new uint256[](3);
+
+            minAmountsOut[2] = (DAI_ACCOUNT_AMOUNT - 1) / 2;
+
+            ExitPoolRequest memory request;
+
+            {
+                bytes memory userData = abi.encode(
+                    ExitKind.EXACT_BPT_IN_FOR_ONE_TOKEN_OUT,
+                    DAI_ACCOUNT_AMOUNT - 1,
+                    2
+                );
+
+                request = ExitPoolRequest({
+                    assets: assets,
+                    minAmountsOut: minAmountsOut,
+                    userData: userData,
+                    toInternalBalance: false
+                });
+            }
+
+            bytes memory expectedCallData = abi.encodeWithSelector(
+                IBalancerV2Vault.exitPool.selector,
+                POOL_ID_1,
+                creditAccount,
+                creditAccount,
+                request
+            );
+
+            (address pool, ) = balancerMock.getPool(POOL_ID_1);
+
+            if (multicall) {
+                expectMulticallStackCalls(
+                    address(adapter),
+                    address(balancerMock),
+                    USER,
+                    expectedCallData,
+                    pool,
+                    tokenTestSuite.addressOf(Tokens.USDT),
+                    true,
+                    false
+                );
+
+                executeOneLineMulticall(address(adapter), passedCallData);
+            } else {
+                expectFastCheckStackCalls(
+                    address(adapter),
+                    address(balancerMock),
+                    USER,
+                    expectedCallData,
+                    pool,
+                    tokenTestSuite.addressOf(Tokens.USDT),
+                    true,
+                    false
+                );
+
+                evm.startPrank(USER);
+                adapter.exitPoolSingleAssetAll(
+                    POOL_ID_1,
+                    IAsset(tokenTestSuite.addressOf(Tokens.USDT)),
+                    RAY / 2
+                );
+                evm.stopPrank();
+            }
+
+            expectBalance(Tokens.USDT, creditAccount, DAI_ACCOUNT_AMOUNT - 1);
+
+            expectBalance(pool, creditAccount, 1);
+
+            expectTokenIsEnabled(Tokens.USDT, true);
         }
     }
 }

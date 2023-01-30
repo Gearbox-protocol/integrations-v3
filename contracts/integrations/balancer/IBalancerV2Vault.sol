@@ -15,6 +15,19 @@ enum PoolSpecialization {
     TWO_TOKEN
 }
 
+enum JoinKind {
+    INIT,
+    EXACT_TOKENS_IN_FOR_BPT_OUT,
+    TOKEN_IN_FOR_EXACT_BPT_OUT,
+    ALL_TOKENS_IN_FOR_EXACT_BPT_OUT
+}
+
+enum ExitKind {
+    EXACT_BPT_IN_FOR_ONE_TOKEN_OUT,
+    EXACT_BPT_IN_FOR_TOKENS_OUT,
+    BPT_IN_FOR_EXACT_TOKENS_OUT
+}
+
 struct SingleSwap {
     bytes32 poolId;
     SwapKind kind;
@@ -54,12 +67,14 @@ struct ExitPoolRequest {
 }
 
 interface IBalancerV2VaultGetters {
-    function getPool(bytes32 poolId)
-        external
-        view
-        returns (address, PoolSpecialization);
+    function getPool(
+        bytes32 poolId
+    ) external view returns (address, PoolSpecialization);
 
-    function getPoolTokenInfo(bytes32 poolId, IERC20 token)
+    function getPoolTokenInfo(
+        bytes32 poolId,
+        IERC20 token
+    )
         external
         view
         returns (
@@ -69,7 +84,9 @@ interface IBalancerV2VaultGetters {
             address assetManager
         );
 
-    function getPoolTokens(bytes32 poolId)
+    function getPoolTokens(
+        bytes32 poolId
+    )
         external
         view
         returns (

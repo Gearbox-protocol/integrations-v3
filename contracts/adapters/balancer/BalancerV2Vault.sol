@@ -29,9 +29,10 @@ contract BalancerV2VaultAdapter is
     /// @dev Constructor
     /// @param _creditManager Address Credit manager
     /// @param _vault Address of IBalancerV2Vault
-    constructor(address _creditManager, address _vault)
-        AbstractAdapter(_creditManager, _vault)
-    {}
+    constructor(
+        address _creditManager,
+        address _vault
+    ) AbstractAdapter(_creditManager, _vault) {}
 
     /// @dev Sends an order to swap a token for another token within a single pool
     /// @param singleSwap Struct containing swap parameters
@@ -170,7 +171,7 @@ contract BalancerV2VaultAdapter is
             creditAccount
         );
 
-        _approveAssets(assets, type(uint256).max);
+        _approveAssets(assets, limits, type(uint256).max);
 
         assetDeltas = abi.decode(
             _execute(
@@ -187,7 +188,7 @@ contract BalancerV2VaultAdapter is
             (int256[])
         );
 
-        _approveAssets(assets, 1);
+        _approveAssets(assets, limits, 1);
 
         _enableAssets(creditAccount, assets, assetDeltas);
 
@@ -252,7 +253,7 @@ contract BalancerV2VaultAdapter is
 
         request.fromInternalBalance = false;
 
-        _approveAssets(request.assets, type(uint256).max);
+        _approveAssets(request.assets, request.maxAmountsIn, type(uint256).max);
         _enableToken(creditAccount, bpt);
 
         _execute(
@@ -265,7 +266,7 @@ contract BalancerV2VaultAdapter is
             )
         );
 
-        _approveAssets(request.assets, 1);
+        _approveAssets(request.assets, request.maxAmountsIn, 1);
 
         _fullCheck(creditAccount);
     }
@@ -543,11 +544,31 @@ contract BalancerV2VaultAdapter is
     }
 
     /// @dev Internal function that changes approval for a batch of assets in the vault
-    function _approveAssets(IAsset[] memory assets, uint256 amount) internal {
+    function _approveAssets(
+        IAsset[] memory assets,
+        int256[] memory filter,
+        uint256 amount
+    ) internal {
         uint256 len = assets.length;
 
         for (uint256 i = 0; i < len; ) {
-            _approveToken(address(assets[i]), amount);
+            if (filter[i] > 1) _approveToken(address(assets[i]), amount);
+
+            unchecked {
+                ++i;
+            }
+        }
+    }
+
+    function _approveAssets(
+        IAsset[] memory assets,
+        uint256[] memory filter,
+        uint256 amount
+    ) internal {
+        uint256 len = assets.length;
+
+        for (uint256 i = 0; i < len; ) {
+            if (filter[i] > 1) _approveToken(address(assets[i]), amount);
 
             unchecked {
                 ++i;
@@ -556,9 +577,10 @@ contract BalancerV2VaultAdapter is
     }
 
     /// @dev Internal function to enable a token on a CA
-    function _enableToken(address creditAccount, address tokenToEnable)
-        internal
-    {
+    function _enableToken(
+        address creditAccount,
+        address tokenToEnable
+    ) internal {
         creditManager.checkAndEnableToken(creditAccount, tokenToEnable);
     }
 
@@ -571,7 +593,7 @@ contract BalancerV2VaultAdapter is
         uint256 len = assets.length;
 
         for (uint256 i = 0; i < len; ) {
-            if (filter[i] > 1) {
+            if (filter[i] < -1) {
                 creditManager.checkAndEnableToken(
                     creditAccount,
                     address(assets[i])
@@ -585,17 +607,16 @@ contract BalancerV2VaultAdapter is
     }
 
     /// @dev Internal function that creates a filter based on CA token balances
-    function _getBalancesFilter(address creditAccount, IAsset[] memory assets)
-        internal
-        view
-        returns (int256[] memory filter)
-    {
+    function _getBalancesFilter(
+        address creditAccount,
+        IAsset[] memory assets
+    ) internal view returns (int256[] memory filter) {
         uint256 len = assets.length;
 
         filter = new int256[](len);
 
         for (uint256 i = 0; i < len; ) {
-            filter[i] = int256(
+            filter[i] = -int256(
                 IERC20(address(assets[i])).balanceOf(creditAccount)
             );
 
@@ -606,11 +627,9 @@ contract BalancerV2VaultAdapter is
     }
 
     /// @dev Returns a standard FundManagement struct used by the adapter
-    function _getDefaultFundManagement(address creditAccount)
-        internal
-        pure
-        returns (FundManagement memory)
-    {
+    function _getDefaultFundManagement(
+        address creditAccount
+    ) internal pure returns (FundManagement memory) {
         return
             FundManagement({
                 sender: creditAccount,
@@ -622,18 +641,19 @@ contract BalancerV2VaultAdapter is
 
     /// @dev Returns the address and specialization of the pool, based on ID
     /// @param poolId ID of Balancer pool to query
-    function getPool(bytes32 poolId)
-        external
-        view
-        returns (address, PoolSpecialization)
-    {
+    function getPool(
+        bytes32 poolId
+    ) external view returns (address, PoolSpecialization) {
         return IBalancerV2Vault(targetContract).getPool(poolId);
     }
 
     /// @dev Returns the data for a single asset in the pool
     /// @param poolId ID of Balancer pool to query
     /// @param token Token to query
-    function getPoolTokenInfo(bytes32 poolId, IERC20 token)
+    function getPoolTokenInfo(
+        bytes32 poolId,
+        IERC20 token
+    )
         external
         view
         returns (
@@ -648,7 +668,9 @@ contract BalancerV2VaultAdapter is
 
     /// @dev Returns the pool tokens, based on pool ID
     /// @param poolId ID of Balancer pool to query
-    function getPoolTokens(bytes32 poolId)
+    function getPoolTokens(
+        bytes32 poolId
+    )
         external
         view
         returns (

@@ -1,6 +1,6 @@
 pragma solidity ^0.8.10;
 
-import { IBalancerV2Vault, PoolSpecialization, SingleSwap, BatchSwapStep, FundManagement, SwapKind, JoinPoolRequest, ExitPoolRequest } from "../../../integrations/balancer/IBalancerV2Vault.sol";
+import { IBalancerV2Vault, PoolSpecialization, SingleSwap, BatchSwapStep, FundManagement, SwapKind, JoinPoolRequest, ExitPoolRequest, JoinKind, ExitKind } from "../../../integrations/balancer/IBalancerV2Vault.sol";
 import { IAsset } from "../../../integrations/balancer/IAsset.sol";
 import { BPTMock } from "./BPTMock.sol";
 import { BPTStableMock } from "./BPTStableMock.sol";
@@ -16,19 +16,6 @@ struct PoolData {
     mapping(address => uint256) withdrawalRatesRAY;
     PoolSpecialization specialization;
     uint24 fee;
-}
-
-enum JoinKind {
-    INIT,
-    EXACT_TOKENS_IN_FOR_BPT_OUT,
-    TOKEN_IN_FOR_EXACT_BPT_OUT,
-    ALL_TOKENS_IN_FOR_EXACT_BPT_OUT
-}
-
-enum ExitKind {
-    EXACT_BPT_IN_FOR_ONE_TOKEN_OUT,
-    EXACT_BPT_IN_FOR_TOKENS_OUT,
-    BPT_IN_FOR_EXACT_TOKENS_OUT
 }
 
 contract BalancerVaultMock is IBalancerV2Vault {
@@ -92,18 +79,15 @@ contract BalancerVaultMock is IBalancerV2Vault {
         poolData[poolId].withdrawalRatesRAY[asset] = rateRAY;
     }
 
-    function setAssetBalances(bytes32 poolId, uint256[] memory balances)
-        external
-    {
+    function setAssetBalances(
+        bytes32 poolId,
+        uint256[] memory balances
+    ) external {
         require(poolData[poolId].assets.length == balances.length);
         poolData[poolId].balances = balances;
     }
 
-    function mintBPT(
-        bytes32 poolId,
-        address to,
-        uint256 amount
-    ) external {
+    function mintBPT(bytes32 poolId, address to, uint256 amount) external {
         BPTMock(poolData[poolId].pool).mint(to, amount);
     }
 
@@ -228,6 +212,8 @@ contract BalancerVaultMock is IBalancerV2Vault {
         IAsset[] memory assets,
         FundManagement memory
     ) public returns (int256[] memory assetDeltas) {
+        assetDeltas = new int256[](assets.length);
+
         if (kind == SwapKind.GIVEN_IN) {
             for (uint256 i = 0; i < swaps.length; ++i) {
                 require(
@@ -235,34 +221,19 @@ contract BalancerVaultMock is IBalancerV2Vault {
                     "BalancerVault: Unknown pool"
                 );
 
-                address assetIn = poolData[swaps[i].poolId].assets[
-                    swaps[i].assetInIndex
-                ];
-                address assetOut = poolData[swaps[i].poolId].assets[
-                    swaps[i].assetOutIndex
-                ];
-                uint256 assetInArrayIndex = assets.length;
-                uint256 assetOutArrayIndex = assets.length;
-
-                for (uint256 j = 0; i < assets.length; ++j) {
-                    if (address(assets[j]) == assetIn) assetInArrayIndex = j;
-                    if (address(assets[j]) == assetOut) assetOutArrayIndex = j;
-                }
-
-                require(
-                    assetInArrayIndex != assets.length &&
-                        assetOutArrayIndex != assets.length,
-                    "BalanceVault: Asset not in assets array"
-                );
+                address assetIn = address(assets[swaps[i].assetInIndex]);
+                address assetOut = address(assets[swaps[i].assetOutIndex]);
 
                 uint256 amountIn;
 
                 if (swaps[i].amount > 0) {
                     amountIn = swaps[i].amount;
-                    assetDeltas[assetInArrayIndex] += int256(swaps[i].amount);
+                    assetDeltas[swaps[i].assetInIndex] += int256(
+                        swaps[i].amount
+                    );
                 } else {
-                    amountIn = uint256(-assetDeltas[assetInArrayIndex]);
-                    assetDeltas[assetInArrayIndex] = 0;
+                    amountIn = uint256(-assetDeltas[swaps[i].assetInIndex]);
+                    assetDeltas[swaps[i].assetInIndex] = 0;
                 }
 
                 uint256 rate = poolData[swaps[i].poolId].ratesRAY[assetIn][
@@ -271,7 +242,7 @@ contract BalancerVaultMock is IBalancerV2Vault {
 
                 require(rate != 0, "BalancerVault: Rate not set");
 
-                assetDeltas[assetOutArrayIndex] -= int256(
+                assetDeltas[swaps[i].assetOutIndex] -= int256(
                     (amountIn *
                         rate *
                         (10000 - uint256(poolData[swaps[i].poolId].fee))) /
@@ -285,34 +256,19 @@ contract BalancerVaultMock is IBalancerV2Vault {
                     "BalancerVault: Unknown pool"
                 );
 
-                address assetIn = poolData[swaps[i].poolId].assets[
-                    swaps[i].assetInIndex
-                ];
-                address assetOut = poolData[swaps[i].poolId].assets[
-                    swaps[i].assetOutIndex
-                ];
-                uint256 assetInArrayIndex = assets.length;
-                uint256 assetOutArrayIndex = assets.length;
-
-                for (uint256 j = 0; i < assets.length; ++j) {
-                    if (address(assets[j]) == assetIn) assetInArrayIndex = j;
-                    if (address(assets[j]) == assetOut) assetOutArrayIndex = j;
-                }
-
-                require(
-                    assetInArrayIndex != assets.length &&
-                        assetOutArrayIndex != assets.length,
-                    "BalanceVault: Asset not in assets array"
-                );
+                address assetIn = address(assets[swaps[i].assetInIndex]);
+                address assetOut = address(assets[swaps[i].assetOutIndex]);
 
                 uint256 amountOut;
 
                 if (swaps[i].amount > 0) {
                     amountOut = swaps[i].amount;
-                    assetDeltas[assetOutArrayIndex] -= int256(swaps[i].amount);
+                    assetDeltas[swaps[i].assetOutIndex] -= int256(
+                        swaps[i].amount
+                    );
                 } else {
-                    amountOut = uint256(assetDeltas[assetOutArrayIndex]);
-                    assetDeltas[assetOutArrayIndex] = 0;
+                    amountOut = uint256(assetDeltas[swaps[i].assetOutIndex]);
+                    assetDeltas[swaps[i].assetOutIndex] = 0;
                 }
 
                 uint256 rate = poolData[swaps[i].poolId].ratesRAY[assetIn][
@@ -321,7 +277,7 @@ contract BalancerVaultMock is IBalancerV2Vault {
 
                 require(rate != 0, "BalancerVault: Rate not set");
 
-                assetDeltas[assetInArrayIndex] += int256(
+                assetDeltas[swaps[i].assetInIndex] += int256(
                     (amountOut * RAY * 10000) /
                         (rate *
                             (10000 - uint256(poolData[swaps[i].poolId].fee)))
@@ -453,7 +409,9 @@ contract BalancerVaultMock is IBalancerV2Vault {
         return abi.decode(userData, (JoinKind));
     }
 
-    function _exactTokensInForBPTOut(bytes memory userData)
+    function _exactTokensInForBPTOut(
+        bytes memory userData
+    )
         internal
         pure
         returns (uint256[] memory amountsIn, uint256 minBPTAmountOut)
@@ -464,22 +422,18 @@ contract BalancerVaultMock is IBalancerV2Vault {
         );
     }
 
-    function _tokenInForExactBPTOut(bytes memory userData)
-        internal
-        pure
-        returns (uint256 bptAmountOut, uint256 tokenIndex)
-    {
+    function _tokenInForExactBPTOut(
+        bytes memory userData
+    ) internal pure returns (uint256 bptAmountOut, uint256 tokenIndex) {
         (, bptAmountOut, tokenIndex) = abi.decode(
             userData,
             (JoinKind, uint256, uint256)
         );
     }
 
-    function _allTokensInForExactBptOut(bytes memory userData)
-        internal
-        pure
-        returns (uint256 bptAmountOut)
-    {
+    function _allTokensInForExactBptOut(
+        bytes memory userData
+    ) internal pure returns (uint256 bptAmountOut) {
         (, bptAmountOut) = abi.decode(userData, (JoinKind, uint256));
     }
 
@@ -591,26 +545,24 @@ contract BalancerVaultMock is IBalancerV2Vault {
         return abi.decode(userData, (ExitKind));
     }
 
-    function _exactBptInForTokenOut(bytes memory userData)
-        internal
-        pure
-        returns (uint256 bptAmountIn, uint256 tokenIndex)
-    {
+    function _exactBptInForTokenOut(
+        bytes memory userData
+    ) internal pure returns (uint256 bptAmountIn, uint256 tokenIndex) {
         (, bptAmountIn, tokenIndex) = abi.decode(
             userData,
             (ExitKind, uint256, uint256)
         );
     }
 
-    function _exactBptInForTokensOut(bytes memory userData)
-        internal
-        pure
-        returns (uint256 bptAmountIn)
-    {
+    function _exactBptInForTokensOut(
+        bytes memory userData
+    ) internal pure returns (uint256 bptAmountIn) {
         (, bptAmountIn) = abi.decode(userData, (ExitKind, uint256));
     }
 
-    function _bptInForExactTokensOut(bytes memory userData)
+    function _bptInForExactTokensOut(
+        bytes memory userData
+    )
         internal
         pure
         returns (uint256[] memory amountsOut, uint256 maxBPTAmountIn)
@@ -621,11 +573,9 @@ contract BalancerVaultMock is IBalancerV2Vault {
         );
     }
 
-    function getPool(bytes32 poolId)
-        external
-        view
-        returns (address, PoolSpecialization)
-    {
+    function getPool(
+        bytes32 poolId
+    ) external view returns (address, PoolSpecialization) {
         require(
             poolData[poolId].pool != address(0),
             "BalancerVault: Unknown pool"
@@ -634,7 +584,9 @@ contract BalancerVaultMock is IBalancerV2Vault {
         return (poolData[poolId].pool, poolData[poolId].specialization);
     }
 
-    function getPoolTokens(bytes32 poolId)
+    function getPoolTokens(
+        bytes32 poolId
+    )
         external
         view
         returns (
@@ -660,7 +612,10 @@ contract BalancerVaultMock is IBalancerV2Vault {
         }
     }
 
-    function getPoolTokenInfo(bytes32 poolId, IERC20 token)
+    function getPoolTokenInfo(
+        bytes32 poolId,
+        IERC20 token
+    )
         external
         view
         returns (
