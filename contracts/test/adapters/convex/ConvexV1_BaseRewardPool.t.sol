@@ -3,16 +3,22 @@
 // (c) Gearbox Holdings, 2022
 pragma solidity ^0.8.10;
 
+import { MultiCall } from "@gearbox-protocol/core-v2/contracts/interfaces/ICreditFacade.sol";
+import { ICreditManagerV2Exceptions } from "@gearbox-protocol/core-v2/contracts/interfaces/ICreditManagerV2.sol";
 import { NotImplementedException } from "@gearbox-protocol/core-v2/contracts/interfaces/IErrors.sol";
 
 import { ConvexAdapterHelper, CURVE_LP_AMOUNT, DAI_ACCOUNT_AMOUNT, REWARD_AMOUNT, REWARD_AMOUNT1, REWARD_AMOUNT2 } from "./ConvexAdapterHelper.sol";
 import { ERC20Mock } from "@gearbox-protocol/core-v2/contracts/test/mocks/token/ERC20Mock.sol";
 
-import { USER, CONFIGURATOR } from "../../lib/constants.sol";
+import { USER, CONFIGURATOR, FRIEND } from "../../lib/constants.sol";
 
 import "@gearbox-protocol/core-v2/contracts/test/lib/test.sol";
 
-contract ConvexV1AdapterBasePoolTest is DSTest, ConvexAdapterHelper {
+contract ConvexV1AdapterBasePoolTest is
+    DSTest,
+    ConvexAdapterHelper,
+    ICreditManagerV2Exceptions
+{
     function setUp() public {
         _setupConvexSuite(2);
     }
@@ -777,6 +783,46 @@ contract ConvexV1AdapterBasePoolTest is DSTest, ConvexAdapterHelper {
             basePoolMock.extraRewards(1),
             basePoolAdapter.extraRewards(1),
             "extraRewards(1) is not consistent"
+        );
+    }
+
+    function test_ACVX1_P_14_getReward_cannot_break_max_token_limit() public {
+        _setupConvexSuite(2);
+
+        address creditAccount = _openTestCreditAccountAndDeposit();
+
+        cft.tokenTestSuite().mint(underlying, FRIEND, DAI_ACCOUNT_AMOUNT);
+
+        evm.prank(FRIEND);
+        creditFacade.openCreditAccount(DAI_ACCOUNT_AMOUNT, FRIEND, 100, 0);
+
+        evm.prank(USER);
+        basePoolAdapter.stakeAll();
+
+        basePoolMock.addRewardAmount(REWARD_AMOUNT);
+        extraPoolMock1.addRewardAmount(REWARD_AMOUNT1);
+        extraPoolMock2.addRewardAmount(REWARD_AMOUNT2);
+
+        evm.prank(CONFIGURATOR);
+        creditConfigurator.setMaxEnabledTokens(3);
+
+        evm.expectRevert(TooManyEnabledTokensException.selector);
+        evm.prank(FRIEND);
+        basePoolAdapter.getReward(creditAccount, true);
+
+        evm.expectRevert(TooManyEnabledTokensException.selector);
+        evm.prank(FRIEND);
+        creditFacade.multicall(
+            multicallBuilder(
+                MultiCall({
+                    target: address(basePoolAdapter),
+                    callData: abi.encodeWithSignature(
+                        "getReward(address,bool)",
+                        creditAccount,
+                        true
+                    )
+                })
+            )
         );
     }
 }

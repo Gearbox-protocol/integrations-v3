@@ -215,15 +215,15 @@ contract Live_FraxUsdcEquivalenceTest is DSTest, LiveEnvHelper {
         internal
         returns (address creditAccount)
     {
-        ICreditFacade creditFacade = lts.creditFacades(Tokens.DAI);
+        ICreditFacade creditFacade = lts.creditFacades(Tokens.FRAX);
 
-        tokenTestSuite.mint(Tokens.FRAX, USER, 2 * amount);
+        tokenTestSuite.mint(Tokens.FRAX, USER, 3 * amount);
 
         // Approve tokens
         tokenTestSuite.approve(
             Tokens.FRAX,
             USER,
-            address(lts.creditManagers(Tokens.DAI))
+            address(lts.creditManagers(Tokens.FRAX))
         );
 
         evm.startPrank(USER);
@@ -242,9 +242,9 @@ contract Live_FraxUsdcEquivalenceTest is DSTest, LiveEnvHelper {
 
         evm.stopPrank();
 
-        creditAccount = lts.creditManagers(Tokens.DAI).getCreditAccountOrRevert(
-                USER
-            );
+        creditAccount = lts
+            .creditManagers(Tokens.FRAX)
+            .getCreditAccountOrRevert(USER);
     }
 
     /// @dev [L-CRVET-5]: FraxUsdc adapter and normal account works identically
@@ -252,7 +252,7 @@ contract Live_FraxUsdcEquivalenceTest is DSTest, LiveEnvHelper {
         public
         liveOnly
     {
-        ICreditFacade creditFacade = lts.creditFacades(Tokens.DAI);
+        ICreditFacade creditFacade = lts.creditFacades(Tokens.FRAX);
 
         (uint256 minAmount, ) = creditFacade.limits();
 
@@ -277,11 +277,11 @@ contract Live_FraxUsdcEquivalenceTest is DSTest, LiveEnvHelper {
         evm.revertTo(snapshot);
 
         compareBehavior(
-            lts.getAdapter(Tokens.DAI, Contracts.CURVE_FRAX_USDC_POOL),
+            lts.getAdapter(Tokens.FRAX, Contracts.CURVE_FRAX_USDC_POOL),
             creditAccount
         );
         compareExtraFunctions(
-            lts.getAdapter(Tokens.DAI, Contracts.CURVE_FRAX_USDC_POOL),
+            lts.getAdapter(Tokens.FRAX, Contracts.CURVE_FRAX_USDC_POOL),
             creditAccount,
             true
         );
