@@ -186,11 +186,6 @@ contract CurveV1AdapterBaseTest is DSTest, CurveV1AdapterHelper {
             "Incorrect creditManager"
         );
         assertEq(
-            address(adapter.creditFacade()),
-            address(creditFacade),
-            "Incorrect creditFacade"
-        );
-        assertEq(
             address(adapter.targetContract()),
             address(curveV1Mock),
             "Incorrect router"

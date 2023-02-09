@@ -296,7 +296,12 @@ contract ConvexV1BaseRewardPoolAdapter is
     {
         IBaseRewardPool(targetContract).getReward(_account, _claimExtras); // F: [ACVX1_P_06-07]
         _enableRewardTokens(_account, _claimExtras);
-        _checkAndOptimizeEnabledTokens(_account);
+
+        if (_account == creditManager.creditAccounts(msg.sender)) {
+            _checkAndOptimizeEnabledTokens(_account);
+        } else {
+            creditManager.checkAndOptimizeEnabledTokens(_account);
+        }
 
         return true;
     }

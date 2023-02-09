@@ -133,6 +133,26 @@ contract LiveEnvTestSuite is CreditConfigLive {
                             mintedNFT = true;
                         }
 
+                        IPoolService pool = IPoolService(
+                            creditManagers[underlyingT].pool()
+                        );
+
+                        if (pool.expectedLiquidity() == 0) {
+                            tokenTestSuite.mint(
+                                underlyingT,
+                                FRIEND,
+                                2000000 * WAD
+                            );
+                            tokenTestSuite.approve(
+                                underlyingT,
+                                FRIEND,
+                                address(pool)
+                            );
+
+                            evm.prank(FRIEND);
+                            pool.addLiquidity(2000000 * WAD, FRIEND, 0);
+                        }
+
                         evm.label(
                             cmList[i].creditFacade,
                             string(
