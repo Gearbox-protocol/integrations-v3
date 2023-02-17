@@ -121,7 +121,7 @@ contract MyContract {
 
 ## Bug bounty
 
-This repository is subject to the Gearbox bug bounty program, per the terms defined [here]().
+This repository is subject to the Gearbox bug bounty program, per the terms defined [here](https://docs.gearbox.finance/risk-and-security/audits-bug-bounty#bug-bounty).
 
 ## Documentation
 
