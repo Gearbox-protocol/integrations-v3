@@ -4,7 +4,6 @@
 pragma solidity ^0.8.17;
 
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
 import { AbstractAdapter } from "@gearbox-protocol/core-v2/contracts/adapters/AbstractAdapter.sol";
 import { AdapterType } from "@gearbox-protocol/core-v2/contracts/interfaces/adapters/IAdapter.sol";
@@ -16,13 +15,13 @@ import { IEulerV1_ETokenAdapter } from "../../interfaces/euler/IEulerV1_ETokenAd
 /// @notice Implements logic for CAs to interact with Euler's eTokens
 contract EulerV1_ETokenAdapter is AbstractAdapter, IEulerV1_ETokenAdapter {
     /// @notice Address of the eToken's underlying token
-    address public immutable underlying;
+    address public immutable override underlying;
 
     AdapterType public constant _gearboxAdapterType =
         AdapterType.EULER_V1_ETOKEN;
     uint16 public constant _gearboxAdapterVersion = 1;
 
-    /// @dev Constructor
+    /// @notice Constructor
     /// @param _creditManager Credit manager address
     /// @param _eToken eToken address
     constructor(

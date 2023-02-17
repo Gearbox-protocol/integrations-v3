@@ -5,10 +5,11 @@ pragma solidity ^0.8.17;
 
 import { IAdapter } from "@gearbox-protocol/core-v2/contracts/interfaces/adapters/IAdapter.sol";
 
-import { IEToken } from "../../integrations/euler/IEToken.sol";
-
 /// @title Euler V1 eToken adapter interface
 interface IEulerV1_ETokenAdapter is IAdapter {
+    /// @notice Address of the eToken's underlying token
+    function underlying() external view returns (address);
+
     /// @notice Deposit underlying tokens into Euler in exchange for eTokens
     /// @param amount Amount of underlying tokens to deposit, set to `type(uint256).max`
     ///        to deposit full amount (in this case, underlying will be disabled)
