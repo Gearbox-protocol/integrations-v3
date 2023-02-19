@@ -81,9 +81,7 @@ contract EulerV1_ETokenAdapter is AbstractAdapter, IEulerV1_ETokenAdapter {
     ///      - `tokenOut` is eToken
     ///      - `disableTokenIn` is set to true because operation spends the entire balance
     function _depositAll() internal {
-        address creditAccount = creditManager.getCreditAccountOrRevert(
-            msg.sender
-        );
+        address creditAccount = _creditAccount();
         uint256 balance = IERC20(underlying).balanceOf(creditAccount);
         if (balance <= 1) return;
 
@@ -151,9 +149,7 @@ contract EulerV1_ETokenAdapter is AbstractAdapter, IEulerV1_ETokenAdapter {
     ///      - `tokenOut` is eToken's underlying token
     ///      - `disableTokenIn` is set to true because operation spends the entire balance
     function _withdrawAll() internal {
-        address creditAccount = creditManager.getCreditAccountOrRevert(
-            msg.sender
-        );
+        address creditAccount = _creditAccount();
         // NOTE: there is no guaranteed way to keep precisely 1 eToken on the balance
         // so we're keeping an equivalent of 1 underlying token
         uint256 balance = IEToken(targetContract).balanceOfUnderlying(
