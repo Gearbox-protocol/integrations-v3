@@ -67,9 +67,7 @@ contract CompoundV2_CEtherAdapter is CompoundV2_CTokenAdapter {
     ///      - `tokenOut` is cETH
     ///      - `disableTokenIn` is set to true because operation spends the entire balance
     function _mintAll() internal override returns (uint256 error) {
-        address creditAccount = creditManager.getCreditAccountOrRevert(
-            msg.sender
-        );
+        address creditAccount = _creditAccount();
         uint256 balance = IERC20(underlying).balanceOf(creditAccount);
         if (balance <= 1) return 0;
 
@@ -113,9 +111,7 @@ contract CompoundV2_CEtherAdapter is CompoundV2_CTokenAdapter {
     ///      - `tokenOut` is WETH
     ///      - `disableTokenIn` is set to true because operation spends the entire balance
     function _redeemAll() internal override returns (uint256 error) {
-        address creditAccount = creditManager.getCreditAccountOrRevert(
-            msg.sender
-        );
+        address creditAccount = _creditAccount();
         uint256 balance = ICEther(cToken).balanceOf(creditAccount);
         if (balance <= 1) return 0;
 
