@@ -15,7 +15,7 @@ import { ZeroAddressException } from "@gearbox-protocol/core-v2/contracts/interf
 
 uint256 constant RANGE_WIDTH = 200; // 2%
 
-/// @title Compound price feed
+/// @title Compound V2 cToken price feed
 contract CompoundPriceFeed is LPPriceFeed {
     /// @dev Chainlink price feed for the underlying token
     AggregatorV3Interface public immutable priceFeed;
