@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 // Gearbox Protocol. Generalized leverage for DeFi protocols
-// (c) Gearbox Holdings, 2022
-pragma solidity ^0.8.10;
+// (c) Gearbox Holdings, 2023
+pragma solidity ^0.8.17;
 
 import { TokensTestSuite } from "../suites/TokensTestSuite.sol";
 import { Tokens } from "./Tokens.sol";
@@ -80,8 +80,7 @@ contract CreditConfig is DSTest, ICreditConfig {
                 collateralTokens: getCollateralTokens(),
                 degenNFT: address(0),
                 blacklistHelper: address(0),
-                expirable: false,
-                skipInit: false
+                expirable: false
             });
     }
 
