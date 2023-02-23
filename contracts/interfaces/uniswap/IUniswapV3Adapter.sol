@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Gearbox Protocol. Generalized leverage for DeFi protocols
-// (c) Gearbox Holdings, 2022
-pragma solidity ^0.8.10;
+// (c) Gearbox Holdings, 2023
+pragma solidity ^0.8.17;
 
 import { IAdapter } from "@gearbox-protocol/core-v2/contracts/interfaces/adapters/IAdapter.sol";
 import { ISwapRouter } from "../../integrations/uniswap/IUniswapV3.sol";
@@ -11,11 +11,11 @@ interface IUniswapV3AdapterExceptions {
     error InvalidPathException();
 }
 
-interface IUniswapV3Adapter is
-    IAdapter,
-    ISwapRouter,
-    IUniswapV3AdapterExceptions
-{
+interface IUniswapV3Adapter is IAdapter, IUniswapV3AdapterExceptions {
+    function exactInputSingle(
+        ISwapRouter.ExactInputSingleParams calldata params
+    ) external;
+
     /// @dev A struct encoding parameters for exactAllInputSingle,
     ///      which is unique to the Gearbox adapter
     /// @param tokenIn Token that is spent by the swap
@@ -39,9 +39,11 @@ interface IUniswapV3Adapter is
     /// - Fills the `ExactInputSingleParams` struct
     /// - Makes a max allowance fast check call, passing the new struct as params
     /// @param params The parameters necessary for the swap, encoded as `ExactAllInputSingleParams` in calldata
-    function exactAllInputSingle(ExactAllInputSingleParams calldata params)
-        external
-        returns (uint256 amountOut);
+    function exactAllInputSingle(
+        ExactAllInputSingleParams calldata params
+    ) external;
+
+    function exactInput(ISwapRouter.ExactInputParams calldata params) external;
 
     /// @dev A struct encoding parameters for exactAllInput,
     ///      which is unique to the Gearbox adapter
@@ -61,7 +63,13 @@ interface IUniswapV3Adapter is
     /// - Fills the `ExactAllInputParams` struct
     /// - Makes a max allowance fast check call, passing the new struct as `params`
     /// @param params The parameters necessary for the multi-hop swap, encoded as `ExactAllInputParams` in calldata
-    function exactAllInput(ExactAllInputParams calldata params)
-        external
-        returns (uint256 amountOut);
+    function exactAllInput(ExactAllInputParams calldata params) external;
+
+    function exactOutputSingle(
+        ISwapRouter.ExactOutputSingleParams calldata params
+    ) external;
+
+    function exactOutput(
+        ISwapRouter.ExactOutputParams calldata params
+    ) external;
 }

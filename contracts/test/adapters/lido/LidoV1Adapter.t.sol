@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 // Gearbox Protocol. Generalized leverage for DeFi protocols
-// (c) Gearbox Holdings, 2022
-pragma solidity ^0.8.10;
+// (c) Gearbox Holdings, 2023
+pragma solidity ^0.8.17;
 
 import { LidoV1Adapter, LIDO_STETH_LIMIT } from "../../../adapters/lido/LidoV1.sol";
 import { ILidoV1AdapterEvents, ILidoV1AdapterExceptions } from "../../../interfaces/lido/ILidoV1Adapter.sol";
@@ -112,185 +112,125 @@ contract LidoV1AdapterTest is
         evm.expectRevert(
             ICreditManagerV2Exceptions.HasNoOpenedAccountException.selector
         );
-        lidoV1Adapter.submit(2 * WAD);
+        executeOneLineMulticall(
+            address(lidoV1Adapter),
+            abi.encodeCall(lidoV1Adapter.submit, (2 * WAD))
+        );
 
         evm.expectRevert(
             ICreditManagerV2Exceptions.HasNoOpenedAccountException.selector
         );
-        lidoV1Adapter.submitAll();
+        executeOneLineMulticall(
+            address(lidoV1Adapter),
+            abi.encodeCall(lidoV1Adapter.submitAll, ())
+        );
     }
 
     /// @dev [LDOV1-3]: Submit works correctly and fires events
     function test_LDOV1_03_submit_works_correctly() public {
-        for (uint256 m = 0; m < 2; m++) {
-            bool multicall = m != 0;
+        setUp();
+        (
+            address creditAccount,
+            uint256 initialWETHamount
+        ) = _openTestCreditAccount();
 
-            setUp();
-            (
-                address creditAccount,
-                uint256 initialWETHamount
-            ) = _openTestCreditAccount();
+        expectAllowance(Tokens.WETH, creditAccount, address(lidoV1Gateway), 0);
 
-            expectAllowance(
-                Tokens.WETH,
-                creditAccount,
-                address(lidoV1Gateway),
-                0
-            );
+        bytes memory expectedCallData = abi.encodeCall(
+            LidoV1Gateway.submit,
+            (2 * WAD, DUMB_ADDRESS)
+        );
 
-            bytes memory expectedCallData = abi.encodeWithSelector(
-                LidoV1Gateway.submit.selector,
-                2 * WAD,
-                DUMB_ADDRESS
-            );
+        expectMulticallStackCalls(
+            address(lidoV1Adapter),
+            address(lidoV1Gateway),
+            USER,
+            expectedCallData,
+            tokenTestSuite.addressOf(Tokens.WETH),
+            tokenTestSuite.addressOf(Tokens.STETH),
+            true
+        );
 
-            if (multicall) {
-                expectMulticallStackCalls(
-                    address(lidoV1Adapter),
-                    address(lidoV1Gateway),
-                    USER,
-                    expectedCallData,
-                    tokenTestSuite.addressOf(Tokens.WETH),
-                    tokenTestSuite.addressOf(Tokens.STETH),
-                    true
-                );
+        executeOneLineMulticall(
+            address(lidoV1Adapter),
+            abi.encodeCall(LidoV1Adapter.submit, (2 * WAD))
+        );
 
-                executeOneLineMulticall(
-                    address(lidoV1Adapter),
-                    abi.encodeWithSelector(
-                        LidoV1Adapter.submit.selector,
-                        2 * WAD
-                    )
-                );
-            } else {
-                expectFastCheckStackCalls(
-                    address(lidoV1Adapter),
-                    address(lidoV1Gateway),
-                    USER,
-                    expectedCallData,
-                    tokenTestSuite.addressOf(Tokens.WETH),
-                    tokenTestSuite.addressOf(Tokens.STETH),
-                    true
-                );
+        expectBalance(Tokens.WETH, creditAccount, initialWETHamount - 2 * WAD);
 
-                evm.prank(USER);
-                lidoV1Adapter.submit(2 * WAD);
-            }
+        uint256 stETHExpectedSharesGateway = (2 * WAD * STETH_TOTAL_SHARES) /
+            STETH_POOLED_ETH;
+        uint256 stETHExpectedBalanceGateway = lidoV1Mock.getPooledEthByShares(
+            stETHExpectedSharesGateway
+        );
 
-            expectBalance(
-                Tokens.WETH,
-                creditAccount,
-                initialWETHamount - 2 * WAD
-            );
+        uint256 stETHExpectedSharesAfterGatewayTransfer = lidoV1Mock
+            .getSharesByPooledEth(stETHExpectedBalanceGateway);
+        uint256 stETHExpectedBalance = lidoV1Mock.getPooledEthByShares(
+            stETHExpectedSharesAfterGatewayTransfer
+        );
 
-            uint256 stETHExpectedSharesGateway = (2 *
-                WAD *
-                STETH_TOTAL_SHARES) / STETH_POOLED_ETH;
-            uint256 stETHExpectedBalanceGateway = lidoV1Mock
-                .getPooledEthByShares(stETHExpectedSharesGateway);
-
-            uint256 stETHExpectedSharesAfterGatewayTransfer = lidoV1Mock
-                .getSharesByPooledEth(stETHExpectedBalanceGateway);
-            uint256 stETHExpectedBalance = lidoV1Mock.getPooledEthByShares(
-                stETHExpectedSharesAfterGatewayTransfer
-            );
-
-            expectBalance(Tokens.STETH, creditAccount, stETHExpectedBalance);
-            expectEthBalance(address(lidoV1Mock), 2 * WAD);
-            expectAllowance(
-                Tokens.WETH,
-                creditAccount,
-                address(lidoV1Gateway),
-                1
-            );
-            expectTokenIsEnabled(Tokens.STETH, true);
-        }
+        expectBalance(Tokens.STETH, creditAccount, stETHExpectedBalance);
+        expectEthBalance(address(lidoV1Mock), 2 * WAD);
+        expectAllowance(Tokens.WETH, creditAccount, address(lidoV1Gateway), 1);
+        expectTokenIsEnabled(Tokens.STETH, true);
     }
 
     /// @dev [LDOV1-4]: submitAll works correctly and fires events
     function test_LDOV1_04_submitAll_works_correctly() public {
-        for (uint256 m = 0; m < 2; m++) {
-            bool multicall = m != 0;
+        setUp();
 
-            setUp();
+        evm.prank(CONFIGURATOR);
+        lidoV1Adapter.setLimit(RAY);
 
-            evm.prank(CONFIGURATOR);
-            lidoV1Adapter.setLimit(RAY);
+        (
+            address creditAccount,
+            uint256 initialWETHamount
+        ) = _openTestCreditAccount();
 
-            (
-                address creditAccount,
-                uint256 initialWETHamount
-            ) = _openTestCreditAccount();
+        expectAllowance(Tokens.WETH, creditAccount, address(lidoV1Gateway), 0);
 
-            expectAllowance(
-                Tokens.WETH,
-                creditAccount,
-                address(lidoV1Gateway),
-                0
-            );
+        bytes memory expectedCallData = abi.encodeCall(
+            LidoV1Gateway.submit,
+            (initialWETHamount - 1, DUMB_ADDRESS)
+        );
 
-            bytes memory expectedCallData = abi.encodeWithSelector(
-                LidoV1Gateway.submit.selector,
-                initialWETHamount - 1,
-                DUMB_ADDRESS
-            );
+        expectMulticallStackCalls(
+            address(lidoV1Adapter),
+            address(lidoV1Gateway),
+            USER,
+            expectedCallData,
+            tokenTestSuite.addressOf(Tokens.WETH),
+            tokenTestSuite.addressOf(Tokens.STETH),
+            true
+        );
 
-            if (multicall) {
-                expectMulticallStackCalls(
-                    address(lidoV1Adapter),
-                    address(lidoV1Gateway),
-                    USER,
-                    expectedCallData,
-                    tokenTestSuite.addressOf(Tokens.WETH),
-                    tokenTestSuite.addressOf(Tokens.STETH),
-                    true
-                );
+        executeOneLineMulticall(
+            address(lidoV1Adapter),
+            abi.encodeCall(LidoV1Adapter.submitAll, ())
+        );
 
-                executeOneLineMulticall(
-                    address(lidoV1Adapter),
-                    abi.encodeWithSelector(LidoV1Adapter.submitAll.selector)
-                );
-            } else {
-                expectFastCheckStackCalls(
-                    address(lidoV1Adapter),
-                    address(lidoV1Gateway),
-                    USER,
-                    expectedCallData,
-                    tokenTestSuite.addressOf(Tokens.WETH),
-                    tokenTestSuite.addressOf(Tokens.STETH),
-                    true
-                );
+        expectBalance(Tokens.WETH, creditAccount, 1);
 
-                evm.prank(USER);
-                lidoV1Adapter.submitAll();
-            }
+        // Have to account for stETH precision errors
 
-            expectBalance(Tokens.WETH, creditAccount, 1);
+        uint256 stETHExpectedSharesGateway = ((initialWETHamount - 1) *
+            STETH_TOTAL_SHARES) / STETH_POOLED_ETH;
+        uint256 stETHExpectedBalanceGateway = lidoV1Mock.getPooledEthByShares(
+            stETHExpectedSharesGateway
+        );
 
-            // Have to account for stETH precision errors
+        uint256 stETHExpectedSharesAfterGatewayTransfer = lidoV1Mock
+            .getSharesByPooledEth(stETHExpectedBalanceGateway);
+        uint256 stETHExpectedBalance = lidoV1Mock.getPooledEthByShares(
+            stETHExpectedSharesAfterGatewayTransfer
+        );
 
-            uint256 stETHExpectedSharesGateway = ((initialWETHamount - 1) *
-                STETH_TOTAL_SHARES) / STETH_POOLED_ETH;
-            uint256 stETHExpectedBalanceGateway = lidoV1Mock
-                .getPooledEthByShares(stETHExpectedSharesGateway);
-
-            uint256 stETHExpectedSharesAfterGatewayTransfer = lidoV1Mock
-                .getSharesByPooledEth(stETHExpectedBalanceGateway);
-            uint256 stETHExpectedBalance = lidoV1Mock.getPooledEthByShares(
-                stETHExpectedSharesAfterGatewayTransfer
-            );
-
-            expectBalance(Tokens.STETH, creditAccount, stETHExpectedBalance);
-            expectEthBalance(address(lidoV1Mock), initialWETHamount - 1);
-            expectAllowance(
-                Tokens.WETH,
-                creditAccount,
-                address(lidoV1Gateway),
-                1
-            );
-            expectTokenIsEnabled(Tokens.WETH, false);
-            expectTokenIsEnabled(Tokens.STETH, true);
-        }
+        expectBalance(Tokens.STETH, creditAccount, stETHExpectedBalance);
+        expectEthBalance(address(lidoV1Mock), initialWETHamount - 1);
+        expectAllowance(Tokens.WETH, creditAccount, address(lidoV1Gateway), 1);
+        expectTokenIsEnabled(Tokens.WETH, false);
+        expectTokenIsEnabled(Tokens.STETH, true);
     }
 
     /// @dev [LDOV1-5]: submit and submitAll correctly update the limit and revert on violating it
@@ -302,18 +242,24 @@ contract LidoV1AdapterTest is
         evm.prank(CONFIGURATOR);
         lidoV1Adapter.setLimit(2 * WAD);
 
-        evm.prank(USER);
-        lidoV1Adapter.submit(WAD);
+        executeOneLineMulticall(
+            address(lidoV1Adapter),
+            abi.encodeCall(lidoV1Adapter.submit, (WAD))
+        );
 
         assertEq(lidoV1Adapter.limit(), WAD, "New limit was set incorrectly");
 
         evm.expectRevert(LimitIsOverException.selector);
-        evm.prank(USER);
-        lidoV1Adapter.submit(WAD + 1);
+        executeOneLineMulticall(
+            address(lidoV1Adapter),
+            abi.encodeCall(lidoV1Adapter.submit, (WAD + 1))
+        );
 
         evm.expectRevert(LimitIsOverException.selector);
-        evm.prank(USER);
-        lidoV1Adapter.submitAll();
+        executeOneLineMulticall(
+            address(lidoV1Adapter),
+            abi.encodeCall(lidoV1Adapter.submitAll, ())
+        );
     }
 
     /// @dev [LDOV1-6]: setLimit reverts if called by Non-configurator
@@ -325,9 +271,9 @@ contract LidoV1AdapterTest is
     }
 
     /// @dev [LDOV1-7]: setLimit updates limit properly
-    function test_LDOV1_07_submit_updates_limit_properly(uint256 amount)
-        public
-    {
+    function test_LDOV1_07_submit_updates_limit_properly(
+        uint256 amount
+    ) public {
         evm.expectEmit(false, false, false, true);
         emit NewLimit(amount);
 

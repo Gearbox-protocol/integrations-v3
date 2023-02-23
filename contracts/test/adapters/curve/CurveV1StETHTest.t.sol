@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 // Gearbox Protocol. Generalized leverage for DeFi protocols
-// (c) Gearbox Holdings, 2022
-pragma solidity ^0.8.10;
+// (c) Gearbox Holdings, 2023
+pragma solidity ^0.8.17;
 
 import { N_COINS } from "../../../integrations/curve/ICurvePoolStETH.sol";
 
@@ -60,655 +60,477 @@ contract CurveV1StEthAdapterTest is DSTest, CurveV1AdapterHelper {
 
     /// @dev [ACV1S-1]: add_liquidity works correctly
     function test_ACV1S_01_add_liquidity_works_correctly() public {
-        for (uint256 m = 0; m < 2; m++) {
-            bool multicall = m != 0;
+        setUp();
 
-            setUp();
+        (
+            address creditAccount,
+            uint256 initialWethBalance
+        ) = _openTestCreditAccount();
 
-            (
-                address creditAccount,
-                uint256 initialWethBalance
-            ) = _openTestCreditAccount();
+        evm.prank(USER);
+        addCollateral(Tokens.STETH, STETH_ACCOUNT_AMOUNT);
 
-            evm.prank(USER);
-            addCollateral(Tokens.STETH, STETH_ACCOUNT_AMOUNT);
+        expectAllowance(
+            Tokens.WETH,
+            creditAccount,
+            _curveV1stETHPoolGateway,
+            0
+        );
 
-            expectAllowance(
-                Tokens.WETH,
-                creditAccount,
-                _curveV1stETHPoolGateway,
-                0
-            );
+        expectAllowance(
+            Tokens.STETH,
+            creditAccount,
+            _curveV1stETHPoolGateway,
+            0
+        );
 
-            expectAllowance(
-                Tokens.STETH,
-                creditAccount,
-                _curveV1stETHPoolGateway,
-                0
-            );
+        uint256 ethalanceBefore = address(curveV1Mock).balance;
+        uint256 stethBalanceBefore = tokenTestSuite.balanceOf(
+            Tokens.STETH,
+            address(curveV1Mock)
+        );
 
-            uint256 ethalanceBefore = address(curveV1Mock).balance;
-            uint256 stethBalanceBefore = tokenTestSuite.balanceOf(
-                Tokens.STETH,
-                address(curveV1Mock)
-            );
+        // Initial Gateway LP balance should be equal 0
+        // Gateway LP balance should be equal 1
+        expectBalance(
+            lp_token,
+            _curveV1stETHPoolGateway,
+            0,
+            "setGateway lp_token != 0"
+        );
 
-            // Initial Gateway LP balance should be equal 0
-            // Gateway LP balance should be equal 1
-            expectBalance(
-                lp_token,
-                _curveV1stETHPoolGateway,
-                0,
-                "setGateway lp_token != 0"
-            );
+        uint256[N_COINS] memory amounts = [
+            WETH_ADD_LIQUIDITY_AMOUNT,
+            STETH_ADD_LIQUIDITY_AMOUNT
+        ];
 
-            uint256[N_COINS] memory amounts = [
-                WETH_ADD_LIQUIDITY_AMOUNT,
-                STETH_ADD_LIQUIDITY_AMOUNT
-            ];
+        bytes memory callData = abi.encodeCall(
+            ICurvePool2Assets.add_liquidity,
+            (amounts, CURVE_LP_OPERATION_AMOUNT)
+        );
 
-            bytes memory callData = abi.encodeWithSelector(
-                ICurvePool2Assets.add_liquidity.selector,
-                amounts,
-                CURVE_LP_OPERATION_AMOUNT
-            );
+        expectStETHAddLiquidityCalls(USER, callData);
 
-            expectStETHAddLiquidityCalls(USER, callData, multicall);
+        executeOneLineMulticall(address(adapter), callData);
 
-            if (multicall) {
-                executeOneLineMulticall(address(adapter), callData);
-            } else {
-                evm.prank(USER);
-                adapter.add_liquidity(amounts, CURVE_LP_OPERATION_AMOUNT);
-            }
+        expectBalance(
+            Tokens.WETH,
+            creditAccount,
+            initialWethBalance - WETH_ADD_LIQUIDITY_AMOUNT
+        );
 
-            expectBalance(
-                Tokens.WETH,
-                creditAccount,
-                initialWethBalance - WETH_ADD_LIQUIDITY_AMOUNT
-            );
+        expectBalance(
+            Tokens.STETH,
+            creditAccount,
+            STETH_ACCOUNT_AMOUNT - STETH_ADD_LIQUIDITY_AMOUNT
+        );
 
-            expectBalance(
-                Tokens.STETH,
-                creditAccount,
-                STETH_ACCOUNT_AMOUNT - STETH_ADD_LIQUIDITY_AMOUNT
-            );
+        expectBalance(lp_token, creditAccount, CURVE_LP_OPERATION_AMOUNT - 1);
 
-            expectBalance(
-                lp_token,
-                creditAccount,
-                CURVE_LP_OPERATION_AMOUNT - 1
-            );
+        // Gateway LP balance should be equal 1
+        expectBalance(
+            lp_token,
+            _curveV1stETHPoolGateway,
+            1,
+            "setGateway lp_token != 1"
+        );
 
-            // Gateway LP balance should be equal 1
-            expectBalance(
-                lp_token,
-                _curveV1stETHPoolGateway,
-                1,
-                "setGateway lp_token != 1"
-            );
+        expectEthBalance(
+            address(curveV1Mock),
+            ethalanceBefore + WETH_ADD_LIQUIDITY_AMOUNT
+        );
 
-            expectEthBalance(
-                address(curveV1Mock),
-                ethalanceBefore + WETH_ADD_LIQUIDITY_AMOUNT
-            );
+        expectBalance(
+            Tokens.STETH,
+            address(curveV1Mock),
+            stethBalanceBefore + STETH_ADD_LIQUIDITY_AMOUNT
+        );
 
-            expectBalance(
-                Tokens.STETH,
-                address(curveV1Mock),
-                stethBalanceBefore + STETH_ADD_LIQUIDITY_AMOUNT
-            );
+        expectTokenIsEnabled(lp_token, true);
 
-            expectTokenIsEnabled(lp_token, true);
+        expectAllowance(
+            Tokens.WETH,
+            creditAccount,
+            _curveV1stETHPoolGateway,
+            type(uint256).max
+        );
 
-            expectAllowance(
-                Tokens.WETH,
-                creditAccount,
-                _curveV1stETHPoolGateway,
-                type(uint256).max
-            );
-
-            expectAllowance(
-                Tokens.STETH,
-                creditAccount,
-                _curveV1stETHPoolGateway,
-                type(uint256).max
-            );
-        }
+        expectAllowance(
+            Tokens.STETH,
+            creditAccount,
+            _curveV1stETHPoolGateway,
+            type(uint256).max
+        );
     }
 
     /// @dev [ACV1S-2]: remove_liquidity works correctly
     function test_ACV1S_02_remove_liquidity_works_correctly() public {
-        for (uint256 m = 0; m < 2; m++) {
-            bool multicall = m != 0;
+        setUp();
 
-            setUp();
+        (
+            address creditAccount,
+            uint256 initialWethBalance
+        ) = _openTestCreditAccount();
 
+        evm.prank(USER);
+        addCollateral(Tokens.STETH, STETH_ACCOUNT_AMOUNT);
+
+        uint256 ethalanceBefore = address(curveV1Mock).balance;
+
+        uint256[N_COINS] memory amounts = [
+            WETH_ADD_LIQUIDITY_AMOUNT,
+            STETH_ADD_LIQUIDITY_AMOUNT
+        ];
+
+        uint256 STETH_REMOVE_LIQUIDITY_AMOUNT = STETH_ADD_LIQUIDITY_AMOUNT / 2;
+        // uint256 WETH_REMOVE_LIQUIDITY_AMOUNT = WETH_ADD_LIQUIDITY_AMOUNT / 4;
+
+        // Initial Gateway LP balance should be equal 0
+        expectBalance(
+            lp_token,
+            _curveV1stETHPoolGateway,
+            0,
+            "setGateway lp_token != 0"
+        );
+
+        executeOneLineMulticall(
+            address(adapter),
+            abi.encodeCall(
+                adapter.add_liquidity,
+                (amounts, CURVE_LP_OPERATION_AMOUNT)
+            )
+        );
+
+        // Initial Gateway LP balance should be equal 1
+        expectBalance(
+            lp_token,
+            _curveV1stETHPoolGateway,
+            1,
+            "setGateway lp_token != 1"
+        );
+
+        expectAllowance(lp_token, creditAccount, _curveV1stETHPoolGateway, 0);
+
+        bytes memory callData = abi.encodeCall(
+            ICurvePool2Assets.remove_liquidity,
             (
-                address creditAccount,
-                uint256 initialWethBalance
-            ) = _openTestCreditAccount();
-
-            evm.prank(USER);
-            addCollateral(Tokens.STETH, STETH_ACCOUNT_AMOUNT);
-
-            uint256 ethalanceBefore = address(curveV1Mock).balance;
-
-            uint256[N_COINS] memory amounts = [
-                WETH_ADD_LIQUIDITY_AMOUNT,
-                STETH_ADD_LIQUIDITY_AMOUNT
-            ];
-
-            uint256 STETH_REMOVE_LIQUIDITY_AMOUNT = STETH_ADD_LIQUIDITY_AMOUNT /
-                2;
-            // uint256 WETH_REMOVE_LIQUIDITY_AMOUNT = WETH_ADD_LIQUIDITY_AMOUNT / 4;
-
-            // Initial Gateway LP balance should be equal 0
-            expectBalance(
-                lp_token,
-                _curveV1stETHPoolGateway,
-                0,
-                "setGateway lp_token != 0"
-            );
-
-            evm.prank(USER);
-            adapter.add_liquidity(amounts, CURVE_LP_OPERATION_AMOUNT);
-
-            // Initial Gateway LP balance should be equal 1
-            expectBalance(
-                lp_token,
-                _curveV1stETHPoolGateway,
-                1,
-                "setGateway lp_token != 1"
-            );
-
-            expectAllowance(
-                lp_token,
-                creditAccount,
-                _curveV1stETHPoolGateway,
-                0
-            );
-
-            bytes memory callData = abi.encodeWithSelector(
-                ICurvePool2Assets.remove_liquidity.selector,
                 CURVE_LP_OPERATION_AMOUNT / 2,
                 [WETH_REMOVE_LIQUIDITY_AMOUNT, STETH_REMOVE_LIQUIDITY_AMOUNT]
-            );
+            )
+        );
 
-            expectStETHRemoveLiquidityCalls(USER, callData, multicall);
+        expectStETHRemoveLiquidityCalls(USER, callData);
 
-            if (multicall) {
-                executeOneLineMulticall(address(adapter), callData);
-            } else {
-                evm.prank(USER);
-                adapter.remove_liquidity(
-                    CURVE_LP_OPERATION_AMOUNT / 2,
-                    [
-                        WETH_REMOVE_LIQUIDITY_AMOUNT,
-                        STETH_REMOVE_LIQUIDITY_AMOUNT
-                    ]
-                );
-            }
+        executeOneLineMulticall(address(adapter), callData);
 
-            // balance -1 cause gateway takes it for gas efficience
-            expectBalance(
-                Tokens.WETH,
-                creditAccount,
-                initialWethBalance -
-                    WETH_ADD_LIQUIDITY_AMOUNT +
-                    WETH_REMOVE_LIQUIDITY_AMOUNT -
-                    1
-            );
+        // balance -1 cause gateway takes it for gas efficience
+        expectBalance(
+            Tokens.WETH,
+            creditAccount,
+            initialWethBalance -
+                WETH_ADD_LIQUIDITY_AMOUNT +
+                WETH_REMOVE_LIQUIDITY_AMOUNT -
+                1
+        );
 
-            // balance -1 cause gateway takes it for gas efficience
-            expectBalance(
-                Tokens.STETH,
-                creditAccount,
-                STETH_ACCOUNT_AMOUNT -
-                    STETH_ADD_LIQUIDITY_AMOUNT +
-                    STETH_REMOVE_LIQUIDITY_AMOUNT -
-                    1
-            );
+        // balance -1 cause gateway takes it for gas efficience
+        expectBalance(
+            Tokens.STETH,
+            creditAccount,
+            STETH_ACCOUNT_AMOUNT -
+                STETH_ADD_LIQUIDITY_AMOUNT +
+                STETH_REMOVE_LIQUIDITY_AMOUNT -
+                1
+        );
 
-            // balance -1 cause gateway takes it for gas efficience
-            expectBalance(
-                lp_token,
-                creditAccount,
-                (CURVE_LP_OPERATION_AMOUNT - 1) - CURVE_LP_OPERATION_AMOUNT / 2
-            );
+        // balance -1 cause gateway takes it for gas efficience
+        expectBalance(
+            lp_token,
+            creditAccount,
+            (CURVE_LP_OPERATION_AMOUNT - 1) - CURVE_LP_OPERATION_AMOUNT / 2
+        );
 
-            // Gateway balance check
-            expectBalance(
-                Tokens.STETH,
-                _curveV1stETHPoolGateway,
-                1,
-                "stETH != 1"
-            );
-            expectBalance(
-                Tokens.WETH,
-                _curveV1stETHPoolGateway,
-                1,
-                "WETH != 1"
-            );
-            expectBalance(lp_token, _curveV1stETHPoolGateway, 1, "steCRV != 1");
+        // Gateway balance check
+        expectBalance(Tokens.STETH, _curveV1stETHPoolGateway, 1, "stETH != 1");
+        expectBalance(Tokens.WETH, _curveV1stETHPoolGateway, 1, "WETH != 1");
+        expectBalance(lp_token, _curveV1stETHPoolGateway, 1, "steCRV != 1");
 
-            expectEthBalance(
-                address(curveV1Mock),
-                ethalanceBefore +
-                    WETH_ADD_LIQUIDITY_AMOUNT -
-                    WETH_REMOVE_LIQUIDITY_AMOUNT
-            );
+        expectEthBalance(
+            address(curveV1Mock),
+            ethalanceBefore +
+                WETH_ADD_LIQUIDITY_AMOUNT -
+                WETH_REMOVE_LIQUIDITY_AMOUNT
+        );
 
-            expectAllowance(
-                lp_token,
-                creditAccount,
-                _curveV1stETHPoolGateway,
-                type(uint256).max
-            );
+        expectAllowance(
+            lp_token,
+            creditAccount,
+            _curveV1stETHPoolGateway,
+            type(uint256).max
+        );
 
-            expectTokenIsEnabled(Tokens.WETH, true);
-            expectTokenIsEnabled(Tokens.STETH, true);
-        }
+        expectTokenIsEnabled(Tokens.WETH, true);
+        expectTokenIsEnabled(Tokens.STETH, true);
     }
 
     /// @dev [ACV1S-3]: exchange works correctly
     function test_ACV1S_03_exchange_works_correctly() public {
-        for (uint256 m = 0; m < 2; m++) {
-            bool multicall = m != 0;
+        setUp();
 
-            setUp();
+        address tokenIn = tokenTestSuite.addressOf(Tokens.WETH);
+        address tokenOut = tokenTestSuite.addressOf(Tokens.STETH);
 
-            address tokenIn = tokenTestSuite.addressOf(Tokens.WETH);
-            address tokenOut = tokenTestSuite.addressOf(Tokens.STETH);
+        (
+            address creditAccount,
+            uint256 initialWethBalance
+        ) = _openTestCreditAccount();
 
-            (
-                address creditAccount,
-                uint256 initialWethBalance
-            ) = _openTestCreditAccount();
+        uint256 ethalanceBefore = address(curveV1Mock).balance;
 
-            uint256 ethalanceBefore = address(curveV1Mock).balance;
+        // uint256 WETH_EXCHANGE_AMOUNT = WETH_ACCOUNT_AMOUNT / 5;
 
-            // uint256 WETH_EXCHANGE_AMOUNT = WETH_ACCOUNT_AMOUNT / 5;
+        expectAllowance(
+            Tokens.WETH,
+            creditAccount,
+            _curveV1stETHPoolGateway,
+            0
+        );
 
-            expectAllowance(
-                Tokens.WETH,
-                creditAccount,
-                _curveV1stETHPoolGateway,
-                0
-            );
+        bytes memory callData = abi.encodeCall(
+            ICurvePool.exchange,
+            (0, 1, WETH_EXCHANGE_AMOUNT, 0)
+        );
 
-            bytes memory callData = abi.encodeWithSelector(
-                ICurvePool.exchange.selector,
-                0,
-                1,
-                WETH_EXCHANGE_AMOUNT,
-                0
-            );
+        expectMulticallStackCalls(
+            address(adapter),
+            _curveV1stETHPoolGateway,
+            USER,
+            callData,
+            tokenIn,
+            tokenOut,
+            false
+        );
 
-            if (multicall) {
-                expectMulticallStackCalls(
-                    address(adapter),
-                    _curveV1stETHPoolGateway,
-                    USER,
-                    callData,
-                    tokenIn,
-                    tokenOut,
-                    false
-                );
+        executeOneLineMulticall(address(adapter), callData);
 
-                executeOneLineMulticall(address(adapter), callData);
-            } else {
-                expectFastCheckStackCalls(
-                    address(adapter),
-                    _curveV1stETHPoolGateway,
-                    USER,
-                    callData,
-                    tokenIn,
-                    tokenOut,
-                    false
-                );
+        expectBalance(
+            Tokens.WETH,
+            creditAccount,
+            initialWethBalance - WETH_EXCHANGE_AMOUNT
+        );
 
-                evm.prank(USER);
-                // 0 => 1 means WETH => stETH
-                adapter.exchange(0, 1, WETH_EXCHANGE_AMOUNT, 0);
-            }
+        // balance would be -1 because of rayMul
+        expectBalance(
+            Tokens.STETH,
+            creditAccount,
+            WETH_EXCHANGE_AMOUNT * RATE - 1
+        );
 
-            expectBalance(
-                Tokens.WETH,
-                creditAccount,
-                initialWethBalance - WETH_EXCHANGE_AMOUNT
-            );
+        expectEthBalance(
+            address(curveV1Mock),
+            ethalanceBefore + WETH_EXCHANGE_AMOUNT
+        );
 
-            // balance would be -1 because of rayMul
-            expectBalance(
-                Tokens.STETH,
-                creditAccount,
-                WETH_EXCHANGE_AMOUNT * RATE - 1
-            );
+        expectAllowance(
+            Tokens.WETH,
+            creditAccount,
+            _curveV1stETHPoolGateway,
+            type(uint256).max
+        );
 
-            expectEthBalance(
-                address(curveV1Mock),
-                ethalanceBefore + WETH_EXCHANGE_AMOUNT
-            );
-
-            expectAllowance(
-                Tokens.WETH,
-                creditAccount,
-                _curveV1stETHPoolGateway,
-                type(uint256).max
-            );
-
-            expectTokenIsEnabled(Tokens.STETH, true);
-        }
+        expectTokenIsEnabled(Tokens.STETH, true);
     }
 
     /// @dev [ACV1S-4]: remove_liquidity_one_coin works correctly
     function test_ACV1S_04_remove_liquidity_one_coin_works_correctly() public {
-        for (uint256 m = 0; m < 2; m++) {
-            bool multicall = m != 0;
+        setUp();
 
-            setUp();
+        address tokenIn = curveV1Mock.token();
+        address tokenOut = tokenTestSuite.addressOf(Tokens.WETH);
 
-            address tokenIn = curveV1Mock.token();
-            address tokenOut = tokenTestSuite.addressOf(Tokens.WETH);
+        (
+            address creditAccount,
+            uint256 initialWethBalance
+        ) = _openTestCreditAccount();
 
-            (
-                address creditAccount,
-                uint256 initialWethBalance
-            ) = _openTestCreditAccount();
+        uint256 ethBalanceBefore = address(curveV1Mock).balance;
 
-            uint256 ethBalanceBefore = address(curveV1Mock).balance;
+        addCRVCollateral(curveV1Mock, CURVE_LP_ACCOUNT_AMOUNT);
 
-            addCRVCollateral(curveV1Mock, CURVE_LP_ACCOUNT_AMOUNT);
+        expectAllowance(tokenIn, creditAccount, _curveV1stETHPoolGateway, 0);
 
-            expectAllowance(
-                tokenIn,
-                creditAccount,
-                _curveV1stETHPoolGateway,
-                0
-            );
+        bytes memory callData = abi.encodeCall(
+            ICurvePool.remove_liquidity_one_coin,
+            (CURVE_LP_OPERATION_AMOUNT, 0, WETH_EXCHANGE_AMOUNT)
+        );
 
-            bytes memory callData = abi.encodeWithSelector(
-                ICurvePool.remove_liquidity_one_coin.selector,
-                CURVE_LP_OPERATION_AMOUNT,
-                0,
-                WETH_EXCHANGE_AMOUNT
-            );
+        expectMulticallStackCalls(
+            address(adapter),
+            _curveV1stETHPoolGateway,
+            USER,
+            callData,
+            tokenIn,
+            tokenOut,
+            false
+        );
 
-            if (multicall) {
-                expectMulticallStackCalls(
-                    address(adapter),
-                    _curveV1stETHPoolGateway,
-                    USER,
-                    callData,
-                    tokenIn,
-                    tokenOut,
-                    false
-                );
+        executeOneLineMulticall(address(adapter), callData);
 
-                executeOneLineMulticall(address(adapter), callData);
-            } else {
-                expectFastCheckStackCalls(
-                    address(adapter),
-                    _curveV1stETHPoolGateway,
-                    USER,
-                    callData,
-                    tokenIn,
-                    tokenOut,
-                    false
-                );
+        expectBalance(
+            tokenIn,
+            creditAccount,
+            CURVE_LP_ACCOUNT_AMOUNT - CURVE_LP_OPERATION_AMOUNT
+        );
 
-                evm.prank(USER);
-                // 0 => 1 means WETH => stETH
-                adapter.remove_liquidity_one_coin(
-                    CURVE_LP_OPERATION_AMOUNT,
-                    0,
-                    WETH_EXCHANGE_AMOUNT
-                );
-            }
-            expectBalance(
-                tokenIn,
-                creditAccount,
-                CURVE_LP_ACCOUNT_AMOUNT - CURVE_LP_OPERATION_AMOUNT
-            );
+        expectBalance(
+            tokenOut,
+            creditAccount,
+            initialWethBalance + WETH_EXCHANGE_AMOUNT - 1
+        );
 
-            expectBalance(
-                tokenOut,
-                creditAccount,
-                initialWethBalance + WETH_EXCHANGE_AMOUNT - 1
-            );
+        expectEthBalance(
+            address(curveV1Mock),
+            ethBalanceBefore - WETH_EXCHANGE_AMOUNT
+        );
 
-            expectEthBalance(
-                address(curveV1Mock),
-                ethBalanceBefore - WETH_EXCHANGE_AMOUNT
-            );
+        expectAllowance(
+            tokenIn,
+            creditAccount,
+            _curveV1stETHPoolGateway,
+            type(uint256).max
+        );
 
-            expectAllowance(
-                tokenIn,
-                creditAccount,
-                _curveV1stETHPoolGateway,
-                type(uint256).max
-            );
-
-            expectTokenIsEnabled(Tokens.WETH, true);
-        }
+        expectTokenIsEnabled(Tokens.WETH, true);
     }
 
     /// @dev [ACV1S-5]: remove_all_liquidity_one_coin works correctly
     function test_ACV1S_05_remove_all_liquidity_one_coin_works_correctly()
         public
     {
-        for (uint256 m = 0; m < 2; m++) {
-            bool multicall = m != 0;
+        setUp();
 
-            setUp();
+        address tokenIn = curveV1Mock.token();
+        address tokenOut = tokenTestSuite.addressOf(Tokens.WETH);
 
-            address tokenIn = curveV1Mock.token();
-            address tokenOut = tokenTestSuite.addressOf(Tokens.WETH);
+        (
+            address creditAccount,
+            uint256 initialWethBalance
+        ) = _openTestCreditAccount();
 
-            (
-                address creditAccount,
-                uint256 initialWethBalance
-            ) = _openTestCreditAccount();
+        uint256 ethBalanceBefore = address(curveV1Mock).balance;
+        uint256 rateRAY = RAY / 2;
 
-            uint256 ethBalanceBefore = address(curveV1Mock).balance;
-            uint256 rateRAY = RAY / 2;
+        addCRVCollateral(curveV1Mock, CURVE_LP_ACCOUNT_AMOUNT);
 
-            addCRVCollateral(curveV1Mock, CURVE_LP_ACCOUNT_AMOUNT);
+        expectAllowance(tokenIn, creditAccount, _curveV1stETHPoolGateway, 0);
 
-            expectAllowance(
-                tokenIn,
-                creditAccount,
-                _curveV1stETHPoolGateway,
-                0
-            );
+        bytes memory expectedCallData = abi.encodeCall(
+            ICurvePool.remove_liquidity_one_coin,
+            (CURVE_LP_ACCOUNT_AMOUNT - 1, 0, (CURVE_LP_ACCOUNT_AMOUNT - 1) / 2)
+        );
 
-            bytes memory expectedCallData = abi.encodeWithSelector(
-                ICurvePool.remove_liquidity_one_coin.selector,
-                CURVE_LP_ACCOUNT_AMOUNT - 1,
+        expectMulticallStackCalls(
+            address(adapter),
+            _curveV1stETHPoolGateway,
+            USER,
+            expectedCallData,
+            tokenIn,
+            tokenOut,
+            false
+        );
+
+        executeOneLineMulticall(
+            address(adapter),
+            abi.encodeWithSignature(
+                "remove_all_liquidity_one_coin(int128,uint256)",
                 0,
-                (CURVE_LP_ACCOUNT_AMOUNT - 1) / 2
-            );
+                rateRAY
+            )
+        );
 
-            if (multicall) {
-                expectMulticallStackCalls(
-                    address(adapter),
-                    _curveV1stETHPoolGateway,
-                    USER,
-                    expectedCallData,
-                    tokenIn,
-                    tokenOut,
-                    false
-                );
+        expectBalance(tokenIn, creditAccount, 1);
 
-                executeOneLineMulticall(
-                    address(adapter),
-                    abi.encodeWithSignature(
-                        "remove_all_liquidity_one_coin(int128,uint256)",
-                        0,
-                        rateRAY
-                    )
-                );
-            } else {
-                expectFastCheckStackCalls(
-                    address(adapter),
-                    _curveV1stETHPoolGateway,
-                    USER,
-                    expectedCallData,
-                    tokenIn,
-                    tokenOut,
-                    false
-                );
+        expectBalance(
+            tokenOut,
+            creditAccount,
+            initialWethBalance + ((CURVE_LP_ACCOUNT_AMOUNT - 1) / 2) - 1
+        );
 
-                evm.prank(USER);
-                // 0 => 1 means WETH => stETH
-                adapter.remove_all_liquidity_one_coin(0, rateRAY);
-            }
+        expectEthBalance(
+            address(curveV1Mock),
+            ethBalanceBefore - ((CURVE_LP_ACCOUNT_AMOUNT - 1) / 2)
+        );
 
-            expectBalance(tokenIn, creditAccount, 1);
+        expectAllowance(
+            tokenIn,
+            creditAccount,
+            _curveV1stETHPoolGateway,
+            type(uint256).max
+        );
 
-            expectBalance(
-                tokenOut,
-                creditAccount,
-                initialWethBalance + ((CURVE_LP_ACCOUNT_AMOUNT - 1) / 2) - 1
-            );
-
-            expectEthBalance(
-                address(curveV1Mock),
-                ethBalanceBefore - ((CURVE_LP_ACCOUNT_AMOUNT - 1) / 2)
-            );
-
-            expectAllowance(
-                tokenIn,
-                creditAccount,
-                _curveV1stETHPoolGateway,
-                type(uint256).max
-            );
-
-            expectTokenIsEnabled(Tokens.WETH, true);
-        }
+        expectTokenIsEnabled(Tokens.WETH, true);
     }
 
     /// @dev [ACV1S-6]: remove_liquidity_imbalance works correctly
     function test_ACV1S_06_remove_liquidity_imbalance_works_correctly() public {
-        for (uint256 m = 0; m < 2; m++) {
-            bool multicall = m != 0;
+        setUp();
 
-            setUp();
+        address tokenIn = curveV1Mock.token();
 
-            address tokenIn = curveV1Mock.token();
+        (
+            address creditAccount,
+            uint256 initialWethBalance
+        ) = _openTestCreditAccount();
 
-            (
-                address creditAccount,
-                uint256 initialWethBalance
-            ) = _openTestCreditAccount();
+        uint256 ethBalanceBefore = address(curveV1Mock).balance;
 
-            uint256 ethBalanceBefore = address(curveV1Mock).balance;
+        uint256[N_COINS] memory expectedAmounts = [
+            WETH_REMOVE_LIQUIDITY_AMOUNT,
+            0
+        ];
 
-            uint256[N_COINS] memory expectedAmounts = [
-                WETH_REMOVE_LIQUIDITY_AMOUNT,
-                0
-            ];
+        addCRVCollateral(curveV1Mock, CURVE_LP_ACCOUNT_AMOUNT);
 
-            addCRVCollateral(curveV1Mock, CURVE_LP_ACCOUNT_AMOUNT);
+        expectAllowance(tokenIn, creditAccount, _curveV1stETHPoolGateway, 0);
 
-            expectAllowance(
-                tokenIn,
-                creditAccount,
-                _curveV1stETHPoolGateway,
-                0
-            );
-
-            bytes memory callData = abi.encodeWithSelector(
-                ICurvePool2Assets.remove_liquidity_imbalance.selector,
-                expectedAmounts,
-                CURVE_LP_OPERATION_AMOUNT
-            );
-
-            expectStETHRemoveLiquidityImbalanceCalls(
-                USER,
-                callData,
-                expectedAmounts,
-                multicall
-            );
-
-            if (multicall) {
-                executeOneLineMulticall(address(adapter), callData);
-            } else {
-                evm.prank(USER);
-                // 0 => 1 means WETH => stETH
-                adapter.remove_liquidity_imbalance(
-                    expectedAmounts,
-                    CURVE_LP_OPERATION_AMOUNT
-                );
-            }
-
-            expectBalance(
-                curveV1Mock.token(),
-                creditAccount,
-                CURVE_LP_ACCOUNT_AMOUNT - CURVE_LP_OPERATION_AMOUNT
-            );
-
-            expectBalance(
-                Tokens.WETH,
-                creditAccount,
-                initialWethBalance + WETH_REMOVE_LIQUIDITY_AMOUNT - 1
-            );
-
-            expectEthBalance(
-                address(curveV1Mock),
-                ethBalanceBefore - WETH_REMOVE_LIQUIDITY_AMOUNT
-            );
-
-            expectAllowance(
-                tokenIn,
-                creditAccount,
-                _curveV1stETHPoolGateway,
-                type(uint256).max
-            );
-
-            expectTokenIsEnabled(Tokens.WETH, true);
-            expectTokenIsEnabled(Tokens.STETH, false);
-        }
-    }
-
-    /// @dev [ACV1S-7]: returned view function values are consistent between adapter and target
-    function test_ACV1S_07_adapter_returns_correct_view_function_results(
-        uint256 value
-    ) public {
-        evm.assume(value < type(uint96).max);
-
-        assertEq(
-            adapter.get_dy(0, 1, value),
-            curveV1Mock.get_dy(0, 1, value),
-            "get_dy is inconsistent"
+        bytes memory callData = abi.encodeCall(
+            ICurvePool2Assets.remove_liquidity_imbalance,
+            (expectedAmounts, CURVE_LP_OPERATION_AMOUNT)
         );
 
-        curveV1Mock.set_virtual_price(value);
-
-        assertEq(
-            adapter.get_virtual_price(),
-            curveV1Mock.get_virtual_price(),
-            "get_virtual_price is inconsistent"
+        expectStETHRemoveLiquidityImbalanceCalls(
+            USER,
+            callData,
+            expectedAmounts
         );
 
-        // TODO: understant what's the problem
+        executeOneLineMulticall(address(adapter), callData);
 
-        // assertEq(
-        //     adapter.coins(0),
-        //     tokenTestSuite.addressOf(Tokens.WETH),
-        //     "Adapter does not view token0 as WETH"
-        // );
-
-        // assertEq(
-        //     adapter.coins(1),
-        //     curveV1Mock.coins(1),
-        //     "token1 is inconsistent"
-        // );
-
-        evm.expectRevert(
-            abi.encodeWithSelector(NotImplementedException.selector)
+        expectBalance(
+            curveV1Mock.token(),
+            creditAccount,
+            CURVE_LP_ACCOUNT_AMOUNT - CURVE_LP_OPERATION_AMOUNT
         );
-        adapter.get_dy_underlying(0, 1, 1);
+
+        expectBalance(
+            Tokens.WETH,
+            creditAccount,
+            initialWethBalance + WETH_REMOVE_LIQUIDITY_AMOUNT - 1
+        );
+
+        expectEthBalance(
+            address(curveV1Mock),
+            ethBalanceBefore - WETH_REMOVE_LIQUIDITY_AMOUNT
+        );
+
+        expectAllowance(
+            tokenIn,
+            creditAccount,
+            _curveV1stETHPoolGateway,
+            type(uint256).max
+        );
+
+        expectTokenIsEnabled(Tokens.WETH, true);
+        expectTokenIsEnabled(Tokens.STETH, false);
     }
 }

@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: MIT
 // Gearbox Protocol. Generalized leverage for DeFi protocols
-// (c) Gearbox Holdings, 2022
-pragma solidity ^0.8.10;
+// (c) Gearbox Holdings, 2023
+pragma solidity ^0.8.17;
 
 import { MultiCall } from "@gearbox-protocol/core-v2/contracts/libraries/MultiCall.sol";
-import { ICurvePool } from "../../integrations/curve/ICurvePool.sol";
-import { ICurvePool2Assets } from "../../integrations/curve/ICurvePool_2.sol";
-import { ICurvePool3Assets } from "../../integrations/curve/ICurvePool_3.sol";
-import { ICurvePool4Assets } from "../../integrations/curve/ICurvePool_4.sol";
+
 import { ICurveV1Adapter } from "../../interfaces/curve/ICurveV1Adapter.sol";
+import { ICurveV1_2AssetsAdapter } from "../../interfaces/curve/ICurveV1_2AssetsAdapter.sol";
+import { ICurveV1_3AssetsAdapter } from "../../interfaces/curve/ICurveV1_3AssetsAdapter.sol";
+import { ICurveV1_4AssetsAdapter } from "../../interfaces/curve/ICurveV1_4AssetsAdapter.sol";
 
 interface CurveV1Multicaller {}
 
@@ -23,12 +23,9 @@ library CurveV1Calls {
         return
             MultiCall({
                 target: address(c),
-                callData: abi.encodeWithSelector(
-                    ICurvePool.exchange.selector,
-                    i,
-                    j,
-                    dx,
-                    min_dy
+                callData: abi.encodeCall(
+                    ICurveV1Adapter.exchange,
+                    (i, j, dx, min_dy)
                 )
             });
     }
@@ -42,11 +39,9 @@ library CurveV1Calls {
         return
             MultiCall({
                 target: address(c),
-                callData: abi.encodeWithSelector(
-                    ICurveV1Adapter.exchange_all.selector,
-                    i,
-                    j,
-                    rateMinRAY
+                callData: abi.encodeCall(
+                    ICurveV1Adapter.exchange_all,
+                    (i, j, rateMinRAY)
                 )
             });
     }
@@ -61,12 +56,9 @@ library CurveV1Calls {
         return
             MultiCall({
                 target: address(c),
-                callData: abi.encodeWithSelector(
-                    ICurvePool.exchange_underlying.selector,
-                    i,
-                    j,
-                    dx,
-                    min_dy
+                callData: abi.encodeCall(
+                    ICurveV1Adapter.exchange_underlying,
+                    (i, j, dx, min_dy)
                 )
             });
     }
@@ -80,11 +72,9 @@ library CurveV1Calls {
         return
             MultiCall({
                 target: address(c),
-                callData: abi.encodeWithSelector(
-                    ICurveV1Adapter.exchange_all_underlying.selector,
-                    i,
-                    j,
-                    rateMinRAY
+                callData: abi.encodeCall(
+                    ICurveV1Adapter.exchange_all_underlying,
+                    (i, j, rateMinRAY)
                 )
             });
     }
@@ -97,10 +87,9 @@ library CurveV1Calls {
         return
             MultiCall({
                 target: address(c),
-                callData: abi.encodeWithSelector(
-                    ICurvePool2Assets.add_liquidity.selector,
-                    amounts,
-                    min_mint_amount
+                callData: abi.encodeCall(
+                    ICurveV1_2AssetsAdapter.add_liquidity,
+                    (amounts, min_mint_amount)
                 )
             });
     }
@@ -113,10 +102,9 @@ library CurveV1Calls {
         return
             MultiCall({
                 target: address(c),
-                callData: abi.encodeWithSelector(
-                    ICurvePool3Assets.add_liquidity.selector,
-                    amounts,
-                    min_mint_amount
+                callData: abi.encodeCall(
+                    ICurveV1_3AssetsAdapter.add_liquidity,
+                    (amounts, min_mint_amount)
                 )
             });
     }
@@ -129,10 +117,9 @@ library CurveV1Calls {
         return
             MultiCall({
                 target: address(c),
-                callData: abi.encodeWithSelector(
-                    ICurvePool4Assets.add_liquidity.selector,
-                    amounts,
-                    min_mint_amount
+                callData: abi.encodeCall(
+                    ICurveV1_4AssetsAdapter.add_liquidity,
+                    (amounts, min_mint_amount)
                 )
             });
     }
@@ -146,11 +133,9 @@ library CurveV1Calls {
         return
             MultiCall({
                 target: address(c),
-                callData: abi.encodeWithSelector(
-                    ICurveV1Adapter.add_liquidity_one_coin.selector,
-                    amount,
-                    i,
-                    minAmount
+                callData: abi.encodeCall(
+                    ICurveV1Adapter.add_liquidity_one_coin,
+                    (amount, i, minAmount)
                 )
             });
     }
@@ -163,10 +148,9 @@ library CurveV1Calls {
         return
             MultiCall({
                 target: address(c),
-                callData: abi.encodeWithSelector(
-                    ICurveV1Adapter.add_all_liquidity_one_coin.selector,
-                    i,
-                    minRateRAY
+                callData: abi.encodeCall(
+                    ICurveV1Adapter.add_all_liquidity_one_coin,
+                    (i, minRateRAY)
                 )
             });
     }
@@ -179,10 +163,9 @@ library CurveV1Calls {
         return
             MultiCall({
                 target: address(c),
-                callData: abi.encodeWithSelector(
-                    ICurvePool2Assets.remove_liquidity.selector,
-                    amount,
-                    min_amounts
+                callData: abi.encodeCall(
+                    ICurveV1_2AssetsAdapter.remove_liquidity,
+                    (amount, min_amounts)
                 )
             });
     }
@@ -195,10 +178,9 @@ library CurveV1Calls {
         return
             MultiCall({
                 target: address(c),
-                callData: abi.encodeWithSelector(
-                    ICurvePool3Assets.remove_liquidity.selector,
-                    amount,
-                    min_amounts
+                callData: abi.encodeCall(
+                    ICurveV1_3AssetsAdapter.remove_liquidity,
+                    (amount, min_amounts)
                 )
             });
     }
@@ -211,10 +193,9 @@ library CurveV1Calls {
         return
             MultiCall({
                 target: address(c),
-                callData: abi.encodeWithSelector(
-                    ICurvePool4Assets.remove_liquidity.selector,
-                    amount,
-                    min_amounts
+                callData: abi.encodeCall(
+                    ICurveV1_4AssetsAdapter.remove_liquidity,
+                    (amount, min_amounts)
                 )
             });
     }
@@ -228,11 +209,9 @@ library CurveV1Calls {
         return
             MultiCall({
                 target: address(c),
-                callData: abi.encodeWithSelector(
-                    ICurvePool.remove_liquidity_one_coin.selector,
-                    token_amount,
-                    i,
-                    min_amount
+                callData: abi.encodeCall(
+                    ICurveV1Adapter.remove_liquidity_one_coin,
+                    (token_amount, i, min_amount)
                 )
             });
     }
@@ -245,10 +224,9 @@ library CurveV1Calls {
         return
             MultiCall({
                 target: address(c),
-                callData: abi.encodeWithSelector(
-                    ICurveV1Adapter.remove_all_liquidity_one_coin.selector,
-                    i,
-                    minRateRAY
+                callData: abi.encodeCall(
+                    ICurveV1Adapter.remove_all_liquidity_one_coin,
+                    (i, minRateRAY)
                 )
             });
     }
@@ -261,10 +239,9 @@ library CurveV1Calls {
         return
             MultiCall({
                 target: address(c),
-                callData: abi.encodeWithSelector(
-                    ICurvePool2Assets.remove_liquidity_imbalance.selector,
-                    amounts,
-                    max_burn_amount
+                callData: abi.encodeCall(
+                    ICurveV1_2AssetsAdapter.remove_liquidity_imbalance,
+                    (amounts, max_burn_amount)
                 )
             });
     }
@@ -277,10 +254,9 @@ library CurveV1Calls {
         return
             MultiCall({
                 target: address(c),
-                callData: abi.encodeWithSelector(
-                    ICurvePool3Assets.remove_liquidity_imbalance.selector,
-                    amounts,
-                    max_burn_amount
+                callData: abi.encodeCall(
+                    ICurveV1_3AssetsAdapter.remove_liquidity_imbalance,
+                    (amounts, max_burn_amount)
                 )
             });
     }
@@ -293,10 +269,9 @@ library CurveV1Calls {
         return
             MultiCall({
                 target: address(c),
-                callData: abi.encodeWithSelector(
-                    ICurvePool4Assets.remove_liquidity_imbalance.selector,
-                    amounts,
-                    max_burn_amount
+                callData: abi.encodeCall(
+                    ICurveV1_4AssetsAdapter.remove_liquidity_imbalance,
+                    (amounts, max_burn_amount)
                 )
             });
     }

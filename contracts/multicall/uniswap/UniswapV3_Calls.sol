@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Gearbox Protocol. Generalized leverage for DeFi protocols
-// (c) Gearbox Holdings, 2022
-pragma solidity ^0.8.10;
+// (c) Gearbox Holdings, 2023
+pragma solidity ^0.8.17;
 
 import { MultiCall } from "@gearbox-protocol/core-v2/contracts/libraries/MultiCall.sol";
 import { ISwapRouter } from "../../integrations/uniswap/IUniswapV3.sol";
@@ -17,9 +17,9 @@ library UniswapV3_Calls {
         return
             MultiCall({
                 target: address(c),
-                callData: abi.encodeWithSelector(
-                    ISwapRouter.exactInputSingle.selector,
-                    params
+                callData: abi.encodeCall(
+                    IUniswapV3Adapter.exactInputSingle,
+                    (params)
                 )
             });
     }
@@ -31,9 +31,9 @@ library UniswapV3_Calls {
         return
             MultiCall({
                 target: address(c),
-                callData: abi.encodeWithSelector(
-                    IUniswapV3Adapter.exactAllInputSingle.selector,
-                    params
+                callData: abi.encodeCall(
+                    IUniswapV3Adapter.exactAllInputSingle,
+                    (params)
                 )
             });
     }
@@ -45,10 +45,7 @@ library UniswapV3_Calls {
         return
             MultiCall({
                 target: address(c),
-                callData: abi.encodeWithSelector(
-                    ISwapRouter.exactInput.selector,
-                    params
-                )
+                callData: abi.encodeCall(IUniswapV3Adapter.exactInput, (params))
             });
     }
 
@@ -59,9 +56,9 @@ library UniswapV3_Calls {
         return
             MultiCall({
                 target: address(c),
-                callData: abi.encodeWithSelector(
-                    IUniswapV3Adapter.exactAllInput.selector,
-                    params
+                callData: abi.encodeCall(
+                    IUniswapV3Adapter.exactAllInput,
+                    (params)
                 )
             });
     }
@@ -73,9 +70,9 @@ library UniswapV3_Calls {
         return
             MultiCall({
                 target: address(c),
-                callData: abi.encodeWithSelector(
-                    ISwapRouter.exactOutputSingle.selector,
-                    params
+                callData: abi.encodeCall(
+                    IUniswapV3Adapter.exactOutputSingle,
+                    (params)
                 )
             });
     }
@@ -87,9 +84,9 @@ library UniswapV3_Calls {
         return
             MultiCall({
                 target: address(c),
-                callData: abi.encodeWithSelector(
-                    ISwapRouter.exactOutput.selector,
-                    params
+                callData: abi.encodeCall(
+                    IUniswapV3Adapter.exactOutput,
+                    (params)
                 )
             });
     }

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 // Gearbox Protocol. Generalized leverage for DeFi protocols
-// (c) Gearbox Holdings, 2022
-pragma solidity ^0.8.10;
+// (c) Gearbox Holdings, 2023
+pragma solidity ^0.8.17;
 
 import { CurveV1AdapterBase } from "../../../adapters/curve/CurveV1_Base.sol";
 import { ICurveV1Adapter } from "../../../interfaces/curve/ICurveV1Adapter.sol";
@@ -65,15 +65,12 @@ contract CurveV1AdapterBaseMetaPoolTest is DSTest, CurveV1AdapterHelper {
 
         addCollateral(Tokens.cLINK, LINK_ACCOUNT_AMOUNT);
 
-        bytes memory callData = abi.encodeWithSelector(
-            ICurvePool.exchange_underlying.selector,
-            0,
-            3,
-            LINK_EXCHANGE_AMOUNT,
-            (LINK_EXCHANGE_AMOUNT * 99) / 100
+        bytes memory callData = abi.encodeCall(
+            ICurvePool.exchange_underlying,
+            (0, 3, LINK_EXCHANGE_AMOUNT, (LINK_EXCHANGE_AMOUNT * 99) / 100)
         );
 
-        expectFastCheckStackCalls(
+        expectMulticallStackCalls(
             address(adapter),
             address(curveV1Mock),
             USER,
@@ -83,12 +80,12 @@ contract CurveV1AdapterBaseMetaPoolTest is DSTest, CurveV1AdapterHelper {
             false
         );
 
-        evm.prank(USER);
-        adapter.exchange_underlying(
-            0,
-            3,
-            LINK_EXCHANGE_AMOUNT,
-            (LINK_EXCHANGE_AMOUNT * 99) / 100
+        executeOneLineMulticall(
+            address(adapter),
+            abi.encodeCall(
+                adapter.exchange_underlying,
+                (0, 3, LINK_EXCHANGE_AMOUNT, (LINK_EXCHANGE_AMOUNT * 99) / 100)
+            )
         );
 
         expectBalance(
@@ -113,15 +110,17 @@ contract CurveV1AdapterBaseMetaPoolTest is DSTest, CurveV1AdapterHelper {
 
         addCollateral(Tokens.cLINK, LINK_ACCOUNT_AMOUNT);
 
-        bytes memory callData = abi.encodeWithSelector(
-            ICurvePool.exchange_underlying.selector,
-            0,
-            3,
-            LINK_ACCOUNT_AMOUNT - 1,
-            ((LINK_ACCOUNT_AMOUNT - 1) * 99) / 100
+        bytes memory callData = abi.encodeCall(
+            ICurvePool.exchange_underlying,
+            (
+                0,
+                3,
+                LINK_ACCOUNT_AMOUNT - 1,
+                ((LINK_ACCOUNT_AMOUNT - 1) * 99) / 100
+            )
         );
 
-        expectFastCheckStackCalls(
+        expectMulticallStackCalls(
             address(adapter),
             address(curveV1Mock),
             USER,
@@ -131,8 +130,13 @@ contract CurveV1AdapterBaseMetaPoolTest is DSTest, CurveV1AdapterHelper {
             false
         );
 
-        evm.prank(USER);
-        adapter.exchange_all_underlying(0, 3, (RAY * 99) / 100);
+        executeOneLineMulticall(
+            address(adapter),
+            abi.encodeCall(
+                adapter.exchange_all_underlying,
+                (0, 3, (RAY * 99) / 100)
+            )
+        );
 
         expectBalance(Tokens.cLINK, creditAccount, 1);
 
@@ -157,12 +161,9 @@ contract CurveV1AdapterBaseMetaPoolTest is DSTest, CurveV1AdapterHelper {
 
         addCollateral(Tokens.cLINK, LINK_ACCOUNT_AMOUNT);
 
-        bytes memory callData = abi.encodeWithSelector(
-            ICurvePool.exchange_underlying.selector,
-            0,
-            3,
-            LINK_EXCHANGE_AMOUNT,
-            (LINK_EXCHANGE_AMOUNT * 99) / 100
+        bytes memory callData = abi.encodeCall(
+            ICurvePool.exchange_underlying,
+            (0, 3, LINK_EXCHANGE_AMOUNT, (LINK_EXCHANGE_AMOUNT * 99) / 100)
         );
 
         MultiCall[] memory calls = new MultiCall[](1);
@@ -205,19 +206,19 @@ contract CurveV1AdapterBaseMetaPoolTest is DSTest, CurveV1AdapterHelper {
 
         addCollateral(Tokens.cLINK, LINK_ACCOUNT_AMOUNT);
 
-        bytes memory callData = abi.encodeWithSelector(
-            ICurvePool.exchange_underlying.selector,
-            0,
-            3,
-            LINK_ACCOUNT_AMOUNT - 1,
-            ((LINK_ACCOUNT_AMOUNT - 1) * 99) / 100
+        bytes memory callData = abi.encodeCall(
+            ICurvePool.exchange_underlying,
+            (
+                0,
+                3,
+                LINK_ACCOUNT_AMOUNT - 1,
+                ((LINK_ACCOUNT_AMOUNT - 1) * 99) / 100
+            )
         );
 
-        bytes memory facadeCallData = abi.encodeWithSelector(
-            ICurveV1Adapter.exchange_all_underlying.selector,
-            0,
-            3,
-            (99 * RAY) / 100
+        bytes memory facadeCallData = abi.encodeCall(
+            ICurveV1Adapter.exchange_all_underlying,
+            (0, 3, (99 * RAY) / 100)
         );
 
         MultiCall[] memory calls = new MultiCall[](1);

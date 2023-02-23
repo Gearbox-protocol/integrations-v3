@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 // Gearbox Protocol. Generalized leverage for DeFi protocols
-// (c) Gearbox Holdings, 2022
-pragma solidity ^0.8.10;
+// (c) Gearbox Holdings, 2023
+pragma solidity ^0.8.17;
 
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
@@ -363,10 +363,9 @@ contract CurveV1AdapterHelper is
     // HELPERS
     //
 
-    function getPoolTokens(uint256 nCoins)
-        internal
-        returns (address[] memory poolTokens)
-    {
+    function getPoolTokens(
+        uint256 nCoins
+    ) internal returns (address[] memory poolTokens) {
         require(
             nCoins <= poolTkns.length,
             "getPoolTokens: Incorrect nCoins parameter"
@@ -390,10 +389,9 @@ contract CurveV1AdapterHelper is
         }
     }
 
-    function getUnderlyingPoolTokens(uint256 nCoins)
-        internal
-        returns (address[] memory underlyingPoolTokens)
-    {
+    function getUnderlyingPoolTokens(
+        uint256 nCoins
+    ) internal returns (address[] memory underlyingPoolTokens) {
         require(
             nCoins <= underlyingPoolTkns.length,
             "getUnderlyingPoolTokens: Incorrect nCoins parameter"
@@ -422,32 +420,26 @@ contract CurveV1AdapterHelper is
         }
     }
 
-    function _castToDynamic(uint256[2] memory arr)
-        internal
-        pure
-        returns (uint256[] memory res)
-    {
+    function _castToDynamic(
+        uint256[2] memory arr
+    ) internal pure returns (uint256[] memory res) {
         res = new uint256[](2);
         res[0] = arr[0];
         res[1] = arr[1];
     }
 
-    function _castToDynamic(uint256[3] memory arr)
-        internal
-        pure
-        returns (uint256[] memory res)
-    {
+    function _castToDynamic(
+        uint256[3] memory arr
+    ) internal pure returns (uint256[] memory res) {
         res = new uint256[](3);
         res[0] = arr[0];
         res[1] = arr[1];
         res[2] = arr[2];
     }
 
-    function _castToDynamic(uint256[4] memory arr)
-        internal
-        pure
-        returns (uint256[] memory res)
-    {
+    function _castToDynamic(
+        uint256[4] memory arr
+    ) internal pure returns (uint256[] memory res) {
         res = new uint256[](4);
         res[0] = arr[0];
         res[1] = arr[1];
@@ -455,9 +447,10 @@ contract CurveV1AdapterHelper is
         res[3] = arr[3];
     }
 
-    function addCRVCollateral(CurveV1Mock curveV1Mock, uint256 amount)
-        internal
-    {
+    function addCRVCollateral(
+        CurveV1Mock curveV1Mock,
+        uint256 amount
+    ) internal {
         // provide LP token to creditAccount
         ICRVToken crv = ICRVToken(curveV1Mock.token());
         crv.set_minter(address(this));
@@ -483,15 +476,13 @@ contract CurveV1AdapterHelper is
     function expectAddLiquidityCalls(
         address borrower,
         bytes memory callData,
-        uint256 nCoins,
-        bool isMultiCall
+        uint256 nCoins
     ) internal {
         address[] memory curvePoolTokens = getPoolTokens(nCoins);
 
         _expectAddLiquidityCalls(
             borrower,
             callData,
-            isMultiCall,
             _curveV1MockAddr,
             curvePoolTokens
         );
@@ -499,8 +490,7 @@ contract CurveV1AdapterHelper is
 
     function expectStETHAddLiquidityCalls(
         address borrower,
-        bytes memory callData,
-        bool isMultiCall
+        bytes memory callData
     ) internal {
         address[] memory curvePoolTokens = new address[](2);
         curvePoolTokens[0] = tokenTestSuite.addressOf(Tokens.WETH);
@@ -509,7 +499,6 @@ contract CurveV1AdapterHelper is
         _expectAddLiquidityCalls(
             borrower,
             callData,
-            isMultiCall,
             _curveV1stETHPoolGateway,
             curvePoolTokens
         );
@@ -518,7 +507,6 @@ contract CurveV1AdapterHelper is
     function _expectAddLiquidityCalls(
         address borrower,
         bytes memory callData,
-        bool isMultiCall,
         address pool,
         address[] memory curvePoolTokens
     ) internal {
@@ -528,89 +516,47 @@ contract CurveV1AdapterHelper is
             borrower
         );
 
-        if (isMultiCall) {
-            evm.expectEmit(true, false, false, false);
-            emit MultiCallStarted(borrower);
-        }
+        evm.expectEmit(true, false, false, false);
+        emit MultiCallStarted(borrower);
 
         for (uint256 i = 0; i < nCoins; i++) {
             evm.expectCall(
                 address(creditManager),
-                abi.encodeWithSelector(
-                    ICreditManagerV2.approveCreditAccount.selector,
-                    isMultiCall ? address(creditFacade) : borrower,
-                    pool,
-                    curvePoolTokens[i],
-                    type(uint256).max
+                abi.encodeCall(
+                    ICreditManagerV2.approveCreditAccount,
+                    (pool, curvePoolTokens[i], type(uint256).max)
                 )
             );
         }
 
         evm.expectCall(
             address(creditManager),
-            abi.encodeWithSelector(
-                ICreditManagerV2.checkAndEnableToken.selector,
-                creditAccount,
-                lpToken
+            abi.encodeCall(
+                ICreditManagerV2.checkAndEnableToken,
+                (creditAccount, lpToken)
             )
         );
 
         evm.expectCall(
             address(creditManager),
-            abi.encodeWithSelector(
-                ICreditManagerV2.executeOrder.selector,
-                isMultiCall ? address(creditFacade) : borrower,
-                pool,
-                callData
-            )
+            abi.encodeCall(ICreditManagerV2.executeOrder, (pool, callData))
         );
 
         evm.expectEmit(true, true, false, false);
-        emit ExecuteOrder(isMultiCall ? address(creditFacade) : borrower, pool);
+        emit ExecuteOrder(creditAccount, pool);
 
-        if (isMultiCall) {
-            for (uint256 i = 0; i < nCoins; i++) {
-                evm.expectCall(
-                    address(creditManager),
-                    abi.encodeWithSelector(
-                        ICreditManagerV2.approveCreditAccount.selector,
-                        address(creditFacade),
-                        pool,
-                        curvePoolTokens[i],
-                        type(uint256).max
-                    )
-                );
-            }
-
+        for (uint256 i = 0; i < nCoins; i++) {
             evm.expectCall(
                 address(creditManager),
-                abi.encodeWithSelector(
-                    ICreditManagerV2.fullCollateralCheck.selector,
-                    creditAccount
+                abi.encodeCall(
+                    ICreditManagerV2.approveCreditAccount,
+                    (pool, curvePoolTokens[i], type(uint256).max)
                 )
             );
-        } else {
-            evm.expectCall(
-                address(creditManager),
-                abi.encodeWithSelector(
-                    ICreditManagerV2.fullCollateralCheck.selector,
-                    creditAccount
-                )
-            );
-
-            for (uint256 i = 0; i < nCoins; i++) {
-                evm.expectCall(
-                    address(creditManager),
-                    abi.encodeWithSelector(
-                        ICreditManagerV2.approveCreditAccount.selector,
-                        borrower,
-                        pool,
-                        curvePoolTokens[i],
-                        type(uint256).max
-                    )
-                );
-            }
         }
+
+        evm.expectEmit(false, false, false, false);
+        emit MultiCallFinished();
     }
 
     //
@@ -620,15 +566,13 @@ contract CurveV1AdapterHelper is
     function expectRemoveLiquidityCalls(
         address borrower,
         bytes memory callData,
-        uint256 nCoins,
-        bool isMultiCall
+        uint256 nCoins
     ) internal {
         address[] memory curvePoolTokens = getPoolTokens(nCoins);
 
         _expectRemoveLiquidityCalls(
             borrower,
             callData,
-            isMultiCall,
             _curveV1MockAddr,
             curvePoolTokens
         );
@@ -636,8 +580,7 @@ contract CurveV1AdapterHelper is
 
     function expectStETHRemoveLiquidityCalls(
         address borrower,
-        bytes memory callData,
-        bool isMultiCall
+        bytes memory callData
     ) internal {
         address[] memory curvePoolTokens = new address[](2);
         curvePoolTokens[0] = tokenTestSuite.addressOf(Tokens.WETH);
@@ -646,7 +589,6 @@ contract CurveV1AdapterHelper is
         _expectRemoveLiquidityCalls(
             borrower,
             callData,
-            isMultiCall,
             _curveV1stETHPoolGateway,
             curvePoolTokens
         );
@@ -655,7 +597,6 @@ contract CurveV1AdapterHelper is
     function _expectRemoveLiquidityCalls(
         address borrower,
         bytes memory callData,
-        bool isMultiCall,
         address pool,
         address[] memory curvePoolTokens
     ) internal {
@@ -665,42 +606,29 @@ contract CurveV1AdapterHelper is
             borrower
         );
 
-        if (isMultiCall) {
-            evm.expectEmit(true, false, false, false);
-            emit MultiCallStarted(borrower);
-        }
+        evm.expectEmit(true, false, false, false);
+        emit MultiCallStarted(borrower);
 
         for (uint256 i = 0; i < nCoins; i++) {
             evm.expectCall(
                 address(creditManager),
-                abi.encodeWithSelector(
-                    ICreditManagerV2.checkAndEnableToken.selector,
-                    creditAccount,
-                    curvePoolTokens[i]
+                abi.encodeCall(
+                    ICreditManagerV2.checkAndEnableToken,
+                    (creditAccount, curvePoolTokens[i])
                 )
             );
         }
 
         evm.expectCall(
             address(creditManager),
-            abi.encodeWithSelector(
-                ICreditManagerV2.executeOrder.selector,
-                isMultiCall ? address(creditFacade) : borrower,
-                pool,
-                callData
-            )
+            abi.encodeCall(ICreditManagerV2.executeOrder, (pool, callData))
         );
 
         evm.expectEmit(true, true, false, false);
-        emit ExecuteOrder(isMultiCall ? address(creditFacade) : borrower, pool);
+        emit ExecuteOrder(creditAccount, pool);
 
-        evm.expectCall(
-            address(creditManager),
-            abi.encodeWithSelector(
-                ICreditManagerV2.fullCollateralCheck.selector,
-                creditAccount
-            )
-        );
+        evm.expectEmit(false, false, false, false);
+        emit MultiCallFinished();
     }
 
     //
@@ -711,8 +639,7 @@ contract CurveV1AdapterHelper is
         address borrower,
         bytes memory callData,
         uint256 nCoins,
-        uint256[] memory amounts,
-        bool isMultiCall
+        uint256[] memory amounts
     ) internal {
         address[] memory curvePoolTokens = getPoolTokens(nCoins);
 
@@ -720,7 +647,6 @@ contract CurveV1AdapterHelper is
             borrower,
             callData,
             amounts,
-            isMultiCall,
             _curveV1MockAddr,
             curvePoolTokens
         );
@@ -729,8 +655,7 @@ contract CurveV1AdapterHelper is
     function expectStETHRemoveLiquidityImbalanceCalls(
         address borrower,
         bytes memory callData,
-        uint256[2] memory amounts,
-        bool isMultiCall
+        uint256[2] memory amounts
     ) internal {
         address[] memory curvePoolTokens = new address[](2);
         curvePoolTokens[0] = tokenTestSuite.addressOf(Tokens.WETH);
@@ -740,7 +665,6 @@ contract CurveV1AdapterHelper is
             borrower,
             callData,
             _castToDynamic(amounts),
-            isMultiCall,
             _curveV1stETHPoolGateway,
             curvePoolTokens
         );
@@ -750,7 +674,6 @@ contract CurveV1AdapterHelper is
         address borrower,
         bytes memory callData,
         uint256[] memory amounts,
-        bool isMultiCall,
         address pool,
         address[] memory curvePoolTokens
     ) internal {
@@ -760,19 +683,16 @@ contract CurveV1AdapterHelper is
             borrower
         );
 
-        if (isMultiCall) {
-            evm.expectEmit(true, false, false, false);
-            emit MultiCallStarted(borrower);
-        }
+        evm.expectEmit(true, false, false, false);
+        emit MultiCallStarted(borrower);
 
         for (uint256 i = 0; i < nCoins; i++) {
             if (amounts[i] > 0) {
                 evm.expectCall(
                     address(creditManager),
-                    abi.encodeWithSelector(
-                        ICreditManagerV2.checkAndEnableToken.selector,
-                        creditAccount,
-                        curvePoolTokens[i]
+                    abi.encodeCall(
+                        ICreditManagerV2.checkAndEnableToken,
+                        (creditAccount, curvePoolTokens[i])
                     )
                 );
             }
@@ -780,74 +700,40 @@ contract CurveV1AdapterHelper is
 
         evm.expectCall(
             address(creditManager),
-            abi.encodeWithSelector(
-                ICreditManagerV2.executeOrder.selector,
-                isMultiCall ? address(creditFacade) : borrower,
-                pool,
-                callData
-            )
+            abi.encodeCall(ICreditManagerV2.executeOrder, (pool, callData))
         );
 
         evm.expectEmit(true, true, false, false);
-        emit ExecuteOrder(isMultiCall ? address(creditFacade) : borrower, pool);
-
-        evm.expectCall(
-            address(creditManager),
-            abi.encodeWithSelector(
-                ICreditManagerV2.fullCollateralCheck.selector,
-                creditAccount
-            )
-        );
+        emit ExecuteOrder(creditAccount, pool);
     }
 
     function expectRemoveLiquidityImbalanceCalls(
         address borrower,
         bytes memory callData,
         uint256 nCoins,
-        uint256[2] memory amounts,
-        bool isMultiCall
+        uint256[2] memory amounts
     ) internal {
         uint256[] memory amts = _castToDynamic(amounts);
-        expectRemoveLiquidityImbalanceCalls(
-            borrower,
-            callData,
-            nCoins,
-            amts,
-            isMultiCall
-        );
+        expectRemoveLiquidityImbalanceCalls(borrower, callData, nCoins, amts);
     }
 
     function expectRemoveLiquidityImbalanceCalls(
         address borrower,
         bytes memory callData,
         uint256 nCoins,
-        uint256[3] memory amounts,
-        bool isMultiCall
+        uint256[3] memory amounts
     ) internal {
         uint256[] memory amts = _castToDynamic(amounts);
-        expectRemoveLiquidityImbalanceCalls(
-            borrower,
-            callData,
-            nCoins,
-            amts,
-            isMultiCall
-        );
+        expectRemoveLiquidityImbalanceCalls(borrower, callData, nCoins, amts);
     }
 
     function expectRemoveLiquidityImbalanceCalls(
         address borrower,
         bytes memory callData,
         uint256 nCoins,
-        uint256[4] memory amounts,
-        bool isMultiCall
+        uint256[4] memory amounts
     ) internal {
         uint256[] memory amts = _castToDynamic(amounts);
-        expectRemoveLiquidityImbalanceCalls(
-            borrower,
-            callData,
-            nCoins,
-            amts,
-            isMultiCall
-        );
+        expectRemoveLiquidityImbalanceCalls(borrower, callData, nCoins, amts);
     }
 }
