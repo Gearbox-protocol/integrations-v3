@@ -1,35 +1,41 @@
 // SPDX-License-Identifier: BUSL-1.1
 // Gearbox Protocol. Generalized leverage for DeFi protocols
-// (c) Gearbox Holdings, 2022
-pragma solidity ^0.8.10;
+// (c) Gearbox Holdings, 2023
+pragma solidity ^0.8.17;
 pragma abicoder v1;
 
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { ReentrancyGuard } from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+
 import { AbstractAdapter } from "@gearbox-protocol/core-v2/contracts/adapters/AbstractAdapter.sol";
+import { IAdapter, AdapterType } from "@gearbox-protocol/core-v2/contracts/interfaces/adapters/IAdapter.sol";
 
 import { IClaimZap } from "../../integrations/convex/IClaimZap.sol";
 import { IRewards, IBasicRewards } from "../../integrations/convex/IRewards.sol";
 import { IBaseRewardPool } from "../../integrations/convex/IBaseRewardPool.sol";
-import { IAdapter, AdapterType } from "@gearbox-protocol/core-v2/contracts/interfaces/adapters/IAdapter.sol";
 
 /// @title ConvexV1ClaimZapAdapter adapter
 /// @dev Implements logic for interacting with the Convex ClaimZap contract
-contract ConvexV1ClaimZapAdapter is
-    AbstractAdapter,
-    IClaimZap,
-    ReentrancyGuard
-{
-    AdapterType public constant _gearboxAdapterType =
+contract ConvexV1ClaimZapAdapter is AbstractAdapter, IClaimZap {
+    /// @dev CRV token address
+    address public immutable override crv;
+
+    /// @dev CVX token address
+    address public immutable override cvx;
+
+    AdapterType public constant override _gearboxAdapterType =
         AdapterType.CONVEX_V1_CLAIM_ZAP;
-    uint16 public constant _gearboxAdapterVersion = 1;
+    uint16 public constant override _gearboxAdapterVersion = 2;
 
     /// @dev Constructor
     /// @param _creditManager Address of the Credit manager
     /// @param _claimZap Address of the ClaimZap contract
-    constructor(address _creditManager, address _claimZap)
-        AbstractAdapter(_creditManager, _claimZap)
-    {}
+    constructor(
+        address _creditManager,
+        address _claimZap
+    ) AbstractAdapter(_creditManager, _claimZap) {
+        crv = IClaimZap(targetContract).crv(); // F: [ACVX1_Z-1]
+        cvx = IClaimZap(targetContract).cvx(); // F: [ACVX1_Z-1]
+    }
 
     /// @dev Claims rewards from multiple sources for a Credit Account
     /// @param rewardContracts Base reward pools to claim from
@@ -48,25 +54,21 @@ contract ConvexV1ClaimZapAdapter is
         uint256,
         uint256,
         uint256
-    ) external {
-        address creditAccount = creditManager.getCreditAccountOrRevert(
-            msg.sender
-        );
+    ) external override creditFacadeOnly {
+        address creditAccount = _creditAccount();
 
-        _claimAndEnableRewards(creditAccount, rewardContracts); // F: [ACVX1_Z-1]
+        _claimAndEnableRewards(creditAccount, rewardContracts); // F: [ACVX1_Z-2]
 
-        _claimAndEnableExtraRewards(creditAccount, extraRewardContracts); // F: [ACVX1_Z-1,2]
+        _claimAndEnableExtraRewards(creditAccount, extraRewardContracts); // F: [ACVX1_Z-2,3]
 
-        _claimAndEnableTokenRewards( // F: [ACVX1_Z-1,4]
+        _claimAndEnableTokenRewards( // F: [ACVX1_Z-2,5]
             creditAccount,
             tokenRewardContracts,
             tokenRewardTokens
         );
 
-        _enableTokenIfHasBalance(creditAccount, crv()); // F: [ACVX1_Z-1]
-        _enableTokenIfHasBalance(creditAccount, cvx()); // F: [ACVX1_Z-1]
-
-        _checkAndOptimizeEnabledTokens(creditAccount);
+        _enableTokenIfHasBalance(creditAccount, crv); // F: [ACVX1_Z-2]
+        _enableTokenIfHasBalance(creditAccount, cvx); // F: [ACVX1_Z-2]
     }
 
     /// @dev Calls getReward on base reward contracts and enables extra reward tokens, if available
@@ -84,21 +86,21 @@ contract ConvexV1ClaimZapAdapter is
         for (uint256 i; i < len; ) {
             address rewardContract = rewardContracts[i];
 
-            IBaseRewardPool(rewardContract).getReward(creditAccount, true); // F: [ACVX1_Z-1]
+            IBaseRewardPool(rewardContract).getReward(creditAccount, true); // F: [ACVX1_Z-2]
             token = IRewards(rewardContract).rewardToken();
 
             try IBaseRewardPool(rewardContract).extraRewards(0) returns (
                 address extraRewardContract1
             ) {
-                // F: [ACVX1_Z-5]
+                // F: [ACVX1_Z-6]
                 token = IRewards(extraRewardContract1).rewardToken();
-                _enableTokenIfHasBalance(creditAccount, token); // F: [ACVX1_Z-1]
+                _enableTokenIfHasBalance(creditAccount, token); // F: [ACVX1_Z-2]
 
                 try IBaseRewardPool(rewardContract).extraRewards(1) returns (
                     address extraRewardContract2
                 ) {
                     token = IRewards(extraRewardContract2).rewardToken();
-                    _enableTokenIfHasBalance(creditAccount, token); // F: [ACVX1_Z-1]
+                    _enableTokenIfHasBalance(creditAccount, token); // F: [ACVX1_Z-2]
                 } catch {}
             } catch {}
 
@@ -121,9 +123,9 @@ contract ConvexV1ClaimZapAdapter is
 
         for (uint256 i = 0; i < len; ) {
             token = IRewards(extraRewardContracts[i]).rewardToken();
-            IRewards(extraRewardContracts[i]).getReward(creditAccount); // F: [ACVX1_Z-1,2]
+            IRewards(extraRewardContracts[i]).getReward(creditAccount); // F: [ACVX1_Z-2,3]
 
-            _enableTokenIfHasBalance(creditAccount, token); // F: [ACVX1_Z-1,2]
+            _enableTokenIfHasBalance(creditAccount, token); // F: [ACVX1_Z-2,3]
 
             unchecked {
                 ++i;
@@ -143,16 +145,16 @@ contract ConvexV1ClaimZapAdapter is
         address[] calldata tokenRewardTokens
     ) internal {
         address token;
-        uint256 len = tokenRewardContracts.length; // F: [ACVX1_Z-4]
+        uint256 len = tokenRewardContracts.length; // F: [ACVX1_Z-5]
         //claim from multi reward token contract
         for (uint256 i; i < len; ) {
             token = tokenRewardTokens[i];
-            IBasicRewards(tokenRewardContracts[i]).getReward( // F: [ACVX1_Z-1,4]
+            IBasicRewards(tokenRewardContracts[i]).getReward( // F: [ACVX1_Z-2,5]
                 creditAccount,
                 token
             );
 
-            _enableTokenIfHasBalance(creditAccount, token); // F: [ACVX1_Z-1,4]
+            _enableTokenIfHasBalance(creditAccount, token); // F: [ACVX1_Z-2,5]
 
             unchecked {
                 ++i;
@@ -163,21 +165,12 @@ contract ConvexV1ClaimZapAdapter is
     /// @dev Enables token for a credit account if it has balance > 1
     /// @param creditAccount The CA to enable the token for
     /// @param token The token to enable
-    function _enableTokenIfHasBalance(address creditAccount, address token)
-        internal
-    {
+    function _enableTokenIfHasBalance(
+        address creditAccount,
+        address token
+    ) internal {
         if (IERC20(token).balanceOf(creditAccount) > 1) {
             creditManager.checkAndEnableToken(creditAccount, token);
         }
-    }
-
-    /// @dev Returns the CRV token address
-    function crv() public view returns (address) {
-        return IClaimZap(targetContract).crv();
-    }
-
-    /// @dev Returns the CVX token address
-    function cvx() public view returns (address) {
-        return IClaimZap(targetContract).cvx();
     }
 }

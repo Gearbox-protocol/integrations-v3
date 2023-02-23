@@ -1,48 +1,47 @@
 // SPDX-License-Identifier: BUSL-1.1
 // Gearbox Protocol. Generalized leverage for DeFi protocols
-// (c) Gearbox Holdings, 2022
-pragma solidity ^0.8.10;
-
-import { ReentrancyGuard } from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+// (c) Gearbox Holdings, 2023
+pragma solidity ^0.8.17;
 
 import { AbstractAdapter } from "@gearbox-protocol/core-v2/contracts/adapters/AbstractAdapter.sol";
-import { IBooster } from "../../integrations/convex/IBooster.sol";
-import { IConvexV1BaseRewardPoolAdapter } from "../../interfaces/convex/IConvexV1BaseRewardPoolAdapter.sol";
-
 import { IAdapter, AdapterType } from "@gearbox-protocol/core-v2/contracts/interfaces/adapters/IAdapter.sol";
-
+import { ACLNonReentrantTrait } from "@gearbox-protocol/core-v2/contracts/core/ACLNonReentrantTrait.sol";
 import { IPoolService } from "@gearbox-protocol/core-v2/contracts/interfaces/IPoolService.sol";
-
-import { ACLTrait } from "@gearbox-protocol/core-v2/contracts/core/ACLTrait.sol";
 import { ICreditManagerV2 } from "@gearbox-protocol/core-v2/contracts/interfaces/ICreditManagerV2.sol";
 import { ICreditConfigurator } from "@gearbox-protocol/core-v2/contracts/interfaces/ICreditConfigurator.sol";
+
+import { IBooster } from "../../integrations/convex/IBooster.sol";
+import { IConvexV1BoosterAdapter } from "../../interfaces/convex/IConvexV1BoosterAdapter.sol";
+import { IConvexV1BaseRewardPoolAdapter } from "../../interfaces/convex/IConvexV1BaseRewardPoolAdapter.sol";
 
 /// @title ConvexV1BoosterAdapter adapter
 /// @dev Implements logic for for interacting with the Convex Booster contract
 contract ConvexV1BoosterAdapter is
     AbstractAdapter,
-    IBooster,
-    ACLTrait,
-    ReentrancyGuard
+    ACLNonReentrantTrait,
+    IConvexV1BoosterAdapter
 {
     /// @dev CRV token
-    address public immutable crv;
+    address public immutable override crv;
 
     /// @dev CVX token
-    address public immutable minter;
+    address public immutable override minter;
 
     /// @dev Maps pid to a pseudo-ERC20 token that represents the staked position
-    mapping(uint256 => address) public pidToPhantomToken;
+    mapping(uint256 => address) public override pidToPhantomToken;
 
     AdapterType public constant _gearboxAdapterType =
         AdapterType.CONVEX_V1_BOOSTER;
-    uint16 public constant _gearboxAdapterVersion = 1;
+    uint16 public constant _gearboxAdapterVersion = 2;
 
     /// @dev Constructor
     /// @param _creditManager Address Credit manager
     /// @param _booster Address of Booster contract
-    constructor(address _creditManager, address _booster)
-        ACLTrait(
+    constructor(
+        address _creditManager,
+        address _booster
+    )
+        ACLNonReentrantTrait(
             address(
                 IPoolService(ICreditManagerV2(_creditManager).poolService())
                     .addressProvider()
@@ -50,8 +49,8 @@ contract ConvexV1BoosterAdapter is
         )
         AbstractAdapter(_creditManager, _booster)
     {
-        crv = IBooster(_booster).crv(); // F: [ACVX1_B_01]
-        minter = IBooster(_booster).minter(); // F: [ACVX1_B_01]
+        crv = IBooster(_booster).crv(); // F: [ACVX1_B-1]
+        minter = IBooster(_booster).minter(); // F: [ACVX1_B-1]
     }
 
     /// @dev Sends an order to deposit Curve LP tokens into Booster
@@ -64,16 +63,19 @@ contract ConvexV1BoosterAdapter is
         uint256 _pid,
         uint256,
         bool _stake
-    ) external returns (bool) {
-        return _deposit(_pid, _stake, msg.data, false);
+    ) external override creditFacadeOnly {
+        _deposit(_pid, _stake, msg.data, false);
     }
 
     /// @dev Sends an order to deposit all available Curve LP tokens into Booster
     /// @param _pid The ID of the pool being deposited to
     /// @param _stake Whether to immediately stake resulting Convex LP tokens in the pool
     /// The input token does need to be disabled, because this spends the entire balance
-    function depositAll(uint256 _pid, bool _stake) external returns (bool) {
-        return _deposit(_pid, _stake, msg.data, true);
+    function depositAll(
+        uint256 _pid,
+        bool _stake
+    ) external override creditFacadeOnly {
+        _deposit(_pid, _stake, msg.data, true);
     }
 
     /// @dev Internal implementation for deposit functions
@@ -90,21 +92,13 @@ contract ConvexV1BoosterAdapter is
         bool _stake,
         bytes memory callData,
         bool disableTokenIn
-    ) internal returns (bool) {
-        PoolInfo memory pool = IBooster(targetContract).poolInfo(_pid);
+    ) internal {
+        IBooster.PoolInfo memory pool = IBooster(targetContract).poolInfo(_pid);
 
-        address tokenIn = pool.lptoken; // F: [ACVX1_B_02-05]
-        address tokenOut = _stake ? pidToPhantomToken[_pid] : pool.token; // F: [ACVX1_B_02-05]
+        address tokenIn = pool.lptoken; // F: [ACVX1_B-2,3]
+        address tokenOut = _stake ? pidToPhantomToken[_pid] : pool.token; // F: [ACVX1_B-2,3]
 
-        _safeExecuteFastCheck(
-            tokenIn,
-            tokenOut,
-            callData,
-            true,
-            disableTokenIn
-        );
-
-        return true;
+        _executeSwapSafeApprove(tokenIn, tokenOut, callData, disableTokenIn);
     }
 
     /// @dev Sends an order to burn Convex LP tokens and retrieve Curve LP tokens
@@ -112,15 +106,18 @@ contract ConvexV1BoosterAdapter is
     /// @notice '_amount' is ignored since the unchanged calldata is routed directly to the target
     /// The input token does not need to be disabled, because this does not spend the entire
     /// balance, generally
-    function withdraw(uint256 _pid, uint256) external returns (bool) {
-        return _withdraw(_pid, msg.data, false);
+    function withdraw(
+        uint256 _pid,
+        uint256
+    ) external override creditFacadeOnly {
+        _withdraw(_pid, msg.data, false);
     }
 
     /// @dev Sends an order to burn all Convex LP tokens and retrieve Curve LP tokens
     /// @param _pid The ID of the pool
     /// The input token does need to be disabled, because this spends the entire balance
-    function withdrawAll(uint256 _pid) external returns (bool) {
-        return _withdraw(_pid, msg.data, true);
+    function withdrawAll(uint256 _pid) external override creditFacadeOnly {
+        _withdraw(_pid, msg.data, true);
     }
 
     /// @dev Internal implementation for withdraw functions
@@ -135,61 +132,13 @@ contract ConvexV1BoosterAdapter is
         uint256 _pid,
         bytes memory callData,
         bool disableTokenIn
-    ) internal returns (bool) {
-        PoolInfo memory pool = IBooster(targetContract).poolInfo(_pid);
+    ) internal {
+        IBooster.PoolInfo memory pool = IBooster(targetContract).poolInfo(_pid);
 
-        address tokenIn = pool.token; // F: [ACVX1_B_06-07]
-        address tokenOut = pool.lptoken; // F: [ACVX1_B_06-07]
+        address tokenIn = pool.token; // F: [ACVX1_B-4,5]
+        address tokenOut = pool.lptoken; // F: [ACVX1_B-4,5]
 
-        _safeExecuteFastCheck(
-            tokenIn,
-            tokenOut,
-            callData,
-            false,
-            disableTokenIn
-        );
-
-        return true;
-    }
-
-    //
-    // GETTERS
-    //
-
-    /// @dev Returns a struct with parameters of a particular pool
-    /// @param i The ID of the pool
-    function poolInfo(uint256 i) external view returns (PoolInfo memory) {
-        return IBooster(targetContract).poolInfo(i); // F: [ACVX1_B_08]
-    }
-
-    /// @dev Returns the total number of pools
-    function poolLength() external view returns (uint256) {
-        return IBooster(targetContract).poolLength(); // F: [ACVX1_B_08]
-    }
-
-    /// @dev Returns the Convex helper contract that facilitates staking into Curve
-    function staker() external view returns (address) {
-        return IBooster(targetContract).staker(); // F: [ACVX1_B_08]
-    }
-
-    /// @dev Returns the Curve registry
-    function registry() external view returns (address) {
-        return IBooster(targetContract).registry();
-    }
-
-    /// @dev Returns the CVX staking pool
-    function stakerRewards() external view returns (address) {
-        return IBooster(targetContract).stakerRewards();
-    }
-
-    /// @dev Returns the cvxCRV staking pool
-    function lockRewards() external view returns (address) {
-        return IBooster(targetContract).lockRewards();
-    }
-
-    /// @dev Retrusn the cvxCRV extra reward pool (3CRV)
-    function lockFees() external view returns (address) {
-        return IBooster(targetContract).lockFees();
+        _executeSwapNoApprove(tokenIn, tokenOut, callData, disableTokenIn);
     }
 
     ///
@@ -202,7 +151,10 @@ contract ConvexV1BoosterAdapter is
     /// and adds them to the mapping
     /// @notice This is needed in order to determine the tokenOut when
     /// the user deposits with staking
-    function updateStakedPhantomTokensMap() external configuratorOnly {
+    function updateStakedPhantomTokensMap()
+        external
+        configuratorOnly // F: [ACVX1_B-6]
+    {
         ICreditConfigurator cc = ICreditConfigurator(
             creditManager.creditConfigurator()
         );
