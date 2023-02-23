@@ -12,7 +12,7 @@ interface UniswapV3_Multicaller {}
 library UniswapV3_Calls {
     function exactInputSingle(
         UniswapV3_Multicaller c,
-        ISwapRouter.ExactInputSingleParams calldata params
+        ISwapRouter.ExactInputSingleParams memory params
     ) internal pure returns (MultiCall memory) {
         return
             MultiCall({
@@ -26,7 +26,7 @@ library UniswapV3_Calls {
 
     function exactAllInputSingle(
         UniswapV3_Multicaller c,
-        IUniswapV3Adapter.ExactAllInputSingleParams calldata params
+        IUniswapV3Adapter.ExactAllInputSingleParams memory params
     ) internal pure returns (MultiCall memory) {
         return
             MultiCall({
@@ -40,7 +40,7 @@ library UniswapV3_Calls {
 
     function exactInput(
         UniswapV3_Multicaller c,
-        ISwapRouter.ExactInputParams calldata params
+        ISwapRouter.ExactInputParams memory params
     ) internal pure returns (MultiCall memory) {
         return
             MultiCall({
@@ -51,7 +51,7 @@ library UniswapV3_Calls {
 
     function exactAllInput(
         UniswapV3_Multicaller c,
-        IUniswapV3Adapter.ExactAllInputParams calldata params
+        IUniswapV3Adapter.ExactAllInputParams memory params
     ) internal pure returns (MultiCall memory) {
         return
             MultiCall({
@@ -65,7 +65,7 @@ library UniswapV3_Calls {
 
     function exactOutputSingle(
         UniswapV3_Multicaller c,
-        ISwapRouter.ExactOutputSingleParams calldata params
+        ISwapRouter.ExactOutputSingleParams memory params
     ) internal pure returns (MultiCall memory) {
         return
             MultiCall({
@@ -79,7 +79,7 @@ library UniswapV3_Calls {
 
     function exactOutput(
         UniswapV3_Multicaller c,
-        ISwapRouter.ExactOutputParams calldata params
+        ISwapRouter.ExactOutputParams memory params
     ) internal pure returns (MultiCall memory) {
         return
             MultiCall({

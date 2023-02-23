@@ -13,7 +13,7 @@ library UniswapV2_Calls {
         UniswapV2_Multicaller c,
         uint256 amountOut,
         uint256 amountInMax,
-        address[] calldata path,
+        address[] memory path,
         address recipient,
         uint256 deadline
     ) internal pure returns (MultiCall memory) {
@@ -31,7 +31,7 @@ library UniswapV2_Calls {
         UniswapV2_Multicaller c,
         uint256 amountIn,
         uint256 amountOutMin,
-        address[] calldata path,
+        address[] memory path,
         address recipient,
         uint256 deadline
     ) internal pure returns (MultiCall memory) {
@@ -48,7 +48,7 @@ library UniswapV2_Calls {
     function swapAllTokensForTokens(
         UniswapV2_Multicaller c,
         uint256 rateMinRAY,
-        address[] calldata path,
+        address[] memory path,
         uint256 deadline
     ) internal pure returns (MultiCall memory) {
         return
