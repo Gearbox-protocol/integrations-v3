@@ -1,19 +1,20 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Gearbox Protocol. Generalized leverage for DeFi protocols
-// (c) Gearbox Holdings, 2022
-pragma solidity ^0.8.10;
+// (c) Gearbox Holdings, 2023
+pragma solidity ^0.8.17;
 
-// LIBRARIES
-import { CurveV1AdapterBase } from "./CurveV1_Base.sol";
-
-// INTERFACES
-import { N_COINS, ICurvePool4Assets } from "../../integrations/curve/ICurvePool_4.sol";
 import { IAdapter, AdapterType } from "@gearbox-protocol/core-v2/contracts/interfaces/adapters/IAdapter.sol";
+
+import { N_COINS } from "../../integrations/curve/ICurvePool_4.sol";
+import { ICurveV1_4AssetsAdapter } from "../../interfaces/curve/ICurveV1_4AssetsAdapter.sol";
+import { CurveV1AdapterBase } from "./CurveV1_Base.sol";
 
 /// @title CurveV1Adapter4Assets adapter
 /// @dev Implements logic for interacting with a Curve pool with 4 assets
-contract CurveV1Adapter4Assets is CurveV1AdapterBase, ICurvePool4Assets {
-    AdapterType public constant override _gearboxAdapterType =
+contract CurveV1Adapter4Assets is CurveV1AdapterBase, ICurveV1_4AssetsAdapter {
+    AdapterType
+        public constant
+        override(CurveV1AdapterBase, IAdapter) _gearboxAdapterType =
         AdapterType.CURVE_V1_4ASSETS;
 
     /// @dev Constructor
@@ -40,10 +41,10 @@ contract CurveV1Adapter4Assets is CurveV1AdapterBase, ICurvePool4Assets {
     /// @param amounts Amounts of tokens to add
     /// @notice 'min_mint_amount' is ignored since the calldata is routed directly to the target
     /// @notice Internal implementation details in CurveV1Base
-    function add_liquidity(uint256[N_COINS] calldata amounts, uint256)
-        external
-        nonReentrant
-    {
+    function add_liquidity(
+        uint256[N_COINS] calldata amounts,
+        uint256
+    ) external creditFacadeOnly {
         _add_liquidity(
             amounts[0] > 1,
             amounts[1] > 1,
@@ -55,11 +56,10 @@ contract CurveV1Adapter4Assets is CurveV1AdapterBase, ICurvePool4Assets {
     /// @dev Sends an order to remove liquidity from a Curve pool
     /// @notice '_amount' and 'min_amounts' are ignored since the calldata is routed directly to the target
     /// @notice Internal implementation details in CurveV1Base
-    function remove_liquidity(uint256, uint256[N_COINS] calldata)
-        external
-        virtual
-        nonReentrant
-    {
+    function remove_liquidity(
+        uint256,
+        uint256[N_COINS] calldata
+    ) external virtual creditFacadeOnly {
         _remove_liquidity(); // F:[ACV1_4-5]
     }
 
@@ -70,66 +70,12 @@ contract CurveV1Adapter4Assets is CurveV1AdapterBase, ICurvePool4Assets {
     function remove_liquidity_imbalance(
         uint256[N_COINS] calldata amounts,
         uint256
-    ) external virtual override nonReentrant {
+    ) external virtual override creditFacadeOnly {
         _remove_liquidity_imbalance(
             amounts[0] > 1,
             amounts[1] > 1,
             amounts[2] > 1,
             amounts[3] > 1
         ); // F:[ACV1_4-6]
-    }
-
-    /// @dev Calculates the amount of LP token minted or burned based on added/removed coin amounts
-    /// @param _amounts Amounts of coins to be added or removed from the pool
-    /// @param _is_deposit Whether the tokens are added or removed
-    function calc_token_amount(
-        uint256[N_COINS] calldata _amounts,
-        bool _is_deposit
-    ) external view returns (uint256) {
-        return
-            ICurvePool4Assets(targetContract).calc_token_amount(
-                _amounts,
-                _is_deposit
-            );
-    }
-
-    /// @dev Calculates the time-weighted average of initial and final balances
-    /// @param _first_balances Initial cumulative balances
-    /// @param _last_balances Final cumulative balances
-    /// @param _time_elapsed Amount of time between initial and final balances
-    function get_twap_balances(
-        uint256[N_COINS] calldata _first_balances,
-        uint256[N_COINS] calldata _last_balances,
-        uint256 _time_elapsed
-    ) external view returns (uint256[N_COINS] memory) {
-        return
-            ICurvePool4Assets(targetContract).get_twap_balances(
-                _first_balances,
-                _last_balances,
-                _time_elapsed
-            );
-    }
-
-    /// @dev Returns the current balances of coins in the pool
-    function get_balances() external view returns (uint256[N_COINS] memory) {
-        return ICurvePool4Assets(targetContract).get_balances();
-    }
-
-    /// @dev Returns the balances of coins in the pool from the last block where it was updated
-    function get_previous_balances()
-        external
-        view
-        returns (uint256[N_COINS] memory)
-    {
-        return ICurvePool4Assets(targetContract).get_previous_balances();
-    }
-
-    /// @dev Returns cumulative balances for TWAP calculation
-    function get_price_cumulative_last()
-        external
-        view
-        returns (uint256[N_COINS] memory)
-    {
-        return ICurvePool4Assets(targetContract).get_price_cumulative_last();
     }
 }

@@ -10,16 +10,22 @@ interface ICurveV1AdapterExceptions {
     error IncorrectIndexException();
 }
 
-interface ICurveV1Adapter is IAdapter, ICurvePool, ICurveV1AdapterExceptions {
+interface ICurveV1Adapter is IAdapter, ICurveV1AdapterExceptions {
+    /// @dev Sends an order to exchange one asset to another
+    /// @param i Index for the coin sent
+    /// @param j Index for the coin received
+    function exchange(int128 i, int128 j, uint256, uint256) external;
+
     /// @dev Sends an order to exchange the entire balance of one asset to another
     /// @param i Index for the coin sent
     /// @param j Index for the coin received
     /// @param rateMinRAY Minimum exchange rate between coins i and j
-    function exchange_all(
-        int128 i,
-        int128 j,
-        uint256 rateMinRAY
-    ) external;
+    function exchange_all(int128 i, int128 j, uint256 rateMinRAY) external;
+
+    /// @dev Sends an order to exchange one underlying asset to another
+    /// @param i Index for the underlying coin sent
+    /// @param j Index for the underlying coin received
+    function exchange_underlying(int128 i, int128 j, uint256, uint256) external;
 
     /// @dev Sends an order to exchange the entire balance of one underlying asset to another
     /// @param i Index for the underlying coin sent
@@ -46,15 +52,29 @@ interface ICurveV1Adapter is IAdapter, ICurvePool, ICurveV1AdapterExceptions {
     /// @param rateMinRAY Minimal exchange rate between the deposited asset and the LP token
     function add_all_liquidity_one_coin(int128 i, uint256 rateMinRAY) external;
 
+    /// @dev Sends an order to remove liquidity from a pool in a single asset
+    /// @param i Index of the asset to withdraw
+    /// @notice `_token_amount` and `min_amount` are ignored since the calldata is routed directly to the target
+    function remove_liquidity_one_coin(
+        uint256, // _token_amount,
+        int128 i,
+        uint256 // min_amount
+    ) external;
+
     /// @dev Sends an order to remove all liquidity from the pool in a single asset
     /// @param i Index of the asset to withdraw
     /// @param minRateRAY Minimal exchange rate between the LP token and the received token
-    function remove_all_liquidity_one_coin(int128 i, uint256 minRateRAY)
-        external;
+    function remove_all_liquidity_one_coin(
+        int128 i,
+        uint256 minRateRAY
+    ) external;
 
     //
     // GETTERS
     //
+
+    /// @dev The pool LP token
+    function token() external view returns (address);
 
     /// @dev The pool LP token
     function lp_token() external view returns (address);
@@ -92,8 +112,8 @@ interface ICurveV1Adapter is IAdapter, ICurvePool, ICurveV1AdapterExceptions {
     /// @dev Returns the amount of lp token received when adding a single coin to the pool
     /// @param amount Amount of coin to be deposited
     /// @param i Index of a coin to be deposited
-    function calc_add_one_coin(uint256 amount, int128 i)
-        external
-        view
-        returns (uint256);
+    function calc_add_one_coin(
+        uint256 amount,
+        int128 i
+    ) external view returns (uint256);
 }

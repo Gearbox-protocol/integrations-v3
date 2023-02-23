@@ -1,10 +1,13 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Gearbox Protocol. Generalized leverage for DeFi protocols
-// (c) Gearbox Holdings, 2022
-pragma solidity ^0.8.10;
+// (c) Gearbox Holdings, 2023
+pragma solidity ^0.8.17;
 
-import { N_COINS, ICurvePool2Assets } from "../../integrations/curve/ICurvePool_2.sol";
 import { IAdapter, AdapterType } from "@gearbox-protocol/core-v2/contracts/interfaces/adapters/IAdapter.sol";
+
+import { N_COINS } from "../../integrations/curve/ICurvePool_2.sol";
+import { ICurveV1Adapter } from "../../interfaces/curve/ICurveV1Adapter.sol";
+import { CurveV1AdapterBase } from "./CurveV1_Base.sol";
 import { CurveV1Adapter2Assets } from "./CurveV1_2.sol";
 
 /// @title CurveV1AdapterStETH adapter
@@ -47,11 +50,14 @@ contract CurveV1AdapterStETH is CurveV1Adapter2Assets {
     /// @dev Sends an order to remove liquidity from a Curve pool
     /// - Unlike other adapters, approves the LP token to the target
     /// @notice See more implementation details in CurveV1Adapter2Assets
-    function remove_liquidity(uint256, uint256[N_COINS] calldata)
+    function remove_liquidity(
+        uint256,
+        uint256[N_COINS] calldata
+    )
         public
         override
+        creditFacadeOnly
         withLPTokenApproval // F:[ACV1S-2]
-        nonReentrant
     {
         _remove_liquidity(); // F:[ACV1S-2]
     }
@@ -66,9 +72,9 @@ contract CurveV1AdapterStETH is CurveV1Adapter2Assets {
         uint256 // min_amount
     )
         external
-        override
+        override(CurveV1AdapterBase, ICurveV1Adapter)
+        creditFacadeOnly
         withLPTokenApproval // F:[ACV1S-4]
-        nonReentrant
     {
         address tokenOut = _get_token(i); // F:[ACV1S-4]
         _remove_liquidity_one_coin(tokenOut); // F:[ACV1S-4]
@@ -79,11 +85,14 @@ contract CurveV1AdapterStETH is CurveV1Adapter2Assets {
     /// @param minRateRAY The minimum exchange rate of the LP token to the received asset
     /// - Unlike other adapters, approves the LP token to the target
     /// @notice See more implementation details in CurveV1Adapter2Assets
-    function remove_all_liquidity_one_coin(int128 i, uint256 minRateRAY)
+    function remove_all_liquidity_one_coin(
+        int128 i,
+        uint256 minRateRAY
+    )
         external
-        override
+        override(CurveV1AdapterBase, ICurveV1Adapter)
+        creditFacadeOnly
         withLPTokenApproval // F:[ACV1S-5]
-        nonReentrant
     {
         address tokenOut = _get_token(i); // F:[ACV1S-5]
         _remove_all_liquidity_one_coin(i, tokenOut, minRateRAY); // F:[ACV1S-5]
@@ -99,8 +108,8 @@ contract CurveV1AdapterStETH is CurveV1Adapter2Assets {
     )
         external
         override
+        creditFacadeOnly
         withLPTokenApproval // F:[ACV1S-6]
-        nonReentrant
     {
         _remove_liquidity_imbalance(
             amounts[0] > 1,
