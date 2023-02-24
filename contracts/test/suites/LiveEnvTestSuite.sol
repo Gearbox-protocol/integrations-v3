@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 // Gearbox Protocol. Generalized leverage for DeFi protocols
-// (c) Gearbox Holdings, 2022
-pragma solidity ^0.8.10;
+// (c) Gearbox Holdings, 2023
+pragma solidity ^0.8.17;
 
 import { Tokens } from "../config/Tokens.sol";
 import { TokensTestSuite } from "./TokensTestSuite.sol";
@@ -137,12 +137,11 @@ contract LiveEnvTestSuite is CreditConfigLive {
                             creditManagers[underlyingT].pool()
                         );
 
-                        if (pool.expectedLiquidity() == 0) {
-                            tokenTestSuite.mint(
-                                underlyingT,
-                                FRIEND,
-                                2000000 * WAD
-                            );
+                        uint256 el = pool.expectedLiquidity();
+                        uint256 elLimit = pool.expectedLiquidityLimit();
+                        if (el < elLimit / 2) {
+                            uint256 amount = elLimit / 2 - el;
+                            tokenTestSuite.mint(underlyingT, FRIEND, amount);
                             tokenTestSuite.approve(
                                 underlyingT,
                                 FRIEND,
@@ -150,7 +149,7 @@ contract LiveEnvTestSuite is CreditConfigLive {
                             );
 
                             evm.prank(FRIEND);
-                            pool.addLiquidity(2000000 * WAD, FRIEND, 0);
+                            pool.addLiquidity(amount, FRIEND, 0);
                         }
 
                         evm.label(
@@ -405,7 +404,9 @@ contract LiveEnvTestSuite is CreditConfigLive {
         // evm.stopPrank();
     }
 
-    function _wstETHPoolExists(ContractsRegister cr) internal returns (bool) {
+    function _wstETHPoolExists(
+        ContractsRegister cr
+    ) internal view returns (bool) {
         address[] memory pools = cr.getPools();
 
         for (uint256 i = 0; i < pools.length; ++i) {
@@ -451,7 +452,9 @@ contract LiveEnvTestSuite is CreditConfigLive {
     //   evm.stopPrank();
     // }
 
-    function getCreditManagerConfig(address poolUnderlying)
+    function getCreditManagerConfig(
+        address poolUnderlying
+    )
         internal
         view
         returns (
@@ -491,33 +494,29 @@ contract LiveEnvTestSuite is CreditConfigLive {
         adaptersList = humanCfg.contracts;
     }
 
-    function getAdapter(Tokens underlying, Contracts target)
-        public
-        view
-        returns (address)
-    {
+    function getAdapter(
+        Tokens underlying,
+        Contracts target
+    ) public view returns (address) {
         return
             creditManagers[underlying].contractToAdapter(
                 supportedContracts.addressOf(target)
             );
     }
 
-    function getMockAdapter(Tokens underlying, Contracts target)
-        public
-        view
-        returns (address)
-    {
+    function getMockAdapter(
+        Tokens underlying,
+        Contracts target
+    ) public view returns (address) {
         return
             creditManagerMocks[underlying].contractToAdapter(
                 supportedContracts.addressOf(target)
             );
     }
 
-    function getAdapters(Tokens underlying)
-        public
-        view
-        returns (address[] memory adapters)
-    {
+    function getAdapters(
+        Tokens underlying
+    ) public view returns (address[] memory adapters) {
         uint256 contractCount = supportedContracts.contractCount();
 
         adapters = new address[](contractCount);

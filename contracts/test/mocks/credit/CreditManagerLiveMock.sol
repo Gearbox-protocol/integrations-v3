@@ -7,4 +7,15 @@ import { CreditManager } from "@gearbox-protocol/core-v2/contracts/credit/Credit
 
 contract CreditManagerLiveMock is CreditManager {
     constructor(address _pool) CreditManager(_pool) {}
+
+    function _fullCollateralCheck(
+        address creditAccount,
+        uint256[] memory collateralHints,
+        uint16 minHealthFactor
+    ) internal override {}
+
+    function _checkAndEnableToken(
+        address creditAccount,
+        address token
+    ) internal override {}
 }
