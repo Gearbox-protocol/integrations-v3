@@ -137,10 +137,18 @@ contract LiveEnvTestSuite is CreditConfigLive {
                             creditManagers[underlyingT].pool()
                         );
 
-                        uint256 el = pool.expectedLiquidity();
-                        uint256 elLimit = pool.expectedLiquidityLimit();
-                        if (el < elLimit / 2) {
-                            uint256 amount = elLimit / 2 - el;
+                        uint256 expectedLiquidityUSD = priceOracle.convertToUSD(
+                            pool.expectedLiquidity(),
+                            tokenTestSuite.addressOf(underlyingT)
+                        );
+                        uint256 oneMillionUSD = 1_000_000 * 10 ** 8;
+                        if (expectedLiquidityUSD < oneMillionUSD) {
+                            uint256 amountUSD = oneMillionUSD -
+                                expectedLiquidityUSD;
+                            uint256 amount = priceOracle.convertFromUSD(
+                                amountUSD,
+                                tokenTestSuite.addressOf(underlyingT)
+                            );
                             tokenTestSuite.mint(underlyingT, FRIEND, amount);
                             tokenTestSuite.approve(
                                 underlyingT,
