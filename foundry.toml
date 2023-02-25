@@ -7,6 +7,7 @@ remappings = [
   '@openzeppelin/=node_modules/@openzeppelin/',
   '@chainlink/=node_modules/@chainlink/',
   'hardhat/=node_modules/hardhat/',
+  'forge-std/=node_modules/forge-std/',
   '@gearbox-protocol=node_modules/@gearbox-protocol/'
 ]
 solc_version = '0.8.17'

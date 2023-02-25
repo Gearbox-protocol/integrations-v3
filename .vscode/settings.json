@@ -20,6 +20,7 @@
     "@openzeppelin/=node_modules/@openzeppelin/",
     "ds-test/=lib/ds-test/src/",
     "hardhat/=node_modules/hardhat/",
+    "forge-std/=node_modules/forge-std/",
     "@gearbox-protocol=node_modules/@gearbox-protocol/"
   ]
 }

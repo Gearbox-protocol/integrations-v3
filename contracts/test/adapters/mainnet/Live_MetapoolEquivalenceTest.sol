@@ -1,12 +1,14 @@
 // SPDX-License-Identifier: UNLICENSED
 // Gearbox Protocol. Generalized leverage for DeFi protocols
-// (c) Gearbox Holdings, 2022
-pragma solidity ^0.8.10;
+// (c) Gearbox Holdings, 2023
+pragma solidity ^0.8.17;
 
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { ICreditFacade } from "@gearbox-protocol/core-v2/contracts/interfaces/ICreditFacade.sol";
 import { ICurvePool2Assets } from "../../../integrations/curve/ICurvePool_2.sol";
 import { ICurveV1_2AssetsAdapter } from "../../../interfaces/curve/ICurveV1_2AssetsAdapter.sol";
+import { CurveV1Calls, CurveV1Multicaller } from "../../../multicall/curve/CurveV1_Calls.sol";
+
 import { Tokens } from "../../config/Tokens.sol";
 import { Contracts } from "../../config/SupportedContracts.sol";
 
@@ -22,6 +24,7 @@ import { BalanceComparator, BalanceBackup } from "../../helpers/BalanceComparato
 
 contract Live_MetapoolTest is DSTest, LiveEnvHelper {
     using CreditFacadeCalls for CreditFacadeMulticaller;
+    using CurveV1Calls for CurveV1Multicaller;
     BalanceComparator comparator;
 
     string[] _stages;
@@ -59,99 +62,169 @@ contract Live_MetapoolTest is DSTest, LiveEnvHelper {
 
     function compareBehavior(
         address curvePoolAddr,
-        address accountToSaveBalances
-    ) internal {
-        ICurvePool2Assets curvePool = ICurvePool2Assets(curvePoolAddr);
-
-        evm.prank(USER);
-        curvePool.exchange(1, 0, 3000 * WAD, 2000 * WAD);
-        comparator.takeSnapshot("after_exchange", accountToSaveBalances);
-
-        evm.prank(USER);
-        curvePool.exchange_underlying(0, 2, 500 * WAD, 125 * (10**6));
-        comparator.takeSnapshot(
-            "after_exchange_underlying",
-            accountToSaveBalances
-        );
-
-        uint256[2] memory amounts = [1500 * WAD, 1500 * WAD];
-
-        evm.prank(USER);
-        curvePool.add_liquidity(amounts, 0);
-        comparator.takeSnapshot("after_add_liquidity", accountToSaveBalances);
-
-        amounts = [uint256(0), 0];
-
-        evm.prank(USER);
-        curvePool.remove_liquidity(500 * WAD, amounts);
-        comparator.takeSnapshot(
-            "after_remove_liquidity",
-            accountToSaveBalances
-        );
-
-        evm.prank(USER);
-        curvePool.remove_liquidity_one_coin(500 * WAD, 1, 0);
-        comparator.takeSnapshot(
-            "after_remove_liquidity_one_coin",
-            accountToSaveBalances
-        );
-
-        amounts = [100 * WAD, 500 * WAD];
-
-        evm.prank(USER);
-        curvePool.remove_liquidity_imbalance(amounts, type(uint256).max);
-        comparator.takeSnapshot(
-            "after_remove_liquidity_imbalance",
-            accountToSaveBalances
-        );
-    }
-
-    function compareExtraFunctions(
-        address curvePoolAddr,
         address accountToSaveBalances,
         bool isAdapter
     ) internal {
         if (isAdapter) {
-            ICurveV1_2AssetsAdapter pool = ICurveV1_2AssetsAdapter(
-                curvePoolAddr
+            ICreditFacade creditFacade = lts.creditFacades(Tokens.DAI);
+            CurveV1Multicaller pool = CurveV1Multicaller(curvePoolAddr);
+
+            evm.prank(USER);
+            creditFacade.multicall(
+                multicallBuilder(pool.exchange(1, 0, 3000 * WAD, 2000 * WAD))
+            );
+            comparator.takeSnapshot("after_exchange", accountToSaveBalances);
+
+            evm.prank(USER);
+            creditFacade.multicall(
+                multicallBuilder(
+                    pool.exchange_underlying(0, 2, 500 * WAD, 125 * (10 ** 6))
+                )
+            );
+            comparator.takeSnapshot(
+                "after_exchange_underlying",
+                accountToSaveBalances
+            );
+
+            uint256[2] memory amounts = [1500 * WAD, 1500 * WAD];
+
+            evm.prank(USER);
+            creditFacade.multicall(
+                multicallBuilder(pool.add_liquidity(amounts, 0))
+            );
+            comparator.takeSnapshot(
+                "after_add_liquidity",
+                accountToSaveBalances
+            );
+
+            amounts = [uint256(0), 0];
+
+            evm.prank(USER);
+            creditFacade.multicall(
+                multicallBuilder(pool.remove_liquidity(500 * WAD, amounts))
+            );
+            comparator.takeSnapshot(
+                "after_remove_liquidity",
+                accountToSaveBalances
             );
 
             evm.prank(USER);
-            pool.add_liquidity_one_coin(100 * WAD, 1, 50 * WAD);
+            creditFacade.multicall(
+                multicallBuilder(
+                    pool.remove_liquidity_one_coin(500 * WAD, 1, 0)
+                )
+            );
+            comparator.takeSnapshot(
+                "after_remove_liquidity_one_coin",
+                accountToSaveBalances
+            );
+
+            amounts = [100 * WAD, 500 * WAD];
+
+            evm.prank(USER);
+            creditFacade.multicall(
+                multicallBuilder(
+                    pool.remove_liquidity_imbalance(amounts, type(uint256).max)
+                )
+            );
+            comparator.takeSnapshot(
+                "after_remove_liquidity_imbalance",
+                accountToSaveBalances
+            );
+
+            evm.prank(USER);
+            creditFacade.multicall(
+                multicallBuilder(
+                    pool.add_liquidity_one_coin(100 * WAD, 1, 50 * WAD)
+                )
+            );
             comparator.takeSnapshot(
                 "after_add_liquidity_one_coin",
                 accountToSaveBalances
             );
 
             evm.prank(USER);
-            pool.exchange_all(1, 0, RAY / 2);
+            creditFacade.multicall(
+                multicallBuilder(pool.exchange_all(1, 0, RAY / 2))
+            );
             comparator.takeSnapshot(
                 "after_exchange_all",
                 accountToSaveBalances
             );
 
             evm.prank(USER);
-            pool.add_all_liquidity_one_coin(0, RAY / 2);
+            creditFacade.multicall(
+                multicallBuilder(pool.add_all_liquidity_one_coin(0, RAY / 2))
+            );
             comparator.takeSnapshot(
                 "after_add_all_liquidity_one_coin",
                 accountToSaveBalances
             );
 
             evm.prank(USER);
-            pool.remove_all_liquidity_one_coin(0, RAY / 2);
+            creditFacade.multicall(
+                multicallBuilder(pool.remove_all_liquidity_one_coin(0, RAY / 2))
+            );
             comparator.takeSnapshot(
                 "after_remove_all_liquidity_one_coin",
                 accountToSaveBalances
             );
 
             evm.prank(USER);
-            pool.exchange_all_underlying(0, 1, RAY / 2);
+            creditFacade.multicall(
+                multicallBuilder(pool.exchange_all_underlying(0, 1, RAY / 2))
+            );
             comparator.takeSnapshot(
                 "after_exchange_all_underlying",
                 accountToSaveBalances
             );
         } else {
             ICurvePool2Assets pool = ICurvePool2Assets(curvePoolAddr);
+
+            evm.prank(USER);
+            pool.exchange(1, 0, 3000 * WAD, 2000 * WAD);
+            comparator.takeSnapshot("after_exchange", accountToSaveBalances);
+
+            evm.prank(USER);
+            pool.exchange_underlying(0, 2, 500 * WAD, 125 * (10 ** 6));
+            comparator.takeSnapshot(
+                "after_exchange_underlying",
+                accountToSaveBalances
+            );
+
+            uint256[2] memory amounts = [1500 * WAD, 1500 * WAD];
+
+            evm.prank(USER);
+            pool.add_liquidity(amounts, 0);
+            comparator.takeSnapshot(
+                "after_add_liquidity",
+                accountToSaveBalances
+            );
+
+            amounts = [uint256(0), 0];
+
+            evm.prank(USER);
+            pool.remove_liquidity(500 * WAD, amounts);
+            comparator.takeSnapshot(
+                "after_remove_liquidity",
+                accountToSaveBalances
+            );
+
+            evm.prank(USER);
+            pool.remove_liquidity_one_coin(500 * WAD, 1, 0);
+            comparator.takeSnapshot(
+                "after_remove_liquidity_one_coin",
+                accountToSaveBalances
+            );
+
+            amounts = [100 * WAD, 500 * WAD];
+
+            evm.prank(USER);
+            pool.remove_liquidity_imbalance(amounts, type(uint256).max);
+            comparator.takeSnapshot(
+                "after_remove_liquidity_imbalance",
+                accountToSaveBalances
+            );
 
             evm.prank(USER);
             pool.add_liquidity([0, 100 * WAD], 50 * WAD);
@@ -208,10 +281,9 @@ contract Live_MetapoolTest is DSTest, LiveEnvHelper {
 
     /// @dev Opens credit account for USER and make amount of desired token equal
     /// amounts for USER and CA to be able to launch test for both
-    function openEquivalentCreditAccountWith3CRVAmount(uint256 amount)
-        internal
-        returns (address creditAccount)
-    {
+    function openEquivalentCreditAccountWith3CRVAmount(
+        uint256 amount
+    ) internal returns (address creditAccount) {
         ICreditFacade creditFacade = lts.creditFacades(Tokens.DAI);
 
         (uint256 minAmount, ) = creditFacade.limits();
@@ -255,8 +327,8 @@ contract Live_MetapoolTest is DSTest, LiveEnvHelper {
         evm.stopPrank();
 
         creditAccount = lts.creditManagers(Tokens.DAI).getCreditAccountOrRevert(
-                USER
-            );
+            USER
+        );
     }
 
     /// @dev [L-CRVET-2]: FRAX3CRV adapter and normal account works identically
@@ -302,10 +374,6 @@ contract Live_MetapoolTest is DSTest, LiveEnvHelper {
 
         compareBehavior(
             supportedContracts.addressOf(Contracts.CURVE_FRAX_POOL),
-            USER
-        );
-        compareExtraFunctions(
-            supportedContracts.addressOf(Contracts.CURVE_FRAX_POOL),
             USER,
             false
         );
@@ -317,10 +385,6 @@ contract Live_MetapoolTest is DSTest, LiveEnvHelper {
         evm.revertTo(snapshot);
 
         compareBehavior(
-            lts.getAdapter(Tokens.DAI, Contracts.CURVE_FRAX_POOL),
-            creditAccount
-        );
-        compareExtraFunctions(
             lts.getAdapter(Tokens.DAI, Contracts.CURVE_FRAX_POOL),
             creditAccount,
             true
@@ -372,10 +436,6 @@ contract Live_MetapoolTest is DSTest, LiveEnvHelper {
 
         compareBehavior(
             supportedContracts.addressOf(Contracts.CURVE_LUSD_POOL),
-            USER
-        );
-        compareExtraFunctions(
-            supportedContracts.addressOf(Contracts.CURVE_LUSD_POOL),
             USER,
             false
         );
@@ -387,10 +447,6 @@ contract Live_MetapoolTest is DSTest, LiveEnvHelper {
         evm.revertTo(snapshot);
 
         compareBehavior(
-            lts.getAdapter(Tokens.DAI, Contracts.CURVE_LUSD_POOL),
-            creditAccount
-        );
-        compareExtraFunctions(
             lts.getAdapter(Tokens.DAI, Contracts.CURVE_LUSD_POOL),
             creditAccount,
             true

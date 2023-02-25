@@ -81,7 +81,7 @@ library CurveV1Calls {
 
     function add_liquidity(
         CurveV1Multicaller c,
-        uint256[2] calldata amounts,
+        uint256[2] memory amounts,
         uint256 min_mint_amount
     ) internal pure returns (MultiCall memory) {
         return
@@ -96,7 +96,7 @@ library CurveV1Calls {
 
     function add_liquidity(
         CurveV1Multicaller c,
-        uint256[3] calldata amounts,
+        uint256[3] memory amounts,
         uint256 min_mint_amount
     ) internal pure returns (MultiCall memory) {
         return
@@ -111,7 +111,7 @@ library CurveV1Calls {
 
     function add_liquidity(
         CurveV1Multicaller c,
-        uint256[4] calldata amounts,
+        uint256[4] memory amounts,
         uint256 min_mint_amount
     ) internal pure returns (MultiCall memory) {
         return
@@ -158,7 +158,7 @@ library CurveV1Calls {
     function remove_liquidity(
         CurveV1Multicaller c,
         uint256 amount,
-        uint256[2] calldata min_amounts
+        uint256[2] memory min_amounts
     ) internal pure returns (MultiCall memory) {
         return
             MultiCall({
@@ -173,7 +173,7 @@ library CurveV1Calls {
     function remove_liquidity(
         CurveV1Multicaller c,
         uint256 amount,
-        uint256[3] calldata min_amounts
+        uint256[3] memory min_amounts
     ) internal pure returns (MultiCall memory) {
         return
             MultiCall({
@@ -188,7 +188,7 @@ library CurveV1Calls {
     function remove_liquidity(
         CurveV1Multicaller c,
         uint256 amount,
-        uint256[4] calldata min_amounts
+        uint256[4] memory min_amounts
     ) internal pure returns (MultiCall memory) {
         return
             MultiCall({
@@ -233,7 +233,7 @@ library CurveV1Calls {
 
     function remove_liquidity_imbalance(
         CurveV1Multicaller c,
-        uint256[2] calldata amounts,
+        uint256[2] memory amounts,
         uint256 max_burn_amount
     ) internal pure returns (MultiCall memory) {
         return
@@ -248,7 +248,7 @@ library CurveV1Calls {
 
     function remove_liquidity_imbalance(
         CurveV1Multicaller c,
-        uint256[3] calldata amounts,
+        uint256[3] memory amounts,
         uint256 max_burn_amount
     ) internal pure returns (MultiCall memory) {
         return
@@ -263,7 +263,7 @@ library CurveV1Calls {
 
     function remove_liquidity_imbalance(
         CurveV1Multicaller c,
-        uint256[4] calldata amounts,
+        uint256[4] memory amounts,
         uint256 max_burn_amount
     ) internal pure returns (MultiCall memory) {
         return
