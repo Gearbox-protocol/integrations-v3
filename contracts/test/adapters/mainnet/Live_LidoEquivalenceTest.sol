@@ -1,12 +1,14 @@
 // SPDX-License-Identifier: UNLICENSED
 // Gearbox Protocol. Generalized leverage for DeFi protocols
-// (c) Gearbox Holdings, 2022
-pragma solidity ^0.8.10;
+// (c) Gearbox Holdings, 2023
+pragma solidity ^0.8.17;
 
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { ICreditFacade } from "@gearbox-protocol/core-v2/contracts/interfaces/ICreditFacade.sol";
 import { ILidoV1Adapter } from "../../../interfaces/lido/ILidoV1Adapter.sol";
 import { LidoV1Gateway } from "../../../adapters/lido/LidoV1_WETHGateway.sol";
+import { LidoV1_Calls, LidoV1_Multicaller } from "../../../multicall/lido/LidoV1_Calls.sol";
+
 import { Tokens } from "../../config/Tokens.sol";
 import { Contracts } from "../../config/SupportedContracts.sol";
 
@@ -22,6 +24,7 @@ import { BalanceComparator, BalanceBackup } from "../../helpers/BalanceComparato
 
 contract Live_LidoEquivalenceTest is DSTest, LiveEnvHelper {
     using CreditFacadeCalls for CreditFacadeMulticaller;
+    using LidoV1_Calls for LidoV1_Multicaller;
     BalanceComparator comparator;
 
     function setUp() public liveOnly {
@@ -72,14 +75,15 @@ contract Live_LidoEquivalenceTest is DSTest, LiveEnvHelper {
         bool isAdapter
     ) internal {
         if (isAdapter) {
-            ILidoV1Adapter lido = ILidoV1Adapter(lidoAddr);
+            ICreditFacade creditFacade = lts.creditFacades(Tokens.WETH);
+            LidoV1_Multicaller lido = LidoV1_Multicaller(lidoAddr);
 
             evm.prank(USER);
-            lido.submit(WAD);
+            creditFacade.multicall(multicallBuilder(lido.submit(WAD)));
             comparator.takeSnapshot("after_submit", accountToSaveBalances);
 
             evm.prank(USER);
-            lido.submitAll();
+            creditFacade.multicall(multicallBuilder(lido.submitAll()));
             comparator.takeSnapshot("after_submitAll", accountToSaveBalances);
         } else {
             LidoV1Gateway lido = LidoV1Gateway(payable(lidoAddr));
@@ -100,10 +104,9 @@ contract Live_LidoEquivalenceTest is DSTest, LiveEnvHelper {
 
     /// @dev Opens credit account for USER and make amount of desired token equal
     /// amounts for USER and CA to be able to launch test for both
-    function openCreditAccountWithEqualAmount(uint256 amount)
-        internal
-        returns (address creditAccount)
-    {
+    function openCreditAccountWithEqualAmount(
+        uint256 amount
+    ) internal returns (address creditAccount) {
         ICreditFacade creditFacade = lts.creditFacades(Tokens.WETH);
 
         tokenTestSuite.mint(Tokens.WETH, USER, 3 * amount);

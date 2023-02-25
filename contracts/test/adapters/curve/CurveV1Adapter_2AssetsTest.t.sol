@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 // Gearbox Protocol. Generalized leverage for DeFi protocols
-// (c) Gearbox Holdings, 2022
-pragma solidity ^0.8.10;
+// (c) Gearbox Holdings, 2023
+pragma solidity ^0.8.17;
 
 import { N_COINS, CurveV1Adapter2Assets } from "../../../adapters/curve/CurveV1_2.sol";
 
@@ -119,204 +119,169 @@ contract CurveV1Adapter2AssetsTest is DSTest, CurveV1AdapterHelper {
         evm.expectRevert(
             ICreditManagerV2Exceptions.HasNoOpenedAccountException.selector
         );
-        adapter.add_liquidity(data, 0);
+        executeOneLineMulticall(
+            address(adapter),
+            abi.encodeCall(adapter.add_liquidity, (data, 0))
+        );
 
         evm.expectRevert(
             ICreditManagerV2Exceptions.HasNoOpenedAccountException.selector
         );
-        adapter.remove_liquidity(0, data);
+        executeOneLineMulticall(
+            address(adapter),
+            abi.encodeCall(adapter.remove_liquidity, (0, data))
+        );
 
         evm.expectRevert(
             ICreditManagerV2Exceptions.HasNoOpenedAccountException.selector
         );
-        adapter.remove_liquidity_imbalance(data, 1);
+        executeOneLineMulticall(
+            address(adapter),
+            abi.encodeCall(adapter.remove_liquidity_imbalance, (data, 1))
+        );
     }
 
     /// @dev [ACV1_2-4]: add_liquidity works as expected(
     function test_ACV1_2_04_add_liquidity_works_as_expected() public {
-        for (uint256 m = 0; m < 2; m++) {
-            bool multicall = m != 0;
+        setUp();
+        (address creditAccount, ) = _openTestCreditAccount();
 
-            setUp();
-            (address creditAccount, ) = _openTestCreditAccount();
+        addCollateral(Tokens.cDAI, DAI_ACCOUNT_AMOUNT);
+        addCollateral(Tokens.cUSDC, USDC_ACCOUNT_AMOUNT);
 
-            addCollateral(Tokens.cDAI, DAI_ACCOUNT_AMOUNT);
-            addCollateral(Tokens.cUSDC, USDC_ACCOUNT_AMOUNT);
+        uint256[N_COINS] memory amounts = [DAI_TO_LP, USDC_TO_LP];
 
-            uint256[N_COINS] memory amounts = [DAI_TO_LP, USDC_TO_LP];
+        bytes memory callData = abi.encodeCall(
+            ICurvePool2Assets.add_liquidity,
+            (amounts, CURVE_LP_OPERATION_AMOUNT)
+        );
 
-            bytes memory callData = abi.encodeWithSelector(
-                ICurvePool2Assets.add_liquidity.selector,
-                amounts,
-                CURVE_LP_OPERATION_AMOUNT
-            );
+        expectAllowance(Tokens.cDAI, creditAccount, address(curveV1Mock), 0);
 
-            expectAllowance(
-                Tokens.cDAI,
-                creditAccount,
-                address(curveV1Mock),
-                0
-            );
+        expectAllowance(Tokens.cUSDC, creditAccount, address(curveV1Mock), 0);
 
-            expectAllowance(
-                Tokens.cUSDC,
-                creditAccount,
-                address(curveV1Mock),
-                0
-            );
+        expectAddLiquidityCalls(USER, callData, N_COINS);
 
-            expectAddLiquidityCalls(USER, callData, N_COINS, multicall);
+        executeOneLineMulticall(address(adapter), callData);
 
-            if (multicall) {
-                executeOneLineMulticall(address(adapter), callData);
-            } else {
-                evm.prank(USER);
-                adapter.add_liquidity(amounts, CURVE_LP_OPERATION_AMOUNT);
-            }
+        expectBalance(
+            Tokens.cDAI,
+            creditAccount,
+            DAI_ACCOUNT_AMOUNT - DAI_TO_LP
+        );
 
-            expectBalance(
-                Tokens.cDAI,
-                creditAccount,
-                DAI_ACCOUNT_AMOUNT - DAI_TO_LP
-            );
+        expectBalance(
+            Tokens.cUSDC,
+            creditAccount,
+            USDC_ACCOUNT_AMOUNT - USDC_TO_LP
+        );
 
-            expectBalance(
-                Tokens.cUSDC,
-                creditAccount,
-                USDC_ACCOUNT_AMOUNT - USDC_TO_LP
-            );
+        expectBalance(
+            curveV1Mock.token(),
+            creditAccount,
+            CURVE_LP_OPERATION_AMOUNT
+        );
 
-            expectBalance(
-                curveV1Mock.token(),
-                creditAccount,
-                CURVE_LP_OPERATION_AMOUNT
-            );
+        expectTokenIsEnabled(curveV1Mock.token(), true);
 
-            expectTokenIsEnabled(curveV1Mock.token(), true);
+        expectAllowance(
+            Tokens.cDAI,
+            creditAccount,
+            address(curveV1Mock),
+            type(uint256).max
+        );
 
-            expectAllowance(
-                Tokens.cDAI,
-                creditAccount,
-                address(curveV1Mock),
-                type(uint256).max
-            );
-
-            expectAllowance(
-                Tokens.cUSDC,
-                creditAccount,
-                address(curveV1Mock),
-                type(uint256).max
-            );
-        }
+        expectAllowance(
+            Tokens.cUSDC,
+            creditAccount,
+            address(curveV1Mock),
+            type(uint256).max
+        );
     }
 
     /// @dev [ACV1_2-5]: remove_liquidity works as expected(
     function test_ACV1_2_05_remove_liquidity_works_as_expected() public {
-        for (uint256 m = 0; m < 2; m++) {
-            bool multicall = m != 0;
+        setUp();
+        (address creditAccount, ) = _openTestCreditAccount();
 
-            setUp();
-            (address creditAccount, ) = _openTestCreditAccount();
+        // provide LP token to creditAccount
+        addCRVCollateral(curveV1Mock, CURVE_LP_ACCOUNT_AMOUNT);
 
-            // provide LP token to creditAccount
-            addCRVCollateral(curveV1Mock, CURVE_LP_ACCOUNT_AMOUNT);
+        uint256[N_COINS] memory amounts = [DAI_TO_LP, USDC_TO_LP];
 
-            uint256[N_COINS] memory amounts = [DAI_TO_LP, USDC_TO_LP];
+        bytes memory callData = abi.encodeCall(
+            ICurvePool2Assets.remove_liquidity,
+            (CURVE_LP_OPERATION_AMOUNT, amounts)
+        );
 
-            bytes memory callData = abi.encodeWithSelector(
-                ICurvePool2Assets.remove_liquidity.selector,
-                CURVE_LP_OPERATION_AMOUNT,
-                amounts
-            );
+        expectRemoveLiquidityCalls(USER, callData, N_COINS);
 
-            expectRemoveLiquidityCalls(USER, callData, N_COINS, multicall);
+        executeOneLineMulticall(address(adapter), callData);
 
-            if (multicall) {
-                executeOneLineMulticall(address(adapter), callData);
-            } else {
-                evm.prank(USER);
-                adapter.remove_liquidity(CURVE_LP_OPERATION_AMOUNT, amounts);
-            }
+        expectBalance(Tokens.cDAI, creditAccount, DAI_TO_LP);
 
-            expectBalance(Tokens.cDAI, creditAccount, DAI_TO_LP);
+        expectBalance(Tokens.cUSDC, creditAccount, USDC_TO_LP);
 
-            expectBalance(Tokens.cUSDC, creditAccount, USDC_TO_LP);
+        expectBalance(
+            curveV1Mock.token(),
+            creditAccount,
+            CURVE_LP_ACCOUNT_AMOUNT - CURVE_LP_OPERATION_AMOUNT
+        );
 
-            expectBalance(
-                curveV1Mock.token(),
-                creditAccount,
-                CURVE_LP_ACCOUNT_AMOUNT - CURVE_LP_OPERATION_AMOUNT
-            );
+        expectAllowance(
+            curveV1Mock.token(),
+            creditAccount,
+            address(curveV1Mock),
+            0
+        );
 
-            expectAllowance(
-                curveV1Mock.token(),
-                creditAccount,
-                address(curveV1Mock),
-                0
-            );
-
-            expectTokenIsEnabled(Tokens.cDAI, true);
-            expectTokenIsEnabled(Tokens.cUSDC, true);
-        }
+        expectTokenIsEnabled(Tokens.cDAI, true);
+        expectTokenIsEnabled(Tokens.cUSDC, true);
     }
 
     /// @dev [ACV1_2-6]: remove_liquidity_imbalance works as expected(
     function test_ACV1_2_06_remove_liquidity_imbalance_works_as_expected()
         public
     {
-        for (uint256 m = 0; m < 2; m++) {
-            bool multicall = m != 0;
+        setUp();
+        (address creditAccount, ) = _openTestCreditAccount();
 
-            setUp();
-            (address creditAccount, ) = _openTestCreditAccount();
+        addCRVCollateral(curveV1Mock, CURVE_LP_ACCOUNT_AMOUNT);
 
-            addCRVCollateral(curveV1Mock, CURVE_LP_ACCOUNT_AMOUNT);
+        uint256[N_COINS] memory expectedAmounts = [DAI_TO_LP, USDC_TO_LP];
 
-            uint256[N_COINS] memory expectedAmounts = [DAI_TO_LP, USDC_TO_LP];
+        bytes memory callData = abi.encodeCall(
+            ICurvePool2Assets.remove_liquidity_imbalance,
+            (expectedAmounts, CURVE_LP_OPERATION_AMOUNT)
+        );
 
-            bytes memory callData = abi.encodeWithSelector(
-                ICurvePool2Assets.remove_liquidity_imbalance.selector,
-                expectedAmounts,
-                CURVE_LP_OPERATION_AMOUNT
-            );
+        expectRemoveLiquidityImbalanceCalls(
+            USER,
+            callData,
+            N_COINS,
+            expectedAmounts
+        );
 
-            expectRemoveLiquidityImbalanceCalls(
-                USER,
-                callData,
-                N_COINS,
-                expectedAmounts,
-                multicall
-            );
+        executeOneLineMulticall(address(adapter), callData);
 
-            if (multicall) {
-                executeOneLineMulticall(address(adapter), callData);
-            } else {
-                evm.prank(USER);
-                adapter.remove_liquidity_imbalance(
-                    expectedAmounts,
-                    CURVE_LP_OPERATION_AMOUNT
-                );
-            }
+        expectBalance(Tokens.cDAI, creditAccount, DAI_TO_LP);
 
-            expectBalance(Tokens.cDAI, creditAccount, DAI_TO_LP);
+        expectBalance(Tokens.cUSDC, creditAccount, USDC_TO_LP);
 
-            expectBalance(Tokens.cUSDC, creditAccount, USDC_TO_LP);
+        expectBalance(
+            curveV1Mock.token(),
+            creditAccount,
+            CURVE_LP_ACCOUNT_AMOUNT - CURVE_LP_OPERATION_AMOUNT
+        );
 
-            expectBalance(
-                curveV1Mock.token(),
-                creditAccount,
-                CURVE_LP_ACCOUNT_AMOUNT - CURVE_LP_OPERATION_AMOUNT
-            );
+        expectAllowance(
+            curveV1Mock.token(),
+            creditAccount,
+            address(curveV1Mock),
+            0
+        );
 
-            expectAllowance(
-                curveV1Mock.token(),
-                creditAccount,
-                address(curveV1Mock),
-                0
-            );
-
-            expectTokenIsEnabled(Tokens.cDAI, true);
-            expectTokenIsEnabled(Tokens.cUSDC, true);
-        }
+        expectTokenIsEnabled(Tokens.cDAI, true);
+        expectTokenIsEnabled(Tokens.cUSDC, true);
     }
 }

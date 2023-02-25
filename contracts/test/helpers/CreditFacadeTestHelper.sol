@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 // Gearbox Protocol. Generalized leverage for DeFi protocols
-// (c) Gearbox Holdings, 2022
-pragma solidity ^0.8.10;
+// (c) Gearbox Holdings, 2023
+pragma solidity ^0.8.17;
 
 import { AggregatorV3Interface } from "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
 import { TokensTestSuite } from "../suites/TokensTestSuite.sol";
@@ -40,7 +40,7 @@ contract CreditFacadeTestHelper is CreditFacadeTestEngine {
         evm.stopPrank();
     }
 
-    function tokenTestSuite() private returns (TokensTestSuite) {
+    function tokenTestSuite() private view returns (TokensTestSuite) {
         return TokensTestSuite(payable(address(cft.tokenTestSuite())));
     }
 

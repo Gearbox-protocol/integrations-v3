@@ -920,10 +920,10 @@
     "@ethersproject/properties" "^5.7.0"
     "@ethersproject/strings" "^5.7.0"
 
-"@gearbox-protocol/core-v2@^1.8.0-next.3":
-  version "1.8.0-next.4"
-  resolved "https://registry.yarnpkg.com/@gearbox-protocol/core-v2/-/core-v2-1.8.0-next.4.tgz#de86399093760dbf62c231b3912c9f6245da05d8"
-  integrity sha512-xEnmzkTgc98TOuJub1JThhLe0fuMwlbKdwXiVmr4Pz2R8bZRA6mh/zu5tkdAJmV/L811Z/xrT1RPydQQIsstwg==
+"@gearbox-protocol/core-v2@^1.8.0-next.34":
+  version "1.8.0-next.34"
+  resolved "https://registry.yarnpkg.com/@gearbox-protocol/core-v2/-/core-v2-1.8.0-next.34.tgz#5293344dd784fd78dacfeb139294fc0df03ffa9d"
+  integrity sha512-fCs6KV12ZH/wxPSAqKHmnaK4PasNuJt3ZharRM7hnuM2Jn6wmkXvZRnnbURdvbnpxhKFO8PzQSTZ6v+NesgGWw==
 
 "@gearbox-protocol/eslint-config@^1.6.1":
   version "1.6.1"
@@ -945,10 +945,10 @@
   resolved "https://registry.yarnpkg.com/@gearbox-protocol/prettier-config/-/prettier-config-1.5.0.tgz#4df8e9fd2305fee6ab8c1417a02e31343836932a"
   integrity sha512-FUoprSsBdZyBjgxXCKL6mTkbeUJytaLzPJqIOoQpDmBRTX0seCc2o5I9PI9tySoRIlNnd/XXnKCXq1xHDEGbxw==
 
-"@gearbox-protocol/sdk@^1.15.6":
-  version "1.20.0"
-  resolved "https://registry.yarnpkg.com/@gearbox-protocol/sdk/-/sdk-1.20.0.tgz#96216bb7bd87a8acf47890e709bf637abb049634"
-  integrity sha512-VETO5cldN4u3oquCsMyh5tZAOtTjSx0bUDt76NQLqqBZREP3eaXr141EW3oc25rZHrJUj0ztiLLp0pEM+6+ibQ==
+"@gearbox-protocol/sdk@^1.20.7":
+  version "1.20.7"
+  resolved "https://registry.yarnpkg.com/@gearbox-protocol/sdk/-/sdk-1.20.7.tgz#adc9f72c9d58830c828f0e2eaafd2f0063ebe982"
+  integrity sha512-lGkd5ck2eYabJYCyJygNy+bqaLwDl2fVzlCs684t2bEcLjLqROOncRtJLDn33V5M01HGo2sl8hm6ybgMCElMLQ==
   dependencies:
     "@types/deep-eql" "^4.0.0"
     decimal.js-light "^2.5.1"
@@ -4097,6 +4097,11 @@ forever-agent@~0.6.1:
   version "0.6.1"
   resolved "https://registry.yarnpkg.com/forever-agent/-/forever-agent-0.6.1.tgz#fbc71f0c41adeb37f96c577ad1ed42d8fdacca91"
   integrity sha512-j0KLYPhm6zeac4lz3oJ3o65qvgQCcPubiyotZrXqEaG4hNagNYO8qdlUrX5vwqv9ohqeT/Z3j6+yW067yWWdUw==
+
+forge-std@^1.1.2:
+  version "1.1.2"
+  resolved "https://registry.yarnpkg.com/forge-std/-/forge-std-1.1.2.tgz#f4a0eda103538d56f9c563f3cd1fa2fd01bd9378"
+  integrity sha512-Wfb0iAS9PcfjMKtGpWQw9mXzJxrWD62kJCUqqLcyuI0+VRtJ3j20XembjF3kS20qELYdXft1vD/SPFVWVKMFOw==
 
 form-data-encoder@1.7.1:
   version "1.7.1"

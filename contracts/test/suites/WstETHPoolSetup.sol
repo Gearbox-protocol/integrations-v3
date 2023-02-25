@@ -14,10 +14,13 @@ import { LinearInterestRateModel } from "@gearbox-protocol/core-v2/contracts/poo
 import { IwstETH } from "../../integrations/lido/IwstETH.sol";
 import "../lib/constants.sol";
 
-uint256 constant U_OPTIMAL = 70_00;
-uint256 constant R_BASE = 0;
-uint256 constant R_SLOPE_1 = 4_00;
-uint256 constant R_SLOPE_2 = 60_00;
+uint256 constant U_OPTIMAL = 80_00;
+uint256 constant U_RESERVE = 90_00;
+uint256 constant R_BASE = 2_00;
+uint256 constant R_SLOPE_1 = 5_00;
+uint256 constant R_SLOPE_2 = 40_00;
+uint256 constant R_SLOPE_3 = 75_00;
+
 uint256 constant EXPECTED_LIQUIDITY_LIMIT = 10_000 * WAD;
 uint256 constant WITHDRAW_FEE = 1_00;
 
@@ -34,9 +37,12 @@ contract WstETHPoolSetup {
     ) {
         LinearInterestRateModel linearModel = new LinearInterestRateModel(
             U_OPTIMAL,
+            U_RESERVE,
             R_BASE,
             R_SLOPE_1,
-            R_SLOPE_2
+            R_SLOPE_2,
+            R_SLOPE_3,
+            false
         );
 
         PoolService pool = new PoolService(

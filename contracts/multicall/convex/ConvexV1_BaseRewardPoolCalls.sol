@@ -1,40 +1,38 @@
 // SPDX-License-Identifier: MIT
 // Gearbox Protocol. Generalized leverage for DeFi protocols
-// (c) Gearbox Holdings, 2022
-pragma solidity ^0.8.10;
+// (c) Gearbox Holdings, 2023
+pragma solidity ^0.8.17;
 
 import { MultiCall } from "@gearbox-protocol/core-v2/contracts/libraries/MultiCall.sol";
 
-import { IBaseRewardPool } from "../../integrations/convex/IBaseRewardPool.sol";
+import { IConvexV1BaseRewardPoolAdapter } from "../../interfaces/convex/IConvexV1BaseRewardPoolAdapter.sol";
 
 interface ConvexV1_BaseRewardPoolMulticaller {}
 
 library ConvexV1_BaseRewardPoolCalls {
-    function stake(ConvexV1_BaseRewardPoolMulticaller c, uint256 amount)
-        internal
-        pure
-        returns (MultiCall memory)
-    {
+    function stake(
+        ConvexV1_BaseRewardPoolMulticaller c,
+        uint256 amount
+    ) internal pure returns (MultiCall memory) {
         return
             MultiCall({
                 target: address(c),
-                callData: abi.encodeWithSelector(
-                    IBaseRewardPool.stake.selector,
-                    amount
+                callData: abi.encodeCall(
+                    IConvexV1BaseRewardPoolAdapter.stake,
+                    (amount)
                 )
             });
     }
 
-    function stakeAll(ConvexV1_BaseRewardPoolMulticaller c)
-        internal
-        pure
-        returns (MultiCall memory)
-    {
+    function stakeAll(
+        ConvexV1_BaseRewardPoolMulticaller c
+    ) internal pure returns (MultiCall memory) {
         return
             MultiCall({
                 target: address(c),
-                callData: abi.encodeWithSelector(
-                    IBaseRewardPool.stakeAll.selector
+                callData: abi.encodeCall(
+                    IConvexV1BaseRewardPoolAdapter.stakeAll,
+                    ()
                 )
             });
     }
@@ -47,25 +45,23 @@ library ConvexV1_BaseRewardPoolCalls {
         return
             MultiCall({
                 target: address(c),
-                callData: abi.encodeWithSelector(
-                    IBaseRewardPool.withdraw.selector,
-                    amount,
-                    claim
+                callData: abi.encodeCall(
+                    IConvexV1BaseRewardPoolAdapter.withdraw,
+                    (amount, claim)
                 )
             });
     }
 
-    function withdrawAll(ConvexV1_BaseRewardPoolMulticaller c, bool claim)
-        internal
-        pure
-        returns (MultiCall memory)
-    {
+    function withdrawAll(
+        ConvexV1_BaseRewardPoolMulticaller c,
+        bool claim
+    ) internal pure returns (MultiCall memory) {
         return
             MultiCall({
                 target: address(c),
-                callData: abi.encodeWithSelector(
-                    IBaseRewardPool.withdrawAll.selector,
-                    claim
+                callData: abi.encodeCall(
+                    IConvexV1BaseRewardPoolAdapter.withdrawAll,
+                    (claim)
                 )
             });
     }
@@ -78,10 +74,9 @@ library ConvexV1_BaseRewardPoolCalls {
         return
             MultiCall({
                 target: address(c),
-                callData: abi.encodeWithSelector(
-                    IBaseRewardPool.withdrawAndUnwrap.selector,
-                    amount,
-                    claim
+                callData: abi.encodeCall(
+                    IConvexV1BaseRewardPoolAdapter.withdrawAndUnwrap,
+                    (amount, claim)
                 )
             });
     }
@@ -93,38 +88,23 @@ library ConvexV1_BaseRewardPoolCalls {
         return
             MultiCall({
                 target: address(c),
-                callData: abi.encodeWithSelector(
-                    IBaseRewardPool.withdrawAllAndUnwrap.selector,
-                    claim
+                callData: abi.encodeCall(
+                    IConvexV1BaseRewardPoolAdapter.withdrawAllAndUnwrap,
+                    (claim)
                 )
             });
     }
 
     function getReward(
-        ConvexV1_BaseRewardPoolMulticaller c,
-        address account,
-        bool claimExtras
+        ConvexV1_BaseRewardPoolMulticaller c
     ) internal pure returns (MultiCall memory) {
         return
             MultiCall({
                 target: address(c),
-                callData: abi.encodeWithSignature(
-                    "getReward(address,bool)",
-                    account,
-                    claimExtras
+                callData: abi.encodeCall(
+                    IConvexV1BaseRewardPoolAdapter.getReward,
+                    ()
                 )
-            });
-    }
-
-    function getReward(ConvexV1_BaseRewardPoolMulticaller c)
-        internal
-        pure
-        returns (MultiCall memory)
-    {
-        return
-            MultiCall({
-                target: address(c),
-                callData: abi.encodeWithSignature("getReward()")
             });
     }
 }

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 // Gearbox Protocol. Generalized leverage for DeFi protocols
-// (c) Gearbox Holdings, 2022
-pragma solidity ^0.8.10;
+// (c) Gearbox Holdings, 2023
+pragma solidity ^0.8.17;
 
 import { CreditManager } from "@gearbox-protocol/core-v2/contracts/credit/CreditManager.sol";
 
@@ -9,8 +9,6 @@ import { IBooster } from "../../../integrations/convex/IBooster.sol";
 import { IBaseRewardPool } from "../../../integrations/convex/IBaseRewardPool.sol";
 
 import { IPriceOracleV2Ext } from "@gearbox-protocol/core-v2/contracts/interfaces/IPriceOracle.sol";
-
-import { IConvexV1BaseRewardPoolAdapterErrors } from "../../../interfaces/convex/IConvexV1BaseRewardPoolAdapter.sol";
 
 import { ConvexV1BaseRewardPoolAdapter } from "../../../adapters/convex/ConvexV1_BaseRewardPool.sol";
 import { ConvexV1BoosterAdapter } from "../../../adapters/convex/ConvexV1_Booster.sol";
@@ -39,10 +37,7 @@ uint256 constant REWARD_AMOUNT2 = RAY * 4;
 
 /// @title ConvexAdapterHelper
 /// @notice Designed for unit test purposes only
-contract ConvexAdapterHelper is
-    AdapterTestHelper,
-    IConvexV1BaseRewardPoolAdapterErrors
-{
+contract ConvexAdapterHelper is AdapterTestHelper {
     PriceFeedMock public feed;
     IPriceOracleV2Ext public priceOracle;
 
@@ -181,9 +176,9 @@ contract ConvexAdapterHelper is
         boosterAdapter.updateStakedPhantomTokensMap();
     }
 
-    function _checkPoolAdapterConstructorRevert(uint256 forgottenToken)
-        internal
-    {
+    function _checkPoolAdapterConstructorRevert(
+        uint256 forgottenToken
+    ) internal {
         address forgottenTokenAddr;
 
         address curveLPToken_c = address(
@@ -261,7 +256,7 @@ contract ConvexAdapterHelper is
 
         evm.expectRevert(
             abi.encodeWithSelector(
-                TokenIsNotAddedToCreditManagerException.selector,
+                TokenIsNotInAllowedList.selector,
                 forgottenTokenAddr
             )
         );
@@ -284,107 +279,62 @@ contract ConvexAdapterHelper is
         address borrower,
         uint256 amount,
         bool stake,
-        bool depositAll,
-        bool isMultiCall
+        bool depositAll
     ) internal {
         bytes memory callData = depositAll
-            ? abi.encodeWithSelector(IBooster.depositAll.selector, 0, stake)
-            : abi.encodeWithSelector(
-                IBooster.deposit.selector,
-                0,
-                amount,
-                stake
-            );
+            ? abi.encodeCall(IBooster.depositAll, (0, stake))
+            : abi.encodeCall(IBooster.deposit, (0, amount, stake));
 
-        if (isMultiCall) {
-            expectMulticallStackCalls(
-                address(boosterAdapter),
-                address(boosterMock),
-                borrower,
-                callData,
-                curveLPToken,
-                stake ? phantomToken : convexLPToken,
-                true
-            );
-        } else {
-            expectFastCheckStackCalls(
-                address(boosterAdapter),
-                address(boosterMock),
-                borrower,
-                callData,
-                curveLPToken,
-                stake ? phantomToken : convexLPToken,
-                true
-            );
-        }
+        expectMulticallStackCalls(
+            address(boosterAdapter),
+            address(boosterMock),
+            borrower,
+            callData,
+            curveLPToken,
+            stake ? phantomToken : convexLPToken,
+            true
+        );
     }
 
     function expectWithdrawStackCalls(
         address borrower,
         uint256 amount,
-        bool withdrawAll,
-        bool isMultiCall
+        bool withdrawAll
     ) internal {
         bytes memory callData = withdrawAll
-            ? abi.encodeWithSelector(IBooster.withdrawAll.selector, 0)
-            : abi.encodeWithSelector(IBooster.withdraw.selector, 0, amount);
+            ? abi.encodeCall(IBooster.withdrawAll, (0))
+            : abi.encodeCall(IBooster.withdraw, (0, amount));
 
-        if (isMultiCall) {
-            expectMulticallStackCalls(
-                address(boosterAdapter),
-                address(boosterMock),
-                borrower,
-                callData,
-                convexLPToken,
-                curveLPToken,
-                true,
-                false
-            );
-        } else {
-            expectFastCheckStackCalls(
-                address(boosterAdapter),
-                address(boosterMock),
-                borrower,
-                callData,
-                convexLPToken,
-                curveLPToken,
-                true,
-                false
-            );
-        }
+        expectMulticallStackCalls(
+            address(boosterAdapter),
+            address(boosterMock),
+            borrower,
+            callData,
+            convexLPToken,
+            curveLPToken,
+            true,
+            false
+        );
     }
 
     function expectStakeStackCalls(
         address borrower,
         uint256 amount,
-        bool stakeAll,
-        bool isMultiCall
+        bool stakeAll
     ) internal {
         bytes memory callData = stakeAll
-            ? abi.encodeWithSelector(IBaseRewardPool.stakeAll.selector)
-            : abi.encodeWithSelector(IBaseRewardPool.stake.selector, amount);
+            ? abi.encodeCall(IBaseRewardPool.stakeAll, ())
+            : abi.encodeCall(IBaseRewardPool.stake, (amount));
 
-        if (isMultiCall) {
-            expectMulticallStackCalls(
-                address(basePoolAdapter),
-                address(basePoolMock),
-                borrower,
-                callData,
-                convexLPToken,
-                phantomToken,
-                true
-            );
-        } else {
-            expectFastCheckStackCalls(
-                address(basePoolAdapter),
-                address(basePoolMock),
-                borrower,
-                callData,
-                convexLPToken,
-                phantomToken,
-                true
-            );
-        }
+        expectMulticallStackCalls(
+            address(basePoolAdapter),
+            address(basePoolMock),
+            borrower,
+            callData,
+            convexLPToken,
+            phantomToken,
+            true
+        );
     }
 
     function expectPoolWithdrawStackCalls(
@@ -392,7 +342,6 @@ contract ConvexAdapterHelper is
         uint256 amount,
         bool withdrawAll,
         bool unwrap,
-        bool isMultiCall,
         uint256 numExtras
     ) internal {
         address creditAccount = creditManager.getCreditAccountOrRevert(
@@ -403,86 +352,59 @@ contract ConvexAdapterHelper is
 
         if (unwrap) {
             callData = withdrawAll
-                ? abi.encodeWithSelector(
-                    IBaseRewardPool.withdrawAllAndUnwrap.selector,
-                    true
-                )
-                : abi.encodeWithSelector(
-                    IBaseRewardPool.withdrawAndUnwrap.selector,
-                    amount,
-                    true
+                ? abi.encodeCall(IBaseRewardPool.withdrawAllAndUnwrap, (true))
+                : abi.encodeCall(
+                    IBaseRewardPool.withdrawAndUnwrap,
+                    (amount, true)
                 );
         } else {
             callData = withdrawAll
-                ? abi.encodeWithSelector(
-                    IBaseRewardPool.withdrawAll.selector,
-                    true
-                )
-                : abi.encodeWithSelector(
-                    IBaseRewardPool.withdraw.selector,
-                    amount,
-                    true
-                );
+                ? abi.encodeCall(IBaseRewardPool.withdrawAll, (true))
+                : abi.encodeCall(IBaseRewardPool.withdraw, (amount, true));
         }
 
-        if (isMultiCall) {
-            expectMulticallStackCalls(
-                address(basePoolAdapter),
-                address(basePoolMock),
-                borrower,
-                callData,
-                phantomToken,
-                unwrap ? curveLPToken : convexLPToken,
-                true,
-                false
-            );
-        } else {
-            expectFastCheckStackCalls(
-                address(basePoolAdapter),
-                address(basePoolMock),
-                borrower,
-                callData,
-                phantomToken,
-                unwrap ? curveLPToken : convexLPToken,
-                true,
-                false
-            );
-        }
+        expectMulticallStackCalls(
+            address(basePoolAdapter),
+            address(basePoolMock),
+            borrower,
+            callData,
+            phantomToken,
+            unwrap ? curveLPToken : convexLPToken,
+            true,
+            false
+        );
+
         evm.expectCall(
             address(creditManager),
-            abi.encodeWithSelector(
-                CreditManager.checkAndEnableToken.selector,
-                creditAccount,
-                crv
+            abi.encodeCall(
+                CreditManager.checkAndEnableToken,
+                (creditAccount, crv)
             )
         );
 
         evm.expectCall(
             address(creditManager),
-            abi.encodeWithSelector(
-                CreditManager.checkAndEnableToken.selector,
-                creditAccount,
-                cvx
+            abi.encodeCall(
+                CreditManager.checkAndEnableToken,
+                (creditAccount, cvx)
             )
         );
 
         if (numExtras >= 1) {
             evm.expectCall(
                 address(creditManager),
-                abi.encodeWithSelector(
-                    CreditManager.checkAndEnableToken.selector,
-                    creditAccount,
-                    extraRewardToken1
+                abi.encodeCall(
+                    CreditManager.checkAndEnableToken,
+                    (creditAccount, extraRewardToken1)
                 )
             );
         }
         if (numExtras == 2) {
             evm.expectCall(
                 address(creditManager),
-                abi.encodeWithSelector(
-                    CreditManager.checkAndEnableToken.selector,
-                    creditAccount,
-                    extraRewardToken2
+                abi.encodeCall(
+                    CreditManager.checkAndEnableToken,
+                    (creditAccount, extraRewardToken2)
                 )
             );
         }
@@ -490,155 +412,85 @@ contract ConvexAdapterHelper is
 
     function expectClaimZapStackCalls(
         address borrower,
-        bytes memory callData,
-        address[] memory enabledTokens,
-        bool isMultiCall
+        address[] memory enabledTokens
     ) internal {
         address creditAccount = creditManager.getCreditAccountOrRevert(
             borrower
         );
 
-        if (isMultiCall) {
-            evm.expectEmit(true, false, false, false);
-            emit MultiCallStarted(borrower);
-
-            evm.expectCall(
-                address(creditManager),
-                abi.encodeWithSelector(
-                    CreditManager.executeOrder.selector,
-                    address(creditFacade),
-                    address(claimZapMock),
-                    callData
-                )
-            );
-        } else {
-            evm.expectCall(
-                address(creditManager),
-                abi.encodeWithSelector(
-                    CreditManager.executeOrder.selector,
-                    borrower,
-                    address(claimZapMock),
-                    callData
-                )
-            );
-        }
+        evm.expectEmit(true, false, false, false);
+        emit MultiCallStarted(borrower);
 
         for (uint256 i = 0; i < enabledTokens.length; i++) {
             evm.expectCall(
                 address(creditManager),
-                abi.encodeWithSelector(
-                    CreditManager.checkAndEnableToken.selector,
-                    creditAccount,
-                    enabledTokens[i]
+                abi.encodeCall(
+                    CreditManager.checkAndEnableToken,
+                    (creditAccount, enabledTokens[i])
                 )
             );
         }
 
-        if (isMultiCall) {
-            evm.expectEmit(false, false, false, false);
-            emit MultiCallFinished();
-        } else {
-            evm.expectCall(
-                address(creditManager),
-                abi.encodeWithSelector(
-                    CreditManager.checkAndOptimizeEnabledTokens.selector,
-                    creditAccount
-                )
-            );
-        }
+        evm.expectEmit(false, false, false, false);
+        emit MultiCallFinished();
     }
 
     function expectClaimStackCalls(
         address borrower,
-        bool claimExtras,
-        bool isExternal,
-        bool isMultiCall,
         uint256 numExtras
     ) internal {
         address creditAccount = creditManager.getCreditAccountOrRevert(
             borrower
         );
 
-        if (isMultiCall) {
-            evm.expectEmit(true, false, false, false);
-            emit MultiCallStarted(borrower);
-        }
+        evm.expectEmit(true, false, false, false);
+        emit MultiCallStarted(borrower);
 
-        if (isExternal) {
-            evm.expectEmit(true, true, false, false);
-            emit ExecuteOrder(
-                isMultiCall ? address(creditFacade) : borrower,
-                address(basePoolMock)
-            );
+        evm.expectEmit(true, true, false, false);
+        emit ExecuteOrder(creditAccount, address(basePoolMock));
 
-            evm.expectCall(
-                address(basePoolMock),
-                abi.encodeWithSignature("getReward()")
-            );
-        } else {
-            evm.expectCall(
-                address(basePoolMock),
-                abi.encodeWithSignature(
-                    "getReward(address,bool)",
-                    creditAccount,
-                    claimExtras
-                )
-            );
-        }
+        evm.expectCall(
+            address(basePoolMock),
+            abi.encodeWithSignature("getReward()")
+        );
 
         evm.expectCall(
             address(creditManager),
-            abi.encodeWithSelector(
-                CreditManager.checkAndEnableToken.selector,
-                creditAccount,
-                crv
+            abi.encodeCall(
+                CreditManager.checkAndEnableToken,
+                (creditAccount, crv)
             )
         );
 
         evm.expectCall(
             address(creditManager),
-            abi.encodeWithSelector(
-                CreditManager.checkAndEnableToken.selector,
-                creditAccount,
-                cvx
+            abi.encodeCall(
+                CreditManager.checkAndEnableToken,
+                (creditAccount, cvx)
             )
         );
 
-        if (claimExtras) {
-            if (numExtras >= 1) {
-                evm.expectCall(
-                    address(creditManager),
-                    abi.encodeWithSelector(
-                        CreditManager.checkAndEnableToken.selector,
-                        creditAccount,
-                        extraRewardToken1
-                    )
-                );
-            }
-
-            if (numExtras == 2) {
-                evm.expectCall(
-                    address(creditManager),
-                    abi.encodeWithSelector(
-                        CreditManager.checkAndEnableToken.selector,
-                        creditAccount,
-                        extraRewardToken2
-                    )
-                );
-            }
-        }
-
-        if (isMultiCall) {
-            evm.expectEmit(false, false, false, false);
-            emit MultiCallFinished();
-        } else {
+        if (numExtras >= 1) {
             evm.expectCall(
                 address(creditManager),
-                abi.encodeWithSelector(
-                    CreditManager.checkAndOptimizeEnabledTokens.selector,
-                    creditAccount
+                abi.encodeCall(
+                    CreditManager.checkAndEnableToken,
+                    (creditAccount, extraRewardToken1)
                 )
             );
         }
+
+        if (numExtras == 2) {
+            evm.expectCall(
+                address(creditManager),
+                abi.encodeCall(
+                    CreditManager.checkAndEnableToken,
+                    (creditAccount, extraRewardToken2)
+                )
+            );
+        }
+
+        evm.expectEmit(false, false, false, false);
+        emit MultiCallFinished();
     }
 }

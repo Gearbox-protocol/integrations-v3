@@ -1,18 +1,16 @@
 // SPDX-License-Identifier: MIT
 // Gearbox Protocol. Generalized leverage for DeFi protocols
-// (c) Gearbox Holdings, 2022
-pragma solidity ^0.8.10;
+// (c) Gearbox Holdings, 2023
+pragma solidity ^0.8.17;
 
 import { MultiCall } from "@gearbox-protocol/core-v2/contracts/libraries/MultiCall.sol";
 
 interface YearnV2_Multicaller {}
 
 library YearnV2_Calls {
-    function deposit(YearnV2_Multicaller c)
-        internal
-        pure
-        returns (MultiCall memory)
-    {
+    function deposit(
+        YearnV2_Multicaller c
+    ) internal pure returns (MultiCall memory) {
         return
             MultiCall({
                 target: address(c),
@@ -20,11 +18,10 @@ library YearnV2_Calls {
             });
     }
 
-    function deposit(YearnV2_Multicaller c, uint256 amount)
-        internal
-        pure
-        returns (MultiCall memory)
-    {
+    function deposit(
+        YearnV2_Multicaller c,
+        uint256 amount
+    ) internal pure returns (MultiCall memory) {
         return
             MultiCall({
                 target: address(c),
@@ -48,11 +45,9 @@ library YearnV2_Calls {
             });
     }
 
-    function withdraw(YearnV2_Multicaller c)
-        internal
-        pure
-        returns (MultiCall memory)
-    {
+    function withdraw(
+        YearnV2_Multicaller c
+    ) internal pure returns (MultiCall memory) {
         return
             MultiCall({
                 target: address(c),
@@ -60,11 +55,10 @@ library YearnV2_Calls {
             });
     }
 
-    function withdraw(YearnV2_Multicaller c, uint256 maxShares)
-        internal
-        pure
-        returns (MultiCall memory)
-    {
+    function withdraw(
+        YearnV2_Multicaller c,
+        uint256 maxShares
+    ) internal pure returns (MultiCall memory) {
         return
             MultiCall({
                 target: address(c),

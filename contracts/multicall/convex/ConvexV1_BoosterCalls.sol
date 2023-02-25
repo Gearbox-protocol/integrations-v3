@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: MIT
 // Gearbox Protocol. Generalized leverage for DeFi protocols
-// (c) Gearbox Holdings, 2022
-pragma solidity ^0.8.10;
+// (c) Gearbox Holdings, 2023
+pragma solidity ^0.8.17;
 
 import { MultiCall } from "@gearbox-protocol/core-v2/contracts/libraries/MultiCall.sol";
-import { IBooster } from "../../integrations/convex/IBooster.sol";
+
+import { IConvexV1BoosterAdapter } from "../../interfaces/convex/IConvexV1BoosterAdapter.sol";
 
 interface ConvexV1_BoosterMulticaller {}
 
@@ -18,11 +19,9 @@ library ConvexV1_BoosterCalls {
         return
             MultiCall({
                 target: address(c),
-                callData: abi.encodeWithSelector(
-                    IBooster.deposit.selector,
-                    pid,
-                    amount,
-                    stake
+                callData: abi.encodeCall(
+                    IConvexV1BoosterAdapter.deposit,
+                    (pid, amount, stake)
                 )
             });
     }
@@ -35,10 +34,9 @@ library ConvexV1_BoosterCalls {
         return
             MultiCall({
                 target: address(c),
-                callData: abi.encodeWithSelector(
-                    IBooster.depositAll.selector,
-                    pid,
-                    stake
+                callData: abi.encodeCall(
+                    IConvexV1BoosterAdapter.depositAll,
+                    (pid, stake)
                 )
             });
     }
@@ -51,25 +49,23 @@ library ConvexV1_BoosterCalls {
         return
             MultiCall({
                 target: address(c),
-                callData: abi.encodeWithSelector(
-                    IBooster.withdraw.selector,
-                    pid,
-                    amount
+                callData: abi.encodeCall(
+                    IConvexV1BoosterAdapter.withdraw,
+                    (pid, amount)
                 )
             });
     }
 
-    function withdrawAll(ConvexV1_BoosterMulticaller c, uint256 pid)
-        internal
-        pure
-        returns (MultiCall memory)
-    {
+    function withdrawAll(
+        ConvexV1_BoosterMulticaller c,
+        uint256 pid
+    ) internal pure returns (MultiCall memory) {
         return
             MultiCall({
                 target: address(c),
-                callData: abi.encodeWithSelector(
-                    IBooster.withdrawAll.selector,
-                    pid
+                callData: abi.encodeCall(
+                    IConvexV1BoosterAdapter.withdrawAll,
+                    (pid)
                 )
             });
     }

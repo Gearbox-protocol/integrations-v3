@@ -8,7 +8,7 @@
 
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "editor.formatOnSave": true,
-  "editor.tabSize": 2,
+  "editor.tabSize": 4,
   "eslint.validate": ["javascript", "typescript"],
   "files.eol": "\n",
   "solidity.formatter": "prettier",
@@ -17,8 +17,10 @@
   "solidity.remappings": [
     "@chainlink/=node_modules/@chainlink/",
     "@ensdomains/=node_modules/@ensdomains/",
-    "@openzeppelin/=node_modules/@openzeppelin/contracts",
+    "@openzeppelin/=node_modules/@openzeppelin/",
     "ds-test/=lib/ds-test/src/",
-    "hardhat/=node_modules/hardhat/"
+    "hardhat/=node_modules/hardhat/",
+    "forge-std/=node_modules/forge-std/",
+    "@gearbox-protocol=node_modules/@gearbox-protocol/"
   ]
 }

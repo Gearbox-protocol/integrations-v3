@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 // Gearbox Protocol. Generalized leverage for DeFi protocols
-// (c) Gearbox Holdings, 2022
-pragma solidity ^0.8.10;
+// (c) Gearbox Holdings, 2023
+pragma solidity ^0.8.17;
 
 import { ICreditManagerV2, ICreditManagerV2Events } from "@gearbox-protocol/core-v2/contracts/interfaces/ICreditManagerV2.sol";
 import { ICreditFacadeEvents } from "@gearbox-protocol/core-v2/contracts/interfaces/ICreditFacade.sol";
@@ -26,10 +26,11 @@ contract AdapterTestHelper is
     DSTest,
     ICreditManagerV2Events,
     ICreditFacadeEvents,
-    IAdapterExceptions,
     BalanceHelper,
     CreditFacadeTestHelper
 {
+    error TokenIsNotInAllowedList(address);
+
     function _setUp() internal {
         _setUp(Tokens.DAI);
     }
@@ -58,77 +59,6 @@ contract AdapterTestHelper is
         return block.timestamp + 1;
     }
 
-    function expectFastCheckStackCalls(
-        address, // adapter,
-        address targetContract,
-        address borrower,
-        bytes memory callData,
-        address tokenIn,
-        address, // tokenOut,
-        bool safeExecute,
-        bool allowTokenIn
-    ) internal {
-        if (allowTokenIn) {
-            evm.expectCall(
-                address(creditManager),
-                abi.encodeWithSelector(
-                    ICreditManagerV2.approveCreditAccount.selector,
-                    borrower,
-                    targetContract,
-                    tokenIn,
-                    type(uint256).max
-                )
-            );
-        }
-
-        evm.expectCall(
-            address(creditManager),
-            abi.encodeWithSelector(
-                ICreditManagerV2.executeOrder.selector,
-                borrower,
-                targetContract,
-                callData
-            )
-        );
-
-        evm.expectEmit(true, true, false, false);
-        emit ExecuteOrder(borrower, targetContract);
-
-        if (allowTokenIn) {
-            evm.expectCall(
-                address(creditManager),
-                abi.encodeWithSelector(
-                    ICreditManagerV2.approveCreditAccount.selector,
-                    borrower,
-                    targetContract,
-                    tokenIn,
-                    safeExecute ? 1 : type(uint256).max
-                )
-            );
-        }
-    }
-
-    function expectFastCheckStackCalls(
-        address adapter,
-        address targetContract,
-        address borrower,
-        bytes memory callData,
-        address tokenIn,
-        address tokenOut,
-        bool safeExecute
-    ) internal {
-        expectFastCheckStackCalls(
-            adapter,
-            targetContract,
-            borrower,
-            callData,
-            tokenIn,
-            tokenOut,
-            safeExecute,
-            true
-        );
-    }
-
     function expectMulticallStackCalls(
         address, // adapter,
         address targetContract,
@@ -136,7 +66,7 @@ contract AdapterTestHelper is
         bytes memory callData,
         address tokenIn,
         address, // tokenOut,
-        bool safeExecute,
+        bool safeApprove,
         bool allowTokenIn
     ) internal {
         evm.expectEmit(true, false, false, false);
@@ -145,41 +75,43 @@ contract AdapterTestHelper is
         if (allowTokenIn) {
             evm.expectCall(
                 address(creditManager),
-                abi.encodeWithSelector(
-                    ICreditManagerV2.approveCreditAccount.selector,
-                    address(creditFacade),
-                    targetContract,
-                    tokenIn,
-                    type(uint256).max
+                abi.encodeCall(
+                    ICreditManagerV2.approveCreditAccount,
+                    (targetContract, tokenIn, type(uint256).max)
                 )
             );
         }
 
         evm.expectCall(
             address(creditManager),
-            abi.encodeWithSelector(
-                ICreditManagerV2.executeOrder.selector,
-                address(creditFacade),
-                targetContract,
-                callData
+            abi.encodeCall(
+                ICreditManagerV2.executeOrder,
+                (targetContract, callData)
             )
         );
 
+        address creditAccount = creditManager.getCreditAccountOrRevert(
+            borrower
+        );
         evm.expectEmit(true, true, false, false);
-        emit ExecuteOrder(address(creditFacade), targetContract);
+        emit ExecuteOrder(creditAccount, targetContract);
 
         if (allowTokenIn) {
             evm.expectCall(
                 address(creditManager),
-                abi.encodeWithSelector(
-                    ICreditManagerV2.approveCreditAccount.selector,
-                    address(creditFacade),
-                    targetContract,
-                    tokenIn,
-                    safeExecute ? 1 : type(uint256).max
+                abi.encodeCall(
+                    ICreditManagerV2.approveCreditAccount,
+                    (
+                        targetContract,
+                        tokenIn,
+                        safeApprove ? 1 : type(uint256).max
+                    )
                 )
             );
         }
+
+        evm.expectEmit(false, false, false, false);
+        emit MultiCallFinished();
     }
 
     function expectMulticallStackCalls(
@@ -189,7 +121,7 @@ contract AdapterTestHelper is
         bytes memory callData,
         address tokenIn,
         address tokenOut,
-        bool safeExecute
+        bool safeApprove
     ) internal {
         expectMulticallStackCalls(
             adapter,
@@ -198,7 +130,7 @@ contract AdapterTestHelper is
             callData,
             tokenIn,
             tokenOut,
-            safeExecute,
+            safeApprove,
             true
         );
     }
