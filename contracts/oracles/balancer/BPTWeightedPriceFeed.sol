@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 // Gearbox Protocol. Generalized leverage for DeFi protocols
-// (c) Gearbox Holdings, 2022
-pragma solidity ^0.8.10;
+// (c) Gearbox Holdings, 2023
+pragma solidity ^0.8.17;
 
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import { AggregatorV3Interface } from "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
@@ -17,16 +17,16 @@ import { FixedPoint } from "../../integrations/balancer/FixedPoint.sol";
 import { ZeroAddressException, NotImplementedException } from "@gearbox-protocol/core-v2/contracts/interfaces/IErrors.sol";
 
 uint256 constant RANGE_WIDTH = 200; // 2%
-uint256 constant DECIMALS = 10**18;
-uint256 constant USD_FEED_DECIMALS = 10**8;
+uint256 constant DECIMALS = 10 ** 18;
+uint256 constant USD_FEED_DECIMALS = 10 ** 8;
 
 /// @title Balancer Weighted pool LP token price feed
 contract BPTWeightedPriceFeed is BPTWeightedPriceFeedSetup, LPPriceFeed {
     using FixedPoint for uint256;
 
     PriceFeedType public constant override priceFeedType =
-        PriceFeedType.ZERO_ORACLE;
-    uint256 public constant override version = 2;
+        PriceFeedType.BALANCER_WEIGHTED_LP_ORACLE;
+    uint256 public constant override version = 1;
 
     /// @dev Whether to skip price sanity checks.
     /// @notice Always set to true for LP price feeds,
@@ -108,29 +108,39 @@ contract BPTWeightedPriceFeed is BPTWeightedPriceFeedSetup, LPPriceFeed {
     }
 
     /// @dev Returns the balance array sorted in the order of increasing asset weights
-    function _alignAndScaleBalanceArray(uint256[] memory balances)
-        internal
-        view
-        returns (uint256[] memory sortedBalances)
-    {
+    function _alignAndScaleBalanceArray(
+        uint256[] memory balances
+    ) internal view returns (uint256[] memory sortedBalances) {
         uint256 len = balances.length;
 
         sortedBalances = new uint256[](len);
 
-        sortedBalances[0] = (balances[index0] * DECIMALS) / (10**decimals0);
-        sortedBalances[1] = (balances[index1] * DECIMALS) / (10**decimals1);
+        sortedBalances[0] = (balances[index0] * DECIMALS) / (10 ** decimals0);
+        sortedBalances[1] = (balances[index1] * DECIMALS) / (10 ** decimals1);
         if (len >= 3)
-            sortedBalances[2] = (balances[index2] * DECIMALS) / (10**decimals2);
+            sortedBalances[2] =
+                (balances[index2] * DECIMALS) /
+                (10 ** decimals2);
         if (len >= 4)
-            sortedBalances[3] = (balances[index3] * DECIMALS) / (10**decimals3);
+            sortedBalances[3] =
+                (balances[index3] * DECIMALS) /
+                (10 ** decimals3);
         if (len >= 5)
-            sortedBalances[4] = (balances[index4] * DECIMALS) / (10**decimals4);
+            sortedBalances[4] =
+                (balances[index4] * DECIMALS) /
+                (10 ** decimals4);
         if (len >= 6)
-            sortedBalances[5] = (balances[index5] * DECIMALS) / (10**decimals5);
+            sortedBalances[5] =
+                (balances[index5] * DECIMALS) /
+                (10 ** decimals5);
         if (len >= 7)
-            sortedBalances[6] = (balances[index6] * DECIMALS) / (10**decimals6);
+            sortedBalances[6] =
+                (balances[index6] * DECIMALS) /
+                (10 ** decimals6);
         if (len >= 8)
-            sortedBalances[7] = (balances[index7] * DECIMALS) / (10**decimals7);
+            sortedBalances[7] =
+                (balances[index7] * DECIMALS) /
+                (10 ** decimals7);
     }
 
     /// @dev Returns the price of a single BPT in USD (with 8 decimals)
@@ -212,12 +222,10 @@ contract BPTWeightedPriceFeed is BPTWeightedPriceFeedSetup, LPPriceFeed {
         return _computeInvariantOverSupply(balances, weights);
     }
 
-    function _checkCurrentValueInBounds(uint256 _lowerBound, uint256 _uBound)
-        internal
-        view
-        override
-        returns (bool)
-    {
+    function _checkCurrentValueInBounds(
+        uint256 _lowerBound,
+        uint256 _uBound
+    ) internal view override returns (bool) {
         (, uint256[] memory balances, ) = balancerVault.getPoolTokens(poolId);
         uint256[] memory weights = _getWeightsArray();
 

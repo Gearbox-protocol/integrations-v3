@@ -20,8 +20,6 @@ import { BalanceHelper } from "../helpers/BalanceHelper.sol";
 import { CreditFacadeTestHelper } from "../helpers/CreditFacadeTestHelper.sol";
 import { CreditConfig } from "../config/CreditConfig.sol";
 
-/// @title UniswapV2AdapterTest
-/// @notice Designed for unit test purposes only
 contract AdapterTestHelper is
     DSTest,
     ICreditManagerV2Events,

@@ -1,34 +1,27 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Gearbox Protocol. Generalized leverage for DeFi protocols
-// (c) Gearbox Holdings, 2022
-pragma solidity ^0.8.10;
+// (c) Gearbox Holdings, 2023
+pragma solidity ^0.8.17;
 
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { ReentrancyGuard } from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 import { AbstractAdapter } from "@gearbox-protocol/core-v2/contracts/adapters/AbstractAdapter.sol";
-import { IAsset } from "../../integrations/balancer/IAsset.sol";
-import { IBalancerV2Vault, SwapKind, SingleSwap, FundManagement, BatchSwapStep, JoinPoolRequest, ExitPoolRequest, PoolSpecialization } from "../../integrations/balancer/IBalancerV2Vault.sol";
-import { IBalancerV2VaultAdapter, SingleSwapAll } from "../../interfaces/balancer/IBalancerV2VaultAdapter.sol";
 import { IAdapter, AdapterType } from "@gearbox-protocol/core-v2/contracts/interfaces/adapters/IAdapter.sol";
-
 import { RAY } from "@gearbox-protocol/core-v2/contracts/libraries/Constants.sol";
 
-// EXCEPTIONS
-import { NotImplementedException } from "@gearbox-protocol/core-v2/contracts/interfaces/IErrors.sol";
+import { IAsset } from "../../integrations/balancer/IAsset.sol";
+import { IBalancerV2Vault, SwapKind, SingleSwap, FundManagement, BatchSwapStep, JoinPoolRequest, ExitPoolRequest } from "../../integrations/balancer/IBalancerV2Vault.sol";
+import { IBalancerV2VaultAdapter, SingleSwapAll } from "../../interfaces/balancer/IBalancerV2VaultAdapter.sol";
 
-/// @title BalancerVault adapter
-contract BalancerV2VaultAdapter is
-    AbstractAdapter,
-    IBalancerV2VaultAdapter,
-    ReentrancyGuard
-{
-    AdapterType public constant _gearboxAdapterType = AdapterType.ABSTRACT;
+/// @title Balancer V2 Vault adapter
+contract BalancerV2VaultAdapter is AbstractAdapter, IBalancerV2VaultAdapter {
+    AdapterType public constant _gearboxAdapterType =
+        AdapterType.BALANCER_VAULT;
     uint16 public constant _gearboxAdapterVersion = 1;
 
     /// @dev Constructor
-    /// @param _creditManager Address Credit manager
-    /// @param _vault Address of IBalancerV2Vault
+    /// @param _creditManager Address of credit manager
+    /// @param _vault Address of Balancer vault
     constructor(
         address _creditManager,
         address _vault
@@ -44,7 +37,6 @@ contract BalancerV2VaultAdapter is
     ///                   * userData - generic blob used to pass extra data
     /// @param limit The minimal amount of assetOut to receive or maximal amount of assetIn to spend (depending on SwapKind)
     /// @param deadline The latest date at which the swap would be executed
-    /// @return amountCalculated The amount of assetIn spent / assetOut received
     /// @notice `fundManagement` param from the original interface is ignored, as the adapter does not use internal balances and
     ///         only has one sender/recipient
     function swap(
@@ -52,10 +44,8 @@ contract BalancerV2VaultAdapter is
         FundManagement memory,
         uint256 limit,
         uint256 deadline
-    ) external returns (uint256 amountCalculated) {
-        address creditAccount = creditManager.getCreditAccountOrRevert(
-            msg.sender
-        );
+    ) external override creditFacadeOnly {
+        address creditAccount = _creditAccount();
 
         address tokenIn = address(singleSwap.assetIn);
         address tokenOut = address(singleSwap.assetOut);
@@ -64,22 +54,15 @@ contract BalancerV2VaultAdapter is
             creditAccount
         );
 
-        amountCalculated = abi.decode(
-            _safeExecuteFastCheck(
-                creditAccount,
-                tokenIn,
-                tokenOut,
-                abi.encodeWithSelector(
-                    IBalancerV2Vault.swap.selector,
-                    singleSwap,
-                    fundManagement,
-                    limit,
-                    deadline
-                ),
-                true,
-                false
+        _executeSwapSafeApprove(
+            creditAccount,
+            tokenIn,
+            tokenOut,
+            abi.encodeCall(
+                IBalancerV2Vault.swap,
+                (singleSwap, fundManagement, limit, deadline)
             ),
-            (uint256)
+            false
         );
     }
 
@@ -91,15 +74,12 @@ contract BalancerV2VaultAdapter is
     ///                   * userData - additional generic blob used to pass extra data
     /// @param limitRateRAY The minimal resulting exchange rate of assetOut to assetIn
     /// @param deadline The latest date at which the swap would be executed
-    /// @return amountCalculated The amount of assetOut received
     function swapAll(
         SingleSwapAll memory singleSwapAll,
         uint256 limitRateRAY,
         uint256 deadline
-    ) external returns (uint256 amountCalculated) {
-        address creditAccount = creditManager.getCreditAccountOrRevert(
-            msg.sender
-        );
+    ) external override creditFacadeOnly {
+        address creditAccount = _creditAccount();
 
         address tokenIn = address(singleSwapAll.assetIn);
         address tokenOut = address(singleSwapAll.assetOut);
@@ -115,13 +95,13 @@ contract BalancerV2VaultAdapter is
                 creditAccount
             );
 
-            amountCalculated = abi.decode(
-                _safeExecuteFastCheck(
-                    creditAccount,
-                    tokenIn,
-                    tokenOut,
-                    abi.encodeWithSelector(
-                        IBalancerV2Vault.swap.selector,
+            _executeSwapSafeApprove(
+                creditAccount,
+                tokenIn,
+                tokenOut,
+                abi.encodeCall(
+                    IBalancerV2Vault.swap,
+                    (
                         SingleSwap({
                             poolId: singleSwapAll.poolId,
                             kind: SwapKind.GIVEN_IN,
@@ -133,11 +113,9 @@ contract BalancerV2VaultAdapter is
                         fundManagement,
                         (balanceInBefore * limitRateRAY) / RAY,
                         deadline
-                    ),
-                    true,
-                    true
+                    )
                 ),
-                (uint256)
+                true
             );
         }
     }
@@ -154,7 +132,6 @@ contract BalancerV2VaultAdapter is
     /// @param assets Alphanumerically sorted array of assets participating in the swap
     /// @param limits Array of minimal received (negative) / maximal spent (positive) amounts, in the same order as the assets array
     /// @param deadline The latest date at which the swap would be executed
-    /// @return assetDeltas Changes in the vault balances as a result of the swap, in the same order as `assets`
     function batchSwap(
         SwapKind kind,
         BatchSwapStep[] memory swaps,
@@ -162,10 +139,8 @@ contract BalancerV2VaultAdapter is
         FundManagement memory,
         int256[] memory limits,
         uint256 deadline
-    ) external returns (int256[] memory assetDeltas) {
-        address creditAccount = creditManager.getCreditAccountOrRevert(
-            msg.sender
-        );
+    ) external override creditFacadeOnly {
+        address creditAccount = _creditAccount();
 
         FundManagement memory fundManagement = _getDefaultFundManagement(
             creditAccount
@@ -173,16 +148,11 @@ contract BalancerV2VaultAdapter is
 
         _approveAssets(assets, limits, type(uint256).max);
 
-        assetDeltas = abi.decode(
+        int256[] memory assetDeltas = abi.decode(
             _execute(
-                abi.encodeWithSelector(
-                    IBalancerV2Vault.batchSwap.selector,
-                    kind,
-                    swaps,
-                    assets,
-                    fundManagement,
-                    limits,
-                    deadline
+                abi.encodeCall(
+                    IBalancerV2Vault.batchSwap,
+                    (kind, swaps, assets, fundManagement, limits, deadline)
                 )
             ),
             (int256[])
@@ -191,43 +161,6 @@ contract BalancerV2VaultAdapter is
         _approveAssets(assets, limits, 1);
 
         _enableAssets(creditAccount, assets, assetDeltas);
-
-        _fullCheck(creditAccount);
-    }
-
-    /// @dev Simulates a Balancer batch swap to retrieve resulting assetDeltas
-    /// @param kind Type of swap (GIVEN IN or GIVEN OUT)
-    /// @param swaps Array of structs containing data on each individual swap:
-    ///              * poolId - ID of the pool to perform a swap in
-    ///              * assetInIndex - Index of the input asset in the pool (in an alphanumerically sorted array of asset addresses)
-    ///              * assetOutIndex - Index of the output asset in the pool (in an alphanumerically sorted array of asset addresses)
-    ///              * amount - amount of asset to send / receive. 0 signals to either spend the entire amount received from the last step,
-    ///                         or to receive the exact amount needed for the next step
-    ///              * userData - generic blob used to pass extra data
-    /// @param assets Alphanumerically sorted array of assets participating in the swap
-    /// @return assetDeltas Changes in the vault balances as a result of the swap, in the same order as `assets`
-    /// @notice Does not do a health check, since queryBatchSwap cannot change Vault / CA state
-    function queryBatchSwap(
-        SwapKind kind,
-        BatchSwapStep[] memory swaps,
-        IAsset[] memory assets,
-        FundManagement memory
-    ) external returns (int256[] memory assetDeltas) {
-        address creditAccount = creditManager.getCreditAccountOrRevert(
-            msg.sender
-        );
-
-        FundManagement memory fundManagement = _getDefaultFundManagement(
-            creditAccount
-        );
-
-        return
-            IBalancerV2Vault(targetContract).queryBatchSwap(
-                kind,
-                swaps,
-                assets,
-                fundManagement
-            );
     }
 
     /// @dev Sends an order to deposit liquidity into a Balancer pool and receive BPT
@@ -237,17 +170,16 @@ contract BalancerV2VaultAdapter is
     ///                * maxAmountsIn - Array of maximal amounts to be spent for each asset
     ///                * userData - a blob encoding the type of deposit and additional parameters
     ///                  (see https://dev.balancer.fi/resources/joins-and-exits/pool-joins#userdata for more info)
-    ///                * fromInternalBalance - whether to use internal balances for assets (ignored as the adapter does not use internal balances)
+    ///                * fromInternalBalance - whether to use internal balances for assets
+    ///                  (ignored as the adapter does not use internal balances)
     /// @notice Sender and recipient are ignored, since they are always set to the creditAccount address
     function joinPool(
         bytes32 poolId,
         address,
         address,
         JoinPoolRequest memory request
-    ) external {
-        address creditAccount = creditManager.getCreditAccountOrRevert(
-            msg.sender
-        );
+    ) external override creditFacadeOnly {
+        address creditAccount = _creditAccount();
 
         (address bpt, ) = IBalancerV2Vault(targetContract).getPool(poolId);
 
@@ -257,18 +189,13 @@ contract BalancerV2VaultAdapter is
         _enableToken(creditAccount, bpt);
 
         _execute(
-            abi.encodeWithSelector(
-                IBalancerV2Vault.joinPool.selector,
-                poolId,
-                creditAccount,
-                creditAccount,
-                request
+            abi.encodeCall(
+                IBalancerV2Vault.joinPool,
+                (poolId, creditAccount, creditAccount, request)
             )
         );
 
         _approveAssets(request.assets, request.maxAmountsIn, 1);
-
-        _fullCheck(creditAccount);
     }
 
     /// @dev Sends an order to deposit liquidity into a Balancer pool in one asset
@@ -281,30 +208,29 @@ contract BalancerV2VaultAdapter is
         IAsset assetIn,
         uint256 amountIn,
         uint256 minAmountOut
-    ) external {
-        address creditAccount = creditManager.getCreditAccountOrRevert(
-            msg.sender
-        );
+    ) external override creditFacadeOnly {
+        address creditAccount = _creditAccount();
 
         (address bpt, ) = IBalancerV2Vault(targetContract).getPool(poolId);
 
-        _safeExecuteFastCheck(
+        _executeSwapSafeApprove(
             creditAccount,
             address(assetIn),
             bpt,
-            abi.encodeWithSelector(
-                IBalancerV2Vault.joinPool.selector,
-                poolId,
-                creditAccount,
-                creditAccount,
-                _getJoinSingleAssetRequest(
+            abi.encodeCall(
+                IBalancerV2Vault.joinPool,
+                (
                     poolId,
-                    assetIn,
-                    amountIn,
-                    minAmountOut
+                    creditAccount,
+                    creditAccount,
+                    _getJoinSingleAssetRequest(
+                        poolId,
+                        assetIn,
+                        amountIn,
+                        minAmountOut
+                    )
                 )
             ),
-            true,
             false
         );
     }
@@ -317,10 +243,8 @@ contract BalancerV2VaultAdapter is
         bytes32 poolId,
         IAsset assetIn,
         uint256 minRateRAY
-    ) external {
-        address creditAccount = creditManager.getCreditAccountOrRevert(
-            msg.sender
-        );
+    ) external override creditFacadeOnly {
+        address creditAccount = _creditAccount();
 
         uint256 balanceInBefore = IERC20(address(assetIn)).balanceOf(
             creditAccount
@@ -333,23 +257,24 @@ contract BalancerV2VaultAdapter is
 
             (address bpt, ) = IBalancerV2Vault(targetContract).getPool(poolId);
 
-            _safeExecuteFastCheck(
+            _executeSwapSafeApprove(
                 creditAccount,
                 address(assetIn),
                 bpt,
-                abi.encodeWithSignature(
-                    "joinPool(bytes32,address,address,(address[],uint256[],bytes,bool))",
-                    poolId,
-                    creditAccount,
-                    creditAccount,
-                    _getJoinSingleAssetRequest(
+                abi.encodeCall(
+                    IBalancerV2Vault.joinPool,
+                    (
                         poolId,
-                        assetIn,
-                        balanceInBefore,
-                        (balanceInBefore * minRateRAY) / RAY
+                        creditAccount,
+                        creditAccount,
+                        _getJoinSingleAssetRequest(
+                            poolId,
+                            assetIn,
+                            balanceInBefore,
+                            (balanceInBefore * minRateRAY) / RAY
+                        )
                     )
                 ),
-                true,
                 true
             );
         }
@@ -395,28 +320,24 @@ contract BalancerV2VaultAdapter is
     ///                * assets - Array of all assets in the pool
     ///                * minAmountsOut - The minimal amounts to receive for each asset
     ///                * userData - a blob encoding the type of deposit and additional parameters
-    ///                (see https://dev.balancer.fi/resources/joins-and-exits/pool-exits#userdata for more info)
-    ///                * toInternalBalance - whether to use internal balances for assets (ignored as the adapter does not use internal balances)
+    ///                  (see https://dev.balancer.fi/resources/joins-and-exits/pool-exits#userdata for more info)
+    ///                * toInternalBalance - whether to use internal balances for assets
+    ///                  (ignored as the adapter does not use internal balances)
     /// @notice Sender and recipient are ignored, since they are always set to the creditAccount address
     function exitPool(
         bytes32 poolId,
         address,
         address payable,
         ExitPoolRequest memory request
-    ) external {
-        address creditAccount = creditManager.getCreditAccountOrRevert(
-            msg.sender
-        );
+    ) external override creditFacadeOnly {
+        address creditAccount = _creditAccount();
 
         request.toInternalBalance = false;
 
         _execute(
-            abi.encodeWithSelector(
-                IBalancerV2Vault.exitPool.selector,
-                poolId,
-                creditAccount,
-                creditAccount,
-                request
+            abi.encodeCall(
+                IBalancerV2Vault.exitPool,
+                (poolId, creditAccount, payable(creditAccount), request)
             )
         );
 
@@ -425,8 +346,6 @@ contract BalancerV2VaultAdapter is
             request.assets,
             _getBalancesFilter(creditAccount, request.assets)
         );
-
-        _fullCheck(creditAccount);
     }
 
     /// @dev Sends an order to withdraw liquidity from a Balancer pool, burning BPT and receiving a single asset
@@ -439,30 +358,29 @@ contract BalancerV2VaultAdapter is
         IAsset assetOut,
         uint256 amountIn,
         uint256 minAmountOut
-    ) external {
-        address creditAccount = creditManager.getCreditAccountOrRevert(
-            msg.sender
-        );
+    ) external override creditFacadeOnly {
+        address creditAccount = _creditAccount();
 
         (address bpt, ) = IBalancerV2Vault(targetContract).getPool(poolId);
 
-        _safeExecuteFastCheck(
+        _executeSwapNoApprove(
             creditAccount,
             bpt,
             address(assetOut),
-            abi.encodeWithSelector(
-                IBalancerV2Vault.exitPool.selector,
-                poolId,
-                creditAccount,
-                creditAccount,
-                _getExitSingleAssetRequest(
+            abi.encodeCall(
+                IBalancerV2Vault.exitPool,
+                (
                     poolId,
-                    assetOut,
-                    amountIn,
-                    minAmountOut
+                    creditAccount,
+                    payable(creditAccount),
+                    _getExitSingleAssetRequest(
+                        poolId,
+                        assetOut,
+                        amountIn,
+                        minAmountOut
+                    )
                 )
             ),
-            false,
             false
         );
     }
@@ -475,10 +393,8 @@ contract BalancerV2VaultAdapter is
         bytes32 poolId,
         IAsset assetOut,
         uint256 minRateRAY
-    ) external {
-        address creditAccount = creditManager.getCreditAccountOrRevert(
-            msg.sender
-        );
+    ) external override creditFacadeOnly {
+        address creditAccount = _creditAccount();
 
         (address bpt, ) = IBalancerV2Vault(targetContract).getPool(poolId);
 
@@ -489,23 +405,24 @@ contract BalancerV2VaultAdapter is
                 balanceInBefore--;
             }
 
-            _safeExecuteFastCheck(
+            _executeSwapNoApprove(
                 creditAccount,
                 bpt,
                 address(assetOut),
-                abi.encodeWithSignature(
-                    "exitPool(bytes32,address,address,(address[],uint256[],bytes,bool))",
-                    poolId,
-                    creditAccount,
-                    creditAccount,
-                    _getExitSingleAssetRequest(
+                abi.encodeCall(
+                    IBalancerV2Vault.exitPool,
+                    (
                         poolId,
-                        assetOut,
-                        balanceInBefore,
-                        (balanceInBefore * minRateRAY) / RAY
+                        creditAccount,
+                        payable(creditAccount),
+                        _getExitSingleAssetRequest(
+                            poolId,
+                            assetOut,
+                            balanceInBefore,
+                            (balanceInBefore * minRateRAY) / RAY
+                        )
                     )
                 ),
-                false,
                 true
             );
         }
@@ -637,48 +554,5 @@ contract BalancerV2VaultAdapter is
                 recipient: payable(creditAccount),
                 toInternalBalance: false
             });
-    }
-
-    /// @dev Returns the address and specialization of the pool, based on ID
-    /// @param poolId ID of Balancer pool to query
-    function getPool(
-        bytes32 poolId
-    ) external view returns (address, PoolSpecialization) {
-        return IBalancerV2Vault(targetContract).getPool(poolId);
-    }
-
-    /// @dev Returns the data for a single asset in the pool
-    /// @param poolId ID of Balancer pool to query
-    /// @param token Token to query
-    function getPoolTokenInfo(
-        bytes32 poolId,
-        IERC20 token
-    )
-        external
-        view
-        returns (
-            uint256 cash,
-            uint256 managed,
-            uint256 lastChangeBlock,
-            address assetManager
-        )
-    {
-        return IBalancerV2Vault(targetContract).getPoolTokenInfo(poolId, token);
-    }
-
-    /// @dev Returns the pool tokens, based on pool ID
-    /// @param poolId ID of Balancer pool to query
-    function getPoolTokens(
-        bytes32 poolId
-    )
-        external
-        view
-        returns (
-            IERC20[] memory tokens,
-            uint256[] memory balances,
-            uint256 lastChangeBlock
-        )
-    {
-        return IBalancerV2Vault(targetContract).getPoolTokens(poolId);
     }
 }

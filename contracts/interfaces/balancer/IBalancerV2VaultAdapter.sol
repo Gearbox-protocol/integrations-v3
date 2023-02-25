@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 // Gearbox Protocol. Generalized leverage for DeFi protocols
-// (c) Gearbox Holdings, 2022
-pragma solidity ^0.8.10;
+// (c) Gearbox Holdings, 2023
+pragma solidity ^0.8.17;
 
-import { IBalancerV2Vault, IAsset } from "../../integrations/balancer/IBalancerV2Vault.sol";
+import { IAsset, SingleSwap, FundManagement, SwapKind, BatchSwapStep, JoinPoolRequest, ExitPoolRequest } from "../../integrations/balancer/IBalancerV2Vault.sol";
 
 struct SingleSwapAll {
     bytes32 poolId;
@@ -12,12 +12,35 @@ struct SingleSwapAll {
     bytes userData;
 }
 
-interface IBalancerV2VaultAdapter is IBalancerV2Vault {
+interface IBalancerV2VaultAdapter {
+    function swap(
+        SingleSwap memory singleSwap,
+        FundManagement memory,
+        uint256 limit,
+        uint256 deadline
+    ) external;
+
     function swapAll(
-        SingleSwapAll calldata singleSwapAll,
+        SingleSwapAll memory singleSwapAll,
         uint256 limitRateRAY,
         uint256 deadline
-    ) external returns (uint256 amountCalculated);
+    ) external;
+
+    function batchSwap(
+        SwapKind kind,
+        BatchSwapStep[] memory swaps,
+        IAsset[] memory assets,
+        FundManagement memory,
+        int256[] memory limits,
+        uint256 deadline
+    ) external;
+
+    function joinPool(
+        bytes32 poolId,
+        address,
+        address,
+        JoinPoolRequest memory request
+    ) external;
 
     function joinPoolSingleAsset(
         bytes32 poolId,
@@ -30,6 +53,13 @@ interface IBalancerV2VaultAdapter is IBalancerV2Vault {
         bytes32 poolId,
         IAsset assetIn,
         uint256 minRateRAY
+    ) external;
+
+    function exitPool(
+        bytes32 poolId,
+        address,
+        address payable,
+        ExitPoolRequest memory request
     ) external;
 
     function exitPoolSingleAsset(

@@ -1,4 +1,7 @@
-pragma solidity ^0.8.10;
+// SPDX-License-Identifier: UNLICENSED
+// Gearbox Protocol. Generalized leverage for DeFi protocols
+// (c) Gearbox Holdings, 2022
+pragma solidity ^0.8.17;
 
 import { IBalancerV2Vault, PoolSpecialization, SingleSwap, BatchSwapStep, FundManagement, SwapKind, JoinPoolRequest, ExitPoolRequest, JoinKind, ExitKind } from "../../../integrations/balancer/IBalancerV2Vault.sol";
 import { IAsset } from "../../../integrations/balancer/IAsset.sol";
@@ -211,7 +214,7 @@ contract BalancerVaultMock is IBalancerV2Vault {
         BatchSwapStep[] memory swaps,
         IAsset[] memory assets,
         FundManagement memory
-    ) public returns (int256[] memory assetDeltas) {
+    ) public view returns (int256[] memory assetDeltas) {
         assetDeltas = new int256[](assets.length);
 
         if (kind == SwapKind.GIVEN_IN) {
@@ -613,8 +616,8 @@ contract BalancerVaultMock is IBalancerV2Vault {
     }
 
     function getPoolTokenInfo(
-        bytes32 poolId,
-        IERC20 token
+        bytes32,
+        IERC20
     )
         external
         view

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 // Gearbox Protocol. Generalized leverage for DeFi protocols
-// (c) Gearbox Holdings, 2022
-pragma solidity ^0.8.10;
+// (c) Gearbox Holdings, 2023
+pragma solidity ^0.8.17;
 
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import { AggregatorV3Interface } from "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
@@ -14,7 +14,7 @@ import { IBalancerStablePool } from "../../integrations/balancer/IBalancerStable
 import { ZeroAddressException, IncorrectPriceFeedException } from "@gearbox-protocol/core-v2/contracts/interfaces/IErrors.sol";
 
 uint256 constant RANGE_WIDTH = 200; // 2%
-uint256 constant DECIMALS = 10**18;
+uint256 constant DECIMALS = 10 ** 18;
 
 /// @title BPT Stable pool LP price feed
 contract BPTStablePriceFeed is LPPriceFeed {
@@ -38,7 +38,7 @@ contract BPTStablePriceFeed is LPPriceFeed {
     uint8 public immutable numAssets;
 
     PriceFeedType public constant override priceFeedType =
-        PriceFeedType.ZERO_ORACLE;
+        PriceFeedType.BALANCER_STABLE_LP_ORACLE;
 
     /// @dev Contract version
     uint256 public constant override version = 1;
