@@ -3,22 +3,18 @@
 // (c) Gearbox Holdings, 2023
 pragma solidity ^0.8.17;
 
-import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
-import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract BPTMock is ERC20, Ownable {
     uint8 private immutable _decimals;
     uint256[] weights;
     bytes32 poolId;
 
-    constructor(
-        string memory name_,
-        string memory symbol_,
-        uint8 decimals_,
-        uint256[] memory _weights,
-        bytes32 _poolId
-    ) ERC20(name_, symbol_) {
+    constructor(string memory name_, string memory symbol_, uint8 decimals_, uint256[] memory _weights, bytes32 _poolId)
+        ERC20(name_, symbol_)
+    {
         _decimals = decimals_;
         weights = _weights;
         poolId = _poolId;

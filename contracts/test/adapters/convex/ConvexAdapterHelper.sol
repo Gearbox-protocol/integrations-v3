@@ -3,31 +3,31 @@
 // (c) Gearbox Holdings, 2023
 pragma solidity ^0.8.17;
 
-import { CreditManager } from "@gearbox-protocol/core-v2/contracts/credit/CreditManager.sol";
+import {CreditManager} from "@gearbox-protocol/core-v2/contracts/credit/CreditManager.sol";
 
-import { IBooster } from "../../../integrations/convex/IBooster.sol";
-import { IBaseRewardPool } from "../../../integrations/convex/IBaseRewardPool.sol";
+import {IBooster} from "../../../integrations/convex/IBooster.sol";
+import {IBaseRewardPool} from "../../../integrations/convex/IBaseRewardPool.sol";
 
-import { IPriceOracleV2Ext } from "@gearbox-protocol/core-v2/contracts/interfaces/IPriceOracle.sol";
+import {IPriceOracleV2Ext} from "@gearbox-protocol/core-v2/contracts/interfaces/IPriceOracle.sol";
 
-import { ConvexV1BaseRewardPoolAdapter } from "../../../adapters/convex/ConvexV1_BaseRewardPool.sol";
-import { ConvexV1BoosterAdapter } from "../../../adapters/convex/ConvexV1_Booster.sol";
-import { ConvexV1ClaimZapAdapter } from "../../../adapters/convex/ConvexV1_ClaimZap.sol";
-import { ConvexStakedPositionToken } from "../../../adapters/convex/ConvexV1_StakedPositionToken.sol";
+import {ConvexV1BaseRewardPoolAdapter} from "../../../adapters/convex/ConvexV1_BaseRewardPool.sol";
+import {ConvexV1BoosterAdapter} from "../../../adapters/convex/ConvexV1_Booster.sol";
+import {ConvexV1ClaimZapAdapter} from "../../../adapters/convex/ConvexV1_ClaimZap.sol";
+import {ConvexStakedPositionToken} from "../../../adapters/convex/ConvexV1_StakedPositionToken.sol";
 
-import { BoosterMock } from "../../mocks/integrations/ConvexBoosterMock.sol";
-import { BaseRewardPoolMock } from "../../mocks/integrations/ConvexBaseRewardPoolMock.sol";
-import { ExtraRewardPoolMock } from "../../mocks/integrations/ConvexExtraRewardPoolMock.sol";
-import { ClaimZapMock } from "../../mocks/integrations/ConvexClaimZapMock.sol";
+import {BoosterMock} from "../../mocks/integrations/ConvexBoosterMock.sol";
+import {BaseRewardPoolMock} from "../../mocks/integrations/ConvexBaseRewardPoolMock.sol";
+import {ExtraRewardPoolMock} from "../../mocks/integrations/ConvexExtraRewardPoolMock.sol";
+import {ClaimZapMock} from "../../mocks/integrations/ConvexClaimZapMock.sol";
 
-import { PriceFeedMock } from "@gearbox-protocol/core-v2/contracts/test/mocks/oracles/PriceFeedMock.sol";
+import {PriceFeedMock} from "@gearbox-protocol/core-v2/contracts/test/mocks/oracles/PriceFeedMock.sol";
 
-import { WAD, RAY } from "@gearbox-protocol/core-v2/contracts/libraries/Constants.sol";
-import { ERC20Mock } from "@gearbox-protocol/core-v2/contracts/test/mocks/token/ERC20Mock.sol";
+import {WAD, RAY} from "@gearbox-protocol/core-v2/contracts/libraries/Constants.sol";
+import {ERC20Mock} from "@gearbox-protocol/core-v2/contracts/test/mocks/token/ERC20Mock.sol";
 
-import { AdapterTestHelper } from "../AdapterTestHelper.sol";
+import {AdapterTestHelper} from "../AdapterTestHelper.sol";
 
-import { USER, CONFIGURATOR, DAI_MIN_BORROWED_AMOUNT, DAI_MAX_BORROWED_AMOUNT } from "../../lib/constants.sol";
+import {USER, CONFIGURATOR, DAI_MIN_BORROWED_AMOUNT, DAI_MAX_BORROWED_AMOUNT} from "../../lib/constants.sol";
 
 uint256 constant CURVE_LP_AMOUNT = 10000 * RAY;
 uint256 constant DAI_ACCOUNT_AMOUNT = 10000 * WAD;
@@ -85,25 +85,19 @@ contract ConvexAdapterHelper is AdapterTestHelper {
         _addToken(cvx);
 
         if (extraRewardsCount >= 1) {
-            extraRewardToken1 = address(
-                new ERC20Mock("Extra Reward 1", "EXTR1", 18)
-            );
+            extraRewardToken1 = address(new ERC20Mock("Extra Reward 1", "EXTR1", 18));
             _addToken(extraRewardToken1);
         }
 
         if (extraRewardsCount >= 2) {
-            extraRewardToken2 = address(
-                new ERC20Mock("Extra Reward 2", "EXTR2", 18)
-            );
+            extraRewardToken2 = address(new ERC20Mock("Extra Reward 2", "EXTR2", 18));
             _addToken(extraRewardToken2);
         }
 
         boosterMock = new BoosterMock(crv, cvx);
         boosterMock.addPool(curveLPToken);
 
-        IBooster.PoolInfo memory pool = IBooster(address(boosterMock)).poolInfo(
-            0
-        );
+        IBooster.PoolInfo memory pool = IBooster(address(boosterMock)).poolInfo(0);
 
         convexLPToken = pool.token;
         _addToken(convexLPToken);
@@ -132,9 +126,7 @@ contract ConvexAdapterHelper is AdapterTestHelper {
 
         claimZapMock = new ClaimZapMock(crv, cvx);
 
-        phantomToken = address(
-            new ConvexStakedPositionToken(address(basePoolMock), convexLPToken)
-        );
+        phantomToken = address(new ConvexStakedPositionToken(address(basePoolMock), convexLPToken));
 
         basePoolAdapter = new ConvexV1BaseRewardPoolAdapter(
             address(creditManager),
@@ -145,10 +137,7 @@ contract ConvexAdapterHelper is AdapterTestHelper {
         _addToken(phantomToken);
 
         evm.prank(CONFIGURATOR);
-        creditConfigurator.allowContract(
-            address(basePoolMock),
-            address(basePoolAdapter)
-        );
+        creditConfigurator.allowContract(address(basePoolMock), address(basePoolAdapter));
 
         boosterAdapter = new ConvexV1BoosterAdapter(
             address(creditManager),
@@ -156,10 +145,7 @@ contract ConvexAdapterHelper is AdapterTestHelper {
         );
 
         evm.prank(CONFIGURATOR);
-        creditConfigurator.allowContract(
-            address(boosterMock),
-            address(boosterAdapter)
-        );
+        creditConfigurator.allowContract(address(boosterMock), address(boosterAdapter));
 
         claimZapAdapter = new ConvexV1ClaimZapAdapter(
             address(creditManager),
@@ -167,23 +153,16 @@ contract ConvexAdapterHelper is AdapterTestHelper {
         );
 
         evm.prank(CONFIGURATOR);
-        creditConfigurator.allowContract(
-            address(claimZapMock),
-            address(claimZapAdapter)
-        );
+        creditConfigurator.allowContract(address(claimZapMock), address(claimZapAdapter));
 
         evm.prank(CONFIGURATOR);
         boosterAdapter.updateStakedPhantomTokensMap();
     }
 
-    function _checkPoolAdapterConstructorRevert(
-        uint256 forgottenToken
-    ) internal {
+    function _checkPoolAdapterConstructorRevert(uint256 forgottenToken) internal {
         address forgottenTokenAddr;
 
-        address curveLPToken_c = address(
-            new ERC20Mock("Curve LP Token", "CRVLP", 18)
-        );
+        address curveLPToken_c = address(new ERC20Mock("Curve LP Token", "CRVLP", 18));
 
         if (forgottenToken == 2) {
             forgottenTokenAddr = curveLPToken_c;
@@ -207,9 +186,7 @@ contract ConvexAdapterHelper is AdapterTestHelper {
             _addToken(cvx_c);
         }
 
-        address extraRewardToken1_c = address(
-            new ERC20Mock("Extra Reward 1", "EXTR1", 18)
-        );
+        address extraRewardToken1_c = address(new ERC20Mock("Extra Reward 1", "EXTR1", 18));
 
         if (forgottenToken == 3) {
             forgottenTokenAddr = extraRewardToken1_c;
@@ -217,9 +194,7 @@ contract ConvexAdapterHelper is AdapterTestHelper {
             _addToken(extraRewardToken1_c);
         }
 
-        address extraRewardToken2_c = address(
-            new ERC20Mock("Extra Reward 2", "EXTR2", 18)
-        );
+        address extraRewardToken2_c = address(new ERC20Mock("Extra Reward 2", "EXTR2", 18));
 
         if (forgottenToken == 4) {
             forgottenTokenAddr = extraRewardToken2_c;
@@ -230,8 +205,7 @@ contract ConvexAdapterHelper is AdapterTestHelper {
         BoosterMock boosterMock_c = new BoosterMock(crv_c, cvx_c);
         boosterMock_c.addPool(curveLPToken_c);
 
-        IBooster.PoolInfo memory pool = IBooster(address(boosterMock_c))
-            .poolInfo(0);
+        IBooster.PoolInfo memory pool = IBooster(address(boosterMock_c)).poolInfo(0);
 
         address convexLPToken_c = pool.token;
         _addToken(convexLPToken_c);
@@ -254,12 +228,7 @@ contract ConvexAdapterHelper is AdapterTestHelper {
 
         basePoolMock_c.addExtraReward(address(extraPoolMock2_c));
 
-        evm.expectRevert(
-            abi.encodeWithSelector(
-                TokenIsNotInAllowedList.selector,
-                forgottenTokenAddr
-            )
-        );
+        evm.expectRevert(abi.encodeWithSelector(TokenIsNotInAllowedList.selector, forgottenTokenAddr));
 
         new ConvexV1BaseRewardPoolAdapter(
             address(creditManager),
@@ -275,12 +244,7 @@ contract ConvexAdapterHelper is AdapterTestHelper {
         evm.stopPrank();
     }
 
-    function expectDepositStackCalls(
-        address borrower,
-        uint256 amount,
-        bool stake,
-        bool depositAll
-    ) internal {
+    function expectDepositStackCalls(address borrower, uint256 amount, bool stake, bool depositAll) internal {
         bytes memory callData = depositAll
             ? abi.encodeCall(IBooster.depositAll, (0, stake))
             : abi.encodeCall(IBooster.deposit, (0, amount, stake));
@@ -296,44 +260,21 @@ contract ConvexAdapterHelper is AdapterTestHelper {
         );
     }
 
-    function expectWithdrawStackCalls(
-        address borrower,
-        uint256 amount,
-        bool withdrawAll
-    ) internal {
-        bytes memory callData = withdrawAll
-            ? abi.encodeCall(IBooster.withdrawAll, (0))
-            : abi.encodeCall(IBooster.withdraw, (0, amount));
+    function expectWithdrawStackCalls(address borrower, uint256 amount, bool withdrawAll) internal {
+        bytes memory callData =
+            withdrawAll ? abi.encodeCall(IBooster.withdrawAll, (0)) : abi.encodeCall(IBooster.withdraw, (0, amount));
 
         expectMulticallStackCalls(
-            address(boosterAdapter),
-            address(boosterMock),
-            borrower,
-            callData,
-            convexLPToken,
-            curveLPToken,
-            true,
-            false
+            address(boosterAdapter), address(boosterMock), borrower, callData, convexLPToken, curveLPToken, true, false
         );
     }
 
-    function expectStakeStackCalls(
-        address borrower,
-        uint256 amount,
-        bool stakeAll
-    ) internal {
-        bytes memory callData = stakeAll
-            ? abi.encodeCall(IBaseRewardPool.stakeAll, ())
-            : abi.encodeCall(IBaseRewardPool.stake, (amount));
+    function expectStakeStackCalls(address borrower, uint256 amount, bool stakeAll) internal {
+        bytes memory callData =
+            stakeAll ? abi.encodeCall(IBaseRewardPool.stakeAll, ()) : abi.encodeCall(IBaseRewardPool.stake, (amount));
 
         expectMulticallStackCalls(
-            address(basePoolAdapter),
-            address(basePoolMock),
-            borrower,
-            callData,
-            convexLPToken,
-            phantomToken,
-            true
+            address(basePoolAdapter), address(basePoolMock), borrower, callData, convexLPToken, phantomToken, true
         );
     }
 
@@ -344,19 +285,14 @@ contract ConvexAdapterHelper is AdapterTestHelper {
         bool unwrap,
         uint256 numExtras
     ) internal {
-        address creditAccount = creditManager.getCreditAccountOrRevert(
-            borrower
-        );
+        address creditAccount = creditManager.getCreditAccountOrRevert(borrower);
 
         bytes memory callData;
 
         if (unwrap) {
             callData = withdrawAll
                 ? abi.encodeCall(IBaseRewardPool.withdrawAllAndUnwrap, (true))
-                : abi.encodeCall(
-                    IBaseRewardPool.withdrawAndUnwrap,
-                    (amount, true)
-                );
+                : abi.encodeCall(IBaseRewardPool.withdrawAndUnwrap, (amount, true));
         } else {
             callData = withdrawAll
                 ? abi.encodeCall(IBaseRewardPool.withdrawAll, (true))
@@ -374,49 +310,26 @@ contract ConvexAdapterHelper is AdapterTestHelper {
             false
         );
 
-        evm.expectCall(
-            address(creditManager),
-            abi.encodeCall(
-                CreditManager.checkAndEnableToken,
-                (creditAccount, crv)
-            )
-        );
+        evm.expectCall(address(creditManager), abi.encodeCall(CreditManager.checkAndEnableToken, (creditAccount, crv)));
 
-        evm.expectCall(
-            address(creditManager),
-            abi.encodeCall(
-                CreditManager.checkAndEnableToken,
-                (creditAccount, cvx)
-            )
-        );
+        evm.expectCall(address(creditManager), abi.encodeCall(CreditManager.checkAndEnableToken, (creditAccount, cvx)));
 
         if (numExtras >= 1) {
             evm.expectCall(
                 address(creditManager),
-                abi.encodeCall(
-                    CreditManager.checkAndEnableToken,
-                    (creditAccount, extraRewardToken1)
-                )
+                abi.encodeCall(CreditManager.checkAndEnableToken, (creditAccount, extraRewardToken1))
             );
         }
         if (numExtras == 2) {
             evm.expectCall(
                 address(creditManager),
-                abi.encodeCall(
-                    CreditManager.checkAndEnableToken,
-                    (creditAccount, extraRewardToken2)
-                )
+                abi.encodeCall(CreditManager.checkAndEnableToken, (creditAccount, extraRewardToken2))
             );
         }
     }
 
-    function expectClaimZapStackCalls(
-        address borrower,
-        address[] memory enabledTokens
-    ) internal {
-        address creditAccount = creditManager.getCreditAccountOrRevert(
-            borrower
-        );
+    function expectClaimZapStackCalls(address borrower, address[] memory enabledTokens) internal {
+        address creditAccount = creditManager.getCreditAccountOrRevert(borrower);
 
         evm.expectEmit(true, false, false, false);
         emit MultiCallStarted(borrower);
@@ -424,10 +337,7 @@ contract ConvexAdapterHelper is AdapterTestHelper {
         for (uint256 i = 0; i < enabledTokens.length; i++) {
             evm.expectCall(
                 address(creditManager),
-                abi.encodeCall(
-                    CreditManager.checkAndEnableToken,
-                    (creditAccount, enabledTokens[i])
-                )
+                abi.encodeCall(CreditManager.checkAndEnableToken, (creditAccount, enabledTokens[i]))
             );
         }
 
@@ -435,13 +345,8 @@ contract ConvexAdapterHelper is AdapterTestHelper {
         emit MultiCallFinished();
     }
 
-    function expectClaimStackCalls(
-        address borrower,
-        uint256 numExtras
-    ) internal {
-        address creditAccount = creditManager.getCreditAccountOrRevert(
-            borrower
-        );
+    function expectClaimStackCalls(address borrower, uint256 numExtras) internal {
+        address creditAccount = creditManager.getCreditAccountOrRevert(borrower);
 
         evm.expectEmit(true, false, false, false);
         emit MultiCallStarted(borrower);
@@ -449,44 +354,23 @@ contract ConvexAdapterHelper is AdapterTestHelper {
         evm.expectEmit(true, true, false, false);
         emit ExecuteOrder(creditAccount, address(basePoolMock));
 
-        evm.expectCall(
-            address(basePoolMock),
-            abi.encodeWithSignature("getReward()")
-        );
+        evm.expectCall(address(basePoolMock), abi.encodeWithSignature("getReward()"));
 
-        evm.expectCall(
-            address(creditManager),
-            abi.encodeCall(
-                CreditManager.checkAndEnableToken,
-                (creditAccount, crv)
-            )
-        );
+        evm.expectCall(address(creditManager), abi.encodeCall(CreditManager.checkAndEnableToken, (creditAccount, crv)));
 
-        evm.expectCall(
-            address(creditManager),
-            abi.encodeCall(
-                CreditManager.checkAndEnableToken,
-                (creditAccount, cvx)
-            )
-        );
+        evm.expectCall(address(creditManager), abi.encodeCall(CreditManager.checkAndEnableToken, (creditAccount, cvx)));
 
         if (numExtras >= 1) {
             evm.expectCall(
                 address(creditManager),
-                abi.encodeCall(
-                    CreditManager.checkAndEnableToken,
-                    (creditAccount, extraRewardToken1)
-                )
+                abi.encodeCall(CreditManager.checkAndEnableToken, (creditAccount, extraRewardToken1))
             );
         }
 
         if (numExtras == 2) {
             evm.expectCall(
                 address(creditManager),
-                abi.encodeCall(
-                    CreditManager.checkAndEnableToken,
-                    (creditAccount, extraRewardToken2)
-                )
+                abi.encodeCall(CreditManager.checkAndEnableToken, (creditAccount, extraRewardToken2))
             );
         }
 

@@ -3,8 +3,8 @@
 // (c) Gearbox Holdings, 2023
 pragma solidity ^0.8.17;
 
-import { IAdapter } from "@gearbox-protocol/core-v2/contracts/interfaces/adapters/IAdapter.sol";
-import { ISwapRouter } from "../../integrations/uniswap/IUniswapV3.sol";
+import {IAdapter} from "@gearbox-protocol/core-v2/contracts/interfaces/adapters/IAdapter.sol";
+import {ISwapRouter} from "../../integrations/uniswap/IUniswapV3.sol";
 
 interface IUniswapV3AdapterExceptions {
     /// @dev Thrown when sanity checks on a Uniswap path fail
@@ -12,9 +12,7 @@ interface IUniswapV3AdapterExceptions {
 }
 
 interface IUniswapV3Adapter is IAdapter, IUniswapV3AdapterExceptions {
-    function exactInputSingle(
-        ISwapRouter.ExactInputSingleParams calldata params
-    ) external;
+    function exactInputSingle(ISwapRouter.ExactInputSingleParams calldata params) external;
 
     /// @dev A struct encoding parameters for exactAllInputSingle,
     ///      which is unique to the Gearbox adapter
@@ -39,9 +37,7 @@ interface IUniswapV3Adapter is IAdapter, IUniswapV3AdapterExceptions {
     /// - Fills the `ExactInputSingleParams` struct
     /// - Makes a max allowance fast check call, passing the new struct as params
     /// @param params The parameters necessary for the swap, encoded as `ExactAllInputSingleParams` in calldata
-    function exactAllInputSingle(
-        ExactAllInputSingleParams calldata params
-    ) external;
+    function exactAllInputSingle(ExactAllInputSingleParams calldata params) external;
 
     function exactInput(ISwapRouter.ExactInputParams calldata params) external;
 
@@ -65,11 +61,7 @@ interface IUniswapV3Adapter is IAdapter, IUniswapV3AdapterExceptions {
     /// @param params The parameters necessary for the multi-hop swap, encoded as `ExactAllInputParams` in calldata
     function exactAllInput(ExactAllInputParams calldata params) external;
 
-    function exactOutputSingle(
-        ISwapRouter.ExactOutputSingleParams calldata params
-    ) external;
+    function exactOutputSingle(ISwapRouter.ExactOutputSingleParams calldata params) external;
 
-    function exactOutput(
-        ISwapRouter.ExactOutputParams calldata params
-    ) external;
+    function exactOutput(ISwapRouter.ExactOutputParams calldata params) external;
 }

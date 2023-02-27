@@ -7,8 +7,8 @@ import "../../../integrations/convex/Interfaces.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import { ERC20Mock } from "@gearbox-protocol/core-v2/contracts/test/mocks/token/ERC20Mock.sol";
-import { CheatCodes, HEVM_ADDRESS } from "@gearbox-protocol/core-v2/contracts/test/lib/cheatCodes.sol";
+import {ERC20Mock} from "@gearbox-protocol/core-v2/contracts/test/mocks/token/ERC20Mock.sol";
+import {CheatCodes, HEVM_ADDRESS} from "@gearbox-protocol/core-v2/contracts/test/lib/cheatCodes.sol";
 
 contract VirtualBalanceWrapper {
     using SafeMath for uint256;
@@ -29,6 +29,7 @@ contract ExtraRewardPoolMock is VirtualBalanceWrapper {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
     using SafeERC20 for ERC20Mock;
+
     CheatCodes evm = CheatCodes(HEVM_ADDRESS);
 
     ERC20Mock public rewardToken;
@@ -51,11 +52,7 @@ contract ExtraRewardPoolMock is VirtualBalanceWrapper {
     uint256 totalRewards = 0;
     uint256 index = 0;
 
-    constructor(
-        address deposit_,
-        address reward_,
-        address op_
-    ) {
+    constructor(address deposit_, address reward_, address op_) {
         deposits = IDeposit(deposit_);
         rewardToken = ERC20Mock(reward_);
         operator = op_;
@@ -74,36 +71,22 @@ contract ExtraRewardPoolMock is VirtualBalanceWrapper {
     }
 
     function earned(address account) public view returns (uint256) {
-        return
-            balanceOf(account)
-                .mul(rewardPerToken().sub(userRewardPerTokenPaid[account]))
-                .div(1e18)
-                .add(rewards[account]);
+        return balanceOf(account).mul(rewardPerToken().sub(userRewardPerTokenPaid[account])).div(1e18).add(
+            rewards[account]
+        );
     }
 
-    function stake(address _account, uint256)
-        public
-        updateReward(_account)
-        returns (bool)
-    {
+    function stake(address _account, uint256) public updateReward(_account) returns (bool) {
         index += 1;
         return true;
     }
 
-    function withdraw(address _account, uint256)
-        public
-        updateReward(_account)
-        returns (bool)
-    {
+    function withdraw(address _account, uint256) public updateReward(_account) returns (bool) {
         index += 1;
         return true;
     }
 
-    function getReward(address _account)
-        public
-        updateReward(_account)
-        returns (bool)
-    {
+    function getReward(address _account) public updateReward(_account) returns (bool) {
         uint256 reward = earned(_account);
         if (reward > 0) {
             rewards[_account] = 0;
@@ -127,10 +110,7 @@ contract ExtraRewardPoolMock is VirtualBalanceWrapper {
         return true;
     }
 
-    function notifyRewardAmount(uint256 reward)
-        internal
-        updateReward(address(0))
-    {}
+    function notifyRewardAmount(uint256 reward) internal updateReward(address(0)) {}
 
     ///
     /// MOCK FUNCTIONS

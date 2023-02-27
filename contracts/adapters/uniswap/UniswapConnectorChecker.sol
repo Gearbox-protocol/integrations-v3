@@ -37,9 +37,7 @@ abstract contract UniswapConnectorChecker {
         uint256 len = _connectorTokensInit.length;
 
         for (uint256 i = 0; i < 10; ++i) {
-            _connectorTokens[i] = i >= len
-                ? address(0)
-                : _connectorTokensInit[i];
+            _connectorTokens[i] = i >= len ? address(0) : _connectorTokensInit[i];
         }
 
         connectorToken0 = _connectorTokens[0];
@@ -57,29 +55,17 @@ abstract contract UniswapConnectorChecker {
     }
 
     function isConnector(address token) public view returns (bool) {
-        return
-            token == connectorToken0 ||
-            token == connectorToken1 ||
-            token == connectorToken2 ||
-            token == connectorToken3 ||
-            token == connectorToken4 ||
-            token == connectorToken5 ||
-            token == connectorToken6 ||
-            token == connectorToken7 ||
-            token == connectorToken8 ||
-            token == connectorToken9;
+        return token == connectorToken0 || token == connectorToken1 || token == connectorToken2
+            || token == connectorToken3 || token == connectorToken4 || token == connectorToken5 || token == connectorToken6
+            || token == connectorToken7 || token == connectorToken8 || token == connectorToken9;
     }
 
-    function getConnectors()
-        external
-        view
-        returns (address[] memory connectors)
-    {
+    function getConnectors() external view returns (address[] memory connectors) {
         uint256 len = numConnectors;
 
         connectors = new address[](len);
 
-        for (uint256 i = 0; i < len; ) {
+        for (uint256 i = 0; i < len;) {
             if (i == 0) connectors[0] = connectorToken0;
             if (i == 1) connectors[1] = connectorToken1;
             if (i == 2) connectors[2] = connectorToken2;

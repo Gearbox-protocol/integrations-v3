@@ -3,22 +3,22 @@
 // (c) Gearbox Holdings, 2022
 pragma solidity ^0.8.10;
 
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { PriceFeedMock } from "@gearbox-protocol/core-v2/contracts/test/mocks/oracles/PriceFeedMock.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {PriceFeedMock} from "@gearbox-protocol/core-v2/contracts/test/mocks/oracles/PriceFeedMock.sol";
 
-import { AggregatorV3Interface } from "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
+import {AggregatorV3Interface} from "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
 
-import { Tokens } from "./Tokens.sol";
-import { TokenType } from "../../integrations/TokenType.sol";
-import { DAI_WETH_RATE } from "../lib/constants.sol";
-import { TokenData } from "../suites/TokensTestSuite.sol";
+import {Tokens} from "./Tokens.sol";
+import {TokenType} from "../../integrations/TokenType.sol";
+import {DAI_WETH_RATE} from "../lib/constants.sol";
+import {TokenData} from "../suites/TokensTestSuite.sol";
 
-import { WETHMock } from "../mocks/token/WETHMock.sol";
-import { LidoMock } from "../mocks/integrations/LidoMock.sol";
-import { WstETHV1Mock } from "../mocks/integrations/WstETHV1Mock.sol";
-import { ERC20Mock } from "@gearbox-protocol/core-v2/contracts/test/mocks/token/ERC20Mock.sol";
-import { cERC20Mock } from "../mocks/token/cERC20Mock.sol";
-import { ChainlinkPriceFeedData } from "./PriceFeedDataLive.sol";
+import {WETHMock} from "../mocks/token/WETHMock.sol";
+import {LidoMock} from "../mocks/integrations/LidoMock.sol";
+import {WstETHV1Mock} from "../mocks/integrations/WstETHV1Mock.sol";
+import {ERC20Mock} from "@gearbox-protocol/core-v2/contracts/test/mocks/token/ERC20Mock.sol";
+import {cERC20Mock} from "../mocks/token/cERC20Mock.sol";
+import {ChainlinkPriceFeedData} from "./PriceFeedDataLive.sol";
 
 struct TestToken {
     Tokens index;
@@ -48,17 +48,13 @@ contract TokensData {
         return tokenData;
     }
 
-    function getTokensData()
-        internal
-        pure
-        returns (TestToken[] memory tokensData)
-    {
+    function getTokensData() internal pure returns (TestToken[] memory tokensData) {
         TestToken[14] memory coreTokensData = [
             TestToken({
                 index: Tokens.DAI,
                 symbol: "DAI",
                 decimals: 18,
-                price: 10**8,
+                price: 10 ** 8,
                 tokenType: TokenType.NORMAL_TOKEN,
                 underlying: Tokens.NO_TOKEN
             }),
@@ -66,7 +62,7 @@ contract TokensData {
                 index: Tokens.USDC,
                 symbol: "USDC",
                 decimals: 6,
-                price: 10**8,
+                price: 10 ** 8,
                 tokenType: TokenType.NORMAL_TOKEN,
                 underlying: Tokens.NO_TOKEN
             }),
@@ -74,7 +70,7 @@ contract TokensData {
                 index: Tokens.WETH,
                 symbol: "WETH",
                 decimals: 18,
-                price: int256(DAI_WETH_RATE) * 10**8,
+                price: int256(DAI_WETH_RATE) * 10 ** 8,
                 tokenType: TokenType.NORMAL_TOKEN,
                 underlying: Tokens.NO_TOKEN
             }),
@@ -82,7 +78,7 @@ contract TokensData {
                 index: Tokens.LINK,
                 symbol: "LINK",
                 decimals: 18,
-                price: 15 * 10**8,
+                price: 15 * 10 ** 8,
                 tokenType: TokenType.NORMAL_TOKEN,
                 underlying: Tokens.NO_TOKEN
             }),
@@ -90,7 +86,7 @@ contract TokensData {
                 index: Tokens.USDT,
                 symbol: "USDT",
                 decimals: 18,
-                price: 99 * 10**7, // .99 for test purposes
+                price: 99 * 10 ** 7, // .99 for test purposes
                 tokenType: TokenType.NORMAL_TOKEN,
                 underlying: Tokens.NO_TOKEN
             }),
@@ -98,7 +94,7 @@ contract TokensData {
                 index: Tokens.STETH,
                 symbol: "stETH",
                 decimals: 18,
-                price: 3300 * 10**8,
+                price: 3300 * 10 ** 8,
                 tokenType: TokenType.NORMAL_TOKEN,
                 underlying: Tokens.NO_TOKEN
             }),
@@ -106,7 +102,7 @@ contract TokensData {
                 index: Tokens.CRV,
                 symbol: "CRV",
                 decimals: 18,
-                price: 14 * 10**7,
+                price: 14 * 10 ** 7,
                 tokenType: TokenType.NORMAL_TOKEN,
                 underlying: Tokens.NO_TOKEN
             }),
@@ -114,7 +110,7 @@ contract TokensData {
                 index: Tokens.CVX,
                 symbol: "CVX",
                 decimals: 18,
-                price: 7 * 10**8,
+                price: 7 * 10 ** 8,
                 tokenType: TokenType.NORMAL_TOKEN,
                 underlying: Tokens.NO_TOKEN
             }),
@@ -130,7 +126,7 @@ contract TokensData {
                 index: Tokens.wstETH,
                 symbol: "wstETH",
                 decimals: 18,
-                price: 3300 * 10**8,
+                price: 3300 * 10 ** 8,
                 tokenType: TokenType.NORMAL_TOKEN,
                 underlying: Tokens.NO_TOKEN
             }),
@@ -138,7 +134,7 @@ contract TokensData {
                 index: Tokens.cDAI,
                 symbol: "cDAI",
                 decimals: 18,
-                price: 10**8,
+                price: 10 ** 8,
                 tokenType: TokenType.C_TOKEN,
                 underlying: Tokens.DAI
             }),
@@ -146,7 +142,7 @@ contract TokensData {
                 index: Tokens.cUSDC,
                 symbol: "cUSDC",
                 decimals: 6,
-                price: 10**8,
+                price: 10 ** 8,
                 tokenType: TokenType.C_TOKEN,
                 underlying: Tokens.USDC
             }),
@@ -154,7 +150,7 @@ contract TokensData {
                 index: Tokens.cUSDT,
                 symbol: "cUSDT",
                 decimals: 18,
-                price: 99 * 10**7, // .99 for test purposes
+                price: 99 * 10 ** 7, // .99 for test purposes
                 tokenType: TokenType.C_TOKEN,
                 underlying: Tokens.USDT
             }),
@@ -162,7 +158,7 @@ contract TokensData {
                 index: Tokens.cLINK,
                 symbol: "cLINK",
                 decimals: 18,
-                price: 15 * 10**8,
+                price: 15 * 10 ** 8,
                 tokenType: TokenType.C_TOKEN,
                 underlying: Tokens.LINK
             })
@@ -203,12 +199,8 @@ contract TokensData {
             revert("tokenTestSuite: Creating unknown token type");
         }
 
-        TokenData memory td = TokenData({
-            id: token.index,
-            addr: address(t),
-            symbol: token.symbol,
-            tokenType: token.tokenType
-        });
+        TokenData memory td =
+            TokenData({id: token.index, addr: address(t), symbol: token.symbol, tokenType: token.tokenType});
 
         addressOf[token.index] = address(t);
         tokenData.push(td);
@@ -221,22 +213,13 @@ contract TokensData {
 
         // tokenTypes[token.index] = token.tokenType;
 
-        chainlinkPriceFeedData.push(
-            ChainlinkPriceFeedData({
-                token: token.index,
-                priceFeed: address(priceFeed)
-            })
-        );
+        chainlinkPriceFeedData.push(ChainlinkPriceFeedData({token: token.index, priceFeed: address(priceFeed)}));
         // symbols[token.index] = token.symbol;
         // priceFeedsMap[token.index] = address(priceFeed);
         // tokenCount++;
     }
 
-    function getChainlinkPriceFeedData()
-        external
-        view
-        returns (ChainlinkPriceFeedData[] memory)
-    {
+    function getChainlinkPriceFeedData() external view returns (ChainlinkPriceFeedData[] memory) {
         return chainlinkPriceFeedData;
     }
 }

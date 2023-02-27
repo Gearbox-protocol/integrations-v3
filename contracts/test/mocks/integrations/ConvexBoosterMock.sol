@@ -13,13 +13,10 @@ contract BoosterMock {
     CheatCodes evm = CheatCodes(HEVM_ADDRESS);
 
     address public crv;
-    address public constant registry =
-        address(0x0000000022D53366457F9d5E68Ec105046FC4383);
+    address public constant registry = address(0x0000000022D53366457F9d5E68Ec105046FC4383);
     uint256 public constant distributionAddressId = 4;
-    address public constant voteOwnership =
-        address(0xE478de485ad2fe566d49342Cbd03E49ed7DB3356);
-    address public constant voteParameter =
-        address(0xBCfF8B0b9419b9A88c44546519b1e909cF330399);
+    address public constant voteOwnership = address(0xE478de485ad2fe566d49342Cbd03E49ed7DB3356);
+    address public constant voteParameter = address(0xBCfF8B0b9419b9A88c44546519b1e909cF330399);
 
     uint256 public lockIncentive = 1000; //incentive to crv stakers
     uint256 public stakerIncentive = 450; //incentive to native token stakers
@@ -93,9 +90,7 @@ contract BoosterMock {
         //create a tokenized deposit
         address token = address(new ERC20Mock("ConvexToken", "CVXTOKEN", 18));
         //create a reward contract for crv rewards
-        address newRewardPool = address(
-            new BaseRewardPoolMock(pid, token, crv, address(this))
-        );
+        address newRewardPool = address(new BaseRewardPoolMock(pid, token, crv, address(this)));
 
         //add the new pool
         poolInfo.push(
@@ -113,11 +108,7 @@ contract BoosterMock {
     }
 
     //deposit lp tokens and stake
-    function deposit(
-        uint256 _pid,
-        uint256 _amount,
-        bool _stake
-    ) public returns (bool) {
+    function deposit(uint256 _pid, uint256 _amount, bool _stake) public returns (bool) {
         PoolInfo storage pool = poolInfo[_pid];
 
         //send to proxy to stake
@@ -150,12 +141,7 @@ contract BoosterMock {
     }
 
     //withdraw lp tokens
-    function _withdraw(
-        uint256 _pid,
-        uint256 _amount,
-        address _from,
-        address _to
-    ) internal {
+    function _withdraw(uint256 _pid, uint256 _amount, address _from, address _to) internal {
         PoolInfo storage pool = poolInfo[_pid];
         address lptoken = pool.lptoken;
 
@@ -184,11 +170,7 @@ contract BoosterMock {
     }
 
     //allow reward contracts to send here and withdraw to user
-    function withdrawTo(
-        uint256 _pid,
-        uint256 _amount,
-        address _to
-    ) external returns (bool) {
+    function withdrawTo(uint256 _pid, uint256 _amount, address _to) external returns (bool) {
         address rewardContract = poolInfo[_pid].crvRewards;
         require(msg.sender == rewardContract, "!auth");
 
@@ -197,11 +179,7 @@ contract BoosterMock {
     }
 
     //callback from reward contract when crv is received.
-    function rewardClaimed(
-        uint256 _pid,
-        address _address,
-        uint256 _amount
-    ) external returns (bool) {
+    function rewardClaimed(uint256 _pid, address _address, uint256 _amount) external returns (bool) {
         address rewardContract = poolInfo[_pid].crvRewards;
         require(msg.sender == rewardContract, "!auth");
 

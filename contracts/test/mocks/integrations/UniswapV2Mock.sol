@@ -3,11 +3,11 @@
 // (c) Gearbox Holdings, 2022
 pragma solidity ^0.8.10;
 
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
-import { IUniswapV2Router02 } from "../../../integrations/uniswap/IUniswapV2Router02.sol";
-import { RAY } from "@gearbox-protocol/core-v2/contracts/libraries/Constants.sol";
+import {IUniswapV2Router02} from "../../../integrations/uniswap/IUniswapV2Router02.sol";
+import {RAY} from "@gearbox-protocol/core-v2/contracts/libraries/Constants.sol";
 
 contract UniswapV2Mock is IUniswapV2Router02 {
     using SafeERC20 for IERC20;
@@ -21,20 +21,12 @@ contract UniswapV2Mock is IUniswapV2Router02 {
         _;
     }
 
-    function setRate(
-        address tokenFrom,
-        address tokenTo,
-        uint256 rate_RAY
-    ) external {
+    function setRate(address tokenFrom, address tokenTo, uint256 rate_RAY) external {
         _rates_RAY[tokenFrom][tokenTo] = rate_RAY;
         _rates_RAY[tokenTo][tokenFrom] = (RAY * RAY) / rate_RAY;
     }
 
-    function getRate(address tokenIn, address tokenOut)
-        public
-        view
-        returns (uint256 rate)
-    {
+    function getRate(address tokenIn, address tokenOut) public view returns (uint256 rate) {
         rate = _rates_RAY[tokenIn][tokenOut];
         if (rate == 0) {
             revert("Token pair not found");
@@ -51,10 +43,7 @@ contract UniswapV2Mock is IUniswapV2Router02 {
         uint256[] memory amounts = getAmountsOut(amountIn, path);
 
         uint256 amountOut = amounts[path.length - 1];
-        require(
-            amountOut >= amountOutMin,
-            "UniswapV2Router: INSUFFICIENT_OUTPUT_AMOUNT"
-        );
+        require(amountOut >= amountOutMin, "UniswapV2Router: INSUFFICIENT_OUTPUT_AMOUNT");
 
         // tokenIN
         IERC20(path[0]).safeTransferFrom(msg.sender, address(this), amountIn);
@@ -79,10 +68,7 @@ contract UniswapV2Mock is IUniswapV2Router02 {
 
         uint256 amountIn = amounts[0];
 
-        require(
-            amountIn <= amountInMax,
-            "UniswapV2Router: EXCESSIVE_INPUT_AMOUNT"
-        );
+        require(amountIn <= amountInMax, "UniswapV2Router: EXCESSIVE_INPUT_AMOUNT");
 
         // tokenIN
         IERC20(path[0]).safeTransferFrom(msg.sender, address(this), amountIn);
@@ -215,9 +201,7 @@ contract UniswapV2Mock is IUniswapV2Router02 {
             require(rate_RAY != 0, "UniswapMock: Rate is not setup");
             // transfers
 
-            amounts[i] =
-                (((amounts[i - 1] * rate_RAY) / RAY) * FEE_MULTIPLIER) /
-                1_000;
+            amounts[i] = (((amounts[i - 1] * rate_RAY) / RAY) * FEE_MULTIPLIER) / 1_000;
         }
     }
 
@@ -237,9 +221,7 @@ contract UniswapV2Mock is IUniswapV2Router02 {
         for (uint256 i = path.length - 1; i > 0; i--) {
             uint256 rate_RAY = getRate(path[i - 1], path[i]);
             require(rate_RAY != 0, "UniswapMock: Rate is not setup");
-            amounts[i - 1] =
-                (((amounts[i] * RAY) / rate_RAY) * 1_000) /
-                FEE_MULTIPLIER;
+            amounts[i - 1] = (((amounts[i] * RAY) / rate_RAY) * 1_000) / FEE_MULTIPLIER;
         }
     }
 
@@ -256,16 +238,7 @@ contract UniswapV2Mock is IUniswapV2Router02 {
         uint256, // amountBMin,
         address, // to,
         uint256 // deadline
-    )
-        external
-        pure
-        override
-        returns (
-            uint256 amountA,
-            uint256 amountB,
-            uint256 liquidity
-        )
-    {}
+    ) external pure override returns (uint256 amountA, uint256 amountB, uint256 liquidity) {}
 
     function addLiquidityETH(
         address, // token,
@@ -274,16 +247,7 @@ contract UniswapV2Mock is IUniswapV2Router02 {
         uint256, // amountETHMin,
         address, // to,
         uint256 // deadline
-    )
-        external
-        payable
-        override
-        returns (
-            uint256 amountToken,
-            uint256 amountETH,
-            uint256 liquidity
-        )
-    {}
+    ) external payable override returns (uint256 amountToken, uint256 amountETH, uint256 liquidity) {}
 
     function removeLiquidity(
         address, // tokenA,

@@ -3,47 +3,43 @@
 // (c) Gearbox Holdings, 2023
 pragma solidity ^0.8.17;
 
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-import { AbstractAdapter } from "@gearbox-protocol/core-v2/contracts/adapters/AbstractAdapter.sol";
-import { AdapterType } from "@gearbox-protocol/core-v2/contracts/interfaces/adapters/IAdapter.sol";
+import {AbstractAdapter} from "@gearbox-protocol/core-v2/contracts/adapters/AbstractAdapter.sol";
+import {AdapterType} from "@gearbox-protocol/core-v2/contracts/interfaces/adapters/IAdapter.sol";
 
-import { IWrappedAToken } from "../../interfaces/aave/IWrappedAToken.sol";
-import { IAaveV2_WrappedATokenAdapter } from "../../interfaces/aave/IAaveV2_WrappedATokenAdapter.sol";
+import {IWrappedAToken} from "../../interfaces/aave/IWrappedAToken.sol";
+import {IAaveV2_WrappedATokenAdapter} from "../../interfaces/aave/IAaveV2_WrappedATokenAdapter.sol";
 
 /// @title Aave V2 Wrapped aToken adapter
 /// @notice Implements logic for CAs to convert between waTokens, aTokens and underlying tokens
-contract AaveV2_WrappedATokenAdapter is
-    AbstractAdapter,
-    IAaveV2_WrappedATokenAdapter
-{
+contract AaveV2_WrappedATokenAdapter is AbstractAdapter, IAaveV2_WrappedATokenAdapter {
     /// @notice Underlying aToken
     address public immutable override aToken;
 
     /// @notice Underlying token
     address public immutable override underlying;
 
-    AdapterType public constant _gearboxAdapterType =
-        AdapterType.AAVE_V2_WRAPPED_ATOKEN;
+    AdapterType public constant _gearboxAdapterType = AdapterType.AAVE_V2_WRAPPED_ATOKEN;
     uint16 public constant _gearboxAdapterVersion = 1;
 
     /// @notice Constructor
     /// @param _creditManager Credit manager address
     /// @param _waToken Wrapped aToken address
-    constructor(
-        address _creditManager,
-        address _waToken
-    ) AbstractAdapter(_creditManager, _waToken) {
-        if (creditManager.tokenMasksMap(targetContract) == 0)
+    constructor(address _creditManager, address _waToken) AbstractAdapter(_creditManager, _waToken) {
+        if (creditManager.tokenMasksMap(targetContract) == 0) {
             revert TokenIsNotInAllowedList(targetContract);
+        }
 
         aToken = address(IWrappedAToken(targetContract).aToken());
-        if (creditManager.tokenMasksMap(aToken) == 0)
+        if (creditManager.tokenMasksMap(aToken) == 0) {
             revert TokenIsNotInAllowedList(aToken);
+        }
 
         underlying = address(IWrappedAToken(targetContract).underlying());
-        if (creditManager.tokenMasksMap(underlying) == 0)
+        if (creditManager.tokenMasksMap(underlying) == 0) {
             revert TokenIsNotInAllowedList(underlying);
+        }
     }
 
     /// -------- ///
@@ -63,9 +59,7 @@ contract AaveV2_WrappedATokenAdapter is
 
     /// @notice Deposit given amount underlying tokens
     /// @param assets Amount of underlying tokens to deposit in exchange for waTokens
-    function depositUnderlying(
-        uint256 assets
-    ) external override creditFacadeOnly {
+    function depositUnderlying(uint256 assets) external override creditFacadeOnly {
         _deposit(assets, true);
     }
 
@@ -81,10 +75,7 @@ contract AaveV2_WrappedATokenAdapter is
     ///      - `disableTokenIn` is false because operation doesn't spend the entire balance
     function _deposit(uint256 assets, bool fromUnderlying) internal {
         _executeSwapSafeApprove(
-            fromUnderlying ? underlying : aToken,
-            targetContract,
-            _encodeDeposit(assets, fromUnderlying),
-            false
+            fromUnderlying ? underlying : aToken, targetContract, _encodeDeposit(assets, fromUnderlying), false
         );
     }
 
@@ -104,20 +95,11 @@ contract AaveV2_WrappedATokenAdapter is
             assets = balance - 1;
         }
 
-        _executeSwapSafeApprove(
-            creditAccount,
-            tokenIn,
-            targetContract,
-            _encodeDeposit(assets, fromUnderlying),
-            true
-        );
+        _executeSwapSafeApprove(creditAccount, tokenIn, targetContract, _encodeDeposit(assets, fromUnderlying), true);
     }
 
     /// @dev Returns data for `IWrappedAToken`'s `deposit` or `depositUnderlying` call
-    function _encodeDeposit(
-        uint256 assets,
-        bool fromUnderlying
-    ) internal pure returns (bytes memory callData) {
+    function _encodeDeposit(uint256 assets, bool fromUnderlying) internal pure returns (bytes memory callData) {
         callData = fromUnderlying
             ? abi.encodeCall(IWrappedAToken.depositUnderlying, (assets))
             : abi.encodeCall(IWrappedAToken.deposit, (assets));
@@ -140,9 +122,7 @@ contract AaveV2_WrappedATokenAdapter is
 
     /// @notice Withdraw given amount of waTokens for underlying tokens
     /// @param shares Amount of waTokens to burn in exchange for underlying tokens
-    function withdrawUnderlying(
-        uint256 shares
-    ) external override creditFacadeOnly {
+    function withdrawUnderlying(uint256 shares) external override creditFacadeOnly {
         _withdraw(shares, true);
     }
 
@@ -158,10 +138,7 @@ contract AaveV2_WrappedATokenAdapter is
     ///      - `disableTokenIn` is false because operation doesn't spend the entire balance
     function _withdraw(uint256 shares, bool toUnderlying) internal {
         _executeSwapNoApprove(
-            targetContract,
-            toUnderlying ? underlying : aToken,
-            _encodeWithdraw(shares, toUnderlying),
-            false
+            targetContract, toUnderlying ? underlying : aToken, _encodeWithdraw(shares, toUnderlying), false
         );
     }
 
@@ -190,10 +167,7 @@ contract AaveV2_WrappedATokenAdapter is
     }
 
     /// @dev Returns data for `IWrappedAToken`'s `withdraw` or `withdrawUnderlying` call
-    function _encodeWithdraw(
-        uint256 shares,
-        bool toUnderlying
-    ) internal pure returns (bytes memory callData) {
+    function _encodeWithdraw(uint256 shares, bool toUnderlying) internal pure returns (bytes memory callData) {
         callData = toUnderlying
             ? abi.encodeCall(IWrappedAToken.withdrawUnderlying, (shares))
             : abi.encodeCall(IWrappedAToken.withdraw, (shares));

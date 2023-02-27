@@ -3,17 +3,17 @@
 // (c) Gearbox Holdings, 2023
 pragma solidity ^0.8.17;
 
-import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
-import { ZeroAddressException } from "@gearbox-protocol/core-v2/contracts/interfaces/IErrors.sol";
-import { WAD } from "@gearbox-protocol/core-v2/contracts/libraries/Constants.sol";
+import {ZeroAddressException} from "@gearbox-protocol/core-v2/contracts/interfaces/IErrors.sol";
+import {WAD} from "@gearbox-protocol/core-v2/contracts/libraries/Constants.sol";
 
-import { IAToken } from "../../integrations/aave/IAToken.sol";
-import { ILendingPool } from "../../integrations/aave/ILendingPool.sol";
-import { IWrappedAToken } from "../../interfaces/aave/IWrappedAToken.sol";
+import {IAToken} from "../../integrations/aave/IAToken.sol";
+import {ILendingPool} from "../../integrations/aave/ILendingPool.sol";
+import {IWrappedAToken} from "../../interfaces/aave/IWrappedAToken.sol";
 
 /// @title Wrapped aToken
 /// @notice Non-rebasing wrapper of Aave V2 aToken
@@ -32,16 +32,10 @@ contract WrappedAToken is ERC20, IWrappedAToken {
 
     /// @dev Constructor
     /// @param _aToken Underlying aToken
-    constructor(
-        IAToken _aToken
-    )
+    constructor(IAToken _aToken)
         ERC20(
-            address(_aToken) != address(0)
-                ? string(abi.encodePacked("Wrapped ", _aToken.name()))
-                : "",
-            address(_aToken) != address(0)
-                ? string(abi.encodePacked("w", _aToken.symbol()))
-                : ""
+            address(_aToken) != address(0) ? string(abi.encodePacked("Wrapped ", _aToken.name())) : "",
+            address(_aToken) != address(0) ? string(abi.encodePacked("w", _aToken.symbol())) : ""
         )
     {
         if (address(_aToken) == address(0)) revert ZeroAddressException();
@@ -52,19 +46,12 @@ contract WrappedAToken is ERC20, IWrappedAToken {
     }
 
     /// @notice waToken decimals, same as underlying and aToken
-    function decimals()
-        public
-        view
-        override(ERC20, IERC20Metadata)
-        returns (uint8)
-    {
+    function decimals() public view override(ERC20, IERC20Metadata) returns (uint8) {
         return aToken.decimals();
     }
 
     /// @notice Returns amount of aTokens belonging to given account (increases as interest is accrued)
-    function balanceOfUnderlying(
-        address account
-    ) external view override returns (uint256) {
+    function balanceOfUnderlying(address account) external view override returns (uint256) {
         return (balanceOf(account) * exchangeRate()) / WAD;
     }
 
@@ -78,9 +65,7 @@ contract WrappedAToken is ERC20, IWrappedAToken {
     /// @notice Deposit given amount of aTokens (aToken must be approved before the call)
     /// @param assets Amount of aTokens to deposit in exchange for waTokens
     /// @return shares Amount of waTokens minted to the caller
-    function deposit(
-        uint256 assets
-    ) external override returns (uint256 shares) {
+    function deposit(uint256 assets) external override returns (uint256 shares) {
         aToken.transferFrom(msg.sender, address(this), assets);
         shares = _deposit(assets);
     }
@@ -88,9 +73,7 @@ contract WrappedAToken is ERC20, IWrappedAToken {
     /// @notice Deposit given amount underlying tokens (underlying must be approved before the call)
     /// @param assets Amount of underlying tokens to deposit in exchange for waTokens
     /// @return shares Amount of waTokens minted to the caller
-    function depositUnderlying(
-        uint256 assets
-    ) external override returns (uint256 shares) {
+    function depositUnderlying(uint256 assets) external override returns (uint256 shares) {
         underlying.safeTransferFrom(msg.sender, address(this), assets);
         underlying.safeApprove(address(lendingPool), assets);
         lendingPool.deposit(address(underlying), assets, address(this), 0);
@@ -100,9 +83,7 @@ contract WrappedAToken is ERC20, IWrappedAToken {
     /// @notice Withdraw given amount of waTokens for aTokens
     /// @param shares Amount of waTokens to burn in exchange for aTokens
     /// @return assets Amount of aTokens sent to the caller
-    function withdraw(
-        uint256 shares
-    ) external override returns (uint256 assets) {
+    function withdraw(uint256 shares) external override returns (uint256 assets) {
         assets = _withdraw(shares);
         aToken.transfer(msg.sender, assets);
     }
@@ -110,9 +91,7 @@ contract WrappedAToken is ERC20, IWrappedAToken {
     /// @notice Withdraw given amount of waTokens for underlying tokens
     /// @param shares Amount of waTokens to burn in exchange for underlying tokens
     /// @return assets Amount of underlying tokens sent to the caller
-    function withdrawUnderlying(
-        uint256 shares
-    ) external override returns (uint256 assets) {
+    function withdrawUnderlying(uint256 shares) external override returns (uint256 assets) {
         assets = _withdraw(shares);
         lendingPool.withdraw(address(underlying), assets, msg.sender);
     }

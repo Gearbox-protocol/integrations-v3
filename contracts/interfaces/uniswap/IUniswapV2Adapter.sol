@@ -3,7 +3,7 @@
 // (c) Gearbox Holdings, 2023
 pragma solidity ^0.8.17;
 
-import { IAdapter } from "@gearbox-protocol/core-v2/contracts/interfaces/adapters/IAdapter.sol";
+import {IAdapter} from "@gearbox-protocol/core-v2/contracts/interfaces/adapters/IAdapter.sol";
 
 interface IUniswapV2AdapterExceptions {
     /// @dev Thrown when sanity checks on a Uniswap path fail
@@ -27,9 +27,5 @@ interface IUniswapV2Adapter is IAdapter, IUniswapV2AdapterExceptions {
         uint256 deadline
     ) external;
 
-    function swapAllTokensForTokens(
-        uint256 rateMinRAY,
-        address[] calldata path,
-        uint256 deadline
-    ) external;
+    function swapAllTokensForTokens(uint256 rateMinRAY, address[] calldata path, uint256 deadline) external;
 }

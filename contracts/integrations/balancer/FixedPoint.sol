@@ -42,18 +42,11 @@ library FixedPoint {
         return (a * b) / ONE;
     }
 
-    function mulUp(uint256 a, uint256 b)
-        internal
-        pure
-        returns (uint256 result)
-    {
+    function mulUp(uint256 a, uint256 b) internal pure returns (uint256 result) {
         uint256 product = a * b;
 
         assembly {
-            result := mul(
-                iszero(iszero(product)),
-                add(div(sub(product, 1), ONE), 1)
-            )
+            result := mul(iszero(iszero(product)), add(div(sub(product, 1), ONE), 1))
         }
     }
 
@@ -61,20 +54,13 @@ library FixedPoint {
         return (a * ONE) / b;
     }
 
-    function divUp(uint256 a, uint256 b)
-        internal
-        pure
-        returns (uint256 result)
-    {
+    function divUp(uint256 a, uint256 b) internal pure returns (uint256 result) {
         require(b != 0, "zero division");
 
         uint256 aInflated = a * ONE;
 
         assembly {
-            result := mul(
-                iszero(iszero(aInflated)),
-                add(div(sub(aInflated, 1), b), 1)
-            )
+            result := mul(iszero(iszero(aInflated)), add(div(sub(aInflated, 1), b), 1))
         }
     }
 

@@ -3,13 +3,13 @@
 // (c) Gearbox Holdings, 2023
 pragma solidity ^0.8.17;
 
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-import { AbstractAdapter } from "@gearbox-protocol/core-v2/contracts/adapters/AbstractAdapter.sol";
-import { AdapterType } from "@gearbox-protocol/core-v2/contracts/interfaces/adapters/IAdapter.sol";
+import {AbstractAdapter} from "@gearbox-protocol/core-v2/contracts/adapters/AbstractAdapter.sol";
+import {AdapterType} from "@gearbox-protocol/core-v2/contracts/interfaces/adapters/IAdapter.sol";
 
-import { IEToken } from "../../integrations/euler/IEToken.sol";
-import { IEulerV1_ETokenAdapter } from "../../interfaces/euler/IEulerV1_ETokenAdapter.sol";
+import {IEToken} from "../../integrations/euler/IEToken.sol";
+import {IEulerV1_ETokenAdapter} from "../../interfaces/euler/IEulerV1_ETokenAdapter.sol";
 
 /// @title Euler eToken adapter
 /// @notice Implements logic for CAs to interact with Euler's eTokens
@@ -17,24 +17,22 @@ contract EulerV1_ETokenAdapter is AbstractAdapter, IEulerV1_ETokenAdapter {
     /// @notice Address of the eToken's underlying token
     address public immutable override underlying;
 
-    AdapterType public constant _gearboxAdapterType =
-        AdapterType.EULER_V1_ETOKEN;
+    AdapterType public constant _gearboxAdapterType = AdapterType.EULER_V1_ETOKEN;
     uint16 public constant _gearboxAdapterVersion = 1;
 
     /// @notice Constructor
     /// @param _creditManager Credit manager address
     /// @param _eToken eToken address
-    constructor(
-        address _creditManager,
-        address _eToken
-    ) AbstractAdapter(_creditManager, _eToken) {
+    constructor(address _creditManager, address _eToken) AbstractAdapter(_creditManager, _eToken) {
         underlying = IEToken(_eToken).underlyingAsset();
 
-        if (creditManager.tokenMasksMap(underlying) == 0)
+        if (creditManager.tokenMasksMap(underlying) == 0) {
             revert TokenIsNotInAllowedList(underlying);
+        }
 
-        if (creditManager.tokenMasksMap(targetContract) == 0)
+        if (creditManager.tokenMasksMap(targetContract) == 0) {
             revert TokenIsNotInAllowedList(targetContract);
+        }
     }
 
     /// -------- ///
@@ -45,10 +43,7 @@ contract EulerV1_ETokenAdapter is AbstractAdapter, IEulerV1_ETokenAdapter {
     /// @param amount Amount of underlying tokens to deposit, set to `type(uint256).max`
     ///        to deposit full amount (in this case, underlying will be disabled)
     /// @dev First param (`subAccountId`) is ignored since CAs can't use Euler's sub-accounts
-    function deposit(
-        uint256,
-        uint256 amount
-    ) external override creditFacadeOnly {
+    function deposit(uint256, uint256 amount) external override creditFacadeOnly {
         if (amount == type(uint256).max) {
             _depositAll();
         } else {
@@ -67,12 +62,7 @@ contract EulerV1_ETokenAdapter is AbstractAdapter, IEulerV1_ETokenAdapter {
     ///      - `tokenOut` is eToken
     ///      - `disableTokenIn` is set to false because operation doesn't spend the entire balance
     function _deposit(uint256 amount) internal {
-        _executeSwapSafeApprove(
-            underlying,
-            targetContract,
-            _encodeDeposit(amount),
-            false
-        );
+        _executeSwapSafeApprove(underlying, targetContract, _encodeDeposit(amount), false);
     }
 
     /// @dev Internal implementation of `depositAll` functionality
@@ -89,19 +79,11 @@ contract EulerV1_ETokenAdapter is AbstractAdapter, IEulerV1_ETokenAdapter {
         unchecked {
             amount = balance - 1;
         }
-        _executeSwapSafeApprove(
-            creditAccount,
-            underlying,
-            targetContract,
-            _encodeDeposit(amount),
-            true
-        );
+        _executeSwapSafeApprove(creditAccount, underlying, targetContract, _encodeDeposit(amount), true);
     }
 
     /// @dev Returns calldata for `IEToken.deposit` call
-    function _encodeDeposit(
-        uint256 amount
-    ) internal pure returns (bytes memory callData) {
+    function _encodeDeposit(uint256 amount) internal pure returns (bytes memory callData) {
         return abi.encodeCall(IEToken.deposit, (0, amount));
     }
 
@@ -113,10 +95,7 @@ contract EulerV1_ETokenAdapter is AbstractAdapter, IEulerV1_ETokenAdapter {
     /// @param amount Amount of underlying tokens to withdraw, set to `type(uint256).max`
     ///        to withdraw full amount (in this case, eToken will be disabled)
     /// @dev First param (`subAccountId`) is ignored since CAs can't use Euler's sub-accounts
-    function withdraw(
-        uint256,
-        uint256 amount
-    ) external override creditFacadeOnly {
+    function withdraw(uint256, uint256 amount) external override creditFacadeOnly {
         if (amount == type(uint256).max) {
             _withdrawAll();
         } else {
@@ -135,12 +114,7 @@ contract EulerV1_ETokenAdapter is AbstractAdapter, IEulerV1_ETokenAdapter {
     ///      - `tokenOut` is eToken's underlying token
     ///      - `disableTokenIn` is set to false because operation doesn't spend the entire balance
     function _withdraw(uint256 amount) internal {
-        _executeSwapNoApprove(
-            targetContract,
-            underlying,
-            _encodeWithdraw(amount),
-            false
-        );
+        _executeSwapNoApprove(targetContract, underlying, _encodeWithdraw(amount), false);
     }
 
     /// @dev Implementation of `withdrawAll` functionality
@@ -152,28 +126,18 @@ contract EulerV1_ETokenAdapter is AbstractAdapter, IEulerV1_ETokenAdapter {
         address creditAccount = _creditAccount();
         // NOTE: there is no guaranteed way to keep precisely 1 eToken on the balance
         // so we're keeping an equivalent of 1 underlying token
-        uint256 balance = IEToken(targetContract).balanceOfUnderlying(
-            creditAccount
-        );
+        uint256 balance = IEToken(targetContract).balanceOfUnderlying(creditAccount);
         if (balance <= 1) return;
 
         uint256 amount;
         unchecked {
             amount = balance - 1;
         }
-        _executeSwapNoApprove(
-            creditAccount,
-            targetContract,
-            underlying,
-            _encodeWithdraw(amount),
-            true
-        );
+        _executeSwapNoApprove(creditAccount, targetContract, underlying, _encodeWithdraw(amount), true);
     }
 
     /// @dev Returns calldata for `IEToken.withdraw` call
-    function _encodeWithdraw(
-        uint256 amount
-    ) internal pure returns (bytes memory callData) {
+    function _encodeWithdraw(uint256 amount) internal pure returns (bytes memory callData) {
         return abi.encodeCall(IEToken.withdraw, (0, amount));
     }
 }

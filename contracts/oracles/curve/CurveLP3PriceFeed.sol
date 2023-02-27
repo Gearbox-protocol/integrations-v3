@@ -3,12 +3,14 @@
 // (c) Gearbox Holdings, 2022
 pragma solidity ^0.8.10;
 
-import { AggregatorV3Interface } from "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
-import { AbstractCurveLPPriceFeed } from "./AbstractCurveLPPriceFeed.sol";
-import { PriceFeedType } from "@gearbox-protocol/core-v2/contracts/interfaces/IPriceFeedType.sol";
+import {AggregatorV3Interface} from "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
+import {AbstractCurveLPPriceFeed} from "./AbstractCurveLPPriceFeed.sol";
+import {PriceFeedType} from "@gearbox-protocol/core-v2/contracts/interfaces/IPriceFeedType.sol";
 
 // EXCEPTIONS
-import { ZeroAddressException, NotImplementedException } from "@gearbox-protocol/core-v2/contracts/interfaces/IErrors.sol";
+import {
+    ZeroAddressException, NotImplementedException
+} from "@gearbox-protocol/core-v2/contracts/interfaces/IErrors.sol";
 
 /// @title CurveLP price feed for 3 assets
 contract CurveLP3PriceFeed is AbstractCurveLPPriceFeed {
@@ -19,8 +21,7 @@ contract CurveLP3PriceFeed is AbstractCurveLPPriceFeed {
     /// @dev Price feed of coin 2 in the pool
     AggregatorV3Interface public immutable priceFeed3;
 
-    PriceFeedType public constant override priceFeedType =
-        PriceFeedType.CURVE_3LP_ORACLE;
+    PriceFeedType public constant override priceFeedType = PriceFeedType.CURVE_3LP_ORACLE;
 
     constructor(
         address addressProvider,
@@ -30,11 +31,9 @@ contract CurveLP3PriceFeed is AbstractCurveLPPriceFeed {
         address _priceFeed3,
         string memory _description
     ) AbstractCurveLPPriceFeed(addressProvider, _curvePool, _description) {
-        if (
-            _priceFeed1 == address(0) ||
-            _priceFeed2 == address(0) ||
-            _priceFeed3 == address(0)
-        ) revert ZeroAddressException();
+        if (_priceFeed1 == address(0) || _priceFeed2 == address(0) || _priceFeed3 == address(0)) {
+            revert ZeroAddressException();
+        }
 
         priceFeed1 = AggregatorV3Interface(_priceFeed1); // F:[OCLP-1]
         priceFeed2 = AggregatorV3Interface(_priceFeed2); // F:[OCLP-1]
@@ -48,13 +47,7 @@ contract CurveLP3PriceFeed is AbstractCurveLPPriceFeed {
         external
         view
         override
-        returns (
-            uint80 roundId,
-            int256 answer,
-            uint256 startedAt,
-            uint256 updatedAt,
-            uint80 answeredInRound
-        )
+        returns (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound)
     {
         uint80 roundIdA;
         int256 answerA;
@@ -62,19 +55,12 @@ contract CurveLP3PriceFeed is AbstractCurveLPPriceFeed {
         uint256 updatedAtA;
         uint80 answeredInRoundA;
 
-        (roundId, answer, startedAt, updatedAt, answeredInRound) = priceFeed1
-            .latestRoundData(); // F:[OCLP-5]
+        (roundId, answer, startedAt, updatedAt, answeredInRound) = priceFeed1.latestRoundData(); // F:[OCLP-5]
 
         // Sanity check for chainlink pricefeed
         _checkAnswer(roundId, answer, updatedAt, answeredInRound);
 
-        (
-            roundIdA,
-            answerA,
-            startedAtA,
-            updatedAtA,
-            answeredInRoundA
-        ) = priceFeed2.latestRoundData(); // F:[OCLP-5]
+        (roundIdA, answerA, startedAtA, updatedAtA, answeredInRoundA) = priceFeed2.latestRoundData(); // F:[OCLP-5]
 
         // Sanity check for chainlink pricefeed
         _checkAnswer(roundIdA, answerA, updatedAtA, answeredInRoundA);
@@ -87,13 +73,7 @@ contract CurveLP3PriceFeed is AbstractCurveLPPriceFeed {
             answeredInRound = answeredInRoundA;
         } // F:[OCLP-4]
 
-        (
-            roundIdA,
-            answerA,
-            startedAtA,
-            updatedAtA,
-            answeredInRoundA
-        ) = priceFeed3.latestRoundData(); // F:[OCLP-5]
+        (roundIdA, answerA, startedAtA, updatedAtA, answeredInRoundA) = priceFeed3.latestRoundData(); // F:[OCLP-5]
 
         // Sanity check for chainlink pricefeed
         _checkAnswer(roundIdA, answerA, updatedAtA, answeredInRoundA);

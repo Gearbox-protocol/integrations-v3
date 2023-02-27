@@ -3,34 +3,25 @@
 // (c) Gearbox Holdings, 2023
 pragma solidity ^0.8.17;
 
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-import { AdapterType } from "@gearbox-protocol/core-v2/contracts/interfaces/adapters/IAdapter.sol";
-import { AbstractAdapter } from "@gearbox-protocol/core-v2/contracts/adapters/AbstractAdapter.sol";
-import { RAY } from "@gearbox-protocol/core-v2/contracts/libraries/Constants.sol";
+import {AdapterType} from "@gearbox-protocol/core-v2/contracts/interfaces/adapters/IAdapter.sol";
+import {AbstractAdapter} from "@gearbox-protocol/core-v2/contracts/adapters/AbstractAdapter.sol";
+import {RAY} from "@gearbox-protocol/core-v2/contracts/libraries/Constants.sol";
 
-import { IUniswapV2Router02 } from "../../integrations/uniswap/IUniswapV2Router02.sol";
-import { IUniswapV2Adapter } from "../../interfaces/uniswap/IUniswapV2Adapter.sol";
-import { UniswapConnectorChecker } from "./UniswapConnectorChecker.sol";
+import {IUniswapV2Router02} from "../../integrations/uniswap/IUniswapV2Router02.sol";
+import {IUniswapV2Adapter} from "../../interfaces/uniswap/IUniswapV2Adapter.sol";
+import {UniswapConnectorChecker} from "./UniswapConnectorChecker.sol";
 
 /// @title Uniswap V2 Router adapter
-contract UniswapV2Adapter is
-    AbstractAdapter,
-    UniswapConnectorChecker,
-    IUniswapV2Adapter
-{
-    AdapterType public constant _gearboxAdapterType =
-        AdapterType.UNISWAP_V2_ROUTER;
+contract UniswapV2Adapter is AbstractAdapter, UniswapConnectorChecker, IUniswapV2Adapter {
+    AdapterType public constant _gearboxAdapterType = AdapterType.UNISWAP_V2_ROUTER;
     uint16 public constant _gearboxAdapterVersion = 3;
 
     /// @dev Constructor
     /// @param _creditManager Address Credit manager
     /// @param _router Address of IUniswapV2Router02
-    constructor(
-        address _creditManager,
-        address _router,
-        address[] memory _connectorTokensInit
-    )
+    constructor(address _creditManager, address _router, address[] memory _connectorTokensInit)
         AbstractAdapter(_creditManager, _router)
         UniswapConnectorChecker(_connectorTokensInit)
     {}
@@ -71,8 +62,7 @@ contract UniswapV2Adapter is
             tokenIn,
             tokenOut,
             abi.encodeCall(
-                IUniswapV2Router02.swapTokensForExactTokens,
-                (amountOut, amountInMax, path, creditAccount, deadline)
+                IUniswapV2Router02.swapTokensForExactTokens, (amountOut, amountInMax, path, creditAccount, deadline)
             ),
             false
         ); // F:[AUV2-2]
@@ -114,8 +104,7 @@ contract UniswapV2Adapter is
             tokenIn,
             tokenOut,
             abi.encodeCall(
-                IUniswapV2Router02.swapExactTokensForTokens,
-                (amountIn, amountOutMin, path, creditAccount, deadline)
+                IUniswapV2Router02.swapExactTokensForTokens, (amountIn, amountOutMin, path, creditAccount, deadline)
             ),
             false
         ); // F:[AUV2-3]
@@ -136,11 +125,11 @@ contract UniswapV2Adapter is
      * Input token is allowed, since the target does a transferFrom for the input token
      * The input token does need to be disabled, because this spends the entire balance
      */
-    function swapAllTokensForTokens(
-        uint256 rateMinRAY,
-        address[] calldata path,
-        uint256 deadline
-    ) external override creditFacadeOnly {
+    function swapAllTokensForTokens(uint256 rateMinRAY, address[] calldata path, uint256 deadline)
+        external
+        override
+        creditFacadeOnly
+    {
         address creditAccount = _creditAccount(); // F:[AUV2-1]
 
         address tokenIn;
@@ -167,13 +156,7 @@ contract UniswapV2Adapter is
                 tokenOut,
                 abi.encodeCall(
                     IUniswapV2Router02.swapExactTokensForTokens,
-                    (
-                        balanceInBefore,
-                        (balanceInBefore * rateMinRAY) / RAY,
-                        path,
-                        creditAccount,
-                        deadline
-                    )
+                    (balanceInBefore, (balanceInBefore * rateMinRAY) / RAY, path, creditAccount, deadline)
                 ),
                 true
             ); // F:[AUV2-4]
@@ -184,9 +167,11 @@ contract UniswapV2Adapter is
     /// @param path Path to check
     /// @notice Sanity checks include path length not being more than 4 (more than 3 hops) and intermediary tokens
     ///         being allowed as connectors
-    function _parseUniV2Path(
-        address[] memory path
-    ) internal view returns (bool valid, address tokenIn, address tokenOut) {
+    function _parseUniV2Path(address[] memory path)
+        internal
+        view
+        returns (bool valid, address tokenIn, address tokenOut)
+    {
         valid = true;
         tokenIn = path[0];
         tokenOut = path[path.length - 1];
@@ -197,7 +182,7 @@ contract UniswapV2Adapter is
             valid = false;
         }
 
-        for (uint256 i = 1; i < len - 1; ) {
+        for (uint256 i = 1; i < len - 1;) {
             if (!isConnector(path[i])) {
                 valid = false;
             }

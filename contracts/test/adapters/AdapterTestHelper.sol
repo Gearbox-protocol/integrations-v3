@@ -3,22 +3,25 @@
 // (c) Gearbox Holdings, 2023
 pragma solidity ^0.8.17;
 
-import { ICreditManagerV2, ICreditManagerV2Events } from "@gearbox-protocol/core-v2/contracts/interfaces/ICreditManagerV2.sol";
-import { ICreditFacadeEvents } from "@gearbox-protocol/core-v2/contracts/interfaces/ICreditFacade.sol";
-import { IAdapterExceptions } from "@gearbox-protocol/core-v2/contracts/interfaces/adapters/IAdapter.sol";
+import {
+    ICreditManagerV2,
+    ICreditManagerV2Events
+} from "@gearbox-protocol/core-v2/contracts/interfaces/ICreditManagerV2.sol";
+import {ICreditFacadeEvents} from "@gearbox-protocol/core-v2/contracts/interfaces/ICreditFacade.sol";
+import {IAdapterExceptions} from "@gearbox-protocol/core-v2/contracts/interfaces/adapters/IAdapter.sol";
 
 // TEST
 import "../lib/constants.sol";
 
 // SUITES
-import { TokensTestSuite } from "../suites/TokensTestSuite.sol";
-import { Tokens } from "../config/Tokens.sol";
+import {TokensTestSuite} from "../suites/TokensTestSuite.sol";
+import {Tokens} from "../config/Tokens.sol";
 
-import { CreditFacadeTestSuite } from "@gearbox-protocol/core-v2/contracts/test/suites/CreditFacadeTestSuite.sol";
+import {CreditFacadeTestSuite} from "@gearbox-protocol/core-v2/contracts/test/suites/CreditFacadeTestSuite.sol";
 
-import { BalanceHelper } from "../helpers/BalanceHelper.sol";
-import { CreditFacadeTestHelper } from "../helpers/CreditFacadeTestHelper.sol";
-import { CreditConfig } from "../config/CreditConfig.sol";
+import {BalanceHelper} from "../helpers/BalanceHelper.sol";
+import {CreditFacadeTestHelper} from "../helpers/CreditFacadeTestHelper.sol";
+import {CreditConfig} from "../config/CreditConfig.sol";
 
 contract AdapterTestHelper is
     DSTest,
@@ -34,13 +37,10 @@ contract AdapterTestHelper is
     }
 
     function _setUp(Tokens t) internal {
-        require(
-            t == Tokens.DAI || t == Tokens.WETH || t == Tokens.STETH,
-            "Unsupported token"
-        );
+        require(t == Tokens.DAI || t == Tokens.WETH || t == Tokens.STETH, "Unsupported token");
 
         tokenTestSuite = new TokensTestSuite();
-        tokenTestSuite.topUpWETH{ value: 100 * WAD }();
+        tokenTestSuite.topUpWETH{value: 100 * WAD}();
 
         CreditConfig creditConfig = new CreditConfig(tokenTestSuite, t);
 
@@ -73,24 +73,15 @@ contract AdapterTestHelper is
         if (allowTokenIn) {
             evm.expectCall(
                 address(creditManager),
-                abi.encodeCall(
-                    ICreditManagerV2.approveCreditAccount,
-                    (targetContract, tokenIn, type(uint256).max)
-                )
+                abi.encodeCall(ICreditManagerV2.approveCreditAccount, (targetContract, tokenIn, type(uint256).max))
             );
         }
 
         evm.expectCall(
-            address(creditManager),
-            abi.encodeCall(
-                ICreditManagerV2.executeOrder,
-                (targetContract, callData)
-            )
+            address(creditManager), abi.encodeCall(ICreditManagerV2.executeOrder, (targetContract, callData))
         );
 
-        address creditAccount = creditManager.getCreditAccountOrRevert(
-            borrower
-        );
+        address creditAccount = creditManager.getCreditAccountOrRevert(borrower);
         evm.expectEmit(true, true, false, false);
         emit ExecuteOrder(creditAccount, targetContract);
 
@@ -99,11 +90,7 @@ contract AdapterTestHelper is
                 address(creditManager),
                 abi.encodeCall(
                     ICreditManagerV2.approveCreditAccount,
-                    (
-                        targetContract,
-                        tokenIn,
-                        safeApprove ? 1 : type(uint256).max
-                    )
+                    (targetContract, tokenIn, safeApprove ? 1 : type(uint256).max)
                 )
             );
         }
@@ -121,15 +108,6 @@ contract AdapterTestHelper is
         address tokenOut,
         bool safeApprove
     ) internal {
-        expectMulticallStackCalls(
-            adapter,
-            targetContract,
-            borrower,
-            callData,
-            tokenIn,
-            tokenOut,
-            safeApprove,
-            true
-        );
+        expectMulticallStackCalls(adapter, targetContract, borrower, callData, tokenIn, tokenOut, safeApprove, true);
     }
 }

@@ -13,20 +13,9 @@ interface IUniswapPathChecker {
     function parseUniV2Path(address[] memory path)
         external
         view
-        returns (
-            bool valid,
-            address tokenIn,
-            address tokenOut
-        );
+        returns (bool valid, address tokenIn, address tokenOut);
 
     /// @dev Performs sanity checks on a Uniswap V3 path (result is returned as `valid`) and returns input/output tokens
     /// @param path UniswapV3 bytes-encoded path
-    function parseUniV3Path(bytes memory path)
-        external
-        view
-        returns (
-            bool valid,
-            address tokenIn,
-            address tokenOut
-        );
+    function parseUniV3Path(bytes memory path) external view returns (bool valid, address tokenIn, address tokenOut);
 }

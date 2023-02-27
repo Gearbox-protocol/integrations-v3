@@ -2,14 +2,15 @@
 // Gearbox. Generalized leverage protocol that allows to take leverage and then use it across other DeFi protocols and platforms in a composable way.
 // (c) Gearbox Holdings, 2022
 pragma solidity ^0.8.10;
-import { Tokens } from "../suites/TokensTestSuite.sol";
 
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {Tokens} from "../suites/TokensTestSuite.sol";
+
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 // TEST
 
 import "../lib/constants.sol";
-import { TokensTestSuite } from "../suites/TokensTestSuite.sol";
+import {TokensTestSuite} from "../suites/TokensTestSuite.sol";
 
 struct BalanceBackup {
     string stage;
@@ -29,11 +30,7 @@ contract BalanceComparator is DSTest {
     string[] public stages;
     mapping(string => bool) _allowedStages;
 
-    constructor(
-        string[] memory _stages,
-        Tokens[] memory _tokensToTrack,
-        TokensTestSuite _tokenTestSuite
-    ) {
+    constructor(string[] memory _stages, Tokens[] memory _tokensToTrack, TokensTestSuite _tokenTestSuite) {
         tokenTestSuite = _tokenTestSuite;
         uint256 len = _tokensToTrack.length;
         unchecked {
@@ -57,19 +54,13 @@ contract BalanceComparator is DSTest {
         unchecked {
             for (uint256 i; i < len; ++i) {
                 Tokens t = tokensToTrack[i];
-                uint256 balance = IERC20(tokenTestSuite.addressOf(t)).balanceOf(
-                    holder
-                );
+                uint256 balance = IERC20(tokenTestSuite.addressOf(t)).balanceOf(holder);
                 savedBalances[stage][t][holder] = balance;
             }
         }
     }
 
-    function exportSnapshots(address holder)
-        external
-        view
-        returns (BalanceBackup[] memory result)
-    {
+    function exportSnapshots(address holder) external view returns (BalanceBackup[] memory result) {
         uint256 lenStages = stages.length;
         uint256 len = tokensToTrack.length;
         unchecked {
@@ -80,28 +71,18 @@ contract BalanceComparator is DSTest {
                     Tokens t = tokensToTrack[i];
                     string memory stage = stages[j];
 
-                    result[i + j * len] = BalanceBackup({
-                        stage: stage,
-                        token: t,
-                        balance: savedBalances[stage][t][holder]
-                    });
+                    result[i + j * len] =
+                        BalanceBackup({stage: stage, token: t, balance: savedBalances[stage][t][holder]});
                 }
             }
         }
     }
 
-    function compareAllSnapshots(
-        address holder,
-        BalanceBackup[] memory savedSnapshots
-    ) public {
+    function compareAllSnapshots(address holder, BalanceBackup[] memory savedSnapshots) public {
         compareAllSnapshots(holder, savedSnapshots, 0);
     }
 
-    function compareAllSnapshots(
-        address holder,
-        BalanceBackup[] memory savedSnapshots,
-        uint256 expectedError
-    ) public {
+    function compareAllSnapshots(address holder, BalanceBackup[] memory savedSnapshots, uint256 expectedError) public {
         uint256 len = savedSnapshots.length;
         unchecked {
             for (uint256 i; i < len; ++i) {
@@ -125,20 +106,14 @@ contract BalanceComparator is DSTest {
                             savedBalances[stage][t][COMPARE_WITH],
                             string(
                                 abi.encodePacked(
-                                    "Balances are not equal for ",
-                                    stage,
-                                    " for ",
-                                    tokenTestSuite.symbols(t)
+                                    "Balances are not equal for ", stage, " for ", tokenTestSuite.symbols(t)
                                 )
                             )
                         );
                     } else {
-                        uint256 diff = savedBalances[stage][t][holder] >
-                            savedBalances[stage][t][COMPARE_WITH]
-                            ? savedBalances[stage][t][holder] -
-                                savedBalances[stage][t][COMPARE_WITH]
-                            : savedBalances[stage][t][COMPARE_WITH] -
-                                savedBalances[stage][t][holder];
+                        uint256 diff = savedBalances[stage][t][holder] > savedBalances[stage][t][COMPARE_WITH]
+                            ? savedBalances[stage][t][holder] - savedBalances[stage][t][COMPARE_WITH]
+                            : savedBalances[stage][t][COMPARE_WITH] - savedBalances[stage][t][holder];
 
                         assertLe(
                             diff,

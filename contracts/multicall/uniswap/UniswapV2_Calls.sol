@@ -3,8 +3,8 @@
 // (c) Gearbox Holdings, 2023
 pragma solidity ^0.8.17;
 
-import { MultiCall } from "@gearbox-protocol/core-v2/contracts/libraries/MultiCall.sol";
-import { IUniswapV2Adapter } from "../../interfaces/uniswap/IUniswapV2Adapter.sol";
+import {MultiCall} from "@gearbox-protocol/core-v2/contracts/libraries/MultiCall.sol";
+import {IUniswapV2Adapter} from "../../interfaces/uniswap/IUniswapV2Adapter.sol";
 
 interface UniswapV2_Multicaller {}
 
@@ -17,14 +17,12 @@ library UniswapV2_Calls {
         address recipient,
         uint256 deadline
     ) internal pure returns (MultiCall memory) {
-        return
-            MultiCall({
-                target: address(c),
-                callData: abi.encodeCall(
-                    IUniswapV2Adapter.swapTokensForExactTokens,
-                    (amountOut, amountInMax, path, recipient, deadline)
+        return MultiCall({
+            target: address(c),
+            callData: abi.encodeCall(
+                IUniswapV2Adapter.swapTokensForExactTokens, (amountOut, amountInMax, path, recipient, deadline)
                 )
-            });
+        });
     }
 
     function swapExactTokensForTokens(
@@ -35,14 +33,12 @@ library UniswapV2_Calls {
         address recipient,
         uint256 deadline
     ) internal pure returns (MultiCall memory) {
-        return
-            MultiCall({
-                target: address(c),
-                callData: abi.encodeCall(
-                    IUniswapV2Adapter.swapExactTokensForTokens,
-                    (amountIn, amountOutMin, path, recipient, deadline)
+        return MultiCall({
+            target: address(c),
+            callData: abi.encodeCall(
+                IUniswapV2Adapter.swapExactTokensForTokens, (amountIn, amountOutMin, path, recipient, deadline)
                 )
-            });
+        });
     }
 
     function swapAllTokensForTokens(
@@ -51,13 +47,9 @@ library UniswapV2_Calls {
         address[] memory path,
         uint256 deadline
     ) internal pure returns (MultiCall memory) {
-        return
-            MultiCall({
-                target: address(c),
-                callData: abi.encodeCall(
-                    IUniswapV2Adapter.swapAllTokensForTokens,
-                    (rateMinRAY, path, deadline)
-                )
-            });
+        return MultiCall({
+            target: address(c),
+            callData: abi.encodeCall(IUniswapV2Adapter.swapAllTokensForTokens, (rateMinRAY, path, deadline))
+        });
     }
 }

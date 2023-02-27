@@ -7,9 +7,9 @@ import "../../../integrations/convex/Interfaces.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import { ERC20Mock } from "@gearbox-protocol/core-v2/contracts/test/mocks/token/ERC20Mock.sol";
-import { CheatCodes, HEVM_ADDRESS } from "@gearbox-protocol/core-v2/contracts/test/lib/cheatCodes.sol";
-import { MathUtil } from "@gearbox-protocol/core-v2/contracts/test/lib/MathUtil.sol";
+import {ERC20Mock} from "@gearbox-protocol/core-v2/contracts/test/mocks/token/ERC20Mock.sol";
+import {CheatCodes, HEVM_ADDRESS} from "@gearbox-protocol/core-v2/contracts/test/lib/cheatCodes.sol";
+import {MathUtil} from "@gearbox-protocol/core-v2/contracts/test/lib/MathUtil.sol";
 
 contract BaseRewardPoolMock {
     CheatCodes evm = CheatCodes(HEVM_ADDRESS);
@@ -45,12 +45,7 @@ contract BaseRewardPoolMock {
     uint256 totalRewards = 0;
     uint256 index = 0;
 
-    constructor(
-        uint256 pid_,
-        address stakingToken_,
-        address rewardToken_,
-        address operator_
-    ) {
+    constructor(uint256 pid_, address stakingToken_, address rewardToken_, address operator_) {
         pid = pid_;
         stakingToken = IERC20(stakingToken_);
         rewardToken = ERC20Mock(rewardToken_);
@@ -93,22 +88,16 @@ contract BaseRewardPoolMock {
     }
 
     function earned(address account) public view returns (uint256) {
-        return
-            balanceOf(account)
-                .mul(rewardPerToken().sub(userRewardPerTokenPaid[account]))
-                .div(1e18)
-                .add(rewards[account]);
+        return balanceOf(account).mul(rewardPerToken().sub(userRewardPerTokenPaid[account])).div(1e18).add(
+            rewards[account]
+        );
     }
 
     function lastTimeRewardApplicable() public view returns (uint256) {
         return MathUtil.min(block.timestamp, periodFinish);
     }
 
-    function stake(uint256 _amount)
-        public
-        updateReward(msg.sender)
-        returns (bool)
-    {
+    function stake(uint256 _amount) public updateReward(msg.sender) returns (bool) {
         require(_amount > 0, "RewardPool : Cannot stake 0");
 
         //also stake to linked rewards
@@ -132,11 +121,7 @@ contract BaseRewardPoolMock {
         return true;
     }
 
-    function stakeFor(address _for, uint256 _amount)
-        public
-        updateReward(_for)
-        returns (bool)
-    {
+    function stakeFor(address _for, uint256 _amount) public updateReward(_for) returns (bool) {
         require(_amount > 0, "RewardPool : Cannot stake 0");
 
         //also stake to linked rewards
@@ -156,11 +141,7 @@ contract BaseRewardPoolMock {
         return true;
     }
 
-    function withdraw(uint256 amount, bool claim)
-        public
-        updateReward(msg.sender)
-        returns (bool)
-    {
+    function withdraw(uint256 amount, bool claim) public updateReward(msg.sender) returns (bool) {
         require(amount > 0, "RewardPool : Cannot withdraw 0");
 
         //also withdraw from linked rewards
@@ -185,11 +166,7 @@ contract BaseRewardPoolMock {
         withdraw(_balances[msg.sender], claim);
     }
 
-    function withdrawAndUnwrap(uint256 amount, bool claim)
-        public
-        updateReward(msg.sender)
-        returns (bool)
-    {
+    function withdrawAndUnwrap(uint256 amount, bool claim) public updateReward(msg.sender) returns (bool) {
         //also withdraw from linked rewards
         for (uint256 i = 0; i < extraRewards.length; i++) {
             IRewards(extraRewards[i]).withdraw(msg.sender, amount);
@@ -214,11 +191,7 @@ contract BaseRewardPoolMock {
         withdrawAndUnwrap(_balances[msg.sender], claim);
     }
 
-    function getReward(address _account, bool _claimExtras)
-        public
-        updateReward(_account)
-        returns (bool)
-    {
+    function getReward(address _account, bool _claimExtras) public updateReward(_account) returns (bool) {
         uint256 reward = earned(_account);
         if (reward > 0) {
             rewards[_account] = 0;
@@ -250,10 +223,7 @@ contract BaseRewardPoolMock {
         return true;
     }
 
-    function notifyRewardAmount(uint256 reward)
-        internal
-        updateReward(address(0))
-    {}
+    function notifyRewardAmount(uint256 reward) internal updateReward(address(0)) {}
 
     ///
     /// MOCK FUNCTIONS

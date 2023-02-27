@@ -3,22 +3,26 @@
 // (c) Gearbox Holdings, 2023
 pragma solidity ^0.8.17;
 
-import { LidoV1Adapter, LIDO_STETH_LIMIT } from "../../../adapters/lido/LidoV1.sol";
-import { ILidoV1AdapterEvents, ILidoV1AdapterExceptions } from "../../../interfaces/lido/ILidoV1Adapter.sol";
-import { LidoV1Gateway } from "../../../adapters/lido/LidoV1_WETHGateway.sol";
-import { LidoMock, ILidoMockEvents } from "../../mocks/integrations/LidoMock.sol";
+import {LidoV1Adapter, LIDO_STETH_LIMIT} from "../../../adapters/lido/LidoV1.sol";
+import {ILidoV1AdapterEvents, ILidoV1AdapterExceptions} from "../../../interfaces/lido/ILidoV1Adapter.sol";
+import {LidoV1Gateway} from "../../../adapters/lido/LidoV1_WETHGateway.sol";
+import {LidoMock, ILidoMockEvents} from "../../mocks/integrations/LidoMock.sol";
 
-import { Tokens } from "../../suites/TokensTestSuite.sol";
+import {Tokens} from "../../suites/TokensTestSuite.sol";
 
 // TEST
 import "../../lib/constants.sol";
 
-import { AdapterTestHelper } from "../AdapterTestHelper.sol";
+import {AdapterTestHelper} from "../AdapterTestHelper.sol";
 
 // EXCEPTIONS
 
-import { ZeroAddressException, CallerNotConfiguratorException, NotImplementedException } from "@gearbox-protocol/core-v2/contracts/interfaces/IErrors.sol";
-import { ICreditManagerV2Exceptions } from "@gearbox-protocol/core-v2/contracts/interfaces/ICreditManagerV2.sol";
+import {
+    ZeroAddressException,
+    CallerNotConfiguratorException,
+    NotImplementedException
+} from "@gearbox-protocol/core-v2/contracts/interfaces/IErrors.sol";
+import {ICreditManagerV2Exceptions} from "@gearbox-protocol/core-v2/contracts/interfaces/ICreditManagerV2.sol";
 
 uint256 constant STETH_POOLED_ETH = 2 * WAD;
 uint256 constant STETH_TOTAL_SHARES = WAD;
@@ -56,10 +60,7 @@ contract LidoV1AdapterTest is
         treasury = lidoV1Adapter.treasury();
 
         evm.prank(CONFIGURATOR);
-        creditConfigurator.allowContract(
-            address(lidoV1Gateway),
-            address(lidoV1Adapter)
-        );
+        creditConfigurator.allowContract(address(lidoV1Gateway), address(lidoV1Adapter));
 
         treasury = cft.addressProvider().getTreasuryContract();
 
@@ -80,66 +81,32 @@ contract LidoV1AdapterTest is
 
     /// @dev [LDOV1-1]: Constructor sets correct parameters
     function test_LDOV1_01_constructor_sets_correct_params() public {
-        assertEq(
-            lidoV1Adapter.stETH(),
-            address(lidoV1Mock),
-            "stETH address incorrect"
-        );
+        assertEq(lidoV1Adapter.stETH(), address(lidoV1Mock), "stETH address incorrect");
 
-        assertEq(
-            lidoV1Adapter.weth(),
-            tokenTestSuite.addressOf(Tokens.WETH),
-            "WETH address incorrect"
-        );
+        assertEq(lidoV1Adapter.weth(), tokenTestSuite.addressOf(Tokens.WETH), "WETH address incorrect");
 
-        assertEq(
-            lidoV1Adapter.treasury(),
-            cft.addressProvider().getTreasuryContract(),
-            "Treasury address incorrect"
-        );
+        assertEq(lidoV1Adapter.treasury(), cft.addressProvider().getTreasuryContract(), "Treasury address incorrect");
 
-        assertEq(
-            lidoV1Adapter.limit(),
-            LIDO_STETH_LIMIT,
-            "Limit is set incorrect"
-        );
+        assertEq(lidoV1Adapter.limit(), LIDO_STETH_LIMIT, "Limit is set incorrect");
     }
 
     /// @dev [LDOV1-2]: submit and submitAll reverts if user has no account
-    function test_LDOV1_02_submit_and_submitAll_reverts_if_user_has_no_account()
-        public
-    {
-        evm.expectRevert(
-            ICreditManagerV2Exceptions.HasNoOpenedAccountException.selector
-        );
-        executeOneLineMulticall(
-            address(lidoV1Adapter),
-            abi.encodeCall(lidoV1Adapter.submit, (2 * WAD))
-        );
+    function test_LDOV1_02_submit_and_submitAll_reverts_if_user_has_no_account() public {
+        evm.expectRevert(ICreditManagerV2Exceptions.HasNoOpenedAccountException.selector);
+        executeOneLineMulticall(address(lidoV1Adapter), abi.encodeCall(lidoV1Adapter.submit, (2 * WAD)));
 
-        evm.expectRevert(
-            ICreditManagerV2Exceptions.HasNoOpenedAccountException.selector
-        );
-        executeOneLineMulticall(
-            address(lidoV1Adapter),
-            abi.encodeCall(lidoV1Adapter.submitAll, ())
-        );
+        evm.expectRevert(ICreditManagerV2Exceptions.HasNoOpenedAccountException.selector);
+        executeOneLineMulticall(address(lidoV1Adapter), abi.encodeCall(lidoV1Adapter.submitAll, ()));
     }
 
     /// @dev [LDOV1-3]: Submit works correctly and fires events
     function test_LDOV1_03_submit_works_correctly() public {
         setUp();
-        (
-            address creditAccount,
-            uint256 initialWETHamount
-        ) = _openTestCreditAccount();
+        (address creditAccount, uint256 initialWETHamount) = _openTestCreditAccount();
 
         expectAllowance(Tokens.WETH, creditAccount, address(lidoV1Gateway), 0);
 
-        bytes memory expectedCallData = abi.encodeCall(
-            LidoV1Gateway.submit,
-            (2 * WAD, DUMB_ADDRESS)
-        );
+        bytes memory expectedCallData = abi.encodeCall(LidoV1Gateway.submit, (2 * WAD, DUMB_ADDRESS));
 
         expectMulticallStackCalls(
             address(lidoV1Adapter),
@@ -151,24 +118,15 @@ contract LidoV1AdapterTest is
             true
         );
 
-        executeOneLineMulticall(
-            address(lidoV1Adapter),
-            abi.encodeCall(LidoV1Adapter.submit, (2 * WAD))
-        );
+        executeOneLineMulticall(address(lidoV1Adapter), abi.encodeCall(LidoV1Adapter.submit, (2 * WAD)));
 
         expectBalance(Tokens.WETH, creditAccount, initialWETHamount - 2 * WAD);
 
-        uint256 stETHExpectedSharesGateway = (2 * WAD * STETH_TOTAL_SHARES) /
-            STETH_POOLED_ETH;
-        uint256 stETHExpectedBalanceGateway = lidoV1Mock.getPooledEthByShares(
-            stETHExpectedSharesGateway
-        );
+        uint256 stETHExpectedSharesGateway = (2 * WAD * STETH_TOTAL_SHARES) / STETH_POOLED_ETH;
+        uint256 stETHExpectedBalanceGateway = lidoV1Mock.getPooledEthByShares(stETHExpectedSharesGateway);
 
-        uint256 stETHExpectedSharesAfterGatewayTransfer = lidoV1Mock
-            .getSharesByPooledEth(stETHExpectedBalanceGateway);
-        uint256 stETHExpectedBalance = lidoV1Mock.getPooledEthByShares(
-            stETHExpectedSharesAfterGatewayTransfer
-        );
+        uint256 stETHExpectedSharesAfterGatewayTransfer = lidoV1Mock.getSharesByPooledEth(stETHExpectedBalanceGateway);
+        uint256 stETHExpectedBalance = lidoV1Mock.getPooledEthByShares(stETHExpectedSharesAfterGatewayTransfer);
 
         expectBalance(Tokens.STETH, creditAccount, stETHExpectedBalance);
         expectEthBalance(address(lidoV1Mock), 2 * WAD);
@@ -183,17 +141,11 @@ contract LidoV1AdapterTest is
         evm.prank(CONFIGURATOR);
         lidoV1Adapter.setLimit(RAY);
 
-        (
-            address creditAccount,
-            uint256 initialWETHamount
-        ) = _openTestCreditAccount();
+        (address creditAccount, uint256 initialWETHamount) = _openTestCreditAccount();
 
         expectAllowance(Tokens.WETH, creditAccount, address(lidoV1Gateway), 0);
 
-        bytes memory expectedCallData = abi.encodeCall(
-            LidoV1Gateway.submit,
-            (initialWETHamount - 1, DUMB_ADDRESS)
-        );
+        bytes memory expectedCallData = abi.encodeCall(LidoV1Gateway.submit, (initialWETHamount - 1, DUMB_ADDRESS));
 
         expectMulticallStackCalls(
             address(lidoV1Adapter),
@@ -205,26 +157,17 @@ contract LidoV1AdapterTest is
             true
         );
 
-        executeOneLineMulticall(
-            address(lidoV1Adapter),
-            abi.encodeCall(LidoV1Adapter.submitAll, ())
-        );
+        executeOneLineMulticall(address(lidoV1Adapter), abi.encodeCall(LidoV1Adapter.submitAll, ()));
 
         expectBalance(Tokens.WETH, creditAccount, 1);
 
         // Have to account for stETH precision errors
 
-        uint256 stETHExpectedSharesGateway = ((initialWETHamount - 1) *
-            STETH_TOTAL_SHARES) / STETH_POOLED_ETH;
-        uint256 stETHExpectedBalanceGateway = lidoV1Mock.getPooledEthByShares(
-            stETHExpectedSharesGateway
-        );
+        uint256 stETHExpectedSharesGateway = ((initialWETHamount - 1) * STETH_TOTAL_SHARES) / STETH_POOLED_ETH;
+        uint256 stETHExpectedBalanceGateway = lidoV1Mock.getPooledEthByShares(stETHExpectedSharesGateway);
 
-        uint256 stETHExpectedSharesAfterGatewayTransfer = lidoV1Mock
-            .getSharesByPooledEth(stETHExpectedBalanceGateway);
-        uint256 stETHExpectedBalance = lidoV1Mock.getPooledEthByShares(
-            stETHExpectedSharesAfterGatewayTransfer
-        );
+        uint256 stETHExpectedSharesAfterGatewayTransfer = lidoV1Mock.getSharesByPooledEth(stETHExpectedBalanceGateway);
+        uint256 stETHExpectedBalance = lidoV1Mock.getPooledEthByShares(stETHExpectedSharesAfterGatewayTransfer);
 
         expectBalance(Tokens.STETH, creditAccount, stETHExpectedBalance);
         expectEthBalance(address(lidoV1Mock), initialWETHamount - 1);
@@ -234,46 +177,31 @@ contract LidoV1AdapterTest is
     }
 
     /// @dev [LDOV1-5]: submit and submitAll correctly update the limit and revert on violating it
-    function test_LDOV1_05_submit_updates_limit_and_reverts_on_limit_exceeded()
-        public
-    {
+    function test_LDOV1_05_submit_updates_limit_and_reverts_on_limit_exceeded() public {
         _openTestCreditAccount();
 
         evm.prank(CONFIGURATOR);
         lidoV1Adapter.setLimit(2 * WAD);
 
-        executeOneLineMulticall(
-            address(lidoV1Adapter),
-            abi.encodeCall(lidoV1Adapter.submit, (WAD))
-        );
+        executeOneLineMulticall(address(lidoV1Adapter), abi.encodeCall(lidoV1Adapter.submit, (WAD)));
 
         assertEq(lidoV1Adapter.limit(), WAD, "New limit was set incorrectly");
 
         evm.expectRevert(LimitIsOverException.selector);
-        executeOneLineMulticall(
-            address(lidoV1Adapter),
-            abi.encodeCall(lidoV1Adapter.submit, (WAD + 1))
-        );
+        executeOneLineMulticall(address(lidoV1Adapter), abi.encodeCall(lidoV1Adapter.submit, (WAD + 1)));
 
         evm.expectRevert(LimitIsOverException.selector);
-        executeOneLineMulticall(
-            address(lidoV1Adapter),
-            abi.encodeCall(lidoV1Adapter.submitAll, ())
-        );
+        executeOneLineMulticall(address(lidoV1Adapter), abi.encodeCall(lidoV1Adapter.submitAll, ()));
     }
 
     /// @dev [LDOV1-6]: setLimit reverts if called by Non-configurator
-    function test_LDOV1_06_submit_updates_limit_and_reverts_on_limit_exceeded()
-        public
-    {
+    function test_LDOV1_06_submit_updates_limit_and_reverts_on_limit_exceeded() public {
         evm.expectRevert(CallerNotConfiguratorException.selector);
         lidoV1Adapter.setLimit(0);
     }
 
     /// @dev [LDOV1-7]: setLimit updates limit properly
-    function test_LDOV1_07_submit_updates_limit_properly(
-        uint256 amount
-    ) public {
+    function test_LDOV1_07_submit_updates_limit_properly(uint256 amount) public {
         evm.expectEmit(false, false, false, true);
         emit NewLimit(amount);
 

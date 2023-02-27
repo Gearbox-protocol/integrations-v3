@@ -3,18 +3,20 @@
 // (c) Gearbox Holdings, 2023
 pragma solidity ^0.8.17;
 
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
-import { AggregatorV3Interface } from "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
-import { PriceFeedType } from "@gearbox-protocol/core-v2/contracts/interfaces/IPriceFeedType.sol";
-import { LPPriceFeed } from "@gearbox-protocol/core-v2/contracts/oracles/LPPriceFeed.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import {AggregatorV3Interface} from "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
+import {PriceFeedType} from "@gearbox-protocol/core-v2/contracts/interfaces/IPriceFeedType.sol";
+import {LPPriceFeed} from "@gearbox-protocol/core-v2/contracts/oracles/LPPriceFeed.sol";
 
-import { IBalancerV2VaultGetters } from "../../integrations/balancer/IBalancerV2Vault.sol";
-import { IBalancerWeightedPool } from "../../integrations/balancer/IBalancerWeightedPool.sol";
-import { FixedPoint } from "../../integrations/balancer/FixedPoint.sol";
+import {IBalancerV2VaultGetters} from "../../integrations/balancer/IBalancerV2Vault.sol";
+import {IBalancerWeightedPool} from "../../integrations/balancer/IBalancerWeightedPool.sol";
+import {FixedPoint} from "../../integrations/balancer/FixedPoint.sol";
 
 // EXCEPTIONS
-import { ZeroAddressException, NotImplementedException } from "@gearbox-protocol/core-v2/contracts/interfaces/IErrors.sol";
+import {
+    ZeroAddressException, NotImplementedException
+} from "@gearbox-protocol/core-v2/contracts/interfaces/IErrors.sol";
 
 /// @title Balancer Weighted pool LP price feed parameters and setup
 /// @notice Each variable set is sorted in order of ascending asset weights in Balancer pool
@@ -152,18 +154,15 @@ contract BPTWeightedPriceFeedSetup {
     /// @notice During deployment, the assets and price feeds are reshuffled
     ///         in the order of ascending weights for each asset. Everything is saved into immutable
     ///         variables for efficiency
-    constructor(
-        address _balancerVault,
-        address _balancerPool,
-        address[] memory priceFeeds
-    ) {
-        if (_balancerVault == address(0) || _balancerPool == address(0))
-            revert ZeroAddressException(); // F: [OBWLP-2]
+    constructor(address _balancerVault, address _balancerPool, address[] memory priceFeeds) {
+        if (_balancerVault == address(0) || _balancerPool == address(0)) {
+            revert ZeroAddressException();
+        } // F: [OBWLP-2]
 
         {
             uint256 len = priceFeeds.length;
 
-            for (uint256 i = 0; i < len; ) {
+            for (uint256 i = 0; i < len;) {
                 if (priceFeeds[i] == address(0)) {
                     revert ZeroAddressException(); // F: [OBWLP-2]
                 }
@@ -179,14 +178,11 @@ contract BPTWeightedPriceFeedSetup {
 
         poolId = balancerPool.getPoolId(); // F: [OBWLP-1]
 
-        (IERC20[] memory tokens, , ) = balancerVault.getPoolTokens(poolId);
+        (IERC20[] memory tokens,,) = balancerVault.getPoolTokens(poolId);
 
         uint256[] memory weights = balancerPool.getNormalizedWeights();
 
-        if (
-            tokens.length != weights.length ||
-            weights.length != priceFeeds.length
-        ) {
+        if (tokens.length != weights.length || weights.length != priceFeeds.length) {
             revert TokenArraysLengthMismatchException();
         }
 
@@ -194,11 +190,7 @@ contract BPTWeightedPriceFeedSetup {
 
         uint256[] memory indices;
 
-        (tokens, weights, priceFeeds, indices) = _getSortedArrays(
-            tokens,
-            weights,
-            priceFeeds
-        );
+        (tokens, weights, priceFeeds, indices) = _getSortedArrays(tokens, weights, priceFeeds);
 
         asset0 = tokens[0]; // F: [OBWLP-1]
         asset1 = tokens[1]; // F: [OBWLP-1]
@@ -211,24 +203,12 @@ contract BPTWeightedPriceFeedSetup {
 
         decimals0 = IERC20Metadata(address(tokens[0])).decimals(); // F: [OBWLP-1]
         decimals1 = IERC20Metadata(address(tokens[1])).decimals(); // F: [OBWLP-1]
-        decimals2 = numAssets >= 3
-            ? IERC20Metadata(address(tokens[2])).decimals()
-            : 0; // F: [OBWLP-1]
-        decimals3 = numAssets >= 4
-            ? IERC20Metadata(address(tokens[3])).decimals()
-            : 0; // F: [OBWLP-1]
-        decimals4 = numAssets >= 5
-            ? IERC20Metadata(address(tokens[4])).decimals()
-            : 0; // F: [OBWLP-1]
-        decimals5 = numAssets >= 6
-            ? IERC20Metadata(address(tokens[5])).decimals()
-            : 0; // F: [OBWLP-1]
-        decimals6 = numAssets >= 7
-            ? IERC20Metadata(address(tokens[6])).decimals()
-            : 0; // F: [OBWLP-1]
-        decimals7 = numAssets >= 8
-            ? IERC20Metadata(address(tokens[7])).decimals()
-            : 0; // F: [OBWLP-1]
+        decimals2 = numAssets >= 3 ? IERC20Metadata(address(tokens[2])).decimals() : 0; // F: [OBWLP-1]
+        decimals3 = numAssets >= 4 ? IERC20Metadata(address(tokens[3])).decimals() : 0; // F: [OBWLP-1]
+        decimals4 = numAssets >= 5 ? IERC20Metadata(address(tokens[4])).decimals() : 0; // F: [OBWLP-1]
+        decimals5 = numAssets >= 6 ? IERC20Metadata(address(tokens[5])).decimals() : 0; // F: [OBWLP-1]
+        decimals6 = numAssets >= 7 ? IERC20Metadata(address(tokens[6])).decimals() : 0; // F: [OBWLP-1]
+        decimals7 = numAssets >= 8 ? IERC20Metadata(address(tokens[7])).decimals() : 0; // F: [OBWLP-1]
 
         normalizedWeight0 = weights[0]; // F: [OBWLP-1]
         normalizedWeight1 = weights[1]; // F: [OBWLP-1]
@@ -241,24 +221,12 @@ contract BPTWeightedPriceFeedSetup {
 
         priceFeed0 = AggregatorV3Interface(priceFeeds[0]); // F: [OBWLP-1]
         priceFeed1 = AggregatorV3Interface(priceFeeds[1]); // F: [OBWLP-1]
-        priceFeed2 = numAssets >= 3
-            ? AggregatorV3Interface(priceFeeds[2])
-            : AggregatorV3Interface(address(0)); // F: [OBWLP-1]
-        priceFeed3 = numAssets >= 4
-            ? AggregatorV3Interface(priceFeeds[3])
-            : AggregatorV3Interface(address(0)); // F: [OBWLP-1]
-        priceFeed4 = numAssets >= 5
-            ? AggregatorV3Interface(priceFeeds[4])
-            : AggregatorV3Interface(address(0)); // F: [OBWLP-1]
-        priceFeed5 = numAssets >= 6
-            ? AggregatorV3Interface(priceFeeds[5])
-            : AggregatorV3Interface(address(0)); // F: [OBWLP-1]
-        priceFeed6 = numAssets >= 7
-            ? AggregatorV3Interface(priceFeeds[6])
-            : AggregatorV3Interface(address(0)); // F: [OBWLP-1]
-        priceFeed7 = numAssets >= 8
-            ? AggregatorV3Interface(priceFeeds[7])
-            : AggregatorV3Interface(address(0)); // F: [OBWLP-1]
+        priceFeed2 = numAssets >= 3 ? AggregatorV3Interface(priceFeeds[2]) : AggregatorV3Interface(address(0)); // F: [OBWLP-1]
+        priceFeed3 = numAssets >= 4 ? AggregatorV3Interface(priceFeeds[3]) : AggregatorV3Interface(address(0)); // F: [OBWLP-1]
+        priceFeed4 = numAssets >= 5 ? AggregatorV3Interface(priceFeeds[4]) : AggregatorV3Interface(address(0)); // F: [OBWLP-1]
+        priceFeed5 = numAssets >= 6 ? AggregatorV3Interface(priceFeeds[5]) : AggregatorV3Interface(address(0)); // F: [OBWLP-1]
+        priceFeed6 = numAssets >= 7 ? AggregatorV3Interface(priceFeeds[6]) : AggregatorV3Interface(address(0)); // F: [OBWLP-1]
+        priceFeed7 = numAssets >= 8 ? AggregatorV3Interface(priceFeeds[7]) : AggregatorV3Interface(address(0)); // F: [OBWLP-1]
 
         index0 = indices[0]; // F: [OBWLP-1]
         index1 = indices[1]; // F: [OBWLP-1]
@@ -272,25 +240,16 @@ contract BPTWeightedPriceFeedSetup {
 
     /// @dev Internal function that sorts tokens, weights and price feeds in the order of ascending weights,
     ///      and also returns the resulting permutation to be later used for realigning balances
-    function _getSortedArrays(
-        IERC20[] memory tokens,
-        uint256[] memory weights,
-        address[] memory priceFeeds
-    )
+    function _getSortedArrays(IERC20[] memory tokens, uint256[] memory weights, address[] memory priceFeeds)
         internal
         pure
-        returns (
-            IERC20[] memory,
-            uint256[] memory,
-            address[] memory,
-            uint256[] memory
-        )
+        returns (IERC20[] memory, uint256[] memory, address[] memory, uint256[] memory)
     {
         uint256 len = weights.length;
 
         uint256[] memory indices = new uint256[](len);
 
-        for (uint256 i; i < len; ) {
+        for (uint256 i; i < len;) {
             indices[i] = i;
 
             unchecked {
@@ -303,7 +262,7 @@ contract BPTWeightedPriceFeedSetup {
         IERC20[] memory sortedTokens = new IERC20[](len);
         address[] memory sortedPFs = new address[](len);
 
-        for (uint256 i = 0; i < len; ) {
+        for (uint256 i = 0; i < len;) {
             sortedTokens[i] = tokens[indices[i]];
             sortedPFs[i] = priceFeeds[indices[i]];
 
@@ -316,12 +275,7 @@ contract BPTWeightedPriceFeedSetup {
     }
 
     /// @dev Internal function that runs QuickSort on data and also returns the resulting permutation
-    function _quickIndices(
-        uint256[] memory data,
-        uint256[] memory indices,
-        uint256 low,
-        uint256 high
-    ) internal pure {
+    function _quickIndices(uint256[] memory data, uint256[] memory indices, uint256 low, uint256 high) internal pure {
         if (low < high) {
             uint256 pVal = data[(low + high) / 2];
 
@@ -345,11 +299,7 @@ contract BPTWeightedPriceFeedSetup {
     }
 
     /// @dev Returns weights as an array
-    function _getWeightsArray()
-        internal
-        view
-        returns (uint256[] memory weights)
-    {
+    function _getWeightsArray() internal view returns (uint256[] memory weights) {
         weights = new uint256[](numAssets);
 
         weights[0] = normalizedWeight0;
@@ -363,11 +313,7 @@ contract BPTWeightedPriceFeedSetup {
     }
 
     /// @dev Returns price feeds as an array
-    function _getPriceFeedsArray()
-        internal
-        view
-        returns (AggregatorV3Interface[] memory priceFeeds)
-    {
+    function _getPriceFeedsArray() internal view returns (AggregatorV3Interface[] memory priceFeeds) {
         priceFeeds = new AggregatorV3Interface[](numAssets);
 
         priceFeeds[0] = priceFeed0;

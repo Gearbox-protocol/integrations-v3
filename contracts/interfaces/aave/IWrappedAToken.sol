@@ -3,11 +3,11 @@
 // (c) Gearbox Holdings, 2023
 pragma solidity ^0.8.17;
 
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
-import { IAToken } from "../../integrations/aave/IAToken.sol";
-import { ILendingPool } from "../../integrations/aave/ILendingPool.sol";
+import {IAToken} from "../../integrations/aave/IAToken.sol";
+import {ILendingPool} from "../../integrations/aave/ILendingPool.sol";
 
 /// @title Wrapped aToken interface
 interface IWrappedAToken is IERC20Metadata {
@@ -33,9 +33,7 @@ interface IWrappedAToken is IERC20Metadata {
     function lendingPool() external view returns (ILendingPool);
 
     /// @notice Returns amount of aTokens belonging to given account (increases as interest is accrued)
-    function balanceOfUnderlying(
-        address account
-    ) external view returns (uint256);
+    function balanceOfUnderlying(address account) external view returns (uint256);
 
     /// @notice Returns amount of aTokens per waToken, scaled by 1e18
     function exchangeRate() external view returns (uint256);
@@ -48,9 +46,7 @@ interface IWrappedAToken is IERC20Metadata {
     /// @notice Deposit given amount underlying tokens (underlying must be approved before the call)
     /// @param assets Amount of underlying tokens to deposit in exchange for waTokens
     /// @return shares Amount of waTokens minted to the caller
-    function depositUnderlying(
-        uint256 assets
-    ) external returns (uint256 shares);
+    function depositUnderlying(uint256 assets) external returns (uint256 shares);
 
     /// @notice Withdraw given amount of waTokens for aTokens
     /// @param shares Amount of waTokens to burn in exchange for aTokens
@@ -60,7 +56,5 @@ interface IWrappedAToken is IERC20Metadata {
     /// @notice Withdraw given amount of waTokens for underlying tokens
     /// @param shares Amount of waTokens to burn in exchange for underlying tokens
     /// @return assets Amount of underlying tokens sent to the caller
-    function withdrawUnderlying(
-        uint256 shares
-    ) external returns (uint256 assets);
+    function withdrawUnderlying(uint256 shares) external returns (uint256 assets);
 }

@@ -28,8 +28,8 @@
     "verify": "npx hardhat run node_modules/@gearbox-protocol/devops/lib/verifier/verify.js",
     "deploy-fork": "npx hardhat run deploy/cmV2deploy.ts --network localhost",
     "prepare": "husky install",
-    "prettier": "prettier --write .",
-    "prettier:ci": "npx prettier --check .",
+    "prettier": "forge fmt",
+    "prettier:ci": "forge fmt",
     "lint": "eslint \"**/*.ts\" --fix",
     "lint:ci": "eslint \"**/*.ts\"",
     "typecheck:ci": "tsc --noEmit",
@@ -75,6 +75,7 @@
       "eslint --fix",
       "prettier --write"
     ],
-    "*.{sol,json,md}": "prettier --write"
+    "*.sol": "forge fmt",
+    "*.{json,md}": "prettier --write"
   }
 }

@@ -3,15 +3,15 @@
 // (c) Gearbox Holdings, 2022
 pragma solidity ^0.8.10;
 
-import { ITokenTestSuite } from "@gearbox-protocol/core-v2/contracts/test/interfaces/ITokenTestSuite.sol";
+import {ITokenTestSuite} from "@gearbox-protocol/core-v2/contracts/test/interfaces/ITokenTestSuite.sol";
 
-import { IAddressProvider } from "@gearbox-protocol/core-v2/contracts/interfaces/IAddressProvider.sol";
-import { PoolService } from "@gearbox-protocol/core-v2/contracts/pool/PoolService.sol";
+import {IAddressProvider} from "@gearbox-protocol/core-v2/contracts/interfaces/IAddressProvider.sol";
+import {PoolService} from "@gearbox-protocol/core-v2/contracts/pool/PoolService.sol";
 
-import { ContractsRegister } from "@gearbox-protocol/core-v2/contracts/core/ContractsRegister.sol";
-import { LinearInterestRateModel } from "@gearbox-protocol/core-v2/contracts/pool/LinearInterestRateModel.sol";
+import {ContractsRegister} from "@gearbox-protocol/core-v2/contracts/core/ContractsRegister.sol";
+import {LinearInterestRateModel} from "@gearbox-protocol/core-v2/contracts/pool/LinearInterestRateModel.sol";
 
-import { IwstETH } from "../../integrations/lido/IwstETH.sol";
+import {IwstETH} from "../../integrations/lido/IwstETH.sol";
 import "../lib/constants.sol";
 
 uint256 constant U_OPTIMAL = 80_00;
@@ -29,12 +29,7 @@ uint256 constant WITHDRAW_FEE = 1_00;
 contract WstETHPoolSetup {
     CheatCodes evm = CheatCodes(HEVM_ADDRESS);
 
-    constructor(
-        address addressProvider,
-        address wstETH,
-        ITokenTestSuite tokensTestSuite,
-        address root
-    ) {
+    constructor(address addressProvider, address wstETH, ITokenTestSuite tokensTestSuite, address root) {
         LinearInterestRateModel linearModel = new LinearInterestRateModel(
             U_OPTIMAL,
             U_RESERVE,
@@ -52,9 +47,7 @@ contract WstETHPoolSetup {
             EXPECTED_LIQUIDITY_LIMIT
         );
 
-        ContractsRegister cr = ContractsRegister(
-            IAddressProvider(addressProvider).getContractsRegister()
-        );
+        ContractsRegister cr = ContractsRegister(IAddressProvider(addressProvider).getContractsRegister());
 
         evm.prank(root);
         pool.setWithdrawFee(WITHDRAW_FEE);
@@ -64,9 +57,7 @@ contract WstETHPoolSetup {
 
         uint256 poolLiquidityAmount = EXPECTED_LIQUIDITY_LIMIT / 3;
 
-        uint256 wrappedAmount = IwstETH(wstETH).getStETHByWstETH(
-            poolLiquidityAmount
-        );
+        uint256 wrappedAmount = IwstETH(wstETH).getStETHByWstETH(poolLiquidityAmount);
 
         address stETH = IwstETH(wstETH).stETH();
 
@@ -74,9 +65,7 @@ contract WstETHPoolSetup {
 
         tokensTestSuite.approve(stETH, address(this), wstETH);
 
-        uint256 updatedPoolLiquidityAmount = IwstETH(wstETH).wrap(
-            wrappedAmount
-        );
+        uint256 updatedPoolLiquidityAmount = IwstETH(wstETH).wrap(wrappedAmount);
         IwstETH(wstETH).approve(address(pool), type(uint256).max);
 
         pool.addLiquidity(updatedPoolLiquidityAmount, address(this), 0);

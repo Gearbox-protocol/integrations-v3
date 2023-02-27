@@ -3,29 +3,25 @@
 // (c) Gearbox Holdings, 2023
 pragma solidity ^0.8.17;
 
-import { ICreditManagerV2Exceptions } from "@gearbox-protocol/core-v2/contracts/interfaces/ICreditManagerV2.sol";
+import {ICreditManagerV2Exceptions} from "@gearbox-protocol/core-v2/contracts/interfaces/ICreditManagerV2.sol";
 
-import { BytesLib } from "../../../integrations/uniswap/BytesLib.sol";
+import {BytesLib} from "../../../integrations/uniswap/BytesLib.sol";
 
-import { ISwapRouter } from "../../../integrations/uniswap/IUniswapV3.sol";
-import { UniswapV3Adapter } from "../../../adapters/uniswap/UniswapV3.sol";
-import { IUniswapV3Adapter, IUniswapV3AdapterExceptions } from "../../../interfaces/uniswap/IUniswapV3Adapter.sol";
-import { UniswapV3Mock } from "../../mocks/integrations/UniswapV3Mock.sol";
+import {ISwapRouter} from "../../../integrations/uniswap/IUniswapV3.sol";
+import {UniswapV3Adapter} from "../../../adapters/uniswap/UniswapV3.sol";
+import {IUniswapV3Adapter, IUniswapV3AdapterExceptions} from "../../../interfaces/uniswap/IUniswapV3Adapter.sol";
+import {UniswapV3Mock} from "../../mocks/integrations/UniswapV3Mock.sol";
 
-import { Tokens } from "../../suites/TokensTestSuite.sol";
+import {Tokens} from "../../suites/TokensTestSuite.sol";
 
 // TEST
 import "../../lib/constants.sol";
 
-import { AdapterTestHelper } from "../AdapterTestHelper.sol";
+import {AdapterTestHelper} from "../AdapterTestHelper.sol";
 
 /// @title UniswapV3AdapterTest
 /// @notice Designed for unit test purposes only
-contract UniswapV3AdapterTest is
-    DSTest,
-    AdapterTestHelper,
-    IUniswapV3AdapterExceptions
-{
+contract UniswapV3AdapterTest is DSTest, AdapterTestHelper, IUniswapV3AdapterExceptions {
     using BytesLib for bytes;
 
     IUniswapV3Adapter public adapter;
@@ -37,40 +33,22 @@ contract UniswapV3AdapterTest is
         uniswapMock = new UniswapV3Mock();
 
         uniswapMock.setRate(
-            tokenTestSuite.addressOf(Tokens.WETH),
-            tokenTestSuite.addressOf(Tokens.DAI),
-            DAI_WETH_RATE * RAY
+            tokenTestSuite.addressOf(Tokens.WETH), tokenTestSuite.addressOf(Tokens.DAI), DAI_WETH_RATE * RAY
         );
+
+        uniswapMock.setRate(tokenTestSuite.addressOf(Tokens.DAI), tokenTestSuite.addressOf(Tokens.USDC), RAY);
 
         uniswapMock.setRate(
-            tokenTestSuite.addressOf(Tokens.DAI),
-            tokenTestSuite.addressOf(Tokens.USDC),
-            RAY
+            tokenTestSuite.addressOf(Tokens.WETH), tokenTestSuite.addressOf(Tokens.USDC), DAI_WETH_RATE * RAY
         );
+
+        uniswapMock.setRate(tokenTestSuite.addressOf(Tokens.USDC), tokenTestSuite.addressOf(Tokens.USDT), RAY);
 
         uniswapMock.setRate(
-            tokenTestSuite.addressOf(Tokens.WETH),
-            tokenTestSuite.addressOf(Tokens.USDC),
-            DAI_WETH_RATE * RAY
+            tokenTestSuite.addressOf(Tokens.USDT), tokenTestSuite.addressOf(Tokens.WETH), RAY / DAI_WETH_RATE
         );
 
-        uniswapMock.setRate(
-            tokenTestSuite.addressOf(Tokens.USDC),
-            tokenTestSuite.addressOf(Tokens.USDT),
-            RAY
-        );
-
-        uniswapMock.setRate(
-            tokenTestSuite.addressOf(Tokens.USDT),
-            tokenTestSuite.addressOf(Tokens.WETH),
-            RAY / DAI_WETH_RATE
-        );
-
-        tokenTestSuite.mint(
-            Tokens.WETH,
-            address(uniswapMock),
-            (2 * DAI_ACCOUNT_AMOUNT) / DAI_WETH_RATE
-        );
+        tokenTestSuite.mint(Tokens.WETH, address(uniswapMock), (2 * DAI_ACCOUNT_AMOUNT) / DAI_WETH_RATE);
 
         address[] memory connectors = new address[](2);
 
@@ -84,10 +62,7 @@ contract UniswapV3AdapterTest is
         );
 
         evm.prank(CONFIGURATOR);
-        creditConfigurator.allowContract(
-            address(uniswapMock),
-            address(adapter)
-        );
+        creditConfigurator.allowContract(address(uniswapMock), address(adapter));
 
         evm.label(address(adapter), "ADAPTER");
         evm.label(address(uniswapMock), "UNISWAP_V3_MOCK");
@@ -99,11 +74,7 @@ contract UniswapV3AdapterTest is
     /// HELPERS
     ///
 
-    function _getExactInputSingleParams()
-        internal
-        view
-        returns (ISwapRouter.ExactInputSingleParams memory params)
-    {
+    function _getExactInputSingleParams() internal view returns (ISwapRouter.ExactInputSingleParams memory params) {
         params = ISwapRouter.ExactInputSingleParams({
             tokenIn: tokenTestSuite.addressOf(Tokens.DAI),
             tokenOut: tokenTestSuite.addressOf(Tokens.WETH),
@@ -111,29 +82,23 @@ contract UniswapV3AdapterTest is
             recipient: USER,
             deadline: deadline,
             amountIn: DAI_EXCHANGE_AMOUNT,
-            amountOutMinimum: ((DAI_EXCHANGE_AMOUNT / DAI_WETH_RATE) * 997) /
-                1000,
+            amountOutMinimum: ((DAI_EXCHANGE_AMOUNT / DAI_WETH_RATE) * 997) / 1000,
             sqrtPriceLimitX96: 0
         });
     }
 
-    function _getExactInputParams()
-        internal
-        view
-        returns (ISwapRouter.ExactInputParams memory params)
-    {
+    function _getExactInputParams() internal view returns (ISwapRouter.ExactInputParams memory params) {
         address tokenIn = tokenTestSuite.addressOf(Tokens.DAI);
         address tokenOut = tokenTestSuite.addressOf(Tokens.WETH);
 
         params = ISwapRouter.ExactInputParams({
-            path: bytes(abi.encodePacked(tokenIn))
-                .concat(bytes(abi.encodePacked(uint24(3000))))
-                .concat(bytes(abi.encodePacked(tokenOut))),
+            path: bytes(abi.encodePacked(tokenIn)).concat(bytes(abi.encodePacked(uint24(3000)))).concat(
+                bytes(abi.encodePacked(tokenOut))
+                ),
             recipient: USER,
             deadline: deadline,
             amountIn: DAI_EXCHANGE_AMOUNT,
-            amountOutMinimum: ((DAI_EXCHANGE_AMOUNT / DAI_WETH_RATE) * 997) /
-                1000
+            amountOutMinimum: ((DAI_EXCHANGE_AMOUNT / DAI_WETH_RATE) * 997) / 1000
         });
     }
 
@@ -152,28 +117,20 @@ contract UniswapV3AdapterTest is
         });
     }
 
-    function _getAllInputParams()
-        internal
-        view
-        returns (IUniswapV3Adapter.ExactAllInputParams memory params)
-    {
+    function _getAllInputParams() internal view returns (IUniswapV3Adapter.ExactAllInputParams memory params) {
         address tokenIn = tokenTestSuite.addressOf(Tokens.DAI);
         address tokenOut = tokenTestSuite.addressOf(Tokens.WETH);
 
         params = IUniswapV3Adapter.ExactAllInputParams({
-            path: bytes(abi.encodePacked(tokenIn))
-                .concat(bytes(abi.encodePacked(uint24(3000))))
-                .concat(bytes(abi.encodePacked(tokenOut))),
+            path: bytes(abi.encodePacked(tokenIn)).concat(bytes(abi.encodePacked(uint24(3000)))).concat(
+                bytes(abi.encodePacked(tokenOut))
+                ),
             deadline: deadline,
             rateMinRAY: ((RAY / DAI_WETH_RATE) * 997) / 1000
         });
     }
 
-    function _getExactOutputSingleParams()
-        internal
-        view
-        returns (ISwapRouter.ExactOutputSingleParams memory params)
-    {
+    function _getExactOutputSingleParams() internal view returns (ISwapRouter.ExactOutputSingleParams memory params) {
         params = ISwapRouter.ExactOutputSingleParams({
             tokenIn: tokenTestSuite.addressOf(Tokens.DAI),
             tokenOut: tokenTestSuite.addressOf(Tokens.WETH),
@@ -186,18 +143,14 @@ contract UniswapV3AdapterTest is
         });
     }
 
-    function _getExactOutputParams()
-        internal
-        view
-        returns (ISwapRouter.ExactOutputParams memory params)
-    {
+    function _getExactOutputParams() internal view returns (ISwapRouter.ExactOutputParams memory params) {
         address tokenIn = tokenTestSuite.addressOf(Tokens.DAI);
         address tokenOut = tokenTestSuite.addressOf(Tokens.WETH);
 
         params = ISwapRouter.ExactOutputParams({
-            path: bytes(abi.encodePacked(tokenOut))
-                .concat(bytes(abi.encodePacked(uint24(3000))))
-                .concat(bytes(abi.encodePacked(tokenIn))),
+            path: bytes(abi.encodePacked(tokenOut)).concat(bytes(abi.encodePacked(uint24(3000)))).concat(
+                bytes(abi.encodePacked(tokenIn))
+                ),
             recipient: USER,
             deadline: deadline,
             amountOut: DAI_EXCHANGE_AMOUNT / DAI_WETH_RATE / 2,
@@ -213,71 +166,34 @@ contract UniswapV3AdapterTest is
 
     /// @dev [AUV3-1]: swap reverts if user has no account
     function test_AUV3_01_swap_reverts_if_user_has_no_account() public {
-        ISwapRouter.ExactInputSingleParams
-            memory exactInputSingleParams = _getExactInputSingleParams();
-        evm.expectRevert(
-            ICreditManagerV2Exceptions.HasNoOpenedAccountException.selector
-        );
+        ISwapRouter.ExactInputSingleParams memory exactInputSingleParams = _getExactInputSingleParams();
+        evm.expectRevert(ICreditManagerV2Exceptions.HasNoOpenedAccountException.selector);
+        executeOneLineMulticall(address(adapter), abi.encodeCall(adapter.exactInputSingle, (exactInputSingleParams)));
+
+        ISwapRouter.ExactInputParams memory exactInputParams = _getExactInputParams();
+        evm.expectRevert(ICreditManagerV2Exceptions.HasNoOpenedAccountException.selector);
+        executeOneLineMulticall(address(adapter), abi.encodeCall(adapter.exactInput, (exactInputParams)));
+
+        IUniswapV3Adapter.ExactAllInputSingleParams memory exactAllInputSingleParams = _getAllInputSingleParams();
+
+        evm.expectRevert(ICreditManagerV2Exceptions.HasNoOpenedAccountException.selector);
         executeOneLineMulticall(
-            address(adapter),
-            abi.encodeCall(adapter.exactInputSingle, (exactInputSingleParams))
+            address(adapter), abi.encodeCall(adapter.exactAllInputSingle, (exactAllInputSingleParams))
         );
 
-        ISwapRouter.ExactInputParams
-            memory exactInputParams = _getExactInputParams();
-        evm.expectRevert(
-            ICreditManagerV2Exceptions.HasNoOpenedAccountException.selector
-        );
-        executeOneLineMulticall(
-            address(adapter),
-            abi.encodeCall(adapter.exactInput, (exactInputParams))
-        );
+        IUniswapV3Adapter.ExactAllInputParams memory exactAllInputParams = _getAllInputParams();
 
-        IUniswapV3Adapter.ExactAllInputSingleParams
-            memory exactAllInputSingleParams = _getAllInputSingleParams();
+        evm.expectRevert(ICreditManagerV2Exceptions.HasNoOpenedAccountException.selector);
+        executeOneLineMulticall(address(adapter), abi.encodeCall(adapter.exactAllInput, (exactAllInputParams)));
 
-        evm.expectRevert(
-            ICreditManagerV2Exceptions.HasNoOpenedAccountException.selector
-        );
-        executeOneLineMulticall(
-            address(adapter),
-            abi.encodeCall(
-                adapter.exactAllInputSingle,
-                (exactAllInputSingleParams)
-            )
-        );
+        ISwapRouter.ExactOutputSingleParams memory exactOutputSingleParams = _getExactOutputSingleParams();
 
-        IUniswapV3Adapter.ExactAllInputParams
-            memory exactAllInputParams = _getAllInputParams();
+        evm.expectRevert(ICreditManagerV2Exceptions.HasNoOpenedAccountException.selector);
+        executeOneLineMulticall(address(adapter), abi.encodeCall(adapter.exactOutputSingle, (exactOutputSingleParams)));
 
-        evm.expectRevert(
-            ICreditManagerV2Exceptions.HasNoOpenedAccountException.selector
-        );
-        executeOneLineMulticall(
-            address(adapter),
-            abi.encodeCall(adapter.exactAllInput, (exactAllInputParams))
-        );
-
-        ISwapRouter.ExactOutputSingleParams
-            memory exactOutputSingleParams = _getExactOutputSingleParams();
-
-        evm.expectRevert(
-            ICreditManagerV2Exceptions.HasNoOpenedAccountException.selector
-        );
-        executeOneLineMulticall(
-            address(adapter),
-            abi.encodeCall(adapter.exactOutputSingle, (exactOutputSingleParams))
-        );
-
-        ISwapRouter.ExactOutputParams
-            memory exactOutputParams = _getExactOutputParams();
-        evm.expectRevert(
-            ICreditManagerV2Exceptions.HasNoOpenedAccountException.selector
-        );
-        executeOneLineMulticall(
-            address(adapter),
-            abi.encodeCall(adapter.exactOutput, (exactOutputParams))
-        );
+        ISwapRouter.ExactOutputParams memory exactOutputParams = _getExactOutputParams();
+        evm.expectRevert(ICreditManagerV2Exceptions.HasNoOpenedAccountException.selector);
+        executeOneLineMulticall(address(adapter), abi.encodeCall(adapter.exactOutput, (exactOutputParams)));
     }
 
     //
@@ -288,29 +204,19 @@ contract UniswapV3AdapterTest is
     function test_AUV3_02_exactInputSingle_works_for_user_as_expected() public {
         setUp();
 
-        ISwapRouter.ExactInputSingleParams
-            memory exactInputSingleParams = _getExactInputSingleParams();
+        ISwapRouter.ExactInputSingleParams memory exactInputSingleParams = _getExactInputSingleParams();
 
-        (
-            address creditAccount,
-            uint256 initialDAIbalance
-        ) = _openTestCreditAccount();
+        (address creditAccount, uint256 initialDAIbalance) = _openTestCreditAccount();
 
         expectAllowance(Tokens.DAI, creditAccount, address(uniswapMock), 0);
 
         exactInputSingleParams.recipient = creditAccount;
 
-        bytes memory expectedCallData = abi.encodeCall(
-            ISwapRouter.exactInputSingle,
-            (exactInputSingleParams)
-        );
+        bytes memory expectedCallData = abi.encodeCall(ISwapRouter.exactInputSingle, (exactInputSingleParams));
 
         exactInputSingleParams.recipient = address(0);
 
-        bytes memory callData = abi.encodeCall(
-            adapter.exactInputSingle,
-            (exactInputSingleParams)
-        );
+        bytes memory callData = abi.encodeCall(adapter.exactInputSingle, (exactInputSingleParams));
 
         expectMulticallStackCalls(
             address(adapter),
@@ -325,41 +231,22 @@ contract UniswapV3AdapterTest is
         // MULTICALL
         executeOneLineMulticall(address(adapter), callData);
 
-        expectBalance(
-            Tokens.DAI,
-            creditAccount,
-            initialDAIbalance - DAI_EXCHANGE_AMOUNT
-        );
+        expectBalance(Tokens.DAI, creditAccount, initialDAIbalance - DAI_EXCHANGE_AMOUNT);
 
-        expectBalance(
-            Tokens.WETH,
-            creditAccount,
-            ((DAI_EXCHANGE_AMOUNT / DAI_WETH_RATE) * 997) / 1000
-        );
+        expectBalance(Tokens.WETH, creditAccount, ((DAI_EXCHANGE_AMOUNT / DAI_WETH_RATE) * 997) / 1000);
 
-        expectAllowance(
-            Tokens.DAI,
-            creditAccount,
-            address(uniswapMock),
-            type(uint256).max
-        );
+        expectAllowance(Tokens.DAI, creditAccount, address(uniswapMock), type(uint256).max);
 
         expectTokenIsEnabled(Tokens.WETH, true);
     }
 
     /// @dev [AUV3-3]: exactAllInputSingle works for user as expected
-    function test_AUV3_03_exactAllInputSingle_works_for_user_as_expected()
-        public
-    {
+    function test_AUV3_03_exactAllInputSingle_works_for_user_as_expected() public {
         setUp();
 
-        IUniswapV3Adapter.ExactAllInputSingleParams
-            memory exactAllInputSingleParams = _getAllInputSingleParams();
+        IUniswapV3Adapter.ExactAllInputSingleParams memory exactAllInputSingleParams = _getAllInputSingleParams();
 
-        (
-            address creditAccount,
-            uint256 initialDAIbalance
-        ) = _openTestCreditAccount();
+        (address creditAccount, uint256 initialDAIbalance) = _openTestCreditAccount();
 
         expectAllowance(Tokens.DAI, creditAccount, address(uniswapMock), 0);
 
@@ -381,10 +268,7 @@ contract UniswapV3AdapterTest is
             )
         );
 
-        bytes memory callData = abi.encodeCall(
-            adapter.exactAllInputSingle,
-            (exactAllInputSingleParams)
-        );
+        bytes memory callData = abi.encodeCall(adapter.exactAllInputSingle, (exactAllInputSingleParams));
 
         expectMulticallStackCalls(
             address(adapter),
@@ -402,18 +286,10 @@ contract UniswapV3AdapterTest is
         expectBalance(Tokens.DAI, creditAccount, 1);
 
         expectBalance(
-            Tokens.WETH,
-            creditAccount,
-            (((initialDAIbalance - 1) / DAI_WETH_RATE) * (1_000_000 - 3000)) /
-                1_000_000
+            Tokens.WETH, creditAccount, (((initialDAIbalance - 1) / DAI_WETH_RATE) * (1_000_000 - 3000)) / 1_000_000
         );
 
-        expectAllowance(
-            Tokens.DAI,
-            creditAccount,
-            address(uniswapMock),
-            type(uint256).max
-        );
+        expectAllowance(Tokens.DAI, creditAccount, address(uniswapMock), type(uint256).max);
 
         expectTokenIsEnabled(Tokens.DAI, false);
         expectTokenIsEnabled(Tokens.WETH, true);
@@ -423,62 +299,33 @@ contract UniswapV3AdapterTest is
     function test_AUV3_04_exactInput_works_for_user_as_expected() public {
         setUp();
 
-        ISwapRouter.ExactInputParams
-            memory exactInputParams = _getExactInputParams();
+        ISwapRouter.ExactInputParams memory exactInputParams = _getExactInputParams();
 
-        (
-            address creditAccount,
-            uint256 initialDAIbalance
-        ) = _openTestCreditAccount();
+        (address creditAccount, uint256 initialDAIbalance) = _openTestCreditAccount();
 
         expectAllowance(Tokens.DAI, creditAccount, address(uniswapMock), 0);
 
-        bytes memory callData = abi.encodeCall(
-            adapter.exactInput,
-            (exactInputParams)
-        );
+        bytes memory callData = abi.encodeCall(adapter.exactInput, (exactInputParams));
 
         exactInputParams.recipient = creditAccount;
 
-        bytes memory expectedCallData = abi.encodeCall(
-            ISwapRouter.exactInput,
-            (exactInputParams)
-        );
+        bytes memory expectedCallData = abi.encodeCall(ISwapRouter.exactInput, (exactInputParams));
 
         address tokenIn = tokenTestSuite.addressOf(Tokens.DAI);
         address tokenOut = tokenTestSuite.addressOf(Tokens.WETH);
 
         expectMulticallStackCalls(
-            address(adapter),
-            address(uniswapMock),
-            USER,
-            expectedCallData,
-            tokenIn,
-            tokenOut,
-            false
+            address(adapter), address(uniswapMock), USER, expectedCallData, tokenIn, tokenOut, false
         );
 
         // MULTICALL
         executeOneLineMulticall(address(adapter), callData);
 
-        expectBalance(
-            Tokens.DAI,
-            creditAccount,
-            initialDAIbalance - DAI_EXCHANGE_AMOUNT
-        );
+        expectBalance(Tokens.DAI, creditAccount, initialDAIbalance - DAI_EXCHANGE_AMOUNT);
 
-        expectBalance(
-            Tokens.WETH,
-            creditAccount,
-            ((DAI_EXCHANGE_AMOUNT / DAI_WETH_RATE) * 997) / 1000
-        );
+        expectBalance(Tokens.WETH, creditAccount, ((DAI_EXCHANGE_AMOUNT / DAI_WETH_RATE) * 997) / 1000);
 
-        expectAllowance(
-            Tokens.DAI,
-            creditAccount,
-            address(uniswapMock),
-            type(uint256).max
-        );
+        expectAllowance(Tokens.DAI, creditAccount, address(uniswapMock), type(uint256).max);
 
         expectTokenIsEnabled(Tokens.WETH, true);
     }
@@ -487,13 +334,9 @@ contract UniswapV3AdapterTest is
     function test_AUV3_05_exactAllInput_works_for_user_as_expected() public {
         setUp();
 
-        IUniswapV3Adapter.ExactAllInputParams
-            memory exactAllInputParams = _getAllInputParams();
+        IUniswapV3Adapter.ExactAllInputParams memory exactAllInputParams = _getAllInputParams();
 
-        (
-            address creditAccount,
-            uint256 initialDAIbalance
-        ) = _openTestCreditAccount();
+        (address creditAccount, uint256 initialDAIbalance) = _openTestCreditAccount();
 
         expectAllowance(Tokens.DAI, creditAccount, address(uniswapMock), 0);
 
@@ -506,9 +349,9 @@ contract UniswapV3AdapterTest is
             ISwapRouter.exactInput,
             (
                 ISwapRouter.ExactInputParams({
-                    path: bytes(abi.encodePacked(tokenIn))
-                        .concat(bytes(abi.encodePacked(uint24(3000))))
-                        .concat(bytes(abi.encodePacked(tokenOut))),
+                    path: bytes(abi.encodePacked(tokenIn)).concat(bytes(abi.encodePacked(uint24(3000)))).concat(
+                        bytes(abi.encodePacked(tokenOut))
+                        ),
                     recipient: creditAccount,
                     deadline: exactAllInputParams.deadline,
                     amountIn: amountIn,
@@ -517,19 +360,10 @@ contract UniswapV3AdapterTest is
             )
         );
 
-        bytes memory callData = abi.encodeCall(
-            adapter.exactAllInput,
-            (exactAllInputParams)
-        );
+        bytes memory callData = abi.encodeCall(adapter.exactAllInput, (exactAllInputParams));
 
         expectMulticallStackCalls(
-            address(adapter),
-            address(uniswapMock),
-            USER,
-            expectedCallData,
-            tokenIn,
-            tokenOut,
-            false
+            address(adapter), address(uniswapMock), USER, expectedCallData, tokenIn, tokenOut, false
         );
 
         // MULTICALL
@@ -538,50 +372,30 @@ contract UniswapV3AdapterTest is
         expectBalance(Tokens.DAI, creditAccount, 1);
 
         expectBalance(
-            Tokens.WETH,
-            creditAccount,
-            (((initialDAIbalance - 1) / DAI_WETH_RATE) * (1_000_000 - 3000)) /
-                1_000_000
+            Tokens.WETH, creditAccount, (((initialDAIbalance - 1) / DAI_WETH_RATE) * (1_000_000 - 3000)) / 1_000_000
         );
 
-        expectAllowance(
-            Tokens.DAI,
-            creditAccount,
-            address(uniswapMock),
-            type(uint256).max
-        );
+        expectAllowance(Tokens.DAI, creditAccount, address(uniswapMock), type(uint256).max);
 
         expectTokenIsEnabled(Tokens.DAI, false);
         expectTokenIsEnabled(Tokens.WETH, true);
     }
 
     /// @dev [AUV3-6]: exactOutputSingle works for user as expected
-    function test_AUV3_06_exactOutputSingle_works_for_user_as_expected()
-        public
-    {
+    function test_AUV3_06_exactOutputSingle_works_for_user_as_expected() public {
         setUp();
 
-        ISwapRouter.ExactOutputSingleParams
-            memory exactOutputSingleParams = _getExactOutputSingleParams();
+        ISwapRouter.ExactOutputSingleParams memory exactOutputSingleParams = _getExactOutputSingleParams();
 
-        (
-            address creditAccount,
-            uint256 initialDAIbalance
-        ) = _openTestCreditAccount();
+        (address creditAccount, uint256 initialDAIbalance) = _openTestCreditAccount();
 
         expectAllowance(Tokens.DAI, creditAccount, address(uniswapMock), 0);
 
-        bytes memory callData = abi.encodeCall(
-            adapter.exactOutputSingle,
-            (exactOutputSingleParams)
-        );
+        bytes memory callData = abi.encodeCall(adapter.exactOutputSingle, (exactOutputSingleParams));
 
         exactOutputSingleParams.recipient = creditAccount;
 
-        bytes memory expectedCallData = abi.encodeCall(
-            ISwapRouter.exactOutputSingle,
-            (exactOutputSingleParams)
-        );
+        bytes memory expectedCallData = abi.encodeCall(ISwapRouter.exactOutputSingle, (exactOutputSingleParams));
 
         expectMulticallStackCalls(
             address(adapter),
@@ -596,24 +410,11 @@ contract UniswapV3AdapterTest is
         // MULTICALL
         executeOneLineMulticall(address(adapter), callData);
 
-        expectBalance(
-            Tokens.DAI,
-            creditAccount,
-            initialDAIbalance - ((DAI_EXCHANGE_AMOUNT / 2) * 1000) / 997
-        );
+        expectBalance(Tokens.DAI, creditAccount, initialDAIbalance - ((DAI_EXCHANGE_AMOUNT / 2) * 1000) / 997);
 
-        expectBalance(
-            Tokens.WETH,
-            creditAccount,
-            DAI_EXCHANGE_AMOUNT / DAI_WETH_RATE / 2
-        );
+        expectBalance(Tokens.WETH, creditAccount, DAI_EXCHANGE_AMOUNT / DAI_WETH_RATE / 2);
 
-        expectAllowance(
-            Tokens.DAI,
-            creditAccount,
-            address(uniswapMock),
-            type(uint256).max
-        );
+        expectAllowance(Tokens.DAI, creditAccount, address(uniswapMock), type(uint256).max);
 
         expectTokenIsEnabled(Tokens.WETH, true);
     }
@@ -622,128 +423,66 @@ contract UniswapV3AdapterTest is
     function test_AUV3_07_exactOutput_works_for_user_as_expected() public {
         setUp();
 
-        ISwapRouter.ExactOutputParams
-            memory exactOutputParams = _getExactOutputParams();
+        ISwapRouter.ExactOutputParams memory exactOutputParams = _getExactOutputParams();
 
-        (
-            address creditAccount,
-            uint256 initialDAIbalance
-        ) = _openTestCreditAccount();
+        (address creditAccount, uint256 initialDAIbalance) = _openTestCreditAccount();
 
         expectAllowance(Tokens.DAI, creditAccount, address(uniswapMock), 0);
 
-        bytes memory callData = abi.encodeCall(
-            adapter.exactOutput,
-            (exactOutputParams)
-        );
+        bytes memory callData = abi.encodeCall(adapter.exactOutput, (exactOutputParams));
 
         exactOutputParams.recipient = creditAccount;
 
-        bytes memory expectedCallData = abi.encodeCall(
-            ISwapRouter.exactOutput,
-            (exactOutputParams)
-        );
+        bytes memory expectedCallData = abi.encodeCall(ISwapRouter.exactOutput, (exactOutputParams));
 
         address tokenIn = tokenTestSuite.addressOf(Tokens.DAI);
         address tokenOut = tokenTestSuite.addressOf(Tokens.WETH);
 
         expectMulticallStackCalls(
-            address(adapter),
-            address(uniswapMock),
-            USER,
-            expectedCallData,
-            tokenIn,
-            tokenOut,
-            false
+            address(adapter), address(uniswapMock), USER, expectedCallData, tokenIn, tokenOut, false
         );
 
         // MULTICALL
         executeOneLineMulticall(address(adapter), callData);
 
-        expectBalance(
-            Tokens.DAI,
-            creditAccount,
-            initialDAIbalance - ((DAI_EXCHANGE_AMOUNT / 2) * 1000) / 997
-        );
+        expectBalance(Tokens.DAI, creditAccount, initialDAIbalance - ((DAI_EXCHANGE_AMOUNT / 2) * 1000) / 997);
 
-        expectBalance(
-            Tokens.WETH,
-            creditAccount,
-            DAI_EXCHANGE_AMOUNT / DAI_WETH_RATE / 2
-        );
+        expectBalance(Tokens.WETH, creditAccount, DAI_EXCHANGE_AMOUNT / DAI_WETH_RATE / 2);
 
-        expectAllowance(
-            Tokens.DAI,
-            creditAccount,
-            address(uniswapMock),
-            type(uint256).max
-        );
+        expectAllowance(Tokens.DAI, creditAccount, address(uniswapMock), type(uint256).max);
 
         expectTokenIsEnabled(Tokens.WETH, true);
     }
 
     /// @dev [AUV3-8]: UniswapV3 adapter can't be exploited with an incorrectly-formed path
-    function test_AUV3_08_exactOutput_cannot_be_exploited_with_tailored_path_parameter()
-        public
-    {
+    function test_AUV3_08_exactOutput_cannot_be_exploited_with_tailored_path_parameter() public {
         address tokenIn = tokenTestSuite.addressOf(Tokens.DAI);
         address tokenOut = tokenTestSuite.addressOf(Tokens.WETH);
 
-        ISwapRouter.ExactOutputParams
-            memory exactOutputParams = _getExactOutputParams();
+        ISwapRouter.ExactOutputParams memory exactOutputParams = _getExactOutputParams();
 
-        exactOutputParams.path = exactOutputParams.path.concat(
-            abi.encodePacked(tokenTestSuite.addressOf(Tokens.USDC))
-        );
+        exactOutputParams.path = exactOutputParams.path.concat(abi.encodePacked(tokenTestSuite.addressOf(Tokens.USDC)));
 
-        (
-            address creditAccount,
-            uint256 initialDAIbalance
-        ) = _openTestCreditAccount();
+        (address creditAccount, uint256 initialDAIbalance) = _openTestCreditAccount();
 
         expectAllowance(Tokens.DAI, creditAccount, address(uniswapMock), 0);
 
         exactOutputParams.recipient = creditAccount;
 
-        bytes memory expectedCallData = abi.encodeCall(
-            ISwapRouter.exactOutput,
-            (exactOutputParams)
-        );
+        bytes memory expectedCallData = abi.encodeCall(ISwapRouter.exactOutput, (exactOutputParams));
 
         expectMulticallStackCalls(
-            address(adapter),
-            address(uniswapMock),
-            USER,
-            expectedCallData,
-            tokenIn,
-            tokenOut,
-            false
+            address(adapter), address(uniswapMock), USER, expectedCallData, tokenIn, tokenOut, false
         );
 
         exactOutputParams.recipient = address(0);
-        executeOneLineMulticall(
-            address(adapter),
-            abi.encodeCall(adapter.exactOutput, (exactOutputParams))
-        );
+        executeOneLineMulticall(address(adapter), abi.encodeCall(adapter.exactOutput, (exactOutputParams)));
 
-        expectBalance(
-            Tokens.DAI,
-            creditAccount,
-            initialDAIbalance - ((DAI_EXCHANGE_AMOUNT / 2) * 1000) / 997
-        );
+        expectBalance(Tokens.DAI, creditAccount, initialDAIbalance - ((DAI_EXCHANGE_AMOUNT / 2) * 1000) / 997);
 
-        expectBalance(
-            Tokens.WETH,
-            creditAccount,
-            DAI_EXCHANGE_AMOUNT / DAI_WETH_RATE / 2
-        );
+        expectBalance(Tokens.WETH, creditAccount, DAI_EXCHANGE_AMOUNT / DAI_WETH_RATE / 2);
 
-        expectAllowance(
-            Tokens.DAI,
-            creditAccount,
-            address(uniswapMock),
-            type(uint256).max
-        );
+        expectAllowance(Tokens.DAI, creditAccount, address(uniswapMock), type(uint256).max);
 
         expectAllowance(Tokens.USDC, creditAccount, address(uniswapMock), 0);
 
@@ -755,128 +494,68 @@ contract UniswapV3AdapterTest is
     function test_AUV3_09_path_validity_checks_are_correct() public {
         _openTestCreditAccount();
 
-        ISwapRouter.ExactInputParams
-            memory exactInputParams = _getExactInputParams();
+        ISwapRouter.ExactInputParams memory exactInputParams = _getExactInputParams();
 
-        exactInputParams.path = bytes(
-            abi.encodePacked(creditManager.underlying())
-        )
-            .concat(bytes(abi.encodePacked(uint24(3000))))
-            .concat(
-                bytes(abi.encodePacked(tokenTestSuite.addressOf(Tokens.USDC)))
-            )
-            .concat(bytes(abi.encodePacked(uint24(3000))))
-            .concat(
-                bytes(abi.encodePacked(tokenTestSuite.addressOf(Tokens.USDT)))
-            )
-            .concat(bytes(abi.encodePacked(uint24(3000))))
-            .concat(
-                bytes(abi.encodePacked(tokenTestSuite.addressOf(Tokens.USDC)))
-            )
-            .concat(bytes(abi.encodePacked(uint24(3000))))
-            .concat(
-                bytes(abi.encodePacked(tokenTestSuite.addressOf(Tokens.WETH)))
-            );
+        exactInputParams.path = bytes(abi.encodePacked(creditManager.underlying())).concat(
+            bytes(abi.encodePacked(uint24(3000)))
+        ).concat(bytes(abi.encodePacked(tokenTestSuite.addressOf(Tokens.USDC)))).concat(
+            bytes(abi.encodePacked(uint24(3000)))
+        ).concat(bytes(abi.encodePacked(tokenTestSuite.addressOf(Tokens.USDT)))).concat(
+            bytes(abi.encodePacked(uint24(3000)))
+        ).concat(bytes(abi.encodePacked(tokenTestSuite.addressOf(Tokens.USDC)))).concat(
+            bytes(abi.encodePacked(uint24(3000)))
+        ).concat(bytes(abi.encodePacked(tokenTestSuite.addressOf(Tokens.WETH))));
 
         evm.expectRevert(InvalidPathException.selector);
-        executeOneLineMulticall(
-            address(adapter),
-            abi.encodeCall(adapter.exactInput, (exactInputParams))
-        );
+        executeOneLineMulticall(address(adapter), abi.encodeCall(adapter.exactInput, (exactInputParams)));
 
-        IUniswapV3Adapter.ExactAllInputParams
-            memory exactAllInputParams = _getAllInputParams();
+        IUniswapV3Adapter.ExactAllInputParams memory exactAllInputParams = _getAllInputParams();
 
-        exactAllInputParams.path = bytes(
-            abi.encodePacked(creditManager.underlying())
-        )
-            .concat(bytes(abi.encodePacked(uint24(3000))))
-            .concat(
-                bytes(abi.encodePacked(tokenTestSuite.addressOf(Tokens.USDC)))
-            )
-            .concat(bytes(abi.encodePacked(uint24(3000))))
-            .concat(
-                bytes(abi.encodePacked(tokenTestSuite.addressOf(Tokens.USDT)))
-            )
-            .concat(bytes(abi.encodePacked(uint24(3000))))
-            .concat(
-                bytes(abi.encodePacked(tokenTestSuite.addressOf(Tokens.USDC)))
-            )
-            .concat(bytes(abi.encodePacked(uint24(3000))))
-            .concat(
-                bytes(abi.encodePacked(tokenTestSuite.addressOf(Tokens.WETH)))
-            );
+        exactAllInputParams.path = bytes(abi.encodePacked(creditManager.underlying())).concat(
+            bytes(abi.encodePacked(uint24(3000)))
+        ).concat(bytes(abi.encodePacked(tokenTestSuite.addressOf(Tokens.USDC)))).concat(
+            bytes(abi.encodePacked(uint24(3000)))
+        ).concat(bytes(abi.encodePacked(tokenTestSuite.addressOf(Tokens.USDT)))).concat(
+            bytes(abi.encodePacked(uint24(3000)))
+        ).concat(bytes(abi.encodePacked(tokenTestSuite.addressOf(Tokens.USDC)))).concat(
+            bytes(abi.encodePacked(uint24(3000)))
+        ).concat(bytes(abi.encodePacked(tokenTestSuite.addressOf(Tokens.WETH))));
 
         evm.expectRevert(InvalidPathException.selector);
-        executeOneLineMulticall(
-            address(adapter),
-            abi.encodeCall(adapter.exactAllInput, (exactAllInputParams))
-        );
+        executeOneLineMulticall(address(adapter), abi.encodeCall(adapter.exactAllInput, (exactAllInputParams)));
 
-        ISwapRouter.ExactOutputParams
-            memory exactOutputParams = _getExactOutputParams();
+        ISwapRouter.ExactOutputParams memory exactOutputParams = _getExactOutputParams();
 
-        exactOutputParams.path = bytes(
-            abi.encodePacked(creditManager.underlying())
-        )
-            .concat(bytes(abi.encodePacked(uint24(3000))))
-            .concat(
-                bytes(abi.encodePacked(tokenTestSuite.addressOf(Tokens.USDC)))
-            )
-            .concat(bytes(abi.encodePacked(uint24(3000))))
-            .concat(
-                bytes(abi.encodePacked(tokenTestSuite.addressOf(Tokens.USDT)))
-            )
-            .concat(bytes(abi.encodePacked(uint24(3000))))
-            .concat(
-                bytes(abi.encodePacked(tokenTestSuite.addressOf(Tokens.USDC)))
-            )
-            .concat(bytes(abi.encodePacked(uint24(3000))))
-            .concat(
-                bytes(abi.encodePacked(tokenTestSuite.addressOf(Tokens.WETH)))
-            );
+        exactOutputParams.path = bytes(abi.encodePacked(creditManager.underlying())).concat(
+            bytes(abi.encodePacked(uint24(3000)))
+        ).concat(bytes(abi.encodePacked(tokenTestSuite.addressOf(Tokens.USDC)))).concat(
+            bytes(abi.encodePacked(uint24(3000)))
+        ).concat(bytes(abi.encodePacked(tokenTestSuite.addressOf(Tokens.USDT)))).concat(
+            bytes(abi.encodePacked(uint24(3000)))
+        ).concat(bytes(abi.encodePacked(tokenTestSuite.addressOf(Tokens.USDC)))).concat(
+            bytes(abi.encodePacked(uint24(3000)))
+        ).concat(bytes(abi.encodePacked(tokenTestSuite.addressOf(Tokens.WETH))));
 
         evm.expectRevert(InvalidPathException.selector);
-        executeOneLineMulticall(
-            address(adapter),
-            abi.encodeCall(adapter.exactOutput, (exactOutputParams))
-        );
+        executeOneLineMulticall(address(adapter), abi.encodeCall(adapter.exactOutput, (exactOutputParams)));
 
-        exactInputParams.path = bytes(
-            abi.encodePacked(creditManager.underlying())
-        )
-            .concat(bytes(abi.encodePacked(uint24(3000))))
-            .concat(
-                bytes(abi.encodePacked(tokenTestSuite.addressOf(Tokens.LINK)))
-            )
-            .concat(bytes(abi.encodePacked(uint24(3000))))
-            .concat(
-                bytes(abi.encodePacked(tokenTestSuite.addressOf(Tokens.WETH)))
-            );
+        exactInputParams.path = bytes(abi.encodePacked(creditManager.underlying())).concat(
+            bytes(abi.encodePacked(uint24(3000)))
+        ).concat(bytes(abi.encodePacked(tokenTestSuite.addressOf(Tokens.LINK)))).concat(
+            bytes(abi.encodePacked(uint24(3000)))
+        ).concat(bytes(abi.encodePacked(tokenTestSuite.addressOf(Tokens.WETH))));
 
         evm.expectRevert(InvalidPathException.selector);
-        executeOneLineMulticall(
-            address(adapter),
-            abi.encodeCall(adapter.exactInput, (exactInputParams))
-        );
+        executeOneLineMulticall(address(adapter), abi.encodeCall(adapter.exactInput, (exactInputParams)));
 
-        exactInputParams.path = bytes(
-            abi.encodePacked(creditManager.underlying())
-        )
-            .concat(bytes(abi.encodePacked(uint24(3000))))
-            .concat(
-                bytes(abi.encodePacked(tokenTestSuite.addressOf(Tokens.USDC)))
-            )
-            .concat(bytes(abi.encodePacked(uint24(3000))))
-            .concat(
-                bytes(abi.encodePacked(tokenTestSuite.addressOf(Tokens.WETH)))
-            );
+        exactInputParams.path = bytes(abi.encodePacked(creditManager.underlying())).concat(
+            bytes(abi.encodePacked(uint24(3000)))
+        ).concat(bytes(abi.encodePacked(tokenTestSuite.addressOf(Tokens.USDC)))).concat(
+            bytes(abi.encodePacked(uint24(3000)))
+        ).concat(bytes(abi.encodePacked(tokenTestSuite.addressOf(Tokens.WETH))));
 
         exactInputParams.amountOutMinimum = 0;
 
-        executeOneLineMulticall(
-            address(adapter),
-            abi.encodeCall(adapter.exactInput, (exactInputParams))
-        );
+        executeOneLineMulticall(address(adapter), abi.encodeCall(adapter.exactInput, (exactInputParams)));
     }
 }

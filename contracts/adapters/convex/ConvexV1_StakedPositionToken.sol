@@ -3,9 +3,9 @@
 // (c) Gearbox Holdings, 2022
 pragma solidity ^0.8.10;
 
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { PhantomERC20 } from "@gearbox-protocol/core-v2/contracts/tokens/PhantomERC20.sol";
-import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {PhantomERC20} from "@gearbox-protocol/core-v2/contracts/tokens/PhantomERC20.sol";
+import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
 /// @title ConvexStakedPositionToken
 /// @dev Represents the balance of the staking token position in Convex pools
@@ -18,12 +18,7 @@ contract ConvexStakedPositionToken is PhantomERC20 {
     constructor(address _pool, address _lptoken)
         PhantomERC20(
             _lptoken,
-            string(
-                abi.encodePacked(
-                    "Convex Staked Position ",
-                    IERC20Metadata(_lptoken).name()
-                )
-            ),
+            string(abi.encodePacked("Convex Staked Position ", IERC20Metadata(_lptoken).name())),
             string(abi.encodePacked("stk", IERC20Metadata(_lptoken).symbol())),
             IERC20Metadata(_lptoken).decimals()
         )

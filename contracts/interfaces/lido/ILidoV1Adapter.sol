@@ -3,7 +3,7 @@
 // (c) Gearbox Holdings, 2023
 pragma solidity ^0.8.17;
 
-import { IAdapter } from "@gearbox-protocol/core-v2/contracts/interfaces/adapters/IAdapter.sol";
+import {IAdapter} from "@gearbox-protocol/core-v2/contracts/interfaces/adapters/IAdapter.sol";
 
 interface ILidoV1AdapterEvents {
     event NewLimit(uint256 _limit);
@@ -13,11 +13,7 @@ interface ILidoV1AdapterExceptions {
     error LimitIsOverException();
 }
 
-interface ILidoV1Adapter is
-    IAdapter,
-    ILidoV1AdapterEvents,
-    ILidoV1AdapterExceptions
-{
+interface ILidoV1Adapter is IAdapter, ILidoV1AdapterEvents, ILidoV1AdapterExceptions {
     /// @dev Address of WETH
     function weth() external view returns (address);
 

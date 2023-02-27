@@ -3,9 +3,18 @@
 // (c) Gearbox Holdings, 2022
 pragma solidity ^0.8.10;
 
-import { ILPPriceFeedExceptions } from "@gearbox-protocol/core-v2/contracts/interfaces/ILPPriceFeed.sol";
-import { IBalancerV2Vault, PoolSpecialization, SingleSwap, BatchSwapStep, FundManagement, SwapKind, JoinPoolRequest, ExitPoolRequest } from "../../integrations/balancer/IBalancerV2Vault.sol";
-import { BPTWeightedPriceFeed } from "../../oracles/balancer/BPTWeightedPriceFeed.sol";
+import {ILPPriceFeedExceptions} from "@gearbox-protocol/core-v2/contracts/interfaces/ILPPriceFeed.sol";
+import {
+    IBalancerV2Vault,
+    PoolSpecialization,
+    SingleSwap,
+    BatchSwapStep,
+    FundManagement,
+    SwapKind,
+    JoinPoolRequest,
+    ExitPoolRequest
+} from "../../integrations/balancer/IBalancerV2Vault.sol";
+import {BPTWeightedPriceFeed} from "../../oracles/balancer/BPTWeightedPriceFeed.sol";
 
 // LIBRARIES
 
@@ -14,15 +23,17 @@ import "../lib/constants.sol";
 
 // MOCKS
 
-import { BalancerVaultMock } from "../mocks/integrations/BalancerVaultMock.sol";
-import { PriceFeedMock } from "@gearbox-protocol/core-v2/contracts/test/mocks/oracles/PriceFeedMock.sol";
-import { AddressProviderACLMock } from "@gearbox-protocol/core-v2/contracts/test/mocks/core/AddressProviderACLMock.sol";
+import {BalancerVaultMock} from "../mocks/integrations/BalancerVaultMock.sol";
+import {PriceFeedMock} from "@gearbox-protocol/core-v2/contracts/test/mocks/oracles/PriceFeedMock.sol";
+import {AddressProviderACLMock} from "@gearbox-protocol/core-v2/contracts/test/mocks/core/AddressProviderACLMock.sol";
 
 // SUITES
-import { TokensTestSuite, Tokens } from "../suites/TokensTestSuite.sol";
+import {TokensTestSuite, Tokens} from "../suites/TokensTestSuite.sol";
 
 // EXCEPTIONS
-import { ZeroAddressException, NotImplementedException } from "@gearbox-protocol/core-v2/contracts/interfaces/IErrors.sol";
+import {
+    ZeroAddressException, NotImplementedException
+} from "@gearbox-protocol/core-v2/contracts/interfaces/IErrors.sol";
 
 /// @title BPTWeightedPriceFeedTest
 /// @notice Designed for unit test purposes only
@@ -64,7 +75,7 @@ contract BPTWeightedPriceFeedTest is DSTest, ILPPriceFeedExceptions {
 
         address[] memory _coins = new address[](4);
         tokenTestSuite = new TokensTestSuite();
-        tokenTestSuite.topUpWETH{ value: 100 * WAD }();
+        tokenTestSuite.topUpWETH{value: 100 * WAD}();
 
         _coins[0] = tokenTestSuite.addressOf(Tokens.WETH);
         _coins[1] = tokenTestSuite.addressOf(Tokens.DAI);
@@ -74,29 +85,23 @@ contract BPTWeightedPriceFeedTest is DSTest, ILPPriceFeedExceptions {
         balancerMock = new BalancerVaultMock();
 
         uint256[] memory weights = new uint256[](4);
-        weights[0] = 40 * 10**16;
-        weights[1] = 20 * 10**16;
-        weights[2] = 30 * 10**16;
-        weights[3] = 10 * 10**16;
+        weights[0] = 40 * 10 ** 16;
+        weights[1] = 20 * 10 ** 16;
+        weights[2] = 30 * 10 ** 16;
+        weights[3] = 10 * 10 ** 16;
 
-        balancerMock.addPool(
-            POOL_ID,
-            _coins,
-            weights,
-            PoolSpecialization.GENERAL,
-            50
-        );
+        balancerMock.addPool(POOL_ID, _coins, weights, PoolSpecialization.GENERAL, 50);
 
-        balancerMock.mintBPT(POOL_ID, USER, 1_000_000 * 10**18);
+        balancerMock.mintBPT(POOL_ID, USER, 1_000_000 * 10 ** 18);
 
-        (bptMock, ) = balancerMock.getPool(POOL_ID);
+        (bptMock,) = balancerMock.getPool(POOL_ID);
 
         uint256[] memory balances = new uint256[](4);
 
-        balances[0] = 4000 * 10**18;
-        balances[1] = 2_000_000 * 10**18;
-        balances[2] = 3_000_000 * 10**18;
-        balances[3] = 1_000_000 * 10**6;
+        balances[0] = 4000 * 10 ** 18;
+        balances[1] = 2_000_000 * 10 ** 18;
+        balances[2] = 3_000_000 * 10 ** 18;
+        balances[3] = 1_000_000 * 10 ** 6;
 
         balancerMock.setAssetBalances(POOL_ID, balances);
 
@@ -122,125 +127,45 @@ contract BPTWeightedPriceFeedTest is DSTest, ILPPriceFeedExceptions {
 
     /// @dev [OBWLP-1]: constructor sets correct values
     function test_OBWLP_01_constructor_sets_correct_values() public {
-        assertEq(
-            address(bptPriceFeed.priceFeed0()),
-            address(pfm4),
-            "Incorrect price feed 0"
-        );
+        assertEq(address(bptPriceFeed.priceFeed0()), address(pfm4), "Incorrect price feed 0");
 
-        assertEq(
-            address(bptPriceFeed.priceFeed1()),
-            address(pfm2),
-            "Incorrect price feed 1"
-        );
+        assertEq(address(bptPriceFeed.priceFeed1()), address(pfm2), "Incorrect price feed 1");
 
-        assertEq(
-            address(bptPriceFeed.priceFeed2()),
-            address(pfm3),
-            "Incorrect price feed 2"
-        );
+        assertEq(address(bptPriceFeed.priceFeed2()), address(pfm3), "Incorrect price feed 2");
 
-        assertEq(
-            address(bptPriceFeed.priceFeed3()),
-            address(pfm1),
-            "Incorrect price feed 3"
-        );
+        assertEq(address(bptPriceFeed.priceFeed3()), address(pfm1), "Incorrect price feed 3");
 
-        assertEq(
-            address(bptPriceFeed.priceFeed4()),
-            address(0),
-            "Incorrect price feed 4"
-        );
+        assertEq(address(bptPriceFeed.priceFeed4()), address(0), "Incorrect price feed 4");
 
-        assertEq(
-            address(bptPriceFeed.priceFeed5()),
-            address(0),
-            "Incorrect price feed 5"
-        );
+        assertEq(address(bptPriceFeed.priceFeed5()), address(0), "Incorrect price feed 5");
 
-        assertEq(
-            address(bptPriceFeed.priceFeed6()),
-            address(0),
-            "Incorrect price feed 6"
-        );
+        assertEq(address(bptPriceFeed.priceFeed6()), address(0), "Incorrect price feed 6");
 
-        assertEq(
-            address(bptPriceFeed.priceFeed7()),
-            address(0),
-            "Incorrect price feed 7"
-        );
+        assertEq(address(bptPriceFeed.priceFeed7()), address(0), "Incorrect price feed 7");
 
-        assertEq(
-            address(bptPriceFeed.asset0()),
-            tokenTestSuite.addressOf(Tokens.USDC),
-            "Incorrect asset 0"
-        );
+        assertEq(address(bptPriceFeed.asset0()), tokenTestSuite.addressOf(Tokens.USDC), "Incorrect asset 0");
 
-        assertEq(
-            address(bptPriceFeed.asset1()),
-            tokenTestSuite.addressOf(Tokens.DAI),
-            "Incorrect asset 1"
-        );
+        assertEq(address(bptPriceFeed.asset1()), tokenTestSuite.addressOf(Tokens.DAI), "Incorrect asset 1");
 
-        assertEq(
-            address(bptPriceFeed.asset2()),
-            tokenTestSuite.addressOf(Tokens.USDT),
-            "Incorrect asset 2"
-        );
+        assertEq(address(bptPriceFeed.asset2()), tokenTestSuite.addressOf(Tokens.USDT), "Incorrect asset 2");
 
-        assertEq(
-            address(bptPriceFeed.asset3()),
-            tokenTestSuite.addressOf(Tokens.WETH),
-            "Incorrect asset 3"
-        );
+        assertEq(address(bptPriceFeed.asset3()), tokenTestSuite.addressOf(Tokens.WETH), "Incorrect asset 3");
 
-        assertEq(
-            address(bptPriceFeed.asset4()),
-            address(0),
-            "Incorrect asset 4"
-        );
+        assertEq(address(bptPriceFeed.asset4()), address(0), "Incorrect asset 4");
 
-        assertEq(
-            address(bptPriceFeed.asset5()),
-            address(0),
-            "Incorrect asset 5"
-        );
+        assertEq(address(bptPriceFeed.asset5()), address(0), "Incorrect asset 5");
 
-        assertEq(
-            address(bptPriceFeed.asset6()),
-            address(0),
-            "Incorrect asset 6"
-        );
+        assertEq(address(bptPriceFeed.asset6()), address(0), "Incorrect asset 6");
 
-        assertEq(
-            address(bptPriceFeed.asset7()),
-            address(0),
-            "Incorrect asset 7"
-        );
+        assertEq(address(bptPriceFeed.asset7()), address(0), "Incorrect asset 7");
 
-        assertEq(
-            bptPriceFeed.normalizedWeight0(),
-            10 * 10**16,
-            "Incorrect weight 0"
-        );
+        assertEq(bptPriceFeed.normalizedWeight0(), 10 * 10 ** 16, "Incorrect weight 0");
 
-        assertEq(
-            bptPriceFeed.normalizedWeight1(),
-            20 * 10**16,
-            "Incorrect weight 1"
-        );
+        assertEq(bptPriceFeed.normalizedWeight1(), 20 * 10 ** 16, "Incorrect weight 1");
 
-        assertEq(
-            bptPriceFeed.normalizedWeight2(),
-            30 * 10**16,
-            "Incorrect weight 2"
-        );
+        assertEq(bptPriceFeed.normalizedWeight2(), 30 * 10 ** 16, "Incorrect weight 2");
 
-        assertEq(
-            bptPriceFeed.normalizedWeight3(),
-            40 * 10**16,
-            "Incorrect weight 3"
-        );
+        assertEq(bptPriceFeed.normalizedWeight3(), 40 * 10 ** 16, "Incorrect weight 3");
 
         assertEq(bptPriceFeed.normalizedWeight4(), 0, "Incorrect weight 4");
 
@@ -250,17 +175,9 @@ contract BPTWeightedPriceFeedTest is DSTest, ILPPriceFeedExceptions {
 
         assertEq(bptPriceFeed.normalizedWeight7(), 0, "Incorrect weight 7");
 
-        assertEq(
-            address(bptPriceFeed.balancerPool()),
-            bptMock,
-            "Incorrect balancer pool"
-        );
+        assertEq(address(bptPriceFeed.balancerPool()), bptMock, "Incorrect balancer pool");
 
-        assertEq(
-            address(bptPriceFeed.balancerVault()),
-            address(balancerMock),
-            "Incorrect balancer vault"
-        );
+        assertEq(address(bptPriceFeed.balancerVault()), address(balancerMock), "Incorrect balancer vault");
 
         assertEq(bptPriceFeed.poolId(), POOL_ID, "Incorrect pool ID");
 
@@ -309,7 +226,7 @@ contract BPTWeightedPriceFeedTest is DSTest, ILPPriceFeedExceptions {
         balanceScaleFactor = (balanceScaleFactor % (100e18 - 1e18)) + 1e18;
         ethPrice = (ethPrice % (100000e8 - 100e8)) + 100e8;
 
-        (, uint256[] memory balances, ) = balancerMock.getPoolTokens(POOL_ID);
+        (, uint256[] memory balances,) = balancerMock.getPoolTokens(POOL_ID);
 
         uint256 expectedPrice = 0;
 
@@ -329,7 +246,7 @@ contract BPTWeightedPriceFeedTest is DSTest, ILPPriceFeedExceptions {
         balances[3] = (balances[3] * balanceScaleFactor) / 1e18;
         expectedPrice += (balances[3] * 1e8) / 1e6;
 
-        expectedPrice = (expectedPrice * 1e18) / (1_000_000 * 10**18);
+        expectedPrice = (expectedPrice * 1e18) / (1_000_000 * 10 ** 18);
 
         balancerMock.setAssetBalances(POOL_ID, balances);
 
@@ -339,13 +256,9 @@ contract BPTWeightedPriceFeedTest is DSTest, ILPPriceFeedExceptions {
 
         bptPriceFeed.setLimiter(ios);
 
-        (, int256 answer, , , ) = bptPriceFeed.latestRoundData();
+        (, int256 answer,,,) = bptPriceFeed.latestRoundData();
 
-        assertLe(
-            expectedPrice - uint256(answer),
-            100,
-            "Price discrepancy more than than 1e-6 USD"
-        );
+        assertLe(expectedPrice - uint256(answer), 100, "Price discrepancy more than than 1e-6 USD");
     }
 
     function test_OBWLP_04_latestRoundData_returns_discounted_value_for_imbalanced_pool(
@@ -361,7 +274,7 @@ contract BPTWeightedPriceFeedTest is DSTest, ILPPriceFeedExceptions {
         price2 = (price2 % (2e8 - 9e7)) + 9e7;
         price3 = (price3 % (2e8 - 9e7)) + 9e7;
 
-        (, uint256[] memory balances, ) = balancerMock.getPoolTokens(POOL_ID);
+        (, uint256[] memory balances,) = balancerMock.getPoolTokens(POOL_ID);
 
         uint256 expectedPrice = 0;
 
@@ -377,7 +290,7 @@ contract BPTWeightedPriceFeedTest is DSTest, ILPPriceFeedExceptions {
         balances[3] = (balances[3] * balanceScaleFactor) / 1e18;
         expectedPrice += (balances[3] * price3) / 1e6;
 
-        expectedPrice = (expectedPrice * 1e18) / (1_000_000 * 10**18);
+        expectedPrice = (expectedPrice * 1e18) / (1_000_000 * 10 ** 18);
 
         balancerMock.setAssetBalances(POOL_ID, balances);
 
@@ -390,19 +303,13 @@ contract BPTWeightedPriceFeedTest is DSTest, ILPPriceFeedExceptions {
 
         bptPriceFeed.setLimiter(ios);
 
-        (, int256 answer, , , ) = bptPriceFeed.latestRoundData();
+        (, int256 answer,,,) = bptPriceFeed.latestRoundData();
 
-        assertLe(
-            uint256(answer),
-            expectedPrice,
-            "Returned value larger than expected price"
-        );
+        assertLe(uint256(answer), expectedPrice, "Returned value larger than expected price");
     }
 
-    function test_OBWLP_05_latestRoundData_reverts_for_out_of_bounds_value()
-        public
-    {
-        (, uint256[] memory balances, ) = balancerMock.getPoolTokens(POOL_ID);
+    function test_OBWLP_05_latestRoundData_reverts_for_out_of_bounds_value() public {
+        (, uint256[] memory balances,) = balancerMock.getPoolTokens(POOL_ID);
 
         balances[0] = balances[0] / 2;
         balances[1] = balances[1] / 2;
@@ -421,18 +328,12 @@ contract BPTWeightedPriceFeedTest is DSTest, ILPPriceFeedExceptions {
 
         balancerMock.setAssetBalances(POOL_ID, balances);
 
-        (, int256 answer, , , ) = bptPriceFeed.latestRoundData();
+        (, int256 answer,,,) = bptPriceFeed.latestRoundData();
 
-        assertEq(
-            uint256(answer),
-            1020000000 - 1,
-            "Upper bound value was not used"
-        );
+        assertEq(uint256(answer), 1020000000 - 1, "Upper bound value was not used");
     }
 
-    function test_OBWLP_06_setLimiter_reverts_if_current_value_out_of_new_bounds()
-        public
-    {
+    function test_OBWLP_06_setLimiter_reverts_if_current_value_out_of_new_bounds() public {
         uint256 ios = bptPriceFeed.getInvariantOverSupply();
 
         evm.expectRevert(IncorrectLimitsException.selector);

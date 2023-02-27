@@ -3,9 +3,9 @@
 // (c) Gearbox Holdings, 2023
 pragma solidity ^0.8.17;
 
-import { IPool4626 } from "@gearbox-protocol/core-v2/contracts/interfaces/IPool4626.sol";
-import { IAToken } from "../../integrations/aave/IAToken.sol";
-import { IWrappedAToken } from "./IWrappedAToken.sol";
+import {IPool4626} from "@gearbox-protocol/core-v2/contracts/interfaces/IPool4626.sol";
+import {IAToken} from "../../integrations/aave/IAToken.sol";
+import {IWrappedAToken} from "./IWrappedAToken.sol";
 
 /// @title waToken Gateway interface
 /// @notice Allows LPs to add/remove aTokens to/from waToken liquidity pool
@@ -28,11 +28,7 @@ interface IWrappedATokenGateway {
     /// @param receiver Account that should receive dTokens
     /// @param referralCode Referral code, for potential rewards
     /// @return shares Amount of dTokens minted to `receiver`
-    function depositReferral(
-        uint256 assets,
-        address receiver,
-        uint16 referralCode
-    ) external returns (uint256 shares);
+    function depositReferral(uint256 assets, address receiver, uint16 referralCode) external returns (uint256 shares);
 
     /// @notice Redeem aTokens from waToken liquidity pool
     /// @dev Gateway must be approved to spend dTokens from `owner` before the call
@@ -40,9 +36,5 @@ interface IWrappedATokenGateway {
     /// @param receiver Account that should receive aTokens
     /// @param owner Account to burn dTokens from
     /// @return assets Amount of aTokens sent to `receiver`
-    function redeem(
-        uint256 shares,
-        address receiver,
-        address owner
-    ) external returns (uint256 assets);
+    function redeem(uint256 shares, address receiver, address owner) external returns (uint256 assets);
 }

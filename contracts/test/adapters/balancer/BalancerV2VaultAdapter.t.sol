@@ -3,22 +3,36 @@
 // (c) Gearbox Holdings, 2023
 pragma solidity ^0.8.17;
 
-import { ICreditManagerV2, ICreditManagerV2Exceptions } from "@gearbox-protocol/core-v2/contracts/interfaces/ICreditManagerV2.sol";
+import {
+    ICreditManagerV2,
+    ICreditManagerV2Exceptions
+} from "@gearbox-protocol/core-v2/contracts/interfaces/ICreditManagerV2.sol";
 
-import { IBalancerV2Vault, PoolSpecialization, SingleSwap, BatchSwapStep, FundManagement, SwapKind, JoinKind, ExitKind, JoinPoolRequest, ExitPoolRequest } from "../../../integrations/balancer/IBalancerV2Vault.sol";
-import { IBalancerV2VaultAdapter, SingleSwapAll } from "../../../interfaces/balancer/IBalancerV2VaultAdapter.sol";
-import { IAsset } from "../../../integrations/balancer/IAsset.sol";
-import { BalancerV2VaultAdapter } from "../../../adapters/balancer/BalancerV2VaultAdapter.sol";
-import { BPTStablePriceFeed } from "../../../oracles/balancer/BPTStablePriceFeed.sol";
-import { BPTWeightedPriceFeed } from "../../../oracles/balancer/BPTWeightedPriceFeed.sol";
-import { IBalancerV2VaultAdapter } from "../../../interfaces/balancer/IBalancerV2VaultAdapter.sol";
-import { BalancerVaultMock } from "../../mocks/integrations/BalancerVaultMock.sol";
+import {
+    IBalancerV2Vault,
+    PoolSpecialization,
+    SingleSwap,
+    BatchSwapStep,
+    FundManagement,
+    SwapKind,
+    JoinKind,
+    ExitKind,
+    JoinPoolRequest,
+    ExitPoolRequest
+} from "../../../integrations/balancer/IBalancerV2Vault.sol";
+import {IBalancerV2VaultAdapter, SingleSwapAll} from "../../../interfaces/balancer/IBalancerV2VaultAdapter.sol";
+import {IAsset} from "../../../integrations/balancer/IAsset.sol";
+import {BalancerV2VaultAdapter} from "../../../adapters/balancer/BalancerV2VaultAdapter.sol";
+import {BPTStablePriceFeed} from "../../../oracles/balancer/BPTStablePriceFeed.sol";
+import {BPTWeightedPriceFeed} from "../../../oracles/balancer/BPTWeightedPriceFeed.sol";
+import {IBalancerV2VaultAdapter} from "../../../interfaces/balancer/IBalancerV2VaultAdapter.sol";
+import {BalancerVaultMock} from "../../mocks/integrations/BalancerVaultMock.sol";
 
-import { Tokens } from "../../suites/TokensTestSuite.sol";
+import {Tokens} from "../../suites/TokensTestSuite.sol";
 
 // TEST
 import "../../lib/constants.sol";
-import { AdapterTestHelper } from "../AdapterTestHelper.sol";
+import {AdapterTestHelper} from "../AdapterTestHelper.sol";
 
 bytes32 constant POOL_ID_1 = bytes32(uint256(1));
 bytes32 constant POOL_ID_2 = bytes32(uint256(2));
@@ -44,17 +58,11 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper {
         balancerMock.addStablePool(POOL_ID_1, assets, 50);
 
         balancerMock.setRate(
-            POOL_ID_1,
-            tokenTestSuite.addressOf(Tokens.DAI),
-            tokenTestSuite.addressOf(Tokens.USDC),
-            RAY / 1e12
+            POOL_ID_1, tokenTestSuite.addressOf(Tokens.DAI), tokenTestSuite.addressOf(Tokens.USDC), RAY / 1e12
         );
 
         balancerMock.setRate(
-            POOL_ID_1,
-            tokenTestSuite.addressOf(Tokens.USDT),
-            tokenTestSuite.addressOf(Tokens.DAI),
-            (99 * RAY) / 100
+            POOL_ID_1, tokenTestSuite.addressOf(Tokens.USDT), tokenTestSuite.addressOf(Tokens.DAI), (99 * RAY) / 100
         );
 
         balancerMock.setRate(
@@ -64,41 +72,17 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper {
             (99 * RAY) / (100 * 1e12)
         );
 
-        balancerMock.setDepositRate(
-            POOL_ID_1,
-            tokenTestSuite.addressOf(Tokens.DAI),
-            RAY
-        );
+        balancerMock.setDepositRate(POOL_ID_1, tokenTestSuite.addressOf(Tokens.DAI), RAY);
 
-        balancerMock.setDepositRate(
-            POOL_ID_1,
-            tokenTestSuite.addressOf(Tokens.USDC),
-            RAY * 1e12
-        );
+        balancerMock.setDepositRate(POOL_ID_1, tokenTestSuite.addressOf(Tokens.USDC), RAY * 1e12);
 
-        balancerMock.setDepositRate(
-            POOL_ID_1,
-            tokenTestSuite.addressOf(Tokens.USDT),
-            RAY
-        );
+        balancerMock.setDepositRate(POOL_ID_1, tokenTestSuite.addressOf(Tokens.USDT), RAY);
 
-        balancerMock.setWithdrawalRate(
-            POOL_ID_1,
-            tokenTestSuite.addressOf(Tokens.DAI),
-            RAY
-        );
+        balancerMock.setWithdrawalRate(POOL_ID_1, tokenTestSuite.addressOf(Tokens.DAI), RAY);
 
-        balancerMock.setWithdrawalRate(
-            POOL_ID_1,
-            tokenTestSuite.addressOf(Tokens.USDC),
-            RAY / 1e12
-        );
+        balancerMock.setWithdrawalRate(POOL_ID_1, tokenTestSuite.addressOf(Tokens.USDC), RAY / 1e12);
 
-        balancerMock.setWithdrawalRate(
-            POOL_ID_1,
-            tokenTestSuite.addressOf(Tokens.USDT),
-            RAY
-        );
+        balancerMock.setWithdrawalRate(POOL_ID_1, tokenTestSuite.addressOf(Tokens.USDT), RAY);
 
         tokenTestSuite.mint(Tokens.DAI, address(balancerMock), RAY);
 
@@ -114,7 +98,7 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper {
 
         balancerMock.setAssetBalances(POOL_ID_1, balances);
 
-        (address bpt, ) = balancerMock.getPool(POOL_ID_1);
+        (address bpt,) = balancerMock.getPool(POOL_ID_1);
 
         address[] memory priceFeeds = new address[](3);
         priceFeeds[0] = cft.priceOracle().priceFeeds(assets[0]);
@@ -147,44 +131,19 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper {
         weights[0] = WAD / 2;
         weights[1] = WAD / 2;
 
-        balancerMock.addPool(
-            POOL_ID_2,
-            assets,
-            weights,
-            PoolSpecialization.MINIMAL_SWAP_INFO,
-            50
-        );
+        balancerMock.addPool(POOL_ID_2, assets, weights, PoolSpecialization.MINIMAL_SWAP_INFO, 50);
 
         balancerMock.setRate(
-            POOL_ID_2,
-            tokenTestSuite.addressOf(Tokens.DAI),
-            tokenTestSuite.addressOf(Tokens.WETH),
-            RAY / DAI_WETH_RATE
+            POOL_ID_2, tokenTestSuite.addressOf(Tokens.DAI), tokenTestSuite.addressOf(Tokens.WETH), RAY / DAI_WETH_RATE
         );
 
-        balancerMock.setDepositRate(
-            POOL_ID_2,
-            tokenTestSuite.addressOf(Tokens.DAI),
-            RAY
-        );
+        balancerMock.setDepositRate(POOL_ID_2, tokenTestSuite.addressOf(Tokens.DAI), RAY);
 
-        balancerMock.setWithdrawalRate(
-            POOL_ID_2,
-            tokenTestSuite.addressOf(Tokens.DAI),
-            RAY
-        );
+        balancerMock.setWithdrawalRate(POOL_ID_2, tokenTestSuite.addressOf(Tokens.DAI), RAY);
 
-        balancerMock.setDepositRate(
-            POOL_ID_2,
-            tokenTestSuite.addressOf(Tokens.WETH),
-            RAY * DAI_WETH_RATE
-        );
+        balancerMock.setDepositRate(POOL_ID_2, tokenTestSuite.addressOf(Tokens.WETH), RAY * DAI_WETH_RATE);
 
-        balancerMock.setWithdrawalRate(
-            POOL_ID_2,
-            tokenTestSuite.addressOf(Tokens.WETH),
-            RAY / DAI_WETH_RATE
-        );
+        balancerMock.setWithdrawalRate(POOL_ID_2, tokenTestSuite.addressOf(Tokens.WETH), RAY / DAI_WETH_RATE);
 
         tokenTestSuite.mint(Tokens.DAI, address(balancerMock), RAY);
 
@@ -199,7 +158,7 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper {
 
         balancerMock.mintBPT(POOL_ID_2, FRIEND2, 20000000 * WAD);
 
-        (bpt, ) = balancerMock.getPool(POOL_ID_2);
+        (bpt,) = balancerMock.getPool(POOL_ID_2);
 
         priceFeeds = new address[](2);
         priceFeeds[0] = cft.priceOracle().priceFeeds(assets[0]);
@@ -227,10 +186,7 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper {
         );
 
         evm.prank(CONFIGURATOR);
-        creditConfigurator.allowContract(
-            address(balancerMock),
-            address(adapter)
-        );
+        creditConfigurator.allowContract(address(balancerMock), address(adapter));
 
         evm.label(address(adapter), "ADAPTER");
         evm.label(address(balancerMock), "BALANCER_MOCK");
@@ -238,16 +194,13 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper {
         deadline = _getUniswapDeadline();
     }
 
-    function _standardFundManagement(
-        address creditAccount
-    ) internal pure returns (FundManagement memory) {
-        return
-            FundManagement({
-                sender: creditAccount,
-                fromInternalBalance: false,
-                recipient: payable(creditAccount),
-                toInternalBalance: false
-            });
+    function _standardFundManagement(address creditAccount) internal pure returns (FundManagement memory) {
+        return FundManagement({
+            sender: creditAccount,
+            fromInternalBalance: false,
+            recipient: payable(creditAccount),
+            toInternalBalance: false
+        });
     }
 
     function expectBatchSwapStackCalls(
@@ -266,19 +219,14 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper {
                 evm.expectCall(
                     address(creditManager),
                     abi.encodeCall(
-                        ICreditManagerV2.approveCreditAccount,
-                        (targetContract, address(assets[i]), type(uint256).max)
+                        ICreditManagerV2.approveCreditAccount, (targetContract, address(assets[i]), type(uint256).max)
                     )
                 );
             }
         }
 
         evm.expectCall(
-            address(creditManager),
-            abi.encodeCall(
-                ICreditManagerV2.executeOrder,
-                (targetContract, callData)
-            )
+            address(creditManager), abi.encodeCall(ICreditManagerV2.executeOrder, (targetContract, callData))
         );
 
         evm.expectEmit(true, true, false, false);
@@ -288,10 +236,7 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper {
             if (limits[i] > 1) {
                 evm.expectCall(
                     address(creditManager),
-                    abi.encodeCall(
-                        ICreditManagerV2.approveCreditAccount,
-                        (targetContract, address(assets[i]), 1)
-                    )
+                    abi.encodeCall(ICreditManagerV2.approveCreditAccount, (targetContract, address(assets[i]), 1))
                 );
             }
         }
@@ -300,10 +245,7 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper {
             if (limits[i] < -1) {
                 evm.expectCall(
                     address(creditManager),
-                    abi.encodeCall(
-                        ICreditManagerV2.checkAndEnableToken,
-                        (creditAccount, address(assets[i]))
-                    )
+                    abi.encodeCall(ICreditManagerV2.checkAndEnableToken, (creditAccount, address(assets[i])))
                 );
             }
         }
@@ -329,29 +271,20 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper {
                 evm.expectCall(
                     address(creditManager),
                     abi.encodeCall(
-                        ICreditManagerV2.approveCreditAccount,
-                        (targetContract, address(assets[i]), type(uint256).max)
+                        ICreditManagerV2.approveCreditAccount, (targetContract, address(assets[i]), type(uint256).max)
                     )
                 );
             }
         }
 
-        (address pool, ) = balancerMock.getPool(poolId);
+        (address pool,) = balancerMock.getPool(poolId);
 
         evm.expectCall(
-            address(creditManager),
-            abi.encodeCall(
-                ICreditManagerV2.checkAndEnableToken,
-                (creditAccount, pool)
-            )
+            address(creditManager), abi.encodeCall(ICreditManagerV2.checkAndEnableToken, (creditAccount, pool))
         );
 
         evm.expectCall(
-            address(creditManager),
-            abi.encodeCall(
-                ICreditManagerV2.executeOrder,
-                (targetContract, callData)
-            )
+            address(creditManager), abi.encodeCall(ICreditManagerV2.executeOrder, (targetContract, callData))
         );
 
         evm.expectEmit(true, true, false, false);
@@ -361,10 +294,7 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper {
             if (maxAmountsIn[i] > 1) {
                 evm.expectCall(
                     address(creditManager),
-                    abi.encodeCall(
-                        ICreditManagerV2.approveCreditAccount,
-                        (targetContract, address(assets[i]), 1)
-                    )
+                    abi.encodeCall(ICreditManagerV2.approveCreditAccount, (targetContract, address(assets[i]), 1))
                 );
             }
         }
@@ -384,11 +314,7 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper {
         emit MultiCallStarted(borrower);
 
         evm.expectCall(
-            address(creditManager),
-            abi.encodeCall(
-                ICreditManagerV2.executeOrder,
-                (targetContract, callData)
-            )
+            address(creditManager), abi.encodeCall(ICreditManagerV2.executeOrder, (targetContract, callData))
         );
 
         evm.expectEmit(true, true, false, false);
@@ -397,10 +323,7 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper {
         for (uint256 i = 0; i < assets.length; ++i) {
             evm.expectCall(
                 address(creditManager),
-                abi.encodeCall(
-                    ICreditManagerV2.checkAndEnableToken,
-                    (creditAccount, address(assets[i]))
-                )
+                abi.encodeCall(ICreditManagerV2.checkAndEnableToken, (creditAccount, address(assets[i])))
             );
         }
 
@@ -417,17 +340,10 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper {
     /// @dev [ABV2-1]: swap works as expected
     function test_ABV2_01_swap_works_as_expected() public {
         setUp();
-        (
-            address creditAccount,
-            uint256 initialDAIBalance
-        ) = _openTestCreditAccount();
+        (address creditAccount, uint256 initialDAIBalance) = _openTestCreditAccount();
 
-        FundManagement memory fundManagement = FundManagement({
-            sender: USER,
-            fromInternalBalance: true,
-            recipient: payable(USER),
-            toInternalBalance: true
-        });
+        FundManagement memory fundManagement =
+            FundManagement({sender: USER, fromInternalBalance: true, recipient: payable(USER), toInternalBalance: true});
 
         SingleSwap memory singleSwapData = SingleSwap({
             poolId: POOL_ID_2,
@@ -470,17 +386,9 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper {
 
         executeOneLineMulticall(address(adapter), passedCallData);
 
-        expectBalance(
-            Tokens.DAI,
-            creditAccount,
-            initialDAIBalance - DAI_EXCHANGE_AMOUNT
-        );
+        expectBalance(Tokens.DAI, creditAccount, initialDAIBalance - DAI_EXCHANGE_AMOUNT);
 
-        expectBalance(
-            Tokens.WETH,
-            creditAccount,
-            ((DAI_EXCHANGE_AMOUNT / DAI_WETH_RATE) * 9950) / 10000
-        );
+        expectBalance(Tokens.WETH, creditAccount, ((DAI_EXCHANGE_AMOUNT / DAI_WETH_RATE) * 9950) / 10000);
 
         expectAllowance(Tokens.DAI, creditAccount, address(balancerMock), 1);
 
@@ -490,10 +398,7 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper {
     /// @dev [ABV2-2]: swapAll works as expected
     function test_ABV2_02_swapAll_works_as_expected() public {
         setUp();
-        (
-            address creditAccount,
-            uint256 initialDAIBalance
-        ) = _openTestCreditAccount();
+        (address creditAccount, uint256 initialDAIBalance) = _openTestCreditAccount();
 
         SingleSwapAll memory singleSwapAllData = SingleSwapAll({
             poolId: POOL_ID_2,
@@ -520,10 +425,7 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper {
         );
 
         bytes memory passedCallData = abi.encodeWithSelector(
-            IBalancerV2VaultAdapter.swapAll.selector,
-            singleSwapAllData,
-            RAY / (DAI_WETH_RATE * 2),
-            deadline
+            IBalancerV2VaultAdapter.swapAll.selector, singleSwapAllData, RAY / (DAI_WETH_RATE * 2), deadline
         );
 
         expectAllowance(Tokens.DAI, creditAccount, address(balancerMock), 0);
@@ -544,11 +446,7 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper {
 
         expectBalance(Tokens.DAI, creditAccount, 1);
 
-        expectBalance(
-            Tokens.WETH,
-            creditAccount,
-            (((initialDAIBalance - 1) / DAI_WETH_RATE) * 9950) / 10000
-        );
+        expectBalance(Tokens.WETH, creditAccount, (((initialDAIBalance - 1) / DAI_WETH_RATE) * 9950) / 10000);
 
         expectAllowance(Tokens.DAI, creditAccount, address(balancerMock), 1);
 
@@ -565,10 +463,7 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper {
             // 2 = consecutive swap from WETH to DAI to USDC
 
             setUp();
-            (
-                address creditAccount,
-                uint256 initialDAIBalance
-            ) = _openTestCreditAccount();
+            (address creditAccount, uint256 initialDAIBalance) = _openTestCreditAccount();
 
             BatchSwapStep[] memory batchSteps;
             IAsset[] memory assets;
@@ -634,9 +529,7 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper {
 
                 limits[0] = 0;
                 limits[1] = int256(WETH_EXCHANGE_AMOUNT);
-                limits[2] =
-                    (-int256(WETH_EXCHANGE_AMOUNT * DAI_WETH_RATE)) /
-                    (2 * 1e12);
+                limits[2] = (-int256(WETH_EXCHANGE_AMOUNT * DAI_WETH_RATE)) / (2 * 1e12);
 
                 batchSteps[0] = BatchSwapStep({
                     poolId: POOL_ID_2,
@@ -646,13 +539,8 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper {
                     userData: ""
                 });
 
-                batchSteps[1] = BatchSwapStep({
-                    poolId: POOL_ID_1,
-                    assetInIndex: 0,
-                    assetOutIndex: 2,
-                    amount: 0,
-                    userData: ""
-                });
+                batchSteps[1] =
+                    BatchSwapStep({poolId: POOL_ID_1, assetInIndex: 0, assetOutIndex: 2, amount: 0, userData: ""});
             }
 
             FundManagement memory fundManagement = FundManagement({
@@ -662,19 +550,9 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper {
                 toInternalBalance: true
             });
 
-            expectAllowance(
-                Tokens.DAI,
-                creditAccount,
-                address(balancerMock),
-                0
-            );
+            expectAllowance(Tokens.DAI, creditAccount, address(balancerMock), 0);
 
-            expectAllowance(
-                Tokens.WETH,
-                creditAccount,
-                address(balancerMock),
-                0
-            );
+            expectAllowance(Tokens.WETH, creditAccount, address(balancerMock), 0);
 
             bytes memory expectedCallData = abi.encodeWithSelector(
                 IBalancerV2Vault.batchSwap.selector,
@@ -686,14 +564,7 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper {
                 deadline
             );
 
-            expectBatchSwapStackCalls(
-                address(balancerMock),
-                USER,
-                creditAccount,
-                expectedCallData,
-                assets,
-                limits
-            );
+            expectBatchSwapStackCalls(address(balancerMock), USER, creditAccount, expectedCallData, assets, limits);
 
             executeOneLineMulticall(
                 address(adapter),
@@ -709,109 +580,43 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper {
             );
 
             if (st == 0) {
-                expectBalance(
-                    Tokens.DAI,
-                    creditAccount,
-                    initialDAIBalance - DAI_EXCHANGE_AMOUNT
-                );
+                expectBalance(Tokens.DAI, creditAccount, initialDAIBalance - DAI_EXCHANGE_AMOUNT);
 
-                expectBalance(
-                    Tokens.WETH,
-                    creditAccount,
-                    ((DAI_EXCHANGE_AMOUNT / DAI_WETH_RATE) * 9950) / 10000
-                );
+                expectBalance(Tokens.WETH, creditAccount, ((DAI_EXCHANGE_AMOUNT / DAI_WETH_RATE) * 9950) / 10000);
 
-                expectAllowance(
-                    Tokens.DAI,
-                    creditAccount,
-                    address(balancerMock),
-                    1
-                );
+                expectAllowance(Tokens.DAI, creditAccount, address(balancerMock), 1);
 
-                expectAllowance(
-                    Tokens.WETH,
-                    creditAccount,
-                    address(balancerMock),
-                    0
-                );
+                expectAllowance(Tokens.WETH, creditAccount, address(balancerMock), 0);
 
                 expectTokenIsEnabled(Tokens.WETH, true);
             } else if (st == 1) {
-                expectBalance(
-                    Tokens.DAI,
-                    creditAccount,
-                    initialDAIBalance - 2 * DAI_EXCHANGE_AMOUNT
-                );
+                expectBalance(Tokens.DAI, creditAccount, initialDAIBalance - 2 * DAI_EXCHANGE_AMOUNT);
 
-                expectBalance(
-                    Tokens.WETH,
-                    creditAccount,
-                    ((DAI_EXCHANGE_AMOUNT / DAI_WETH_RATE) * 9950) / 10000
-                );
+                expectBalance(Tokens.WETH, creditAccount, ((DAI_EXCHANGE_AMOUNT / DAI_WETH_RATE) * 9950) / 10000);
 
-                expectBalance(
-                    Tokens.USDC,
-                    creditAccount,
-                    ((DAI_EXCHANGE_AMOUNT / 1e12) * 9950) / 10000
-                );
+                expectBalance(Tokens.USDC, creditAccount, ((DAI_EXCHANGE_AMOUNT / 1e12) * 9950) / 10000);
 
-                expectAllowance(
-                    Tokens.DAI,
-                    creditAccount,
-                    address(balancerMock),
-                    1
-                );
+                expectAllowance(Tokens.DAI, creditAccount, address(balancerMock), 1);
 
-                expectAllowance(
-                    Tokens.WETH,
-                    creditAccount,
-                    address(balancerMock),
-                    0
-                );
+                expectAllowance(Tokens.WETH, creditAccount, address(balancerMock), 0);
 
-                expectAllowance(
-                    Tokens.USDC,
-                    creditAccount,
-                    address(balancerMock),
-                    0
-                );
+                expectAllowance(Tokens.USDC, creditAccount, address(balancerMock), 0);
 
                 expectTokenIsEnabled(Tokens.WETH, true);
                 expectTokenIsEnabled(Tokens.USDC, true);
             } else if (st == 2) {
-                expectBalance(
-                    Tokens.WETH,
-                    creditAccount,
-                    WETH_ACCOUNT_AMOUNT - WETH_EXCHANGE_AMOUNT
-                );
+                expectBalance(Tokens.WETH, creditAccount, WETH_ACCOUNT_AMOUNT - WETH_EXCHANGE_AMOUNT);
                 expectBalance(Tokens.DAI, creditAccount, initialDAIBalance);
 
-                uint256 expectedAmount = (WETH_EXCHANGE_AMOUNT *
-                    DAI_WETH_RATE *
-                    9950) / 10000;
+                uint256 expectedAmount = (WETH_EXCHANGE_AMOUNT * DAI_WETH_RATE * 9950) / 10000;
                 expectedAmount = ((expectedAmount / 1e12) * 9950) / 10000;
 
                 expectBalance(Tokens.USDC, creditAccount, expectedAmount);
-                expectAllowance(
-                    Tokens.DAI,
-                    creditAccount,
-                    address(balancerMock),
-                    0
-                );
+                expectAllowance(Tokens.DAI, creditAccount, address(balancerMock), 0);
 
-                expectAllowance(
-                    Tokens.WETH,
-                    creditAccount,
-                    address(balancerMock),
-                    1
-                );
+                expectAllowance(Tokens.WETH, creditAccount, address(balancerMock), 1);
 
-                expectAllowance(
-                    Tokens.USDC,
-                    creditAccount,
-                    address(balancerMock),
-                    0
-                );
+                expectAllowance(Tokens.USDC, creditAccount, address(balancerMock), 0);
 
                 expectTokenIsEnabled(Tokens.USDC, true);
             }
@@ -821,10 +626,7 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper {
     /// @dev [ABV2-4]: joinPool works as expected
     function test_ABV2_04_joinPool_works_as_expected() public {
         setUp();
-        (
-            address creditAccount,
-            uint256 initialDAIBalance
-        ) = _openTestCreditAccount();
+        (address creditAccount, uint256 initialDAIBalance) = _openTestCreditAccount();
 
         addCollateral(Tokens.USDT, DAI_ACCOUNT_AMOUNT);
 
@@ -843,11 +645,7 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper {
         JoinPoolRequest memory request;
 
         {
-            bytes memory userData = abi.encode(
-                JoinKind.EXACT_TOKENS_IN_FOR_BPT_OUT,
-                maxAmountsIn,
-                DAI_EXCHANGE_AMOUNT
-            );
+            bytes memory userData = abi.encode(JoinKind.EXACT_TOKENS_IN_FOR_BPT_OUT, maxAmountsIn, DAI_EXCHANGE_AMOUNT);
 
             request = JoinPoolRequest({
                 assets: assets,
@@ -857,50 +655,26 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper {
             });
         }
 
-        bytes memory passedCallData = abi.encodeWithSelector(
-            IBalancerV2Vault.joinPool.selector,
-            POOL_ID_1,
-            USER,
-            USER,
-            request
-        );
+        bytes memory passedCallData =
+            abi.encodeWithSelector(IBalancerV2Vault.joinPool.selector, POOL_ID_1, USER, USER, request);
 
         request.fromInternalBalance = false;
 
-        bytes memory expectedCallData = abi.encodeWithSelector(
-            IBalancerV2Vault.joinPool.selector,
-            POOL_ID_1,
-            creditAccount,
-            creditAccount,
-            request
-        );
+        bytes memory expectedCallData =
+            abi.encodeWithSelector(IBalancerV2Vault.joinPool.selector, POOL_ID_1, creditAccount, creditAccount, request);
 
         request.fromInternalBalance = true;
 
         expectJoinPoolStackCalls(
-            address(balancerMock),
-            USER,
-            creditAccount,
-            POOL_ID_1,
-            expectedCallData,
-            assets,
-            maxAmountsIn
+            address(balancerMock), USER, creditAccount, POOL_ID_1, expectedCallData, assets, maxAmountsIn
         );
 
         executeOneLineMulticall(address(adapter), passedCallData);
 
-        expectBalance(
-            Tokens.DAI,
-            creditAccount,
-            initialDAIBalance - DAI_EXCHANGE_AMOUNT
-        );
-        expectBalance(
-            Tokens.USDT,
-            creditAccount,
-            DAI_ACCOUNT_AMOUNT - DAI_EXCHANGE_AMOUNT
-        );
+        expectBalance(Tokens.DAI, creditAccount, initialDAIBalance - DAI_EXCHANGE_AMOUNT);
+        expectBalance(Tokens.USDT, creditAccount, DAI_ACCOUNT_AMOUNT - DAI_EXCHANGE_AMOUNT);
 
-        (address pool, ) = balancerMock.getPool(POOL_ID_1);
+        (address pool,) = balancerMock.getPool(POOL_ID_1);
 
         expectBalance(pool, creditAccount, DAI_EXCHANGE_AMOUNT * 2);
 
@@ -914,10 +688,7 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper {
     /// @dev [ABV2-5]: joinPoolSingleAsset works as expected
     function test_ABV2_05_joinPoolSingleAsset_works_as_expected() public {
         setUp();
-        (
-            address creditAccount,
-            uint256 initialDAIBalance
-        ) = _openTestCreditAccount();
+        (address creditAccount, uint256 initialDAIBalance) = _openTestCreditAccount();
 
         expectAllowance(Tokens.DAI, creditAccount, address(balancerMock), 0);
 
@@ -942,11 +713,8 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper {
         JoinPoolRequest memory request;
 
         {
-            bytes memory userData = abi.encode(
-                JoinKind.EXACT_TOKENS_IN_FOR_BPT_OUT,
-                maxAmountsIn,
-                DAI_EXCHANGE_AMOUNT / 2
-            );
+            bytes memory userData =
+                abi.encode(JoinKind.EXACT_TOKENS_IN_FOR_BPT_OUT, maxAmountsIn, DAI_EXCHANGE_AMOUNT / 2);
 
             request = JoinPoolRequest({
                 assets: assets,
@@ -956,15 +724,10 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper {
             });
         }
 
-        bytes memory expectedCallData = abi.encodeWithSelector(
-            IBalancerV2Vault.joinPool.selector,
-            POOL_ID_1,
-            creditAccount,
-            creditAccount,
-            request
-        );
+        bytes memory expectedCallData =
+            abi.encodeWithSelector(IBalancerV2Vault.joinPool.selector, POOL_ID_1, creditAccount, creditAccount, request);
 
-        (address pool, ) = balancerMock.getPool(POOL_ID_1);
+        (address pool,) = balancerMock.getPool(POOL_ID_1);
 
         expectMulticallStackCalls(
             address(adapter),
@@ -978,11 +741,7 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper {
 
         executeOneLineMulticall(address(adapter), passedCallData);
 
-        expectBalance(
-            Tokens.DAI,
-            creditAccount,
-            initialDAIBalance - DAI_EXCHANGE_AMOUNT
-        );
+        expectBalance(Tokens.DAI, creditAccount, initialDAIBalance - DAI_EXCHANGE_AMOUNT);
 
         expectBalance(pool, creditAccount, DAI_EXCHANGE_AMOUNT);
 
@@ -994,10 +753,7 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper {
     /// @dev [ABV2-6]: joinPoolSingleAssetAll works as expected
     function test_ABV2_06_joinPoolSingleAssetAll_works_as_expected() public {
         setUp();
-        (
-            address creditAccount,
-            uint256 initialDAIBalance
-        ) = _openTestCreditAccount();
+        (address creditAccount, uint256 initialDAIBalance) = _openTestCreditAccount();
 
         expectAllowance(Tokens.DAI, creditAccount, address(balancerMock), 0);
 
@@ -1021,11 +777,8 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper {
         JoinPoolRequest memory request;
 
         {
-            bytes memory userData = abi.encode(
-                JoinKind.EXACT_TOKENS_IN_FOR_BPT_OUT,
-                maxAmountsIn,
-                (initialDAIBalance - 1) / 2
-            );
+            bytes memory userData =
+                abi.encode(JoinKind.EXACT_TOKENS_IN_FOR_BPT_OUT, maxAmountsIn, (initialDAIBalance - 1) / 2);
 
             request = JoinPoolRequest({
                 assets: assets,
@@ -1035,15 +788,10 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper {
             });
         }
 
-        bytes memory expectedCallData = abi.encodeWithSelector(
-            IBalancerV2Vault.joinPool.selector,
-            POOL_ID_1,
-            creditAccount,
-            creditAccount,
-            request
-        );
+        bytes memory expectedCallData =
+            abi.encodeWithSelector(IBalancerV2Vault.joinPool.selector, POOL_ID_1, creditAccount, creditAccount, request);
 
-        (address pool, ) = balancerMock.getPool(POOL_ID_1);
+        (address pool,) = balancerMock.getPool(POOL_ID_1);
 
         expectMulticallStackCalls(
             address(adapter),
@@ -1069,10 +817,7 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper {
     /// @dev [ABV2-7]: exitPool works as expected
     function test_ABV2_07_exitPool_works_as_expected() public {
         setUp();
-        (
-            address creditAccount,
-            uint256 initialDAIBalance
-        ) = _openTestCreditAccount();
+        (address creditAccount, uint256 initialDAIBalance) = _openTestCreditAccount();
 
         balancerMock.mintBPT(POOL_ID_1, creditAccount, 50000 * WAD);
 
@@ -1091,10 +836,7 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper {
         ExitPoolRequest memory request;
 
         {
-            bytes memory userData = abi.encode(
-                ExitKind.EXACT_BPT_IN_FOR_TOKENS_OUT,
-                30000 * WAD
-            );
+            bytes memory userData = abi.encode(ExitKind.EXACT_BPT_IN_FOR_TOKENS_OUT, 30000 * WAD);
 
             request = ExitPoolRequest({
                 assets: assets,
@@ -1104,45 +846,25 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper {
             });
         }
 
-        bytes memory passedCallData = abi.encodeWithSelector(
-            IBalancerV2Vault.exitPool.selector,
-            POOL_ID_1,
-            USER,
-            USER,
-            request
-        );
+        bytes memory passedCallData =
+            abi.encodeWithSelector(IBalancerV2Vault.exitPool.selector, POOL_ID_1, USER, USER, request);
 
         request.toInternalBalance = false;
 
-        bytes memory expectedCallData = abi.encodeWithSelector(
-            IBalancerV2Vault.exitPool.selector,
-            POOL_ID_1,
-            creditAccount,
-            creditAccount,
-            request
-        );
+        bytes memory expectedCallData =
+            abi.encodeWithSelector(IBalancerV2Vault.exitPool.selector, POOL_ID_1, creditAccount, creditAccount, request);
 
         request.toInternalBalance = true;
 
-        expectExitPoolStackCalls(
-            address(balancerMock),
-            USER,
-            creditAccount,
-            expectedCallData,
-            assets
-        );
+        expectExitPoolStackCalls(address(balancerMock), USER, creditAccount, expectedCallData, assets);
 
         executeOneLineMulticall(address(adapter), passedCallData);
 
-        expectBalance(
-            Tokens.DAI,
-            creditAccount,
-            initialDAIBalance + 10000 * WAD
-        );
+        expectBalance(Tokens.DAI, creditAccount, initialDAIBalance + 10000 * WAD);
         expectBalance(Tokens.USDT, creditAccount, 10000 * WAD);
         expectBalance(Tokens.USDC, creditAccount, 10000 * 1e6);
 
-        (address pool, ) = balancerMock.getPool(POOL_ID_1);
+        (address pool,) = balancerMock.getPool(POOL_ID_1);
 
         expectBalance(pool, creditAccount, 20000 * WAD);
 
@@ -1154,7 +876,7 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper {
     /// @dev [ABV2-8]: exitPoolSingleAsset works as expected
     function test_ABV2_08_exitPoolSingleAsset_works_as_expected() public {
         setUp();
-        (address creditAccount, ) = _openTestCreditAccount();
+        (address creditAccount,) = _openTestCreditAccount();
 
         balancerMock.mintBPT(POOL_ID_1, creditAccount, DAI_ACCOUNT_AMOUNT);
 
@@ -1179,11 +901,7 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper {
         ExitPoolRequest memory request;
 
         {
-            bytes memory userData = abi.encode(
-                ExitKind.EXACT_BPT_IN_FOR_ONE_TOKEN_OUT,
-                DAI_EXCHANGE_AMOUNT,
-                2
-            );
+            bytes memory userData = abi.encode(ExitKind.EXACT_BPT_IN_FOR_ONE_TOKEN_OUT, DAI_EXCHANGE_AMOUNT, 2);
 
             request = ExitPoolRequest({
                 assets: assets,
@@ -1193,15 +911,10 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper {
             });
         }
 
-        bytes memory expectedCallData = abi.encodeWithSelector(
-            IBalancerV2Vault.exitPool.selector,
-            POOL_ID_1,
-            creditAccount,
-            creditAccount,
-            request
-        );
+        bytes memory expectedCallData =
+            abi.encodeWithSelector(IBalancerV2Vault.exitPool.selector, POOL_ID_1, creditAccount, creditAccount, request);
 
-        (address pool, ) = balancerMock.getPool(POOL_ID_1);
+        (address pool,) = balancerMock.getPool(POOL_ID_1);
 
         expectMulticallStackCalls(
             address(adapter),
@@ -1218,11 +931,7 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper {
 
         expectBalance(Tokens.USDT, creditAccount, DAI_EXCHANGE_AMOUNT);
 
-        expectBalance(
-            pool,
-            creditAccount,
-            DAI_ACCOUNT_AMOUNT - DAI_EXCHANGE_AMOUNT
-        );
+        expectBalance(pool, creditAccount, DAI_ACCOUNT_AMOUNT - DAI_EXCHANGE_AMOUNT);
 
         expectTokenIsEnabled(Tokens.USDT, true);
     }
@@ -1230,7 +939,7 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper {
     /// @dev [ABV2-9]: exitPoolSingleAssetAll works as expected
     function test_ABV2_09_exitPoolSingleAssetAll_works_as_expected() public {
         setUp();
-        (address creditAccount, ) = _openTestCreditAccount();
+        (address creditAccount,) = _openTestCreditAccount();
 
         balancerMock.mintBPT(POOL_ID_1, creditAccount, DAI_ACCOUNT_AMOUNT);
 
@@ -1254,11 +963,7 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper {
         ExitPoolRequest memory request;
 
         {
-            bytes memory userData = abi.encode(
-                ExitKind.EXACT_BPT_IN_FOR_ONE_TOKEN_OUT,
-                DAI_ACCOUNT_AMOUNT - 1,
-                2
-            );
+            bytes memory userData = abi.encode(ExitKind.EXACT_BPT_IN_FOR_ONE_TOKEN_OUT, DAI_ACCOUNT_AMOUNT - 1, 2);
 
             request = ExitPoolRequest({
                 assets: assets,
@@ -1268,15 +973,10 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper {
             });
         }
 
-        bytes memory expectedCallData = abi.encodeWithSelector(
-            IBalancerV2Vault.exitPool.selector,
-            POOL_ID_1,
-            creditAccount,
-            creditAccount,
-            request
-        );
+        bytes memory expectedCallData =
+            abi.encodeWithSelector(IBalancerV2Vault.exitPool.selector, POOL_ID_1, creditAccount, creditAccount, request);
 
-        (address pool, ) = balancerMock.getPool(POOL_ID_1);
+        (address pool,) = balancerMock.getPool(POOL_ID_1);
 
         expectMulticallStackCalls(
             address(adapter),

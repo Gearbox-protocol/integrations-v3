@@ -3,15 +3,15 @@
 // (c) Gearbox Holdings, 2023
 pragma solidity ^0.8.17;
 
-import { AggregatorV3Interface } from "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
-import { PriceFeedType } from "@gearbox-protocol/core-v2/contracts/interfaces/IPriceFeedType.sol";
-import { LPPriceFeed } from "@gearbox-protocol/core-v2/contracts/oracles/LPPriceFeed.sol";
-import { WAD } from "@gearbox-protocol/core-v2/contracts/libraries/Constants.sol";
+import {AggregatorV3Interface} from "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
+import {PriceFeedType} from "@gearbox-protocol/core-v2/contracts/interfaces/IPriceFeedType.sol";
+import {LPPriceFeed} from "@gearbox-protocol/core-v2/contracts/oracles/LPPriceFeed.sol";
+import {WAD} from "@gearbox-protocol/core-v2/contracts/libraries/Constants.sol";
 
-import { ICToken } from "../../integrations/compound/ICToken.sol";
+import {ICToken} from "../../integrations/compound/ICToken.sol";
 
 // EXCEPTIONS
-import { ZeroAddressException } from "@gearbox-protocol/core-v2/contracts/interfaces/IErrors.sol";
+import {ZeroAddressException} from "@gearbox-protocol/core-v2/contracts/interfaces/IErrors.sol";
 
 uint256 constant RANGE_WIDTH = 200; // 2%
 
@@ -26,8 +26,7 @@ contract CompoundPriceFeed is LPPriceFeed {
     /// @dev Scale of the cToken's exchangeRate
     uint256 public constant decimalsDivider = WAD;
 
-    PriceFeedType public constant override priceFeedType =
-        PriceFeedType.COMPOUND_ORACLE;
+    PriceFeedType public constant override priceFeedType = PriceFeedType.COMPOUND_ORACLE;
     uint256 public constant override version = 1;
 
     /// @dev Whether to skip price sanity checks.
@@ -35,23 +34,16 @@ contract CompoundPriceFeed is LPPriceFeed {
     ///         since they perform their own sanity checks
     bool public constant override skipPriceCheck = true;
 
-    constructor(
-        address addressProvider,
-        address _cToken,
-        address _priceFeed
-    )
+    constructor(address addressProvider, address _cToken, address _priceFeed)
         LPPriceFeed(
             addressProvider,
             RANGE_WIDTH,
-            _cToken != address(0)
-                ? string(
-                    abi.encodePacked(ICToken(_cToken).name(), " priceFeed")
-                )
-                : ""
+            _cToken != address(0) ? string(abi.encodePacked(ICToken(_cToken).name(), " priceFeed")) : ""
         )
     {
-        if (_cToken == address(0) || _priceFeed == address(0))
+        if (_cToken == address(0) || _priceFeed == address(0)) {
             revert ZeroAddressException();
+        }
 
         cToken = ICToken(_cToken);
         priceFeed = AggregatorV3Interface(_priceFeed);
@@ -66,16 +58,9 @@ contract CompoundPriceFeed is LPPriceFeed {
         external
         view
         override
-        returns (
-            uint80 roundId,
-            int256 answer,
-            uint256 startedAt,
-            uint256 updatedAt,
-            uint80 answeredInRound
-        )
+        returns (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound)
     {
-        (roundId, answer, startedAt, updatedAt, answeredInRound) = priceFeed
-            .latestRoundData();
+        (roundId, answer, startedAt, updatedAt, answeredInRound) = priceFeed.latestRoundData();
 
         // Sanity check for chainlink pricefeed
         _checkAnswer(roundId, answer, updatedAt, answeredInRound);
@@ -88,10 +73,7 @@ contract CompoundPriceFeed is LPPriceFeed {
         answer = int256((exchangeRate * uint256(answer)) / decimalsDivider);
     }
 
-    function _checkCurrentValueInBounds(
-        uint256 _lowerBound,
-        uint256 _uBound
-    ) internal view override returns (bool) {
+    function _checkCurrentValueInBounds(uint256 _lowerBound, uint256 _uBound) internal view override returns (bool) {
         uint256 rate = cToken.exchangeRateStored();
         if (rate < _lowerBound || rate > _uBound) {
             return false;

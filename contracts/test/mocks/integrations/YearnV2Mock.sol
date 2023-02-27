@@ -3,16 +3,17 @@
 // (c) Gearbox Holdings, 2022
 pragma solidity ^0.8.10;
 
-import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
-import { IYVault } from "../../../integrations/yearn/IYVault.sol";
+import {IYVault} from "../../../integrations/yearn/IYVault.sol";
 
 contract YearnV2Mock is IYVault, ERC20, Ownable {
     using SafeERC20 for IERC20;
+
     address public override token;
     uint256 public override pricePerShare;
 
@@ -25,7 +26,7 @@ contract YearnV2Mock is IYVault, ERC20, Ownable {
         )
     {
         token = _token;
-        decimalsMul = 10**ERC20.decimals();
+        decimalsMul = 10 ** ERC20.decimals();
         pricePerShare = decimalsMul;
     }
 
@@ -37,11 +38,7 @@ contract YearnV2Mock is IYVault, ERC20, Ownable {
         return deposit(_amount, msg.sender);
     }
 
-    function deposit(uint256 _amount, address recipient)
-        public
-        override
-        returns (uint256 shares)
-    {
+    function deposit(uint256 _amount, address recipient) public override returns (uint256 shares) {
         IERC20(token).safeTransferFrom(msg.sender, address(this), _amount);
         shares = (_amount * decimalsMul) / pricePerShare;
         _mint(recipient, shares);
@@ -55,11 +52,7 @@ contract YearnV2Mock is IYVault, ERC20, Ownable {
         return withdraw(maxShares, msg.sender);
     }
 
-    function withdraw(uint256 maxShares, address recipient)
-        public
-        override
-        returns (uint256)
-    {
+    function withdraw(uint256 maxShares, address recipient) public override returns (uint256) {
         return withdraw(maxShares, recipient, 1);
     }
 
@@ -81,21 +74,11 @@ contract YearnV2Mock is IYVault, ERC20, Ownable {
         pricePerShare = newPrice;
     }
 
-    function name()
-        public
-        view
-        override(IYVault, ERC20)
-        returns (string memory)
-    {
+    function name() public view override(IYVault, ERC20) returns (string memory) {
         return ERC20.name();
     }
 
-    function symbol()
-        public
-        view
-        override(IYVault, ERC20)
-        returns (string memory)
-    {
+    function symbol() public view override(IYVault, ERC20) returns (string memory) {
         return ERC20.symbol();
     }
 

@@ -3,20 +3,22 @@
 // (c) Gearbox Holdings, 2023
 pragma solidity ^0.8.17;
 
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { SafeCast } from "@openzeppelin/contracts/utils/math/SafeCast.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 
-import { AbstractAdapter } from "@gearbox-protocol/core-v2/contracts/adapters/AbstractAdapter.sol";
-import { ICurvePool2Assets } from "../../integrations/curve/ICurvePool_2.sol";
-import { ICurvePool3Assets } from "../../integrations/curve/ICurvePool_3.sol";
-import { ICurvePool4Assets } from "../../integrations/curve/ICurvePool_4.sol";
-import { ICurveV1Adapter } from "../../interfaces/curve/ICurveV1Adapter.sol";
-import { IAdapter, AdapterType } from "@gearbox-protocol/core-v2/contracts/interfaces/adapters/IAdapter.sol";
-import { ICurvePool } from "../../integrations/curve/ICurvePool.sol";
-import { RAY } from "@gearbox-protocol/core-v2/contracts/libraries/Constants.sol";
+import {AbstractAdapter} from "@gearbox-protocol/core-v2/contracts/adapters/AbstractAdapter.sol";
+import {ICurvePool2Assets} from "../../integrations/curve/ICurvePool_2.sol";
+import {ICurvePool3Assets} from "../../integrations/curve/ICurvePool_3.sol";
+import {ICurvePool4Assets} from "../../integrations/curve/ICurvePool_4.sol";
+import {ICurveV1Adapter} from "../../interfaces/curve/ICurveV1Adapter.sol";
+import {IAdapter, AdapterType} from "@gearbox-protocol/core-v2/contracts/interfaces/adapters/IAdapter.sol";
+import {ICurvePool} from "../../integrations/curve/ICurvePool.sol";
+import {RAY} from "@gearbox-protocol/core-v2/contracts/libraries/Constants.sol";
 
 // EXCEPTIONS
-import { ZeroAddressException, NotImplementedException } from "@gearbox-protocol/core-v2/contracts/interfaces/IErrors.sol";
+import {
+    ZeroAddressException, NotImplementedException
+} from "@gearbox-protocol/core-v2/contracts/interfaces/IErrors.sol";
 
 uint256 constant ZERO = 0;
 
@@ -70,13 +72,7 @@ contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
 
     uint16 public constant _gearboxAdapterVersion = 2;
 
-    function _gearboxAdapterType()
-        external
-        pure
-        virtual
-        override
-        returns (AdapterType)
-    {
+    function _gearboxAdapterType() external pure virtual override returns (AdapterType) {
         return AdapterType.CURVE_V1_EXCHANGE_ONLY;
     }
 
@@ -85,17 +81,14 @@ contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
     /// @param _curvePool Address of the target contract Curve pool
     /// @param _lp_token Address of the pool's LP token
     /// @param _metapoolBase The base pool if this pool is a metapool, otherwise 0x0
-    constructor(
-        address _creditManager,
-        address _curvePool,
-        address _lp_token,
-        address _metapoolBase,
-        uint256 _nCoins
-    ) AbstractAdapter(_creditManager, _curvePool) {
+    constructor(address _creditManager, address _curvePool, address _lp_token, address _metapoolBase, uint256 _nCoins)
+        AbstractAdapter(_creditManager, _curvePool)
+    {
         if (_lp_token == address(0)) revert ZeroAddressException(); // F:[ACV1-1]
 
-        if (creditManager.tokenMasksMap(_lp_token) == 0)
-            revert TokenIsNotInAllowedList(_lp_token); // F:[ACV1-1]
+        if (creditManager.tokenMasksMap(_lp_token) == 0) {
+            revert TokenIsNotInAllowedList(_lp_token);
+        } // F:[ACV1-1]
 
         token = _lp_token; // F:[ACV1-2]
         lp_token = _lp_token; // F:[ACV1-2]
@@ -104,24 +97,21 @@ contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
 
         address[4] memory tokens;
 
-        for (uint256 i = 0; i < nCoins; ) {
+        for (uint256 i = 0; i < nCoins;) {
             address currentCoin;
 
-            try ICurvePool(targetContract).coins(i) returns (
-                address tokenAddress
-            ) {
+            try ICurvePool(targetContract).coins(i) returns (address tokenAddress) {
                 currentCoin = tokenAddress;
             } catch {
-                try
-                    ICurvePool(targetContract).coins(i.toInt256().toInt128())
-                returns (address tokenAddress) {
+                try ICurvePool(targetContract).coins(i.toInt256().toInt128()) returns (address tokenAddress) {
                     currentCoin = tokenAddress;
                 } catch {}
             }
 
             if (currentCoin == address(0)) revert ZeroAddressException();
-            if (creditManager.tokenMasksMap(currentCoin) == 0)
+            if (creditManager.tokenMasksMap(currentCoin) == 0) {
                 revert TokenIsNotInAllowedList(currentCoin);
+            }
 
             tokens[i] = currentCoin;
 
@@ -137,39 +127,30 @@ contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
 
         tokens = [address(0), address(0), address(0), address(0)];
 
-        for (uint256 i = 0; i < 4; ) {
+        for (uint256 i = 0; i < 4;) {
             address currentCoin;
 
             if (metapoolBase != address(0)) {
                 if (i == 0) {
                     currentCoin = token0;
                 } else {
-                    try ICurvePool(metapoolBase).coins(i - 1) returns (
+                    try ICurvePool(metapoolBase).coins(i - 1) returns (address tokenAddress) {
+                        currentCoin = tokenAddress;
+                    } catch {}
+                }
+            } else {
+                try ICurvePool(targetContract).underlying_coins(i) returns (address tokenAddress) {
+                    currentCoin = tokenAddress;
+                } catch {
+                    try ICurvePool(targetContract).underlying_coins(i.toInt256().toInt128()) returns (
                         address tokenAddress
                     ) {
                         currentCoin = tokenAddress;
                     } catch {}
                 }
-            } else {
-                try ICurvePool(targetContract).underlying_coins(i) returns (
-                    address tokenAddress
-                ) {
-                    currentCoin = tokenAddress;
-                } catch {
-                    try
-                        ICurvePool(targetContract).underlying_coins(
-                            i.toInt256().toInt128()
-                        )
-                    returns (address tokenAddress) {
-                        currentCoin = tokenAddress;
-                    } catch {}
-                }
             }
 
-            if (
-                currentCoin != address(0) &&
-                creditManager.tokenMasksMap(currentCoin) == 0
-            ) {
+            if (currentCoin != address(0) && creditManager.tokenMasksMap(currentCoin) == 0) {
                 revert TokenIsNotInAllowedList(currentCoin); // F:[ACV1-1]
             }
 
@@ -195,12 +176,7 @@ contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
     /// Input token is allowed, since the target does a transferFrom for coin i
     /// The input token does not need to be disabled, because this does not spend the entire
     /// balance, generally
-    function exchange(
-        int128 i,
-        int128 j,
-        uint256,
-        uint256
-    ) external override creditFacadeOnly {
+    function exchange(int128 i, int128 j, uint256, uint256) external override creditFacadeOnly {
         address tokenIn = _get_token(i); // F:[ACV1-4,ACV1S-3]
         address tokenOut = _get_token(j); // F:[ACV1-4,ACV1S-3]
         _executeSwapMaxApprove(tokenIn, tokenOut, msg.data, false); // F:[ACV1-4,ACV1S-3]
@@ -216,11 +192,7 @@ contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
     /// Input token is allowed, since the target does a transferFrom for coin i
     /// The input token does need to be disabled, because this spends the entire balance
     /// @notice Calls `exchange` under the hood, passing current balance - 1 as the amount
-    function exchange_all(
-        int128 i,
-        int128 j,
-        uint256 rateMinRAY
-    ) external override creditFacadeOnly {
+    function exchange_all(int128 i, int128 j, uint256 rateMinRAY) external override creditFacadeOnly {
         address creditAccount = _creditAccount(); //F:[ACV1-3]
 
         address tokenIn = _get_token(i); //F:[ACV1-5]
@@ -235,11 +207,7 @@ contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
             uint256 min_dy = (dx * rateMinRAY) / RAY; //F:[ACV1-5]
 
             _executeSwapMaxApprove(
-                creditAccount,
-                tokenIn,
-                tokenOut,
-                abi.encodeCall(ICurvePool.exchange, (i, j, dx, min_dy)),
-                true
+                creditAccount, tokenIn, tokenOut, abi.encodeCall(ICurvePool.exchange, (i, j, dx, min_dy)), true
             ); //F:[ACV1-5]
         }
     }
@@ -253,12 +221,7 @@ contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
     /// Input token is allowed, since the target does a transferFrom for underlying i
     /// The input token does not need to be disabled, because this does not spend the entire
     /// balance, generally
-    function exchange_underlying(
-        int128 i,
-        int128 j,
-        uint256,
-        uint256
-    ) external override creditFacadeOnly {
+    function exchange_underlying(int128 i, int128 j, uint256, uint256) external override creditFacadeOnly {
         address tokenIn = _get_underlying(i); // F:[ACV1-6]
         address tokenOut = _get_underlying(j); // F:[ACV1-6]
         _executeSwapMaxApprove(tokenIn, tokenOut, msg.data, false); // F:[ACV1-6]
@@ -274,11 +237,7 @@ contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
     /// Input token is allowed, since the target does a transferFrom for underlying i
     /// The input token does need to be disabled, because this spends the entire balance
     /// @notice Calls `exchange_underlying` under the hood, passing current balance - 1 as the amount
-    function exchange_all_underlying(
-        int128 i,
-        int128 j,
-        uint256 rateMinRAY
-    ) external creditFacadeOnly {
+    function exchange_all_underlying(int128 i, int128 j, uint256 rateMinRAY) external creditFacadeOnly {
         address creditAccount = _creditAccount(); //F:[ACV1-3]
 
         address tokenIn = _get_underlying(i); //F:[ACV1-7]
@@ -296,10 +255,7 @@ contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
                 creditAccount,
                 tokenIn,
                 tokenOut,
-                abi.encodeCall(
-                    ICurvePool.exchange_underlying,
-                    (i, j, dx, min_dy)
-                ),
+                abi.encodeCall(ICurvePool.exchange_underlying, (i, j, dx, min_dy)),
                 true
             ); //F:[ACV1-7]
         }
@@ -311,12 +267,7 @@ contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
     /// - Executes the order with a full check (this is required since >2 tokens are involved)
     /// - Resets allowance for tokens that are added
 
-    function _add_liquidity(
-        bool t0Approve,
-        bool t1Approve,
-        bool t2Approve,
-        bool t3Approve
-    ) internal {
+    function _add_liquidity(bool t0Approve, bool t1Approve, bool t2Approve, bool t3Approve) internal {
         address creditAccount = _creditAccount(); // F:[ACV1_2-3, ACV1_3-3, ACV1_3-4]
 
         _approve_coins(t0Approve, t1Approve, t2Approve, t3Approve); // F:[ACV1_2-4, ACV1_3-4, ACV1_4-4]
@@ -324,7 +275,9 @@ contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
         _enableToken(creditAccount, address(lp_token)); // F:[ACV1_2-4, ACV1_3-4, ACV1_4-4]
         _execute(msg.data); // F:[ACV1_2-4, ACV1_3-4, ACV1_4-4]
 
-        _approve_coins(t0Approve, t1Approve, t2Approve, t3Approve); /// F:[ACV1_2-4, ACV1_3-4, ACV1_4-4]
+        _approve_coins(t0Approve, t1Approve, t2Approve, t3Approve);
+
+        /// F:[ACV1_2-4, ACV1_3-4, ACV1_4-4]
     }
 
     /// @dev Sends an order to add liquidity with only 1 input asset
@@ -340,19 +293,10 @@ contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
     /// The input token does not need to be disabled, because this does not spend the entire
     /// balance, generally
     /// @notice Calls `add_liquidity` under the hood with only one amount being non-zero
-    function add_liquidity_one_coin(
-        uint256 amount,
-        int128 i,
-        uint256 minAmount
-    ) external override creditFacadeOnly {
+    function add_liquidity_one_coin(uint256 amount, int128 i, uint256 minAmount) external override creditFacadeOnly {
         address tokenIn = _get_token(i);
 
-        _executeSwapMaxApprove(
-            tokenIn,
-            lp_token,
-            _getAddLiquidityCallData(i, amount, minAmount),
-            false
-        ); // F:[ACV1-8A]
+        _executeSwapMaxApprove(tokenIn, lp_token, _getAddLiquidityCallData(i, amount, minAmount), false); // F:[ACV1-8A]
     }
 
     /// @dev Sends an order to add liquidity with only 1 input asset, using the entire balance
@@ -367,15 +311,14 @@ contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
     /// Input token is allowed, since the target does a transferFrom for the deposited asset
     /// The input token does need to be disabled, because this spends the entire balance
     /// @notice Calls `add_liquidity` under the hood with only one amount being non-zero
-    function add_all_liquidity_one_coin(
-        int128 i,
-        uint256 rateMinRAY
-    ) external override creditFacadeOnly {
+    function add_all_liquidity_one_coin(int128 i, uint256 rateMinRAY) external override creditFacadeOnly {
         address tokenIn = _get_token(i);
 
         address creditAccount = _creditAccount(); // F:[ACV1-8]
 
-        uint256 amount = IERC20(tokenIn).balanceOf(creditAccount); /// F:[ACV1-8]
+        uint256 amount = IERC20(tokenIn).balanceOf(creditAccount);
+
+        /// F:[ACV1-8]
 
         if (amount > 1) {
             unchecked {
@@ -385,70 +328,36 @@ contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
             uint256 minAmount = (amount * rateMinRAY) / RAY; // F:[ACV1-8]
 
             _executeSwapMaxApprove(
-                creditAccount,
-                tokenIn,
-                lp_token,
-                _getAddLiquidityCallData(i, amount, minAmount),
-                true
+                creditAccount, tokenIn, lp_token, _getAddLiquidityCallData(i, amount, minAmount), true
             ); // F:[ACV1-8]
         }
     }
 
-    function _getAddLiquidityCallData(
-        int128 i,
-        uint256 amount,
-        uint256 minAmount
-    ) internal view returns (bytes memory) {
+    function _getAddLiquidityCallData(int128 i, uint256 amount, uint256 minAmount)
+        internal
+        view
+        returns (bytes memory)
+    {
         if (nCoins == 2) {
-            return
-                i == 0
-                    ? abi.encodeCall(
-                        ICurvePool2Assets.add_liquidity,
-                        ([amount, ZERO], minAmount)
-                    )
-                    : abi.encodeCall(
-                        ICurvePool2Assets.add_liquidity,
-                        ([ZERO, amount], minAmount)
-                    ); // F:[ACV1-8]
+            return i == 0
+                ? abi.encodeCall(ICurvePool2Assets.add_liquidity, ([amount, ZERO], minAmount))
+                : abi.encodeCall(ICurvePool2Assets.add_liquidity, ([ZERO, amount], minAmount)); // F:[ACV1-8]
         }
         if (nCoins == 3) {
-            return
-                i == 0
-                    ? abi.encodeCall(
-                        ICurvePool3Assets.add_liquidity,
-                        ([amount, ZERO, ZERO], minAmount)
-                    )
-                    : i == 1
-                    ? abi.encodeCall(
-                        ICurvePool3Assets.add_liquidity,
-                        ([ZERO, amount, ZERO], minAmount)
-                    )
-                    : abi.encodeCall(
-                        ICurvePool3Assets.add_liquidity,
-                        ([ZERO, ZERO, amount], minAmount)
-                    ); // F:[ACV1-8]
+            return i == 0
+                ? abi.encodeCall(ICurvePool3Assets.add_liquidity, ([amount, ZERO, ZERO], minAmount))
+                : i == 1
+                    ? abi.encodeCall(ICurvePool3Assets.add_liquidity, ([ZERO, amount, ZERO], minAmount))
+                    : abi.encodeCall(ICurvePool3Assets.add_liquidity, ([ZERO, ZERO, amount], minAmount)); // F:[ACV1-8]
         }
         if (nCoins == 4) {
-            return
-                i == 0
-                    ? abi.encodeCall(
-                        ICurvePool4Assets.add_liquidity,
-                        ([amount, ZERO, ZERO, ZERO], minAmount)
-                    )
-                    : i == 1
-                    ? abi.encodeCall(
-                        ICurvePool4Assets.add_liquidity,
-                        ([ZERO, amount, ZERO, ZERO], minAmount)
-                    )
+            return i == 0
+                ? abi.encodeCall(ICurvePool4Assets.add_liquidity, ([amount, ZERO, ZERO, ZERO], minAmount))
+                : i == 1
+                    ? abi.encodeCall(ICurvePool4Assets.add_liquidity, ([ZERO, amount, ZERO, ZERO], minAmount))
                     : i == 2
-                    ? abi.encodeCall(
-                        ICurvePool4Assets.add_liquidity,
-                        ([ZERO, ZERO, amount, ZERO], minAmount)
-                    )
-                    : abi.encodeCall(
-                        ICurvePool4Assets.add_liquidity,
-                        ([ZERO, ZERO, ZERO, amount], minAmount)
-                    ); // F:[ACV1-8]
+                        ? abi.encodeCall(ICurvePool4Assets.add_liquidity, ([ZERO, ZERO, amount, ZERO], minAmount))
+                        : abi.encodeCall(ICurvePool4Assets.add_liquidity, ([ZERO, ZERO, ZERO, amount], minAmount)); // F:[ACV1-8]
         }
 
         revert("Incorrect nCoins");
@@ -457,58 +366,25 @@ contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
     /// @dev Returns the amount of lp token received when adding a single coin to the pool
     /// @param amount Amount of coin to be deposited
     /// @param i Index of a coin to be deposited
-    function calc_add_one_coin(
-        uint256 amount,
-        int128 i
-    ) external view returns (uint256) {
+    function calc_add_one_coin(uint256 amount, int128 i) external view returns (uint256) {
         if (nCoins == 2) {
-            return
-                i == 0
-                    ? ICurvePool2Assets(targetContract).calc_token_amount(
-                        [amount, 0],
-                        true
-                    )
-                    : ICurvePool2Assets(targetContract).calc_token_amount(
-                        [0, amount],
-                        true
-                    );
+            return i == 0
+                ? ICurvePool2Assets(targetContract).calc_token_amount([amount, 0], true)
+                : ICurvePool2Assets(targetContract).calc_token_amount([0, amount], true);
         } else if (nCoins == 3) {
-            return
-                i == 0
-                    ? ICurvePool3Assets(targetContract).calc_token_amount(
-                        [amount, 0, 0],
-                        true
-                    )
-                    : i == 1
-                    ? ICurvePool3Assets(targetContract).calc_token_amount(
-                        [0, amount, 0],
-                        true
-                    )
-                    : ICurvePool3Assets(targetContract).calc_token_amount(
-                        [0, 0, amount],
-                        true
-                    );
+            return i == 0
+                ? ICurvePool3Assets(targetContract).calc_token_amount([amount, 0, 0], true)
+                : i == 1
+                    ? ICurvePool3Assets(targetContract).calc_token_amount([0, amount, 0], true)
+                    : ICurvePool3Assets(targetContract).calc_token_amount([0, 0, amount], true);
         } else if (nCoins == 4) {
-            return
-                i == 0
-                    ? ICurvePool4Assets(targetContract).calc_token_amount(
-                        [amount, 0, 0, 0],
-                        true
-                    )
-                    : i == 1
-                    ? ICurvePool4Assets(targetContract).calc_token_amount(
-                        [0, amount, 0, 0],
-                        true
-                    )
+            return i == 0
+                ? ICurvePool4Assets(targetContract).calc_token_amount([amount, 0, 0, 0], true)
+                : i == 1
+                    ? ICurvePool4Assets(targetContract).calc_token_amount([0, amount, 0, 0], true)
                     : i == 2
-                    ? ICurvePool4Assets(targetContract).calc_token_amount(
-                        [0, 0, amount, 0],
-                        true
-                    )
-                    : ICurvePool4Assets(targetContract).calc_token_amount(
-                        [0, 0, 0, amount],
-                        true
-                    );
+                        ? ICurvePool4Assets(targetContract).calc_token_amount([0, 0, amount, 0], true)
+                        : ICurvePool4Assets(targetContract).calc_token_amount([0, 0, 0, amount], true);
         } else {
             revert("Incorrect nCoins");
         }
@@ -570,10 +446,7 @@ contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
     /// @dev Sends an order to remove all liquidity from the pool in a single asset
     /// @param i Index of the asset to withdraw
     /// @param minRateRAY Minimal exchange rate between the LP token and the received token
-    function remove_all_liquidity_one_coin(
-        int128 i,
-        uint256 minRateRAY
-    ) external virtual override creditFacadeOnly {
+    function remove_all_liquidity_one_coin(int128 i, uint256 minRateRAY) external virtual override creditFacadeOnly {
         address tokenOut = _get_token(i); // F:[ACV1-4]
         _remove_all_liquidity_one_coin(i, tokenOut, minRateRAY); // F:[ACV1-10]
     }
@@ -589,11 +462,7 @@ contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
     /// Output token: Coin under index i
     /// Input token is not approved, since the pool directly burns the LP token
     /// The input token does need to be disabled, because this spends the entire balance
-    function _remove_all_liquidity_one_coin(
-        int128 i,
-        address tokenOut,
-        uint256 rateMinRAY
-    ) internal {
+    function _remove_all_liquidity_one_coin(int128 i, address tokenOut, uint256 rateMinRAY) internal {
         address creditAccount = _creditAccount(); //F:[ACV1-3]
 
         uint256 amount = IERC20(lp_token).balanceOf(creditAccount); // F:[ACV1-10]
@@ -607,10 +476,7 @@ contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
                 creditAccount,
                 lp_token,
                 tokenOut,
-                abi.encodeCall(
-                    ICurvePool.remove_liquidity_one_coin,
-                    (amount, i, (amount * rateMinRAY) / RAY)
-                ),
+                abi.encodeCall(ICurvePool.remove_liquidity_one_coin, (amount, i, (amount * rateMinRAY) / RAY)),
                 true
             ); // F:[ACV1-10]
         }
@@ -620,12 +486,7 @@ contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
     /// - Enables tokens with a non-zero amount withdrawn
     /// - Executes the order with a full check (this is required since >2 tokens are involved)
     /// @notice The LP token does not need to be approved since the pool burns it
-    function _remove_liquidity_imbalance(
-        bool t0Enable,
-        bool t1Enable,
-        bool t2Enable,
-        bool t3Enable
-    ) internal {
+    function _remove_liquidity_imbalance(bool t0Enable, bool t1Enable, bool t2Enable, bool t3Enable) internal {
         address creditAccount = _creditAccount(); // F:[ACV1_2-3, ACV1_3-3, ACV1_3-4]
 
         if (t0Enable) {
@@ -649,37 +510,42 @@ contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
 
     /// @dev Return the token i's address gas-efficiently
     function _get_token(int128 i) internal view returns (address addr) {
-        if (i == 0)
-            addr = token0; // F:[ACV1-14]
-        else if (i == 1)
-            addr = token1; // F:[ACV1-14]
-        else if (i == 2)
-            addr = token2; // F:[ACV1-14]
-        else if (i == 3) addr = token3; // F:[ACV1-14]
+        if (i == 0) {
+            addr = token0;
+        } // F:[ACV1-14]
+        else if (i == 1) {
+            addr = token1;
+        } // F:[ACV1-14]
+        else if (i == 2) {
+            addr = token2;
+        } // F:[ACV1-14]
+        else if (i == 3) {
+            addr = token3;
+        } // F:[ACV1-14]
 
         if (addr == address(0)) revert IncorrectIndexException(); // F:[ACV1-13]
     }
 
     /// @dev Return the underlying i's address gas-efficiently
     function _get_underlying(int128 i) internal view returns (address addr) {
-        if (i == 0)
-            addr = underlying0; // F:[ACV1-14]
-        else if (i == 1)
-            addr = underlying1; // F:[ACV1-14]
-        else if (i == 2)
-            addr = underlying2; // F:[ACV1-14]
-        else if (i == 3) addr = underlying3; // F:[ACV1-14]
+        if (i == 0) {
+            addr = underlying0;
+        } // F:[ACV1-14]
+        else if (i == 1) {
+            addr = underlying1;
+        } // F:[ACV1-14]
+        else if (i == 2) {
+            addr = underlying2;
+        } // F:[ACV1-14]
+        else if (i == 3) {
+            addr = underlying3;
+        } // F:[ACV1-14]
 
         if (addr == address(0)) revert IncorrectIndexException(); // F:[ACV1-13]
     }
 
     /// @dev Gives max approval for a coin to target contract
-    function _approve_coins(
-        bool t0Enable,
-        bool t1Enable,
-        bool t2Enable,
-        bool t3Enable
-    ) internal {
+    function _approve_coins(bool t0Enable, bool t1Enable, bool t2Enable, bool t3Enable) internal {
         if (t0Enable) {
             _approveToken(token0, type(uint256).max); // F:[ACV1_2-4, ACV1_3-4, ACV1_4-4]
         }
@@ -694,10 +560,7 @@ contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
         }
     }
 
-    function _enableToken(
-        address creditAccount,
-        address tokenToEnable
-    ) internal {
+    function _enableToken(address creditAccount, address tokenToEnable) internal {
         creditManager.checkAndEnableToken(creditAccount, tokenToEnable);
     }
 }

@@ -3,19 +3,21 @@
 // (c) Gearbox Holdings, 2022
 pragma solidity ^0.8.10;
 
-import { ContractsRegister } from "@gearbox-protocol/core-v2/contracts/core/ContractsRegister.sol";
-import { PriceOracle } from "@gearbox-protocol/core-v2/contracts/oracles/PriceOracle.sol";
-import { Adapter } from "../../../factories/CreditManagerFactory.sol";
+import {ContractsRegister} from "@gearbox-protocol/core-v2/contracts/core/ContractsRegister.sol";
+import {PriceOracle} from "@gearbox-protocol/core-v2/contracts/oracles/PriceOracle.sol";
+import {Adapter} from "../../../factories/CreditManagerFactory.sol";
 
-import { IConvexV1BaseRewardPoolAdapter } from "../../../interfaces/convex/IConvexV1BaseRewardPoolAdapter.sol";
-import { IConvexV1BoosterAdapter } from "../../../interfaces/convex/IConvexV1BoosterAdapter.sol";
+import {IConvexV1BaseRewardPoolAdapter} from "../../../interfaces/convex/IConvexV1BaseRewardPoolAdapter.sol";
+import {IConvexV1BoosterAdapter} from "../../../interfaces/convex/IConvexV1BoosterAdapter.sol";
 
-import { PoolService } from "@gearbox-protocol/core-v2/contracts/pool/PoolService.sol";
-import { CreditManagerLiveMock } from "./CreditManagerLiveMock.sol";
-import { CreditFacade } from "@gearbox-protocol/core-v2/contracts/credit/CreditFacade.sol";
-import { CreditConfigurator, CreditManagerOpts } from "@gearbox-protocol/core-v2/contracts/credit/CreditConfigurator.sol";
+import {PoolService} from "@gearbox-protocol/core-v2/contracts/pool/PoolService.sol";
+import {CreditManagerLiveMock} from "./CreditManagerLiveMock.sol";
+import {CreditFacade} from "@gearbox-protocol/core-v2/contracts/credit/CreditFacade.sol";
+import {
+    CreditConfigurator, CreditManagerOpts
+} from "@gearbox-protocol/core-v2/contracts/credit/CreditConfigurator.sol";
 
-import { ContractUpgrader } from "@gearbox-protocol/core-v2/contracts/support/ContractUpgrader.sol";
+import {ContractUpgrader} from "@gearbox-protocol/core-v2/contracts/support/ContractUpgrader.sol";
 
 import "@gearbox-protocol/core-v2/contracts/interfaces/adapters/IAdapter.sol";
 
@@ -30,11 +32,9 @@ contract CreditManagerMockFactory is ContractUpgrader {
 
     Adapter[] public adapters;
 
-    constructor(
-        address _pool,
-        CreditManagerOpts memory opts,
-        uint256 salt
-    ) ContractUpgrader(address(PoolService(_pool).addressProvider())) {
+    constructor(address _pool, CreditManagerOpts memory opts, uint256 salt)
+        ContractUpgrader(address(PoolService(_pool).addressProvider()))
+    {
         pool = PoolService(_pool);
 
         creditManager = new CreditManagerLiveMock(_pool);
@@ -45,10 +45,8 @@ contract CreditManagerMockFactory is ContractUpgrader {
             opts.expirable
         );
 
-        bytes memory configuratorByteCode = abi.encodePacked(
-            type(CreditConfigurator).creationCode,
-            abi.encode(creditManager, creditFacade, opts)
-        );
+        bytes memory configuratorByteCode =
+            abi.encodePacked(type(CreditConfigurator).creationCode, abi.encode(creditManager, creditFacade, opts));
 
         address creditConfiguratorAddr = getAddress(configuratorByteCode, salt);
 
@@ -58,26 +56,11 @@ contract CreditManagerMockFactory is ContractUpgrader {
 
         creditConfigurator = CreditConfigurator(creditConfiguratorAddr);
 
-        require(
-            address(creditConfigurator.creditManager()) ==
-                address(creditManager),
-            "Incorrect CM"
-        );
+        require(address(creditConfigurator.creditManager()) == address(creditManager), "Incorrect CM");
     }
 
-    function getAddress(bytes memory bytecode, uint256 _salt)
-        public
-        view
-        returns (address)
-    {
-        bytes32 hash = keccak256(
-            abi.encodePacked(
-                bytes1(0xff),
-                address(this),
-                _salt,
-                keccak256(bytecode)
-            )
-        );
+    function getAddress(bytes memory bytecode, uint256 _salt) public view returns (address) {
+        bytes32 hash = keccak256(abi.encodePacked(bytes1(0xff), address(this), _salt, keccak256(bytecode)));
 
         // NOTE: cast last 20 bytes of hash to address
         return address(uint160(uint256(hash)));
@@ -97,17 +80,16 @@ contract CreditManagerMockFactory is ContractUpgrader {
               s = big-endian 256-bit value
         */
         assembly {
-            addr := create2(
-                callvalue(), // wei sent with current call
-                // Actual code starts after skipping the first 32 bytes
-                add(bytecode, 0x20),
-                mload(bytecode), // Load the size of code contained in the first 32 bytes
-                _salt // Salt from function arguments
-            )
+            addr :=
+                create2(
+                    callvalue(), // wei sent with current call
+                    // Actual code starts after skipping the first 32 bytes
+                    add(bytecode, 0x20),
+                    mload(bytecode), // Load the size of code contained in the first 32 bytes
+                    _salt // Salt from function arguments
+                )
 
-            if iszero(extcodesize(addr)) {
-                revert(0, 0)
-            }
+            if iszero(extcodesize(addr)) { revert(0, 0) }
         }
     }
 
@@ -115,7 +97,7 @@ contract CreditManagerMockFactory is ContractUpgrader {
     /// check the list before running configure command
     function addAdapters(Adapter[] memory _adapters) external onlyOwner {
         uint256 len = _adapters.length;
-        for (uint256 i = 0; i < len; ) {
+        for (uint256 i = 0; i < len;) {
             adapters.push(_adapters[i]);
             unchecked {
                 ++i;
@@ -124,18 +106,13 @@ contract CreditManagerMockFactory is ContractUpgrader {
     }
 
     function _configure() internal override {
-        ContractsRegister cr = ContractsRegister(
-            addressProvider.getContractsRegister()
-        );
+        ContractsRegister cr = ContractsRegister(addressProvider.getContractsRegister());
 
         PriceOracle priceOracle = PriceOracle(addressProvider.getPriceOracle());
 
         uint256 len = adapters.length;
-        for (uint256 i = 0; i < len; ) {
-            creditConfigurator.allowContract(
-                adapters[i].targetContract,
-                adapters[i].adapter
-            );
+        for (uint256 i = 0; i < len;) {
+            creditConfigurator.allowContract(adapters[i].targetContract, adapters[i].adapter);
             unchecked {
                 ++i;
             }
@@ -145,39 +122,26 @@ contract CreditManagerMockFactory is ContractUpgrader {
 
         pool.connectCreditManager(address(creditManager));
 
-        address[] memory allowedContracts = creditConfigurator
-            .allowedContracts();
+        address[] memory allowedContracts = creditConfigurator.allowedContracts();
         len = allowedContracts.length;
 
-        for (uint256 i = 0; i < len; ) {
+        for (uint256 i = 0; i < len;) {
             address allowedContract = allowedContracts[i];
             address adapter = creditManager.contractToAdapter(allowedContract);
             AdapterType aType = IAdapter(adapter)._gearboxAdapterType();
 
             if (aType == AdapterType.CONVEX_V1_BASE_REWARD_POOL) {
-                address stakedPhantomToken = IConvexV1BaseRewardPoolAdapter(
-                    adapter
-                ).stakedPhantomToken();
+                address stakedPhantomToken = IConvexV1BaseRewardPoolAdapter(adapter).stakedPhantomToken();
 
-                address curveLPtoken = IConvexV1BaseRewardPoolAdapter(adapter)
-                    .curveLPtoken();
-                address cvxLPToken = address(
-                    IConvexV1BaseRewardPoolAdapter(adapter).stakingToken()
-                );
+                address curveLPtoken = IConvexV1BaseRewardPoolAdapter(adapter).curveLPtoken();
+                address cvxLPToken = address(IConvexV1BaseRewardPoolAdapter(adapter).stakingToken());
 
-                priceOracle.addPriceFeed(
-                    cvxLPToken,
-                    priceOracle.priceFeeds(curveLPtoken)
-                );
+                priceOracle.addPriceFeed(cvxLPToken, priceOracle.priceFeeds(curveLPtoken));
 
-                priceOracle.addPriceFeed(
-                    stakedPhantomToken,
-                    priceOracle.priceFeeds(curveLPtoken)
-                );
+                priceOracle.addPriceFeed(stakedPhantomToken, priceOracle.priceFeeds(curveLPtoken));
 
                 creditConfigurator.addCollateralToken(
-                    stakedPhantomToken,
-                    creditManager.liquidationThresholds(curveLPtoken)
+                    stakedPhantomToken, creditManager.liquidationThresholds(curveLPtoken)
                 ); // F:
             }
 

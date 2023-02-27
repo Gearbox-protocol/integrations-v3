@@ -3,11 +3,11 @@ libs = ['lib']
 out = 'forge-out'
 remappings = [
   'ds-test/=lib/ds-test/src/',
+  'hardhat/=node_modules/hardhat/',
+  'forge-std/=node_modules/forge-std/',
   '@ensdomains/=node_modules/@ensdomains/',
   '@openzeppelin/=node_modules/@openzeppelin/',
   '@chainlink/=node_modules/@chainlink/',
-  'hardhat/=node_modules/hardhat/',
-  'forge-std/=node_modules/forge-std/',
   '@gearbox-protocol=node_modules/@gearbox-protocol/'
 ]
 solc_version = '0.8.17'

@@ -3,13 +3,15 @@
 // (c) Gearbox Holdings, 2022
 pragma solidity ^0.8.10;
 
-import { AggregatorV3Interface } from "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
-import { AbstractCurveLPPriceFeed } from "./AbstractCurveLPPriceFeed.sol";
+import {AggregatorV3Interface} from "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
+import {AbstractCurveLPPriceFeed} from "./AbstractCurveLPPriceFeed.sol";
 
-import { PriceFeedType } from "@gearbox-protocol/core-v2/contracts/interfaces/IPriceFeedType.sol";
+import {PriceFeedType} from "@gearbox-protocol/core-v2/contracts/interfaces/IPriceFeedType.sol";
 
 // EXCEPTIONS
-import { ZeroAddressException, NotImplementedException } from "@gearbox-protocol/core-v2/contracts/interfaces/IErrors.sol";
+import {
+    ZeroAddressException, NotImplementedException
+} from "@gearbox-protocol/core-v2/contracts/interfaces/IErrors.sol";
 
 /// @title CurveLP price feed for 2 assets
 contract CurveLP2PriceFeed is AbstractCurveLPPriceFeed {
@@ -19,8 +21,7 @@ contract CurveLP2PriceFeed is AbstractCurveLPPriceFeed {
     /// @dev Price feed of coin 1 in the pool
     AggregatorV3Interface public immutable priceFeed2;
 
-    PriceFeedType public constant override priceFeedType =
-        PriceFeedType.CURVE_2LP_ORACLE;
+    PriceFeedType public constant override priceFeedType = PriceFeedType.CURVE_2LP_ORACLE;
 
     constructor(
         address addressProvider,
@@ -29,8 +30,9 @@ contract CurveLP2PriceFeed is AbstractCurveLPPriceFeed {
         address _priceFeed2,
         string memory _description
     ) AbstractCurveLPPriceFeed(addressProvider, _curvePool, _description) {
-        if (_priceFeed1 == address(0) || _priceFeed2 == address(0))
+        if (_priceFeed1 == address(0) || _priceFeed2 == address(0)) {
             revert ZeroAddressException();
+        }
 
         priceFeed1 = AggregatorV3Interface(_priceFeed1); // F:[OCLP-1]
         priceFeed2 = AggregatorV3Interface(_priceFeed2); // F:[OCLP-1]
@@ -44,27 +46,15 @@ contract CurveLP2PriceFeed is AbstractCurveLPPriceFeed {
         view
         virtual
         override
-        returns (
-            uint80 roundId,
-            int256 answer,
-            uint256 startedAt,
-            uint256 updatedAt,
-            uint80 answeredInRound
-        )
+        returns (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound)
     {
-        (roundId, answer, startedAt, updatedAt, answeredInRound) = priceFeed1
-            .latestRoundData(); // F:[OCLP-4]
+        (roundId, answer, startedAt, updatedAt, answeredInRound) = priceFeed1.latestRoundData(); // F:[OCLP-4]
 
         // Sanity check for the Chainlink pricefeed
         _checkAnswer(roundId, answer, updatedAt, answeredInRound);
 
-        (
-            uint80 roundId2,
-            int256 answer2,
-            uint256 startedAt2,
-            uint256 updatedAt2,
-            uint80 answeredInRound2
-        ) = priceFeed2.latestRoundData(); // F:[OCLP-4]
+        (uint80 roundId2, int256 answer2, uint256 startedAt2, uint256 updatedAt2, uint80 answeredInRound2) =
+            priceFeed2.latestRoundData(); // F:[OCLP-4]
 
         // Sanity check for the Chainlink pricefeed
         _checkAnswer(roundId2, answer2, updatedAt2, answeredInRound2);
