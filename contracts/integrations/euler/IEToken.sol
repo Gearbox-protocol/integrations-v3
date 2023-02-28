@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity ^0.8.0;
 
-import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
 /// @notice Tokenised representation of assets
 interface IEToken is IERC20Metadata {
@@ -9,16 +9,12 @@ interface IEToken is IERC20Metadata {
     function underlyingAsset() external view returns (address);
 
     /// @notice Balance of a particular account, in underlying units (increases as interest is earned)
-    function balanceOfUnderlying(
-        address account
-    ) external view returns (uint256);
+    function balanceOfUnderlying(address account) external view returns (uint256);
 
     /// @notice Convert an eToken balance to an underlying amount, taking into account current exchange rate
     /// @param balance eToken balance, in internal book-keeping units (18 decimals)
     /// @return Amount in underlying units, (same decimals as underlying token)
-    function convertBalanceToUnderlying(
-        uint256 balance
-    ) external view returns (uint256);
+    function convertBalanceToUnderlying(uint256 balance) external view returns (uint256);
 
     /// @notice Transfer underlying tokens from sender to the Euler pool, and increase account's eTokens
     /// @param subAccountId 0 for primary, 1-255 for a sub-account

@@ -3,11 +3,7 @@ pragma solidity ^0.8.10;
 import "../token/StETHMock.sol";
 
 interface ILidoMockEvents {
-    event Mock_Submitted(
-        address indexed sender,
-        uint256 amount,
-        address referral
-    );
+    event Mock_Submitted(address indexed sender, uint256 amount, address referral);
 }
 
 contract LidoMock is StETHMock, ILidoMockEvents {
@@ -50,23 +46,15 @@ contract LidoMock is StETHMock, ILidoMockEvents {
         return sharesAmount;
     }
 
-    function _emitTransferAfterMintingShares(address _to, uint256 _sharesAmount)
-        internal
-    {
+    function _emitTransferAfterMintingShares(address _to, uint256 _sharesAmount) internal {
         emit Transfer(address(0), _to, getPooledEthByShares(_sharesAmount));
     }
 
-    function _submitted(
-        address _sender,
-        uint256 _value,
-        address _referral
-    ) internal {
+    function _submitted(address _sender, uint256 _value, address _referral) internal {
         emit Mock_Submitted(_sender, _value, _referral);
     }
 
-    function syncExchangeRate(uint256 totalPooledEther, uint256 totalShares)
-        external
-    {
+    function syncExchangeRate(uint256 totalPooledEther, uint256 totalShares) external {
         totalPooledEtherSynced = totalPooledEther;
         totalSharesSynced = totalShares;
     }

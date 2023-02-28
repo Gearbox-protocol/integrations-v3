@@ -3,22 +3,25 @@
 // (c) Gearbox Holdings, 2023
 pragma solidity ^0.8.17;
 
-import { MultiCall } from "@gearbox-protocol/core-v2/contracts/interfaces/ICreditFacade.sol";
-import { ICreditManagerV2Exceptions } from "@gearbox-protocol/core-v2/contracts/interfaces/ICreditManagerV2.sol";
-import { NotImplementedException } from "@gearbox-protocol/core-v2/contracts/interfaces/IErrors.sol";
+import {MultiCall} from "@gearbox-protocol/core-v2/contracts/interfaces/ICreditFacade.sol";
+import {ICreditManagerV2Exceptions} from "@gearbox-protocol/core-v2/contracts/interfaces/ICreditManagerV2.sol";
+import {NotImplementedException} from "@gearbox-protocol/core-v2/contracts/interfaces/IErrors.sol";
 
-import { ConvexAdapterHelper, CURVE_LP_AMOUNT, DAI_ACCOUNT_AMOUNT, REWARD_AMOUNT, REWARD_AMOUNT1, REWARD_AMOUNT2 } from "./ConvexAdapterHelper.sol";
-import { ERC20Mock } from "@gearbox-protocol/core-v2/contracts/test/mocks/token/ERC20Mock.sol";
+import {
+    ConvexAdapterHelper,
+    CURVE_LP_AMOUNT,
+    DAI_ACCOUNT_AMOUNT,
+    REWARD_AMOUNT,
+    REWARD_AMOUNT1,
+    REWARD_AMOUNT2
+} from "./ConvexAdapterHelper.sol";
+import {ERC20Mock} from "@gearbox-protocol/core-v2/contracts/test/mocks/token/ERC20Mock.sol";
 
-import { USER, CONFIGURATOR, FRIEND } from "../../lib/constants.sol";
+import {USER, CONFIGURATOR, FRIEND} from "../../lib/constants.sol";
 
 import "@gearbox-protocol/core-v2/contracts/test/lib/test.sol";
 
-contract ConvexV1AdapterBasePoolTest is
-    DSTest,
-    ConvexAdapterHelper,
-    ICreditManagerV2Exceptions
-{
+contract ConvexV1AdapterBasePoolTest is DSTest, ConvexAdapterHelper, ICreditManagerV2Exceptions {
     function setUp() public {
         _setupConvexSuite(2);
     }
@@ -27,16 +30,12 @@ contract ConvexV1AdapterBasePoolTest is
     /// TESTS
     ///
 
-    function _openTestCreditAccountAndDeposit()
-        internal
-        returns (address creditAccount)
-    {
-        (creditAccount, ) = _openTestCreditAccount();
+    function _openTestCreditAccountAndDeposit() internal returns (address creditAccount) {
+        (creditAccount,) = _openTestCreditAccount();
         ERC20Mock(curveLPToken).mint(creditAccount, CURVE_LP_AMOUNT);
 
         executeOneLineMulticall(
-            address(boosterAdapter),
-            abi.encodeCall(boosterAdapter.deposit, (0, CURVE_LP_AMOUNT, false))
+            address(boosterAdapter), abi.encodeCall(boosterAdapter.deposit, (0, CURVE_LP_AMOUNT, false))
         );
     }
 
@@ -45,58 +44,26 @@ contract ConvexV1AdapterBasePoolTest is
         for (uint256 numExtras; numExtras <= 2; numExtras++) {
             _setupConvexSuite(numExtras);
 
-            assertEq(
-                address(basePoolAdapter.rewardToken()),
-                crv,
-                "Incorrect CRV token"
-            );
+            assertEq(address(basePoolAdapter.rewardToken()), crv, "Incorrect CRV token");
 
             assertEq(basePoolAdapter.cvx(), cvx, "Incorrect minter (CVX)");
 
-            assertEq(
-                basePoolMock.pid(),
-                basePoolAdapter.pid(),
-                "Incorrect pid"
-            );
+            assertEq(basePoolMock.pid(), basePoolAdapter.pid(), "Incorrect pid");
 
-            assertEq(
-                address(basePoolAdapter.stakingToken()),
-                convexLPToken,
-                "Incorrect Convex LP"
-            );
+            assertEq(address(basePoolAdapter.stakingToken()), convexLPToken, "Incorrect Convex LP");
 
-            assertEq(
-                basePoolAdapter.curveLPtoken(),
-                curveLPToken,
-                "Incorrect Curve LP"
-            );
+            assertEq(basePoolAdapter.curveLPtoken(), curveLPToken, "Incorrect Curve LP");
 
             if (numExtras >= 1) {
-                assertEq(
-                    basePoolAdapter.extraReward1(),
-                    extraRewardToken1,
-                    "Incorrect reward token 1"
-                );
+                assertEq(basePoolAdapter.extraReward1(), extraRewardToken1, "Incorrect reward token 1");
             } else {
-                assertEq(
-                    basePoolAdapter.extraReward1(),
-                    address(0),
-                    "Reward token 1 was incorrectly set to non-zero"
-                );
+                assertEq(basePoolAdapter.extraReward1(), address(0), "Reward token 1 was incorrectly set to non-zero");
             }
 
             if (numExtras == 2) {
-                assertEq(
-                    basePoolAdapter.extraReward2(),
-                    extraRewardToken2,
-                    "Incorrect reward token 2"
-                );
+                assertEq(basePoolAdapter.extraReward2(), extraRewardToken2, "Incorrect reward token 2");
             } else {
-                assertEq(
-                    basePoolAdapter.extraReward2(),
-                    address(0),
-                    "Reward token 2 was incorrectly set to non-zero"
-                );
+                assertEq(basePoolAdapter.extraReward2(), address(0), "Reward token 2 was incorrectly set to non-zero");
             }
         }
     }
@@ -118,16 +85,9 @@ contract ConvexV1AdapterBasePoolTest is
 
         expectStakeStackCalls(USER, CURVE_LP_AMOUNT / 2, false);
 
-        executeOneLineMulticall(
-            address(basePoolAdapter),
-            abi.encodeCall(basePoolAdapter.stake, (CURVE_LP_AMOUNT / 2))
-        );
+        executeOneLineMulticall(address(basePoolAdapter), abi.encodeCall(basePoolAdapter.stake, (CURVE_LP_AMOUNT / 2)));
 
-        expectBalance(
-            convexLPToken,
-            creditAccount,
-            CURVE_LP_AMOUNT - CURVE_LP_AMOUNT / 2
-        );
+        expectBalance(convexLPToken, creditAccount, CURVE_LP_AMOUNT - CURVE_LP_AMOUNT / 2);
 
         expectBalance(phantomToken, creditAccount, CURVE_LP_AMOUNT / 2);
 
@@ -148,10 +108,7 @@ contract ConvexV1AdapterBasePoolTest is
 
         expectStakeStackCalls(USER, CURVE_LP_AMOUNT, true);
 
-        executeOneLineMulticall(
-            address(basePoolAdapter),
-            abi.encodeCall(basePoolAdapter.stakeAll, ())
-        );
+        executeOneLineMulticall(address(basePoolAdapter), abi.encodeCall(basePoolAdapter.stakeAll, ()));
 
         expectBalance(convexLPToken, creditAccount, 0);
 
@@ -172,10 +129,7 @@ contract ConvexV1AdapterBasePoolTest is
 
             address creditAccount = _openTestCreditAccountAndDeposit();
 
-            executeOneLineMulticall(
-                address(basePoolAdapter),
-                abi.encodeCall(basePoolAdapter.stakeAll, ())
-            );
+            executeOneLineMulticall(address(basePoolAdapter), abi.encodeCall(basePoolAdapter.stakeAll, ()));
 
             basePoolMock.addRewardAmount(REWARD_AMOUNT);
 
@@ -193,24 +147,13 @@ contract ConvexV1AdapterBasePoolTest is
 
             expectClaimStackCalls(USER, numExtras);
 
-            executeOneLineMulticall(
-                address(basePoolAdapter),
-                abi.encodeCall(basePoolAdapter.getReward, ())
-            );
+            executeOneLineMulticall(address(basePoolAdapter), abi.encodeCall(basePoolAdapter.getReward, ()));
 
             expectBalance(crv, creditAccount, REWARD_AMOUNT);
             expectBalance(cvx, creditAccount, REWARD_AMOUNT);
 
-            expectBalance(
-                extraRewardToken1,
-                creditAccount,
-                numExtras >= 1 ? REWARD_AMOUNT1 : 0
-            );
-            expectBalance(
-                extraRewardToken2,
-                creditAccount,
-                numExtras == 2 ? REWARD_AMOUNT2 : 0
-            );
+            expectBalance(extraRewardToken1, creditAccount, numExtras >= 1 ? REWARD_AMOUNT1 : 0);
+            expectBalance(extraRewardToken2, creditAccount, numExtras == 2 ? REWARD_AMOUNT2 : 0);
 
             expectTokenIsEnabled(cvx, true);
             expectTokenIsEnabled(crv, true);
@@ -227,10 +170,7 @@ contract ConvexV1AdapterBasePoolTest is
 
             address creditAccount = _openTestCreditAccountAndDeposit();
 
-            executeOneLineMulticall(
-                address(basePoolAdapter),
-                abi.encodeCall(basePoolAdapter.stakeAll, ())
-            );
+            executeOneLineMulticall(address(basePoolAdapter), abi.encodeCall(basePoolAdapter.stakeAll, ()));
 
             basePoolMock.addRewardAmount(REWARD_AMOUNT);
 
@@ -247,41 +187,19 @@ contract ConvexV1AdapterBasePoolTest is
             expectTokenIsEnabled(extraRewardToken1, false);
             expectTokenIsEnabled(extraRewardToken2, false);
 
-            expectPoolWithdrawStackCalls(
-                USER,
-                CURVE_LP_AMOUNT / 2,
-                false,
-                false,
-                numExtras
-            );
+            expectPoolWithdrawStackCalls(USER, CURVE_LP_AMOUNT / 2, false, false, numExtras);
 
             executeOneLineMulticall(
-                address(basePoolAdapter),
-                abi.encodeCall(
-                    basePoolAdapter.withdraw,
-                    (CURVE_LP_AMOUNT / 2, true)
-                )
+                address(basePoolAdapter), abi.encodeCall(basePoolAdapter.withdraw, (CURVE_LP_AMOUNT / 2, true))
             );
 
             expectBalance(crv, creditAccount, REWARD_AMOUNT);
             expectBalance(cvx, creditAccount, REWARD_AMOUNT);
-            expectBalance(
-                extraRewardToken1,
-                creditAccount,
-                numExtras >= 1 ? REWARD_AMOUNT1 : 0
-            );
-            expectBalance(
-                extraRewardToken2,
-                creditAccount,
-                numExtras == 2 ? REWARD_AMOUNT2 : 0
-            );
+            expectBalance(extraRewardToken1, creditAccount, numExtras >= 1 ? REWARD_AMOUNT1 : 0);
+            expectBalance(extraRewardToken2, creditAccount, numExtras == 2 ? REWARD_AMOUNT2 : 0);
             expectBalance(convexLPToken, creditAccount, CURVE_LP_AMOUNT / 2);
 
-            expectBalance(
-                phantomToken,
-                creditAccount,
-                CURVE_LP_AMOUNT - CURVE_LP_AMOUNT / 2
-            );
+            expectBalance(phantomToken, creditAccount, CURVE_LP_AMOUNT - CURVE_LP_AMOUNT / 2);
 
             expectTokenIsEnabled(convexLPToken, true);
             expectTokenIsEnabled(cvx, true);
@@ -300,10 +218,7 @@ contract ConvexV1AdapterBasePoolTest is
 
             address creditAccount = _openTestCreditAccountAndDeposit();
 
-            executeOneLineMulticall(
-                address(basePoolAdapter),
-                abi.encodeCall(basePoolAdapter.stakeAll, ())
-            );
+            executeOneLineMulticall(address(basePoolAdapter), abi.encodeCall(basePoolAdapter.stakeAll, ()));
 
             basePoolMock.addRewardAmount(REWARD_AMOUNT);
             if (numExtras >= 1) {
@@ -320,31 +235,14 @@ contract ConvexV1AdapterBasePoolTest is
             expectTokenIsEnabled(extraRewardToken1, false);
             expectTokenIsEnabled(extraRewardToken2, false);
 
-            expectPoolWithdrawStackCalls(
-                USER,
-                CURVE_LP_AMOUNT,
-                true,
-                false,
-                numExtras
-            );
+            expectPoolWithdrawStackCalls(USER, CURVE_LP_AMOUNT, true, false, numExtras);
 
-            executeOneLineMulticall(
-                address(basePoolAdapter),
-                abi.encodeCall(basePoolAdapter.withdrawAll, (true))
-            );
+            executeOneLineMulticall(address(basePoolAdapter), abi.encodeCall(basePoolAdapter.withdrawAll, (true)));
 
             expectBalance(crv, creditAccount, REWARD_AMOUNT);
             expectBalance(cvx, creditAccount, REWARD_AMOUNT);
-            expectBalance(
-                extraRewardToken1,
-                creditAccount,
-                numExtras >= 1 ? REWARD_AMOUNT1 : 0
-            );
-            expectBalance(
-                extraRewardToken2,
-                creditAccount,
-                numExtras == 2 ? REWARD_AMOUNT2 : 0
-            );
+            expectBalance(extraRewardToken1, creditAccount, numExtras >= 1 ? REWARD_AMOUNT1 : 0);
+            expectBalance(extraRewardToken2, creditAccount, numExtras == 2 ? REWARD_AMOUNT2 : 0);
             expectBalance(convexLPToken, creditAccount, CURVE_LP_AMOUNT);
             expectBalance(phantomToken, creditAccount, 0);
 
@@ -367,10 +265,7 @@ contract ConvexV1AdapterBasePoolTest is
 
             address creditAccount = _openTestCreditAccountAndDeposit();
 
-            executeOneLineMulticall(
-                address(basePoolAdapter),
-                abi.encodeCall(basePoolAdapter.stakeAll, ())
-            );
+            executeOneLineMulticall(address(basePoolAdapter), abi.encodeCall(basePoolAdapter.stakeAll, ()));
 
             basePoolMock.addRewardAmount(REWARD_AMOUNT);
             if (numExtras >= 1) {
@@ -386,42 +281,20 @@ contract ConvexV1AdapterBasePoolTest is
             expectTokenIsEnabled(extraRewardToken1, false, "initial setup");
             expectTokenIsEnabled(extraRewardToken2, false, "initial setup");
 
-            expectPoolWithdrawStackCalls(
-                USER,
-                CURVE_LP_AMOUNT / 2,
-                false,
-                true,
-                numExtras
-            );
+            expectPoolWithdrawStackCalls(USER, CURVE_LP_AMOUNT / 2, false, true, numExtras);
 
             executeOneLineMulticall(
-                address(basePoolAdapter),
-                abi.encodeCall(
-                    basePoolAdapter.withdrawAndUnwrap,
-                    (CURVE_LP_AMOUNT / 2, true)
-                )
+                address(basePoolAdapter), abi.encodeCall(basePoolAdapter.withdrawAndUnwrap, (CURVE_LP_AMOUNT / 2, true))
             );
 
             expectBalance(crv, creditAccount, REWARD_AMOUNT);
             expectBalance(cvx, creditAccount, REWARD_AMOUNT);
-            expectBalance(
-                extraRewardToken1,
-                creditAccount,
-                numExtras >= 1 ? REWARD_AMOUNT1 : 0
-            );
-            expectBalance(
-                extraRewardToken2,
-                creditAccount,
-                numExtras == 2 ? REWARD_AMOUNT2 : 0
-            );
+            expectBalance(extraRewardToken1, creditAccount, numExtras >= 1 ? REWARD_AMOUNT1 : 0);
+            expectBalance(extraRewardToken2, creditAccount, numExtras == 2 ? REWARD_AMOUNT2 : 0);
 
             expectBalance(curveLPToken, creditAccount, CURVE_LP_AMOUNT / 2);
 
-            expectBalance(
-                phantomToken,
-                creditAccount,
-                CURVE_LP_AMOUNT - CURVE_LP_AMOUNT / 2
-            );
+            expectBalance(phantomToken, creditAccount, CURVE_LP_AMOUNT - CURVE_LP_AMOUNT / 2);
 
             expectTokenIsEnabled(curveLPToken, true);
             expectTokenIsEnabled(cvx, true);
@@ -440,10 +313,7 @@ contract ConvexV1AdapterBasePoolTest is
 
             address creditAccount = _openTestCreditAccountAndDeposit();
 
-            executeOneLineMulticall(
-                address(basePoolAdapter),
-                abi.encodeCall(basePoolAdapter.stakeAll, ())
-            );
+            executeOneLineMulticall(address(basePoolAdapter), abi.encodeCall(basePoolAdapter.stakeAll, ()));
 
             basePoolMock.addRewardAmount(REWARD_AMOUNT);
             if (numExtras >= 1) {
@@ -460,32 +330,17 @@ contract ConvexV1AdapterBasePoolTest is
             expectTokenIsEnabled(extraRewardToken1, false);
             expectTokenIsEnabled(extraRewardToken2, false);
 
-            expectPoolWithdrawStackCalls(
-                USER,
-                CURVE_LP_AMOUNT,
-                true,
-                true,
-                numExtras
-            );
+            expectPoolWithdrawStackCalls(USER, CURVE_LP_AMOUNT, true, true, numExtras);
 
             executeOneLineMulticall(
-                address(basePoolAdapter),
-                abi.encodeCall(basePoolAdapter.withdrawAllAndUnwrap, (true))
+                address(basePoolAdapter), abi.encodeCall(basePoolAdapter.withdrawAllAndUnwrap, (true))
             );
 
             expectBalance(crv, creditAccount, REWARD_AMOUNT);
             expectBalance(cvx, creditAccount, REWARD_AMOUNT);
 
-            expectBalance(
-                extraRewardToken1,
-                creditAccount,
-                numExtras >= 1 ? REWARD_AMOUNT1 : 0
-            );
-            expectBalance(
-                extraRewardToken2,
-                creditAccount,
-                numExtras == 2 ? REWARD_AMOUNT2 : 0
-            );
+            expectBalance(extraRewardToken1, creditAccount, numExtras >= 1 ? REWARD_AMOUNT1 : 0);
+            expectBalance(extraRewardToken2, creditAccount, numExtras == 2 ? REWARD_AMOUNT2 : 0);
 
             expectBalance(curveLPToken, creditAccount, CURVE_LP_AMOUNT);
 

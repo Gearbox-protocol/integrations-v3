@@ -3,24 +3,24 @@
 // (c) Gearbox Holdings, 2022
 pragma solidity ^0.8.10;
 
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
-import { LidoMock } from "../mocks/integrations/LidoMock.sol";
+import {LidoMock} from "../mocks/integrations/LidoMock.sol";
 
-import { TokenType } from "../../integrations/TokenType.sol";
-import { IWETH } from "@gearbox-protocol/core-v2/contracts/interfaces/external/IWETH.sol";
+import {TokenType} from "../../integrations/TokenType.sol";
+import {IWETH} from "@gearbox-protocol/core-v2/contracts/interfaces/external/IWETH.sol";
 
 // MOCKS
-import { Tokens } from "../config/Tokens.sol";
-import { ERC20Mock } from "@gearbox-protocol/core-v2/contracts/test/mocks/token/ERC20Mock.sol";
-import { cERC20Mock } from "../mocks/token/cERC20Mock.sol";
+import {Tokens} from "../config/Tokens.sol";
+import {ERC20Mock} from "@gearbox-protocol/core-v2/contracts/test/mocks/token/ERC20Mock.sol";
+import {cERC20Mock} from "../mocks/token/cERC20Mock.sol";
 
 import "@gearbox-protocol/core-v2/contracts/test/lib/test.sol";
-import { TokensData, TestToken } from "../config/TokensData.sol";
-import { TokensDataLive } from "../config/TokensDataLive.sol";
-import { TokensTestSuiteHelper } from "@gearbox-protocol/core-v2/contracts/test/suites/TokensTestSuiteHelper.sol";
-import { IstETH } from "../../integrations/lido/IstETH.sol";
+import {TokensData, TestToken} from "../config/TokensData.sol";
+import {TokensDataLive} from "../config/TokensDataLive.sol";
+import {TokensTestSuiteHelper} from "@gearbox-protocol/core-v2/contracts/test/suites/TokensTestSuiteHelper.sol";
+import {IstETH} from "../../integrations/lido/IstETH.sol";
 
 import "../lib/constants.sol";
 
@@ -120,11 +120,7 @@ contract TokensTestSuite is DSTest, TokensTestSuiteHelper {
         }
     }
 
-    function balanceOf(Tokens t, address holder)
-        public
-        view
-        returns (uint256 balance)
-    {
+    function balanceOf(Tokens t, address holder) public view returns (uint256 balance) {
         balance = IERC20(addressOf[t]).balanceOf(holder);
     }
 
@@ -154,63 +150,38 @@ contract TokensTestSuite is DSTest, TokensTestSuiteHelper {
     //     return IERC20(addressOf[t]).allowance(holder, targetContract);
     // }
 
-    function burn(
-        Tokens t,
-        address from,
-        uint256 amount
-    ) external {
+    function burn(Tokens t, address from, uint256 amount) external {
         if (tokenTypes[t] != TokenType.NORMAL_TOKEN && mockTokens) {
             revert("tokenTestSuite: Trying to burn a non-normal token");
         }
         ERC20Mock(addressOf[t]).burn(from, amount);
     }
 
-    function mint(
-        address token,
-        address to,
-        uint256 amount
-    ) public override {
+    function mint(address token, address to, uint256 amount) public override {
         _mint(token, to, amount, false);
     }
 
-    function mintWithTotalSupply(
-        address token,
-        address to,
-        uint256 amount
-    ) external {
+    function mintWithTotalSupply(address token, address to, uint256 amount) external {
         _mint(token, to, amount, true);
     }
 
-    function mint(
-        Tokens t,
-        address to,
-        uint256 amount
-    ) public {
+    function mint(Tokens t, address to, uint256 amount) public {
         _mint(addressOf[t], to, amount, false);
     }
 
-    function mintWithTotalSupply(
-        Tokens t,
-        address to,
-        uint256 amount
-    ) public {
+    function mintWithTotalSupply(Tokens t, address to, uint256 amount) public {
         _mint(addressOf[t], to, amount, true);
     }
 
-    function _mint(
-        address token,
-        address to,
-        uint256 amount,
-        bool adjust
-    ) internal {
+    function _mint(address token, address to, uint256 amount, bool adjust) internal {
         if (mockTokens) {
             if (token == addressOf[Tokens.WETH]) {
                 evm.deal(address(this), amount);
-                IWETH(wethToken).deposit{ value: amount }();
+                IWETH(wethToken).deposit{value: amount}();
                 IERC20(token).transfer(to, amount);
             } else if (token == addressOf[Tokens.STETH]) {
                 evm.deal(address(this), amount);
-                LidoMock(payable(token)).submit{ value: amount }(address(this));
+                LidoMock(payable(token)).submit{value: amount}(address(this));
                 IERC20(token).transfer(to, amount);
             } else if (tokenTypes[tokenIndexes[token]] == TokenType.C_TOKEN) {
                 address underlying = cERC20Mock(token).underlying();
@@ -232,38 +203,25 @@ contract TokensTestSuite is DSTest, TokensTestSuiteHelper {
                 evm.deal(to, amount);
 
                 evm.prank(to);
-                IstETH(payable(stETH)).submit{ value: amount }(to);
+                IstETH(payable(stETH)).submit{value: amount}(to);
             } else {
                 dealToken(token, to, amount, adjust);
             }
         }
     }
 
-    function approve(
-        Tokens t,
-        address holder,
-        address targetContract
-    ) public {
+    function approve(Tokens t, address holder, address targetContract) public {
         approve(t, holder, targetContract, type(uint256).max);
     }
 
-    function approve(
-        Tokens t,
-        address holder,
-        address targetContract,
-        uint256 amount
-    ) public {
+    function approve(Tokens t, address holder, address targetContract, uint256 amount) public {
         evm.startPrank(holder);
         IERC20(addressOf[t]).safeApprove(targetContract, 0);
         IERC20(addressOf[t]).safeApprove(targetContract, amount);
         evm.stopPrank();
     }
 
-    function approveMany(
-        Tokens[] memory tokensToApprove,
-        address holder,
-        address target
-    ) public {
+    function approveMany(Tokens[] memory tokensToApprove, address holder, address target) public {
         uint256 len = tokensToApprove.length;
         unchecked {
             for (uint256 i; i < len; ++i) {
@@ -272,11 +230,7 @@ contract TokensTestSuite is DSTest, TokensTestSuiteHelper {
         }
     }
 
-    function allowance(
-        Tokens t,
-        address holder,
-        address targetContract
-    ) external view returns (uint256) {
+    function allowance(Tokens t, address holder, address targetContract) external view returns (uint256) {
         return IERC20(addressOf[t]).allowance(holder, targetContract);
     }
 }

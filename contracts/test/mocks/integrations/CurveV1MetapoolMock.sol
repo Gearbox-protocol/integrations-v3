@@ -3,15 +3,15 @@
 // (c) Gearbox Holdings, 2022
 pragma solidity ^0.8.10;
 
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import { WAD, RAY } from "@gearbox-protocol/core-v2/contracts/libraries/Constants.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {WAD, RAY} from "@gearbox-protocol/core-v2/contracts/libraries/Constants.sol";
 
-import { ICurvePool } from "../../../integrations/curve/ICurvePool.sol";
-import { N_COINS, ICurvePool2Assets } from "../../../integrations/curve/ICurvePool_2.sol";
-import { ICRVToken } from "../../../integrations/curve/ICRVToken.sol";
+import {ICurvePool} from "../../../integrations/curve/ICurvePool.sol";
+import {N_COINS, ICurvePool2Assets} from "../../../integrations/curve/ICurvePool_2.sol";
+import {ICRVToken} from "../../../integrations/curve/ICRVToken.sol";
 
-import { ERC20Mock } from "@gearbox-protocol/core-v2/contracts/test/mocks/token/ERC20Mock.sol";
+import {ERC20Mock} from "@gearbox-protocol/core-v2/contracts/test/mocks/token/ERC20Mock.sol";
 
 // EXCEPTIONS
 
@@ -36,9 +36,7 @@ contract CurveV1MetapoolMock is ICurvePool, ICurvePool2Assets {
         _coins.push(_token0);
         _coins.push(ICurvePool(_basePool).token());
 
-        address _token = address(
-            new ERC20Mock("CRVMock", "CRV for CurvePoolMock", 18)
-        );
+        address _token = address(new ERC20Mock("CRVMock", "CRV for CurvePoolMock", 18));
         token = _token;
         lp_token = _token;
         virtualPrice = WAD;
@@ -49,20 +47,12 @@ contract CurveV1MetapoolMock is ICurvePool, ICurvePool2Assets {
         real_liquidity_mode = val;
     }
 
-    function setRate(
-        int128 i,
-        int128 j,
-        uint256 rate_RAY
-    ) external {
+    function setRate(int128 i, int128 j, uint256 rate_RAY) external {
         rates_RAY[i][j] = rate_RAY;
         rates_RAY[j][i] = (RAY * RAY) / rate_RAY;
     }
 
-    function setRateUnderlying(
-        int128 i,
-        int128 j,
-        uint256 rate_RAY
-    ) external {
+    function setRateUnderlying(int128 i, int128 j, uint256 rate_RAY) external {
         rates_RAY_underlying[i][j] = rate_RAY;
         rates_RAY_underlying[j][i] = (RAY * RAY) / rate_RAY;
     }
@@ -75,17 +65,10 @@ contract CurveV1MetapoolMock is ICurvePool, ICurvePool2Assets {
         deposit_rates_RAY[i] = rate_RAY;
     }
 
-    function add_liquidity(
-        uint256[N_COINS] memory amounts,
-        uint256 min_mint_amount
-    ) external {
+    function add_liquidity(uint256[N_COINS] memory amounts, uint256 min_mint_amount) external {
         for (uint256 i = 0; i < N_COINS; i++) {
             if (amounts[i] > 0) {
-                IERC20(_coins[i]).transferFrom(
-                    msg.sender,
-                    address(this),
-                    amounts[i]
-                );
+                IERC20(_coins[i]).transferFrom(msg.sender, address(this), amounts[i]);
             }
         }
 
@@ -98,14 +81,10 @@ contract CurveV1MetapoolMock is ICurvePool, ICurvePool2Assets {
         }
     }
 
-    function remove_liquidity(
-        uint256 _amount,
-        uint256[N_COINS] memory min_amounts
-    ) external {
+    function remove_liquidity(uint256 _amount, uint256[N_COINS] memory min_amounts) external {
         for (uint256 i = 0; i < N_COINS; i++) {
             if (real_liquidity_mode) {
-                uint256 amountOut = ((_amount *
-                    withdraw_rates_RAY[int128(uint128(i))]) / N_COINS) / RAY;
+                uint256 amountOut = ((_amount * withdraw_rates_RAY[int128(uint128(i))]) / N_COINS) / RAY;
                 require(amountOut > min_amounts[i]);
                 IERC20(_coins[i]).transfer(msg.sender, amountOut);
             } else if (min_amounts[i] > 0) {
@@ -116,10 +95,7 @@ contract CurveV1MetapoolMock is ICurvePool, ICurvePool2Assets {
         ICRVToken(token).burnFrom(msg.sender, _amount);
     }
 
-    function remove_liquidity_imbalance(
-        uint256[N_COINS] memory amounts,
-        uint256 max_burn_amount
-    ) external {
+    function remove_liquidity_imbalance(uint256[N_COINS] memory amounts, uint256 max_burn_amount) external {
         for (uint256 i = 0; i < N_COINS; i++) {
             if (amounts[i] > 0) {
                 IERC20(_coins[i]).transfer(msg.sender, amounts[i]);
@@ -135,29 +111,21 @@ contract CurveV1MetapoolMock is ICurvePool, ICurvePool2Assets {
         }
     }
 
-    function calc_token_amount(uint256[N_COINS] memory amounts, bool deposit)
-        public
-        view
-        returns (uint256 amount)
-    {
+    function calc_token_amount(uint256[N_COINS] memory amounts, bool deposit) public view returns (uint256 amount) {
         for (uint256 i = 0; i < N_COINS; ++i) {
             if (deposit) {
-                amount +=
-                    (amounts[i] * deposit_rates_RAY[int128(int256(i))]) /
-                    RAY;
+                amount += (amounts[i] * deposit_rates_RAY[int128(int256(i))]) / RAY;
             } else {
-                amount +=
-                    (amounts[i] * RAY) /
-                    withdraw_rates_RAY[int128(int256(i))];
+                amount += (amounts[i] * RAY) / withdraw_rates_RAY[int128(int256(i))];
             }
         }
     }
 
-    function get_twap_balances(
-        uint256[N_COINS] calldata _first_balances,
-        uint256[N_COINS] calldata,
-        uint256
-    ) external pure returns (uint256[N_COINS] memory) {
+    function get_twap_balances(uint256[N_COINS] calldata _first_balances, uint256[N_COINS] calldata, uint256)
+        external
+        pure
+        returns (uint256[N_COINS] memory)
+    {
         return _first_balances;
     }
 
@@ -165,46 +133,24 @@ contract CurveV1MetapoolMock is ICurvePool, ICurvePool2Assets {
         return [uint256(0), uint256(0)];
     }
 
-    function get_previous_balances()
-        external
-        pure
-        returns (uint256[N_COINS] memory)
-    {
+    function get_previous_balances() external pure returns (uint256[N_COINS] memory) {
         return [uint256(0), uint256(0)];
     }
 
-    function get_price_cumulative_last()
-        external
-        pure
-        returns (uint256[N_COINS] memory)
-    {
+    function get_price_cumulative_last() external pure returns (uint256[N_COINS] memory) {
         return [uint256(0), uint256(0)];
     }
 
-    function exchange(
-        int128 i,
-        int128 j,
-        uint256 dx,
-        uint256 min_dy
-    ) external override {
+    function exchange(int128 i, int128 j, uint256 dx, uint256 min_dy) external override {
         uint256 dy = get_dy(i, j, dx);
 
         require(dy >= min_dy, "CurveV1Mock: INSUFFICIENT_OUTPUT_AMOUNT");
 
-        IERC20(_coins[uint256(uint128(i))]).safeTransferFrom(
-            msg.sender,
-            address(this),
-            dx
-        );
+        IERC20(_coins[uint256(uint128(i))]).safeTransferFrom(msg.sender, address(this), dx);
         IERC20(_coins[uint256(uint128(j))]).safeTransfer(msg.sender, dy);
     }
 
-    function exchange_underlying(
-        int128 i,
-        int128 j,
-        uint256 dx,
-        uint256 min_dy
-    ) external override {
+    function exchange_underlying(int128 i, int128 j, uint256 dx, uint256 min_dy) external override {
         if (i == 0) {
             IERC20(_coins[0]).transferFrom(msg.sender, address(this), dx);
         } else {
@@ -217,20 +163,13 @@ contract CurveV1MetapoolMock is ICurvePool, ICurvePool2Assets {
 
         uint256 dy = get_dy(base_i, base_j, dx);
         uint256 dy_underlying = get_dy_underlying(i, j, dx);
-        require(
-            dy_underlying >= min_dy,
-            "CurveV1Mock: INSUFFICIENT_OUTPUT_AMOUNT"
-        );
+        require(dy_underlying >= min_dy, "CurveV1Mock: INSUFFICIENT_OUTPUT_AMOUNT");
 
         if (j == 0) {
             IERC20(_coins[0]).transfer(msg.sender, dy_underlying);
         } else {
             address tokenOut = underlying_coins(uint256(uint128(j)));
-            ICurvePool(basePool).remove_liquidity_one_coin(
-                dy,
-                j - 1,
-                dy_underlying
-            );
+            ICurvePool(basePool).remove_liquidity_one_coin(dy, j - 1, dy_underlying);
             IERC20(tokenOut).transfer(msg.sender, dy_underlying);
         }
     }
@@ -239,11 +178,7 @@ contract CurveV1MetapoolMock is ICurvePool, ICurvePool2Assets {
         ICRVToken(token).mint(to, amount);
     }
 
-    function remove_liquidity_one_coin(
-        uint256 _token_amount,
-        int128 i,
-        uint256 min_amount
-    ) external {
+    function remove_liquidity_one_coin(uint256 _token_amount, int128 i, uint256 min_amount) external {
         ICRVToken(token).burnFrom(msg.sender, _token_amount);
 
         uint256 amountOut;
@@ -257,19 +192,11 @@ contract CurveV1MetapoolMock is ICurvePool, ICurvePool2Assets {
         IERC20(_coins[uint256(uint128(i))]).safeTransfer(msg.sender, amountOut);
     }
 
-    function get_dy_underlying(
-        int128 i,
-        int128 j,
-        uint256 dx
-    ) public view override returns (uint256) {
+    function get_dy_underlying(int128 i, int128 j, uint256 dx) public view override returns (uint256) {
         return (rates_RAY_underlying[i][j] * dx) / RAY;
     }
 
-    function get_dy(
-        int128 i,
-        int128 j,
-        uint256 dx
-    ) public view override returns (uint256) {
+    function get_dy(int128 i, int128 j, uint256 dx) public view override returns (uint256) {
         return (rates_RAY[i][j] * dx) / RAY;
     }
 
@@ -321,11 +248,7 @@ contract CurveV1MetapoolMock is ICurvePool, ICurvePool2Assets {
         return 0;
     }
 
-    function calc_withdraw_one_coin(uint256 amount, int128 coin)
-        public
-        view
-        returns (uint256)
-    {
+    function calc_withdraw_one_coin(uint256 amount, int128 coin) public view returns (uint256) {
         return (amount * withdraw_rates_RAY[coin]) / RAY;
     }
 

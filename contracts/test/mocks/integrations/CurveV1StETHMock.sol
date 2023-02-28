@@ -3,16 +3,16 @@
 // (c) Gearbox Holdings, 2022
 pragma solidity ^0.8.10;
 
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import { WAD, RAY } from "@gearbox-protocol/core-v2/contracts/libraries/Constants.sol";
-import { N_COINS, ICurvePoolStETH } from "../../../integrations/curve/ICurvePoolStETH.sol";
-import { ICRVToken } from "../../../integrations/curve/ICRVToken.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {WAD, RAY} from "@gearbox-protocol/core-v2/contracts/libraries/Constants.sol";
+import {N_COINS, ICurvePoolStETH} from "../../../integrations/curve/ICurvePoolStETH.sol";
+import {ICRVToken} from "../../../integrations/curve/ICRVToken.sol";
 
-import { ERC20Mock } from "@gearbox-protocol/core-v2/contracts/test/mocks/token/ERC20Mock.sol";
+import {ERC20Mock} from "@gearbox-protocol/core-v2/contracts/test/mocks/token/ERC20Mock.sol";
 
 // EXCEPTIONS
-import { NotImplementedException } from "@gearbox-protocol/core-v2/contracts/interfaces/IErrors.sol";
+import {NotImplementedException} from "@gearbox-protocol/core-v2/contracts/interfaces/IErrors.sol";
 
 contract CurveV1StETHMock is ICurvePoolStETH {
     using SafeERC20 for IERC20;
@@ -32,18 +32,12 @@ contract CurveV1StETHMock is ICurvePoolStETH {
 
     constructor(address[] memory _coins) {
         coins = _coins;
-        lp_token = address(
-            new ERC20Mock("CRVMock", "CRV for CurvePoolMock", 18)
-        );
+        lp_token = address(new ERC20Mock("CRVMock", "CRV for CurvePoolMock", 18));
         token = lp_token;
         virtualPrice = WAD;
     }
 
-    function setRate(
-        int128 i,
-        int128 j,
-        uint256 rate_RAY
-    ) external {
+    function setRate(int128 i, int128 j, uint256 rate_RAY) external {
         rates_RAY[i][j] = rate_RAY;
         rates_RAY[j][i] = (RAY * RAY) / rate_RAY;
     }
@@ -60,12 +54,7 @@ contract CurveV1StETHMock is ICurvePoolStETH {
         deposit_rates_RAY[i] = rate_RAY;
     }
 
-    function exchange(
-        int128 i,
-        int128 j,
-        uint256 dx,
-        uint256 min_dy
-    ) external payable override {
+    function exchange(int128 i, int128 j, uint256 dx, uint256 min_dy) external payable override {
         uint256 dy = get_dy(i, j, dx);
 
         require(dy >= min_dy, "CurveV1Mock: INSUFFICIENT_OUTPUT_AMOUNT");
@@ -75,37 +64,22 @@ contract CurveV1StETHMock is ICurvePoolStETH {
             IERC20(coins[uint256(uint128(j))]).safeTransfer(msg.sender, dy);
         } else {
             require(msg.value == 0);
-            IERC20(coins[uint256(uint128(i))]).safeTransferFrom(
-                msg.sender,
-                address(this),
-                dx
-            );
+            IERC20(coins[uint256(uint128(i))]).safeTransferFrom(msg.sender, address(this), dx);
             payable(msg.sender).transfer(dy);
         }
     }
 
-    function calc_token_amount(uint256[N_COINS] memory amounts, bool deposit)
-        public
-        view
-        returns (uint256 amount)
-    {
+    function calc_token_amount(uint256[N_COINS] memory amounts, bool deposit) public view returns (uint256 amount) {
         for (uint256 i = 0; i < N_COINS; ++i) {
             if (deposit) {
-                amount +=
-                    (amounts[i] * deposit_rates_RAY[int128(int256(i))]) /
-                    RAY;
+                amount += (amounts[i] * deposit_rates_RAY[int128(int256(i))]) / RAY;
             } else {
-                amount +=
-                    (amounts[i] * RAY) /
-                    withdraw_rates_RAY[int128(int256(i))];
+                amount += (amounts[i] * RAY) / withdraw_rates_RAY[int128(int256(i))];
             }
         }
     }
 
-    function add_liquidity(
-        uint256[N_COINS] memory amounts,
-        uint256 min_mint_amount
-    ) external payable {
+    function add_liquidity(uint256[N_COINS] memory amounts, uint256 min_mint_amount) external payable {
         require(msg.value == amounts[0]);
         IERC20(coins[1]).transferFrom(msg.sender, address(this), amounts[1]);
 
@@ -118,19 +92,13 @@ contract CurveV1StETHMock is ICurvePoolStETH {
         }
     }
 
-    function remove_liquidity(
-        uint256 _amount,
-        uint256[N_COINS] memory min_amounts
-    ) external {
+    function remove_liquidity(uint256 _amount, uint256[N_COINS] memory min_amounts) external {
         if (real_liquidity_mode) {
-            uint256 amountOut = ((_amount *
-                withdraw_rates_RAY[int128(uint128(0))]) / N_COINS) / RAY;
+            uint256 amountOut = ((_amount * withdraw_rates_RAY[int128(uint128(0))]) / N_COINS) / RAY;
             require(amountOut > min_amounts[0]);
             payable(msg.sender).transfer(amountOut);
 
-            amountOut =
-                ((_amount * withdraw_rates_RAY[int128(uint128(1))]) / N_COINS) /
-                RAY;
+            amountOut = ((_amount * withdraw_rates_RAY[int128(uint128(1))]) / N_COINS) / RAY;
             require(amountOut > min_amounts[1]);
             IERC20(coins[1]).transfer(msg.sender, amountOut);
         } else {
@@ -158,11 +126,7 @@ contract CurveV1StETHMock is ICurvePoolStETH {
         revert NotImplementedException();
     }
 
-    function get_dy(
-        int128 i,
-        int128 j,
-        uint256 dx
-    ) public view override returns (uint256) {
+    function get_dy(int128 i, int128 j, uint256 dx) public view override returns (uint256) {
         return (rates_RAY[i][j] * dx) / RAY;
     }
 
@@ -174,22 +138,13 @@ contract CurveV1StETHMock is ICurvePoolStETH {
         virtualPrice = _price;
     }
 
-    function remove_liquidity_one_coin(
-        uint256 _token_amount,
-        int128 i,
-        uint256 min_amount
-    ) external {
+    function remove_liquidity_one_coin(uint256 _token_amount, int128 i, uint256 min_amount) external {
         ICRVToken(lp_token).burnFrom(msg.sender, _token_amount);
         if (real_liquidity_mode) {
             if (i == 0) {
-                payable(msg.sender).transfer(
-                    calc_withdraw_one_coin(_token_amount, 0)
-                );
+                payable(msg.sender).transfer(calc_withdraw_one_coin(_token_amount, 0));
             } else {
-                IERC20(coins[1]).transfer(
-                    msg.sender,
-                    calc_withdraw_one_coin(_token_amount, 1)
-                );
+                IERC20(coins[1]).transfer(msg.sender, calc_withdraw_one_coin(_token_amount, 1));
             }
         } else {
             if (i == 0) {
@@ -200,10 +155,7 @@ contract CurveV1StETHMock is ICurvePoolStETH {
         }
     }
 
-    function remove_liquidity_imbalance(
-        uint256[N_COINS] memory amounts,
-        uint256 max_burn_amount
-    ) external {
+    function remove_liquidity_imbalance(uint256[N_COINS] memory amounts, uint256 max_burn_amount) external {
         payable(msg.sender).transfer(amounts[0]);
         IERC20(coins[1]).transfer(msg.sender, amounts[1]);
 
@@ -232,11 +184,7 @@ contract CurveV1StETHMock is ICurvePoolStETH {
         return 0;
     }
 
-    function calc_withdraw_one_coin(uint256 amount, int128 coin)
-        public
-        view
-        returns (uint256)
-    {
+    function calc_withdraw_one_coin(uint256 amount, int128 coin) public view returns (uint256) {
         return (amount * withdraw_rates_RAY[coin]) / RAY;
     }
 

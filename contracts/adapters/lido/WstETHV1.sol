@@ -4,13 +4,13 @@
 pragma solidity ^0.8.17;
 pragma abicoder v1;
 
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-import { AbstractAdapter } from "@gearbox-protocol/core-v2/contracts/adapters/AbstractAdapter.sol";
-import { IAdapter, AdapterType } from "@gearbox-protocol/core-v2/contracts/interfaces/adapters/IAdapter.sol";
+import {AbstractAdapter} from "@gearbox-protocol/core-v2/contracts/adapters/AbstractAdapter.sol";
+import {IAdapter, AdapterType} from "@gearbox-protocol/core-v2/contracts/interfaces/adapters/IAdapter.sol";
 
-import { IwstETH } from "../../integrations/lido/IwstETH.sol";
-import { IwstETHV1Adapter } from "../../interfaces/lido/IwstETHV1Adapter.sol";
+import {IwstETH} from "../../integrations/lido/IwstETH.sol";
+import {IwstETHV1Adapter} from "../../interfaces/lido/IwstETHV1Adapter.sol";
 
 /// @title wstETH adapter
 /// @dev Implements logic for wrapping / unwrapping wstETH
@@ -18,24 +18,22 @@ contract WstETHV1Adapter is AbstractAdapter, IwstETHV1Adapter {
     /// @dev Address of the Lido contract
     address public immutable override stETH;
 
-    AdapterType public constant _gearboxAdapterType =
-        AdapterType.LIDO_WSTETH_V1;
+    AdapterType public constant _gearboxAdapterType = AdapterType.LIDO_WSTETH_V1;
     uint16 public constant _gearboxAdapterVersion = 2;
 
     /// @dev Constructor
     /// @param _creditManager Address of the Credit manager
     /// @param _wstETH Address of the wstETH token
-    constructor(
-        address _creditManager,
-        address _wstETH
-    ) AbstractAdapter(_creditManager, _wstETH) {
+    constructor(address _creditManager, address _wstETH) AbstractAdapter(_creditManager, _wstETH) {
         stETH = IwstETH(_wstETH).stETH(); // F:[AWSTV1-1]
 
-        if (creditManager.tokenMasksMap(_wstETH) == 0)
-            revert TokenIsNotInAllowedList(_wstETH); // F:[AWSTV1-2]
+        if (creditManager.tokenMasksMap(_wstETH) == 0) {
+            revert TokenIsNotInAllowedList(_wstETH);
+        } // F:[AWSTV1-2]
 
-        if (creditManager.tokenMasksMap(stETH) == 0)
-            revert TokenIsNotInAllowedList(stETH); // F:[AWSTV1-2]
+        if (creditManager.tokenMasksMap(stETH) == 0) {
+            revert TokenIsNotInAllowedList(stETH);
+        } // F:[AWSTV1-2]
     }
 
     /**
@@ -70,17 +68,9 @@ contract WstETHV1Adapter is AbstractAdapter, IwstETHV1Adapter {
         _wrap(creditAccount, amount, true); // F:[AWSTV1-4]
     }
 
-    function _wrap(
-        address creditAccount,
-        uint256 amount,
-        bool disableTokenIn
-    ) internal {
+    function _wrap(address creditAccount, uint256 amount, bool disableTokenIn) internal {
         _executeSwapSafeApprove(
-            creditAccount,
-            stETH,
-            targetContract,
-            abi.encodeCall(IwstETH.wrap, (amount)),
-            disableTokenIn
+            creditAccount, stETH, targetContract, abi.encodeCall(IwstETH.wrap, (amount)), disableTokenIn
         ); // F: [AWSTV1-4,5]
     }
 
@@ -113,17 +103,9 @@ contract WstETHV1Adapter is AbstractAdapter, IwstETHV1Adapter {
         _unwrap(creditAccount, amount, true); // F: [AWSTV1-6]
     }
 
-    function _unwrap(
-        address creditAccount,
-        uint256 amount,
-        bool disableTokenIn
-    ) internal {
+    function _unwrap(address creditAccount, uint256 amount, bool disableTokenIn) internal {
         _executeSwapNoApprove(
-            creditAccount,
-            targetContract,
-            stETH,
-            abi.encodeCall(IwstETH.unwrap, (amount)),
-            disableTokenIn
+            creditAccount, targetContract, stETH, abi.encodeCall(IwstETH.unwrap, (amount)), disableTokenIn
         ); // F: [AWSTV1-6,7]
     }
 }

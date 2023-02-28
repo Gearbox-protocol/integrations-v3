@@ -3,19 +3,19 @@
 // (c) Gearbox Holdings, 2022
 pragma solidity ^0.8.10;
 
-import { Address } from "@openzeppelin/contracts/utils/Address.sol";
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {Address} from "@openzeppelin/contracts/utils/Address.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
-import { IAddressProvider } from "@gearbox-protocol/core-v2/contracts/interfaces/IAddressProvider.sol";
-import { IContractsRegister } from "@gearbox-protocol/core-v2/contracts/interfaces/IContractsRegister.sol";
+import {IAddressProvider} from "@gearbox-protocol/core-v2/contracts/interfaces/IAddressProvider.sol";
+import {IContractsRegister} from "@gearbox-protocol/core-v2/contracts/interfaces/IContractsRegister.sol";
 
-import { IPoolService } from "@gearbox-protocol/core-v2/contracts/interfaces/IPoolService.sol";
+import {IPoolService} from "@gearbox-protocol/core-v2/contracts/interfaces/IPoolService.sol";
 
-import { IwstETH } from "../../integrations/lido/IwstETH.sol";
-import { IwstETHGateWay } from "../../integrations/lido/IwstETHGateway.sol";
-import { ZeroAddressException } from "@gearbox-protocol/core-v2/contracts/interfaces/IErrors.sol";
+import {IwstETH} from "../../integrations/lido/IwstETH.sol";
+import {IwstETHGateWay} from "../../integrations/lido/IwstETHGateway.sol";
+import {ZeroAddressException} from "@gearbox-protocol/core-v2/contracts/interfaces/IErrors.sol";
 
 /// @title WstETHGateway
 /// @notice Used for converting stETH <> WstETH
@@ -40,10 +40,8 @@ contract WstETHGateway is IwstETHGateWay {
     constructor(address _pool) {
         if (_pool == address(0)) revert ZeroAddressException(); // F:[WSTGV1-2]
 
-        IContractsRegister contractsRegister = IContractsRegister(
-            IAddressProvider(IPoolService(_pool).addressProvider())
-                .getContractsRegister()
-        ); // F:[WSTGV1-2]
+        IContractsRegister contractsRegister =
+            IContractsRegister(IAddressProvider(IPoolService(_pool).addressProvider()).getContractsRegister()); // F:[WSTGV1-2]
 
         if (!contractsRegister.isPool(_pool)) revert NonRegisterPoolException(); // F:[WSTGV1-2]
 
@@ -65,11 +63,7 @@ contract WstETHGateway is IwstETHGateWay {
      * @param referralCode Code used to register the integrator originating the operation, for potential rewards.
      *   0 if the action is executed directly by the user, without a facilitator.
      */
-    function addLiquidity(
-        uint256 amount,
-        address onBehalfOf,
-        uint256 referralCode
-    ) external override {
+    function addLiquidity(uint256 amount, address onBehalfOf, uint256 referralCode) external override {
         IERC20(stETH).safeTransferFrom(msg.sender, address(this), amount); // F:[WSTGV1-3]
 
         uint256 amountWstETH = wstETH.wrap(amount); // F:[WSTGV1-3]
@@ -83,19 +77,12 @@ contract WstETHGateway is IwstETHGateWay {
     ///  - returns the equivalent amount of underlying to 'to'
     /// @param amount Amount of Diesel tokens to burn
     /// @param to Address to transfer the underlying to
-    function removeLiquidity(uint256 amount, address to)
-        external
-        override
-        returns (uint256 amountGet)
-    {
+    function removeLiquidity(uint256 amount, address to) external override returns (uint256 amountGet) {
         address dieselToken = IPoolService(pool).dieselToken(); // F:[WSTGV1-3]
         IERC20(dieselToken).safeTransferFrom(msg.sender, address(this), amount); // F:[WSTGV1-3]
 
         _checkAllowance(dieselToken, amount); // F:[WSTGV1-3]
-        uint256 amountWstETH = IPoolService(pool).removeLiquidity(
-            amount,
-            address(this)
-        ); // F:[WSTGV1-3]
+        uint256 amountWstETH = IPoolService(pool).removeLiquidity(amount, address(this)); // F:[WSTGV1-3]
 
         amountGet = wstETH.unwrap(amountWstETH); // F:[WSTGV1-3]
         IERC20(stETH).safeTransfer(to, amountGet); // F:[WSTGV1-3]

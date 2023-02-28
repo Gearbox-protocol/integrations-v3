@@ -55,15 +55,7 @@ contract ClaimZapMock {
             IBasicRewards(extraRewardContracts[i]).getReward(msg.sender);
         }
 
-        _claimExtras(
-            depositCrvMaxAmount,
-            minAmountOut,
-            depositCvxMaxAmount,
-            spendCvxAmount,
-            0,
-            0,
-            options
-        );
+        _claimExtras(depositCrvMaxAmount, minAmountOut, depositCvxMaxAmount, spendCvxAmount, 0, 0, options);
     }
 
     function _claimExtras(
@@ -75,33 +67,12 @@ contract ClaimZapMock {
         uint256 removeCvxBalance,
         uint256 options
     ) internal pure {
-        require(
-            depositCrvMaxAmount == 0,
-            "Claim Zap Mock: Non-zero extra parameter was passed to target"
-        );
-        require(
-            minAmountOut == 0,
-            "Claim Zap Mock: Non-zero extra parameter was passed to target"
-        );
-        require(
-            depositCvxMaxAmount == 0,
-            "Claim Zap Mock: Non-zero extra parameter was passed to target"
-        );
-        require(
-            spendCvxAmount == 0,
-            "Claim Zap Mock: Non-zero extra parameter was passed to target"
-        );
-        require(
-            removeCrvBalance == 0,
-            "Claim Zap Mock: Non-zero extra parameter was passed to target"
-        );
-        require(
-            removeCvxBalance == 0,
-            "Claim Zap Mock: Non-zero extra parameter was passed to target"
-        );
-        require(
-            options == 0,
-            "Claim Zap Mock: Non-zero extra parameter was passed to target"
-        );
+        require(depositCrvMaxAmount == 0, "Claim Zap Mock: Non-zero extra parameter was passed to target");
+        require(minAmountOut == 0, "Claim Zap Mock: Non-zero extra parameter was passed to target");
+        require(depositCvxMaxAmount == 0, "Claim Zap Mock: Non-zero extra parameter was passed to target");
+        require(spendCvxAmount == 0, "Claim Zap Mock: Non-zero extra parameter was passed to target");
+        require(removeCrvBalance == 0, "Claim Zap Mock: Non-zero extra parameter was passed to target");
+        require(removeCvxBalance == 0, "Claim Zap Mock: Non-zero extra parameter was passed to target");
+        require(options == 0, "Claim Zap Mock: Non-zero extra parameter was passed to target");
     }
 }

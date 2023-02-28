@@ -36,19 +36,12 @@ contract StETHMock is IERC20 {
         return getPooledEthByShares(_sharesOf(_account));
     }
 
-    function transfer(address _recipient, uint256 _amount)
-        public
-        returns (bool)
-    {
+    function transfer(address _recipient, uint256 _amount) public returns (bool) {
         _transfer(msg.sender, _recipient, _amount);
         return true;
     }
 
-    function allowance(address _owner, address _spender)
-        public
-        view
-        returns (uint256)
-    {
+    function allowance(address _owner, address _spender) public view returns (uint256) {
         return allowances[_owner][_spender];
     }
 
@@ -57,43 +50,23 @@ contract StETHMock is IERC20 {
         return true;
     }
 
-    function transferFrom(
-        address _sender,
-        address _recipient,
-        uint256 _amount
-    ) public returns (bool) {
+    function transferFrom(address _sender, address _recipient, uint256 _amount) public returns (bool) {
         uint256 currentAllowance = allowances[_sender][msg.sender];
-        require(
-            currentAllowance >= _amount,
-            "TRANSFER_AMOUNT_EXCEEDS_ALLOWANCE"
-        );
+        require(currentAllowance >= _amount, "TRANSFER_AMOUNT_EXCEEDS_ALLOWANCE");
 
         _transfer(_sender, _recipient, _amount);
         _approve(_sender, msg.sender, currentAllowance.sub(_amount));
         return true;
     }
 
-    function increaseAllowance(address _spender, uint256 _addedValue)
-        public
-        returns (bool)
-    {
-        _approve(
-            msg.sender,
-            _spender,
-            allowances[msg.sender][_spender].add(_addedValue)
-        );
+    function increaseAllowance(address _spender, uint256 _addedValue) public returns (bool) {
+        _approve(msg.sender, _spender, allowances[msg.sender][_spender].add(_addedValue));
         return true;
     }
 
-    function decreaseAllowance(address _spender, uint256 _subtractedValue)
-        public
-        returns (bool)
-    {
+    function decreaseAllowance(address _spender, uint256 _subtractedValue) public returns (bool) {
         uint256 currentAllowance = allowances[msg.sender][_spender];
-        require(
-            currentAllowance >= _subtractedValue,
-            "DECREASED_ALLOWANCE_BELOW_ZERO"
-        );
+        require(currentAllowance >= _subtractedValue, "DECREASED_ALLOWANCE_BELOW_ZERO");
         _approve(msg.sender, _spender, currentAllowance.sub(_subtractedValue));
         return true;
     }
@@ -106,11 +79,7 @@ contract StETHMock is IERC20 {
         return _sharesOf(_account);
     }
 
-    function getSharesByPooledEth(uint256 _ethAmount)
-        public
-        view
-        returns (uint256)
-    {
+    function getSharesByPooledEth(uint256 _ethAmount) public view returns (uint256) {
         uint256 totalPooledEther = _getTotalPooledEther();
         if (totalPooledEther == 0) {
             return 0;
@@ -119,11 +88,7 @@ contract StETHMock is IERC20 {
         }
     }
 
-    function getPooledEthByShares(uint256 _sharesAmount)
-        public
-        view
-        returns (uint256)
-    {
+    function getPooledEthByShares(uint256 _sharesAmount) public view returns (uint256) {
         uint256 totalShares = _getTotalShares();
         if (totalShares == 0) {
             return 0;
@@ -136,21 +101,13 @@ contract StETHMock is IERC20 {
         return totalPooledEtherSynced;
     }
 
-    function _transfer(
-        address _sender,
-        address _recipient,
-        uint256 _amount
-    ) internal {
+    function _transfer(address _sender, address _recipient, uint256 _amount) internal {
         uint256 _sharesToTransfer = getSharesByPooledEth(_amount);
         _transferShares(_sender, _recipient, _sharesToTransfer);
         emit Transfer(_sender, _recipient, _amount);
     }
 
-    function _approve(
-        address _owner,
-        address _spender,
-        uint256 _amount
-    ) internal {
+    function _approve(address _owner, address _spender, uint256 _amount) internal {
         require(_owner != address(0), "APPROVE_FROM_ZERO_ADDRESS");
         require(_spender != address(0), "APPROVE_TO_ZERO_ADDRESS");
 
@@ -166,19 +123,12 @@ contract StETHMock is IERC20 {
         return shares[_account];
     }
 
-    function _transferShares(
-        address _sender,
-        address _recipient,
-        uint256 _sharesAmount
-    ) internal {
+    function _transferShares(address _sender, address _recipient, uint256 _sharesAmount) internal {
         require(_sender != address(0), "TRANSFER_FROM_THE_ZERO_ADDRESS");
         require(_recipient != address(0), "TRANSFER_TO_THE_ZERO_ADDRESS");
 
         uint256 currentSenderShares = shares[_sender];
-        require(
-            _sharesAmount <= currentSenderShares,
-            "TRANSFER_AMOUNT_EXCEEDS_BALANCE"
-        );
+        require(_sharesAmount <= currentSenderShares, "TRANSFER_AMOUNT_EXCEEDS_BALANCE");
 
         shares[_sender] = currentSenderShares.sub(_sharesAmount);
         shares[_recipient] = shares[_recipient].add(_sharesAmount);

@@ -3,8 +3,8 @@
 // (c) Gearbox Holdings, 2023
 pragma solidity ^0.8.17;
 
-import { ICurveV1Adapter } from "./ICurveV1Adapter.sol";
-import { N_COINS } from "../../integrations/curve/ICurvePool_4.sol";
+import {ICurveV1Adapter} from "./ICurveV1Adapter.sol";
+import {N_COINS} from "../../integrations/curve/ICurvePool_4.sol";
 
 interface ICurveV1_4AssetsAdapter is ICurveV1Adapter {
     /// @dev Sends an order to add liquidity to a Curve pool
@@ -22,8 +22,5 @@ interface ICurveV1_4AssetsAdapter is ICurveV1Adapter {
     /// @param amounts Amounts of coins to withdraw
     /// @notice `max_burn_amount` is ignored since the calldata is routed directly to the target
     /// @notice Internal implementation details in CurveV1Base
-    function remove_liquidity_imbalance(
-        uint256[N_COINS] calldata amounts,
-        uint256
-    ) external;
+    function remove_liquidity_imbalance(uint256[N_COINS] calldata amounts, uint256) external;
 }

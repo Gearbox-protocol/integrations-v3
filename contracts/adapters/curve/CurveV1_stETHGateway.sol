@@ -3,14 +3,16 @@
 // (c) Gearbox Holdings, 2022
 pragma solidity ^0.8.10;
 
-import { IWETH } from "@gearbox-protocol/core-v2/contracts/interfaces/external/IWETH.sol";
-import { N_COINS, ICurvePool2Assets } from "../../integrations/curve/ICurvePool_2.sol";
-import { ICurvePoolStETH } from "../../integrations/curve/ICurvePoolStETH.sol";
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {IWETH} from "@gearbox-protocol/core-v2/contracts/interfaces/external/IWETH.sol";
+import {N_COINS, ICurvePool2Assets} from "../../integrations/curve/ICurvePool_2.sol";
+import {ICurvePoolStETH} from "../../integrations/curve/ICurvePoolStETH.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 // EXCEPTIONS
-import { ZeroAddressException, NotImplementedException } from "@gearbox-protocol/core-v2/contracts/interfaces/IErrors.sol";
+import {
+    ZeroAddressException, NotImplementedException
+} from "@gearbox-protocol/core-v2/contracts/interfaces/IErrors.sol";
 
 /// @title CurveV1StETHPoolGateway
 /// @dev This is connector contract to connect creditAccounts and Curve stETH pool
@@ -34,13 +36,10 @@ contract CurveV1StETHPoolGateway is ICurvePool2Assets {
     /// @param _weth WETH address
     /// @param _steth stETH address
     /// @param _pool Address of the ETH/stETH Curve pool
-    constructor(
-        address _weth,
-        address _steth,
-        address _pool
-    ) {
-        if (_weth == address(0) || _steth == address(0) || _pool == address(0))
+    constructor(address _weth, address _steth, address _pool) {
+        if (_weth == address(0) || _steth == address(0) || _pool == address(0)) {
             revert ZeroAddressException();
+        }
 
         token0 = _weth;
         token1 = _steth;
@@ -59,22 +58,17 @@ contract CurveV1StETHPoolGateway is ICurvePool2Assets {
     /// @param j Index of the output coin
     /// @param dx The amount of input coin to swap in
     /// @param min_dy The minimal amount of output coin to receive
-    function exchange(
-        int128 i,
-        int128 j,
-        uint256 dx,
-        uint256 min_dy
-    ) external {
+    function exchange(int128 i, int128 j, uint256 dx, uint256 min_dy) external {
         if (i == 0 && j == 1) {
             IERC20(token0).safeTransferFrom(msg.sender, address(this), dx);
             IWETH(token0).withdraw(dx);
-            ICurvePoolStETH(pool).exchange{ value: dx }(i, j, dx, min_dy);
+            ICurvePoolStETH(pool).exchange{value: dx}(i, j, dx, min_dy);
             _transferAllTokensOf(token1);
         } else if (i == 1 && j == 0) {
             IERC20(token1).safeTransferFrom(msg.sender, address(this), dx);
             ICurvePoolStETH(pool).exchange(i, j, dx, min_dy);
 
-            IWETH(token0).deposit{ value: address(this).balance }();
+            IWETH(token0).deposit{value: address(this).balance}();
 
             _transferAllTokensOf(token0);
         } else {
@@ -89,31 +83,17 @@ contract CurveV1StETHPoolGateway is ICurvePool2Assets {
     /// wraps ETH and sends WETH to sender
     /// @param amounts Amounts of coins to deposit
     /// @param min_mint_amount Minimal amount of LP token to receive
-    function add_liquidity(
-        uint256[N_COINS] calldata amounts,
-        uint256 min_mint_amount
-    ) external {
+    function add_liquidity(uint256[N_COINS] calldata amounts, uint256 min_mint_amount) external {
         if (amounts[0] > 0) {
-            IERC20(token0).safeTransferFrom(
-                msg.sender,
-                address(this),
-                amounts[0]
-            );
+            IERC20(token0).safeTransferFrom(msg.sender, address(this), amounts[0]);
             IWETH(token0).withdraw(amounts[0]);
         }
 
         if (amounts[1] > 0) {
-            IERC20(token1).safeTransferFrom(
-                msg.sender,
-                address(this),
-                amounts[1]
-            );
+            IERC20(token1).safeTransferFrom(msg.sender, address(this), amounts[1]);
         }
 
-        ICurvePoolStETH(pool).add_liquidity{ value: amounts[0] }(
-            amounts,
-            min_mint_amount
-        );
+        ICurvePoolStETH(pool).add_liquidity{value: amounts[0]}(amounts, min_mint_amount);
 
         _transferAllTokensOf(lp_token);
     }
@@ -125,15 +105,12 @@ contract CurveV1StETHPoolGateway is ICurvePool2Assets {
     /// - Sends WETH and stETH to sender
     /// @param amount Amounts of LP token to burn
     /// @param min_amounts Minimal amounts of tokens to receive
-    function remove_liquidity(
-        uint256 amount,
-        uint256[N_COINS] calldata min_amounts
-    ) external {
+    function remove_liquidity(uint256 amount, uint256[N_COINS] calldata min_amounts) external {
         IERC20(lp_token).safeTransferFrom(msg.sender, address(this), amount);
 
         ICurvePoolStETH(pool).remove_liquidity(amount, min_amounts);
 
-        IWETH(token0).deposit{ value: address(this).balance }();
+        IWETH(token0).deposit{value: address(this).balance}();
 
         _transferAllTokensOf(token0);
 
@@ -148,25 +125,13 @@ contract CurveV1StETHPoolGateway is ICurvePool2Assets {
     /// @param _token_amount Amount of LP token to burn
     /// @param i Index of the withdrawn coin
     /// @param min_amount Minimal amount of withdrawn coin to receive
-    function remove_liquidity_one_coin(
-        uint256 _token_amount,
-        int128 i,
-        uint256 min_amount
-    ) external override {
-        IERC20(lp_token).safeTransferFrom(
-            msg.sender,
-            address(this),
-            _token_amount
-        );
+    function remove_liquidity_one_coin(uint256 _token_amount, int128 i, uint256 min_amount) external override {
+        IERC20(lp_token).safeTransferFrom(msg.sender, address(this), _token_amount);
 
-        ICurvePoolStETH(pool).remove_liquidity_one_coin(
-            _token_amount,
-            i,
-            min_amount
-        );
+        ICurvePoolStETH(pool).remove_liquidity_one_coin(_token_amount, i, min_amount);
 
         if (i == 0) {
-            IWETH(token0).deposit{ value: address(this).balance }();
+            IWETH(token0).deposit{value: address(this).balance}();
             _transferAllTokensOf(token0);
         } else {
             _transferAllTokensOf(token1);
@@ -180,23 +145,13 @@ contract CurveV1StETHPoolGateway is ICurvePool2Assets {
     /// - If amounts[1] > 0, transfers stETH to sender
     /// @param amounts Amounts of coins to receive
     /// @param max_burn_amount Maximal amount of LP token to burn
-    function remove_liquidity_imbalance(
-        uint256[N_COINS] calldata amounts,
-        uint256 max_burn_amount
-    ) external {
-        IERC20(lp_token).safeTransferFrom(
-            msg.sender,
-            address(this),
-            max_burn_amount
-        );
+    function remove_liquidity_imbalance(uint256[N_COINS] calldata amounts, uint256 max_burn_amount) external {
+        IERC20(lp_token).safeTransferFrom(msg.sender, address(this), max_burn_amount);
 
-        ICurvePoolStETH(pool).remove_liquidity_imbalance(
-            amounts,
-            max_burn_amount
-        );
+        ICurvePoolStETH(pool).remove_liquidity_imbalance(amounts, max_burn_amount);
 
         if (amounts[0] > 1) {
-            IWETH(token0).deposit{ value: address(this).balance }();
+            IWETH(token0).deposit{value: address(this).balance}();
 
             uint256 balance = IERC20(token0).balanceOf(address(this));
             if (balance > 1) {
@@ -218,21 +173,12 @@ contract CurveV1StETHPoolGateway is ICurvePool2Assets {
     }
 
     /// @dev Not implemented, since the stETH pool does not have this function
-    function exchange_underlying(
-        int128,
-        int128,
-        uint256,
-        uint256
-    ) external pure override {
+    function exchange_underlying(int128, int128, uint256, uint256) external pure override {
         revert NotImplementedException();
     }
 
     /// @dev Not implemented, since the stETH pool does not have this function
-    function get_dy_underlying(
-        int128,
-        int128,
-        uint256
-    ) external pure override returns (uint256) {
+    function get_dy_underlying(int128, int128, uint256) external pure override returns (uint256) {
         revert NotImplementedException();
     }
 
@@ -240,11 +186,7 @@ contract CurveV1StETHPoolGateway is ICurvePool2Assets {
     /// @param i Index of the input coin
     /// @param j Index of the output coin
     /// @param dx Amount of coin i to be swapped in
-    function get_dy(
-        int128 i,
-        int128 j,
-        uint256 dx
-    ) external view override returns (uint256) {
+    function get_dy(int128 i, int128 j, uint256 dx) external view override returns (uint256) {
         return ICurvePoolStETH(pool).get_dy(i, j, dx);
     }
 
@@ -308,11 +250,7 @@ contract CurveV1StETHPoolGateway is ICurvePool2Assets {
     /// @dev Returns the amount of coin withdrawn when using remove_liquidity_one_coin
     /// @param _burn_amount Amount of LP token to be burnt
     /// @param i Index of a coin to receive
-    function calc_withdraw_one_coin(uint256 _burn_amount, int128 i)
-        external
-        view
-        returns (uint256)
-    {
+    function calc_withdraw_one_coin(uint256 _burn_amount, int128 i) external view returns (uint256) {
         return ICurvePoolStETH(pool).calc_withdraw_one_coin(_burn_amount, i);
     }
 
@@ -395,19 +333,16 @@ contract CurveV1StETHPoolGateway is ICurvePool2Assets {
     /// @dev Calculates the amount of LP token minted or burned based on added/removed coin amounts
     /// @param _amounts Amounts of coins to be added or removed from the pool
     /// @param _is_deposit Whether the tokens are added or removed
-    function calc_token_amount(
-        uint256[N_COINS] calldata _amounts,
-        bool _is_deposit
-    ) external view returns (uint256) {
+    function calc_token_amount(uint256[N_COINS] calldata _amounts, bool _is_deposit) external view returns (uint256) {
         return ICurvePoolStETH(pool).calc_token_amount(_amounts, _is_deposit);
     }
 
     /// @dev Not implemented, since the stETH pool does not have this function
-    function get_twap_balances(
-        uint256[N_COINS] calldata,
-        uint256[N_COINS] calldata,
-        uint256
-    ) external pure returns (uint256[N_COINS] memory) {
+    function get_twap_balances(uint256[N_COINS] calldata, uint256[N_COINS] calldata, uint256)
+        external
+        pure
+        returns (uint256[N_COINS] memory)
+    {
         revert NotImplementedException();
     }
 
@@ -417,20 +352,12 @@ contract CurveV1StETHPoolGateway is ICurvePool2Assets {
     }
 
     /// @dev Not implemented, since the stETH pool does not have this function
-    function get_previous_balances()
-        external
-        pure
-        returns (uint256[N_COINS] memory)
-    {
+    function get_previous_balances() external pure returns (uint256[N_COINS] memory) {
         revert NotImplementedException();
     }
 
     /// @dev Not implemented, since the stETH pool does not have this function
-    function get_price_cumulative_last()
-        external
-        pure
-        returns (uint256[N_COINS] memory)
-    {
+    function get_price_cumulative_last() external pure returns (uint256[N_COINS] memory) {
         revert NotImplementedException();
     }
 

@@ -3,27 +3,33 @@
 // (c) Gearbox Holdings, 2023
 pragma solidity ^0.8.17;
 
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { ICreditFacade } from "@gearbox-protocol/core-v2/contracts/interfaces/ICreditFacade.sol";
-import { IBaseRewardPool } from "../../../integrations/convex/IBaseRewardPool.sol";
-import { IBooster } from "../../../integrations/convex/IBooster.sol";
-import { IConvexV1BaseRewardPoolAdapter } from "../../../interfaces/convex/IConvexV1BaseRewardPoolAdapter.sol";
-import { ConvexV1_BaseRewardPoolCalls, ConvexV1_BaseRewardPoolMulticaller } from "../../../multicall/convex/ConvexV1_BaseRewardPoolCalls.sol";
-import { ConvexV1_BoosterCalls, ConvexV1_BoosterMulticaller } from "../../../multicall/convex/ConvexV1_BoosterCalls.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {ICreditFacade} from "@gearbox-protocol/core-v2/contracts/interfaces/ICreditFacade.sol";
+import {IBaseRewardPool} from "../../../integrations/convex/IBaseRewardPool.sol";
+import {IBooster} from "../../../integrations/convex/IBooster.sol";
+import {IConvexV1BaseRewardPoolAdapter} from "../../../interfaces/convex/IConvexV1BaseRewardPoolAdapter.sol";
+import {
+    ConvexV1_BaseRewardPoolCalls,
+    ConvexV1_BaseRewardPoolMulticaller
+} from "../../../multicall/convex/ConvexV1_BaseRewardPoolCalls.sol";
+import {ConvexV1_BoosterCalls, ConvexV1_BoosterMulticaller} from "../../../multicall/convex/ConvexV1_BoosterCalls.sol";
 
-import { Tokens } from "../../config/Tokens.sol";
-import { Contracts } from "../../config/SupportedContracts.sol";
+import {Tokens} from "../../config/Tokens.sol";
+import {Contracts} from "../../config/SupportedContracts.sol";
 
-import { MultiCall } from "@gearbox-protocol/core-v2/contracts/libraries/MultiCall.sol";
-import { CreditFacadeCalls, CreditFacadeMulticaller } from "@gearbox-protocol/core-v2/contracts/multicall/CreditFacadeCalls.sol";
-import { AddressList } from "@gearbox-protocol/core-v2/contracts/libraries/AddressList.sol";
+import {MultiCall} from "@gearbox-protocol/core-v2/contracts/libraries/MultiCall.sol";
+import {
+    CreditFacadeCalls,
+    CreditFacadeMulticaller
+} from "@gearbox-protocol/core-v2/contracts/multicall/CreditFacadeCalls.sol";
+import {AddressList} from "@gearbox-protocol/core-v2/contracts/libraries/AddressList.sol";
 // TEST
 import "@gearbox-protocol/core-v2/contracts/test/lib/constants.sol";
 
 // SUITES
-import { LiveEnvTestSuite } from "../../suites/LiveEnvTestSuite.sol";
-import { LiveEnvHelper } from "../../suites/LiveEnvHelper.sol";
-import { BalanceComparator, BalanceBackup } from "../../helpers/BalanceComparator.sol";
+import {LiveEnvTestSuite} from "../../suites/LiveEnvTestSuite.sol";
+import {LiveEnvHelper} from "../../suites/LiveEnvHelper.sol";
+import {BalanceComparator, BalanceBackup} from "../../helpers/BalanceComparator.sol";
 
 contract Live_ConvexEquivalenceTest is DSTest, LiveEnvHelper {
     using ConvexV1_BaseRewardPoolCalls for ConvexV1_BaseRewardPoolMulticaller;
@@ -83,133 +89,72 @@ contract Live_ConvexEquivalenceTest is DSTest, LiveEnvHelper {
     ) internal {
         if (adapters) {
             ICreditFacade creditFacade = lts.creditFacades(Tokens.DAI);
-            ConvexV1_BoosterMulticaller booster = ConvexV1_BoosterMulticaller(
-                boosterAddress
-            );
-            ConvexV1_BaseRewardPoolMulticaller basePool = ConvexV1_BaseRewardPoolMulticaller(
-                    basePoolAddress
-                );
+            ConvexV1_BoosterMulticaller booster = ConvexV1_BoosterMulticaller(boosterAddress);
+            ConvexV1_BaseRewardPoolMulticaller basePool = ConvexV1_BaseRewardPoolMulticaller(basePoolAddress);
 
             uint256 pid = IConvexV1BaseRewardPoolAdapter(basePoolAddress).pid();
 
             evm.prank(USER);
-            creditFacade.multicall(
-                multicallBuilder(booster.deposit(pid, WAD, false))
-            );
-            comparator.takeSnapshot(
-                "after_booster_deposit_no_staking",
-                accountToSaveBalances
-            );
+            creditFacade.multicall(multicallBuilder(booster.deposit(pid, WAD, false)));
+            comparator.takeSnapshot("after_booster_deposit_no_staking", accountToSaveBalances);
 
             evm.prank(USER);
-            creditFacade.multicall(
-                multicallBuilder(booster.depositAll(pid, false))
-            );
-            comparator.takeSnapshot(
-                "after_booster_depositAll_no_staking",
-                accountToSaveBalances
-            );
+            creditFacade.multicall(multicallBuilder(booster.depositAll(pid, false)));
+            comparator.takeSnapshot("after_booster_depositAll_no_staking", accountToSaveBalances);
 
             evm.prank(USER);
             creditFacade.multicall(multicallBuilder(basePool.stake(WAD)));
-            comparator.takeSnapshot(
-                "after_basePool_stake",
-                accountToSaveBalances
-            );
+            comparator.takeSnapshot("after_basePool_stake", accountToSaveBalances);
 
             evm.prank(USER);
             creditFacade.multicall(multicallBuilder(basePool.stakeAll()));
-            comparator.takeSnapshot(
-                "after_basePool_stakeAll",
-                accountToSaveBalances
-            );
+            comparator.takeSnapshot("after_basePool_stakeAll", accountToSaveBalances);
 
             evm.warp(block.timestamp + 24 * 60 * 60);
 
             evm.prank(USER);
             creditFacade.multicall(multicallBuilder(basePool.getReward()));
-            comparator.takeSnapshot(
-                "after_basePool_getReward_with_extras",
-                accountToSaveBalances
-            );
+            comparator.takeSnapshot("after_basePool_getReward_with_extras", accountToSaveBalances);
 
             evm.warp(block.timestamp + 24 * 60 * 60);
 
             evm.prank(USER);
-            creditFacade.multicall(
-                multicallBuilder(basePool.withdraw(WAD, true))
-            );
-            comparator.takeSnapshot(
-                "after_basePool_withdraw",
-                accountToSaveBalances
-            );
+            creditFacade.multicall(multicallBuilder(basePool.withdraw(WAD, true)));
+            comparator.takeSnapshot("after_basePool_withdraw", accountToSaveBalances);
 
             evm.warp(block.timestamp + 24 * 60 * 60);
 
             evm.prank(USER);
-            creditFacade.multicall(
-                multicallBuilder(basePool.withdrawAll(true))
-            );
-            comparator.takeSnapshot(
-                "after_basePool_withdrawAll",
-                accountToSaveBalances
-            );
+            creditFacade.multicall(multicallBuilder(basePool.withdrawAll(true)));
+            comparator.takeSnapshot("after_basePool_withdrawAll", accountToSaveBalances);
 
             evm.prank(USER);
-            creditFacade.multicall(
-                multicallBuilder(booster.withdraw(pid, WAD))
-            );
-            comparator.takeSnapshot(
-                "after_booster_withdraw",
-                accountToSaveBalances
-            );
+            creditFacade.multicall(multicallBuilder(booster.withdraw(pid, WAD)));
+            comparator.takeSnapshot("after_booster_withdraw", accountToSaveBalances);
 
             evm.prank(USER);
             creditFacade.multicall(multicallBuilder(booster.withdrawAll(pid)));
-            comparator.takeSnapshot(
-                "after_booster_withdrawAll",
-                accountToSaveBalances
-            );
+            comparator.takeSnapshot("after_booster_withdrawAll", accountToSaveBalances);
 
             evm.prank(USER);
-            creditFacade.multicall(
-                multicallBuilder(booster.deposit(pid, WAD, true))
-            );
-            comparator.takeSnapshot(
-                "after_booster_deposit_with_staking",
-                accountToSaveBalances
-            );
+            creditFacade.multicall(multicallBuilder(booster.deposit(pid, WAD, true)));
+            comparator.takeSnapshot("after_booster_deposit_with_staking", accountToSaveBalances);
 
             evm.prank(USER);
-            creditFacade.multicall(
-                multicallBuilder(booster.depositAll(pid, true))
-            );
-            comparator.takeSnapshot(
-                "after_booster_depositAll_with_staking",
-                accountToSaveBalances
-            );
+            creditFacade.multicall(multicallBuilder(booster.depositAll(pid, true)));
+            comparator.takeSnapshot("after_booster_depositAll_with_staking", accountToSaveBalances);
 
             evm.warp(block.timestamp + 24 * 60 * 60);
 
             evm.prank(USER);
-            creditFacade.multicall(
-                multicallBuilder(basePool.withdrawAndUnwrap(WAD, true))
-            );
-            comparator.takeSnapshot(
-                "after_basePool_withdrawAndUnwrap",
-                accountToSaveBalances
-            );
+            creditFacade.multicall(multicallBuilder(basePool.withdrawAndUnwrap(WAD, true)));
+            comparator.takeSnapshot("after_basePool_withdrawAndUnwrap", accountToSaveBalances);
 
             evm.warp(block.timestamp + 24 * 60 * 60);
 
             evm.prank(USER);
-            creditFacade.multicall(
-                multicallBuilder(basePool.withdrawAllAndUnwrap(true))
-            );
-            comparator.takeSnapshot(
-                "after_basePool_withdrawAllAndUnwrap",
-                accountToSaveBalances
-            );
+            creditFacade.multicall(multicallBuilder(basePool.withdrawAllAndUnwrap(true)));
+            comparator.takeSnapshot("after_basePool_withdrawAllAndUnwrap", accountToSaveBalances);
         } else {
             IBooster booster = IBooster(boosterAddress);
             IBaseRewardPool basePool = IBaseRewardPool(basePoolAddress);
@@ -218,123 +163,77 @@ contract Live_ConvexEquivalenceTest is DSTest, LiveEnvHelper {
 
             evm.prank(USER);
             booster.deposit(pid, WAD, false);
-            comparator.takeSnapshot(
-                "after_booster_deposit_no_staking",
-                accountToSaveBalances
-            );
+            comparator.takeSnapshot("after_booster_deposit_no_staking", accountToSaveBalances);
 
             evm.prank(USER);
             booster.depositAll(pid, false);
-            comparator.takeSnapshot(
-                "after_booster_depositAll_no_staking",
-                accountToSaveBalances
-            );
+            comparator.takeSnapshot("after_booster_depositAll_no_staking", accountToSaveBalances);
 
             evm.prank(USER);
             basePool.stake(WAD);
-            comparator.takeSnapshot(
-                "after_basePool_stake",
-                accountToSaveBalances
-            );
+            comparator.takeSnapshot("after_basePool_stake", accountToSaveBalances);
 
             evm.prank(USER);
             basePool.stakeAll();
-            comparator.takeSnapshot(
-                "after_basePool_stakeAll",
-                accountToSaveBalances
-            );
+            comparator.takeSnapshot("after_basePool_stakeAll", accountToSaveBalances);
 
             evm.warp(block.timestamp + 24 * 60 * 60);
 
             evm.prank(USER);
             basePool.getReward();
-            comparator.takeSnapshot(
-                "after_basePool_getReward_with_extras",
-                accountToSaveBalances
-            );
+            comparator.takeSnapshot("after_basePool_getReward_with_extras", accountToSaveBalances);
 
             evm.warp(block.timestamp + 24 * 60 * 60);
 
             evm.prank(USER);
             basePool.withdraw(WAD, true);
-            comparator.takeSnapshot(
-                "after_basePool_withdraw",
-                accountToSaveBalances
-            );
+            comparator.takeSnapshot("after_basePool_withdraw", accountToSaveBalances);
 
             evm.warp(block.timestamp + 24 * 60 * 60);
 
             evm.prank(USER);
             basePool.withdrawAll(true);
-            comparator.takeSnapshot(
-                "after_basePool_withdrawAll",
-                accountToSaveBalances
-            );
+            comparator.takeSnapshot("after_basePool_withdrawAll", accountToSaveBalances);
 
             evm.prank(USER);
             booster.withdraw(pid, WAD);
-            comparator.takeSnapshot(
-                "after_booster_withdraw",
-                accountToSaveBalances
-            );
+            comparator.takeSnapshot("after_booster_withdraw", accountToSaveBalances);
 
             evm.prank(USER);
             booster.withdrawAll(pid);
-            comparator.takeSnapshot(
-                "after_booster_withdrawAll",
-                accountToSaveBalances
-            );
+            comparator.takeSnapshot("after_booster_withdrawAll", accountToSaveBalances);
 
             evm.prank(USER);
             booster.deposit(pid, WAD, true);
-            comparator.takeSnapshot(
-                "after_booster_deposit_with_staking",
-                accountToSaveBalances
-            );
+            comparator.takeSnapshot("after_booster_deposit_with_staking", accountToSaveBalances);
 
             evm.prank(USER);
             booster.depositAll(pid, true);
-            comparator.takeSnapshot(
-                "after_booster_depositAll_with_staking",
-                accountToSaveBalances
-            );
+            comparator.takeSnapshot("after_booster_depositAll_with_staking", accountToSaveBalances);
 
             evm.warp(block.timestamp + 24 * 60 * 60);
 
             evm.prank(USER);
             basePool.withdrawAndUnwrap(WAD, true);
-            comparator.takeSnapshot(
-                "after_basePool_withdrawAndUnwrap",
-                accountToSaveBalances
-            );
+            comparator.takeSnapshot("after_basePool_withdrawAndUnwrap", accountToSaveBalances);
 
             evm.warp(block.timestamp + 24 * 60 * 60);
 
             evm.prank(USER);
             basePool.withdrawAllAndUnwrap(true);
-            comparator.takeSnapshot(
-                "after_basePool_withdrawAllAndUnwrap",
-                accountToSaveBalances
-            );
+            comparator.takeSnapshot("after_basePool_withdrawAllAndUnwrap", accountToSaveBalances);
         }
     }
 
-    function openCreditAccountWithUnderlying(
-        address token,
-        uint256 amount
-    ) internal returns (address creditAccount) {
+    function openCreditAccountWithUnderlying(address token, uint256 amount) internal returns (address creditAccount) {
         ICreditFacade creditFacade = lts.creditFacades(Tokens.DAI);
 
-        (uint256 minAmount, ) = creditFacade.limits();
+        (uint256 minAmount,) = creditFacade.limits();
 
         tokenTestSuite.mint(Tokens.DAI, USER, minAmount);
 
         // Approve tokens
-        tokenTestSuite.approve(
-            Tokens.DAI,
-            USER,
-            address(lts.creditManagers(Tokens.DAI))
-        );
+        tokenTestSuite.approve(Tokens.DAI, USER, address(lts.creditManagers(Tokens.DAI)));
 
         evm.startPrank(USER);
         creditFacade.openCreditAccountMulticall(
@@ -342,9 +241,7 @@ contract Live_ConvexEquivalenceTest is DSTest, LiveEnvHelper {
             USER,
             multicallBuilder(
                 CreditFacadeMulticaller(address(creditFacade)).addCollateral(
-                    USER,
-                    tokenTestSuite.addressOf(Tokens.DAI),
-                    minAmount
+                    USER, tokenTestSuite.addressOf(Tokens.DAI), minAmount
                 )
             ),
             0
@@ -352,34 +249,21 @@ contract Live_ConvexEquivalenceTest is DSTest, LiveEnvHelper {
 
         evm.stopPrank();
 
-        creditAccount = lts.creditManagers(Tokens.DAI).getCreditAccountOrRevert(
-            USER
-        );
+        creditAccount = lts.creditManagers(Tokens.DAI).getCreditAccountOrRevert(USER);
 
         tokenTestSuite.mint(token, creditAccount, amount);
     }
 
-    function prepareComparator(
-        address basePoolAdapter
-    ) internal returns (BalanceComparator comparator) {
+    function prepareComparator(address basePoolAdapter) internal returns (BalanceComparator comparator) {
         address[] memory tokensToTrack = new address[](7);
 
-        tokensToTrack[0] = IConvexV1BaseRewardPoolAdapter(basePoolAdapter)
-            .curveLPtoken();
-        tokensToTrack[1] = address(
-            IConvexV1BaseRewardPoolAdapter(basePoolAdapter).stakingToken()
-        );
-        tokensToTrack[2] = IConvexV1BaseRewardPoolAdapter(basePoolAdapter)
-            .stakedPhantomToken();
-        tokensToTrack[3] = address(
-            IConvexV1BaseRewardPoolAdapter(basePoolAdapter).rewardToken()
-        );
-        tokensToTrack[4] = IConvexV1BaseRewardPoolAdapter(basePoolAdapter)
-            .cvx();
-        tokensToTrack[5] = IConvexV1BaseRewardPoolAdapter(basePoolAdapter)
-            .extraReward1();
-        tokensToTrack[6] = IConvexV1BaseRewardPoolAdapter(basePoolAdapter)
-            .extraReward2();
+        tokensToTrack[0] = IConvexV1BaseRewardPoolAdapter(basePoolAdapter).curveLPtoken();
+        tokensToTrack[1] = address(IConvexV1BaseRewardPoolAdapter(basePoolAdapter).stakingToken());
+        tokensToTrack[2] = IConvexV1BaseRewardPoolAdapter(basePoolAdapter).stakedPhantomToken();
+        tokensToTrack[3] = address(IConvexV1BaseRewardPoolAdapter(basePoolAdapter).rewardToken());
+        tokensToTrack[4] = IConvexV1BaseRewardPoolAdapter(basePoolAdapter).cvx();
+        tokensToTrack[5] = IConvexV1BaseRewardPoolAdapter(basePoolAdapter).extraReward1();
+        tokensToTrack[6] = IConvexV1BaseRewardPoolAdapter(basePoolAdapter).extraReward2();
 
         tokensToTrack = tokensToTrack.trim();
 
@@ -397,18 +281,12 @@ contract Live_ConvexEquivalenceTest is DSTest, LiveEnvHelper {
     }
 
     /// @dev [L-CVXET-1]: convex adapters and original contracts work identically
-    function test_live_CVXET_01_Convex_adapters_and_original_contracts_are_equivalent()
-        public
-        liveOnly
-    {
+    function test_live_CVXET_01_Convex_adapters_and_original_contracts_are_equivalent() public liveOnly {
         for (uint256 i = 0; i < convexPools.length; ++i) {
             uint256 snapshot0 = evm.snapshot();
             uint256 snapshot1 = evm.snapshot();
 
-            address basePoolAdapter = lts.getAdapter(
-                Tokens.DAI,
-                convexPools[i]
-            );
+            address basePoolAdapter = lts.getAdapter(Tokens.DAI, convexPools[i]);
 
             BalanceComparator comparator = prepareComparator(basePoolAdapter);
 
@@ -419,19 +297,12 @@ contract Live_ConvexEquivalenceTest is DSTest, LiveEnvHelper {
             );
 
             tokenTestSuite.approve(
-                address(
-                    IConvexV1BaseRewardPoolAdapter(basePoolAdapter)
-                        .stakingToken()
-                ),
+                address(IConvexV1BaseRewardPoolAdapter(basePoolAdapter).stakingToken()),
                 USER,
                 supportedContracts.addressOf(convexPools[i])
             );
 
-            tokenTestSuite.mint(
-                IConvexV1BaseRewardPoolAdapter(basePoolAdapter).curveLPtoken(),
-                USER,
-                3000 * WAD
-            );
+            tokenTestSuite.mint(IConvexV1BaseRewardPoolAdapter(basePoolAdapter).curveLPtoken(), USER, 3000 * WAD);
 
             compareBehavior(
                 supportedContracts.addressOf(Contracts.CONVEX_BOOSTER),
@@ -441,16 +312,14 @@ contract Live_ConvexEquivalenceTest is DSTest, LiveEnvHelper {
                 comparator
             );
 
-            BalanceBackup[] memory savedBalanceSnapshots = comparator
-                .exportSnapshots(USER);
+            BalanceBackup[] memory savedBalanceSnapshots = comparator.exportSnapshots(USER);
 
             evm.revertTo(snapshot1);
 
             comparator = prepareComparator(basePoolAdapter);
 
             address creditAccount = openCreditAccountWithUnderlying(
-                IConvexV1BaseRewardPoolAdapter(basePoolAdapter).curveLPtoken(),
-                3000 * WAD
+                IConvexV1BaseRewardPoolAdapter(basePoolAdapter).curveLPtoken(), 3000 * WAD
             );
 
             compareBehavior(
@@ -461,10 +330,7 @@ contract Live_ConvexEquivalenceTest is DSTest, LiveEnvHelper {
                 comparator
             );
 
-            comparator.compareAllSnapshots(
-                creditAccount,
-                savedBalanceSnapshots
-            );
+            comparator.compareAllSnapshots(creditAccount, savedBalanceSnapshots);
 
             evm.revertTo(snapshot0);
         }

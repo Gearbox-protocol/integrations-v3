@@ -3,8 +3,8 @@
 // (c) Gearbox Holdings, 2022
 pragma solidity ^0.8.10;
 
-import { Tokens } from "./Tokens.sol";
-import { Contracts } from "./SupportedContracts.sol";
+import {Tokens} from "./Tokens.sol";
+import {Contracts} from "./SupportedContracts.sol";
 
 /// @dev A struct containing parameters for a recognized collateral token in the system
 struct CollateralTokenHuman {
@@ -47,213 +47,41 @@ contract CreditConfigLive {
         cm.blacklistHelper = address(0);
         cm.expirable = false;
         cm.skipInit = false;
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.WETH,
-                liquidationThreshold: 8500
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.STETH,
-                liquidationThreshold: 8250
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.WBTC,
-                liquidationThreshold: 8500
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.USDC,
-                liquidationThreshold: 9200
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.USDT,
-                liquidationThreshold: 9000
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.sUSD,
-                liquidationThreshold: 9000
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.FRAX,
-                liquidationThreshold: 9000
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.GUSD,
-                liquidationThreshold: 9000
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.LUSD,
-                liquidationThreshold: 9000
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.steCRV,
-                liquidationThreshold: 8250
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.cvxsteCRV,
-                liquidationThreshold: 8250
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens._3Crv,
-                liquidationThreshold: 9000
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.cvx3Crv,
-                liquidationThreshold: 9000
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.FRAX3CRV,
-                liquidationThreshold: 9000
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.cvxFRAX3CRV,
-                liquidationThreshold: 9000
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.LUSD3CRV,
-                liquidationThreshold: 9000
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.cvxLUSD3CRV,
-                liquidationThreshold: 9000
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.crvPlain3andSUSD,
-                liquidationThreshold: 9000
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.cvxcrvPlain3andSUSD,
-                liquidationThreshold: 9000
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.gusd3CRV,
-                liquidationThreshold: 9000
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.cvxgusd3CRV,
-                liquidationThreshold: 9000
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.crvFRAX,
-                liquidationThreshold: 9000
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.cvxcrvFRAX,
-                liquidationThreshold: 9000
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.yvDAI,
-                liquidationThreshold: 9000
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.yvUSDC,
-                liquidationThreshold: 9000
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.yvWETH,
-                liquidationThreshold: 8250
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.yvWBTC,
-                liquidationThreshold: 8250
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.yvCurve_stETH,
-                liquidationThreshold: 8250
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.yvCurve_FRAX,
-                liquidationThreshold: 9000
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.CVX,
-                liquidationThreshold: 2500
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.FXS,
-                liquidationThreshold: 2500
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.LQTY,
-                liquidationThreshold: 1
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.CRV,
-                liquidationThreshold: 2500
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({ token: Tokens.LDO, liquidationThreshold: 1 })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.SNX,
-                liquidationThreshold: 2500
-            })
-        );
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.WETH, liquidationThreshold: 8500}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.STETH, liquidationThreshold: 8250}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.WBTC, liquidationThreshold: 8500}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.USDC, liquidationThreshold: 9200}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.USDT, liquidationThreshold: 9000}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.sUSD, liquidationThreshold: 9000}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.FRAX, liquidationThreshold: 9000}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.GUSD, liquidationThreshold: 9000}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.LUSD, liquidationThreshold: 9000}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.steCRV, liquidationThreshold: 8250}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.cvxsteCRV, liquidationThreshold: 8250}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens._3Crv, liquidationThreshold: 9000}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.cvx3Crv, liquidationThreshold: 9000}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.FRAX3CRV, liquidationThreshold: 9000}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.cvxFRAX3CRV, liquidationThreshold: 9000}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.LUSD3CRV, liquidationThreshold: 9000}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.cvxLUSD3CRV, liquidationThreshold: 9000}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.crvPlain3andSUSD, liquidationThreshold: 9000}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.cvxcrvPlain3andSUSD, liquidationThreshold: 9000}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.gusd3CRV, liquidationThreshold: 9000}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.cvxgusd3CRV, liquidationThreshold: 9000}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.crvFRAX, liquidationThreshold: 9000}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.cvxcrvFRAX, liquidationThreshold: 9000}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.yvDAI, liquidationThreshold: 9000}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.yvUSDC, liquidationThreshold: 9000}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.yvWETH, liquidationThreshold: 8250}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.yvWBTC, liquidationThreshold: 8250}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.yvCurve_stETH, liquidationThreshold: 8250}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.yvCurve_FRAX, liquidationThreshold: 9000}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.CVX, liquidationThreshold: 2500}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.FXS, liquidationThreshold: 2500}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.LQTY, liquidationThreshold: 1}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.CRV, liquidationThreshold: 2500}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.LDO, liquidationThreshold: 1}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.SNX, liquidationThreshold: 2500}));
         cm.contracts.push(Contracts.UNISWAP_V3_ROUTER);
         cm.contracts.push(Contracts.UNISWAP_V2_ROUTER);
         cm.contracts.push(Contracts.SUSHISWAP_ROUTER);
@@ -289,213 +117,41 @@ contract CreditConfigLive {
         cm.blacklistHelper = address(0);
         cm.expirable = false;
         cm.skipInit = false;
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.WETH,
-                liquidationThreshold: 8500
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.STETH,
-                liquidationThreshold: 8250
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.WBTC,
-                liquidationThreshold: 8500
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.DAI,
-                liquidationThreshold: 9200
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.USDT,
-                liquidationThreshold: 9000
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.sUSD,
-                liquidationThreshold: 9000
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.FRAX,
-                liquidationThreshold: 9000
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.GUSD,
-                liquidationThreshold: 9000
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.LUSD,
-                liquidationThreshold: 9000
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.steCRV,
-                liquidationThreshold: 8250
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.cvxsteCRV,
-                liquidationThreshold: 8250
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens._3Crv,
-                liquidationThreshold: 9000
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.cvx3Crv,
-                liquidationThreshold: 9000
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.FRAX3CRV,
-                liquidationThreshold: 9000
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.cvxFRAX3CRV,
-                liquidationThreshold: 9000
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.LUSD3CRV,
-                liquidationThreshold: 9000
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.cvxLUSD3CRV,
-                liquidationThreshold: 9000
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.crvPlain3andSUSD,
-                liquidationThreshold: 9000
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.cvxcrvPlain3andSUSD,
-                liquidationThreshold: 9000
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.gusd3CRV,
-                liquidationThreshold: 9000
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.cvxgusd3CRV,
-                liquidationThreshold: 9000
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.crvFRAX,
-                liquidationThreshold: 9000
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.cvxcrvFRAX,
-                liquidationThreshold: 9000
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.yvDAI,
-                liquidationThreshold: 9000
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.yvUSDC,
-                liquidationThreshold: 9000
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.yvWETH,
-                liquidationThreshold: 8250
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.yvWBTC,
-                liquidationThreshold: 8250
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.yvCurve_stETH,
-                liquidationThreshold: 8250
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.yvCurve_FRAX,
-                liquidationThreshold: 9000
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.CVX,
-                liquidationThreshold: 2500
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.FXS,
-                liquidationThreshold: 2500
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.LQTY,
-                liquidationThreshold: 1
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.CRV,
-                liquidationThreshold: 2500
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({ token: Tokens.LDO, liquidationThreshold: 1 })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.SNX,
-                liquidationThreshold: 2500
-            })
-        );
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.WETH, liquidationThreshold: 8500}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.STETH, liquidationThreshold: 8250}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.WBTC, liquidationThreshold: 8500}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.DAI, liquidationThreshold: 9200}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.USDT, liquidationThreshold: 9000}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.sUSD, liquidationThreshold: 9000}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.FRAX, liquidationThreshold: 9000}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.GUSD, liquidationThreshold: 9000}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.LUSD, liquidationThreshold: 9000}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.steCRV, liquidationThreshold: 8250}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.cvxsteCRV, liquidationThreshold: 8250}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens._3Crv, liquidationThreshold: 9000}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.cvx3Crv, liquidationThreshold: 9000}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.FRAX3CRV, liquidationThreshold: 9000}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.cvxFRAX3CRV, liquidationThreshold: 9000}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.LUSD3CRV, liquidationThreshold: 9000}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.cvxLUSD3CRV, liquidationThreshold: 9000}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.crvPlain3andSUSD, liquidationThreshold: 9000}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.cvxcrvPlain3andSUSD, liquidationThreshold: 9000}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.gusd3CRV, liquidationThreshold: 9000}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.cvxgusd3CRV, liquidationThreshold: 9000}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.crvFRAX, liquidationThreshold: 9000}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.cvxcrvFRAX, liquidationThreshold: 9000}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.yvDAI, liquidationThreshold: 9000}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.yvUSDC, liquidationThreshold: 9000}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.yvWETH, liquidationThreshold: 8250}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.yvWBTC, liquidationThreshold: 8250}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.yvCurve_stETH, liquidationThreshold: 8250}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.yvCurve_FRAX, liquidationThreshold: 9000}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.CVX, liquidationThreshold: 2500}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.FXS, liquidationThreshold: 2500}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.LQTY, liquidationThreshold: 1}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.CRV, liquidationThreshold: 2500}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.LDO, liquidationThreshold: 1}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.SNX, liquidationThreshold: 2500}));
         cm.contracts.push(Contracts.UNISWAP_V3_ROUTER);
         cm.contracts.push(Contracts.UNISWAP_V2_ROUTER);
         cm.contracts.push(Contracts.SUSHISWAP_ROUTER);
@@ -531,213 +187,41 @@ contract CreditConfigLive {
         cm.blacklistHelper = address(0);
         cm.expirable = false;
         cm.skipInit = false;
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.STETH,
-                liquidationThreshold: 9000
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.WBTC,
-                liquidationThreshold: 8500
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.USDC,
-                liquidationThreshold: 8250
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.DAI,
-                liquidationThreshold: 8250
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.USDT,
-                liquidationThreshold: 8250
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.sUSD,
-                liquidationThreshold: 8250
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.FRAX,
-                liquidationThreshold: 8250
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.GUSD,
-                liquidationThreshold: 8250
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.LUSD,
-                liquidationThreshold: 8250
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.steCRV,
-                liquidationThreshold: 9000
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.cvxsteCRV,
-                liquidationThreshold: 9000
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens._3Crv,
-                liquidationThreshold: 8000
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.cvx3Crv,
-                liquidationThreshold: 8000
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.FRAX3CRV,
-                liquidationThreshold: 8000
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.cvxFRAX3CRV,
-                liquidationThreshold: 8000
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.LUSD3CRV,
-                liquidationThreshold: 8000
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.cvxLUSD3CRV,
-                liquidationThreshold: 8000
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.crvPlain3andSUSD,
-                liquidationThreshold: 8000
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.cvxcrvPlain3andSUSD,
-                liquidationThreshold: 8000
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.gusd3CRV,
-                liquidationThreshold: 8000
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.cvxgusd3CRV,
-                liquidationThreshold: 8000
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.crvFRAX,
-                liquidationThreshold: 8000
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.cvxcrvFRAX,
-                liquidationThreshold: 8000
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.yvDAI,
-                liquidationThreshold: 8000
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.yvUSDC,
-                liquidationThreshold: 8000
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.yvWETH,
-                liquidationThreshold: 9000
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.yvWBTC,
-                liquidationThreshold: 8000
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.yvCurve_stETH,
-                liquidationThreshold: 9000
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.yvCurve_FRAX,
-                liquidationThreshold: 8000
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.CVX,
-                liquidationThreshold: 2500
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.FXS,
-                liquidationThreshold: 2500
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.LQTY,
-                liquidationThreshold: 1
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.CRV,
-                liquidationThreshold: 2500
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({ token: Tokens.LDO, liquidationThreshold: 1 })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.SNX,
-                liquidationThreshold: 2500
-            })
-        );
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.STETH, liquidationThreshold: 9000}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.WBTC, liquidationThreshold: 8500}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.USDC, liquidationThreshold: 8250}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.DAI, liquidationThreshold: 8250}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.USDT, liquidationThreshold: 8250}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.sUSD, liquidationThreshold: 8250}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.FRAX, liquidationThreshold: 8250}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.GUSD, liquidationThreshold: 8250}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.LUSD, liquidationThreshold: 8250}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.steCRV, liquidationThreshold: 9000}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.cvxsteCRV, liquidationThreshold: 9000}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens._3Crv, liquidationThreshold: 8000}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.cvx3Crv, liquidationThreshold: 8000}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.FRAX3CRV, liquidationThreshold: 8000}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.cvxFRAX3CRV, liquidationThreshold: 8000}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.LUSD3CRV, liquidationThreshold: 8000}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.cvxLUSD3CRV, liquidationThreshold: 8000}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.crvPlain3andSUSD, liquidationThreshold: 8000}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.cvxcrvPlain3andSUSD, liquidationThreshold: 8000}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.gusd3CRV, liquidationThreshold: 8000}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.cvxgusd3CRV, liquidationThreshold: 8000}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.crvFRAX, liquidationThreshold: 8000}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.cvxcrvFRAX, liquidationThreshold: 8000}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.yvDAI, liquidationThreshold: 8000}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.yvUSDC, liquidationThreshold: 8000}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.yvWETH, liquidationThreshold: 9000}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.yvWBTC, liquidationThreshold: 8000}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.yvCurve_stETH, liquidationThreshold: 9000}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.yvCurve_FRAX, liquidationThreshold: 8000}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.CVX, liquidationThreshold: 2500}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.FXS, liquidationThreshold: 2500}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.LQTY, liquidationThreshold: 1}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.CRV, liquidationThreshold: 2500}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.LDO, liquidationThreshold: 1}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.SNX, liquidationThreshold: 2500}));
         cm.contracts.push(Contracts.UNISWAP_V3_ROUTER);
         cm.contracts.push(Contracts.UNISWAP_V2_ROUTER);
         cm.contracts.push(Contracts.SUSHISWAP_ROUTER);
@@ -773,219 +257,42 @@ contract CreditConfigLive {
         cm.blacklistHelper = address(0);
         cm.expirable = false;
         cm.skipInit = false;
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.STETH,
-                liquidationThreshold: 9450
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.WETH,
-                liquidationThreshold: 9000
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.WBTC,
-                liquidationThreshold: 8500
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.USDC,
-                liquidationThreshold: 8250
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.DAI,
-                liquidationThreshold: 8250
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.USDT,
-                liquidationThreshold: 8250
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.sUSD,
-                liquidationThreshold: 8250
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.FRAX,
-                liquidationThreshold: 8250
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.GUSD,
-                liquidationThreshold: 8250
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.LUSD,
-                liquidationThreshold: 8250
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens._3Crv,
-                liquidationThreshold: 8000
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.cvx3Crv,
-                liquidationThreshold: 8000
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.crvFRAX,
-                liquidationThreshold: 8000
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.cvxcrvFRAX,
-                liquidationThreshold: 8000
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.steCRV,
-                liquidationThreshold: 9000
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.cvxsteCRV,
-                liquidationThreshold: 9000
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.FRAX3CRV,
-                liquidationThreshold: 8000
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.cvxFRAX3CRV,
-                liquidationThreshold: 8000
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.crvPlain3andSUSD,
-                liquidationThreshold: 8000
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.cvxcrvPlain3andSUSD,
-                liquidationThreshold: 8000
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.LUSD3CRV,
-                liquidationThreshold: 8000
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.cvxLUSD3CRV,
-                liquidationThreshold: 8000
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.gusd3CRV,
-                liquidationThreshold: 8000
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.cvxgusd3CRV,
-                liquidationThreshold: 8000
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.yvDAI,
-                liquidationThreshold: 8000
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.yvUSDC,
-                liquidationThreshold: 8000
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.yvWETH,
-                liquidationThreshold: 9000
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.yvWBTC,
-                liquidationThreshold: 8000
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.yvCurve_stETH,
-                liquidationThreshold: 9000
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.yvCurve_FRAX,
-                liquidationThreshold: 8000
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.CVX,
-                liquidationThreshold: 2500
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.FXS,
-                liquidationThreshold: 2500
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.LQTY,
-                liquidationThreshold: 1
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.CRV,
-                liquidationThreshold: 2500
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({ token: Tokens.LDO, liquidationThreshold: 1 })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.SNX,
-                liquidationThreshold: 2500
-            })
-        );
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.STETH, liquidationThreshold: 9450}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.WETH, liquidationThreshold: 9000}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.WBTC, liquidationThreshold: 8500}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.USDC, liquidationThreshold: 8250}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.DAI, liquidationThreshold: 8250}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.USDT, liquidationThreshold: 8250}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.sUSD, liquidationThreshold: 8250}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.FRAX, liquidationThreshold: 8250}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.GUSD, liquidationThreshold: 8250}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.LUSD, liquidationThreshold: 8250}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens._3Crv, liquidationThreshold: 8000}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.cvx3Crv, liquidationThreshold: 8000}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.crvFRAX, liquidationThreshold: 8000}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.cvxcrvFRAX, liquidationThreshold: 8000}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.steCRV, liquidationThreshold: 9000}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.cvxsteCRV, liquidationThreshold: 9000}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.FRAX3CRV, liquidationThreshold: 8000}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.cvxFRAX3CRV, liquidationThreshold: 8000}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.crvPlain3andSUSD, liquidationThreshold: 8000}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.cvxcrvPlain3andSUSD, liquidationThreshold: 8000}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.LUSD3CRV, liquidationThreshold: 8000}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.cvxLUSD3CRV, liquidationThreshold: 8000}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.gusd3CRV, liquidationThreshold: 8000}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.cvxgusd3CRV, liquidationThreshold: 8000}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.yvDAI, liquidationThreshold: 8000}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.yvUSDC, liquidationThreshold: 8000}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.yvWETH, liquidationThreshold: 9000}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.yvWBTC, liquidationThreshold: 8000}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.yvCurve_stETH, liquidationThreshold: 9000}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.yvCurve_FRAX, liquidationThreshold: 8000}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.CVX, liquidationThreshold: 2500}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.FXS, liquidationThreshold: 2500}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.LQTY, liquidationThreshold: 1}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.CRV, liquidationThreshold: 2500}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.LDO, liquidationThreshold: 1}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.SNX, liquidationThreshold: 2500}));
         cm.contracts.push(Contracts.UNISWAP_V3_ROUTER);
         cm.contracts.push(Contracts.UNISWAP_V2_ROUTER);
         cm.contracts.push(Contracts.SUSHISWAP_ROUTER);
@@ -1022,213 +329,41 @@ contract CreditConfigLive {
         cm.blacklistHelper = address(0);
         cm.expirable = false;
         cm.skipInit = false;
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.WETH,
-                liquidationThreshold: 8500
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.STETH,
-                liquidationThreshold: 8250
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.USDC,
-                liquidationThreshold: 8250
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.DAI,
-                liquidationThreshold: 8250
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.USDT,
-                liquidationThreshold: 8250
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.sUSD,
-                liquidationThreshold: 8250
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.FRAX,
-                liquidationThreshold: 8250
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.GUSD,
-                liquidationThreshold: 8250
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.LUSD,
-                liquidationThreshold: 8250
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.steCRV,
-                liquidationThreshold: 8250
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.cvxsteCRV,
-                liquidationThreshold: 8250
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens._3Crv,
-                liquidationThreshold: 8000
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.cvx3Crv,
-                liquidationThreshold: 8000
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.FRAX3CRV,
-                liquidationThreshold: 8000
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.cvxFRAX3CRV,
-                liquidationThreshold: 8000
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.LUSD3CRV,
-                liquidationThreshold: 8000
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.cvxLUSD3CRV,
-                liquidationThreshold: 8000
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.crvPlain3andSUSD,
-                liquidationThreshold: 8000
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.cvxcrvPlain3andSUSD,
-                liquidationThreshold: 8000
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.gusd3CRV,
-                liquidationThreshold: 8000
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.cvxgusd3CRV,
-                liquidationThreshold: 8000
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.crvFRAX,
-                liquidationThreshold: 8000
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.cvxcrvFRAX,
-                liquidationThreshold: 8000
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.yvDAI,
-                liquidationThreshold: 8000
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.yvUSDC,
-                liquidationThreshold: 8000
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.yvWETH,
-                liquidationThreshold: 8000
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.yvWBTC,
-                liquidationThreshold: 9000
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.yvCurve_stETH,
-                liquidationThreshold: 8250
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.yvCurve_FRAX,
-                liquidationThreshold: 8000
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.CVX,
-                liquidationThreshold: 2500
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.FXS,
-                liquidationThreshold: 2500
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.LQTY,
-                liquidationThreshold: 1
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.CRV,
-                liquidationThreshold: 2500
-            })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({ token: Tokens.LDO, liquidationThreshold: 1 })
-        );
-        cm.collateralTokens.push(
-            CollateralTokenHuman({
-                token: Tokens.SNX,
-                liquidationThreshold: 2500
-            })
-        );
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.WETH, liquidationThreshold: 8500}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.STETH, liquidationThreshold: 8250}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.USDC, liquidationThreshold: 8250}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.DAI, liquidationThreshold: 8250}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.USDT, liquidationThreshold: 8250}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.sUSD, liquidationThreshold: 8250}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.FRAX, liquidationThreshold: 8250}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.GUSD, liquidationThreshold: 8250}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.LUSD, liquidationThreshold: 8250}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.steCRV, liquidationThreshold: 8250}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.cvxsteCRV, liquidationThreshold: 8250}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens._3Crv, liquidationThreshold: 8000}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.cvx3Crv, liquidationThreshold: 8000}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.FRAX3CRV, liquidationThreshold: 8000}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.cvxFRAX3CRV, liquidationThreshold: 8000}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.LUSD3CRV, liquidationThreshold: 8000}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.cvxLUSD3CRV, liquidationThreshold: 8000}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.crvPlain3andSUSD, liquidationThreshold: 8000}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.cvxcrvPlain3andSUSD, liquidationThreshold: 8000}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.gusd3CRV, liquidationThreshold: 8000}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.cvxgusd3CRV, liquidationThreshold: 8000}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.crvFRAX, liquidationThreshold: 8000}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.cvxcrvFRAX, liquidationThreshold: 8000}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.yvDAI, liquidationThreshold: 8000}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.yvUSDC, liquidationThreshold: 8000}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.yvWETH, liquidationThreshold: 8000}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.yvWBTC, liquidationThreshold: 9000}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.yvCurve_stETH, liquidationThreshold: 8250}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.yvCurve_FRAX, liquidationThreshold: 8000}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.CVX, liquidationThreshold: 2500}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.FXS, liquidationThreshold: 2500}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.LQTY, liquidationThreshold: 1}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.CRV, liquidationThreshold: 2500}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.LDO, liquidationThreshold: 1}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.SNX, liquidationThreshold: 2500}));
         cm.contracts.push(Contracts.UNISWAP_V3_ROUTER);
         cm.contracts.push(Contracts.UNISWAP_V2_ROUTER);
         cm.contracts.push(Contracts.SUSHISWAP_ROUTER);

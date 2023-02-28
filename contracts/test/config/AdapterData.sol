@@ -3,9 +3,9 @@
 // (c) Gearbox Holdings, 2022
 pragma solidity ^0.8.10;
 
-import { Tokens } from "./Tokens.sol";
-import { Contracts } from "./SupportedContracts.sol";
-import { AdapterType } from "@gearbox-protocol/core-v2/contracts/interfaces/adapters/IAdapter.sol";
+import {Tokens} from "./Tokens.sol";
+import {Contracts} from "./SupportedContracts.sol";
+import {AdapterType} from "@gearbox-protocol/core-v2/contracts/interfaces/adapters/IAdapter.sol";
 
 struct SimpleAdapter {
     Contracts targetContract;
@@ -47,88 +47,46 @@ contract AdapterData {
 
     constructor() {
         simpleAdapters.push(
-            SimpleAdapter({
-                targetContract: Contracts.UNISWAP_V2_ROUTER,
-                adapterType: AdapterType.UNISWAP_V2_ROUTER
-            })
+            SimpleAdapter({targetContract: Contracts.UNISWAP_V2_ROUTER, adapterType: AdapterType.UNISWAP_V2_ROUTER})
         );
         simpleAdapters.push(
-            SimpleAdapter({
-                targetContract: Contracts.UNISWAP_V3_ROUTER,
-                adapterType: AdapterType.UNISWAP_V3_ROUTER
-            })
+            SimpleAdapter({targetContract: Contracts.UNISWAP_V3_ROUTER, adapterType: AdapterType.UNISWAP_V3_ROUTER})
         );
         simpleAdapters.push(
-            SimpleAdapter({
-                targetContract: Contracts.SUSHISWAP_ROUTER,
-                adapterType: AdapterType.UNISWAP_V2_ROUTER
-            })
+            SimpleAdapter({targetContract: Contracts.SUSHISWAP_ROUTER, adapterType: AdapterType.UNISWAP_V2_ROUTER})
         );
         simpleAdapters.push(
-            SimpleAdapter({
-                targetContract: Contracts.YEARN_DAI_VAULT,
-                adapterType: AdapterType.YEARN_V2
-            })
+            SimpleAdapter({targetContract: Contracts.YEARN_DAI_VAULT, adapterType: AdapterType.YEARN_V2})
         );
         simpleAdapters.push(
-            SimpleAdapter({
-                targetContract: Contracts.YEARN_USDC_VAULT,
-                adapterType: AdapterType.YEARN_V2
-            })
+            SimpleAdapter({targetContract: Contracts.YEARN_USDC_VAULT, adapterType: AdapterType.YEARN_V2})
         );
         simpleAdapters.push(
-            SimpleAdapter({
-                targetContract: Contracts.YEARN_WETH_VAULT,
-                adapterType: AdapterType.YEARN_V2
-            })
+            SimpleAdapter({targetContract: Contracts.YEARN_WETH_VAULT, adapterType: AdapterType.YEARN_V2})
         );
         simpleAdapters.push(
-            SimpleAdapter({
-                targetContract: Contracts.YEARN_WBTC_VAULT,
-                adapterType: AdapterType.YEARN_V2
-            })
+            SimpleAdapter({targetContract: Contracts.YEARN_WBTC_VAULT, adapterType: AdapterType.YEARN_V2})
         );
         simpleAdapters.push(
-            SimpleAdapter({
-                targetContract: Contracts.YEARN_CURVE_FRAX_VAULT,
-                adapterType: AdapterType.YEARN_V2
-            })
+            SimpleAdapter({targetContract: Contracts.YEARN_CURVE_FRAX_VAULT, adapterType: AdapterType.YEARN_V2})
         );
         simpleAdapters.push(
-            SimpleAdapter({
-                targetContract: Contracts.YEARN_CURVE_STETH_VAULT,
-                adapterType: AdapterType.YEARN_V2
-            })
+            SimpleAdapter({targetContract: Contracts.YEARN_CURVE_STETH_VAULT, adapterType: AdapterType.YEARN_V2})
         );
         simpleAdapters.push(
-            SimpleAdapter({
-                targetContract: Contracts.CONVEX_BOOSTER,
-                adapterType: AdapterType.CONVEX_V1_BOOSTER
-            })
+            SimpleAdapter({targetContract: Contracts.CONVEX_BOOSTER, adapterType: AdapterType.CONVEX_V1_BOOSTER})
         );
         simpleAdapters.push(
-            SimpleAdapter({
-                targetContract: Contracts.CONVEX_CLAIM_ZAP,
-                adapterType: AdapterType.CONVEX_V1_CLAIM_ZAP
-            })
+            SimpleAdapter({targetContract: Contracts.CONVEX_CLAIM_ZAP, adapterType: AdapterType.CONVEX_V1_CLAIM_ZAP})
         );
         simpleAdapters.push(
-            SimpleAdapter({
-                targetContract: Contracts.LIDO_STETH_GATEWAY,
-                adapterType: AdapterType.LIDO_V1
-            })
+            SimpleAdapter({targetContract: Contracts.LIDO_STETH_GATEWAY, adapterType: AdapterType.LIDO_V1})
         );
         simpleAdapters.push(
-            SimpleAdapter({
-                targetContract: Contracts.LIDO_WSTETH,
-                adapterType: AdapterType.LIDO_WSTETH_V1
-            })
+            SimpleAdapter({targetContract: Contracts.LIDO_WSTETH, adapterType: AdapterType.LIDO_WSTETH_V1})
         );
         simpleAdapters.push(
-            SimpleAdapter({
-                targetContract: Contracts.UNIVERSAL_ADAPTER,
-                adapterType: AdapterType.UNIVERSAL
-            })
+            SimpleAdapter({targetContract: Contracts.UNIVERSAL_ADAPTER, adapterType: AdapterType.UNIVERSAL})
         );
         curveAdapters.push(
             CurveAdapter({

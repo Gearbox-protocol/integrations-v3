@@ -2,27 +2,28 @@
 // Gearbox. Generalized leverage protocol that allows to take leverage and then use it across other DeFi protocols and platforms in a composable way.
 // (c) Gearbox Holdings, 2022
 pragma solidity ^0.8.10;
-import { Tokens } from "../config/Tokens.sol";
 
-import { PriceFeedDataLive } from "../config/PriceFeedDataLive.sol";
-import { PriceFeedConfig } from "@gearbox-protocol/core-v2/contracts/oracles/PriceOracle.sol";
-import { ZeroPriceFeed } from "@gearbox-protocol/core-v2/contracts/oracles/ZeroPriceFeed.sol";
-import { YearnPriceFeed } from "../../oracles/yearn/YearnPriceFeed.sol";
-import { WstETHPriceFeed } from "../../oracles/lido/WstETHPriceFeed.sol";
-import { CurveV1StETHPoolGateway } from "../../adapters/curve/CurveV1_stETHGateway.sol";
+import {Tokens} from "../config/Tokens.sol";
 
-import { ISupportedContracts, Contracts } from "../config/SupportedContracts.sol";
+import {PriceFeedDataLive} from "../config/PriceFeedDataLive.sol";
+import {PriceFeedConfig} from "@gearbox-protocol/core-v2/contracts/oracles/PriceOracle.sol";
+import {ZeroPriceFeed} from "@gearbox-protocol/core-v2/contracts/oracles/ZeroPriceFeed.sol";
+import {YearnPriceFeed} from "../../oracles/yearn/YearnPriceFeed.sol";
+import {WstETHPriceFeed} from "../../oracles/lido/WstETHPriceFeed.sol";
+import {CurveV1StETHPoolGateway} from "../../adapters/curve/CurveV1_stETHGateway.sol";
 
-import { CurveLP2PriceFeed } from "../../oracles/curve/CurveLP2PriceFeed.sol";
-import { CurveLP3PriceFeed } from "../../oracles/curve/CurveLP3PriceFeed.sol";
-import { CurveLP4PriceFeed } from "../../oracles/curve/CurveLP4PriceFeed.sol";
+import {ISupportedContracts, Contracts} from "../config/SupportedContracts.sol";
 
-import { IYVault } from "../../integrations/yearn/IYVault.sol";
-import { IwstETH } from "../../integrations/lido/IwstETH.sol";
+import {CurveLP2PriceFeed} from "../../oracles/curve/CurveLP2PriceFeed.sol";
+import {CurveLP3PriceFeed} from "../../oracles/curve/CurveLP3PriceFeed.sol";
+import {CurveLP4PriceFeed} from "../../oracles/curve/CurveLP4PriceFeed.sol";
 
-import { CheatCodes, HEVM_ADDRESS } from "@gearbox-protocol/core-v2/contracts/test/lib/cheatCodes.sol";
+import {IYVault} from "../../integrations/yearn/IYVault.sol";
+import {IwstETH} from "../../integrations/lido/IwstETH.sol";
 
-import { TokensTestSuite } from "./TokensTestSuite.sol";
+import {CheatCodes, HEVM_ADDRESS} from "@gearbox-protocol/core-v2/contracts/test/lib/cheatCodes.sol";
+
+import {TokensTestSuite} from "./TokensTestSuite.sol";
 
 address constant CURVE_REGISTRY = 0x90E00ACe148ca3b23Ac1bC8C240C2a7Dd9c2d7f5;
 
@@ -45,9 +46,7 @@ contract LivePriceFeedDeployer is PriceFeedDataLive {
                 Tokens t = chainlinkPriceFeeds[i].token;
                 setPriceFeed(tokenTestSuite.addressOf(t), pf);
 
-                string memory description = string(
-                    abi.encodePacked("PRICEFEED_", tokenTestSuite.symbols(t))
-                );
+                string memory description = string(abi.encodePacked("PRICEFEED_", tokenTestSuite.symbols(t)));
                 evm.label(pf, description);
             }
         }
@@ -58,10 +57,7 @@ contract LivePriceFeedDeployer is PriceFeedDataLive {
             address zeroPF = address(new ZeroPriceFeed());
             unchecked {
                 for (uint256 i; i < len; ++i) {
-                    setPriceFeed(
-                        tokenTestSuite.addressOf(zeroPriceFeeds[i].token),
-                        zeroPF
-                    );
+                    setPriceFeed(tokenTestSuite.addressOf(zeroPriceFeeds[i].token), zeroPF);
 
                     evm.label(zeroPF, "ZERO PRICEFEED");
                 }
@@ -77,19 +73,12 @@ contract LivePriceFeedDeployer is PriceFeedDataLive {
                 uint256 nCoins = curvePriceFeeds[i].assets.length;
                 address pf;
 
-                address pool = supportedContracts.addressOf(
-                    curvePriceFeeds[i].pool
-                );
+                address pool = supportedContracts.addressOf(curvePriceFeeds[i].pool);
                 if (curvePriceFeeds[i].pool == Contracts.CURVE_STETH_GATEWAY) {
                     pool = CurveV1StETHPoolGateway(payable(pool)).pool();
                 }
 
-                string memory description = string(
-                    abi.encodePacked(
-                        "PRICEFEED_",
-                        tokenTestSuite.symbols(lpToken)
-                    )
-                );
+                string memory description = string(abi.encodePacked("PRICEFEED_", tokenTestSuite.symbols(lpToken)));
 
                 if (nCoins == 2) {
                     pf = address(
@@ -171,12 +160,8 @@ contract LivePriceFeedDeployer is PriceFeedDataLive {
         len = likeCurvePriceFeeds.length;
         unchecked {
             for (uint256 i; i < len; ++i) {
-                address token = tokenTestSuite.addressOf(
-                    likeCurvePriceFeeds[i].lpToken
-                );
-                address curveToken = tokenTestSuite.addressOf(
-                    likeCurvePriceFeeds[i].curveToken
-                );
+                address token = tokenTestSuite.addressOf(likeCurvePriceFeeds[i].lpToken);
+                address curveToken = tokenTestSuite.addressOf(likeCurvePriceFeeds[i].curveToken);
                 setPriceFeed(token, priceFeeds[curveToken]);
             }
         }
@@ -200,9 +185,7 @@ contract LivePriceFeedDeployer is PriceFeedDataLive {
 
                 setPriceFeed(yVault, pf);
 
-                string memory description = string(
-                    abi.encodePacked("PRICEFEED_", tokenTestSuite.symbols(t))
-                );
+                string memory description = string(abi.encodePacked("PRICEFEED_", tokenTestSuite.symbols(t)));
                 evm.label(pf, description);
             }
         }
@@ -213,24 +196,18 @@ contract LivePriceFeedDeployer is PriceFeedDataLive {
             address wsteth = tokenTestSuite.addressOf(t);
             address steth = IwstETH(wsteth).stETH();
 
-            address pf = address(
-                new WstETHPriceFeed(addressProvider, wsteth, priceFeeds[steth])
-            );
+            address pf = address(new WstETHPriceFeed(addressProvider, wsteth, priceFeeds[steth]));
 
             setPriceFeed(wsteth, pf);
 
-            string memory description = string(
-                abi.encodePacked("PRICEFEED_", tokenTestSuite.symbols(t))
-            );
+            string memory description = string(abi.encodePacked("PRICEFEED_", tokenTestSuite.symbols(t)));
             evm.label(pf, description);
         }
     }
 
     function setPriceFeed(address token, address priceFeed) internal {
         priceFeeds[token] = priceFeed;
-        priceFeedConfig.push(
-            PriceFeedConfig({ token: token, priceFeed: priceFeed })
-        );
+        priceFeedConfig.push(PriceFeedConfig({token: token, priceFeed: priceFeed}));
     }
 
     function getPriceFeeds() external view returns (PriceFeedConfig[] memory) {

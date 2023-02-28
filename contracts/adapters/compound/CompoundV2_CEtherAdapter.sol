@@ -3,13 +3,13 @@
 // (c) Gearbox Holdings, 2023
 pragma solidity ^0.8.17;
 
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-import { AdapterType } from "@gearbox-protocol/core-v2/contracts/interfaces/adapters/IAdapter.sol";
+import {AdapterType} from "@gearbox-protocol/core-v2/contracts/interfaces/adapters/IAdapter.sol";
 
-import { CEtherGateway } from "./CEtherGateway.sol";
-import { CompoundV2_CTokenAdapter } from "./CompoundV2_CTokenAdapter.sol";
-import { ICEther } from "../../integrations/compound/ICEther.sol";
+import {CEtherGateway} from "./CEtherGateway.sol";
+import {CompoundV2_CTokenAdapter} from "./CompoundV2_CTokenAdapter.sol";
+import {ICEther} from "../../integrations/compound/ICEther.sol";
 
 /// @title Compound V2 CEther adapter
 contract CompoundV2_CEtherAdapter is CompoundV2_CTokenAdapter {
@@ -19,25 +19,23 @@ contract CompoundV2_CEtherAdapter is CompoundV2_CTokenAdapter {
     /// @notice cToken's underlying token
     address public immutable override underlying;
 
-    AdapterType public constant _gearboxAdapterType =
-        AdapterType.COMPOUND_V2_CETHER;
+    AdapterType public constant _gearboxAdapterType = AdapterType.COMPOUND_V2_CETHER;
     uint16 public constant _gearboxAdapterVersion = 1;
 
     /// @notice Constructor
     /// @param _creditManager Credit manager address
     /// @param _cethGateway CEther gateway contract address
-    constructor(
-        address _creditManager,
-        address _cethGateway
-    ) CompoundV2_CTokenAdapter(_creditManager, _cethGateway) {
+    constructor(address _creditManager, address _cethGateway) CompoundV2_CTokenAdapter(_creditManager, _cethGateway) {
         cToken = address(CEtherGateway(payable(targetContract)).ceth());
         underlying = address(CEtherGateway(payable(targetContract)).weth());
 
-        if (creditManager.tokenMasksMap(cToken) == 0)
+        if (creditManager.tokenMasksMap(cToken) == 0) {
             revert TokenIsNotInAllowedList(cToken);
+        }
 
-        if (creditManager.tokenMasksMap(underlying) == 0)
+        if (creditManager.tokenMasksMap(underlying) == 0) {
             revert TokenIsNotInAllowedList(underlying);
+        }
     }
 
     /// -------------------------------- ///
@@ -50,15 +48,7 @@ contract CompoundV2_CEtherAdapter is CompoundV2_CTokenAdapter {
     ///      - `tokenOut` is cETH
     ///      - `disableTokenIn` is set to false because operation doesn't spend the entire balance
     function _mint(uint256 amount) internal override returns (uint256 error) {
-        error = abi.decode(
-            _executeSwapSafeApprove(
-                underlying,
-                cToken,
-                _encodeMint(amount),
-                false
-            ),
-            (uint256)
-        );
+        error = abi.decode(_executeSwapSafeApprove(underlying, cToken, _encodeMint(amount), false), (uint256));
     }
 
     /// @dev Internal implementation of `mintAll`
@@ -76,16 +66,8 @@ contract CompoundV2_CEtherAdapter is CompoundV2_CTokenAdapter {
             amount = balance - 1;
         }
 
-        error = abi.decode(
-            _executeSwapSafeApprove(
-                creditAccount,
-                underlying,
-                cToken,
-                _encodeMint(amount),
-                true
-            ),
-            (uint256)
-        );
+        error =
+            abi.decode(_executeSwapSafeApprove(creditAccount, underlying, cToken, _encodeMint(amount), true), (uint256));
     }
 
     /// @dev Internal implementation of `redeem`
@@ -94,15 +76,7 @@ contract CompoundV2_CEtherAdapter is CompoundV2_CTokenAdapter {
     ///      - `tokenOut` is WETH
     ///      - `disableTokenIn` is set to false because operation doesn't spend the entire balance
     function _redeem(uint256 amount) internal override returns (uint256 error) {
-        error = abi.decode(
-            _executeSwapSafeApprove(
-                cToken,
-                underlying,
-                _encodeRedeem(amount),
-                false
-            ),
-            (uint256)
-        );
+        error = abi.decode(_executeSwapSafeApprove(cToken, underlying, _encodeRedeem(amount), false), (uint256));
     }
 
     /// @dev Internal implementation of `redeemAll`
@@ -121,14 +95,7 @@ contract CompoundV2_CEtherAdapter is CompoundV2_CTokenAdapter {
         }
 
         error = abi.decode(
-            _executeSwapSafeApprove(
-                creditAccount,
-                cToken,
-                underlying,
-                _encodeRedeem(amount),
-                true
-            ),
-            (uint256)
+            _executeSwapSafeApprove(creditAccount, cToken, underlying, _encodeRedeem(amount), true), (uint256)
         );
     }
 
@@ -137,17 +104,8 @@ contract CompoundV2_CEtherAdapter is CompoundV2_CTokenAdapter {
     ///      - `tokenIn` is cETH
     ///      - `tokenOut` is WETH
     ///      - `disableTokenIn` is set to false because operation doesn't spend the entire balance
-    function _redeemUnderlying(
-        uint256 amount
-    ) internal override returns (uint256 error) {
-        error = abi.decode(
-            _executeSwapSafeApprove(
-                cToken,
-                underlying,
-                _encodeRedeemUnderlying(amount),
-                false
-            ),
-            (uint256)
-        );
+    function _redeemUnderlying(uint256 amount) internal override returns (uint256 error) {
+        error =
+            abi.decode(_executeSwapSafeApprove(cToken, underlying, _encodeRedeemUnderlying(amount), false), (uint256));
     }
 }

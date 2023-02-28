@@ -3,15 +3,15 @@
 // (c) Gearbox Holdings, 2022
 pragma solidity ^0.8.10;
 
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import { WAD, RAY } from "@gearbox-protocol/core-v2/contracts/libraries/Constants.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {WAD, RAY} from "@gearbox-protocol/core-v2/contracts/libraries/Constants.sol";
 
-import { ICurvePool } from "../../../integrations/curve/ICurvePool.sol";
-import { ICRVToken } from "../../../integrations/curve/ICRVToken.sol";
+import {ICurvePool} from "../../../integrations/curve/ICurvePool.sol";
+import {ICRVToken} from "../../../integrations/curve/ICRVToken.sol";
 
-import { ERC20Mock } from "@gearbox-protocol/core-v2/contracts/test/mocks/token/ERC20Mock.sol";
-import { cERC20Mock } from "../token/cERC20Mock.sol";
+import {ERC20Mock} from "@gearbox-protocol/core-v2/contracts/test/mocks/token/ERC20Mock.sol";
+import {cERC20Mock} from "../token/cERC20Mock.sol";
 
 // EXCEPTIONS
 
@@ -37,9 +37,7 @@ contract CurveV1Mock is ICurvePool {
         _coins = coins_;
         _underlying_coins = underlying_coins_;
 
-        address _token = address(
-            new ERC20Mock("CRVMock", "CRV for CurvePoolMock", 18)
-        );
+        address _token = address(new ERC20Mock("CRVMock", "CRV for CurvePoolMock", 18));
         token = _token;
         lp_token = _token;
         virtualPrice = WAD;
@@ -49,11 +47,7 @@ contract CurveV1Mock is ICurvePool {
         real_liquidity_mode = val;
     }
 
-    function setRate(
-        int128 i,
-        int128 j,
-        uint256 rate_RAY
-    ) external {
+    function setRate(int128 i, int128 j, uint256 rate_RAY) external {
         rates_RAY[i][j] = rate_RAY;
         rates_RAY[j][i] = (RAY * RAY) / rate_RAY;
     }
@@ -66,39 +60,21 @@ contract CurveV1Mock is ICurvePool {
         deposit_rates_RAY[i] = rate_RAY;
     }
 
-    function setRateUnderlying(
-        int128 i,
-        int128 j,
-        uint256 rate_RAY
-    ) external {
+    function setRateUnderlying(int128 i, int128 j, uint256 rate_RAY) external {
         rates_RAY_underlying[i][j] = rate_RAY;
         rates_RAY_underlying[j][i] = (RAY * RAY) / rate_RAY;
     }
 
-    function exchange(
-        int128 i,
-        int128 j,
-        uint256 dx,
-        uint256 min_dy
-    ) external override {
+    function exchange(int128 i, int128 j, uint256 dx, uint256 min_dy) external override {
         uint256 dy = get_dy(i, j, dx);
 
         require(dy >= min_dy, "CurveV1Mock: INSUFFICIENT_OUTPUT_AMOUNT");
 
-        IERC20(_coins[uint256(uint128(i))]).safeTransferFrom(
-            msg.sender,
-            address(this),
-            dx
-        );
+        IERC20(_coins[uint256(uint128(i))]).safeTransferFrom(msg.sender, address(this), dx);
         IERC20(_coins[uint256(uint128(j))]).safeTransfer(msg.sender, dy);
     }
 
-    function exchange_underlying(
-        int128 i,
-        int128 j,
-        uint256 dx,
-        uint256 min_dy
-    ) external override {
+    function exchange_underlying(int128 i, int128 j, uint256 dx, uint256 min_dy) external override {
         address coinIn = _coins[uint256(uint128(i))];
         address underlyingIn = _underlying_coins[uint256(uint128(i))];
 
@@ -117,11 +93,7 @@ contract CurveV1Mock is ICurvePool {
         IERC20(underlyingOut).safeTransfer(msg.sender, dy);
     }
 
-    function remove_liquidity_one_coin(
-        uint256 _token_amount,
-        int128 i,
-        uint256 min_amount
-    ) external {
+    function remove_liquidity_one_coin(uint256 _token_amount, int128 i, uint256 min_amount) external {
         ICRVToken(token).burnFrom(msg.sender, _token_amount);
 
         uint256 amountOut;
@@ -135,19 +107,11 @@ contract CurveV1Mock is ICurvePool {
         IERC20(_coins[uint256(uint128(i))]).safeTransfer(msg.sender, amountOut);
     }
 
-    function get_dy_underlying(
-        int128 i,
-        int128 j,
-        uint256 dx
-    ) public view override returns (uint256) {
+    function get_dy_underlying(int128 i, int128 j, uint256 dx) public view override returns (uint256) {
         return (rates_RAY_underlying[i][j] * dx) / RAY;
     }
 
-    function get_dy(
-        int128 i,
-        int128 j,
-        uint256 dx
-    ) public view override returns (uint256) {
+    function get_dy(int128 i, int128 j, uint256 dx) public view override returns (uint256) {
         return (rates_RAY[i][j] * dx) / RAY;
     }
 
@@ -167,21 +131,11 @@ contract CurveV1Mock is ICurvePool {
         return _coins[uint256(int256(i))];
     }
 
-    function underlying_coins(uint256 i)
-        external
-        view
-        override
-        returns (address)
-    {
+    function underlying_coins(uint256 i) external view override returns (address) {
         return _underlying_coins[i];
     }
 
-    function underlying_coins(int128 i)
-        external
-        view
-        override
-        returns (address)
-    {
+    function underlying_coins(int128 i) external view override returns (address) {
         return _underlying_coins[uint256(int256(i))];
     }
 
@@ -205,11 +159,7 @@ contract CurveV1Mock is ICurvePool {
         return 0;
     }
 
-    function calc_withdraw_one_coin(uint256 amount, int128 coin)
-        public
-        view
-        returns (uint256)
-    {
+    function calc_withdraw_one_coin(uint256 amount, int128 coin) public view returns (uint256) {
         return (amount * withdraw_rates_RAY[coin]) / RAY;
     }
 

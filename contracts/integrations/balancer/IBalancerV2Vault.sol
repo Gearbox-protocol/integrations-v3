@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.10;
 
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { IAsset } from "./IAsset.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {IAsset} from "./IAsset.sol";
 
 enum SwapKind {
     GIVEN_IN,
@@ -67,33 +67,17 @@ struct ExitPoolRequest {
 }
 
 interface IBalancerV2VaultGetters {
-    function getPool(
-        bytes32 poolId
-    ) external view returns (address, PoolSpecialization);
+    function getPool(bytes32 poolId) external view returns (address, PoolSpecialization);
 
-    function getPoolTokenInfo(
-        bytes32 poolId,
-        IERC20 token
-    )
+    function getPoolTokenInfo(bytes32 poolId, IERC20 token)
         external
         view
-        returns (
-            uint256 cash,
-            uint256 managed,
-            uint256 lastChangeBlock,
-            address assetManager
-        );
+        returns (uint256 cash, uint256 managed, uint256 lastChangeBlock, address assetManager);
 
-    function getPoolTokens(
-        bytes32 poolId
-    )
+    function getPoolTokens(bytes32 poolId)
         external
         view
-        returns (
-            IERC20[] memory tokens,
-            uint256[] memory balances,
-            uint256 lastChangeBlock
-        );
+        returns (IERC20[] memory tokens, uint256[] memory balances, uint256 lastChangeBlock);
 }
 
 interface IBalancerV2Vault is IBalancerV2VaultGetters {
@@ -113,24 +97,12 @@ interface IBalancerV2Vault is IBalancerV2VaultGetters {
         FundManagement memory funds
     ) external returns (int256[] memory assetDeltas);
 
-    function swap(
-        SingleSwap memory singleSwap,
-        FundManagement memory funds,
-        uint256 limit,
-        uint256 deadline
-    ) external returns (uint256 amountCalculated);
+    function swap(SingleSwap memory singleSwap, FundManagement memory funds, uint256 limit, uint256 deadline)
+        external
+        returns (uint256 amountCalculated);
 
-    function joinPool(
-        bytes32 poolId,
-        address sender,
-        address recipient,
-        JoinPoolRequest memory request
-    ) external;
+    function joinPool(bytes32 poolId, address sender, address recipient, JoinPoolRequest memory request) external;
 
-    function exitPool(
-        bytes32 poolId,
-        address sender,
-        address payable recipient,
-        ExitPoolRequest memory request
-    ) external;
+    function exitPool(bytes32 poolId, address sender, address payable recipient, ExitPoolRequest memory request)
+        external;
 }

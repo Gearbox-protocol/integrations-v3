@@ -3,9 +3,9 @@
 // (c) Gearbox Holdings, 2022
 pragma solidity ^0.8.10;
 
-import { ILPPriceFeedExceptions } from "@gearbox-protocol/core-v2/contracts/interfaces/ILPPriceFeed.sol";
-import { YearnPriceFeed, RANGE_WIDTH } from "../../oracles/yearn/YearnPriceFeed.sol";
-import { PERCENTAGE_FACTOR } from "@gearbox-protocol/core-v2/contracts/libraries/PercentageMath.sol";
+import {ILPPriceFeedExceptions} from "@gearbox-protocol/core-v2/contracts/interfaces/ILPPriceFeed.sol";
+import {YearnPriceFeed, RANGE_WIDTH} from "../../oracles/yearn/YearnPriceFeed.sol";
+import {PERCENTAGE_FACTOR} from "@gearbox-protocol/core-v2/contracts/libraries/PercentageMath.sol";
 
 // LIBRARIES
 
@@ -13,24 +13,22 @@ import { PERCENTAGE_FACTOR } from "@gearbox-protocol/core-v2/contracts/libraries
 import "../lib/constants.sol";
 
 // MOCKS
-import { YearnV2Mock } from "../mocks/integrations/YearnV2Mock.sol";
-import { PriceFeedMock } from "@gearbox-protocol/core-v2/contracts/test/mocks/oracles/PriceFeedMock.sol";
-import { AddressProviderACLMock } from "@gearbox-protocol/core-v2/contracts/test/mocks/core/AddressProviderACLMock.sol";
+import {YearnV2Mock} from "../mocks/integrations/YearnV2Mock.sol";
+import {PriceFeedMock} from "@gearbox-protocol/core-v2/contracts/test/mocks/oracles/PriceFeedMock.sol";
+import {AddressProviderACLMock} from "@gearbox-protocol/core-v2/contracts/test/mocks/core/AddressProviderACLMock.sol";
 
 // SUITES
-import { TokensTestSuite, Tokens } from "../suites/TokensTestSuite.sol";
+import {TokensTestSuite, Tokens} from "../suites/TokensTestSuite.sol";
 
 // EXCEPTIONS
-import { ZeroAddressException, NotImplementedException } from "@gearbox-protocol/core-v2/contracts/interfaces/IErrors.sol";
-import { IPriceOracleV2Exceptions } from "@gearbox-protocol/core-v2/contracts/interfaces/IPriceOracle.sol";
+import {
+    ZeroAddressException, NotImplementedException
+} from "@gearbox-protocol/core-v2/contracts/interfaces/IErrors.sol";
+import {IPriceOracleV2Exceptions} from "@gearbox-protocol/core-v2/contracts/interfaces/IPriceOracle.sol";
 
 /// @title YearnFeedTest
 /// @notice Designed for unit test purposes only
-contract YearnFeedTest is
-    DSTest,
-    ILPPriceFeedExceptions,
-    IPriceOracleV2Exceptions
-{
+contract YearnFeedTest is DSTest, ILPPriceFeedExceptions, IPriceOracleV2Exceptions {
     CheatCodes evm = CheatCodes(HEVM_ADDRESS);
 
     AddressProviderACLMock public addressProvider;
@@ -50,7 +48,7 @@ contract YearnFeedTest is
         underlyingPf.setParams(11, 1111, 1112, 11);
 
         tokenTestSuite = new TokensTestSuite();
-        tokenTestSuite.topUpWETH{ value: 100 * WAD }();
+        tokenTestSuite.topUpWETH{value: 100 * WAD}();
 
         yearnMock = new YearnV2Mock(tokenTestSuite.addressOf(Tokens.DAI));
 
@@ -79,41 +77,25 @@ contract YearnFeedTest is
     function test_OYPF_01_constructor_sets_correct_values() public {
         // LP2
 
-        assertEq(
-            pf.description(),
-            "yearn DAI priceFeed",
-            "Incorrect description"
-        );
+        assertEq(pf.description(), "yearn DAI priceFeed", "Incorrect description");
 
-        assertEq(
-            address(pf.priceFeed()),
-            address(underlyingPf),
-            "Incorrect priceFeed"
-        );
+        assertEq(address(pf.priceFeed()), address(underlyingPf), "Incorrect priceFeed");
 
         assertEq(address(pf.yVault()), address(yearnMock), "Incorrect yVault");
 
         assertEq(
             pf.decimalsDivider(),
-            10**18, // Decimals divider for DAI
+            10 ** 18, // Decimals divider for DAI
             "Incorrect decimals"
         );
 
-        assertTrue(
-            pf.skipPriceCheck() == true,
-            "Incorrect deepencds for address"
-        );
+        assertTrue(pf.skipPriceCheck() == true, "Incorrect deepencds for address");
 
-        assertEq(
-            pf.lowerBound(),
-            yearnMock.pricePerShare(),
-            "Incorrect lower bound"
-        );
+        assertEq(pf.lowerBound(), yearnMock.pricePerShare(), "Incorrect lower bound");
 
         assertEq(
             pf.upperBound(),
-            (yearnMock.pricePerShare() * (PERCENTAGE_FACTOR + RANGE_WIDTH)) /
-                PERCENTAGE_FACTOR,
+            (yearnMock.pricePerShare() * (PERCENTAGE_FACTOR + RANGE_WIDTH)) / PERCENTAGE_FACTOR,
             "Incorrect upper bound"
         );
     }
@@ -140,13 +122,8 @@ contract YearnFeedTest is
 
         evm.prank(CONFIGURATOR);
         yearnMock.setPricePerShare(pricePerShare);
-        (
-            uint80 roundId,
-            int256 answer,
-            uint256 startedAt,
-            uint256 updatedAt,
-            uint80 answeredInRound
-        ) = pf.latestRoundData();
+        (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound) =
+            pf.latestRoundData();
 
         int256 expectedAnswer = int256((pricePerShare * uint256(1100)) / WAD);
 
@@ -158,9 +135,7 @@ contract YearnFeedTest is
     }
 
     /// @dev [OYPF-5]: latestRoundData works correctly
-    function test_OYPF_05_latestRoundData_reverts_or_bounds_for_out_of_bounds_prices()
-        public
-    {
+    function test_OYPF_05_latestRoundData_reverts_or_bounds_for_out_of_bounds_prices() public {
         uint256 lowerBound = pf.lowerBound();
         uint256 upperBound = pf.upperBound();
 
@@ -172,13 +147,8 @@ contract YearnFeedTest is
 
         evm.prank(CONFIGURATOR);
         yearnMock.setPricePerShare(upperBound + 1);
-        (
-            uint80 roundId,
-            int256 answer,
-            uint256 startedAt,
-            uint256 updatedAt,
-            uint80 answeredInRound
-        ) = pf.latestRoundData();
+        (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound) =
+            pf.latestRoundData();
 
         assertEq(roundId, 11, "Incorrect round Id #1");
         assertEq(answer, 1122, "Incorrect answer #1");
@@ -205,9 +175,7 @@ contract YearnFeedTest is
     }
 
     /// @dev [OYPF-6]: setLimiter reverts if pricePerShare is outside new bounds
-    function test_OYPF_06_setLimiter_reverts_on_pricePerShare_outside_bounds()
-        public
-    {
+    function test_OYPF_06_setLimiter_reverts_on_pricePerShare_outside_bounds() public {
         yearnMock.setPricePerShare((15000 * WAD) / 10000);
 
         evm.expectRevert(IncorrectLimitsException.selector);

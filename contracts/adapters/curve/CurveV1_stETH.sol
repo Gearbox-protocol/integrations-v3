@@ -3,23 +3,18 @@
 // (c) Gearbox Holdings, 2023
 pragma solidity ^0.8.17;
 
-import { IAdapter, AdapterType } from "@gearbox-protocol/core-v2/contracts/interfaces/adapters/IAdapter.sol";
+import {IAdapter, AdapterType} from "@gearbox-protocol/core-v2/contracts/interfaces/adapters/IAdapter.sol";
 
-import { N_COINS } from "../../integrations/curve/ICurvePool_2.sol";
-import { ICurveV1Adapter } from "../../interfaces/curve/ICurveV1Adapter.sol";
-import { CurveV1AdapterBase } from "./CurveV1_Base.sol";
-import { CurveV1Adapter2Assets } from "./CurveV1_2.sol";
+import {N_COINS} from "../../integrations/curve/ICurvePool_2.sol";
+import {ICurveV1Adapter} from "../../interfaces/curve/ICurveV1Adapter.sol";
+import {CurveV1AdapterBase} from "./CurveV1_Base.sol";
+import {CurveV1Adapter2Assets} from "./CurveV1_2.sol";
 
 /// @title CurveV1AdapterStETH adapter
 /// @dev Inherits from CurveV1Adapter2Assets but designed to work with CurveV1StETH Gateway.
 /// This adapter needs to approve the LP token to the gateway, as it needs to do a transferFrom
 contract CurveV1AdapterStETH is CurveV1Adapter2Assets {
-    function _gearboxAdapterType()
-        external
-        pure
-        override
-        returns (AdapterType)
-    {
+    function _gearboxAdapterType() external pure override returns (AdapterType) {
         return AdapterType.CURVE_V1_STECRV_POOL;
     }
 
@@ -27,17 +22,8 @@ contract CurveV1AdapterStETH is CurveV1Adapter2Assets {
     /// @param _creditManager Address of the Credit manager
     /// @param _curveStETHPoolGateway Address of the steCRV pool gateway
     /// @param _lp_token Address of the steCRV LP token
-    constructor(
-        address _creditManager,
-        address _curveStETHPoolGateway,
-        address _lp_token
-    )
-        CurveV1Adapter2Assets(
-            _creditManager,
-            _curveStETHPoolGateway,
-            _lp_token,
-            address(0)
-        )
+    constructor(address _creditManager, address _curveStETHPoolGateway, address _lp_token)
+        CurveV1Adapter2Assets(_creditManager, _curveStETHPoolGateway, _lp_token, address(0))
     {}
 
     /// @dev Sets allowance for the pool LP token before and after operation
@@ -50,10 +36,7 @@ contract CurveV1AdapterStETH is CurveV1Adapter2Assets {
     /// @dev Sends an order to remove liquidity from a Curve pool
     /// - Unlike other adapters, approves the LP token to the target
     /// @notice See more implementation details in CurveV1Adapter2Assets
-    function remove_liquidity(
-        uint256,
-        uint256[N_COINS] calldata
-    )
+    function remove_liquidity(uint256, uint256[N_COINS] calldata)
         public
         override
         creditFacadeOnly
@@ -85,10 +68,7 @@ contract CurveV1AdapterStETH is CurveV1Adapter2Assets {
     /// @param minRateRAY The minimum exchange rate of the LP token to the received asset
     /// - Unlike other adapters, approves the LP token to the target
     /// @notice See more implementation details in CurveV1Adapter2Assets
-    function remove_all_liquidity_one_coin(
-        int128 i,
-        uint256 minRateRAY
-    )
+    function remove_all_liquidity_one_coin(int128 i, uint256 minRateRAY)
         external
         override(CurveV1AdapterBase, ICurveV1Adapter)
         creditFacadeOnly
@@ -102,20 +82,12 @@ contract CurveV1AdapterStETH is CurveV1Adapter2Assets {
     /// @param amounts Amounts of coins to withdraw
     /// - Unlike other adapters, approves the LP token to the target
     /// @notice See more implementation details in CurveV1Adapter2Assets
-    function remove_liquidity_imbalance(
-        uint256[N_COINS] calldata amounts,
-        uint256
-    )
+    function remove_liquidity_imbalance(uint256[N_COINS] calldata amounts, uint256)
         external
         override
         creditFacadeOnly
         withLPTokenApproval // F:[ACV1S-6]
     {
-        _remove_liquidity_imbalance(
-            amounts[0] > 1,
-            amounts[1] > 1,
-            false,
-            false
-        ); // F:[ACV1S-6]
+        _remove_liquidity_imbalance(amounts[0] > 1, amounts[1] > 1, false, false); // F:[ACV1S-6]
     }
 }

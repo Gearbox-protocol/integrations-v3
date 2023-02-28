@@ -3,10 +3,10 @@
 // (c) Gearbox Holdings, 2022
 pragma solidity ^0.8.10;
 
-import { ILPPriceFeedExceptions } from "@gearbox-protocol/core-v2/contracts/interfaces/ILPPriceFeed.sol";
-import { CurveLP2PriceFeed } from "../../oracles/curve/CurveLP2PriceFeed.sol";
-import { CurveLP3PriceFeed } from "../../oracles/curve/CurveLP3PriceFeed.sol";
-import { CurveLP4PriceFeed } from "../../oracles/curve/CurveLP4PriceFeed.sol";
+import {ILPPriceFeedExceptions} from "@gearbox-protocol/core-v2/contracts/interfaces/ILPPriceFeed.sol";
+import {CurveLP2PriceFeed} from "../../oracles/curve/CurveLP2PriceFeed.sol";
+import {CurveLP3PriceFeed} from "../../oracles/curve/CurveLP3PriceFeed.sol";
+import {CurveLP4PriceFeed} from "../../oracles/curve/CurveLP4PriceFeed.sol";
 
 // LIBRARIES
 
@@ -14,15 +14,17 @@ import { CurveLP4PriceFeed } from "../../oracles/curve/CurveLP4PriceFeed.sol";
 import "../lib/constants.sol";
 
 // MOCKS
-import { CurveV1Mock } from "../mocks/integrations/CurveV1Mock.sol";
-import { PriceFeedMock } from "@gearbox-protocol/core-v2/contracts/test/mocks/oracles/PriceFeedMock.sol";
-import { AddressProviderACLMock } from "@gearbox-protocol/core-v2/contracts/test/mocks/core/AddressProviderACLMock.sol";
+import {CurveV1Mock} from "../mocks/integrations/CurveV1Mock.sol";
+import {PriceFeedMock} from "@gearbox-protocol/core-v2/contracts/test/mocks/oracles/PriceFeedMock.sol";
+import {AddressProviderACLMock} from "@gearbox-protocol/core-v2/contracts/test/mocks/core/AddressProviderACLMock.sol";
 
 // SUITES
-import { TokensTestSuite, Tokens } from "../suites/TokensTestSuite.sol";
+import {TokensTestSuite, Tokens} from "../suites/TokensTestSuite.sol";
 
 // EXCEPTIONS
-import { ZeroAddressException, NotImplementedException } from "@gearbox-protocol/core-v2/contracts/interfaces/IErrors.sol";
+import {
+    ZeroAddressException, NotImplementedException
+} from "@gearbox-protocol/core-v2/contracts/interfaces/IErrors.sol";
 
 /// @title CurveLPPriceFeedTest
 /// @notice Designed for unit test purposes only
@@ -58,7 +60,7 @@ contract CurveLPPriceFeedTest is DSTest, ILPPriceFeedExceptions {
 
         address[] memory _coins;
         tokenTestSuite = new TokensTestSuite();
-        tokenTestSuite.topUpWETH{ value: 100 * WAD }();
+        tokenTestSuite.topUpWETH{value: 100 * WAD}();
 
         curveV1Mock = new CurveV1Mock(_coins, _coins);
         curveV1Mock.set_virtual_price(WAD);
@@ -101,85 +103,37 @@ contract CurveLPPriceFeedTest is DSTest, ILPPriceFeedExceptions {
     function test_OCLP_01_constructor_sets_correct_values() public {
         // LP2
 
-        assertEq(
-            address(c2feed.priceFeed1()),
-            address(pfm1),
-            "LP2: incorrect priceFeed1"
-        );
+        assertEq(address(c2feed.priceFeed1()), address(pfm1), "LP2: incorrect priceFeed1");
 
-        assertEq(
-            address(c2feed.priceFeed2()),
-            address(pfm2),
-            "LP2: incorrect priceFeed2"
-        );
+        assertEq(address(c2feed.priceFeed2()), address(pfm2), "LP2: incorrect priceFeed2");
 
-        assertEq(
-            address(c2feed.curvePool()),
-            address(curveV1Mock),
-            "LP2: incorrect curvePool"
-        );
+        assertEq(address(c2feed.curvePool()), address(curveV1Mock), "LP2: incorrect curvePool");
 
         assertEq(c2feed.description(), "LP2", "LP2: incorrect description");
 
         // LP3
 
-        assertEq(
-            address(c3feed.priceFeed1()),
-            address(pfm1),
-            "LP3: incorrect priceFeed1"
-        );
+        assertEq(address(c3feed.priceFeed1()), address(pfm1), "LP3: incorrect priceFeed1");
 
-        assertEq(
-            address(c3feed.priceFeed2()),
-            address(pfm2),
-            "LP3: incorrect priceFeed2"
-        );
+        assertEq(address(c3feed.priceFeed2()), address(pfm2), "LP3: incorrect priceFeed2");
 
-        assertEq(
-            address(c3feed.priceFeed3()),
-            address(pfm3),
-            "LP3: incorrect priceFeed3"
-        );
+        assertEq(address(c3feed.priceFeed3()), address(pfm3), "LP3: incorrect priceFeed3");
 
-        assertEq(
-            address(c3feed.curvePool()),
-            address(curveV1Mock),
-            "LP3: incorrect curvePool"
-        );
+        assertEq(address(c3feed.curvePool()), address(curveV1Mock), "LP3: incorrect curvePool");
 
         assertEq(c3feed.description(), "LP3", "LP3: incorrect description");
 
         // LP4
 
-        assertEq(
-            address(c4feed.priceFeed1()),
-            address(pfm1),
-            "LP4: incorrect priceFeed1"
-        );
+        assertEq(address(c4feed.priceFeed1()), address(pfm1), "LP4: incorrect priceFeed1");
 
-        assertEq(
-            address(c4feed.priceFeed2()),
-            address(pfm2),
-            "LP4: incorrect priceFeed2"
-        );
+        assertEq(address(c4feed.priceFeed2()), address(pfm2), "LP4: incorrect priceFeed2");
 
-        assertEq(
-            address(c4feed.priceFeed3()),
-            address(pfm3),
-            "LP4: incorrect priceFeed3"
-        );
+        assertEq(address(c4feed.priceFeed3()), address(pfm3), "LP4: incorrect priceFeed3");
 
-        assertEq(
-            address(c4feed.priceFeed4()),
-            address(pfm4),
-            "LP4: incorrect priceFeed4"
-        );
+        assertEq(address(c4feed.priceFeed4()), address(pfm4), "LP4: incorrect priceFeed4");
 
-        assertEq(
-            address(c4feed.curvePool()),
-            address(curveV1Mock),
-            "LP4: incorrect curvePool"
-        );
+        assertEq(address(c4feed.curvePool()), address(curveV1Mock), "LP4: incorrect curvePool");
 
         assertEq(c4feed.description(), "LP4", "LP4: incorrect description");
 
@@ -333,18 +287,11 @@ contract CurveLPPriceFeedTest is DSTest, ILPPriceFeedExceptions {
 
     /// @dev [OCLP-4]: latestRoundData works correctly for 2 assets CurveLPPriceFeed
 
-    function test_OCLP_04_latestRoundData_works_correctly_for_2_assets_CurveLPPriceFeed()
-        public
-    {
+    function test_OCLP_04_latestRoundData_works_correctly_for_2_assets_CurveLPPriceFeed() public {
         curveV1Mock.set_virtual_price((10050 * WAD) / 10000);
 
-        (
-            uint80 roundId,
-            int256 answer,
-            uint256 startedAt,
-            uint256 updatedAt,
-            uint80 answeredInRound
-        ) = c2feed.latestRoundData();
+        (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound) =
+            c2feed.latestRoundData();
 
         assertEq(roundId, 11, "Incorrect round Id #1");
         assertEq(answer, 1105, "Incorrect answer #1");
@@ -354,8 +301,7 @@ contract CurveLPPriceFeedTest is DSTest, ILPPriceFeedExceptions {
 
         pfm2.setPrice(1000);
 
-        (roundId, answer, startedAt, updatedAt, answeredInRound) = c2feed
-            .latestRoundData();
+        (roundId, answer, startedAt, updatedAt, answeredInRound) = c2feed.latestRoundData();
 
         assertEq(roundId, 22, "Incorrect round Id #2");
         assertEq(answer, 1005, "Incorrect answer #2");
@@ -365,8 +311,7 @@ contract CurveLPPriceFeedTest is DSTest, ILPPriceFeedExceptions {
 
         curveV1Mock.set_virtual_price((10100 * WAD) / 10000);
 
-        (roundId, answer, startedAt, updatedAt, answeredInRound) = c2feed
-            .latestRoundData();
+        (roundId, answer, startedAt, updatedAt, answeredInRound) = c2feed.latestRoundData();
 
         assertEq(roundId, 22, "Incorrect round Id #3");
         assertEq(answer, 1010, "Incorrect answer #3");
@@ -377,18 +322,11 @@ contract CurveLPPriceFeedTest is DSTest, ILPPriceFeedExceptions {
 
     /// @dev [OCLP-5]: latestRoundData works correctly for 3 assets CurveLPPriceFeed
 
-    function test_OCLP_05_latestRoundData_works_correctly_for_3_assets_CurveLPPriceFeed()
-        public
-    {
+    function test_OCLP_05_latestRoundData_works_correctly_for_3_assets_CurveLPPriceFeed() public {
         curveV1Mock.set_virtual_price((10050 * WAD) / 10000);
 
-        (
-            uint80 roundId,
-            int256 answer,
-            uint256 startedAt,
-            uint256 updatedAt,
-            uint80 answeredInRound
-        ) = c3feed.latestRoundData();
+        (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound) =
+            c3feed.latestRoundData();
 
         assertEq(roundId, 11, "Incorrect round Id #1");
         assertEq(answer, 1105, "Incorrect answer #1");
@@ -398,8 +336,7 @@ contract CurveLPPriceFeedTest is DSTest, ILPPriceFeedExceptions {
 
         pfm3.setPrice(1000);
 
-        (roundId, answer, startedAt, updatedAt, answeredInRound) = c3feed
-            .latestRoundData();
+        (roundId, answer, startedAt, updatedAt, answeredInRound) = c3feed.latestRoundData();
 
         assertEq(roundId, 33, "Incorrect round Id #2");
         assertEq(answer, 1005, "Incorrect answer #2");
@@ -409,8 +346,7 @@ contract CurveLPPriceFeedTest is DSTest, ILPPriceFeedExceptions {
 
         curveV1Mock.set_virtual_price((10100 * WAD) / 10000);
 
-        (roundId, answer, startedAt, updatedAt, answeredInRound) = c3feed
-            .latestRoundData();
+        (roundId, answer, startedAt, updatedAt, answeredInRound) = c3feed.latestRoundData();
 
         assertEq(roundId, 33, "Incorrect round Id #3");
         assertEq(answer, 1010, "Incorrect answer #3");
@@ -421,18 +357,11 @@ contract CurveLPPriceFeedTest is DSTest, ILPPriceFeedExceptions {
 
     /// @dev [OCLP-6]: latestRoundData works correctly for 4 assets CurveLPPriceFeed
 
-    function test_OCLP_06_latestRoundData_works_correctly_for_4_assets_CurveLPPriceFeed()
-        public
-    {
+    function test_OCLP_06_latestRoundData_works_correctly_for_4_assets_CurveLPPriceFeed() public {
         curveV1Mock.set_virtual_price((10050 * WAD) / 10000);
 
-        (
-            uint80 roundId,
-            int256 answer,
-            uint256 startedAt,
-            uint256 updatedAt,
-            uint80 answeredInRound
-        ) = c4feed.latestRoundData();
+        (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound) =
+            c4feed.latestRoundData();
 
         assertEq(roundId, 11, "Incorrect round Id #1");
         assertEq(answer, 1105, "Incorrect answer #1");
@@ -442,8 +371,7 @@ contract CurveLPPriceFeedTest is DSTest, ILPPriceFeedExceptions {
 
         pfm4.setPrice(1000);
 
-        (roundId, answer, startedAt, updatedAt, answeredInRound) = c4feed
-            .latestRoundData();
+        (roundId, answer, startedAt, updatedAt, answeredInRound) = c4feed.latestRoundData();
 
         assertEq(roundId, 44, "Incorrect round Id #2");
         assertEq(answer, 1005, "Incorrect answer #2");
@@ -453,8 +381,7 @@ contract CurveLPPriceFeedTest is DSTest, ILPPriceFeedExceptions {
 
         curveV1Mock.set_virtual_price((10100 * WAD) / 10000);
 
-        (roundId, answer, startedAt, updatedAt, answeredInRound) = c4feed
-            .latestRoundData();
+        (roundId, answer, startedAt, updatedAt, answeredInRound) = c4feed.latestRoundData();
 
         assertEq(roundId, 44, "Incorrect round Id #3");
         assertEq(answer, 1010, "Incorrect answer #3");
@@ -465,9 +392,7 @@ contract CurveLPPriceFeedTest is DSTest, ILPPriceFeedExceptions {
 
     /// @dev [OCLP-7]: latestRoundData reverts for out of bounds prices
 
-    function test_OCLP_07_latestRoundData_reverts_for_out_of_bounds_prices()
-        public
-    {
+    function test_OCLP_07_latestRoundData_reverts_for_out_of_bounds_prices() public {
         curveV1Mock.set_virtual_price((9000 * WAD) / 10000);
 
         evm.expectRevert(ValueOutOfRangeException.selector);
@@ -481,13 +406,8 @@ contract CurveLPPriceFeedTest is DSTest, ILPPriceFeedExceptions {
 
         curveV1Mock.set_virtual_price((15000 * WAD) / 10000);
 
-        (
-            uint80 roundId,
-            int256 answer,
-            uint256 startedAt,
-            uint256 updatedAt,
-            uint80 answeredInRound
-        ) = c2feed.latestRoundData();
+        (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound) =
+            c2feed.latestRoundData();
 
         assertEq(roundId, 11, "Incorrect round Id #1");
         assertEq(answer, 1122, "Incorrect answer #1");
@@ -495,8 +415,7 @@ contract CurveLPPriceFeedTest is DSTest, ILPPriceFeedExceptions {
         assertEq(updatedAt, 1112, "Incorrect updatedAt #1");
         assertEq(answeredInRound, 11, "Incorrect answeredInRound #1");
 
-        (roundId, answer, startedAt, updatedAt, answeredInRound) = c3feed
-            .latestRoundData();
+        (roundId, answer, startedAt, updatedAt, answeredInRound) = c3feed.latestRoundData();
 
         assertEq(roundId, 11, "Incorrect round Id #1");
         assertEq(answer, 1122, "Incorrect answer #1");
@@ -504,8 +423,7 @@ contract CurveLPPriceFeedTest is DSTest, ILPPriceFeedExceptions {
         assertEq(updatedAt, 1112, "Incorrect updatedAt #1");
         assertEq(answeredInRound, 11, "Incorrect answeredInRound #1");
 
-        (roundId, answer, startedAt, updatedAt, answeredInRound) = c4feed
-            .latestRoundData();
+        (roundId, answer, startedAt, updatedAt, answeredInRound) = c4feed.latestRoundData();
 
         assertEq(roundId, 11, "Incorrect round Id #1");
         assertEq(answer, 1122, "Incorrect answer #1");
@@ -515,9 +433,7 @@ contract CurveLPPriceFeedTest is DSTest, ILPPriceFeedExceptions {
     }
 
     /// @dev [OCLP-8]: setLimiter reverts if virtual price is outside new bounds
-    function test_OCLP_08_setLimiter_reverts_on_virtual_price_outside_bounds()
-        public
-    {
+    function test_OCLP_08_setLimiter_reverts_on_virtual_price_outside_bounds() public {
         curveV1Mock.set_virtual_price((15000 * WAD) / 10000);
 
         evm.expectRevert(IncorrectLimitsException.selector);

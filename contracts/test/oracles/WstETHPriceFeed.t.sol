@@ -3,9 +3,9 @@
 // (c) Gearbox Holdings, 2022
 pragma solidity ^0.8.10;
 
-import { ILPPriceFeedExceptions } from "@gearbox-protocol/core-v2/contracts/interfaces/ILPPriceFeed.sol";
-import { WstETHPriceFeed, RANGE_WIDTH } from "../../oracles/lido/WstETHPriceFeed.sol";
-import { PERCENTAGE_FACTOR } from "@gearbox-protocol/core-v2/contracts/libraries/PercentageMath.sol";
+import {ILPPriceFeedExceptions} from "@gearbox-protocol/core-v2/contracts/interfaces/ILPPriceFeed.sol";
+import {WstETHPriceFeed, RANGE_WIDTH} from "../../oracles/lido/WstETHPriceFeed.sol";
+import {PERCENTAGE_FACTOR} from "@gearbox-protocol/core-v2/contracts/libraries/PercentageMath.sol";
 
 // LIBRARIES
 
@@ -13,24 +13,22 @@ import { PERCENTAGE_FACTOR } from "@gearbox-protocol/core-v2/contracts/libraries
 import "../lib/constants.sol";
 
 // MOCKS
-import { WstETHV1Mock } from "../mocks/integrations/WstETHV1Mock.sol";
-import { PriceFeedMock } from "@gearbox-protocol/core-v2/contracts/test/mocks/oracles/PriceFeedMock.sol";
-import { AddressProviderACLMock } from "@gearbox-protocol/core-v2/contracts/test/mocks/core/AddressProviderACLMock.sol";
+import {WstETHV1Mock} from "../mocks/integrations/WstETHV1Mock.sol";
+import {PriceFeedMock} from "@gearbox-protocol/core-v2/contracts/test/mocks/oracles/PriceFeedMock.sol";
+import {AddressProviderACLMock} from "@gearbox-protocol/core-v2/contracts/test/mocks/core/AddressProviderACLMock.sol";
 
 // SUITES
-import { TokensTestSuite, Tokens } from "../suites/TokensTestSuite.sol";
+import {TokensTestSuite, Tokens} from "../suites/TokensTestSuite.sol";
 
 // EXCEPTIONS
-import { ZeroAddressException, NotImplementedException } from "@gearbox-protocol/core-v2/contracts/interfaces/IErrors.sol";
-import { IPriceOracleV2Exceptions } from "@gearbox-protocol/core-v2/contracts/interfaces/IPriceOracle.sol";
+import {
+    ZeroAddressException, NotImplementedException
+} from "@gearbox-protocol/core-v2/contracts/interfaces/IErrors.sol";
+import {IPriceOracleV2Exceptions} from "@gearbox-protocol/core-v2/contracts/interfaces/IPriceOracle.sol";
 
 /// @title WstETHFeedTest
 /// @notice Designed for unit test purposes only
-contract WstETHFeedTest is
-    DSTest,
-    ILPPriceFeedExceptions,
-    IPriceOracleV2Exceptions
-{
+contract WstETHFeedTest is DSTest, ILPPriceFeedExceptions, IPriceOracleV2Exceptions {
     CheatCodes evm = CheatCodes(HEVM_ADDRESS);
 
     AddressProviderACLMock public addressProvider;
@@ -50,7 +48,7 @@ contract WstETHFeedTest is
         underlyingPf.setParams(11, 1111, 1112, 11);
 
         tokenTestSuite = new TokensTestSuite();
-        tokenTestSuite.topUpWETH{ value: 100 * WAD }();
+        tokenTestSuite.topUpWETH{value: 100 * WAD}();
 
         wstETHMock = new WstETHV1Mock(tokenTestSuite.addressOf(Tokens.STETH));
 
@@ -79,45 +77,25 @@ contract WstETHFeedTest is
     function test_WSTPF_01_constructor_sets_correct_values() public {
         // LP2
 
-        assertEq(
-            pf.description(),
-            "Wrapped stETH priceFeed",
-            "Incorrect description"
-        );
+        assertEq(pf.description(), "Wrapped stETH priceFeed", "Incorrect description");
 
-        assertEq(
-            address(pf.wstETH()),
-            address(wstETHMock),
-            "Incorrect priceFeed"
-        );
+        assertEq(address(pf.wstETH()), address(wstETHMock), "Incorrect priceFeed");
 
-        assertEq(
-            address(pf.priceFeed()),
-            address(underlyingPf),
-            "Incorrect priceFeed"
-        );
+        assertEq(address(pf.priceFeed()), address(underlyingPf), "Incorrect priceFeed");
 
         assertEq(
             pf.decimalsDivider(),
-            10**18, // Decimals divider for stETH
+            10 ** 18, // Decimals divider for stETH
             "Incorrect decimals"
         );
 
-        assertTrue(
-            pf.skipPriceCheck() == true,
-            "Incorrect deepencds for address"
-        );
+        assertTrue(pf.skipPriceCheck() == true, "Incorrect deepencds for address");
 
-        assertEq(
-            pf.lowerBound(),
-            wstETHMock.stEthPerToken(),
-            "Incorrect lower bound"
-        );
+        assertEq(pf.lowerBound(), wstETHMock.stEthPerToken(), "Incorrect lower bound");
 
         assertEq(
             pf.upperBound(),
-            (wstETHMock.stEthPerToken() * (PERCENTAGE_FACTOR + RANGE_WIDTH)) /
-                PERCENTAGE_FACTOR,
+            (wstETHMock.stEthPerToken() * (PERCENTAGE_FACTOR + RANGE_WIDTH)) / PERCENTAGE_FACTOR,
             "Incorrect upper bound"
         );
     }
@@ -143,13 +121,8 @@ contract WstETHFeedTest is
 
         evm.prank(CONFIGURATOR);
         wstETHMock.setStEthPerToken(stEthPerToken);
-        (
-            uint80 roundId,
-            int256 answer,
-            uint256 startedAt,
-            uint256 updatedAt,
-            uint80 answeredInRound
-        ) = pf.latestRoundData();
+        (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound) =
+            pf.latestRoundData();
 
         int256 expectedAnswer = int256((stEthPerToken * uint256(1100)) / WAD);
 
@@ -161,9 +134,7 @@ contract WstETHFeedTest is
     }
 
     /// @dev [WSTPF-5]: latestRoundData works correctly
-    function test_WSTPF_05_latestRoundData_reverts_or_bounds_for_out_of_bounds_prices()
-        public
-    {
+    function test_WSTPF_05_latestRoundData_reverts_or_bounds_for_out_of_bounds_prices() public {
         uint256 lowerBound = pf.lowerBound();
         uint256 upperBound = pf.upperBound();
 
@@ -175,13 +146,8 @@ contract WstETHFeedTest is
 
         evm.prank(CONFIGURATOR);
         wstETHMock.setStEthPerToken(upperBound + 1);
-        (
-            uint80 roundId,
-            int256 answer,
-            uint256 startedAt,
-            uint256 updatedAt,
-            uint80 answeredInRound
-        ) = pf.latestRoundData();
+        (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound) =
+            pf.latestRoundData();
 
         assertEq(roundId, 11, "Incorrect round Id #1");
         assertEq(answer, 1122 * 2, "Incorrect answer #1");
@@ -208,9 +174,7 @@ contract WstETHFeedTest is
     }
 
     /// @dev [WSTPF-6]: setLimiter reverts if stEthPerToken is outside new bounds
-    function test_WSTPF_06_setLimiter_reverts_on_stEthPerToken_outside_bounds()
-        public
-    {
+    function test_WSTPF_06_setLimiter_reverts_on_stEthPerToken_outside_bounds() public {
         wstETHMock.setStEthPerToken((15000 * WAD) / 10000);
 
         evm.expectRevert(IncorrectLimitsException.selector);

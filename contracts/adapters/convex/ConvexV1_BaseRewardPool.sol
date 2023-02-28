@@ -3,20 +3,17 @@
 // (c) Gearbox Holdings, 2023
 pragma solidity ^0.8.17;
 
-import { AdapterType } from "@gearbox-protocol/core-v2/contracts/interfaces/adapters/IAdapter.sol";
-import { AbstractAdapter } from "@gearbox-protocol/core-v2/contracts/adapters/AbstractAdapter.sol";
+import {AdapterType} from "@gearbox-protocol/core-v2/contracts/interfaces/adapters/IAdapter.sol";
+import {AbstractAdapter} from "@gearbox-protocol/core-v2/contracts/adapters/AbstractAdapter.sol";
 
-import { IBooster } from "../../integrations/convex/IBooster.sol";
-import { IBaseRewardPool } from "../../integrations/convex/IBaseRewardPool.sol";
-import { IRewards } from "../../integrations/convex/Interfaces.sol";
-import { IConvexV1BaseRewardPoolAdapter } from "../../interfaces/convex/IConvexV1BaseRewardPoolAdapter.sol";
+import {IBooster} from "../../integrations/convex/IBooster.sol";
+import {IBaseRewardPool} from "../../integrations/convex/IBaseRewardPool.sol";
+import {IRewards} from "../../integrations/convex/Interfaces.sol";
+import {IConvexV1BaseRewardPoolAdapter} from "../../interfaces/convex/IConvexV1BaseRewardPoolAdapter.sol";
 
 /// @title ConvexV1BaseRewardPoolAdapter adapter
 /// @dev Implements logic for interacting with the Convex BaseRewardPool contract
-contract ConvexV1BaseRewardPoolAdapter is
-    AbstractAdapter,
-    IConvexV1BaseRewardPoolAdapter
-{
+contract ConvexV1BaseRewardPoolAdapter is AbstractAdapter, IConvexV1BaseRewardPoolAdapter {
     /// @dev The underlying Curve pool LP token
     address public immutable override curveLPtoken;
 
@@ -42,18 +39,15 @@ contract ConvexV1BaseRewardPoolAdapter is
     /// @dev Returns the token that is staked in the pool
     address public immutable override stakingToken;
 
-    AdapterType public constant _gearboxAdapterType =
-        AdapterType.CONVEX_V1_BASE_REWARD_POOL;
+    AdapterType public constant _gearboxAdapterType = AdapterType.CONVEX_V1_BASE_REWARD_POOL;
     uint16 public constant _gearboxAdapterVersion = 2;
 
     /// @dev Constructor
     /// @param _creditManager Address of the Credit Manager
     /// @param _baseRewardPool Address of the target BaseRewardPool contract
-    constructor(
-        address _creditManager,
-        address _baseRewardPool,
-        address _stakedPhantomToken
-    ) AbstractAdapter(_creditManager, _baseRewardPool) {
+    constructor(address _creditManager, address _baseRewardPool, address _stakedPhantomToken)
+        AbstractAdapter(_creditManager, _baseRewardPool)
+    {
         stakingToken = address(IBaseRewardPool(_baseRewardPool).stakingToken()); // F: [ACVX1_P-1]
 
         pid = IBaseRewardPool(_baseRewardPool).pid(); // F: [ACVX1_P-1]
@@ -65,18 +59,13 @@ contract ConvexV1BaseRewardPoolAdapter is
         address _extraReward1;
         address _extraReward2;
 
-        uint256 extraRewardLength = IBaseRewardPool(_baseRewardPool)
-            .extraRewardsLength();
+        uint256 extraRewardLength = IBaseRewardPool(_baseRewardPool).extraRewardsLength();
 
         if (extraRewardLength >= 1) {
-            _extraReward1 = IRewards(
-                IBaseRewardPool(_baseRewardPool).extraRewards(0)
-            ).rewardToken();
+            _extraReward1 = IRewards(IBaseRewardPool(_baseRewardPool).extraRewards(0)).rewardToken();
 
             if (extraRewardLength >= 2) {
-                _extraReward2 = IRewards(
-                    IBaseRewardPool(_baseRewardPool).extraRewards(1)
-                ).rewardToken();
+                _extraReward2 = IRewards(IBaseRewardPool(_baseRewardPool).extraRewards(1)).rewardToken();
             }
         }
 
@@ -86,30 +75,29 @@ contract ConvexV1BaseRewardPoolAdapter is
         address booster = IBaseRewardPool(_baseRewardPool).operator();
 
         cvx = IBooster(booster).minter(); // F: [ACVX1_P-1]
-        IBooster.PoolInfo memory poolInfo = IBooster(booster).poolInfo(
-            IBaseRewardPool(_baseRewardPool).pid()
-        );
+        IBooster.PoolInfo memory poolInfo = IBooster(booster).poolInfo(IBaseRewardPool(_baseRewardPool).pid());
 
         curveLPtoken = poolInfo.lptoken; // F: [ACVX1_P-1]
 
-        if (creditManager.tokenMasksMap(rewardToken) == 0)
-            revert TokenIsNotInAllowedList(rewardToken); // F: [ACVX1_P-2]
+        if (creditManager.tokenMasksMap(rewardToken) == 0) {
+            revert TokenIsNotInAllowedList(rewardToken);
+        } // F: [ACVX1_P-2]
 
-        if (creditManager.tokenMasksMap(cvx) == 0)
-            revert TokenIsNotInAllowedList(cvx); // F: [ACVX1_P-2]
+        if (creditManager.tokenMasksMap(cvx) == 0) {
+            revert TokenIsNotInAllowedList(cvx);
+        } // F: [ACVX1_P-2]
 
-        if (creditManager.tokenMasksMap(curveLPtoken) == 0)
-            revert TokenIsNotInAllowedList(curveLPtoken); // F: [ACVX1_P-2]
+        if (creditManager.tokenMasksMap(curveLPtoken) == 0) {
+            revert TokenIsNotInAllowedList(curveLPtoken);
+        } // F: [ACVX1_P-2]
 
-        if (
-            _extraReward1 != address(0) &&
-            creditManager.tokenMasksMap(_extraReward1) == 0
-        ) revert TokenIsNotInAllowedList(_extraReward1); // F: [ACVX1_P-2]
+        if (_extraReward1 != address(0) && creditManager.tokenMasksMap(_extraReward1) == 0) {
+            revert TokenIsNotInAllowedList(_extraReward1);
+        } // F: [ACVX1_P-2]
 
-        if (
-            _extraReward2 != address(0) &&
-            creditManager.tokenMasksMap(_extraReward2) == 0
-        ) revert TokenIsNotInAllowedList(_extraReward2); // F: [ACVX1_P-2]
+        if (_extraReward2 != address(0) && creditManager.tokenMasksMap(_extraReward2) == 0) {
+            revert TokenIsNotInAllowedList(_extraReward2);
+        } // F: [ACVX1_P-2]
     }
 
     /// @dev Sends an order to stake Convex LP tokens in the BaseRewardPool
@@ -121,12 +109,7 @@ contract ConvexV1BaseRewardPoolAdapter is
     /// The input token does not need to be disabled, because this does not spend the entire
     /// balance generally
     function stake(uint256) external override creditFacadeOnly {
-        _executeSwapSafeApprove(
-            stakingToken,
-            stakedPhantomToken,
-            msg.data,
-            false
-        ); // F: [ACVX1_P-3]
+        _executeSwapSafeApprove(stakingToken, stakedPhantomToken, msg.data, false); // F: [ACVX1_P-3]
     }
 
     /// @dev Sends an order to stake all available Convex LP tokens in the BaseRewardPool
@@ -136,12 +119,7 @@ contract ConvexV1BaseRewardPoolAdapter is
     /// Input token is allowed, since the target does a transferFrom for the Convex LP token
     /// The input token does need to be disabled, because this spends the entire balance
     function stakeAll() external override creditFacadeOnly {
-        _executeSwapSafeApprove(
-            stakingToken,
-            stakedPhantomToken,
-            msg.data,
-            true
-        ); // F: [ACVX1_P-4]
+        _executeSwapSafeApprove(stakingToken, stakedPhantomToken, msg.data, true); // F: [ACVX1_P-4]
     }
 
     /// @dev Sends an order to withdraw Convex LP tokens from the BaseRewardPool
@@ -169,20 +147,10 @@ contract ConvexV1BaseRewardPoolAdapter is
     /// Input token: Phantom token (representing staked balance in the pool)
     /// Output token: Convex LP Token
     /// Input token is not allowed, since the target does not need to transferFrom
-    function _withdraw(
-        bytes memory callData,
-        bool claim,
-        bool disableTokenIn
-    ) internal {
+    function _withdraw(bytes memory callData, bool claim, bool disableTokenIn) internal {
         address creditAccount = _creditAccount();
 
-        _executeSwapNoApprove(
-            creditAccount,
-            stakedPhantomToken,
-            stakingToken,
-            callData,
-            disableTokenIn
-        );
+        _executeSwapNoApprove(creditAccount, stakedPhantomToken, stakingToken, callData, disableTokenIn);
 
         if (claim) {
             _enableRewardTokens(creditAccount);
@@ -195,10 +163,7 @@ contract ConvexV1BaseRewardPoolAdapter is
     /// @notice 'amount' is ignored since the unchanged calldata is routed directly to the target
     /// The input token does not need to be disabled, because this does not spend the entire
     /// balance generally
-    function withdrawAndUnwrap(
-        uint256,
-        bool claim
-    ) external override creditFacadeOnly {
+    function withdrawAndUnwrap(uint256, bool claim) external override creditFacadeOnly {
         _withdrawAndUnwrap(msg.data, claim, false); // F: [ACVX1_P-8]
     }
 
@@ -206,9 +171,7 @@ contract ConvexV1BaseRewardPoolAdapter is
     /// and immediately unwrap them into Curve LP tokens
     /// @param claim Whether to claim rewards while withdrawing
     /// The input token does need to be disabled, because this spends the entire balance
-    function withdrawAllAndUnwrap(
-        bool claim
-    ) external override creditFacadeOnly {
+    function withdrawAllAndUnwrap(bool claim) external override creditFacadeOnly {
         _withdrawAndUnwrap(msg.data, claim, true); // F: [ACVX1_P-9]
     }
 
@@ -221,20 +184,10 @@ contract ConvexV1BaseRewardPoolAdapter is
     /// Input token: Phantom token (representing staked balance in the pool)
     /// Output token: Curve LP Token
     /// Input token is not allowed, since the target does not need to transferFrom
-    function _withdrawAndUnwrap(
-        bytes memory callData,
-        bool claim,
-        bool disableTokenIn
-    ) internal {
+    function _withdrawAndUnwrap(bytes memory callData, bool claim, bool disableTokenIn) internal {
         address creditAccount = _creditAccount();
 
-        _executeSwapNoApprove(
-            creditAccount,
-            stakedPhantomToken,
-            curveLPtoken,
-            callData,
-            disableTokenIn
-        );
+        _executeSwapNoApprove(creditAccount, stakedPhantomToken, curveLPtoken, callData, disableTokenIn);
 
         if (claim) {
             _enableRewardTokens(creditAccount);

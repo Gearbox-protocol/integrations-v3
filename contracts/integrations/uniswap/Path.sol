@@ -17,8 +17,7 @@ library Path {
     /// @dev The offset of an encoded pool key
     uint256 private constant POP_OFFSET = NEXT_OFFSET + ADDR_SIZE;
     /// @dev The minimum length of an encoding that contains 2 or more pools
-    uint256 private constant MULTIPLE_POOLS_MIN_LENGTH =
-        POP_OFFSET + NEXT_OFFSET;
+    uint256 private constant MULTIPLE_POOLS_MIN_LENGTH = POP_OFFSET + NEXT_OFFSET;
 
     /// @notice Returns true iff the path contains two or more pools
     /// @param path The encoded swap path
@@ -40,15 +39,7 @@ library Path {
     /// @return tokenA The first token of the given pool
     /// @return tokenB The second token of the given pool
     /// @return fee The fee level of the pool
-    function decodeFirstPool(bytes memory path)
-        internal
-        pure
-        returns (
-            address tokenA,
-            address tokenB,
-            uint24 fee
-        )
-    {
+    function decodeFirstPool(bytes memory path) internal pure returns (address tokenA, address tokenB, uint24 fee) {
         tokenA = path.toAddress(0);
         fee = path.toUint24(ADDR_SIZE);
         tokenB = path.toAddress(NEXT_OFFSET);
@@ -57,11 +48,7 @@ library Path {
     /// @notice Gets the segment corresponding to the first pool in the path
     /// @param path The bytes encoded swap path
     /// @return The segment containing all data necessary to target the first pool in the path
-    function getFirstPool(bytes memory path)
-        internal
-        pure
-        returns (bytes memory)
-    {
+    function getFirstPool(bytes memory path) internal pure returns (bytes memory) {
         return path.slice(0, POP_OFFSET);
     }
 

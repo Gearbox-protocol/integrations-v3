@@ -3,14 +3,21 @@
 // (c) Gearbox Holdings, 2023
 pragma solidity ^0.8.17;
 
-import { ConvexAdapterHelper, CURVE_LP_AMOUNT, DAI_ACCOUNT_AMOUNT, REWARD_AMOUNT, REWARD_AMOUNT1, REWARD_AMOUNT2 } from "./ConvexAdapterHelper.sol";
-import { ERC20Mock } from "@gearbox-protocol/core-v2/contracts/test/mocks/token/ERC20Mock.sol";
-import { TokenRewardContractMock } from "../../mocks/integrations/ConvexTokenRewardContractMock.sol";
+import {
+    ConvexAdapterHelper,
+    CURVE_LP_AMOUNT,
+    DAI_ACCOUNT_AMOUNT,
+    REWARD_AMOUNT,
+    REWARD_AMOUNT1,
+    REWARD_AMOUNT2
+} from "./ConvexAdapterHelper.sol";
+import {ERC20Mock} from "@gearbox-protocol/core-v2/contracts/test/mocks/token/ERC20Mock.sol";
+import {TokenRewardContractMock} from "../../mocks/integrations/ConvexTokenRewardContractMock.sol";
 
-import { Tokens } from "../../config/Tokens.sol";
-import { USER, CONFIGURATOR } from "../../lib/constants.sol";
+import {Tokens} from "../../config/Tokens.sol";
+import {USER, CONFIGURATOR} from "../../lib/constants.sol";
 
-import { MultiCall } from "@gearbox-protocol/core-v2/contracts/libraries/MultiCall.sol";
+import {MultiCall} from "@gearbox-protocol/core-v2/contracts/libraries/MultiCall.sol";
 import "@gearbox-protocol/core-v2/contracts/test/lib/test.sol";
 
 contract ConvexV1ClaimZapAdapterTest is DSTest, ConvexAdapterHelper {
@@ -25,7 +32,7 @@ contract ConvexV1ClaimZapAdapterTest is DSTest, ConvexAdapterHelper {
 
         // IERC20(tokenTestSuite.addressOf(Tokens.DAI)).approve(address(creditManager), type(uint256).max);
 
-        (creditAccount, ) = _openTestCreditAccount();
+        (creditAccount,) = _openTestCreditAccount();
         addCollateral(curveLPToken, CURVE_LP_AMOUNT);
 
         evm.startPrank(USER);
@@ -33,15 +40,9 @@ contract ConvexV1ClaimZapAdapterTest is DSTest, ConvexAdapterHelper {
             multicallBuilder(
                 MultiCall({
                     target: address(boosterAdapter),
-                    callData: abi.encodeCall(
-                        boosterAdapter.deposit,
-                        (0, CURVE_LP_AMOUNT, false)
-                    )
+                    callData: abi.encodeCall(boosterAdapter.deposit, (0, CURVE_LP_AMOUNT, false))
                 }),
-                MultiCall({
-                    target: address(basePoolAdapter),
-                    callData: abi.encodeCall(basePoolAdapter.stakeAll, ())
-                })
+                MultiCall({target: address(basePoolAdapter), callData: abi.encodeCall(basePoolAdapter.stakeAll, ())})
             )
         );
         evm.stopPrank();
@@ -54,14 +55,8 @@ contract ConvexV1ClaimZapAdapterTest is DSTest, ConvexAdapterHelper {
             address(basePoolMock),
             address(boosterMock)
         );
-        tokenRewardContractMock.addRewardAmount(
-            tokenTestSuite.addressOf(Tokens.USDT),
-            REWARD_AMOUNT1
-        );
-        tokenRewardContractMock.addRewardAmount(
-            tokenTestSuite.addressOf(Tokens.LINK),
-            REWARD_AMOUNT2
-        );
+        tokenRewardContractMock.addRewardAmount(tokenTestSuite.addressOf(Tokens.USDT), REWARD_AMOUNT1);
+        tokenRewardContractMock.addRewardAmount(tokenTestSuite.addressOf(Tokens.LINK), REWARD_AMOUNT2);
     }
 
     function _setUpZeroExtras() public {
@@ -72,7 +67,7 @@ contract ConvexV1ClaimZapAdapterTest is DSTest, ConvexAdapterHelper {
 
         // IERC20(tokenTestSuite.addressOf(Tokens.DAI)).approve(address(creditManager), type(uint256).max);
 
-        (creditAccount, ) = _openTestCreditAccount();
+        (creditAccount,) = _openTestCreditAccount();
         addCollateral(curveLPToken, CURVE_LP_AMOUNT);
 
         evm.startPrank(USER);
@@ -80,15 +75,9 @@ contract ConvexV1ClaimZapAdapterTest is DSTest, ConvexAdapterHelper {
             multicallBuilder(
                 MultiCall({
                     target: address(boosterAdapter),
-                    callData: abi.encodeCall(
-                        boosterAdapter.deposit,
-                        (0, CURVE_LP_AMOUNT, false)
-                    )
+                    callData: abi.encodeCall(boosterAdapter.deposit, (0, CURVE_LP_AMOUNT, false))
                 }),
-                MultiCall({
-                    target: address(basePoolAdapter),
-                    callData: abi.encodeCall(basePoolAdapter.stakeAll, ())
-                })
+                MultiCall({target: address(basePoolAdapter), callData: abi.encodeCall(basePoolAdapter.stakeAll, ())})
             )
         );
         evm.stopPrank();
@@ -99,14 +88,8 @@ contract ConvexV1ClaimZapAdapterTest is DSTest, ConvexAdapterHelper {
             address(basePoolMock),
             address(boosterMock)
         );
-        tokenRewardContractMock.addRewardAmount(
-            tokenTestSuite.addressOf(Tokens.USDT),
-            REWARD_AMOUNT1
-        );
-        tokenRewardContractMock.addRewardAmount(
-            tokenTestSuite.addressOf(Tokens.LINK),
-            REWARD_AMOUNT2
-        );
+        tokenRewardContractMock.addRewardAmount(tokenTestSuite.addressOf(Tokens.USDT), REWARD_AMOUNT1);
+        tokenRewardContractMock.addRewardAmount(tokenTestSuite.addressOf(Tokens.LINK), REWARD_AMOUNT2);
     }
 
     ///
@@ -141,17 +124,7 @@ contract ConvexV1ClaimZapAdapterTest is DSTest, ConvexAdapterHelper {
 
         bytes memory expectedCallData = abi.encodeCall(
             claimZapAdapter.claimRewards,
-            (
-                rewardContracts,
-                extraRewardContracts,
-                tokenRewardContracts,
-                tokenRewardTokens,
-                0,
-                0,
-                0,
-                0,
-                0
-            )
+            (rewardContracts, extraRewardContracts, tokenRewardContracts, tokenRewardTokens, 0, 0, 0, 0, 0)
         );
 
         expectClaimZapStackCalls(USER, new address[](0));
@@ -176,14 +149,8 @@ contract ConvexV1ClaimZapAdapterTest is DSTest, ConvexAdapterHelper {
     }
 
     /// @dev [ACVX1_Z-3]: claimRewards claims from individual extra pools correctly
-    function test_ACVX1_Z_03_claimRewards_supports_claiming_from_extra_pools()
-        public
-    {
-        for (
-            uint256 extraRewardsCase;
-            extraRewardsCase <= 2;
-            extraRewardsCase++
-        ) {
+    function test_ACVX1_Z_03_claimRewards_supports_claiming_from_extra_pools() public {
+        for (uint256 extraRewardsCase; extraRewardsCase <= 2; extraRewardsCase++) {
             setUp();
             address[] memory rewardContracts;
             address[] memory extraRewardContracts;
@@ -212,17 +179,7 @@ contract ConvexV1ClaimZapAdapterTest is DSTest, ConvexAdapterHelper {
 
             bytes memory expectedCallData = abi.encodeCall(
                 claimZapAdapter.claimRewards,
-                (
-                    rewardContracts,
-                    extraRewardContracts,
-                    tokenRewardContracts,
-                    tokenRewardTokens,
-                    0,
-                    0,
-                    0,
-                    0,
-                    0
-                )
+                (rewardContracts, extraRewardContracts, tokenRewardContracts, tokenRewardTokens, 0, 0, 0, 0, 0)
             );
 
             expectClaimZapStackCalls(USER, enabledTokens);
@@ -234,31 +191,17 @@ contract ConvexV1ClaimZapAdapterTest is DSTest, ConvexAdapterHelper {
             expectBalance(cvx, creditAccount, 0);
 
             expectBalance(
-                extraRewardToken1,
-                creditAccount,
-                (extraRewardsCase == 0 || extraRewardsCase == 2)
-                    ? REWARD_AMOUNT1
-                    : 0
+                extraRewardToken1, creditAccount, (extraRewardsCase == 0 || extraRewardsCase == 2) ? REWARD_AMOUNT1 : 0
             );
             expectBalance(
-                extraRewardToken2,
-                creditAccount,
-                (extraRewardsCase == 1 || extraRewardsCase == 2)
-                    ? REWARD_AMOUNT2
-                    : 0
+                extraRewardToken2, creditAccount, (extraRewardsCase == 1 || extraRewardsCase == 2) ? REWARD_AMOUNT2 : 0
             );
 
             expectTokenIsEnabled(crv, false);
             expectTokenIsEnabled(cvx, false);
 
-            expectTokenIsEnabled(
-                extraRewardToken1,
-                (extraRewardsCase == 0 || extraRewardsCase == 2)
-            );
-            expectTokenIsEnabled(
-                extraRewardToken2,
-                (extraRewardsCase == 1 || extraRewardsCase == 2)
-            );
+            expectTokenIsEnabled(extraRewardToken1, (extraRewardsCase == 0 || extraRewardsCase == 2));
+            expectTokenIsEnabled(extraRewardToken2, (extraRewardsCase == 1 || extraRewardsCase == 2));
         }
     }
 
@@ -290,9 +233,7 @@ contract ConvexV1ClaimZapAdapterTest is DSTest, ConvexAdapterHelper {
     }
 
     /// @dev [ACVX1_Z-5]: claimRewards does nothing for tokens that weren't passed with the corresponding tokenRewardContract
-    function test_ACVX1_Z_05_claimRewards_only_covers_tokens_with_corresponding_contract()
-        public
-    {
+    function test_ACVX1_Z_05_claimRewards_only_covers_tokens_with_corresponding_contract() public {
         setUp();
 
         address usdt = tokenTestSuite.addressOf(Tokens.USDT);
@@ -312,17 +253,7 @@ contract ConvexV1ClaimZapAdapterTest is DSTest, ConvexAdapterHelper {
             address(claimZapAdapter),
             abi.encodeCall(
                 claimZapAdapter.claimRewards,
-                (
-                    rewardContracts,
-                    extraRewardContracts,
-                    tokenRewardContracts,
-                    tokenRewardTokens,
-                    0,
-                    0,
-                    0,
-                    0,
-                    0
-                )
+                (rewardContracts, extraRewardContracts, tokenRewardContracts, tokenRewardTokens, 0, 0, 0, 0, 0)
             )
         );
 
@@ -355,17 +286,7 @@ contract ConvexV1ClaimZapAdapterTest is DSTest, ConvexAdapterHelper {
 
         bytes memory expectedCallData = abi.encodeCall(
             claimZapAdapter.claimRewards,
-            (
-                rewardContracts,
-                extraRewardContracts,
-                tokenRewardContracts,
-                tokenRewardTokens,
-                0,
-                0,
-                0,
-                0,
-                0
-            )
+            (rewardContracts, extraRewardContracts, tokenRewardContracts, tokenRewardTokens, 0, 0, 0, 0, 0)
         );
 
         executeOneLineMulticall(address(claimZapAdapter), expectedCallData);

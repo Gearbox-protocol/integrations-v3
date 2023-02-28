@@ -7,15 +7,16 @@ import "../../../integrations/convex/Interfaces.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import { ERC20Mock } from "@gearbox-protocol/core-v2/contracts/test/mocks/token/ERC20Mock.sol";
-import { CheatCodes, HEVM_ADDRESS } from "@gearbox-protocol/core-v2/contracts/test/lib/cheatCodes.sol";
+import {ERC20Mock} from "@gearbox-protocol/core-v2/contracts/test/mocks/token/ERC20Mock.sol";
+import {CheatCodes, HEVM_ADDRESS} from "@gearbox-protocol/core-v2/contracts/test/lib/cheatCodes.sol";
 
-import { VirtualBalanceWrapper } from "./ConvexExtraRewardPoolMock.sol";
+import {VirtualBalanceWrapper} from "./ConvexExtraRewardPoolMock.sol";
 
 contract TokenRewardContractMock is VirtualBalanceWrapper {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
     using SafeERC20 for ERC20Mock;
+
     CheatCodes evm = CheatCodes(HEVM_ADDRESS);
 
     uint256 public constant duration = 7 days;

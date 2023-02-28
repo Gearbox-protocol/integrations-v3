@@ -3,12 +3,12 @@
 // (c) Gearbox Holdings, 2023
 pragma solidity ^0.8.17;
 
-import { AggregatorV3Interface } from "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
-import { TokensTestSuite } from "../suites/TokensTestSuite.sol";
-import { CreditFacadeTestEngine } from "@gearbox-protocol/core-v2/contracts/test/helpers/CreditFacadeTestEngine.sol";
+import {AggregatorV3Interface} from "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
+import {TokensTestSuite} from "../suites/TokensTestSuite.sol";
+import {CreditFacadeTestEngine} from "@gearbox-protocol/core-v2/contracts/test/helpers/CreditFacadeTestEngine.sol";
 
-import { PriceFeedMock } from "@gearbox-protocol/core-v2/contracts/test/mocks/oracles/PriceFeedMock.sol";
-import { Tokens } from "../config/Tokens.sol";
+import {PriceFeedMock} from "@gearbox-protocol/core-v2/contracts/test/mocks/oracles/PriceFeedMock.sol";
+import {Tokens} from "../config/Tokens.sol";
 
 import "../lib/constants.sol";
 
@@ -19,16 +19,8 @@ contract CreditFacadeTestHelper is CreditFacadeTestEngine {
         expectTokenIsEnabled(t, expectedState, "");
     }
 
-    function expectTokenIsEnabled(
-        Tokens t,
-        bool expectedState,
-        string memory reason
-    ) internal {
-        expectTokenIsEnabled(
-            tokenTestSuite().addressOf(t),
-            expectedState,
-            reason
-        );
+    function expectTokenIsEnabled(Tokens t, bool expectedState, string memory reason) internal {
+        expectTokenIsEnabled(tokenTestSuite().addressOf(t), expectedState, reason);
     }
 
     function addCollateral(Tokens t, uint256 amount) internal {

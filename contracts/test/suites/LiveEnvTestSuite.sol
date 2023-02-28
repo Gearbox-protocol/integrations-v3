@@ -3,37 +3,37 @@
 // (c) Gearbox Holdings, 2023
 pragma solidity ^0.8.17;
 
-import { Tokens } from "../config/Tokens.sol";
-import { TokensTestSuite } from "./TokensTestSuite.sol";
-import { LivePriceFeedDeployer } from "./LivePriceFeedDeployer.sol";
-import { IDataCompressor } from "@gearbox-protocol/core-v2/contracts/interfaces/IDataCompressor.sol";
-import { CreditManagerData } from "@gearbox-protocol/core-v2/contracts/libraries/Types.sol";
+import {Tokens} from "../config/Tokens.sol";
+import {TokensTestSuite} from "./TokensTestSuite.sol";
+import {LivePriceFeedDeployer} from "./LivePriceFeedDeployer.sol";
+import {IDataCompressor} from "@gearbox-protocol/core-v2/contracts/interfaces/IDataCompressor.sol";
+import {CreditManagerData} from "@gearbox-protocol/core-v2/contracts/libraries/Types.sol";
 
-import { AddressProvider } from "@gearbox-protocol/core-v2/contracts/core/AddressProvider.sol";
+import {AddressProvider} from "@gearbox-protocol/core-v2/contracts/core/AddressProvider.sol";
 
-import { ACL } from "@gearbox-protocol/core-v2/contracts/core/ACL.sol";
-import { ContractsRegister } from "@gearbox-protocol/core-v2/contracts/core/ContractsRegister.sol";
-import { PriceOracle } from "@gearbox-protocol/core-v2/contracts/oracles/PriceOracle.sol";
-import { IPoolService } from "@gearbox-protocol/core-v2/contracts/interfaces/IPoolService.sol";
+import {ACL} from "@gearbox-protocol/core-v2/contracts/core/ACL.sol";
+import {ContractsRegister} from "@gearbox-protocol/core-v2/contracts/core/ContractsRegister.sol";
+import {PriceOracle} from "@gearbox-protocol/core-v2/contracts/oracles/PriceOracle.sol";
+import {IPoolService} from "@gearbox-protocol/core-v2/contracts/interfaces/IPoolService.sol";
 
-import { CreditFacade } from "@gearbox-protocol/core-v2/contracts/credit/CreditFacade.sol";
-import { CreditConfigurator } from "@gearbox-protocol/core-v2/contracts/credit/CreditConfigurator.sol";
-import { CreditManager } from "@gearbox-protocol/core-v2/contracts/credit/CreditManager.sol";
-import { CreditManagerLiveMock } from "../mocks/credit/CreditManagerLiveMock.sol";
-import { Balance } from "@gearbox-protocol/core-v2/contracts/libraries/Balances.sol";
+import {CreditFacade} from "@gearbox-protocol/core-v2/contracts/credit/CreditFacade.sol";
+import {CreditConfigurator} from "@gearbox-protocol/core-v2/contracts/credit/CreditConfigurator.sol";
+import {CreditManager} from "@gearbox-protocol/core-v2/contracts/credit/CreditManager.sol";
+import {CreditManagerLiveMock} from "../mocks/credit/CreditManagerLiveMock.sol";
+import {Balance} from "@gearbox-protocol/core-v2/contracts/libraries/Balances.sol";
 
-import { CreditManagerFactory } from "../../factories/CreditManagerFactory.sol";
-import { CreditManagerMockFactory } from "../mocks/credit/CreditManagerMockFactory.sol";
-import { CreditManagerOpts, CollateralToken } from "@gearbox-protocol/core-v2/contracts/credit/CreditConfigurator.sol";
-import { WstETHPoolSetup } from "./WstETHPoolSetup.sol";
+import {CreditManagerFactory} from "../../factories/CreditManagerFactory.sol";
+import {CreditManagerMockFactory} from "../mocks/credit/CreditManagerMockFactory.sol";
+import {CreditManagerOpts, CollateralToken} from "@gearbox-protocol/core-v2/contracts/credit/CreditConfigurator.sol";
+import {WstETHPoolSetup} from "./WstETHPoolSetup.sol";
 
-import { DegenNFT } from "@gearbox-protocol/core-v2/contracts/tokens/DegenNFT.sol";
+import {DegenNFT} from "@gearbox-protocol/core-v2/contracts/tokens/DegenNFT.sol";
 
 import "../lib/constants.sol";
 
-import { CreditConfigLive, CreditManagerHumanOpts } from "../config/CreditConfigLive.sol";
-import { AdapterDeployer } from "./AdapterDeployer.sol";
-import { Contracts, SupportedContracts } from "../config/SupportedContracts.sol";
+import {CreditConfigLive, CreditManagerHumanOpts} from "../config/CreditConfigLive.sol";
+import {AdapterDeployer} from "./AdapterDeployer.sol";
+import {Contracts, SupportedContracts} from "../config/SupportedContracts.sol";
 
 address constant ADDRESS_PROVIDER = 0xcF64698AFF7E5f27A11dff868AF228653ba53be0;
 address constant ADDRESS_PROVIDER_GOERLI = 0x95f4cea53121b8A2Cb783C6BFB0915cEc44827D3;
@@ -78,9 +78,7 @@ contract LiveEnvTestSuite is CreditConfigLive {
                 useExisting = false;
             }
 
-            address ap = networkId == 1 ? ADDRESS_PROVIDER : networkId == 2
-                ? ADDRESS_PROVIDER_GOERLI
-                : address(0);
+            address ap = networkId == 1 ? ADDRESS_PROVIDER : networkId == 2 ? ADDRESS_PROVIDER_GOERLI : address(0);
 
             supportedContracts = new SupportedContracts(networkId);
             addressProvider = AddressProvider(ap);
@@ -92,9 +90,7 @@ contract LiveEnvTestSuite is CreditConfigLive {
             if (useExisting) {
                 priceOracle = PriceOracle(addressProvider.getPriceOracle());
 
-                IDataCompressor dc = IDataCompressor(
-                    addressProvider.getDataCompressor()
-                );
+                IDataCompressor dc = IDataCompressor(addressProvider.getDataCompressor());
 
                 CreditManagerData[] memory cmList = dc.getCreditManagersList();
 
@@ -102,90 +98,43 @@ contract LiveEnvTestSuite is CreditConfigLive {
 
                 for (uint256 i = 0; i < cmList.length; ++i) {
                     if (cmList[i].version == 2) {
-                        Tokens underlyingT = tokenTestSuite.tokenIndexes(
-                            cmList[i].underlying
-                        );
+                        Tokens underlyingT = tokenTestSuite.tokenIndexes(cmList[i].underlying);
 
-                        creditManagers[underlyingT] = CreditManager(
-                            cmList[i].addr
-                        );
-                        creditFacades[underlyingT] = CreditFacade(
-                            cmList[i].creditFacade
-                        );
-                        creditConfigurators[underlyingT] = CreditConfigurator(
-                            cmList[i].creditConfigurator
-                        );
+                        creditManagers[underlyingT] = CreditManager(cmList[i].addr);
+                        creditFacades[underlyingT] = CreditFacade(cmList[i].creditFacade);
+                        creditConfigurators[underlyingT] = CreditConfigurator(cmList[i].creditConfigurator);
 
-                        string memory underlyingSymbol = tokenTestSuite.symbols(
-                            underlyingT
-                        );
+                        string memory underlyingSymbol = tokenTestSuite.symbols(underlyingT);
 
-                        if (
-                            creditFacades[underlyingT].whitelisted() &&
-                            !mintedNFT
-                        ) {
-                            DegenNFT dnft = DegenNFT(
-                                creditFacades[underlyingT].degenNFT()
-                            );
+                        if (creditFacades[underlyingT].whitelisted() && !mintedNFT) {
+                            DegenNFT dnft = DegenNFT(creditFacades[underlyingT].degenNFT());
 
                             evm.prank(dnft.minter());
                             dnft.mint(USER, 30);
                             mintedNFT = true;
                         }
 
-                        IPoolService pool = IPoolService(
-                            creditManagers[underlyingT].pool()
-                        );
+                        IPoolService pool = IPoolService(creditManagers[underlyingT].pool());
 
-                        uint256 expectedLiquidityUSD = priceOracle.convertToUSD(
-                            pool.expectedLiquidity(),
-                            tokenTestSuite.addressOf(underlyingT)
-                        );
+                        uint256 expectedLiquidityUSD =
+                            priceOracle.convertToUSD(pool.expectedLiquidity(), tokenTestSuite.addressOf(underlyingT));
                         uint256 oneMillionUSD = 1_000_000 * 10 ** 8;
                         if (expectedLiquidityUSD < oneMillionUSD) {
-                            uint256 amountUSD = oneMillionUSD -
-                                expectedLiquidityUSD;
-                            uint256 amount = priceOracle.convertFromUSD(
-                                amountUSD,
-                                tokenTestSuite.addressOf(underlyingT)
-                            );
+                            uint256 amountUSD = oneMillionUSD - expectedLiquidityUSD;
+                            uint256 amount =
+                                priceOracle.convertFromUSD(amountUSD, tokenTestSuite.addressOf(underlyingT));
                             tokenTestSuite.mint(underlyingT, FRIEND, amount);
-                            tokenTestSuite.approve(
-                                underlyingT,
-                                FRIEND,
-                                address(pool)
-                            );
+                            tokenTestSuite.approve(underlyingT, FRIEND, address(pool));
 
                             evm.prank(FRIEND);
                             pool.addLiquidity(amount, FRIEND, 0);
                         }
 
-                        evm.label(
-                            cmList[i].creditFacade,
-                            string(
-                                abi.encodePacked(
-                                    "CREDIT_FACADE_",
-                                    underlyingSymbol
-                                )
-                            )
-                        );
-                        evm.label(
-                            cmList[i].addr,
-                            string(
-                                abi.encodePacked(
-                                    "CREDIT_MANAGER_",
-                                    underlyingSymbol
-                                )
-                            )
-                        );
+                        evm.label(cmList[i].creditFacade, string(abi.encodePacked("CREDIT_FACADE_", underlyingSymbol)));
+                        evm.label(cmList[i].addr, string(abi.encodePacked("CREDIT_MANAGER_", underlyingSymbol)));
                         evm.label(
                             cmList[i].creditConfigurator,
-                            string(
-                                abi.encodePacked(
-                                    "CREDIT_CONFIGURATOR_",
-                                    underlyingSymbol
-                                )
-                            )
+                            string(abi.encodePacked("CREDIT_CONFIGURATOR_", underlyingSymbol))
                         );
                     }
                 }
@@ -205,9 +154,7 @@ contract LiveEnvTestSuite is CreditConfigLive {
                 evm.prank(ROOT_ADDRESS);
                 addressProvider.setPriceOracle(address(priceOracle)); // T:[GD-1]
 
-                ContractsRegister cr = ContractsRegister(
-                    addressProvider.getContractsRegister()
-                );
+                ContractsRegister cr = ContractsRegister(addressProvider.getContractsRegister());
 
                 if (!_wstETHPoolExists(cr)) {
                     // SETUP wstETH pool if none is already deployed
@@ -225,14 +172,10 @@ contract LiveEnvTestSuite is CreditConfigLive {
                     for (uint256 i; i < len; ++i) {
                         // REAL CREDIT MANAGERS
                         {
-                            address underlying = IPoolService(pools[i])
-                                .underlyingToken();
+                            address underlying = IPoolService(pools[i]).underlyingToken();
 
-                            (
-                                bool found,
-                                CreditManagerOpts memory cmOpts,
-                                Contracts[] memory adaptersList
-                            ) = getCreditManagerConfig(underlying);
+                            (bool found, CreditManagerOpts memory cmOpts, Contracts[] memory adaptersList) =
+                                getCreditManagerConfig(underlying);
 
                             if (!found) continue;
 
@@ -242,12 +185,9 @@ contract LiveEnvTestSuite is CreditConfigLive {
                                 0
                             );
 
-                            Tokens underlyingT = tokenTestSuite.tokenIndexes(
-                                underlying
-                            );
+                            Tokens underlyingT = tokenTestSuite.tokenIndexes(underlying);
 
-                            string memory underlyingSymbol = tokenTestSuite
-                                .symbols(underlyingT);
+                            string memory underlyingSymbol = tokenTestSuite.symbols(underlyingT);
 
                             AdapterDeployer ad = new AdapterDeployer(
                                 address(cmf.creditManager()),
@@ -268,57 +208,32 @@ contract LiveEnvTestSuite is CreditConfigLive {
                             acl.transferOwnership(address(cmf));
                             cmf.configure();
 
-                            evm.label(
-                                pools[i],
-                                string(
-                                    abi.encodePacked("POOL_", underlyingSymbol)
-                                )
-                            );
+                            evm.label(pools[i], string(abi.encodePacked("POOL_", underlyingSymbol)));
                             evm.label(
                                 address(cmf.creditFacade()),
-                                string(
-                                    abi.encodePacked(
-                                        "CREDIT_FACADE_",
-                                        underlyingSymbol
-                                    )
-                                )
+                                string(abi.encodePacked("CREDIT_FACADE_", underlyingSymbol))
                             );
                             evm.label(
                                 address(cmf.creditManager()),
-                                string(
-                                    abi.encodePacked(
-                                        "CREDIT_MANAGER_",
-                                        underlyingSymbol
-                                    )
-                                )
+                                string(abi.encodePacked("CREDIT_MANAGER_", underlyingSymbol))
                             );
                             evm.label(
                                 address(cmf.creditConfigurator()),
-                                string(
-                                    abi.encodePacked(
-                                        "CREDIT_CONFIGURATOR_",
-                                        underlyingSymbol
-                                    )
-                                )
+                                string(abi.encodePacked("CREDIT_CONFIGURATOR_", underlyingSymbol))
                             );
 
                             creditManagers[underlyingT] = cmf.creditManager();
                             creditFacades[underlyingT] = cmf.creditFacade();
-                            creditConfigurators[underlyingT] = cmf
-                                .creditConfigurator();
+                            creditConfigurators[underlyingT] = cmf.creditConfigurator();
                         }
 
                         // MOCK CREDIT MANAGERS
                         // Mock credit managers skip health checks
                         {
-                            address underlying = IPoolService(pools[i])
-                                .underlyingToken();
+                            address underlying = IPoolService(pools[i]).underlyingToken();
 
-                            (
-                                bool found,
-                                CreditManagerOpts memory cmOpts,
-                                Contracts[] memory adaptersList
-                            ) = getCreditManagerConfig(underlying);
+                            (bool found, CreditManagerOpts memory cmOpts, Contracts[] memory adaptersList) =
+                                getCreditManagerConfig(underlying);
 
                             if (!found) continue;
 
@@ -328,12 +243,9 @@ contract LiveEnvTestSuite is CreditConfigLive {
                                     0
                                 );
 
-                            Tokens underlyingT = tokenTestSuite.tokenIndexes(
-                                underlying
-                            );
+                            Tokens underlyingT = tokenTestSuite.tokenIndexes(underlying);
 
-                            string memory underlyingSymbol = tokenTestSuite
-                                .symbols(underlyingT);
+                            string memory underlyingSymbol = tokenTestSuite.symbols(underlyingT);
 
                             AdapterDeployer ad = new AdapterDeployer(
                                 address(cmf.creditManager()),
@@ -356,37 +268,20 @@ contract LiveEnvTestSuite is CreditConfigLive {
 
                             evm.label(
                                 address(cmf.creditFacade()),
-                                string(
-                                    abi.encodePacked(
-                                        "CREDIT_FACADE_MOCK_",
-                                        underlyingSymbol
-                                    )
-                                )
+                                string(abi.encodePacked("CREDIT_FACADE_MOCK_", underlyingSymbol))
                             );
                             evm.label(
                                 address(cmf.creditManager()),
-                                string(
-                                    abi.encodePacked(
-                                        "CREDIT_MANAGER_MOCK_",
-                                        underlyingSymbol
-                                    )
-                                )
+                                string(abi.encodePacked("CREDIT_MANAGER_MOCK_", underlyingSymbol))
                             );
                             evm.label(
                                 address(cmf.creditConfigurator()),
-                                string(
-                                    abi.encodePacked(
-                                        "CREDIT_CONFIGURATOR_MOCK_",
-                                        underlyingSymbol
-                                    )
-                                )
+                                string(abi.encodePacked("CREDIT_CONFIGURATOR_MOCK_", underlyingSymbol))
                             );
 
-                            creditManagerMocks[underlyingT] = cmf
-                                .creditManager();
+                            creditManagerMocks[underlyingT] = cmf.creditManager();
                             creditFacadeMocks[underlyingT] = cmf.creditFacade();
-                            creditConfiguratorMocks[underlyingT] = cmf
-                                .creditConfigurator();
+                            creditConfiguratorMocks[underlyingT] = cmf.creditConfigurator();
                         }
                     }
                 }
@@ -412,16 +307,11 @@ contract LiveEnvTestSuite is CreditConfigLive {
         // evm.stopPrank();
     }
 
-    function _wstETHPoolExists(
-        ContractsRegister cr
-    ) internal view returns (bool) {
+    function _wstETHPoolExists(ContractsRegister cr) internal view returns (bool) {
         address[] memory pools = cr.getPools();
 
         for (uint256 i = 0; i < pools.length; ++i) {
-            if (
-                IPoolService(pools[i]).underlyingToken() ==
-                tokenTestSuite.addressOf(Tokens.wstETH)
-            ) {
+            if (IPoolService(pools[i]).underlyingToken() == tokenTestSuite.addressOf(Tokens.wstETH)) {
                 return true;
             }
         }
@@ -460,16 +350,10 @@ contract LiveEnvTestSuite is CreditConfigLive {
     //   evm.stopPrank();
     // }
 
-    function getCreditManagerConfig(
-        address poolUnderlying
-    )
+    function getCreditManagerConfig(address poolUnderlying)
         internal
         view
-        returns (
-            bool found,
-            CreditManagerOpts memory cmOpts,
-            Contracts[] memory adaptersList
-        )
+        returns (bool found, CreditManagerOpts memory cmOpts, Contracts[] memory adaptersList)
     {
         Tokens index = tokenTestSuite.tokenIndexes(poolUnderlying);
         if (index == Tokens.NO_TOKEN) {
@@ -486,12 +370,8 @@ contract LiveEnvTestSuite is CreditConfigLive {
         unchecked {
             for (uint256 i; i < len; ++i) {
                 cmOpts.collateralTokens[i] = CollateralToken({
-                    token: tokenTestSuite.addressOf(
-                        humanCfg.collateralTokens[i].token
-                    ),
-                    liquidationThreshold: humanCfg
-                        .collateralTokens[i]
-                        .liquidationThreshold
+                    token: tokenTestSuite.addressOf(humanCfg.collateralTokens[i].token),
+                    liquidationThreshold: humanCfg.collateralTokens[i].liquidationThreshold
                 });
             }
         }
@@ -502,29 +382,15 @@ contract LiveEnvTestSuite is CreditConfigLive {
         adaptersList = humanCfg.contracts;
     }
 
-    function getAdapter(
-        Tokens underlying,
-        Contracts target
-    ) public view returns (address) {
-        return
-            creditManagers[underlying].contractToAdapter(
-                supportedContracts.addressOf(target)
-            );
+    function getAdapter(Tokens underlying, Contracts target) public view returns (address) {
+        return creditManagers[underlying].contractToAdapter(supportedContracts.addressOf(target));
     }
 
-    function getMockAdapter(
-        Tokens underlying,
-        Contracts target
-    ) public view returns (address) {
-        return
-            creditManagerMocks[underlying].contractToAdapter(
-                supportedContracts.addressOf(target)
-            );
+    function getMockAdapter(Tokens underlying, Contracts target) public view returns (address) {
+        return creditManagerMocks[underlying].contractToAdapter(supportedContracts.addressOf(target));
     }
 
-    function getAdapters(
-        Tokens underlying
-    ) public view returns (address[] memory adapters) {
+    function getAdapters(Tokens underlying) public view returns (address[] memory adapters) {
         uint256 contractCount = supportedContracts.contractCount();
 
         adapters = new address[](contractCount);

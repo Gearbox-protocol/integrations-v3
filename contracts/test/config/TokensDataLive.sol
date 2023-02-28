@@ -3,9 +3,9 @@
 // (c) Gearbox Holdings, 2022
 pragma solidity ^0.8.10;
 
-import { Tokens } from "./Tokens.sol";
-import { TokenData } from "../suites/TokensTestSuite.sol";
-import { TokenType } from "../../integrations/TokenType.sol";
+import {Tokens} from "./Tokens.sol";
+import {TokenData} from "../suites/TokensTestSuite.sol";
+import {TokenType} from "../../integrations/TokenType.sol";
 
 contract TokensDataLive {
     TokenData[] tokenData;

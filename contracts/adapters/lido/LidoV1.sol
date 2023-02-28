@@ -4,28 +4,24 @@
 pragma solidity ^0.8.17;
 pragma abicoder v1;
 
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-import { AbstractAdapter } from "@gearbox-protocol/core-v2/contracts/adapters/AbstractAdapter.sol";
-import { IAdapter, AdapterType } from "@gearbox-protocol/core-v2/contracts/interfaces/adapters/IAdapter.sol";
-import { ACLNonReentrantTrait } from "@gearbox-protocol/core-v2/contracts/core/ACLNonReentrantTrait.sol";
-import { IAddressProvider } from "@gearbox-protocol/core-v2/contracts/interfaces/IAddressProvider.sol";
-import { ICreditManagerV2 } from "@gearbox-protocol/core-v2/contracts/interfaces/ICreditManagerV2.sol";
-import { IPoolService } from "@gearbox-protocol/core-v2/contracts/interfaces/IPoolService.sol";
+import {AbstractAdapter} from "@gearbox-protocol/core-v2/contracts/adapters/AbstractAdapter.sol";
+import {IAdapter, AdapterType} from "@gearbox-protocol/core-v2/contracts/interfaces/adapters/IAdapter.sol";
+import {ACLNonReentrantTrait} from "@gearbox-protocol/core-v2/contracts/core/ACLNonReentrantTrait.sol";
+import {IAddressProvider} from "@gearbox-protocol/core-v2/contracts/interfaces/IAddressProvider.sol";
+import {ICreditManagerV2} from "@gearbox-protocol/core-v2/contracts/interfaces/ICreditManagerV2.sol";
+import {IPoolService} from "@gearbox-protocol/core-v2/contracts/interfaces/IPoolService.sol";
 
-import { IstETH } from "../../integrations/lido/IstETH.sol";
-import { ILidoV1Adapter } from "../../interfaces/lido/ILidoV1Adapter.sol";
-import { LidoV1Gateway } from "./LidoV1_WETHGateway.sol";
+import {IstETH} from "../../integrations/lido/IstETH.sol";
+import {ILidoV1Adapter} from "../../interfaces/lido/ILidoV1Adapter.sol";
+import {LidoV1Gateway} from "./LidoV1_WETHGateway.sol";
 
 uint256 constant LIDO_STETH_LIMIT = 20000 ether;
 
 /// @title Lido V1 adapter
 /// @dev Implements logic for interacting with the Lido contract through the gateway
-contract LidoV1Adapter is
-    AbstractAdapter,
-    ILidoV1Adapter,
-    ACLNonReentrantTrait
-{
+contract LidoV1Adapter is AbstractAdapter, ILidoV1Adapter, ACLNonReentrantTrait {
     /// @dev Address of the Lido contract
     address public immutable override stETH;
 
@@ -44,21 +40,11 @@ contract LidoV1Adapter is
     /// @dev Constructor
     /// @param _creditManager Address of the Credit manager
     /// @param _lidoGateway Address of the Lido gateway
-    constructor(
-        address _creditManager,
-        address _lidoGateway
-    )
-        ACLNonReentrantTrait(
-            address(
-                IPoolService(ICreditManagerV2(_creditManager).poolService())
-                    .addressProvider()
-            )
-        )
+    constructor(address _creditManager, address _lidoGateway)
+        ACLNonReentrantTrait(address(IPoolService(ICreditManagerV2(_creditManager).poolService()).addressProvider()))
         AbstractAdapter(_creditManager, _lidoGateway)
     {
-        IAddressProvider ap = IPoolService(
-            ICreditManagerV2(_creditManager).poolService()
-        ).addressProvider();
+        IAddressProvider ap = IPoolService(ICreditManagerV2(_creditManager).poolService()).addressProvider();
 
         stETH = address(LidoV1Gateway(payable(_lidoGateway)).stETH()); // F:[LDOV1-1]
 
@@ -104,30 +90,20 @@ contract LidoV1Adapter is
         }
     }
 
-    function _submit(
-        uint256 amount,
-        address creditAccount,
-        bool disableTokenIn
-    ) internal {
+    function _submit(uint256 amount, address creditAccount, bool disableTokenIn) internal {
         if (amount > limit) revert LimitIsOverException(); // F:[LDOV1-5]
 
         unchecked {
             limit -= amount; // F:[LDOV1-5]
         }
         _executeSwapSafeApprove(
-            creditAccount,
-            weth,
-            stETH,
-            abi.encodeCall(LidoV1Gateway.submit, (amount, treasury)),
-            disableTokenIn
+            creditAccount, weth, stETH, abi.encodeCall(LidoV1Gateway.submit, (amount, treasury)), disableTokenIn
         ); // F:[LDOV1-3,4]
     }
 
     /// @dev Set a new deposit limit
     /// @param _limit New value for the limit
-    function setLimit(
-        uint256 _limit
-    )
+    function setLimit(uint256 _limit)
         external
         override
         configuratorOnly // F:[LDOV1-6]
