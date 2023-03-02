@@ -347,6 +347,7 @@ adapters += Object.entries(contractParams)
       contractParam.type === AdapterInterface.CURVE_V1_3ASSETS ||
       contractParam.type === AdapterInterface.CURVE_V1_4ASSETS
     ) {
+      if (contractParam.lpToken === "GEAR") return "";
       const basePool: SupportedContract | "NO_CONTRACT" =
         contractParam.tokens.includes("3Crv")
           ? "CURVE_3CRV_POOL"
