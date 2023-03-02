@@ -37,7 +37,7 @@ contract CurveV1AdapterDeposit is CurveV1AdapterBase {
         uint256, // _token_amount,
         int128 i,
         uint256 // min_amount
-    ) external virtual override creditFacadeOnly withLPTokenApproval {
+    ) public virtual override creditFacadeOnly withLPTokenApproval {
         address tokenOut = _get_token(i);
         _remove_liquidity_one_coin(tokenOut);
     }
@@ -49,7 +49,7 @@ contract CurveV1AdapterDeposit is CurveV1AdapterBase {
     /// - Unlike other adapters, approves the LP token to the target
     /// @notice See more implementation details in CurveV1AdapterBase
     function remove_all_liquidity_one_coin(int128 i, uint256 minRateRAY)
-        external
+        public
         virtual
         override
         creditFacadeOnly

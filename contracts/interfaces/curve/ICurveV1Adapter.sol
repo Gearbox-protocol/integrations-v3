@@ -16,16 +16,22 @@ interface ICurveV1Adapter is IAdapter, ICurveV1AdapterExceptions {
     /// @param j Index for the coin received
     function exchange(int128 i, int128 j, uint256, uint256) external;
 
+    function exchange(uint256 i, uint256 j, uint256, uint256) external;
+
     /// @dev Sends an order to exchange the entire balance of one asset to another
     /// @param i Index for the coin sent
     /// @param j Index for the coin received
     /// @param rateMinRAY Minimum exchange rate between coins i and j
     function exchange_all(int128 i, int128 j, uint256 rateMinRAY) external;
 
+    function exchange_all(uint256 i, uint256 j, uint256 rateMinRAY) external;
+
     /// @dev Sends an order to exchange one underlying asset to another
     /// @param i Index for the underlying coin sent
     /// @param j Index for the underlying coin received
     function exchange_underlying(int128 i, int128 j, uint256, uint256) external;
+
+    function exchange_underlying(uint256 i, uint256 j, uint256, uint256) external;
 
     /// @dev Sends an order to exchange the entire balance of one underlying asset to another
     /// @param i Index for the underlying coin sent
@@ -33,16 +39,22 @@ interface ICurveV1Adapter is IAdapter, ICurveV1AdapterExceptions {
     /// @param rateMinRAY Minimum exchange rate between underlyings i and j
     function exchange_all_underlying(int128 i, int128 j, uint256 rateMinRAY) external;
 
+    function exchange_all_underlying(uint256 i, uint256 j, uint256 rateMinRAY) external;
+
     /// @dev Sends an order to add liquidity with only 1 input asset
     /// @param amount Amount of asset to deposit
     /// @param i Index of the asset to deposit
     /// @param minAmount Minimal number of LP tokens to receive
     function add_liquidity_one_coin(uint256 amount, int128 i, uint256 minAmount) external;
 
+    function add_liquidity_one_coin(uint256 amount, uint256 i, uint256 minAmount) external;
+
     /// @dev Sends an order to add liquidity with only 1 input asset, using the entire balance
     /// @param i Index of the asset to deposit
     /// @param rateMinRAY Minimal exchange rate between the deposited asset and the LP token
     function add_all_liquidity_one_coin(int128 i, uint256 rateMinRAY) external;
+
+    function add_all_liquidity_one_coin(uint256 i, uint256 rateMinRAY) external;
 
     /// @dev Sends an order to remove liquidity from a pool in a single asset
     /// @param i Index of the asset to withdraw
@@ -53,10 +65,14 @@ interface ICurveV1Adapter is IAdapter, ICurveV1AdapterExceptions {
         uint256 // min_amount
     ) external;
 
+    function remove_liquidity_one_coin(uint256, uint256 i, uint256) external;
+
     /// @dev Sends an order to remove all liquidity from the pool in a single asset
     /// @param i Index of the asset to withdraw
     /// @param minRateRAY Minimal exchange rate between the LP token and the received token
     function remove_all_liquidity_one_coin(int128 i, uint256 minRateRAY) external;
+
+    function remove_all_liquidity_one_coin(uint256 i, uint256 minRateRAY) external;
 
     //
     // GETTERS
@@ -70,6 +86,9 @@ interface ICurveV1Adapter is IAdapter, ICurveV1AdapterExceptions {
 
     /// @dev Address of the base pool (for metapools only)
     function metapoolBase() external view returns (address);
+
+    /// @dev Whether to use uint256 for token indexes in write functions
+    function use256() external view returns (bool);
 
     /// @dev Number of coins in the pool
     function nCoins() external view returns (uint256);
@@ -102,4 +121,6 @@ interface ICurveV1Adapter is IAdapter, ICurveV1AdapterExceptions {
     /// @param amount Amount of coin to be deposited
     /// @param i Index of a coin to be deposited
     function calc_add_one_coin(uint256 amount, int128 i) external view returns (uint256);
+
+    function calc_add_one_coin(uint256 amount, uint256 i) external view returns (uint256);
 }

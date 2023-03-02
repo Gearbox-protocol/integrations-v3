@@ -191,6 +191,7 @@ contract TokensTestSuite is DSTest, TokensTestSuiteHelper {
                 IERC20(token).transfer(to, amount);
             } else {
                 // dealToken(token, to, amount, adjust);
+                evm.prank(ERC20Mock(token).minter());
                 ERC20Mock(token).mint(address(this), amount);
                 IERC20(token).transfer(to, amount);
             }

@@ -188,7 +188,8 @@ contract CurveV1StEthAdapterTest is DSTest, CurveV1AdapterHelper {
 
         expectAllowance(Tokens.WETH, creditAccount, _curveV1stETHPoolGateway, 0);
 
-        bytes memory callData = abi.encodeCall(ICurvePool.exchange, (0, 1, WETH_EXCHANGE_AMOUNT, 0));
+        bytes memory callData =
+            abi.encodeWithSignature("exchange(int128,int128,uint256,uint256)", 0, 1, WETH_EXCHANGE_AMOUNT, 0);
 
         expectMulticallStackCalls(address(adapter), _curveV1stETHPoolGateway, USER, callData, tokenIn, tokenOut, false);
 
@@ -221,8 +222,9 @@ contract CurveV1StEthAdapterTest is DSTest, CurveV1AdapterHelper {
 
         expectAllowance(tokenIn, creditAccount, _curveV1stETHPoolGateway, 0);
 
-        bytes memory callData =
-            abi.encodeCall(ICurvePool.remove_liquidity_one_coin, (CURVE_LP_OPERATION_AMOUNT, 0, WETH_EXCHANGE_AMOUNT));
+        bytes memory callData = abi.encodeWithSignature(
+            "remove_liquidity_one_coin(uint256,int128,uint256)", CURVE_LP_OPERATION_AMOUNT, 0, WETH_EXCHANGE_AMOUNT
+        );
 
         expectMulticallStackCalls(address(adapter), _curveV1stETHPoolGateway, USER, callData, tokenIn, tokenOut, false);
 
@@ -255,8 +257,11 @@ contract CurveV1StEthAdapterTest is DSTest, CurveV1AdapterHelper {
 
         expectAllowance(tokenIn, creditAccount, _curveV1stETHPoolGateway, 0);
 
-        bytes memory expectedCallData = abi.encodeCall(
-            ICurvePool.remove_liquidity_one_coin, (CURVE_LP_ACCOUNT_AMOUNT - 1, 0, (CURVE_LP_ACCOUNT_AMOUNT - 1) / 2)
+        bytes memory expectedCallData = abi.encodeWithSignature(
+            "remove_liquidity_one_coin(uint256,int128,uint256)",
+            CURVE_LP_ACCOUNT_AMOUNT - 1,
+            0,
+            (CURVE_LP_ACCOUNT_AMOUNT - 1) / 2
         );
 
         expectMulticallStackCalls(

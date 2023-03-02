@@ -76,6 +76,10 @@ contract CurveV1StETHPoolGateway is ICurvePool2Assets {
         }
     }
 
+    function exchange(uint256, uint256, uint256, uint256) external {
+        revert NotImplementedException();
+    }
+
     /// @dev Implements logic allowing CA's to call `add_liquidity` on a pool with plain ETH
     /// - If amounts[0] > 0, transfers WETH from sender and unwraps it
     /// - If amounts[1] > 1, transfers stETH from sender
@@ -138,6 +142,10 @@ contract CurveV1StETHPoolGateway is ICurvePool2Assets {
         }
     }
 
+    function remove_liquidity_one_coin(uint256, uint256, uint256) external {
+        revert NotImplementedException();
+    }
+
     /// @dev Implements logic allowing CA's to call `remove_liquidity_imbalance` on a pool with plain ETH
     /// - Transfers the LP token from sender
     /// - Calls `remove_liquidity_imbalance`
@@ -177,8 +185,16 @@ contract CurveV1StETHPoolGateway is ICurvePool2Assets {
         revert NotImplementedException();
     }
 
+    function exchange_underlying(uint256, uint256, uint256, uint256) external {
+        revert NotImplementedException();
+    }
+
     /// @dev Not implemented, since the stETH pool does not have this function
     function get_dy_underlying(int128, int128, uint256) external pure override returns (uint256) {
+        revert NotImplementedException();
+    }
+
+    function get_dy_underlying(uint256, uint256, uint256) external view returns (uint256) {
         revert NotImplementedException();
     }
 
@@ -188,6 +204,10 @@ contract CurveV1StETHPoolGateway is ICurvePool2Assets {
     /// @param dx Amount of coin i to be swapped in
     function get_dy(int128 i, int128 j, uint256 dx) external view override returns (uint256) {
         return ICurvePoolStETH(pool).get_dy(i, j, dx);
+    }
+
+    function get_dy(uint256 i, uint256 j, uint256 dx) external view returns (uint256) {
+        revert NotImplementedException();
     }
 
     /// @dev Returns the price of the pool's LP token
@@ -252,6 +272,10 @@ contract CurveV1StETHPoolGateway is ICurvePool2Assets {
     /// @param i Index of a coin to receive
     function calc_withdraw_one_coin(uint256 _burn_amount, int128 i) external view returns (uint256) {
         return ICurvePoolStETH(pool).calc_withdraw_one_coin(_burn_amount, i);
+    }
+
+    function calc_withdraw_one_coin(uint256, uint256) external view returns (uint256) {
+        revert NotImplementedException();
     }
 
     /// @dev Returns the amount of coin that belongs to the admin
@@ -327,6 +351,10 @@ contract CurveV1StETHPoolGateway is ICurvePool2Assets {
 
     /// @dev Not implemented, since the stETH pool does not have this function
     function totalSupply() external pure returns (uint256) {
+        revert NotImplementedException();
+    }
+
+    function mid_fee() external view returns (uint256) {
         revert NotImplementedException();
     }
 

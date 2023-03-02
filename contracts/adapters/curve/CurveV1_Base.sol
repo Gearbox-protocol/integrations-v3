@@ -70,6 +70,9 @@ contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
     /// @dev Number of coins in the pool
     uint256 public immutable nCoins;
 
+    /// @dev Whether to use uint256 for token indexes in write functions
+    bool public immutable use256;
+
     uint16 public constant _gearboxAdapterVersion = 2;
 
     function _gearboxAdapterType() external pure virtual override returns (AdapterType) {
@@ -94,6 +97,20 @@ contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
         lp_token = _lp_token; // F:[ACV1-2]
         metapoolBase = _metapoolBase; // F:[ACV1-2]
         nCoins = _nCoins; // F:[ACV1-2]
+
+        {
+            bool _use256;
+
+            /// Only Curve v2 pools have mid_fee, so it can be used to determine
+            /// whether to use int128 or uint256 function signatures
+            try ICurvePool(targetContract).mid_fee() returns (uint256) {
+                _use256 = true;
+            } catch {
+                _use256 = false;
+            }
+
+            use256 = _use256;
+        }
 
         address[4] memory tokens;
 
@@ -176,10 +193,15 @@ contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
     /// Input token is allowed, since the target does a transferFrom for coin i
     /// The input token does not need to be disabled, because this does not spend the entire
     /// balance, generally
-    function exchange(int128 i, int128 j, uint256, uint256) external override creditFacadeOnly {
+    function exchange(int128 i, int128 j, uint256, uint256) public override creditFacadeOnly {
         address tokenIn = _get_token(i); // F:[ACV1-4,ACV1S-3]
         address tokenOut = _get_token(j); // F:[ACV1-4,ACV1S-3]
         _executeSwapMaxApprove(tokenIn, tokenOut, msg.data, false); // F:[ACV1-4,ACV1S-3]
+    }
+
+    /// @dev `exchange` wrapper to support newer pools, which accept uint256 for token indices
+    function exchange(uint256 i, uint256 j, uint256 dx, uint256 min_dy) external override creditFacadeOnly {
+        exchange(i.toInt256().toInt128(), j.toInt256().toInt128(), dx, min_dy);
     }
 
     /// @dev Sends an order to exchange the entire balance of one asset to another
@@ -192,7 +214,7 @@ contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
     /// Input token is allowed, since the target does a transferFrom for coin i
     /// The input token does need to be disabled, because this spends the entire balance
     /// @notice Calls `exchange` under the hood, passing current balance - 1 as the amount
-    function exchange_all(int128 i, int128 j, uint256 rateMinRAY) external override creditFacadeOnly {
+    function exchange_all(int128 i, int128 j, uint256 rateMinRAY) public override creditFacadeOnly {
         address creditAccount = _creditAccount(); //F:[ACV1-3]
 
         address tokenIn = _get_token(i); //F:[ACV1-5]
@@ -206,9 +228,23 @@ contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
             }
             uint256 min_dy = (dx * rateMinRAY) / RAY; //F:[ACV1-5]
 
-            _executeSwapMaxApprove(
-                creditAccount, tokenIn, tokenOut, abi.encodeCall(ICurvePool.exchange, (i, j, dx, min_dy)), true
-            ); //F:[ACV1-5]
+            _executeSwapMaxApprove(creditAccount, tokenIn, tokenOut, _getExchangeCall(i, j, dx, min_dy), true); //F:[ACV1-5]
+        }
+    }
+
+    /// @dev `exchange_all` wrapper to support newer pools, which accept uint256 for token indices
+    function exchange_all(uint256 i, uint256 j, uint256 rateMinRAY) external override creditFacadeOnly {
+        exchange_all(i.toInt256().toInt128(), j.toInt256().toInt128(), rateMinRAY);
+    }
+
+    /// @dev Returns the call to exchange, accounting for different possible signatures
+    function _getExchangeCall(int128 i, int128 j, uint256 dx, uint256 min_dy) internal view returns (bytes memory) {
+        if (use256) {
+            return abi.encodeWithSignature(
+                "exchange(uint256,uint256,uint256,uint256)", uint256(int256(i)), uint256(int256(j)), dx, min_dy
+            );
+        } else {
+            return abi.encodeWithSignature("exchange(int128,int128,uint256,uint256)", i, j, dx, min_dy);
         }
     }
 
@@ -221,10 +257,15 @@ contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
     /// Input token is allowed, since the target does a transferFrom for underlying i
     /// The input token does not need to be disabled, because this does not spend the entire
     /// balance, generally
-    function exchange_underlying(int128 i, int128 j, uint256, uint256) external override creditFacadeOnly {
+    function exchange_underlying(int128 i, int128 j, uint256, uint256) public override creditFacadeOnly {
         address tokenIn = _get_underlying(i); // F:[ACV1-6]
         address tokenOut = _get_underlying(j); // F:[ACV1-6]
         _executeSwapMaxApprove(tokenIn, tokenOut, msg.data, false); // F:[ACV1-6]
+    }
+
+    /// @dev `exchange_underlying` wrapper to support newer pools, which accept uint256 for token indices
+    function exchange_underlying(uint256 i, uint256 j, uint256 dx, uint256 min_dy) external override creditFacadeOnly {
+        exchange_underlying(i.toInt256().toInt128(), j.toInt256().toInt128(), dx, min_dy);
     }
 
     /// @dev Sends an order to exchange the entire balance of one underlying asset to another
@@ -237,7 +278,7 @@ contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
     /// Input token is allowed, since the target does a transferFrom for underlying i
     /// The input token does need to be disabled, because this spends the entire balance
     /// @notice Calls `exchange_underlying` under the hood, passing current balance - 1 as the amount
-    function exchange_all_underlying(int128 i, int128 j, uint256 rateMinRAY) external creditFacadeOnly {
+    function exchange_all_underlying(int128 i, int128 j, uint256 rateMinRAY) public creditFacadeOnly {
         address creditAccount = _creditAccount(); //F:[ACV1-3]
 
         address tokenIn = _get_underlying(i); //F:[ACV1-7]
@@ -251,13 +292,31 @@ contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
             }
             uint256 min_dy = (dx * rateMinRAY) / RAY; //F:[ACV1-7]
 
-            _executeSwapMaxApprove(
-                creditAccount,
-                tokenIn,
-                tokenOut,
-                abi.encodeCall(ICurvePool.exchange_underlying, (i, j, dx, min_dy)),
-                true
-            ); //F:[ACV1-7]
+            _executeSwapMaxApprove(creditAccount, tokenIn, tokenOut, _getExchangeUnderlyingCall(i, j, dx, min_dy), true); //F:[ACV1-7]
+        }
+    }
+
+    /// @dev `exchange_all_underlying` wrapper to support newer pools, which accept uint256 for token indices
+    function exchange_all_underlying(uint256 i, uint256 j, uint256 rateMinRAY) external creditFacadeOnly {
+        exchange_all_underlying(i.toInt256().toInt128(), j.toInt256().toInt128(), rateMinRAY);
+    }
+
+    /// @dev Returns the call to exchange, accounting for different possible signatures
+    function _getExchangeUnderlyingCall(int128 i, int128 j, uint256 dx, uint256 min_dy)
+        internal
+        view
+        returns (bytes memory)
+    {
+        if (use256) {
+            return abi.encodeWithSignature(
+                "exchange_underlying(uint256,uint256,uint256,uint256)",
+                uint256(int256(i)),
+                uint256(int256(j)),
+                dx,
+                min_dy
+            );
+        } else {
+            return abi.encodeWithSignature("exchange_underlying(int128,int128,uint256,uint256)", i, j, dx, min_dy);
         }
     }
 
@@ -293,10 +352,15 @@ contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
     /// The input token does not need to be disabled, because this does not spend the entire
     /// balance, generally
     /// @notice Calls `add_liquidity` under the hood with only one amount being non-zero
-    function add_liquidity_one_coin(uint256 amount, int128 i, uint256 minAmount) external override creditFacadeOnly {
+    function add_liquidity_one_coin(uint256 amount, int128 i, uint256 minAmount) public override creditFacadeOnly {
         address tokenIn = _get_token(i);
 
         _executeSwapMaxApprove(tokenIn, lp_token, _getAddLiquidityCallData(i, amount, minAmount), false); // F:[ACV1-8A]
+    }
+
+    /// @dev `add_liquidity_one_coin` wrapper to support newer pools, which accept uint256 for token indices
+    function add_liquidity_one_coin(uint256 amount, uint256 i, uint256 minAmount) external override creditFacadeOnly {
+        add_liquidity_one_coin(amount, i.toInt256().toInt128(), minAmount);
     }
 
     /// @dev Sends an order to add liquidity with only 1 input asset, using the entire balance
@@ -311,7 +375,7 @@ contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
     /// Input token is allowed, since the target does a transferFrom for the deposited asset
     /// The input token does need to be disabled, because this spends the entire balance
     /// @notice Calls `add_liquidity` under the hood with only one amount being non-zero
-    function add_all_liquidity_one_coin(int128 i, uint256 rateMinRAY) external override creditFacadeOnly {
+    function add_all_liquidity_one_coin(int128 i, uint256 rateMinRAY) public override creditFacadeOnly {
         address tokenIn = _get_token(i);
 
         address creditAccount = _creditAccount(); // F:[ACV1-8]
@@ -331,6 +395,11 @@ contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
                 creditAccount, tokenIn, lp_token, _getAddLiquidityCallData(i, amount, minAmount), true
             ); // F:[ACV1-8]
         }
+    }
+
+    /// @dev `add_all_liquidity_one_coin` wrapper to support newer pools, which accept uint256 for token indices
+    function add_all_liquidity_one_coin(uint256 i, uint256 rateMinRAY) external override creditFacadeOnly {
+        add_all_liquidity_one_coin(i.toInt256().toInt128(), rateMinRAY);
     }
 
     function _getAddLiquidityCallData(int128 i, uint256 amount, uint256 minAmount)
@@ -366,7 +435,7 @@ contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
     /// @dev Returns the amount of lp token received when adding a single coin to the pool
     /// @param amount Amount of coin to be deposited
     /// @param i Index of a coin to be deposited
-    function calc_add_one_coin(uint256 amount, int128 i) external view returns (uint256) {
+    function calc_add_one_coin(uint256 amount, int128 i) public view returns (uint256) {
         if (nCoins == 2) {
             return i == 0
                 ? ICurvePool2Assets(targetContract).calc_token_amount([amount, 0], true)
@@ -388,6 +457,11 @@ contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
         } else {
             revert("Incorrect nCoins");
         }
+    }
+
+    /// @dev `calc_add_one_coin` wrapper to support newer pools, which accept uint256 for token indices
+    function calc_add_one_coin(uint256 amount, uint256 i) external view returns (uint256) {
+        return calc_add_one_coin(amount, i.toInt256().toInt128());
     }
 
     /// @dev Internal implementation for `remove_liquidity`
@@ -425,9 +499,18 @@ contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
         uint256, // _token_amount,
         int128 i,
         uint256 // min_amount
-    ) external virtual override creditFacadeOnly {
+    ) public virtual override creditFacadeOnly {
         address tokenOut = _get_token(i); // F:[ACV1-9]
         _remove_liquidity_one_coin(tokenOut); // F:[ACV1-9]
+    }
+
+    /// @dev `remove_liquidity_one_coin` wrapper to support newer pools, which accept uint256 for token indices
+    function remove_liquidity_one_coin(uint256 _token_amount, uint256 i, uint256 minAmount)
+        external
+        override
+        creditFacadeOnly
+    {
+        remove_liquidity_one_coin(_token_amount, i.toInt256().toInt128(), minAmount);
     }
 
     /// @dev Internal implementation for `remove_liquidity_one_coin` operations
@@ -446,9 +529,14 @@ contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
     /// @dev Sends an order to remove all liquidity from the pool in a single asset
     /// @param i Index of the asset to withdraw
     /// @param minRateRAY Minimal exchange rate between the LP token and the received token
-    function remove_all_liquidity_one_coin(int128 i, uint256 minRateRAY) external virtual override creditFacadeOnly {
+    function remove_all_liquidity_one_coin(int128 i, uint256 minRateRAY) public virtual override creditFacadeOnly {
         address tokenOut = _get_token(i); // F:[ACV1-4]
         _remove_all_liquidity_one_coin(i, tokenOut, minRateRAY); // F:[ACV1-10]
+    }
+
+    /// @dev `remove_all_liquidity_one_coin` wrapper to support newer pools, which accept uint256 for token indices
+    function remove_all_liquidity_one_coin(uint256 i, uint256 minRateRAY) external override creditFacadeOnly {
+        remove_all_liquidity_one_coin(i.toInt256().toInt128(), minRateRAY);
     }
 
     /// @dev Internal implementation for `remove_all_liquidity_one_coin` operations
@@ -476,9 +564,24 @@ contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
                 creditAccount,
                 lp_token,
                 tokenOut,
-                abi.encodeCall(ICurvePool.remove_liquidity_one_coin, (amount, i, (amount * rateMinRAY) / RAY)),
+                _getRemoveLiquidityOneCoinCall(amount, i, (amount * rateMinRAY) / RAY),
                 true
             ); // F:[ACV1-10]
+        }
+    }
+
+    /// @dev Returns the call to exchange, accounting for different possible signatures
+    function _getRemoveLiquidityOneCoinCall(uint256 amount, int128 i, uint256 minAmount)
+        internal
+        view
+        returns (bytes memory)
+    {
+        if (use256) {
+            return abi.encodeWithSignature(
+                "remove_liquidity_one_coin(uint256,uint256,uint256)", amount, uint256(int256(i)), minAmount
+            );
+        } else {
+            return abi.encodeWithSignature("remove_liquidity_one_coin(uint256,int128,uint256)", amount, i, minAmount);
         }
     }
 

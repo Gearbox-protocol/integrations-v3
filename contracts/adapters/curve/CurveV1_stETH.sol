@@ -54,7 +54,7 @@ contract CurveV1AdapterStETH is CurveV1Adapter2Assets {
         int128 i,
         uint256 // min_amount
     )
-        external
+        public
         override(CurveV1AdapterBase, ICurveV1Adapter)
         creditFacadeOnly
         withLPTokenApproval // F:[ACV1S-4]
@@ -69,7 +69,7 @@ contract CurveV1AdapterStETH is CurveV1Adapter2Assets {
     /// - Unlike other adapters, approves the LP token to the target
     /// @notice See more implementation details in CurveV1Adapter2Assets
     function remove_all_liquidity_one_coin(int128 i, uint256 minRateRAY)
-        external
+        public
         override(CurveV1AdapterBase, ICurveV1Adapter)
         creditFacadeOnly
         withLPTokenApproval // F:[ACV1S-5]

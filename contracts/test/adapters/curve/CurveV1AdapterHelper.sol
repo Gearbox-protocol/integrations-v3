@@ -28,6 +28,7 @@ import {Tokens} from "../../config/Tokens.sol";
 import {CurveLP2PriceFeed} from "../../../oracles/curve/CurveLP2PriceFeed.sol";
 import {CurveLP3PriceFeed} from "../../../oracles/curve/CurveLP3PriceFeed.sol";
 import {CurveLP4PriceFeed} from "../../../oracles/curve/CurveLP4PriceFeed.sol";
+import {CurveCryptoLPPriceFeed} from "../../../oracles/curve/CurveCryptoLPPriceFeed.sol";
 
 // TEST
 import "../../lib/constants.sol";
@@ -71,11 +72,11 @@ contract CurveV1AdapterHelper is DSTest, AdapterTestHelper, ICurveV1AdapterExcep
 
             _priceFeed = address(
                 new CurveLP2PriceFeed(
-                    address(cft.addressProvider()),
-                    _curveV1MockAddr,
-                    cft.priceOracle().priceFeeds(curvePoolTokens[0]),
-                    cft.priceOracle().priceFeeds(curvePoolTokens[1]),
-                    "CurveLP2PriceFeed"
+                address(cft.addressProvider()),
+                _curveV1MockAddr,
+                cft.priceOracle().priceFeeds(curvePoolTokens[0]),
+                cft.priceOracle().priceFeeds(curvePoolTokens[1]),
+                "CurveLP2PriceFeed"
                 )
             );
         } else if (nCoins == 3) {
@@ -89,7 +90,7 @@ contract CurveV1AdapterHelper is DSTest, AdapterTestHelper, ICurveV1AdapterExcep
                     cft.priceOracle().priceFeeds(curvePoolTokens[1]),
                     cft.priceOracle().priceFeeds(curvePoolTokens[2]),
                     "CurveLP3PriceFeed"
-                )
+                    )
             );
         } else if (nCoins == 4) {
             _curveV1MockAddr = address(new CurveV1Mock_4Assets(curvePoolTokens, curvePoolUnderlyings));
@@ -312,6 +313,92 @@ contract CurveV1AdapterHelper is DSTest, AdapterTestHelper, ICurveV1AdapterExcep
 
         tokenTestSuite.mint(Tokens.cLINK, _curveV1MockAddr, LINK_ACCOUNT_AMOUNT);
         CurveV1Mock(_basePoolAddr).mintLP(_curveV1MockAddr, DAI_ACCOUNT_AMOUNT);
+
+        evm.label(_adapterAddr, "ADAPTER");
+        evm.label(_curveV1MockAddr, "CURVE_MOCK");
+        evm.label(lpToken, "CURVE_LP_TOKEN");
+    }
+
+    function _setUpCurveCryptoSuite() internal {
+        _setUp(Tokens.DAI);
+
+        poolTkns = [Tokens.cDAI, Tokens.cUSDC, Tokens.cUSDT, Tokens.cLINK];
+        underlyingPoolTkns = [Tokens.DAI, Tokens.USDC, Tokens.USDT, Tokens.LINK];
+
+        address[] memory curvePoolTokens = getPoolTokens(3);
+        address[] memory curvePoolUnderlyings = getUnderlyingPoolTokens(3);
+
+        _basePoolAddr = address(new CurveV1Mock_3Assets(curvePoolTokens, curvePoolUnderlyings));
+
+        address _basePriceFeed = address(
+            new CurveLP3PriceFeed(
+                address(cft.addressProvider()),
+                _basePoolAddr,
+                cft.priceOracle().priceFeeds(curvePoolTokens[0]),
+                cft.priceOracle().priceFeeds(curvePoolTokens[1]),
+                cft.priceOracle().priceFeeds(curvePoolTokens[2]),
+                "CurveLP3PriceFeed"
+            )
+        );
+
+        address baseLpToken = address(ICurvePool(_basePoolAddr).token());
+
+        evm.startPrank(CONFIGURATOR);
+
+        cft.priceOracle().addPriceFeed(baseLpToken, _basePriceFeed);
+        creditConfigurator.addCollateralToken(baseLpToken, 9300);
+
+        evm.stopPrank();
+
+        tokenTestSuite.mint(Tokens.cDAI, _basePoolAddr, LINK_ACCOUNT_AMOUNT * 100);
+        tokenTestSuite.mint(Tokens.cUSDC, _basePoolAddr, LINK_ACCOUNT_AMOUNT * 100);
+        tokenTestSuite.mint(Tokens.cUSDT, _basePoolAddr, LINK_ACCOUNT_AMOUNT * 100);
+
+        _curveV1MockAddr = address(
+            new CurveV1MetapoolMock(
+                tokenTestSuite.addressOf(Tokens.cLINK),
+                _basePoolAddr
+            )
+        );
+
+        CurveV1MetapoolMock(_curveV1MockAddr).setIsCryptoPool(true);
+
+        curvePoolTokens = getPoolTokens(4);
+
+        address _priceFeed = address(
+            new CurveCryptoLPPriceFeed(
+                address(cft.addressProvider()),
+                _curveV1MockAddr,
+                cft.priceOracle().priceFeeds(curvePoolTokens[3]),
+                _basePriceFeed,
+                address(0),
+                "CurveCryptoPriceFeed"
+            )
+        );
+
+        lpToken = address(ICurvePool(_curveV1MockAddr).token());
+
+        evm.startPrank(CONFIGURATOR);
+
+        cft.priceOracle().addPriceFeed(lpToken, _priceFeed);
+        creditConfigurator.addCollateralToken(lpToken, 9300);
+
+        evm.stopPrank();
+
+        _adapterAddr = address(
+            new CurveV1Adapter2Assets(
+                address(creditManager),
+                _curveV1MockAddr,
+                lpToken,
+                _basePoolAddr
+            )
+        );
+
+        evm.prank(CONFIGURATOR);
+        creditConfigurator.allowContract(_curveV1MockAddr, _adapterAddr);
+
+        tokenTestSuite.mint(Tokens.cLINK, _curveV1MockAddr, LINK_ACCOUNT_AMOUNT);
+        CurveV1Mock(_basePoolAddr).mintLP(_curveV1MockAddr, DAI_ACCOUNT_AMOUNT * 100);
 
         evm.label(_adapterAddr, "ADAPTER");
         evm.label(_curveV1MockAddr, "CURVE_MOCK");

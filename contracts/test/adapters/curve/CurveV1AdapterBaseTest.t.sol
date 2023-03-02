@@ -196,15 +196,21 @@ contract CurveV1AdapterBaseTest is DSTest, CurveV1AdapterHelper {
             tokenTestSuite.addressOf(underlyingPoolTkns[3]),
             "Incorrect underlying token 3"
         );
+
+        assertTrue(!adapter.use256(), "Adapter incorrectly uses uint256");
     }
 
     /// @dev [ACV1-3]: exchange reverts if user has no account
     function test_ACV1_03_swap_reverts_if_user_has_no_account() public {
         evm.expectRevert(ICreditManagerV2Exceptions.HasNoOpenedAccountException.selector);
-        executeOneLineMulticall(address(adapter), abi.encodeCall(adapter.exchange, (0, 1, 1, 1)));
+        executeOneLineMulticall(
+            address(adapter), abi.encodeWithSignature("exchange(int128,int128,uint256,uint256)", 0, 1, 1, 1)
+        );
 
         evm.expectRevert(ICreditManagerV2Exceptions.HasNoOpenedAccountException.selector);
-        executeOneLineMulticall(address(adapter), abi.encodeCall(adapter.exchange_all, (0, 0, 1)));
+        executeOneLineMulticall(
+            address(adapter), abi.encodeWithSignature("exchange_all(int128,int128,uint256)", 0, 0, 1)
+        );
     }
 
     /// @dev [ACV1-4]: exchange works for user as expected
@@ -220,8 +226,9 @@ contract CurveV1AdapterBaseTest is DSTest, CurveV1AdapterHelper {
 
         addCollateral(Tokens.cDAI, DAI_ACCOUNT_AMOUNT);
 
-        bytes memory callData =
-            abi.encodeCall(ICurvePool.exchange, (0, 2, DAI_EXCHANGE_AMOUNT, (DAI_EXCHANGE_AMOUNT * 99) / 100));
+        bytes memory callData = abi.encodeWithSignature(
+            "exchange(int128,int128,uint256,uint256)", 0, 2, DAI_EXCHANGE_AMOUNT, (DAI_EXCHANGE_AMOUNT * 99) / 100
+        );
 
         expectMulticallStackCalls(address(adapter), address(curveV1Mock), USER, callData, tokenIn, tokenOut, false);
 
@@ -249,13 +256,18 @@ contract CurveV1AdapterBaseTest is DSTest, CurveV1AdapterHelper {
 
         addCollateral(Tokens.cDAI, DAI_ACCOUNT_AMOUNT);
 
-        bytes memory callData =
-            abi.encodeCall(ICurvePool.exchange, (0, 2, DAI_ACCOUNT_AMOUNT - 1, ((DAI_ACCOUNT_AMOUNT - 1) * 99) / 100));
+        bytes memory callData = abi.encodeWithSignature(
+            "exchange(int128,int128,uint256,uint256)",
+            0,
+            2,
+            DAI_ACCOUNT_AMOUNT - 1,
+            ((DAI_ACCOUNT_AMOUNT - 1) * 99) / 100
+        );
 
         expectMulticallStackCalls(address(adapter), address(curveV1Mock), USER, callData, tokenIn, tokenOut, false);
 
         executeOneLineMulticall(
-            address(adapter), abi.encodeCall(ICurveV1Adapter.exchange_all, (0, 2, (99 * RAY) / 100))
+            address(adapter), abi.encodeWithSignature("exchange_all(int128,int128,uint256)", 0, 2, (99 * RAY) / 100)
         );
 
         expectBalance(Tokens.cDAI, creditAccount, 1);
@@ -278,8 +290,12 @@ contract CurveV1AdapterBaseTest is DSTest, CurveV1AdapterHelper {
 
         expectAllowance(tokenIn, creditAccount, address(curveV1Mock), 0);
 
-        bytes memory callData = abi.encodeCall(
-            ICurvePool.exchange_underlying, (0, 2, DAI_EXCHANGE_AMOUNT, (DAI_EXCHANGE_AMOUNT * 99) / 100)
+        bytes memory callData = abi.encodeWithSignature(
+            "exchange_underlying(int128,int128,uint256,uint256)",
+            0,
+            2,
+            DAI_EXCHANGE_AMOUNT,
+            (DAI_EXCHANGE_AMOUNT * 99) / 100
         );
 
         expectMulticallStackCalls(address(adapter), address(curveV1Mock), USER, callData, tokenIn, tokenOut, false);
@@ -304,8 +320,12 @@ contract CurveV1AdapterBaseTest is DSTest, CurveV1AdapterHelper {
 
         (address creditAccount, uint256 initialDAIbalance) = _openTestCreditAccount();
 
-        bytes memory callData = abi.encodeCall(
-            ICurvePool.exchange_underlying, (0, 2, initialDAIbalance - 1, ((initialDAIbalance - 1) * 99) / 100)
+        bytes memory callData = abi.encodeWithSignature(
+            "exchange_underlying(int128,int128,uint256,uint256)",
+            0,
+            2,
+            initialDAIbalance - 1,
+            ((initialDAIbalance - 1) * 99) / 100
         );
 
         expectAllowance(tokenIn, creditAccount, address(curveV1Mock), 0);
@@ -313,7 +333,8 @@ contract CurveV1AdapterBaseTest is DSTest, CurveV1AdapterHelper {
         expectMulticallStackCalls(address(adapter), address(curveV1Mock), USER, callData, tokenIn, tokenOut, false);
 
         executeOneLineMulticall(
-            address(adapter), abi.encodeCall(ICurveV1Adapter.exchange_all_underlying, (0, 2, (99 * RAY) / 100))
+            address(adapter),
+            abi.encodeWithSignature("exchange_all_underlying(int128,int128,uint256)", 0, 2, (99 * RAY) / 100)
         );
 
         expectBalance(Tokens.DAI, creditAccount, 1);
@@ -340,7 +361,7 @@ contract CurveV1AdapterBaseTest is DSTest, CurveV1AdapterHelper {
                 addCollateral(tokenIn, DAI_ACCOUNT_AMOUNT);
 
                 bytes memory callData =
-                    abi.encodeCall(CurveV1AdapterBase.add_all_liquidity_one_coin, (int128(int256(i)), RAY / 2));
+                    abi.encodeWithSignature("add_all_liquidity_one_coin(int128,uint256)", int128(int256(i)), RAY / 2);
 
                 bytes memory expectedCallData;
 
@@ -396,9 +417,11 @@ contract CurveV1AdapterBaseTest is DSTest, CurveV1AdapterHelper {
                 tokenTestSuite.mint(tokenIn, USER, DAI_ACCOUNT_AMOUNT);
                 addCollateral(tokenIn, DAI_ACCOUNT_AMOUNT);
 
-                bytes memory callData = abi.encodeCall(
-                    CurveV1AdapterBase.add_liquidity_one_coin,
-                    (DAI_ACCOUNT_AMOUNT / 2, int128(int256(i)), DAI_ACCOUNT_AMOUNT / 4)
+                bytes memory callData = abi.encodeWithSignature(
+                    "add_liquidity_one_coin(uint256,int128,uint256)",
+                    DAI_ACCOUNT_AMOUNT / 2,
+                    int128(int256(i)),
+                    DAI_ACCOUNT_AMOUNT / 4
                 );
 
                 bytes memory expectedCallData;
@@ -453,9 +476,11 @@ contract CurveV1AdapterBaseTest is DSTest, CurveV1AdapterHelper {
                 // provide LP token to creditAccount
                 addCRVCollateral(curveV1Mock, CURVE_LP_ACCOUNT_AMOUNT);
 
-                bytes memory expectedCallData = abi.encodeCall(
-                    ICurvePool.remove_liquidity_one_coin,
-                    (CURVE_LP_OPERATION_AMOUNT, int128(int256(i)), USDT_ACCOUNT_AMOUNT / 2)
+                bytes memory expectedCallData = abi.encodeWithSignature(
+                    "remove_liquidity_one_coin(uint256,int128,uint256)",
+                    CURVE_LP_OPERATION_AMOUNT,
+                    int128(int256(i)),
+                    USDT_ACCOUNT_AMOUNT / 2
                 );
 
                 tokenTestSuite.mint(tokenOut, address(curveV1Mock), USDT_ACCOUNT_AMOUNT);
@@ -494,9 +519,11 @@ contract CurveV1AdapterBaseTest is DSTest, CurveV1AdapterHelper {
 
                 tokenTestSuite.mint(tokenOut, address(curveV1Mock), USDT_ACCOUNT_AMOUNT);
 
-                bytes memory expectedCallData = abi.encodeCall(
-                    ICurvePool.remove_liquidity_one_coin,
-                    (CURVE_LP_ACCOUNT_AMOUNT - 1, int128(int256(i)), (CURVE_LP_ACCOUNT_AMOUNT - 1) / 2)
+                bytes memory expectedCallData = abi.encodeWithSignature(
+                    "remove_liquidity_one_coin(uint256,int128,uint256)",
+                    CURVE_LP_ACCOUNT_AMOUNT - 1,
+                    int128(int256(i)),
+                    (CURVE_LP_ACCOUNT_AMOUNT - 1) / 2
                 );
 
                 expectMulticallStackCalls(
@@ -505,7 +532,7 @@ contract CurveV1AdapterBaseTest is DSTest, CurveV1AdapterHelper {
 
                 executeOneLineMulticall(
                     address(adapter),
-                    abi.encodeCall(ICurveV1Adapter.remove_all_liquidity_one_coin, (int128(int256(i)), rateRAY))
+                    abi.encodeWithSignature("remove_all_liquidity_one_coin(int128,uint256)", int128(int256(i)), rateRAY)
                 );
 
                 expectBalance(tokenIn, creditAccount, 1);

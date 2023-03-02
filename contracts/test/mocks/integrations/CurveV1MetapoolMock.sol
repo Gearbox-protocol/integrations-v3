@@ -32,6 +32,8 @@ contract CurveV1MetapoolMock is ICurvePool, ICurvePool2Assets {
 
     bool real_liquidity_mode;
 
+    bool isCryptoPool;
+
     constructor(address _token0, address _basePool) {
         _coins.push(_token0);
         _coins.push(ICurvePool(_basePool).token());
@@ -41,6 +43,10 @@ contract CurveV1MetapoolMock is ICurvePool, ICurvePool2Assets {
         lp_token = _token;
         virtualPrice = WAD;
         basePool = _basePool;
+    }
+
+    function setIsCryptoPool(bool _isCryptoPool) external {
+        isCryptoPool = _isCryptoPool;
     }
 
     function setRealLiquidityMode(bool val) external {
@@ -141,7 +147,11 @@ contract CurveV1MetapoolMock is ICurvePool, ICurvePool2Assets {
         return [uint256(0), uint256(0)];
     }
 
-    function exchange(int128 i, int128 j, uint256 dx, uint256 min_dy) external override {
+    function exchange(uint256 i, uint256 j, uint256 dx, uint256 min_dy) external override {
+        exchange(int128(int256(i)), int128(int256(j)), dx, min_dy);
+    }
+
+    function exchange(int128 i, int128 j, uint256 dx, uint256 min_dy) public override {
         uint256 dy = get_dy(i, j, dx);
 
         require(dy >= min_dy, "CurveV1Mock: INSUFFICIENT_OUTPUT_AMOUNT");
@@ -150,7 +160,11 @@ contract CurveV1MetapoolMock is ICurvePool, ICurvePool2Assets {
         IERC20(_coins[uint256(uint128(j))]).safeTransfer(msg.sender, dy);
     }
 
-    function exchange_underlying(int128 i, int128 j, uint256 dx, uint256 min_dy) external override {
+    function exchange_underlying(uint256 i, uint256 j, uint256 dx, uint256 min_dy) external override {
+        exchange_underlying(int128(int256(i)), int128(int256(j)), dx, min_dy);
+    }
+
+    function exchange_underlying(int128 i, int128 j, uint256 dx, uint256 min_dy) public override {
         if (i == 0) {
             IERC20(_coins[0]).transferFrom(msg.sender, address(this), dx);
         } else {
@@ -178,7 +192,11 @@ contract CurveV1MetapoolMock is ICurvePool, ICurvePool2Assets {
         ICRVToken(token).mint(to, amount);
     }
 
-    function remove_liquidity_one_coin(uint256 _token_amount, int128 i, uint256 min_amount) external {
+    function remove_liquidity_one_coin(uint256 _token_amount, uint256 i, uint256 min_amount) external override {
+        remove_liquidity_one_coin(_token_amount, int128(int256(i)), min_amount);
+    }
+
+    function remove_liquidity_one_coin(uint256 _token_amount, int128 i, uint256 min_amount) public override {
         ICRVToken(token).burnFrom(msg.sender, _token_amount);
 
         uint256 amountOut;
@@ -192,8 +210,16 @@ contract CurveV1MetapoolMock is ICurvePool, ICurvePool2Assets {
         IERC20(_coins[uint256(uint128(i))]).safeTransfer(msg.sender, amountOut);
     }
 
+    function get_dy_underlying(uint256 i, uint256 j, uint256 dx) public view override returns (uint256) {
+        return get_dy_underlying(uint256(int256(i)), uint256(int256(j)), dx);
+    }
+
     function get_dy_underlying(int128 i, int128 j, uint256 dx) public view override returns (uint256) {
         return (rates_RAY_underlying[i][j] * dx) / RAY;
+    }
+
+    function get_dy(uint256 i, uint256 j, uint256 dx) public view override returns (uint256) {
+        return get_dy(uint256(int256(i)), uint256(int256(j)), dx);
     }
 
     function get_dy(int128 i, int128 j, uint256 dx) public view override returns (uint256) {
@@ -248,6 +274,10 @@ contract CurveV1MetapoolMock is ICurvePool, ICurvePool2Assets {
         return 0;
     }
 
+    function calc_withdraw_one_coin(uint256 _burn_amount, uint256 i) external view returns (uint256) {
+        return calc_withdraw_one_coin(_burn_amount, int128(int256(i)));
+    }
+
     function calc_withdraw_one_coin(uint256 amount, int128 coin) public view returns (uint256) {
         return (amount * withdraw_rates_RAY[coin]) / RAY;
     }
@@ -262,6 +292,14 @@ contract CurveV1MetapoolMock is ICurvePool, ICurvePool2Assets {
 
     function fee() external pure returns (uint256) {
         return 0;
+    }
+
+    function mid_fee() external view returns (uint256) {
+        if (isCryptoPool) {
+            return 0;
+        }
+
+        revert("Not a crypto pool");
     }
 
     function admin_fee() external pure returns (uint256) {

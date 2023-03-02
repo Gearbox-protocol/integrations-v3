@@ -159,40 +159,6 @@ contract CurveV1Adapter4AssetsTest is DSTest, CurveV1AdapterHelper {
         expectAllowance(Tokens.cLINK, creditAccount, address(curveV1Mock), type(uint256).max);
     }
 
-    /// @dev [ACV1_4-4A]: add_all_liquidity_one_coin works as expected(
-    function test_ACV1_4_04A_add_all_liquidity_one_coin_works_as_expected() public {
-        setUp();
-        address tokenIn = tokenTestSuite.addressOf(Tokens.cUSDT);
-        address tokenOut = lpToken;
-
-        (address creditAccount,) = _openTestCreditAccount();
-
-        addCollateral(Tokens.cUSDT, USDT_ACCOUNT_AMOUNT);
-
-        uint256[N_COINS] memory amounts = [0, 0, USDT_ACCOUNT_AMOUNT - 1, 0];
-
-        bytes memory callData = abi.encodeCall(CurveV1AdapterBase.add_all_liquidity_one_coin, (2, RAY / 2));
-
-        bytes memory expectedCallData =
-            abi.encodeCall(ICurvePool4Assets.add_liquidity, (amounts, (USDT_ACCOUNT_AMOUNT - 1) / 2));
-
-        expectAllowance(Tokens.cUSDT, creditAccount, address(curveV1Mock), 0);
-
-        expectMulticallStackCalls(
-            address(adapter), address(curveV1Mock), USER, expectedCallData, tokenIn, tokenOut, false, true
-        );
-
-        executeOneLineMulticall(address(adapter), callData);
-
-        expectBalance(Tokens.cUSDT, creditAccount, 1);
-
-        expectBalance(curveV1Mock.token(), creditAccount, (USDT_ACCOUNT_AMOUNT - 1) / 2);
-
-        expectTokenIsEnabled(curveV1Mock.token(), true);
-
-        expectAllowance(Tokens.cUSDT, creditAccount, address(curveV1Mock), type(uint256).max);
-    }
-
     /// @dev [ACV1_4-5]: remove_liquidity works as expected(
     function test_ACV1_4_05_remove_liquidity_works_as_expected() public {
         setUp();
