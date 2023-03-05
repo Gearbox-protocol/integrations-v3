@@ -42,10 +42,6 @@ contract CreditManagerFactory is CreditManagerFactoryBase {
                 priceOracle.addPriceFeed(cvxLPToken, priceOracle.priceFeeds(curveLPtoken));
 
                 priceOracle.addPriceFeed(stakedPhantomToken, priceOracle.priceFeeds(curveLPtoken));
-
-                creditConfigurator.addCollateralToken(
-                    stakedPhantomToken, creditManager.liquidationThresholds(curveLPtoken)
-                ); // F:
             }
 
             if (aType == AdapterType.CONVEX_V1_BOOSTER) {

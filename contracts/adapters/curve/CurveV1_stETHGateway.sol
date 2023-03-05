@@ -76,7 +76,7 @@ contract CurveV1StETHPoolGateway is ICurvePool2Assets {
         }
     }
 
-    function exchange(uint256, uint256, uint256, uint256) external {
+    function exchange(uint256, uint256, uint256, uint256) external pure {
         revert NotImplementedException();
     }
 
@@ -142,7 +142,7 @@ contract CurveV1StETHPoolGateway is ICurvePool2Assets {
         }
     }
 
-    function remove_liquidity_one_coin(uint256, uint256, uint256) external {
+    function remove_liquidity_one_coin(uint256, uint256, uint256) external pure {
         revert NotImplementedException();
     }
 
@@ -185,7 +185,7 @@ contract CurveV1StETHPoolGateway is ICurvePool2Assets {
         revert NotImplementedException();
     }
 
-    function exchange_underlying(uint256, uint256, uint256, uint256) external {
+    function exchange_underlying(uint256, uint256, uint256, uint256) external pure {
         revert NotImplementedException();
     }
 
@@ -194,7 +194,7 @@ contract CurveV1StETHPoolGateway is ICurvePool2Assets {
         revert NotImplementedException();
     }
 
-    function get_dy_underlying(uint256, uint256, uint256) external view returns (uint256) {
+    function get_dy_underlying(uint256, uint256, uint256) external pure returns (uint256) {
         revert NotImplementedException();
     }
 
@@ -206,7 +206,7 @@ contract CurveV1StETHPoolGateway is ICurvePool2Assets {
         return ICurvePoolStETH(pool).get_dy(i, j, dx);
     }
 
-    function get_dy(uint256 i, uint256 j, uint256 dx) external view returns (uint256) {
+    function get_dy(uint256, uint256, uint256) external pure returns (uint256) {
         revert NotImplementedException();
     }
 
@@ -274,7 +274,7 @@ contract CurveV1StETHPoolGateway is ICurvePool2Assets {
         return ICurvePoolStETH(pool).calc_withdraw_one_coin(_burn_amount, i);
     }
 
-    function calc_withdraw_one_coin(uint256, uint256) external view returns (uint256) {
+    function calc_withdraw_one_coin(uint256, uint256) external pure returns (uint256) {
         revert NotImplementedException();
     }
 
@@ -354,7 +354,7 @@ contract CurveV1StETHPoolGateway is ICurvePool2Assets {
         revert NotImplementedException();
     }
 
-    function mid_fee() external view returns (uint256) {
+    function mid_fee() external pure returns (uint256) {
         revert NotImplementedException();
     }
 
