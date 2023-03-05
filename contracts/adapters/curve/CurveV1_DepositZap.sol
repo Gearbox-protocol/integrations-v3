@@ -35,7 +35,7 @@ contract CurveV1AdapterDeposit is CurveV1AdapterBase {
     /// @param i Index of the token to withdraw from the pool
     /// @dev Unlike other adapters, approves the LP token to the target
     function remove_liquidity_one_coin(uint256, int128 i, uint256)
-        external
+        public
         virtual
         override
         creditFacadeOnly
@@ -49,7 +49,7 @@ contract CurveV1AdapterDeposit is CurveV1AdapterBase {
     /// @param rateMinRAY Minimum exchange rate between LP token and received asset, scaled by 1e27
     /// @dev Unlike other adapters, approves the LP token to the target
     function remove_all_liquidity_one_coin(int128 i, uint256 rateMinRAY)
-        external
+        public
         virtual
         override
         creditFacadeOnly

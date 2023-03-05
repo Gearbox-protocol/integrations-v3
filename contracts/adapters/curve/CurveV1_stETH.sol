@@ -39,7 +39,7 @@ contract CurveV1AdapterStETH is CurveV1Adapter2Assets {
     /// @dev '_amount' and 'min_amounts' parameters are ignored because calldata is directly passed to the target contract
     /// @dev Unlike other adapters, approves the LP token to the target
     function remove_liquidity(uint256, uint256[N_COINS] calldata)
-        public
+        external
         override
         creditFacadeOnly
         withLPTokenApproval // F: [ACV1S-2]
@@ -52,7 +52,7 @@ contract CurveV1AdapterStETH is CurveV1Adapter2Assets {
     /// @dev `_token_amount` and `min_amount` parameters are ignored because calldata is passed directly to the target contract
     /// @dev Unlike other adapters, approves the LP token to the target
     function remove_liquidity_one_coin(uint256, int128 i, uint256)
-        external
+        public
         override(CurveV1AdapterBase, ICurveV1Adapter)
         creditFacadeOnly
         withLPTokenApproval // F: [ACV1S-4]
@@ -65,7 +65,7 @@ contract CurveV1AdapterStETH is CurveV1Adapter2Assets {
     /// @param rateMinRAY Minimum exchange rate between LP token and received token
     /// @dev Unlike other adapters, approves the LP token to the target
     function remove_all_liquidity_one_coin(int128 i, uint256 rateMinRAY)
-        external
+        public
         override(CurveV1AdapterBase, ICurveV1Adapter)
         creditFacadeOnly
         withLPTokenApproval // F: [ACV1S-5]

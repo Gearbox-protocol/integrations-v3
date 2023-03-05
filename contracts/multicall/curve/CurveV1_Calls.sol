@@ -18,7 +18,21 @@ library CurveV1Calls {
         pure
         returns (MultiCall memory)
     {
-        return MultiCall({target: address(c), callData: abi.encodeCall(ICurveV1Adapter.exchange, (i, j, dx, min_dy))});
+        return MultiCall({
+            target: address(c),
+            callData: abi.encodeWithSignature("exchange(int128,int128,uint256,uint256)", i, j, dx, min_dy)
+        });
+    }
+
+    function exchange(CurveV1Multicaller c, uint256 i, uint256 j, uint256 dx, uint256 min_dy)
+        internal
+        pure
+        returns (MultiCall memory)
+    {
+        return MultiCall({
+            target: address(c),
+            callData: abi.encodeWithSignature("exchange(uint256,uint256,uint256,uint256)", i, j, dx, min_dy)
+        });
     }
 
     function exchange_all(CurveV1Multicaller c, int128 i, int128 j, uint256 rateMinRAY)
@@ -26,8 +40,21 @@ library CurveV1Calls {
         pure
         returns (MultiCall memory)
     {
-        return
-            MultiCall({target: address(c), callData: abi.encodeCall(ICurveV1Adapter.exchange_all, (i, j, rateMinRAY))});
+        return MultiCall({
+            target: address(c),
+            callData: abi.encodeWithSignature("exchange_all(int128,int128,uint256)", i, j, rateMinRAY)
+        });
+    }
+
+    function exchange_all(CurveV1Multicaller c, uint256 i, uint256 j, uint256 rateMinRAY)
+        internal
+        pure
+        returns (MultiCall memory)
+    {
+        return MultiCall({
+            target: address(c),
+            callData: abi.encodeWithSignature("exchange_all(uint256,uint256,uint256)", i, j, rateMinRAY)
+        });
     }
 
     function exchange_underlying(CurveV1Multicaller c, int128 i, int128 j, uint256 dx, uint256 min_dy)
@@ -37,7 +64,18 @@ library CurveV1Calls {
     {
         return MultiCall({
             target: address(c),
-            callData: abi.encodeCall(ICurveV1Adapter.exchange_underlying, (i, j, dx, min_dy))
+            callData: abi.encodeWithSignature("exchange_underlying(int128,int128,uint256,uint256)", i, j, dx, min_dy)
+        });
+    }
+
+    function exchange_underlying(CurveV1Multicaller c, uint256 i, uint256 j, uint256 dx, uint256 min_dy)
+        internal
+        pure
+        returns (MultiCall memory)
+    {
+        return MultiCall({
+            target: address(c),
+            callData: abi.encodeWithSignature("exchange_underlying(uint256,uint256,uint256,uint256)", i, j, dx, min_dy)
         });
     }
 
@@ -48,7 +86,18 @@ library CurveV1Calls {
     {
         return MultiCall({
             target: address(c),
-            callData: abi.encodeCall(ICurveV1Adapter.exchange_all_underlying, (i, j, rateMinRAY))
+            callData: abi.encodeWithSignature("exchange_all_underlying(int128,int128,uint256)", i, j, rateMinRAY)
+        });
+    }
+
+    function exchange_all_underlying(CurveV1Multicaller c, uint256 i, uint256 j, uint256 rateMinRAY)
+        internal
+        pure
+        returns (MultiCall memory)
+    {
+        return MultiCall({
+            target: address(c),
+            callData: abi.encodeWithSignature("exchange_all_underlying(uint256,uint256,uint256)", i, j, rateMinRAY)
         });
     }
 
@@ -92,7 +141,18 @@ library CurveV1Calls {
     {
         return MultiCall({
             target: address(c),
-            callData: abi.encodeCall(ICurveV1Adapter.add_liquidity_one_coin, (amount, i, minAmount))
+            callData: abi.encodeWithSignature("add_liquidity_one_coin(uint256,int128,uint256)", amount, i, minAmount)
+        });
+    }
+
+    function add_liquidity_one_coin(CurveV1Multicaller c, uint256 amount, uint256 i, uint256 minAmount)
+        internal
+        pure
+        returns (MultiCall memory)
+    {
+        return MultiCall({
+            target: address(c),
+            callData: abi.encodeWithSignature("add_liquidity_one_coin(uint256,uint256,uint256)", amount, i, minAmount)
         });
     }
 
@@ -103,7 +163,18 @@ library CurveV1Calls {
     {
         return MultiCall({
             target: address(c),
-            callData: abi.encodeCall(ICurveV1Adapter.add_all_liquidity_one_coin, (i, minRateRAY))
+            callData: abi.encodeWithSignature("add_all_liquidity_one_coin(int128,uint256)", i, minRateRAY)
+        });
+    }
+
+    function add_all_liquidity_one_coin(CurveV1Multicaller c, uint256 i, uint256 minRateRAY)
+        internal
+        pure
+        returns (MultiCall memory)
+    {
+        return MultiCall({
+            target: address(c),
+            callData: abi.encodeWithSignature("add_all_liquidity_one_coin(uint256,uint256)", i, minRateRAY)
         });
     }
 
@@ -147,7 +218,22 @@ library CurveV1Calls {
     {
         return MultiCall({
             target: address(c),
-            callData: abi.encodeCall(ICurveV1Adapter.remove_liquidity_one_coin, (token_amount, i, min_amount))
+            callData: abi.encodeWithSignature(
+                "remove_liquidity_one_coin(uint256,int128,uint256)", token_amount, i, min_amount
+                )
+        });
+    }
+
+    function remove_liquidity_one_coin(CurveV1Multicaller c, uint256 token_amount, uint256 i, uint256 min_amount)
+        internal
+        pure
+        returns (MultiCall memory)
+    {
+        return MultiCall({
+            target: address(c),
+            callData: abi.encodeWithSignature(
+                "remove_liquidity_one_coin(uint256,uint256,uint256)", token_amount, i, min_amount
+                )
         });
     }
 
@@ -158,7 +244,18 @@ library CurveV1Calls {
     {
         return MultiCall({
             target: address(c),
-            callData: abi.encodeCall(ICurveV1Adapter.remove_all_liquidity_one_coin, (i, minRateRAY))
+            callData: abi.encodeWithSignature("remove_all_liquidity_one_coin(int128,uint256)", i, minRateRAY)
+        });
+    }
+
+    function remove_all_liquidity_one_coin(CurveV1Multicaller c, uint256 i, uint256 minRateRAY)
+        internal
+        pure
+        returns (MultiCall memory)
+    {
+        return MultiCall({
+            target: address(c),
+            callData: abi.encodeWithSignature("remove_all_liquidity_one_coin(uint256,uint256)", i, minRateRAY)
         });
     }
 

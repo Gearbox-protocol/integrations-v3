@@ -86,7 +86,7 @@ contract Live_CurveStETHEquivalenceTest is DSTest, LiveEnvHelper {
             CurveV1Multicaller pool = CurveV1Multicaller(curvePoolAddr);
 
             evm.prank(USER);
-            creditFacade.multicall(multicallBuilder(pool.exchange(0, 1, 5 * WAD, WAD)));
+            creditFacade.multicall(multicallBuilder(pool.exchange(int128(0), int128(1), 5 * WAD, WAD)));
             comparator.takeSnapshot("after_exchange", accountToSaveBalances);
 
             uint256[2] memory amounts = [4 * WAD, 4 * WAD];
@@ -102,7 +102,7 @@ contract Live_CurveStETHEquivalenceTest is DSTest, LiveEnvHelper {
             comparator.takeSnapshot("after_remove_liquidity", accountToSaveBalances);
 
             evm.prank(USER);
-            creditFacade.multicall(multicallBuilder(pool.remove_liquidity_one_coin(WAD, 1, 0)));
+            creditFacade.multicall(multicallBuilder(pool.remove_liquidity_one_coin(WAD, int128(1), 0)));
             comparator.takeSnapshot("after_remove_liquidity_one_coin", accountToSaveBalances);
 
             amounts = [WAD, WAD / 5];
@@ -112,25 +112,25 @@ contract Live_CurveStETHEquivalenceTest is DSTest, LiveEnvHelper {
             comparator.takeSnapshot("after_remove_liquidity_imbalance", accountToSaveBalances);
 
             evm.prank(USER);
-            creditFacade.multicall(multicallBuilder(pool.add_liquidity_one_coin(WAD, 0, WAD / 2)));
+            creditFacade.multicall(multicallBuilder(pool.add_liquidity_one_coin(WAD, int128(0), WAD / 2)));
             comparator.takeSnapshot("after_add_liquidity_one_coin", accountToSaveBalances);
 
             evm.prank(USER);
-            creditFacade.multicall(multicallBuilder(pool.exchange_all(0, 1, RAY / 2)));
+            creditFacade.multicall(multicallBuilder(pool.exchange_all(int128(0), int128(1), RAY / 2)));
             comparator.takeSnapshot("after_exchange_all", accountToSaveBalances);
 
             evm.prank(USER);
-            creditFacade.multicall(multicallBuilder(pool.add_all_liquidity_one_coin(1, RAY / 2)));
+            creditFacade.multicall(multicallBuilder(pool.add_all_liquidity_one_coin(int128(1), RAY / 2)));
             comparator.takeSnapshot("after_add_all_liquidity_one_coin", accountToSaveBalances);
 
             evm.prank(USER);
-            creditFacade.multicall(multicallBuilder(pool.remove_all_liquidity_one_coin(0, RAY / 2)));
+            creditFacade.multicall(multicallBuilder(pool.remove_all_liquidity_one_coin(int128(0), RAY / 2)));
             comparator.takeSnapshot("after_remove_all_liquidity_one_coin", accountToSaveBalances);
         } else {
             ICurvePool2Assets pool = ICurvePool2Assets(curvePoolAddr);
 
             evm.prank(USER);
-            pool.exchange(0, 1, 5 * WAD, WAD);
+            pool.exchange(int128(0), int128(1), 5 * WAD, WAD);
             comparator.takeSnapshot("after_exchange", accountToSaveBalances);
 
             uint256[2] memory amounts = [4 * WAD, 4 * WAD];
@@ -146,7 +146,7 @@ contract Live_CurveStETHEquivalenceTest is DSTest, LiveEnvHelper {
             comparator.takeSnapshot("after_remove_liquidity", accountToSaveBalances);
 
             evm.prank(USER);
-            pool.remove_liquidity_one_coin(WAD, 1, 0);
+            pool.remove_liquidity_one_coin(WAD, int128(1), 0);
             comparator.takeSnapshot("after_remove_liquidity_one_coin", accountToSaveBalances);
 
             amounts = [WAD, WAD / 5];
@@ -161,7 +161,7 @@ contract Live_CurveStETHEquivalenceTest is DSTest, LiveEnvHelper {
 
             uint256 balanceToSwap = tokenTestSuite.balanceOf(Tokens.WETH, accountToSaveBalances) - 1;
             evm.prank(USER);
-            pool.exchange(0, 1, balanceToSwap, balanceToSwap / 2);
+            pool.exchange(int128(0), int128(1), balanceToSwap, balanceToSwap / 2);
             comparator.takeSnapshot("after_exchange_all", accountToSaveBalances);
 
             balanceToSwap = tokenTestSuite.balanceOf(Tokens.STETH, accountToSaveBalances) - 1;
@@ -171,7 +171,7 @@ contract Live_CurveStETHEquivalenceTest is DSTest, LiveEnvHelper {
 
             balanceToSwap = tokenTestSuite.balanceOf(Tokens.steCRV, accountToSaveBalances) - 1;
             evm.prank(USER);
-            pool.remove_liquidity_one_coin(balanceToSwap, 0, balanceToSwap / 2);
+            pool.remove_liquidity_one_coin(balanceToSwap, int128(0), balanceToSwap / 2);
             comparator.takeSnapshot("after_remove_all_liquidity_one_coin", accountToSaveBalances);
         }
     }

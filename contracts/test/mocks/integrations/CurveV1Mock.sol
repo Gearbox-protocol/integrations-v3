@@ -33,6 +33,8 @@ contract CurveV1Mock is ICurvePool {
 
     bool public real_liquidity_mode;
 
+    bool isCryptoPool;
+
     constructor(address[] memory coins_, address[] memory underlying_coins_) {
         _coins = coins_;
         _underlying_coins = underlying_coins_;
@@ -41,6 +43,10 @@ contract CurveV1Mock is ICurvePool {
         token = _token;
         lp_token = _token;
         virtualPrice = WAD;
+    }
+
+    function setIsCryptoPool(bool _isCryptoPool) external {
+        isCryptoPool = _isCryptoPool;
     }
 
     function setRealLiquidityMode(bool val) external {
@@ -65,7 +71,11 @@ contract CurveV1Mock is ICurvePool {
         rates_RAY_underlying[j][i] = (RAY * RAY) / rate_RAY;
     }
 
-    function exchange(int128 i, int128 j, uint256 dx, uint256 min_dy) external override {
+    function exchange(uint256 i, uint256 j, uint256 dx, uint256 min_dy) external override {
+        exchange(int128(int256(i)), int128(int256(j)), dx, min_dy);
+    }
+
+    function exchange(int128 i, int128 j, uint256 dx, uint256 min_dy) public override {
         uint256 dy = get_dy(i, j, dx);
 
         require(dy >= min_dy, "CurveV1Mock: INSUFFICIENT_OUTPUT_AMOUNT");
@@ -74,7 +84,11 @@ contract CurveV1Mock is ICurvePool {
         IERC20(_coins[uint256(uint128(j))]).safeTransfer(msg.sender, dy);
     }
 
-    function exchange_underlying(int128 i, int128 j, uint256 dx, uint256 min_dy) external override {
+    function exchange_underlying(uint256 i, uint256 j, uint256 dx, uint256 min_dy) external override {
+        exchange_underlying(int128(int256(i)), int128(int256(j)), dx, min_dy);
+    }
+
+    function exchange_underlying(int128 i, int128 j, uint256 dx, uint256 min_dy) public override {
         address coinIn = _coins[uint256(uint128(i))];
         address underlyingIn = _underlying_coins[uint256(uint128(i))];
 
@@ -93,7 +107,11 @@ contract CurveV1Mock is ICurvePool {
         IERC20(underlyingOut).safeTransfer(msg.sender, dy);
     }
 
-    function remove_liquidity_one_coin(uint256 _token_amount, int128 i, uint256 min_amount) external {
+    function remove_liquidity_one_coin(uint256 _token_amount, uint256 i, uint256 min_amount) external override {
+        remove_liquidity_one_coin(_token_amount, int128(int256(i)), min_amount);
+    }
+
+    function remove_liquidity_one_coin(uint256 _token_amount, int128 i, uint256 min_amount) public override {
         ICRVToken(token).burnFrom(msg.sender, _token_amount);
 
         uint256 amountOut;
@@ -111,8 +129,16 @@ contract CurveV1Mock is ICurvePool {
         return (rates_RAY_underlying[i][j] * dx) / RAY;
     }
 
+    function get_dy_underlying(uint256 i, uint256 j, uint256 dx) public view override returns (uint256) {
+        return get_dy_underlying(uint256(int256(i)), uint256(int256(j)), dx);
+    }
+
     function get_dy(int128 i, int128 j, uint256 dx) public view override returns (uint256) {
         return (rates_RAY[i][j] * dx) / RAY;
+    }
+
+    function get_dy(uint256 i, uint256 j, uint256 dx) public view override returns (uint256) {
+        return get_dy(uint256(int256(i)), uint256(int256(j)), dx);
     }
 
     function balances(uint256 i) external view override returns (uint256) {
@@ -163,6 +189,10 @@ contract CurveV1Mock is ICurvePool {
         return (amount * withdraw_rates_RAY[coin]) / RAY;
     }
 
+    function calc_withdraw_one_coin(uint256 _burn_amount, uint256 i) external view returns (uint256) {
+        return calc_withdraw_one_coin(_burn_amount, int128(int256(i)));
+    }
+
     function admin_balances(uint256) external pure returns (uint256) {
         return 0;
     }
@@ -197,6 +227,14 @@ contract CurveV1Mock is ICurvePool {
 
     function future_A_time() external pure returns (uint256) {
         return 0;
+    }
+
+    function mid_fee() external view returns (uint256) {
+        if (isCryptoPool) {
+            return 0;
+        }
+
+        revert("Not a crypto pool");
     }
 
     // Some pools implement ERC20

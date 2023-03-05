@@ -61,16 +61,17 @@ contract CurveV1AdapterBaseMetaPoolTest is DSTest, CurveV1AdapterHelper {
 
         addCollateral(Tokens.cLINK, LINK_ACCOUNT_AMOUNT);
 
-        bytes memory callData = abi.encodeCall(
-            ICurvePool.exchange_underlying, (0, 3, LINK_EXCHANGE_AMOUNT, (LINK_EXCHANGE_AMOUNT * 99) / 100)
+        bytes memory callData = abi.encodeWithSignature(
+            "exchange_underlying(int128,int128,uint256,uint256)",
+            0,
+            3,
+            LINK_EXCHANGE_AMOUNT,
+            (LINK_EXCHANGE_AMOUNT * 99) / 100
         );
 
         expectMulticallStackCalls(address(adapter), address(curveV1Mock), USER, callData, tokenIn, tokenOut, true);
 
-        executeOneLineMulticall(
-            address(adapter),
-            abi.encodeCall(adapter.exchange_underlying, (0, 3, LINK_EXCHANGE_AMOUNT, (LINK_EXCHANGE_AMOUNT * 99) / 100))
-        );
+        executeOneLineMulticall(address(adapter), callData);
 
         expectBalance(Tokens.cLINK, creditAccount, LINK_ACCOUNT_AMOUNT - LINK_EXCHANGE_AMOUNT);
 
@@ -87,14 +88,19 @@ contract CurveV1AdapterBaseMetaPoolTest is DSTest, CurveV1AdapterHelper {
 
         addCollateral(Tokens.cLINK, LINK_ACCOUNT_AMOUNT);
 
-        bytes memory callData = abi.encodeCall(
-            ICurvePool.exchange_underlying, (0, 3, LINK_ACCOUNT_AMOUNT - 1, ((LINK_ACCOUNT_AMOUNT - 1) * 99) / 100)
+        bytes memory callData = abi.encodeWithSignature(
+            "exchange_underlying(int128,int128,uint256,uint256)",
+            0,
+            3,
+            LINK_ACCOUNT_AMOUNT - 1,
+            ((LINK_ACCOUNT_AMOUNT - 1) * 99) / 100
         );
 
         expectMulticallStackCalls(address(adapter), address(curveV1Mock), USER, callData, tokenIn, tokenOut, true);
 
         executeOneLineMulticall(
-            address(adapter), abi.encodeCall(adapter.exchange_all_underlying, (0, 3, (RAY * 99) / 100))
+            address(adapter),
+            abi.encodeWithSignature("exchange_all_underlying(int128,int128,uint256)", 0, 3, (RAY * 99) / 100)
         );
 
         expectBalance(Tokens.cLINK, creditAccount, 1);
