@@ -14,13 +14,13 @@ library UniswapV2_Calls {
         uint256 amountOut,
         uint256 amountInMax,
         address[] memory path,
-        address recipient,
+        address,
         uint256 deadline
     ) internal pure returns (MultiCall memory) {
         return MultiCall({
             target: address(c),
             callData: abi.encodeCall(
-                IUniswapV2Adapter.swapTokensForExactTokens, (amountOut, amountInMax, path, recipient, deadline)
+                IUniswapV2Adapter.swapTokensForExactTokens, (amountOut, amountInMax, path, address(0), deadline)
                 )
         });
     }
@@ -30,13 +30,13 @@ library UniswapV2_Calls {
         uint256 amountIn,
         uint256 amountOutMin,
         address[] memory path,
-        address recipient,
+        address,
         uint256 deadline
     ) internal pure returns (MultiCall memory) {
         return MultiCall({
             target: address(c),
             callData: abi.encodeCall(
-                IUniswapV2Adapter.swapExactTokensForTokens, (amountIn, amountOutMin, path, recipient, deadline)
+                IUniswapV2Adapter.swapExactTokensForTokens, (amountIn, amountOutMin, path, address(0), deadline)
                 )
         });
     }

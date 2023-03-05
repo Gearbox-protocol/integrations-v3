@@ -107,6 +107,12 @@ contract WstETHV1AdapterTest is DSTest, AdapterTestHelper {
     /// @dev [AWSTV1-1]: constructor sets correct values
     function test_AWSTV1_01_constructor_sets_correct_values() public {
         assertEq(address(adapter.stETH()), tokenTestSuite.addressOf(Tokens.STETH), "Incorrect token");
+        assertEq(
+            adapter.stETHTokenMask(),
+            creditManager.tokenMasksMap(tokenTestSuite.addressOf(Tokens.STETH)),
+            "Incorrect stETH mask"
+        );
+        assertEq(adapter.wstETHTokenMask(), creditManager.tokenMasksMap(address(wstETHMock)), "Incorrect wstETH mask");
     }
 
     /// @dev [AWSTV1-2]: constructor reverts if token is not allowed
@@ -133,8 +139,8 @@ contract WstETHV1AdapterTest is DSTest, AdapterTestHelper {
         );
     }
 
-    /// @dev [AWSTV1-3]: wrap and unwrap reverts if uses has no account
-    function test_AWSTV1_03_wrap_and_unwrap_if_uses_has_no_account() public {
+    /// @dev [AWSTV1-3]: wrap and unwrap reverts if user has no account
+    function test_AWSTV1_03_wrap_and_unwrap_if_user_has_no_account() public {
         evm.expectRevert(ICreditManagerV2Exceptions.HasNoOpenedAccountException.selector);
         executeOneLineMulticall(address(adapter), abi.encodeCall(adapter.wrapAll, ()));
 
@@ -148,44 +154,35 @@ contract WstETHV1AdapterTest is DSTest, AdapterTestHelper {
         executeOneLineMulticall(address(adapter), abi.encodeCall(adapter.unwrap, (1000)));
     }
 
-    // //
-    // // WRAP
-    // //
+    //
+    // WRAP
+    //
 
     /// @dev [AWSTV1-4]: wrapAll works for user as expected
     function test_AWSTV1_04_wrapAll_works_for_user_as_expected() public {
-        // j == 0: wrapAll
-        // j == 1: wrap(balance)
-        for (uint256 j = 0; j < 2; ++j) {
-            setUp();
-            (address creditAccount, uint256 initialStETHbalance) = _openStETHTestCreditAccount(false);
+        setUp();
+        (address creditAccount, uint256 initialStETHbalance) = _openStETHTestCreditAccount(false);
 
-            expectAllowance(Tokens.STETH, creditAccount, address(wstETHMock), 0);
+        expectAllowance(Tokens.STETH, creditAccount, address(wstETHMock), 0);
 
-            bytes memory expectedCallData = abi.encodeCall(IwstETH.wrap, (initialStETHbalance - 1));
+        bytes memory expectedCallData = abi.encodeCall(IwstETH.wrap, (initialStETHbalance - 1));
 
-            expectMulticallStackCalls(
-                address(adapter), address(wstETHMock), USER, expectedCallData, stETH, address(wstETHMock), true, true
-            );
+        expectMulticallStackCalls(
+            address(adapter), address(wstETHMock), USER, expectedCallData, stETH, address(wstETHMock), true
+        );
 
-            executeOneLineMulticall(
-                address(adapter),
-                j == 0
-                    ? abi.encodeCall(WstETHV1Adapter.wrapAll, ())
-                    : abi.encodeCall(WstETHV1Adapter.wrap, (initialStETHbalance))
-            );
+        executeOneLineMulticall(address(adapter), abi.encodeCall(WstETHV1Adapter.wrapAll, ()));
 
-            expectBalance(Tokens.STETH, creditAccount, 1);
+        expectBalance(Tokens.STETH, creditAccount, 1);
 
-            expectBalance(address(wstETHMock), creditAccount, ((initialStETHbalance - 1) * WAD) / STETH_PER_TOKEN);
+        expectBalance(address(wstETHMock), creditAccount, ((initialStETHbalance - 1) * WAD) / STETH_PER_TOKEN);
 
-            expectAllowance(Tokens.STETH, creditAccount, address(wstETHMock), 1);
+        expectAllowance(Tokens.STETH, creditAccount, address(wstETHMock), 1);
 
-            expectTokenIsEnabled(Tokens.STETH, false);
-            expectTokenIsEnabled(address(wstETHMock), true);
+        expectTokenIsEnabled(Tokens.STETH, false);
+        expectTokenIsEnabled(address(wstETHMock), true);
 
-            expectSafeAllowance(address(wstETHMock));
-        }
+        expectSafeAllowance(address(wstETHMock));
     }
 
     /// @dev [AWSTV1-5]: wrap works for user as expected
@@ -198,7 +195,7 @@ contract WstETHV1AdapterTest is DSTest, AdapterTestHelper {
         bytes memory expectedCallData = abi.encodeCall(IwstETH.wrap, (WETH_EXCHANGE_AMOUNT));
 
         expectMulticallStackCalls(
-            address(adapter), address(wstETHMock), USER, expectedCallData, stETH, address(wstETHMock), true, true
+            address(adapter), address(wstETHMock), USER, expectedCallData, stETH, address(wstETHMock), true
         );
 
         executeOneLineMulticall(address(adapter), expectedCallData);
@@ -220,38 +217,29 @@ contract WstETHV1AdapterTest is DSTest, AdapterTestHelper {
 
     /// @dev [AWSTV1-6]: unwrapAll works for user as expected
     function test_AWSTV1_06_unwrapAll_works_for_user_as_expected() public {
-        // j == 0: wrapAll
-        // j == 1: wrap(balance)
-        for (uint256 j = 0; j < 2; ++j) {
-            setUp();
+        setUp();
 
-            (address creditAccount, uint256 initialWstETHamount) = _openStETHTestCreditAccount(true);
+        (address creditAccount, uint256 initialWstETHamount) = _openStETHTestCreditAccount(true);
 
-            bytes memory expectedCallData = abi.encodeCall(IwstETH.unwrap, (initialWstETHamount - 1));
+        bytes memory expectedCallData = abi.encodeCall(IwstETH.unwrap, (initialWstETHamount - 1));
 
-            expectMulticallStackCalls(
-                address(adapter), address(wstETHMock), USER, expectedCallData, stETH, address(wstETHMock), true, false
-            );
+        expectMulticallStackCalls(
+            address(adapter), address(wstETHMock), USER, expectedCallData, stETH, address(wstETHMock), false
+        );
 
-            executeOneLineMulticall(
-                address(adapter),
-                (j == 0)
-                    ? abi.encodeCall(WstETHV1Adapter.unwrapAll, ())
-                    : abi.encodeCall(WstETHV1Adapter.unwrap, (initialWstETHamount))
-            );
+        executeOneLineMulticall(address(adapter), abi.encodeCall(WstETHV1Adapter.unwrapAll, ()));
 
-            expectBalance(Tokens.STETH, creditAccount, ((initialWstETHamount - 1) * STETH_PER_TOKEN) / WAD + 1);
+        expectBalance(Tokens.STETH, creditAccount, ((initialWstETHamount - 1) * STETH_PER_TOKEN) / WAD + 1);
 
-            expectBalance(address(wstETHMock), creditAccount, 1);
+        expectBalance(address(wstETHMock), creditAccount, 1);
 
-            // There is not need to approve yVault to itself, so nothing in terms of allowance should be done
-            expectAllowance(address(wstETHMock), creditAccount, address(wstETHMock), 0);
+        // There is not need to approve wstETH to itself, so nothing in terms of allowance should be done
+        expectAllowance(address(wstETHMock), creditAccount, address(wstETHMock), 0);
 
-            expectTokenIsEnabled(address(wstETHMock), false);
-            expectTokenIsEnabled(Tokens.STETH, true);
+        expectTokenIsEnabled(address(wstETHMock), false);
+        expectTokenIsEnabled(Tokens.STETH, true);
 
-            expectSafeAllowance(address(wstETHMock));
-        }
+        expectSafeAllowance(address(wstETHMock));
     }
 
     /// @dev [AWSTV1-7]: unwrap works for user as expected
@@ -266,7 +254,7 @@ contract WstETHV1AdapterTest is DSTest, AdapterTestHelper {
         bytes memory expectedCallData = abi.encodeCall(IwstETH.unwrap, (amount));
 
         expectMulticallStackCalls(
-            address(adapter), address(wstETHMock), USER, expectedCallData, stETH, address(wstETHMock), true, false
+            address(adapter), address(wstETHMock), USER, expectedCallData, stETH, address(wstETHMock), false
         );
 
         executeOneLineMulticall(address(adapter), expectedCallData);
@@ -276,7 +264,7 @@ contract WstETHV1AdapterTest is DSTest, AdapterTestHelper {
         // +1 cause it keeps from deposit there
         expectBalance(address(wstETHMock), creditAccount, wstETHamount - amount);
 
-        // There is not need to approve yVault to itself, so nothing in terms of allowance should be done
+        // There is not need to approve wstETH to itself, so nothing in terms of allowance should be done
         expectAllowance(address(wstETHMock), creditAccount, address(wstETHMock), 0);
 
         expectTokenIsEnabled(Tokens.STETH, true);

@@ -96,6 +96,12 @@ contract YearnV2AdapterTest is DSTest, AdapterTestHelper {
     /// @dev [AYV2-1]: constructor sets correct values
     function test_AYV2_01_constructor_sets_correct_values() public {
         assertEq(address(adapter.token()), tokenTestSuite.addressOf(Tokens.DAI), "Incorrect token");
+        assertEq(
+            adapter.tokenMask(),
+            creditManager.tokenMasksMap(tokenTestSuite.addressOf(Tokens.DAI)),
+            "Incorrect underlying token mask"
+        );
+        assertEq(adapter.yTokenMask(), creditManager.tokenMasksMap(yvDAI), "Incorrect vault token mask");
     }
 
     /// @dev [AYV2-2]: constructor reverts if token is not allowed
@@ -159,7 +165,7 @@ contract YearnV2AdapterTest is DSTest, AdapterTestHelper {
         bytes memory expectedCallData = abi.encodeWithSignature("deposit(uint256)", initialDAIbalance - 1);
 
         expectMulticallStackCalls(
-            address(adapter), address(yearnV2Mock), USER, expectedCallData, token, address(yearnV2Mock), true, true
+            address(adapter), address(yearnV2Mock), USER, expectedCallData, token, address(yearnV2Mock), true
         );
 
         executeOneLineMulticall(address(adapter), abi.encodeWithSignature("deposit()"));
@@ -186,7 +192,7 @@ contract YearnV2AdapterTest is DSTest, AdapterTestHelper {
         bytes memory expectedCallData = abi.encodeWithSignature("deposit(uint256)", DAI_EXCHANGE_AMOUNT);
 
         expectMulticallStackCalls(
-            address(adapter), address(yearnV2Mock), USER, expectedCallData, token, address(yearnV2Mock), true, true
+            address(adapter), address(yearnV2Mock), USER, expectedCallData, token, address(yearnV2Mock), true
         );
 
         executeOneLineMulticall(address(adapter), abi.encodeWithSignature("deposit(uint256)", DAI_EXCHANGE_AMOUNT));
@@ -214,7 +220,7 @@ contract YearnV2AdapterTest is DSTest, AdapterTestHelper {
         bytes memory callData = abi.encodeWithSignature("deposit(uint256,address)", DAI_EXCHANGE_AMOUNT, address(0));
 
         expectMulticallStackCalls(
-            address(adapter), address(yearnV2Mock), USER, expectedCallData, token, address(yearnV2Mock), true, true
+            address(adapter), address(yearnV2Mock), USER, expectedCallData, token, address(yearnV2Mock), true
         );
 
         executeOneLineMulticall(address(adapter), callData);
@@ -243,7 +249,7 @@ contract YearnV2AdapterTest is DSTest, AdapterTestHelper {
         bytes memory expectedCallData = abi.encodeWithSignature("withdraw(uint256)", yAmount - 1);
 
         expectMulticallStackCalls(
-            address(adapter), address(yearnV2Mock), USER, expectedCallData, token, address(yearnV2Mock), true, false
+            address(adapter), address(yearnV2Mock), USER, expectedCallData, token, address(yearnV2Mock), false
         );
 
         executeOneLineMulticall(address(adapter), abi.encodeWithSignature("withdraw()"));
@@ -273,7 +279,7 @@ contract YearnV2AdapterTest is DSTest, AdapterTestHelper {
         bytes memory expectedCallData = abi.encodeWithSignature("withdraw(uint256)", amount);
 
         expectMulticallStackCalls(
-            address(adapter), address(yearnV2Mock), USER, expectedCallData, token, address(yearnV2Mock), true, false
+            address(adapter), address(yearnV2Mock), USER, expectedCallData, token, address(yearnV2Mock), false
         );
 
         executeOneLineMulticall(address(adapter), abi.encodeWithSignature("withdraw(uint256)", amount));
@@ -303,7 +309,7 @@ contract YearnV2AdapterTest is DSTest, AdapterTestHelper {
         bytes memory expectedCallData = abi.encodeWithSignature("withdraw(uint256)", amount);
 
         expectMulticallStackCalls(
-            address(adapter), address(yearnV2Mock), USER, expectedCallData, token, address(yearnV2Mock), true, false
+            address(adapter), address(yearnV2Mock), USER, expectedCallData, token, address(yearnV2Mock), false
         );
 
         executeOneLineMulticall(
@@ -336,7 +342,7 @@ contract YearnV2AdapterTest is DSTest, AdapterTestHelper {
             abi.encodeWithSignature("withdraw(uint256,address,uint256)", amount, creditAccount, 1);
 
         expectMulticallStackCalls(
-            address(adapter), address(yearnV2Mock), USER, expectedCallData, token, address(yearnV2Mock), true, false
+            address(adapter), address(yearnV2Mock), USER, expectedCallData, token, address(yearnV2Mock), false
         );
 
         executeOneLineMulticall(

@@ -6,36 +6,46 @@ pragma solidity ^0.8.17;
 import {IAdapter} from "@gearbox-protocol/core-v2/contracts/interfaces/adapters/IAdapter.sol";
 
 interface ILidoV1AdapterEvents {
+    /// @notice Emitted when configurator sets new deposit limit
     event NewLimit(uint256 _limit);
 }
 
 interface ILidoV1AdapterExceptions {
+    /// @notice Thrown when trying to stake more than the current limit
     error LimitIsOverException();
 }
 
+/// @title Lido V1 adapter interface
+/// @notice Implements logic for interacting with the Lido contract through the gateway
 interface ILidoV1Adapter is IAdapter, ILidoV1AdapterEvents, ILidoV1AdapterExceptions {
-    /// @dev Address of WETH
+    /// @notice Address of WETH
     function weth() external view returns (address);
 
-    /// @dev Address of the Lido contract
+    /// @notice Address of the Lido contract
     function stETH() external view returns (address);
 
-    /// @dev Address of Gearbox treasury
+    /// @notice Collateral token mask of WETH in the credit manager
+    function wethTokenMask() external view returns (uint256);
+
+    /// @notice Collateral token mask of stETH in the credit manager
+    function stETHTokenMask() external view returns (uint256);
+
+    /// @notice Address of Gearbox treasury
     function treasury() external view returns (address);
 
-    /// @dev The amount of WETH that can be deposited through this adapter
+    /// @notice The amount of WETH that can be deposited through this adapter
     function limit() external view returns (uint256);
 
-    /// @dev Sends an order to stake ETH in Lido and receive stETH (sending WETH through the gateway)
-    /// @param amount The amount of ETH to deposit in Lido
-    /// @notice Since Gearbox only uses WETH as collateral, the amount has to be passed explicitly
-    ///         unlike Lido. The referral address is always set to Gearbox treasury
+    /// @notice Stakes given amount of WETH in Lido via Gateway
+    /// @param amount Amount of WETH to deposit
+    /// @dev The referral address is set to Gearbox treasury
     function submit(uint256 amount) external;
 
-    /// @dev Sends an order to stake ETH in Lido and receive stETH (sending all available WETH through the gateway)
+    /// @notice Stakes the entire balance of WETH in Lido via Gateway, disables WETH
+    /// @dev The referral address is set to Gearbox treasury
     function submitAll() external;
 
-    /// @dev Set a new deposit limit
+    /// @notice Set a new deposit limit
     /// @param _limit New value for the limit
     function setLimit(uint256 _limit) external;
 }

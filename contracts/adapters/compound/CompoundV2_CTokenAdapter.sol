@@ -9,7 +9,7 @@ import {ICErc20Actions} from "../../integrations/compound/ICErc20.sol";
 import {ICompoundV2_CTokenAdapter, CTokenError} from "../../interfaces/compound/ICompoundV2_CTokenAdapter.sol";
 
 /// @title Compound V2 cToken adapter
-/// @notice Implements logic for CAs to interact with Compound's cTokens
+/// @notice Implements logic allowing CAs to interact with Compound's cTokens
 /// @dev Abstract base contract for CErc20 and CEther adapters
 abstract contract CompoundV2_CTokenAdapter is AbstractAdapter, ICompoundV2_CTokenAdapter {
     /// @notice Constructor

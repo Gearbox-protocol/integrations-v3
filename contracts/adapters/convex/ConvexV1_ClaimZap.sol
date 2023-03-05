@@ -13,33 +13,32 @@ import {IClaimZap} from "../../integrations/convex/IClaimZap.sol";
 import {IRewards, IBasicRewards} from "../../integrations/convex/IRewards.sol";
 import {IBaseRewardPool} from "../../integrations/convex/IBaseRewardPool.sol";
 
-/// @title ConvexV1ClaimZapAdapter adapter
-/// @dev Implements logic for interacting with the Convex ClaimZap contract
+/// @title Convex V1 ClaimZap adapter
+/// @notice Implements logic for interacting with Convex ClaimZap contract
 contract ConvexV1ClaimZapAdapter is AbstractAdapter, IClaimZap {
-    /// @dev CRV token address
+    /// @notice CRV token address
     address public immutable override crv;
 
-    /// @dev CVX token address
+    /// @notice CVX token address
     address public immutable override cvx;
 
     AdapterType public constant override _gearboxAdapterType = AdapterType.CONVEX_V1_CLAIM_ZAP;
     uint16 public constant override _gearboxAdapterVersion = 2;
 
-    /// @dev Constructor
-    /// @param _creditManager Address of the Credit manager
-    /// @param _claimZap Address of the ClaimZap contract
+    /// @notice Constructor
+    /// @param _creditManager Credit manager address
+    /// @param _claimZap ClaimZap contract address
     constructor(address _creditManager, address _claimZap) AbstractAdapter(_creditManager, _claimZap) {
         crv = IClaimZap(targetContract).crv(); // F: [ACVX1_Z-1]
         cvx = IClaimZap(targetContract).cvx(); // F: [ACVX1_Z-1]
     }
 
-    /// @dev Claims rewards from multiple sources for a Credit Account
+    /// @notice Claims rewards from multiple sources for a Credit Account
     /// @param rewardContracts Base reward pools to claim from
     /// @param extraRewardContracts Base reward pools to claim from
     /// @param tokenRewardContracts Special reward pools to claim from
     /// @param tokenRewardTokens Tokens to claim from special reward pools
-    /// @notice Additional parameters for claimZap are ignored, since they deal
-    /// with pools and contracts that are currently not supported.
+    /// @dev Additional parameters are ignored since they deal with pools and contracts that are currently not supported
     function claimRewards(
         address[] calldata rewardContracts,
         address[] calldata extraRewardContracts,
@@ -67,8 +66,7 @@ contract ConvexV1ClaimZapAdapter is AbstractAdapter, IClaimZap {
     /// @dev Calls getReward on base reward contracts and enables extra reward tokens, if available
     /// @param creditAccount Credit account to claim for
     /// @param rewardContracts BaseRewardPool contracts to claim from
-    /// @notice The reward token itself is not enabled, since it is always CRV,
-    /// which is enabled at the end of the main function
+    /// @dev The reward token itself is not enabled since it's always CRV, which is enabled at the end of the main function
     function _claimAndEnableRewards(address creditAccount, address[] calldata rewardContracts) internal {
         address token;
         uint256 len = rewardContracts.length;
@@ -120,8 +118,7 @@ contract ConvexV1ClaimZapAdapter is AbstractAdapter, IClaimZap {
     /// @param creditAccount Credit account to claim for
     /// @param tokenRewardContracts Contracts to claim from
     /// @param tokenRewardTokens Tokens to claim
-    /// @notice If the sizes of two arrays don't match, then any tokens that
-    /// don't have a corresponding contract will be ignored
+    /// @dev If sizes of two arrays don't match, any tokens that don't have a corresponding contract will be ignored
     function _claimAndEnableTokenRewards(
         address creditAccount,
         address[] calldata tokenRewardContracts,
@@ -148,7 +145,7 @@ contract ConvexV1ClaimZapAdapter is AbstractAdapter, IClaimZap {
     /// @param token The token to enable
     function _enableTokenIfHasBalance(address creditAccount, address token) internal {
         if (IERC20(token).balanceOf(creditAccount) > 1) {
-            creditManager.checkAndEnableToken(creditAccount, token);
+            _enableToken(token);
         }
     }
 }

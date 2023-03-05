@@ -139,11 +139,11 @@ contract CurveV1Adapter3AssetsTest is DSTest, CurveV1AdapterHelper {
 
         expectTokenIsEnabled(curveV1Mock.token(), true);
 
-        expectAllowance(Tokens.cDAI, creditAccount, address(curveV1Mock), type(uint256).max);
+        expectAllowance(Tokens.cDAI, creditAccount, address(curveV1Mock), 1);
 
-        expectAllowance(Tokens.cUSDC, creditAccount, address(curveV1Mock), type(uint256).max);
+        expectAllowance(Tokens.cUSDC, creditAccount, address(curveV1Mock), 1);
 
-        expectAllowance(Tokens.cUSDT, creditAccount, address(curveV1Mock), type(uint256).max);
+        expectAllowance(Tokens.cUSDT, creditAccount, address(curveV1Mock), 1);
     }
 
     /// @dev [ACV1_3-5]: remove_liquidity works as expected(

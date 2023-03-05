@@ -21,7 +21,7 @@ import {USER, CONFIGURATOR, FRIEND} from "../../lib/constants.sol";
 
 import "@gearbox-protocol/core-v2/contracts/test/lib/test.sol";
 
-contract ConvexV1AdapterBasePoolTest is DSTest, ConvexAdapterHelper, ICreditManagerV2Exceptions {
+contract ConvexV1BaseRewardPoolAdapterTest is DSTest, ConvexAdapterHelper, ICreditManagerV2Exceptions {
     function setUp() public {
         _setupConvexSuite(2);
     }
@@ -44,33 +44,36 @@ contract ConvexV1AdapterBasePoolTest is DSTest, ConvexAdapterHelper, ICreditMana
         for (uint256 numExtras; numExtras <= 2; numExtras++) {
             _setupConvexSuite(numExtras);
 
-            assertEq(address(basePoolAdapter.rewardToken()), crv, "Incorrect CRV token");
+            assertEq(basePoolAdapter.stakingToken(), convexLPToken, "Incorrect Convex LP token");
+            assertEq(
+                basePoolAdapter.stakingTokenMask(),
+                creditManager.tokenMasksMap(convexLPToken),
+                "Incorrect Convex LP token mask"
+            );
 
-            assertEq(basePoolAdapter.cvx(), cvx, "Incorrect minter (CVX)");
+            assertEq(basePoolAdapter.stakedPhantomToken(), phantomToken, "Incorrect staked token");
+            assertEq(
+                basePoolAdapter.stakedTokenMask(),
+                creditManager.tokenMasksMap(phantomToken),
+                "Incorrect staked token mask"
+            );
 
-            assertEq(basePoolMock.pid(), basePoolAdapter.pid(), "Incorrect pid");
+            assertEq(basePoolAdapter.curveLPtoken(), curveLPToken, "Incorrect Curve LP token");
+            assertEq(
+                basePoolAdapter.curveLPTokenMask(),
+                creditManager.tokenMasksMap(curveLPToken),
+                "Incorrect Curve LP token mask"
+            );
 
-            assertEq(address(basePoolAdapter.stakingToken()), convexLPToken, "Incorrect Convex LP");
-
-            assertEq(basePoolAdapter.curveLPtoken(), curveLPToken, "Incorrect Curve LP");
-
-            if (numExtras >= 1) {
-                assertEq(basePoolAdapter.extraReward1(), extraRewardToken1, "Incorrect reward token 1");
-            } else {
-                assertEq(basePoolAdapter.extraReward1(), address(0), "Reward token 1 was incorrectly set to non-zero");
-            }
-
-            if (numExtras == 2) {
-                assertEq(basePoolAdapter.extraReward2(), extraRewardToken2, "Incorrect reward token 2");
-            } else {
-                assertEq(basePoolAdapter.extraReward2(), address(0), "Reward token 2 was incorrectly set to non-zero");
-            }
+            assertEq(
+                basePoolAdapter.rewardTokensMask(), _makeRewardTokensMask(numExtras), "Incorrect reward tokens mask"
+            );
         }
     }
 
     /// @dev [ACVX1_P-2]: constructor reverts when one of the tokens is not allowed
     function test_ACVX1_P_02_constructor_reverts_on_token_not_allowed() public {
-        for (uint8 i = 0; i < 5; i++) {
+        for (uint8 i = 0; i < 7; i++) {
             _checkPoolAdapterConstructorRevert(i);
         }
     }

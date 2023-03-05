@@ -1,105 +1,123 @@
 // SPDX-License-Identifier: MIT
 // Gearbox Protocol. Generalized leverage for DeFi protocols
-// (c) Gearbox Holdings, 2022
-pragma solidity ^0.8.10;
+// (c) Gearbox Holdings, 2023
+pragma solidity ^0.8.17;
 
 import {IAdapter} from "@gearbox-protocol/core-v2/contracts/interfaces/adapters/IAdapter.sol";
-import {ICurvePool} from "../../integrations/curve/ICurvePool.sol";
 
 interface ICurveV1AdapterExceptions {
+    /// @notice Thrown when trying to pass incorrect asset index as parameter to an adapter function
     error IncorrectIndexException();
 }
 
+/// @title Curve V1 base adapter interface
+/// @notice Implements logic allowing to interact with all Curve pools, regardless of number of coins
 interface ICurveV1Adapter is IAdapter, ICurveV1AdapterExceptions {
-    /// @dev Sends an order to exchange one asset to another
-    /// @param i Index for the coin sent
-    /// @param j Index for the coin received
+    /// @notice Exchanges one pool asset to another
+    /// @param i Index of the asset to spend
+    /// @param j Index of the asset to receive
+    /// @dev `dx` and `min_dy` parameters are ignored because calldata is passed directly to the target contract
     function exchange(int128 i, int128 j, uint256, uint256) external;
 
-    /// @dev Sends an order to exchange the entire balance of one asset to another
-    /// @param i Index for the coin sent
-    /// @param j Index for the coin received
-    /// @param rateMinRAY Minimum exchange rate between coins i and j
+    /// @notice Exchanges the entire balance of one pool asset to another, disables input asset
+    /// @param i Index of the asset to spend
+    /// @param j Index of the asset to receive
+    /// @param rateMinRAY Minimum exchange rate between assets i and j, scaled by 1e27
     function exchange_all(int128 i, int128 j, uint256 rateMinRAY) external;
 
-    /// @dev Sends an order to exchange one underlying asset to another
-    /// @param i Index for the underlying coin sent
-    /// @param j Index for the underlying coin received
+    /// @notice Exchanges one pool's underlying asset to another
+    /// @param i Index of the underlying asset to spend
+    /// @param j Index of the underlying asset to receive
+    /// @dev `dx` and `min_dy` parameters are ignored because calldata is passed directly to the target contract
     function exchange_underlying(int128 i, int128 j, uint256, uint256) external;
 
-    /// @dev Sends an order to exchange the entire balance of one underlying asset to another
-    /// @param i Index for the underlying coin sent
-    /// @param j Index for the underlying coin received
-    /// @param rateMinRAY Minimum exchange rate between underlyings i and j
+    /// @notice Exchanges the entire balance of one pool's underlying asset to another, disables input asset
+    /// @param i Index of the underlying asset to spend
+    /// @param j Index of the underlying asset to receive
+    /// @param rateMinRAY Minimum exchange rate between underlying assets i and j, scaled by 1e27
     function exchange_all_underlying(int128 i, int128 j, uint256 rateMinRAY) external;
 
-    /// @dev Sends an order to add liquidity with only 1 input asset
-    /// @param amount Amount of asset to deposit
+    /// @notice Adds given amount of asset as liquidity to the pool
+    /// @param amount Amount to deposit
     /// @param i Index of the asset to deposit
-    /// @param minAmount Minimal number of LP tokens to receive
+    /// @param minAmount Minimum amount of LP tokens to receive
     function add_liquidity_one_coin(uint256 amount, int128 i, uint256 minAmount) external;
 
-    /// @dev Sends an order to add liquidity with only 1 input asset, using the entire balance
+    /// @notice Adds the entire balance of asset as liquidity to the pool, disables this asset
     /// @param i Index of the asset to deposit
-    /// @param rateMinRAY Minimal exchange rate between the deposited asset and the LP token
+    /// @param rateMinRAY Minimum exchange rate between deposited asset and LP token, scaled by 1e27
     function add_all_liquidity_one_coin(int128 i, uint256 rateMinRAY) external;
 
-    /// @dev Sends an order to remove liquidity from a pool in a single asset
+    /// @notice Removes liquidity from the pool in a specified asset
     /// @param i Index of the asset to withdraw
-    /// @notice `_token_amount` and `min_amount` are ignored since the calldata is routed directly to the target
-    function remove_liquidity_one_coin(
-        uint256, // _token_amount,
-        int128 i,
-        uint256 // min_amount
-    ) external;
+    /// @dev `_token_amount` and `min_amount` parameters are ignored because calldata is passed directly to the target contract
+    function remove_liquidity_one_coin(uint256, int128 i, uint256) external;
 
-    /// @dev Sends an order to remove all liquidity from the pool in a single asset
+    /// @notice Removes all liquidity from the pool in a specified asset
     /// @param i Index of the asset to withdraw
-    /// @param minRateRAY Minimal exchange rate between the LP token and the received token
-    function remove_all_liquidity_one_coin(int128 i, uint256 minRateRAY) external;
+    /// @param rateMinRAY Minimum exchange rate between LP token and received token
+    function remove_all_liquidity_one_coin(int128 i, uint256 rateMinRAY) external;
 
-    //
-    // GETTERS
-    //
-
-    /// @dev The pool LP token
+    /// @notice Pool LP token address (added for backward compatibility)
     function token() external view returns (address);
 
-    /// @dev The pool LP token
+    /// @notice Pool LP token address
     function lp_token() external view returns (address);
 
-    /// @dev Address of the base pool (for metapools only)
+    /// @notice Collateral token mask of pool LP token in the credit manager
+    function lpTokenMask() external view returns (uint256);
+
+    /// @notice Base pool address (for metapools only)
     function metapoolBase() external view returns (address);
 
-    /// @dev Number of coins in the pool
+    /// @notice Number of coins in the pool
     function nCoins() external view returns (uint256);
 
-    /// @dev Token in the pool under index 0
+    /// @notice Token in the pool under index 0
     function token0() external view returns (address);
 
-    /// @dev Token in the pool under index 1
+    /// @notice Token in the pool under index 1
     function token1() external view returns (address);
 
-    /// @dev Token in the pool under index 2
+    /// @notice Token in the pool under index 2
     function token2() external view returns (address);
 
-    /// @dev Token in the pool under index 3
+    /// @notice Token in the pool under index 3
     function token3() external view returns (address);
 
-    /// @dev Underlying in the pool under index 0
+    /// @notice Collateral token mask of token0 in the credit manager
+    function token0Mask() external view returns (uint256);
+
+    /// @notice Collateral token mask of token1 in the credit manager
+    function token1Mask() external view returns (uint256);
+
+    /// @notice Collateral token mask of token2 in the credit manager
+    function token2Mask() external view returns (uint256);
+
+    /// @notice Collateral token mask of token3 in the credit manager
+    function token3Mask() external view returns (uint256);
+
+    /// @notice Underlying in the pool under index 0
     function underlying0() external view returns (address);
 
-    /// @dev Underlying in the pool under index 1
+    /// @notice Underlying in the pool under index 1
     function underlying1() external view returns (address);
 
-    /// @dev Underlying in the pool under index 2
+    /// @notice Underlying in the pool under index 2
     function underlying2() external view returns (address);
 
-    /// @dev Underlying in the pool under index 3
+    /// @notice Underlying in the pool under index 3
     function underlying3() external view returns (address);
 
-    /// @dev Returns the amount of lp token received when adding a single coin to the pool
-    /// @param amount Amount of coin to be deposited
-    /// @param i Index of a coin to be deposited
-    function calc_add_one_coin(uint256 amount, int128 i) external view returns (uint256);
+    /// @notice Collateral token mask of underlying0 in the credit manager
+    function underlying0Mask() external view returns (uint256);
+
+    /// @notice Collateral token mask of underlying1 in the credit manager
+    function underlying1Mask() external view returns (uint256);
+
+    /// @notice Collateral token mask of underlying2 in the credit manager
+    function underlying2Mask() external view returns (uint256);
+
+    /// @notice Collateral token mask of underlying3 in the credit manager
+    function underlying3Mask() external view returns (uint256);
 }

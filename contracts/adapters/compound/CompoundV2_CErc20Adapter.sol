@@ -15,8 +15,14 @@ contract CompoundV2_CErc20Adapter is CompoundV2_CTokenAdapter {
     /// @notice cToken's underlying token
     address public immutable override underlying;
 
-    AdapterType public constant _gearboxAdapterType = AdapterType.COMPOUND_V2_CERC20;
-    uint16 public constant _gearboxAdapterVersion = 1;
+    /// @notice Collateral token mask of underlying token in the credit manager
+    uint256 public immutable override tokenMask;
+
+    /// @notice Collateral token mask of cToken in the credit manager
+    uint256 public immutable override cTokenMask;
+
+    AdapterType public constant override _gearboxAdapterType = AdapterType.COMPOUND_V2_CERC20;
+    uint16 public constant override _gearboxAdapterVersion = 1;
 
     /// @notice Constructor
     /// @param _creditManager Credit manager address
@@ -24,11 +30,13 @@ contract CompoundV2_CErc20Adapter is CompoundV2_CTokenAdapter {
     constructor(address _creditManager, address _cToken) CompoundV2_CTokenAdapter(_creditManager, _cToken) {
         underlying = ICErc20(targetContract).underlying();
 
-        if (creditManager.tokenMasksMap(targetContract) == 0) {
+        cTokenMask = creditManager.tokenMasksMap(targetContract);
+        if (cTokenMask == 0) {
             revert TokenIsNotInAllowedList(targetContract);
         }
 
-        if (creditManager.tokenMasksMap(underlying) == 0) {
+        tokenMask = creditManager.tokenMasksMap(underlying);
+        if (tokenMask == 0) {
             revert TokenIsNotInAllowedList(underlying);
         }
     }
@@ -43,19 +51,20 @@ contract CompoundV2_CErc20Adapter is CompoundV2_CTokenAdapter {
     /// -------------------------------- ///
 
     /// @dev Internal implementation of `mint`
-    ///      - Calls `_executeSwapSafeApprove` because Compound needs permission to transfer underlying
-    ///      - `tokenIn` is cToken's underlying token
-    ///      - `tokenOut` is cToken
-    ///      - `disableTokenIn` is set to false because operation doesn't spend the entire balance
+    ///      - underlying is approved before the call because cToken needs permission to transfer it
+    ///      - cToken is enabled after the call
+    ///      - underlying is not disabled after the call because operation doesn't spend the entire balance
     function _mint(uint256 amount) internal override returns (uint256 error) {
-        error = abi.decode(_executeSwapSafeApprove(underlying, targetContract, _encodeMint(amount), false), (uint256));
+        _approveToken(underlying, type(uint256).max);
+        error = abi.decode(_execute(_encodeMint(amount)), (uint256));
+        _approveToken(underlying, 1);
+        _changeEnabledTokens(cTokenMask, 0);
     }
 
     /// @dev Internal implementation of `mintAll`
-    ///      - Calls `_executeSwapSafeApprove` because Compound needs permission to transfer underlying
-    ///      - `tokenIn` is cToken's underlying token
-    ///      - `tokenOut` is cToken
-    ///      - `disableTokenIn` is set to true because operation spends the entire balance
+    ///      - underlying is approved before the call because cToken needs permission to transfer it
+    ///      - cToken is enabled after the call
+    ///      - underlying is disabled after the call because operation spends the entire balance
     function _mintAll() internal override returns (uint256 error) {
         address creditAccount = _creditAccount();
         uint256 balance = IERC20(underlying).balanceOf(creditAccount);
@@ -66,25 +75,25 @@ contract CompoundV2_CErc20Adapter is CompoundV2_CTokenAdapter {
             amount = balance - 1;
         }
 
-        error = abi.decode(
-            _executeSwapSafeApprove(creditAccount, underlying, targetContract, _encodeMint(amount), true), (uint256)
-        );
+        _approveToken(underlying, type(uint256).max);
+        error = abi.decode(_execute(_encodeMint(amount)), (uint256));
+        _approveToken(underlying, 1);
+        _changeEnabledTokens(cTokenMask, tokenMask);
     }
 
     /// @dev Internal implementation of `redeem`
-    ///      - Calls `_executeSwapNoApprove` because Compound doesn't need permission to burn cTokens
-    ///      - `tokenIn` is cToken
-    ///      - `tokenOut` is cToken's underlying token
-    ///      - `disableTokenIn` is set to false because operation doesn't spend the entire balance
+    ///      - cToken is not approved before the call because cToken doesn't need permission to burn it
+    ///      - underlying is enabled after the call
+    ///      - cToken is not disabled after the call because operation doesn't spend the entire balance
     function _redeem(uint256 amount) internal override returns (uint256 error) {
-        error = abi.decode(_executeSwapNoApprove(targetContract, underlying, _encodeRedeem(amount), false), (uint256));
+        error = abi.decode(_execute(_encodeRedeem(amount)), (uint256));
+        _changeEnabledTokens(tokenMask, 0);
     }
 
     /// @dev Internal implementation of `redeemAll`
-    ///      - Calls `_executeSwapNoApprove` because Compound doesn't need permission to burn cTokens
-    ///      - `tokenIn` is cToken
-    ///      - `tokenOut` is cToken's underlying token
-    ///      - `disableTokenIn` is set to true because operation spends the entire balance
+    ///      - cToken is not approved before the call because cToken doesn't need permission to burn it
+    ///      - underlying is enabled after the call
+    ///      - cToken is disabled after the call because operation spends the entire balance
     function _redeemAll() internal override returns (uint256 error) {
         address creditAccount = _creditAccount();
         uint256 balance = ICErc20(targetContract).balanceOf(creditAccount);
@@ -95,19 +104,16 @@ contract CompoundV2_CErc20Adapter is CompoundV2_CTokenAdapter {
             amount = balance - 1;
         }
 
-        error = abi.decode(
-            _executeSwapNoApprove(creditAccount, targetContract, underlying, _encodeRedeem(amount), true), (uint256)
-        );
+        error = abi.decode(_execute(_encodeRedeem(amount)), (uint256));
+        _changeEnabledTokens(tokenMask, cTokenMask);
     }
 
     /// @dev Internal implementation of `redeemUnderlying`
-    ///      - Calls `_executeSwapNoApprove` because Compound doesn't need permission to burn cTokens
-    ///      - `tokenIn` is cToken
-    ///      - `tokenOut` is cToken's underlying token
-    ///      - `disableTokenIn` is set to false because operation doesn't spend the entire balance
+    ///      - cToken is not approved before the call because cToken doesn't need permission to burn it
+    ///      - underlying is enabled after the call
+    ///      - cToken is not disabled after the call because operation doesn't spend the entire balance
     function _redeemUnderlying(uint256 amount) internal override returns (uint256 error) {
-        error = abi.decode(
-            _executeSwapNoApprove(targetContract, underlying, _encodeRedeemUnderlying(amount), false), (uint256)
-        );
+        error = abi.decode(_encodeRedeemUnderlying(amount), (uint256));
+        _changeEnabledTokens(tokenMask, 0);
     }
 }

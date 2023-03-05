@@ -61,6 +61,7 @@ contract CurveV1AdapterBaseTest is DSTest, CurveV1AdapterHelper {
     ///  TESTS
     ///
     ///
+
     /// @dev [ACV1-1]: constructor reverts for zero addresses and non allowed tokens
     function test_ACV1_01_constructor_reverts_for_zero_addresses_and_non_allowed_tokens() public {
         evm.expectRevert(abi.encodeWithSelector(ZeroAddressException.selector));
@@ -160,41 +161,82 @@ contract CurveV1AdapterBaseTest is DSTest, CurveV1AdapterHelper {
         assertEq(address(adapter.creditManager()), address(creditManager), "Incorrect creditManager");
         assertEq(address(adapter.targetContract()), address(curveV1Mock), "Incorrect router");
         assertEq(address(adapter.token()), address(curveV1Mock.token()), "Incorrect LP token");
-
         assertEq(address(adapter.lp_token()), address(curveV1Mock.token()), "Incorrect LP token");
-
+        assertEq(
+            adapter.lpTokenMask(), creditManager.tokenMasksMap(address(curveV1Mock.token())), "Incorrect LP token mask"
+        );
         assertEq(adapter.nCoins(), 4, "Incorrect nCoins");
 
+        // tokens
         assertEq(address(adapter.token0()), tokenTestSuite.addressOf(poolTkns[0]), "Incorrect token 0");
-
         assertEq(address(adapter.token1()), tokenTestSuite.addressOf(poolTkns[1]), "Incorrect token 1");
-
         assertEq(address(adapter.token2()), tokenTestSuite.addressOf(poolTkns[2]), "Incorrect token 2");
-
         assertEq(address(adapter.token3()), tokenTestSuite.addressOf(poolTkns[3]), "Incorrect token 3");
 
+        // tokens masks
+        assertEq(
+            adapter.token0Mask(),
+            creditManager.tokenMasksMap(tokenTestSuite.addressOf(poolTkns[0])),
+            "Incorrect token 0 mask"
+        );
+        assertEq(
+            adapter.token1Mask(),
+            creditManager.tokenMasksMap(tokenTestSuite.addressOf(poolTkns[1])),
+            "Incorrect token 1 mask"
+        );
+        assertEq(
+            adapter.token2Mask(),
+            creditManager.tokenMasksMap(tokenTestSuite.addressOf(poolTkns[2])),
+            "Incorrect token 2 mask"
+        );
+        assertEq(
+            adapter.token3Mask(),
+            creditManager.tokenMasksMap(tokenTestSuite.addressOf(poolTkns[3])),
+            "Incorrect token 3 mask"
+        );
+
+        // underlying tokens
         assertEq(
             address(adapter.underlying0()),
             tokenTestSuite.addressOf(underlyingPoolTkns[0]),
             "Incorrect underlying token 0"
         );
-
         assertEq(
             address(adapter.underlying1()),
             tokenTestSuite.addressOf(underlyingPoolTkns[1]),
             "Incorrect underlying token 1"
         );
-
         assertEq(
             address(adapter.underlying2()),
             tokenTestSuite.addressOf(underlyingPoolTkns[2]),
             "Incorrect underlying token 2"
         );
-
         assertEq(
             address(adapter.underlying3()),
             tokenTestSuite.addressOf(underlyingPoolTkns[3]),
             "Incorrect underlying token 3"
+        );
+
+        // underlying tokens masks
+        assertEq(
+            adapter.underlying0Mask(),
+            creditManager.tokenMasksMap(tokenTestSuite.addressOf(underlyingPoolTkns[0])),
+            "Incorrect underlying token 0 mask"
+        );
+        assertEq(
+            adapter.underlying1Mask(),
+            creditManager.tokenMasksMap(tokenTestSuite.addressOf(underlyingPoolTkns[1])),
+            "Incorrect underlying token 1 mask"
+        );
+        assertEq(
+            adapter.underlying2Mask(),
+            creditManager.tokenMasksMap(tokenTestSuite.addressOf(underlyingPoolTkns[2])),
+            "Incorrect underlying token 2 mask"
+        );
+        assertEq(
+            adapter.underlying3Mask(),
+            creditManager.tokenMasksMap(tokenTestSuite.addressOf(underlyingPoolTkns[3])),
+            "Incorrect underlying token 3 mask"
         );
     }
 
@@ -223,7 +265,7 @@ contract CurveV1AdapterBaseTest is DSTest, CurveV1AdapterHelper {
         bytes memory callData =
             abi.encodeCall(ICurvePool.exchange, (0, 2, DAI_EXCHANGE_AMOUNT, (DAI_EXCHANGE_AMOUNT * 99) / 100));
 
-        expectMulticallStackCalls(address(adapter), address(curveV1Mock), USER, callData, tokenIn, tokenOut, false);
+        expectMulticallStackCalls(address(adapter), address(curveV1Mock), USER, callData, tokenIn, tokenOut, true);
 
         executeOneLineMulticall(address(adapter), callData);
 
@@ -231,7 +273,7 @@ contract CurveV1AdapterBaseTest is DSTest, CurveV1AdapterHelper {
 
         expectBalance(Tokens.cUSDT, creditAccount, (DAI_EXCHANGE_AMOUNT * 99) / 100);
 
-        expectAllowance(tokenIn, creditAccount, address(curveV1Mock), type(uint256).max);
+        expectAllowance(tokenIn, creditAccount, address(curveV1Mock), 1);
 
         expectTokenIsEnabled(tokenOut, true);
     }
@@ -252,7 +294,7 @@ contract CurveV1AdapterBaseTest is DSTest, CurveV1AdapterHelper {
         bytes memory callData =
             abi.encodeCall(ICurvePool.exchange, (0, 2, DAI_ACCOUNT_AMOUNT - 1, ((DAI_ACCOUNT_AMOUNT - 1) * 99) / 100));
 
-        expectMulticallStackCalls(address(adapter), address(curveV1Mock), USER, callData, tokenIn, tokenOut, false);
+        expectMulticallStackCalls(address(adapter), address(curveV1Mock), USER, callData, tokenIn, tokenOut, true);
 
         executeOneLineMulticall(
             address(adapter), abi.encodeCall(ICurveV1Adapter.exchange_all, (0, 2, (99 * RAY) / 100))
@@ -262,7 +304,7 @@ contract CurveV1AdapterBaseTest is DSTest, CurveV1AdapterHelper {
 
         expectBalance(Tokens.cUSDT, creditAccount, ((DAI_ACCOUNT_AMOUNT - 1) * 99) / 100);
 
-        expectAllowance(tokenIn, creditAccount, address(curveV1Mock), type(uint256).max);
+        expectAllowance(tokenIn, creditAccount, address(curveV1Mock), 1);
 
         expectTokenIsEnabled(tokenIn, false);
         expectTokenIsEnabled(tokenOut, true);
@@ -282,7 +324,7 @@ contract CurveV1AdapterBaseTest is DSTest, CurveV1AdapterHelper {
             ICurvePool.exchange_underlying, (0, 2, DAI_EXCHANGE_AMOUNT, (DAI_EXCHANGE_AMOUNT * 99) / 100)
         );
 
-        expectMulticallStackCalls(address(adapter), address(curveV1Mock), USER, callData, tokenIn, tokenOut, false);
+        expectMulticallStackCalls(address(adapter), address(curveV1Mock), USER, callData, tokenIn, tokenOut, true);
 
         executeOneLineMulticall(address(adapter), callData);
 
@@ -290,7 +332,7 @@ contract CurveV1AdapterBaseTest is DSTest, CurveV1AdapterHelper {
 
         expectBalance(Tokens.USDT, creditAccount, (DAI_EXCHANGE_AMOUNT * 99) / 100);
 
-        expectAllowance(tokenIn, creditAccount, address(curveV1Mock), type(uint256).max);
+        expectAllowance(tokenIn, creditAccount, address(curveV1Mock), 1);
 
         expectTokenIsEnabled(tokenOut, true);
     }
@@ -310,7 +352,7 @@ contract CurveV1AdapterBaseTest is DSTest, CurveV1AdapterHelper {
 
         expectAllowance(tokenIn, creditAccount, address(curveV1Mock), 0);
 
-        expectMulticallStackCalls(address(adapter), address(curveV1Mock), USER, callData, tokenIn, tokenOut, false);
+        expectMulticallStackCalls(address(adapter), address(curveV1Mock), USER, callData, tokenIn, tokenOut, true);
 
         executeOneLineMulticall(
             address(adapter), abi.encodeCall(ICurveV1Adapter.exchange_all_underlying, (0, 2, (99 * RAY) / 100))
@@ -324,65 +366,8 @@ contract CurveV1AdapterBaseTest is DSTest, CurveV1AdapterHelper {
         expectTokenIsEnabled(tokenOut, true);
     }
 
-    /// @dev [ACV1-8]: add_all_liquidity_one_coin works for user as expected
-    function test_ACV1_08_add_all_liquidity_one_coin_works_for_user_as_expected() public {
-        for (uint256 nCoins = 2; nCoins <= 4; nCoins++) {
-            for (uint256 i = 0; i < nCoins; i++) {
-                _setUp(nCoins);
-
-                address tokenIn = curveV1Mock.coins(i);
-                address tokenOut = lpToken;
-
-                // tokenTestSuite.mint(Tokens.DAI, USER, DAI_ACCOUNT_AMOUNT);
-                (address creditAccount,) = _openTestCreditAccount();
-
-                tokenTestSuite.mint(tokenIn, USER, DAI_ACCOUNT_AMOUNT);
-                addCollateral(tokenIn, DAI_ACCOUNT_AMOUNT);
-
-                bytes memory callData =
-                    abi.encodeCall(CurveV1AdapterBase.add_all_liquidity_one_coin, (int128(int256(i)), RAY / 2));
-
-                bytes memory expectedCallData;
-
-                if (nCoins == 2) {
-                    uint256[2] memory amounts;
-                    amounts[i] = DAI_ACCOUNT_AMOUNT - 1;
-                    expectedCallData =
-                        abi.encodeCall(ICurvePool2Assets.add_liquidity, (amounts, (DAI_ACCOUNT_AMOUNT - 1) / 2));
-                } else if (nCoins == 3) {
-                    uint256[3] memory amounts;
-                    amounts[i] = DAI_ACCOUNT_AMOUNT - 1;
-                    expectedCallData =
-                        abi.encodeCall(ICurvePool3Assets.add_liquidity, (amounts, (DAI_ACCOUNT_AMOUNT - 1) / 2));
-                } else if (nCoins == 4) {
-                    uint256[4] memory amounts;
-                    amounts[i] = DAI_ACCOUNT_AMOUNT - 1;
-                    expectedCallData =
-                        abi.encodeCall(ICurvePool4Assets.add_liquidity, (amounts, (DAI_ACCOUNT_AMOUNT - 1) / 2));
-                }
-
-                expectMulticallStackCalls(
-                    address(adapter), address(curveV1Mock), USER, expectedCallData, tokenIn, tokenOut, false, true
-                );
-
-                executeOneLineMulticall(address(adapter), callData);
-
-                expectBalance(tokenIn, creditAccount, 1);
-
-                expectBalance(curveV1Mock.token(), creditAccount, (DAI_ACCOUNT_AMOUNT - 1) / 2);
-
-                expectTokenIsEnabled(tokenIn, false);
-                expectTokenIsEnabled(curveV1Mock.token(), true);
-
-                expectAllowance(tokenIn, creditAccount, address(curveV1Mock), type(uint256).max);
-
-                _closeTestCreditAccount();
-            }
-        }
-    }
-
-    /// @dev [ACV1-8A]: add_liquidity_one_coin works for user as expected
-    function test_ACV1_08A_add_liquidity_one_coin_works_for_user_as_expected() public {
+    /// @dev [ACV1-8]: add_liquidity_one_coin works for user as expected
+    function test_ACV1_08_add_liquidity_one_coin_works_for_user_as_expected() public {
         for (uint256 nCoins = 2; nCoins <= 4; nCoins++) {
             for (uint256 i = 0; i < nCoins; i++) {
                 _setUp(nCoins);
@@ -421,7 +406,7 @@ contract CurveV1AdapterBaseTest is DSTest, CurveV1AdapterHelper {
                 }
 
                 expectMulticallStackCalls(
-                    address(adapter), address(curveV1Mock), USER, expectedCallData, tokenIn, tokenOut, false, true
+                    address(adapter), address(curveV1Mock), USER, expectedCallData, tokenIn, tokenOut, true
                 );
 
                 executeOneLineMulticall(address(adapter), callData);
@@ -432,15 +417,72 @@ contract CurveV1AdapterBaseTest is DSTest, CurveV1AdapterHelper {
 
                 expectTokenIsEnabled(curveV1Mock.token(), true);
 
-                expectAllowance(tokenIn, creditAccount, address(curveV1Mock), type(uint256).max);
+                expectAllowance(tokenIn, creditAccount, address(curveV1Mock), 1);
 
                 _closeTestCreditAccount();
             }
         }
     }
 
-    /// @dev [ACV1-9]: remove_liquidity_one_coin works as expected
-    function test_ACV1_09_remove_liquidity_one_coin_works_correctly() public {
+    /// @dev [ACV1-9]: add_all_liquidity_one_coin works for user as expected
+    function test_ACV1_09_add_all_liquidity_one_coin_works_for_user_as_expected() public {
+        for (uint256 nCoins = 2; nCoins <= 4; nCoins++) {
+            for (uint256 i = 0; i < nCoins; i++) {
+                _setUp(nCoins);
+
+                address tokenIn = curveV1Mock.coins(i);
+                address tokenOut = lpToken;
+
+                // tokenTestSuite.mint(Tokens.DAI, USER, DAI_ACCOUNT_AMOUNT);
+                (address creditAccount,) = _openTestCreditAccount();
+
+                tokenTestSuite.mint(tokenIn, USER, DAI_ACCOUNT_AMOUNT);
+                addCollateral(tokenIn, DAI_ACCOUNT_AMOUNT);
+
+                bytes memory callData =
+                    abi.encodeCall(CurveV1AdapterBase.add_all_liquidity_one_coin, (int128(int256(i)), RAY / 2));
+
+                bytes memory expectedCallData;
+
+                if (nCoins == 2) {
+                    uint256[2] memory amounts;
+                    amounts[i] = DAI_ACCOUNT_AMOUNT - 1;
+                    expectedCallData =
+                        abi.encodeCall(ICurvePool2Assets.add_liquidity, (amounts, (DAI_ACCOUNT_AMOUNT - 1) / 2));
+                } else if (nCoins == 3) {
+                    uint256[3] memory amounts;
+                    amounts[i] = DAI_ACCOUNT_AMOUNT - 1;
+                    expectedCallData =
+                        abi.encodeCall(ICurvePool3Assets.add_liquidity, (amounts, (DAI_ACCOUNT_AMOUNT - 1) / 2));
+                } else if (nCoins == 4) {
+                    uint256[4] memory amounts;
+                    amounts[i] = DAI_ACCOUNT_AMOUNT - 1;
+                    expectedCallData =
+                        abi.encodeCall(ICurvePool4Assets.add_liquidity, (amounts, (DAI_ACCOUNT_AMOUNT - 1) / 2));
+                }
+
+                expectMulticallStackCalls(
+                    address(adapter), address(curveV1Mock), USER, expectedCallData, tokenIn, tokenOut, true
+                );
+
+                executeOneLineMulticall(address(adapter), callData);
+
+                expectBalance(tokenIn, creditAccount, 1);
+
+                expectBalance(curveV1Mock.token(), creditAccount, (DAI_ACCOUNT_AMOUNT - 1) / 2);
+
+                expectTokenIsEnabled(tokenIn, false);
+                expectTokenIsEnabled(curveV1Mock.token(), true);
+
+                expectAllowance(tokenIn, creditAccount, address(curveV1Mock), 1);
+
+                _closeTestCreditAccount();
+            }
+        }
+    }
+
+    /// @dev [ACV1-10]: remove_liquidity_one_coin works as expected
+    function test_ACV1_10_remove_liquidity_one_coin_works_correctly() public {
         for (uint256 nCoins = 2; nCoins <= 4; nCoins++) {
             for (uint256 i = 0; i < nCoins; i++) {
                 _setUp(nCoins);
@@ -461,7 +503,7 @@ contract CurveV1AdapterBaseTest is DSTest, CurveV1AdapterHelper {
                 tokenTestSuite.mint(tokenOut, address(curveV1Mock), USDT_ACCOUNT_AMOUNT);
 
                 expectMulticallStackCalls(
-                    address(adapter), address(curveV1Mock), USER, expectedCallData, tokenIn, tokenOut, false, false
+                    address(adapter), address(curveV1Mock), USER, expectedCallData, tokenIn, tokenOut, false
                 );
 
                 executeOneLineMulticall(address(adapter), expectedCallData);
@@ -476,8 +518,8 @@ contract CurveV1AdapterBaseTest is DSTest, CurveV1AdapterHelper {
         }
     }
 
-    /// @dev [ACV1-10]: remove_all_liquidity_one_coin works as expected
-    function test_ACV1_10_remove_all_liquidity_one_coin_works_correctly() public {
+    /// @dev [ACV1-11]: remove_all_liquidity_one_coin works as expected
+    function test_ACV1_11_remove_all_liquidity_one_coin_works_correctly() public {
         for (uint256 nCoins = 2; nCoins <= 4; nCoins++) {
             for (uint256 i = 0; i < nCoins; i++) {
                 _setUp(nCoins);
@@ -500,7 +542,7 @@ contract CurveV1AdapterBaseTest is DSTest, CurveV1AdapterHelper {
                 );
 
                 expectMulticallStackCalls(
-                    address(adapter), address(curveV1Mock), USER, expectedCallData, tokenIn, tokenOut, false, false
+                    address(adapter), address(curveV1Mock), USER, expectedCallData, tokenIn, tokenOut, false
                 );
 
                 executeOneLineMulticall(
@@ -515,21 +557,6 @@ contract CurveV1AdapterBaseTest is DSTest, CurveV1AdapterHelper {
 
                 expectTokenIsEnabled(tokenIn, false);
                 expectTokenIsEnabled(tokenOut, true);
-            }
-        }
-    }
-
-    /// @dev [ACV1-15]: Adapter calc_add_one_coin works correctly
-    function test_ACV1_15_calc_add_one_coin_works_correctly(uint256 amount) public {
-        evm.assume(amount < 10 ** 27);
-        for (uint256 nCoins = 2; nCoins <= 4; nCoins++) {
-            _setUp(nCoins);
-            for (uint256 i = 0; i < nCoins; i++) {
-                int128 i128 = (int128(uint128(i)));
-
-                curveV1Mock.setDepositRate(i128, RAY * i);
-
-                assertEq(adapter.calc_add_one_coin(amount, i128), amount * i, "Incorrect ammount");
             }
         }
     }

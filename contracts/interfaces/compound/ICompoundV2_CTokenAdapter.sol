@@ -9,12 +9,19 @@ import {IAdapter} from "@gearbox-protocol/core-v2/contracts/interfaces/adapters/
 error CTokenError(uint256 errorCode);
 
 /// @title Compound V2 cToken adapter interface
+/// @notice Implements logic allowing CAs to interact with Compound's cTokens
 interface ICompoundV2_CTokenAdapter is IAdapter {
     /// @notice cToken that this adapter is connected to
     function cToken() external view returns (address);
 
     /// @notice cToken's underlying token
     function underlying() external view returns (address);
+
+    /// @notice Collateral token mask of underlying token in the credit manager
+    function tokenMask() external view returns (uint256);
+
+    /// @notice Collateral token mask of cToken in the credit manager
+    function cTokenMask() external view returns (uint256);
 
     /// @notice Deposit given amount of underlying tokens into Compound in exchange for cTokens
     /// @param amount Amount of underlying tokens to deposit

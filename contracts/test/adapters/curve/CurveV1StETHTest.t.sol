@@ -99,9 +99,9 @@ contract CurveV1StEthAdapterTest is DSTest, CurveV1AdapterHelper {
 
         expectTokenIsEnabled(lp_token, true);
 
-        expectAllowance(Tokens.WETH, creditAccount, _curveV1stETHPoolGateway, type(uint256).max);
+        expectAllowance(Tokens.WETH, creditAccount, _curveV1stETHPoolGateway, 1);
 
-        expectAllowance(Tokens.STETH, creditAccount, _curveV1stETHPoolGateway, type(uint256).max);
+        expectAllowance(Tokens.STETH, creditAccount, _curveV1stETHPoolGateway, 1);
     }
 
     /// @dev [ACV1S-2]: remove_liquidity works correctly
@@ -167,7 +167,7 @@ contract CurveV1StEthAdapterTest is DSTest, CurveV1AdapterHelper {
             address(curveV1Mock), ethalanceBefore + WETH_ADD_LIQUIDITY_AMOUNT - WETH_REMOVE_LIQUIDITY_AMOUNT
         );
 
-        expectAllowance(lp_token, creditAccount, _curveV1stETHPoolGateway, type(uint256).max);
+        expectAllowance(lp_token, creditAccount, _curveV1stETHPoolGateway, 1);
 
         expectTokenIsEnabled(Tokens.WETH, true);
         expectTokenIsEnabled(Tokens.STETH, true);
@@ -190,7 +190,7 @@ contract CurveV1StEthAdapterTest is DSTest, CurveV1AdapterHelper {
 
         bytes memory callData = abi.encodeCall(ICurvePool.exchange, (0, 1, WETH_EXCHANGE_AMOUNT, 0));
 
-        expectMulticallStackCalls(address(adapter), _curveV1stETHPoolGateway, USER, callData, tokenIn, tokenOut, false);
+        expectMulticallStackCalls(address(adapter), _curveV1stETHPoolGateway, USER, callData, tokenIn, tokenOut, true);
 
         executeOneLineMulticall(address(adapter), callData);
 
@@ -201,7 +201,7 @@ contract CurveV1StEthAdapterTest is DSTest, CurveV1AdapterHelper {
 
         expectEthBalance(address(curveV1Mock), ethalanceBefore + WETH_EXCHANGE_AMOUNT);
 
-        expectAllowance(Tokens.WETH, creditAccount, _curveV1stETHPoolGateway, type(uint256).max);
+        expectAllowance(Tokens.WETH, creditAccount, _curveV1stETHPoolGateway, 1);
 
         expectTokenIsEnabled(Tokens.STETH, true);
     }
@@ -224,7 +224,7 @@ contract CurveV1StEthAdapterTest is DSTest, CurveV1AdapterHelper {
         bytes memory callData =
             abi.encodeCall(ICurvePool.remove_liquidity_one_coin, (CURVE_LP_OPERATION_AMOUNT, 0, WETH_EXCHANGE_AMOUNT));
 
-        expectMulticallStackCalls(address(adapter), _curveV1stETHPoolGateway, USER, callData, tokenIn, tokenOut, false);
+        expectMulticallStackCalls(address(adapter), _curveV1stETHPoolGateway, USER, callData, tokenIn, tokenOut, true);
 
         executeOneLineMulticall(address(adapter), callData);
 
@@ -234,7 +234,7 @@ contract CurveV1StEthAdapterTest is DSTest, CurveV1AdapterHelper {
 
         expectEthBalance(address(curveV1Mock), ethBalanceBefore - WETH_EXCHANGE_AMOUNT);
 
-        expectAllowance(tokenIn, creditAccount, _curveV1stETHPoolGateway, type(uint256).max);
+        expectAllowance(tokenIn, creditAccount, _curveV1stETHPoolGateway, 1);
 
         expectTokenIsEnabled(Tokens.WETH, true);
     }
@@ -260,7 +260,7 @@ contract CurveV1StEthAdapterTest is DSTest, CurveV1AdapterHelper {
         );
 
         expectMulticallStackCalls(
-            address(adapter), _curveV1stETHPoolGateway, USER, expectedCallData, tokenIn, tokenOut, false
+            address(adapter), _curveV1stETHPoolGateway, USER, expectedCallData, tokenIn, tokenOut, true
         );
 
         executeOneLineMulticall(
@@ -273,7 +273,7 @@ contract CurveV1StEthAdapterTest is DSTest, CurveV1AdapterHelper {
 
         expectEthBalance(address(curveV1Mock), ethBalanceBefore - ((CURVE_LP_ACCOUNT_AMOUNT - 1) / 2));
 
-        expectAllowance(tokenIn, creditAccount, _curveV1stETHPoolGateway, type(uint256).max);
+        expectAllowance(tokenIn, creditAccount, _curveV1stETHPoolGateway, 1);
 
         expectTokenIsEnabled(Tokens.WETH, true);
     }
@@ -307,7 +307,7 @@ contract CurveV1StEthAdapterTest is DSTest, CurveV1AdapterHelper {
 
         expectEthBalance(address(curveV1Mock), ethBalanceBefore - WETH_REMOVE_LIQUIDITY_AMOUNT);
 
-        expectAllowance(tokenIn, creditAccount, _curveV1stETHPoolGateway, type(uint256).max);
+        expectAllowance(tokenIn, creditAccount, _curveV1stETHPoolGateway, 1);
 
         expectTokenIsEnabled(Tokens.WETH, true);
         expectTokenIsEnabled(Tokens.STETH, false);

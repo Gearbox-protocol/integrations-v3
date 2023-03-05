@@ -150,13 +150,13 @@ contract CurveV1Adapter4AssetsTest is DSTest, CurveV1AdapterHelper {
 
         expectTokenIsEnabled(curveV1Mock.token(), true);
 
-        expectAllowance(Tokens.cDAI, creditAccount, address(curveV1Mock), type(uint256).max);
+        expectAllowance(Tokens.cDAI, creditAccount, address(curveV1Mock), 1);
 
-        expectAllowance(Tokens.cUSDC, creditAccount, address(curveV1Mock), type(uint256).max);
+        expectAllowance(Tokens.cUSDC, creditAccount, address(curveV1Mock), 1);
 
-        expectAllowance(Tokens.cUSDT, creditAccount, address(curveV1Mock), type(uint256).max);
+        expectAllowance(Tokens.cUSDT, creditAccount, address(curveV1Mock), 1);
 
-        expectAllowance(Tokens.cLINK, creditAccount, address(curveV1Mock), type(uint256).max);
+        expectAllowance(Tokens.cLINK, creditAccount, address(curveV1Mock), 1);
     }
 
     /// @dev [ACV1_4-4A]: add_all_liquidity_one_coin works as expected(
@@ -179,7 +179,7 @@ contract CurveV1Adapter4AssetsTest is DSTest, CurveV1AdapterHelper {
         expectAllowance(Tokens.cUSDT, creditAccount, address(curveV1Mock), 0);
 
         expectMulticallStackCalls(
-            address(adapter), address(curveV1Mock), USER, expectedCallData, tokenIn, tokenOut, false, true
+            address(adapter), address(curveV1Mock), USER, expectedCallData, tokenIn, tokenOut, true
         );
 
         executeOneLineMulticall(address(adapter), callData);
@@ -190,7 +190,7 @@ contract CurveV1Adapter4AssetsTest is DSTest, CurveV1AdapterHelper {
 
         expectTokenIsEnabled(curveV1Mock.token(), true);
 
-        expectAllowance(Tokens.cUSDT, creditAccount, address(curveV1Mock), type(uint256).max);
+        expectAllowance(Tokens.cUSDT, creditAccount, address(curveV1Mock), 1);
     }
 
     /// @dev [ACV1_4-5]: remove_liquidity works as expected(

@@ -65,7 +65,7 @@ contract CurveV1AdapterBaseMetaPoolTest is DSTest, CurveV1AdapterHelper {
             ICurvePool.exchange_underlying, (0, 3, LINK_EXCHANGE_AMOUNT, (LINK_EXCHANGE_AMOUNT * 99) / 100)
         );
 
-        expectMulticallStackCalls(address(adapter), address(curveV1Mock), USER, callData, tokenIn, tokenOut, false);
+        expectMulticallStackCalls(address(adapter), address(curveV1Mock), USER, callData, tokenIn, tokenOut, true);
 
         executeOneLineMulticall(
             address(adapter),
@@ -75,6 +75,7 @@ contract CurveV1AdapterBaseMetaPoolTest is DSTest, CurveV1AdapterHelper {
         expectBalance(Tokens.cLINK, creditAccount, LINK_ACCOUNT_AMOUNT - LINK_EXCHANGE_AMOUNT);
 
         expectBalance(Tokens.cUSDT, creditAccount, (LINK_EXCHANGE_AMOUNT * 99) / 100);
+        expectTokenIsEnabled(tokenOut, true);
     }
 
     /// @dev [ACV1-M-3]: exchange_all_underlying works correctly
@@ -90,68 +91,11 @@ contract CurveV1AdapterBaseMetaPoolTest is DSTest, CurveV1AdapterHelper {
             ICurvePool.exchange_underlying, (0, 3, LINK_ACCOUNT_AMOUNT - 1, ((LINK_ACCOUNT_AMOUNT - 1) * 99) / 100)
         );
 
-        expectMulticallStackCalls(address(adapter), address(curveV1Mock), USER, callData, tokenIn, tokenOut, false);
+        expectMulticallStackCalls(address(adapter), address(curveV1Mock), USER, callData, tokenIn, tokenOut, true);
 
         executeOneLineMulticall(
             address(adapter), abi.encodeCall(adapter.exchange_all_underlying, (0, 3, (RAY * 99) / 100))
         );
-
-        expectBalance(Tokens.cLINK, creditAccount, 1);
-
-        expectBalance(Tokens.cUSDT, creditAccount, ((LINK_ACCOUNT_AMOUNT - 1) * 99) / 100);
-
-        expectTokenIsEnabled(tokenIn, false);
-        expectTokenIsEnabled(tokenOut, true);
-    }
-
-    /// @dev [ACV1-M-4]: multicall: exchange_underlying works correctly
-    function test_ACV1_M_04_multicall_exchange_underlying_works_correctly() public {
-        address tokenIn = tokenTestSuite.addressOf(Tokens.cLINK);
-        address tokenOut = tokenTestSuite.addressOf(Tokens.cUSDT);
-
-        (address creditAccount,) = _openTestCreditAccount();
-
-        addCollateral(Tokens.cLINK, LINK_ACCOUNT_AMOUNT);
-
-        bytes memory callData = abi.encodeCall(
-            ICurvePool.exchange_underlying, (0, 3, LINK_EXCHANGE_AMOUNT, (LINK_EXCHANGE_AMOUNT * 99) / 100)
-        );
-
-        MultiCall[] memory calls = new MultiCall[](1);
-        calls[0] = MultiCall({target: address(adapter), callData: callData});
-
-        expectMulticallStackCalls(address(adapter), address(curveV1Mock), USER, callData, tokenIn, tokenOut, false);
-
-        evm.prank(USER);
-        creditFacade.multicall(calls);
-
-        expectBalance(Tokens.cLINK, creditAccount, LINK_ACCOUNT_AMOUNT - LINK_EXCHANGE_AMOUNT);
-
-        expectBalance(Tokens.cUSDT, creditAccount, (LINK_EXCHANGE_AMOUNT * 99) / 100);
-    }
-
-    /// @dev [ACV1-M-5]: exchange_all_underlying works correctly
-    function test_ACV1_M_05_multicall_exchange_all_underlying_works_correctly() public {
-        address tokenIn = tokenTestSuite.addressOf(Tokens.cLINK);
-        address tokenOut = tokenTestSuite.addressOf(Tokens.cUSDT);
-
-        (address creditAccount,) = _openTestCreditAccount();
-
-        addCollateral(Tokens.cLINK, LINK_ACCOUNT_AMOUNT);
-
-        bytes memory callData = abi.encodeCall(
-            ICurvePool.exchange_underlying, (0, 3, LINK_ACCOUNT_AMOUNT - 1, ((LINK_ACCOUNT_AMOUNT - 1) * 99) / 100)
-        );
-
-        bytes memory facadeCallData = abi.encodeCall(ICurveV1Adapter.exchange_all_underlying, (0, 3, (99 * RAY) / 100));
-
-        MultiCall[] memory calls = new MultiCall[](1);
-        calls[0] = MultiCall({target: address(adapter), callData: facadeCallData});
-
-        expectMulticallStackCalls(address(adapter), address(curveV1Mock), USER, callData, tokenIn, tokenOut, false);
-
-        evm.prank(USER);
-        creditFacade.multicall(calls);
 
         expectBalance(Tokens.cLINK, creditAccount, 1);
 

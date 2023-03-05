@@ -64,7 +64,6 @@ contract AdapterTestHelper is
         bytes memory callData,
         address tokenIn,
         address, // tokenOut,
-        bool safeApprove,
         bool allowTokenIn
     ) internal {
         evm.expectEmit(true, false, false, false);
@@ -81,33 +80,17 @@ contract AdapterTestHelper is
             address(creditManager), abi.encodeCall(ICreditManagerV2.executeOrder, (targetContract, callData))
         );
 
-        address creditAccount = creditManager.getCreditAccountOrRevert(borrower);
-        evm.expectEmit(true, true, false, false);
-        emit ExecuteOrder(creditAccount, targetContract);
+        evm.expectEmit(true, false, false, false);
+        emit ExecuteOrder(targetContract);
 
         if (allowTokenIn) {
             evm.expectCall(
                 address(creditManager),
-                abi.encodeCall(
-                    ICreditManagerV2.approveCreditAccount,
-                    (targetContract, tokenIn, safeApprove ? 1 : type(uint256).max)
-                )
+                abi.encodeCall(ICreditManagerV2.approveCreditAccount, (targetContract, tokenIn, 1))
             );
         }
 
         evm.expectEmit(false, false, false, false);
         emit MultiCallFinished();
-    }
-
-    function expectMulticallStackCalls(
-        address adapter,
-        address targetContract,
-        address borrower,
-        bytes memory callData,
-        address tokenIn,
-        address tokenOut,
-        bool safeApprove
-    ) internal {
-        expectMulticallStackCalls(adapter, targetContract, borrower, callData, tokenIn, tokenOut, safeApprove, true);
     }
 }
