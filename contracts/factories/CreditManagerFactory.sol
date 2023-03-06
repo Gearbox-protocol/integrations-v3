@@ -23,8 +23,6 @@ contract CreditManagerFactory is CreditManagerFactoryBase {
     {}
 
     function _postInstall() internal override {
-        PriceOracle priceOracle = PriceOracle(addressProvider.getPriceOracle());
-
         address[] memory allowedContracts = creditConfigurator.allowedContracts();
         uint256 len = allowedContracts.length;
 
@@ -32,17 +30,6 @@ contract CreditManagerFactory is CreditManagerFactoryBase {
             address allowedContract = allowedContracts[i];
             address adapter = creditManager.contractToAdapter(allowedContract);
             AdapterType aType = IAdapter(adapter)._gearboxAdapterType();
-
-            if (aType == AdapterType.CONVEX_V1_BASE_REWARD_POOL) {
-                address stakedPhantomToken = IConvexV1BaseRewardPoolAdapter(adapter).stakedPhantomToken();
-
-                address curveLPtoken = IConvexV1BaseRewardPoolAdapter(adapter).curveLPtoken();
-                address cvxLPToken = address(IConvexV1BaseRewardPoolAdapter(adapter).stakingToken());
-
-                priceOracle.addPriceFeed(cvxLPToken, priceOracle.priceFeeds(curveLPtoken));
-
-                priceOracle.addPriceFeed(stakedPhantomToken, priceOracle.priceFeeds(curveLPtoken));
-            }
 
             if (aType == AdapterType.CONVEX_V1_BOOSTER) {
                 IConvexV1BoosterAdapter(adapter).updateStakedPhantomTokensMap();
