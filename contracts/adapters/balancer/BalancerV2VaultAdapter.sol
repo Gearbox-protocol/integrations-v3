@@ -297,9 +297,9 @@ contract BalancerV2VaultAdapter is AbstractAdapter, IBalancerV2VaultAdapter {
     ///        * `assets` - Array of all assets in the pool
     ///        * `minAmountsOut` - The minimal amounts to receive for each asset
     ///        * `userData` - a blob encoding the type of deposit and additional parameters
-    ///          `(see https://dev.balancer.fi/resources/joins-and-exits/pool-exits#userdata for more info)
+    ///          (see https://dev.balancer.fi/resources/joins-and-exits/pool-exits#userdata for more info)
     ///        * `toInternalBalance` - whether to use internal balances for assets
-    ///          `(ignored as the adapter does not use internal balances)
+    ///          (ignored as the adapter does not use internal balances)
     /// @dev `sender` and `recipient` are ignored, since they are always set to the CA address
     function exitPool(bytes32 poolId, address, address payable, ExitPoolRequest memory request)
         external

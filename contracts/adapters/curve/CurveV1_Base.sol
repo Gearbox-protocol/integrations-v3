@@ -473,8 +473,8 @@ contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
     }
 
     /// @notice `remove_all_liquidity_one_coin` wrapper to support newer pools which accept uint256 for token indices
-    function remove_all_liquidity_one_coin(uint256 i, uint256 minRateRAY) external override creditFacadeOnly {
-        remove_all_liquidity_one_coin(i.toInt256().toInt128(), minRateRAY);
+    function remove_all_liquidity_one_coin(uint256 i, uint256 rateMinRAY) external override creditFacadeOnly {
+        remove_all_liquidity_one_coin(i.toInt256().toInt128(), rateMinRAY);
     }
 
     /// @dev Internal implementation of `remove_all_liquidity_one_coin`

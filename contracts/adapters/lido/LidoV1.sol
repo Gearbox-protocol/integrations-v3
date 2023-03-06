@@ -71,13 +71,13 @@ contract LidoV1Adapter is AbstractAdapter, ILidoV1Adapter, ACLNonReentrantTrait 
     /// @param amount Amount of WETH to deposit
     /// @dev The referral address is set to Gearbox treasury
     function submit(uint256 amount) external override creditFacadeOnly {
-        _submit(amount, false); // F:[LDOV1-3]
+        _submit(amount, false); // F: [LDOV1-3]
     }
 
     /// @notice Stakes the entire balance of WETH in Lido via Gateway, disables WETH
     /// @dev The referral address is set to Gearbox treasury
     function submitAll() external override creditFacadeOnly {
-        address creditAccount = _creditAccount(); // F:[LDOV1-2]
+        address creditAccount = _creditAccount(); // F: [LDOV1-2]
 
         uint256 balance = IERC20(weth).balanceOf(creditAccount);
         if (balance <= 1) return;
@@ -92,9 +92,9 @@ contract LidoV1Adapter is AbstractAdapter, ILidoV1Adapter, ACLNonReentrantTrait 
     ///      - stETH is enabled after the call
     ///      - WETH is only disabled when staking the entire balance
     function _submit(uint256 amount, bool disableWETH) internal {
-        if (amount > limit) revert LimitIsOverException(); // F:[LDOV1-5]
+        if (amount > limit) revert LimitIsOverException(); // F: [LDOV1-5]
         unchecked {
-            limit -= amount; // F:[LDOV1-5]
+            limit -= amount; // F: [LDOV1-5]
         }
 
         _approveToken(weth, type(uint256).max);
@@ -108,9 +108,9 @@ contract LidoV1Adapter is AbstractAdapter, ILidoV1Adapter, ACLNonReentrantTrait 
     function setLimit(uint256 _limit)
         external
         override
-        configuratorOnly // F:[LDOV1-6]
+        configuratorOnly // F: [LDOV1-6]
     {
-        limit = _limit; // F:[LDOV1-7]
-        emit NewLimit(_limit); // F:[LDOV1-7]
+        limit = _limit; // F: [LDOV1-7]
+        emit NewLimit(_limit); // F: [LDOV1-7]
     }
 }

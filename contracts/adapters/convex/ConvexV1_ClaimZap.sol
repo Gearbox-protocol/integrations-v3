@@ -54,9 +54,9 @@ contract ConvexV1ClaimZapAdapter is AbstractAdapter, IClaimZap {
 
         _claimAndEnableRewards(creditAccount, rewardContracts); // F: [ACVX1_Z-2]
 
-        _claimAndEnableExtraRewards(creditAccount, extraRewardContracts); // F: [ACVX1_Z-2,3]
+        _claimAndEnableExtraRewards(creditAccount, extraRewardContracts); // F: [ACVX1_Z-2, ACVX1_Z-3]
 
-        _claimAndEnableTokenRewards( // F: [ACVX1_Z-2,5]
+        _claimAndEnableTokenRewards( // F: [ACVX1_Z-2, ACVX1_Z-5]
         creditAccount, tokenRewardContracts, tokenRewardTokens);
 
         _enableTokenIfHasBalance(creditAccount, crv); // F: [ACVX1_Z-2]
@@ -104,9 +104,9 @@ contract ConvexV1ClaimZapAdapter is AbstractAdapter, IClaimZap {
 
         for (uint256 i = 0; i < len;) {
             token = IRewards(extraRewardContracts[i]).rewardToken();
-            IRewards(extraRewardContracts[i]).getReward(creditAccount); // F: [ACVX1_Z-2,3]
+            IRewards(extraRewardContracts[i]).getReward(creditAccount); // F: [ACVX1_Z-2, ACVX1_Z-3]
 
-            _enableTokenIfHasBalance(creditAccount, token); // F: [ACVX1_Z-2,3]
+            _enableTokenIfHasBalance(creditAccount, token); // F: [ACVX1_Z-2, ACVX1_Z-3]
 
             unchecked {
                 ++i;
@@ -129,10 +129,10 @@ contract ConvexV1ClaimZapAdapter is AbstractAdapter, IClaimZap {
         //claim from multi reward token contract
         for (uint256 i; i < len;) {
             token = tokenRewardTokens[i];
-            IBasicRewards(tokenRewardContracts[i]).getReward( // F: [ACVX1_Z-2,5]
+            IBasicRewards(tokenRewardContracts[i]).getReward( // F: [ACVX1_Z-2, ACVX1_Z-5]
             creditAccount, token);
 
-            _enableTokenIfHasBalance(creditAccount, token); // F: [ACVX1_Z-2,5]
+            _enableTokenIfHasBalance(creditAccount, token); // F: [ACVX1_Z-2, ACVX1_Z-5]
 
             unchecked {
                 ++i;

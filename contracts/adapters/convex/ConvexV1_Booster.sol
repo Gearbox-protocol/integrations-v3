@@ -58,8 +58,8 @@ contract ConvexV1BoosterAdapter is AbstractAdapter, ACLNonReentrantTrait, IConve
     function _deposit(uint256 _pid, bool _stake, bytes memory callData, bool disableCurveLP) internal {
         IBooster.PoolInfo memory pool = IBooster(targetContract).poolInfo(_pid);
 
-        address tokenIn = pool.lptoken; // F: [ACVX1_B-2,3]
-        address tokenOut = _stake ? pidToPhantomToken[_pid] : pool.token; // F: [ACVX1_B-2,3]
+        address tokenIn = pool.lptoken; // F: [ACVX1_B-2, ACVX1_B-3]
+        address tokenOut = _stake ? pidToPhantomToken[_pid] : pool.token; // F: [ACVX1_B-2, ACVX1_B-3]
 
         // using `_executeSwap` because tokens are not known in advance and need to check if they are registered
         _executeSwapSafeApprove(tokenIn, tokenOut, callData, disableCurveLP);
@@ -89,8 +89,8 @@ contract ConvexV1BoosterAdapter is AbstractAdapter, ACLNonReentrantTrait, IConve
     function _withdraw(uint256 _pid, bytes memory callData, bool disableConvexLP) internal {
         IBooster.PoolInfo memory pool = IBooster(targetContract).poolInfo(_pid);
 
-        address tokenIn = pool.token; // F: [ACVX1_B-4,5]
-        address tokenOut = pool.lptoken; // F: [ACVX1_B-4,5]
+        address tokenIn = pool.token; // F: [ACVX1_B-4, ACVX1_B-5]
+        address tokenOut = pool.lptoken; // F: [ACVX1_B-4, ACVX1_B-5]
 
         // using `_executeSwap` because tokens are not known in advance and need to check if they are registered
         _executeSwapNoApprove(tokenIn, tokenOut, callData, disableConvexLP);

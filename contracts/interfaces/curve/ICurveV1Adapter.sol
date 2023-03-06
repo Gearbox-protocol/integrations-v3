@@ -80,7 +80,7 @@ interface ICurveV1Adapter is IAdapter, ICurveV1AdapterExceptions {
     function remove_all_liquidity_one_coin(int128 i, uint256 rateMinRAY) external;
 
     /// @notice `remove_all_liquidity_one_coin` wrapper to support newer pools which accept uint256 for token indices
-    function remove_all_liquidity_one_coin(uint256 i, uint256 minRateRAY) external;
+    function remove_all_liquidity_one_coin(uint256 i, uint256 rateMinRAY) external;
 
     /// @notice Pool LP token address (added for backward compatibility)
     function token() external view returns (address);

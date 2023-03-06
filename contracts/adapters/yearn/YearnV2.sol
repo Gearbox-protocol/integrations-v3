@@ -120,7 +120,7 @@ contract YearnV2Adapter is AbstractAdapter, IYearnV2Adapter {
     /// @dev Second param (`recipient`) is ignored because it can only be the credit account
     function withdraw(uint256 maxShares, address, uint256 maxLoss) external override creditFacadeOnly {
         address creditAccount = _creditAccount(); // F: [AYV2-3]
-        _withdraw(maxShares, creditAccount, maxLoss); // F: [AYV2-10,11]
+        _withdraw(maxShares, creditAccount, maxLoss); // F: [AYV2-10, AYV2-11]
     }
 
     /// @dev Internal implementation of `withdraw` functions
