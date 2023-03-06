@@ -35,7 +35,7 @@ contract CurveCryptoLPPriceFeed is AbstractCurveLPPriceFeed {
     /// @dev Number of coins in the pool (2 or 3)
     uint16 public immutable nCoins;
 
-    PriceFeedType public constant override priceFeedType = PriceFeedType.ZERO_ORACLE;
+    PriceFeedType public constant override priceFeedType = PriceFeedType.CURVE_CRYPTO_ORACLE;
 
     constructor(
         address addressProvider,
