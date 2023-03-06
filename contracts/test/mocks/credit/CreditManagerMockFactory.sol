@@ -1,29 +1,21 @@
 // SPDX-License-Identifier: UNLICENSED
-// Gearbox. Generalized leverage protocol that allows to take leverage and then use it across other DeFi protocols and platforms in a composable way.
-// (c) Gearbox Holdings, 2022
-pragma solidity ^0.8.10;
+// Gearbox Protocol. Generalized leverage for DeFi protocols
+// (c) Gearbox Holdings, 2023
+pragma solidity ^0.8.17;
 
+import {Adapter} from "@gearbox-protocol/core-v2/contracts/factories/CreditManagerFactoryBase.sol";
 import {ContractsRegister} from "@gearbox-protocol/core-v2/contracts/core/ContractsRegister.sol";
-import {PriceOracle} from "@gearbox-protocol/core-v2/contracts/oracles/PriceOracle.sol";
-import {Adapter} from "../../../factories/CreditManagerFactory.sol";
-
-import {IConvexV1BaseRewardPoolAdapter} from "../../../interfaces/convex/IConvexV1BaseRewardPoolAdapter.sol";
-import {IConvexV1BoosterAdapter} from "../../../interfaces/convex/IConvexV1BoosterAdapter.sol";
-
-import {PoolService} from "@gearbox-protocol/core-v2/contracts/pool/PoolService.sol";
-import {CreditManagerLiveMock} from "./CreditManagerLiveMock.sol";
-import {CreditFacade} from "@gearbox-protocol/core-v2/contracts/credit/CreditFacade.sol";
+import {ContractUpgrader} from "@gearbox-protocol/core-v2/contracts/support/ContractUpgrader.sol";
 import {
     CreditConfigurator, CreditManagerOpts
 } from "@gearbox-protocol/core-v2/contracts/credit/CreditConfigurator.sol";
+import {CreditFacade} from "@gearbox-protocol/core-v2/contracts/credit/CreditFacade.sol";
+import {PoolService} from "@gearbox-protocol/core-v2/contracts/pool/PoolService.sol";
 
-import {ContractUpgrader} from "@gearbox-protocol/core-v2/contracts/support/ContractUpgrader.sol";
+import {CreditManagerLiveMock} from "./CreditManagerLiveMock.sol";
 
-import "@gearbox-protocol/core-v2/contracts/interfaces/adapters/IAdapter.sol";
-
-/// @title CreditManagerFactory
-/// @notice Deploys 3 core interdependent contracts: CreditManage, CreditFacade and CredigConfigurator
-///         and setup them by following options
+/// @title CreditManagerMock factory
+/// @notice Same as `CreditManagerFactory` but configures mock credit manager
 contract CreditManagerMockFactory is ContractUpgrader {
     CreditManagerLiveMock public creditManager;
     CreditFacade public creditFacade;
@@ -116,25 +108,12 @@ contract CreditManagerMockFactory is ContractUpgrader {
             }
         }
 
-        cr.addCreditManager(address(creditManager)); // T:[PD-2]
+        cr.addCreditManager(address(creditManager));
 
         pool.connectCreditManager(address(creditManager));
 
-        address[] memory allowedContracts = creditConfigurator.allowedContracts();
-        len = allowedContracts.length;
-
-        for (uint256 i = 0; i < len;) {
-            address allowedContract = allowedContracts[i];
-            address adapter = creditManager.contractToAdapter(allowedContract);
-            AdapterType aType = IAdapter(adapter)._gearboxAdapterType();
-
-            if (aType == AdapterType.CONVEX_V1_BOOSTER) {
-                IConvexV1BoosterAdapter(adapter).updateStakedPhantomTokensMap();
-            }
-
-            unchecked {
-                ++i;
-            }
-        }
+        _postInstall();
     }
+
+    function _postInstall() internal virtual {}
 }
