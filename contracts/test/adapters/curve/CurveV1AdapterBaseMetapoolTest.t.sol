@@ -69,13 +69,14 @@ contract CurveV1AdapterBaseMetaPoolTest is DSTest, CurveV1AdapterHelper {
             (LINK_EXCHANGE_AMOUNT * 99) / 100
         );
 
-        expectMulticallStackCalls(address(adapter), address(curveV1Mock), USER, callData, tokenIn, tokenOut, false);
+        expectMulticallStackCalls(address(adapter), address(curveV1Mock), USER, callData, tokenIn, tokenOut, true);
 
         executeOneLineMulticall(address(adapter), callData);
 
         expectBalance(Tokens.cLINK, creditAccount, LINK_ACCOUNT_AMOUNT - LINK_EXCHANGE_AMOUNT);
 
         expectBalance(Tokens.cUSDT, creditAccount, (LINK_EXCHANGE_AMOUNT * 99) / 100);
+        expectTokenIsEnabled(tokenOut, true);
     }
 
     /// @dev [ACV1-M-3]: exchange_all_underlying works correctly
@@ -95,7 +96,7 @@ contract CurveV1AdapterBaseMetaPoolTest is DSTest, CurveV1AdapterHelper {
             ((LINK_ACCOUNT_AMOUNT - 1) * 99) / 100
         );
 
-        expectMulticallStackCalls(address(adapter), address(curveV1Mock), USER, callData, tokenIn, tokenOut, false);
+        expectMulticallStackCalls(address(adapter), address(curveV1Mock), USER, callData, tokenIn, tokenOut, true);
 
         executeOneLineMulticall(
             address(adapter),

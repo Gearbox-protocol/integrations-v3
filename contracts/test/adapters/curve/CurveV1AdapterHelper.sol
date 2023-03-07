@@ -511,8 +511,6 @@ contract CurveV1AdapterHelper is DSTest, AdapterTestHelper, ICurveV1AdapterExcep
     ) internal {
         uint256 nCoins = curvePoolTokens.length;
 
-        address creditAccount = creditManager.getCreditAccountOrRevert(borrower);
-
         evm.expectEmit(true, false, false, false);
         emit MultiCallStarted(borrower);
 
@@ -523,19 +521,18 @@ contract CurveV1AdapterHelper is DSTest, AdapterTestHelper, ICurveV1AdapterExcep
             );
         }
 
-        evm.expectCall(
-            address(creditManager), abi.encodeCall(ICreditManagerV2.checkAndEnableToken, (creditAccount, lpToken))
-        );
+        uint256 lpTokenMask = creditManager.tokenMasksMap(lpToken);
+        evm.expectCall(address(creditManager), abi.encodeCall(ICreditManagerV2.changeEnabledTokens, (lpTokenMask, 0)));
 
         evm.expectCall(address(creditManager), abi.encodeCall(ICreditManagerV2.executeOrder, (pool, callData)));
 
-        evm.expectEmit(true, true, false, false);
-        emit ExecuteOrder(creditAccount, pool);
+        evm.expectEmit(true, false, false, false);
+        emit ExecuteOrder(pool);
 
         for (uint256 i = 0; i < nCoins; i++) {
             evm.expectCall(
                 address(creditManager),
-                abi.encodeCall(ICreditManagerV2.approveCreditAccount, (pool, curvePoolTokens[i], type(uint256).max))
+                abi.encodeCall(ICreditManagerV2.approveCreditAccount, (pool, curvePoolTokens[i], 1))
             );
         }
 
@@ -568,22 +565,19 @@ contract CurveV1AdapterHelper is DSTest, AdapterTestHelper, ICurveV1AdapterExcep
     ) internal {
         uint256 nCoins = curvePoolTokens.length;
 
-        address creditAccount = creditManager.getCreditAccountOrRevert(borrower);
-
         evm.expectEmit(true, false, false, false);
         emit MultiCallStarted(borrower);
 
+        uint256 tokensMask;
         for (uint256 i = 0; i < nCoins; i++) {
-            evm.expectCall(
-                address(creditManager),
-                abi.encodeCall(ICreditManagerV2.checkAndEnableToken, (creditAccount, curvePoolTokens[i]))
-            );
+            tokensMask |= creditManager.tokenMasksMap(curvePoolTokens[i]);
         }
+        evm.expectCall(address(creditManager), abi.encodeCall(ICreditManagerV2.changeEnabledTokens, (tokensMask, 0)));
 
         evm.expectCall(address(creditManager), abi.encodeCall(ICreditManagerV2.executeOrder, (pool, callData)));
 
-        evm.expectEmit(true, true, false, false);
-        emit ExecuteOrder(creditAccount, pool);
+        evm.expectEmit(true, false, false, false);
+        emit ExecuteOrder(pool);
 
         evm.expectEmit(false, false, false, false);
         emit MultiCallFinished();
@@ -626,24 +620,24 @@ contract CurveV1AdapterHelper is DSTest, AdapterTestHelper, ICurveV1AdapterExcep
     ) internal {
         uint256 nCoins = curvePoolTokens.length;
 
-        address creditAccount = creditManager.getCreditAccountOrRevert(borrower);
-
         evm.expectEmit(true, false, false, false);
         emit MultiCallStarted(borrower);
 
+        uint256 tokensMask;
         for (uint256 i = 0; i < nCoins; i++) {
             if (amounts[i] > 0) {
-                evm.expectCall(
-                    address(creditManager),
-                    abi.encodeCall(ICreditManagerV2.checkAndEnableToken, (creditAccount, curvePoolTokens[i]))
-                );
+                tokensMask |= creditManager.tokenMasksMap(curvePoolTokens[i]);
             }
         }
+        evm.expectCall(address(creditManager), abi.encodeCall(ICreditManagerV2.changeEnabledTokens, (tokensMask, 0)));
 
         evm.expectCall(address(creditManager), abi.encodeCall(ICreditManagerV2.executeOrder, (pool, callData)));
 
-        evm.expectEmit(true, true, false, false);
-        emit ExecuteOrder(creditAccount, pool);
+        evm.expectEmit(true, false, false, false);
+        emit ExecuteOrder(pool);
+
+        evm.expectEmit(false, false, false, false);
+        emit MultiCallFinished();
     }
 
     function expectRemoveLiquidityImbalanceCalls(

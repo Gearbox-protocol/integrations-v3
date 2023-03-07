@@ -156,25 +156,25 @@ library CurveV1Calls {
         });
     }
 
-    function add_all_liquidity_one_coin(CurveV1Multicaller c, int128 i, uint256 minRateRAY)
+    function add_all_liquidity_one_coin(CurveV1Multicaller c, int128 i, uint256 rateMinRAY)
         internal
         pure
         returns (MultiCall memory)
     {
         return MultiCall({
             target: address(c),
-            callData: abi.encodeWithSignature("add_all_liquidity_one_coin(int128,uint256)", i, minRateRAY)
+            callData: abi.encodeWithSignature("add_all_liquidity_one_coin(int128,uint256)", i, rateMinRAY)
         });
     }
 
-    function add_all_liquidity_one_coin(CurveV1Multicaller c, uint256 i, uint256 minRateRAY)
+    function add_all_liquidity_one_coin(CurveV1Multicaller c, uint256 i, uint256 rateMinRAY)
         internal
         pure
         returns (MultiCall memory)
     {
         return MultiCall({
             target: address(c),
-            callData: abi.encodeWithSignature("add_all_liquidity_one_coin(uint256,uint256)", i, minRateRAY)
+            callData: abi.encodeWithSignature("add_all_liquidity_one_coin(uint256,uint256)", i, rateMinRAY)
         });
     }
 
@@ -237,25 +237,25 @@ library CurveV1Calls {
         });
     }
 
-    function remove_all_liquidity_one_coin(CurveV1Multicaller c, int128 i, uint256 minRateRAY)
+    function remove_all_liquidity_one_coin(CurveV1Multicaller c, int128 i, uint256 rateMinRAY)
         internal
         pure
         returns (MultiCall memory)
     {
         return MultiCall({
             target: address(c),
-            callData: abi.encodeWithSignature("remove_all_liquidity_one_coin(int128,uint256)", i, minRateRAY)
+            callData: abi.encodeWithSignature("remove_all_liquidity_one_coin(int128,uint256)", i, rateMinRAY)
         });
     }
 
-    function remove_all_liquidity_one_coin(CurveV1Multicaller c, uint256 i, uint256 minRateRAY)
+    function remove_all_liquidity_one_coin(CurveV1Multicaller c, uint256 i, uint256 rateMinRAY)
         internal
         pure
         returns (MultiCall memory)
     {
         return MultiCall({
             target: address(c),
-            callData: abi.encodeWithSignature("remove_all_liquidity_one_coin(uint256,uint256)", i, minRateRAY)
+            callData: abi.encodeWithSignature("remove_all_liquidity_one_coin(uint256,uint256)", i, rateMinRAY)
         });
     }
 

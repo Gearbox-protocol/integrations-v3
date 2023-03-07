@@ -14,7 +14,7 @@ import "@gearbox-protocol/core-v2/contracts/test/lib/test.sol";
 
 import {CallerNotConfiguratorException} from "@gearbox-protocol/core-v2/contracts/interfaces/IErrors.sol";
 
-contract ConvexV1AdapterBoosterTest is DSTest, ConvexAdapterHelper {
+contract ConvexV1BoosterAdapterTest is DSTest, ConvexAdapterHelper {
     address creditAccount;
 
     function setUp() public {
@@ -27,10 +27,14 @@ contract ConvexV1AdapterBoosterTest is DSTest, ConvexAdapterHelper {
     /// TESTS
     ///
 
-    /// @dev [ACVX1_B-1]: constructor sets correct values
-    function test_ACVX1_B_01_constructor_sets_correct_values() public {
-        assertEq(boosterAdapter.crv(), crv, "Incorrect CRV token");
-        assertEq(boosterAdapter.minter(), cvx, "Incorrect minter (CVX)");
+    /// @dev [ACVX1_B-1]: updateStakedPhantomTokensMap reverts when called not by configurtator
+    function test_ACVX1_B_01_updateStakedPhantomTokensMap_access_restricted() public {
+        evm.prank(CONFIGURATOR);
+        boosterAdapter.updateStakedPhantomTokensMap();
+
+        evm.expectRevert(CallerNotConfiguratorException.selector);
+        evm.prank(USER);
+        boosterAdapter.updateStakedPhantomTokensMap();
     }
 
     /// @dev [ACVX1_B-2]: deposit function works correctly and emits events
@@ -146,15 +150,5 @@ contract ConvexV1AdapterBoosterTest is DSTest, ConvexAdapterHelper {
         expectTokenIsEnabled(curveLPToken, true);
 
         expectSafeAllowance(address(boosterMock));
-    }
-
-    /// @dev [ACVX1_B-6]: updateStakedPhantomTokensMap reverts when called not by configurtator
-    function test_ACVX1_B_06_updateStakedPhantomTokensMap_access_restricted() public {
-        evm.prank(CONFIGURATOR);
-        boosterAdapter.updateStakedPhantomTokensMap();
-
-        evm.expectRevert(CallerNotConfiguratorException.selector);
-        evm.prank(USER);
-        boosterAdapter.updateStakedPhantomTokensMap();
     }
 }

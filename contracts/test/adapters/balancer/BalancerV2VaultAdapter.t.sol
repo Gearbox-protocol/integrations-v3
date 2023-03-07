@@ -206,7 +206,7 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper {
     function expectBatchSwapStackCalls(
         address targetContract,
         address borrower,
-        address creditAccount,
+        address, // creditAccount,
         bytes memory callData,
         IAsset[] memory assets,
         int256[] memory limits
@@ -229,8 +229,8 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper {
             address(creditManager), abi.encodeCall(ICreditManagerV2.executeOrder, (targetContract, callData))
         );
 
-        evm.expectEmit(true, true, false, false);
-        emit ExecuteOrder(creditAccount, targetContract);
+        evm.expectEmit(true, false, false, false);
+        emit ExecuteOrder(targetContract);
 
         for (uint256 i = 0; i < assets.length; ++i) {
             if (limits[i] > 1) {
@@ -244,8 +244,7 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper {
         for (uint256 i = 0; i < assets.length; ++i) {
             if (limits[i] < -1) {
                 evm.expectCall(
-                    address(creditManager),
-                    abi.encodeCall(ICreditManagerV2.checkAndEnableToken, (creditAccount, address(assets[i])))
+                    address(creditManager), abi.encodeCall(ICreditManagerV2.checkAndEnableToken, (address(assets[i])))
                 );
             }
         }
@@ -257,7 +256,7 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper {
     function expectJoinPoolStackCalls(
         address targetContract,
         address borrower,
-        address creditAccount,
+        address, // creditAccount,
         bytes32 poolId,
         bytes memory callData,
         IAsset[] memory assets,
@@ -279,16 +278,14 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper {
 
         (address pool,) = balancerMock.getPool(poolId);
 
-        evm.expectCall(
-            address(creditManager), abi.encodeCall(ICreditManagerV2.checkAndEnableToken, (creditAccount, pool))
-        );
+        evm.expectCall(address(creditManager), abi.encodeCall(ICreditManagerV2.checkAndEnableToken, (pool)));
 
         evm.expectCall(
             address(creditManager), abi.encodeCall(ICreditManagerV2.executeOrder, (targetContract, callData))
         );
 
-        evm.expectEmit(true, true, false, false);
-        emit ExecuteOrder(creditAccount, targetContract);
+        evm.expectEmit(true, false, false, false);
+        emit ExecuteOrder(targetContract);
 
         for (uint256 i = 0; i < assets.length; ++i) {
             if (maxAmountsIn[i] > 1) {
@@ -306,7 +303,7 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper {
     function expectExitPoolStackCalls(
         address targetContract,
         address borrower,
-        address creditAccount,
+        address, // creditAccount,
         bytes memory callData,
         IAsset[] memory assets
     ) internal {
@@ -317,13 +314,12 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper {
             address(creditManager), abi.encodeCall(ICreditManagerV2.executeOrder, (targetContract, callData))
         );
 
-        evm.expectEmit(true, true, false, false);
-        emit ExecuteOrder(creditAccount, targetContract);
+        evm.expectEmit(true, false, false, false);
+        emit ExecuteOrder(targetContract);
 
         for (uint256 i = 0; i < assets.length; ++i) {
             evm.expectCall(
-                address(creditManager),
-                abi.encodeCall(ICreditManagerV2.checkAndEnableToken, (creditAccount, address(assets[i])))
+                address(creditManager), abi.encodeCall(ICreditManagerV2.checkAndEnableToken, (address(assets[i])))
             );
         }
 
@@ -923,7 +919,6 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper {
             expectedCallData,
             pool,
             tokenTestSuite.addressOf(Tokens.USDT),
-            true,
             false
         );
 
@@ -985,7 +980,6 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper {
             expectedCallData,
             pool,
             tokenTestSuite.addressOf(Tokens.USDT),
-            true,
             false
         );
 

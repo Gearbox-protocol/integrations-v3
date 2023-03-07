@@ -11,155 +11,133 @@ import {AbstractAdapter} from "@gearbox-protocol/core-v2/contracts/adapters/Abst
 import {IYVault} from "../../integrations/yearn/IYVault.sol";
 import {IYearnV2Adapter} from "../../interfaces/yearn/IYearnV2Adapter.sol";
 
-/// @title Yearn adapter
-/// @dev Implements logic for interacting with a Yearn vault
+/// @title Yearn V2 Vault adapter
+/// @notice Implements logic allowing CAs to deposit into Yearn vaults
 contract YearnV2Adapter is AbstractAdapter, IYearnV2Adapter {
-    /// @dev Address of the token that is deposited into the vault
+    /// @notice Vault's underlying token address
     address public immutable override token;
 
-    AdapterType public constant _gearboxAdapterType = AdapterType.YEARN_V2;
-    uint16 public constant _gearboxAdapterVersion = 3;
+    /// @notice Collateral token mask of underlying token in the credit manager
+    uint256 public immutable override tokenMask;
 
-    /// @dev Constructor
-    /// @param _creditManager Address Credit manager
-    /// @param _yVault Address of YEARN vault contract
-    constructor(address _creditManager, address _yVault) AbstractAdapter(_creditManager, _yVault) {
-        // Check that we have token connected with this yearn pool
-        token = IYVault(targetContract).token(); // F:[AYV2-1]
+    /// @notice Collateral token mask of eToken in the credit manager
+    uint256 public immutable override yTokenMask;
 
-        if (creditManager.tokenMasksMap(token) == 0) {
-            revert TokenIsNotInAllowedList(token);
-        } // F:[AYV2-2]
+    AdapterType public constant override _gearboxAdapterType = AdapterType.YEARN_V2;
+    uint16 public constant override _gearboxAdapterVersion = 3;
 
-        if (creditManager.tokenMasksMap(_yVault) == 0) {
-            revert TokenIsNotInAllowedList(_yVault);
-        } // F:[AYV2-2]
+    /// @notice Constructor
+    /// @param _creditManager Credit manager address
+    /// @param _vault Yearn vault address
+    constructor(address _creditManager, address _vault) AbstractAdapter(_creditManager, _vault) {
+        token = IYVault(targetContract).token(); // F: [AYV2-1]
+
+        tokenMask = creditManager.tokenMasksMap(token); // F: [AYV2-1]
+        if (tokenMask == 0) {
+            revert TokenIsNotInAllowedList(token); // F: [AYV2-2]
+        }
+
+        yTokenMask = creditManager.tokenMasksMap(_vault); // F: [AYV2-1]
+        if (yTokenMask == 0) {
+            revert TokenIsNotInAllowedList(_vault); // F: [AYV2-2]
+        }
     }
 
-    /// @dev Sends an order to deposit the entire token balance to the vault
-    /// The input token does need to be disabled, because this spends the entire balance
+    /// -------- ///
+    /// DEPOSITS ///
+    /// -------- ///
+
+    /// @notice Deposit the entire balance of underlying tokens into the vault, disables underlying
     function deposit() external override creditFacadeOnly {
-        address creditAccount = _creditAccount(); // F:[AYV2-3]
+        address creditAccount = _creditAccount(); // F: [AYV2-3]
 
         uint256 balance = IERC20(token).balanceOf(creditAccount);
 
         if (balance > 1) {
             unchecked {
-                _deposit(creditAccount, balance - 1, true);
-            } // F:[AYV2-4]
+                _deposit(balance - 1, true); // F: [AYV2-4]
+            }
         }
     }
 
-    /// @dev Sends an order to deposit tokens into the vault
-    /// @param amount The amount to be deposited
-    /// The input token does not need to be disabled, because this does not spend the entire
-    /// balance, generally
+    /// @notice Deposit given amount of underlying tokens into the vault
+    /// @param amount Amount of underlying tokens to deposit
     function deposit(uint256 amount) external override creditFacadeOnly {
-        address creditAccount = _creditAccount(); // F:[AYV2-3]
-        _deposit(creditAccount, amount, false); // F:[AYV2-5]
+        _deposit(amount, false); // F: [AYV2-5]
     }
 
-    /// @dev Sends an order to deposit tokens into the vault
-    /// @param amount The amount to be deposited
-    /// @notice `recipient` is ignored since a CA cannot send tokens to another account
-    /// The input token does not need to be disabled, because this does not spend the entire
-    /// balance, generally
+    /// @notice Deposit given amount of underlying tokens into the vault
+    /// @param amount Amount of underlying tokens to deposit
+    /// @dev Second param (`recipient`) is ignored because it can only be the credit account
     function deposit(uint256 amount, address) external override creditFacadeOnly {
-        address creditAccount = _creditAccount(); // F:[AYV2-3]
-        _deposit(creditAccount, amount, false); // F:[AYV2-6]
+        _deposit(amount, false); // F: [AYV2-6]
     }
 
-    /// @dev Internal implementation for `deposit` functions
-    /// - Makes a safe allowance fast check call to `deposit(uint256)` (since the address is always ignored)
-    /// @param creditAccount The Credit Account from which the operation is performed
-    /// @param amount The amount of token to deposit
-    /// @notice Fast check parameters:
-    /// Input token: Vault underlying token
-    /// Output token: Yearn vault share
-    /// Input token is allowed, since the target does a transferFrom for the deposited asset
-    function _deposit(address creditAccount, uint256 amount, bool disableTokenIn) internal {
-        _executeSwapSafeApprove(
-            creditAccount, token, targetContract, abi.encodeWithSignature("deposit(uint256)", amount), disableTokenIn
-        ); // F:[AYV2-4,5,6]
+    /// @dev Internal implementation of `deposit` functions
+    ///      - underlying is approved before the call because vault needs permission to transfer it
+    ///      - yToken is enabled after the call
+    ///      - underlying is only disabled when depositing the entire balance
+    function _deposit(uint256 amount, bool disableTokenIn) internal {
+        _approveToken(token, type(uint256).max);
+        _execute(abi.encodeWithSignature("deposit(uint256)", amount));
+        _approveToken(token, 1);
+        _changeEnabledTokens(yTokenMask, disableTokenIn ? tokenMask : 0);
     }
 
-    /// @dev Sends an order to withdraw all available shares from the vault
-    /// The input token does need to be disabled, because this spends the entire balance
+    /// ----------- ///
+    /// WITHDRAWALS ///
+    /// ----------- ///
+
+    /// @notice Withdraw the entire balance of underlying from the vault, disables yToken
     function withdraw() external override creditFacadeOnly {
-        address creditAccount = _creditAccount(); // F:[AYV2-3]
+        address creditAccount = _creditAccount(); // F: [AYV2-3]
 
         uint256 balance = IERC20(targetContract).balanceOf(creditAccount);
 
         if (balance > 1) {
             unchecked {
-                _withdraw(creditAccount, balance - 1, true);
-            } // F:[AYV2-7]
+                _withdraw(balance - 1, true); // F: [AYV2-7]
+            }
         }
     }
 
-    /// @dev Sends an order to withdraw shares from the vault
-    /// @param maxShares Number of shares to withdraw
-    /// The input token does not need to be disabled, because this does not spend the entire
-    /// balance, generally
+    /// @notice Burn given amount of yTokens to withdraw corresponding amount of underlying from the vault
+    /// @param maxShares Amout of yTokens to burn
     function withdraw(uint256 maxShares) external override creditFacadeOnly {
-        address creditAccount = _creditAccount(); // F:[AYV2-3]
-        _withdraw(creditAccount, maxShares, false); // F:[AYV2-8]
+        _withdraw(maxShares, false); // F: [AYV2-8]
     }
 
-    /// @dev Sends an order to withdraw shares from the vault
-    /// @param maxShares Number of shares to withdraw
-    /// @notice `recipient` is ignored since a CA cannot send tokens to another account
-    /// The input token does not need to be disabled, because this does not spend the entire
-    /// balance, generally
+    /// @notice Burn given amount of yTokens to withdraw corresponding amount of underlying from the vault
+    /// @param maxShares Amout of yTokens to burn
+    /// @dev Second param (`recipient`) is ignored because it can only be the credit account
     function withdraw(uint256 maxShares, address) external override creditFacadeOnly {
-        address creditAccount = _creditAccount(); // F:[AYV2-3]
-        _withdraw(creditAccount, maxShares, false); // F:[AYV2-9]
+        _withdraw(maxShares, false); // F: [AYV2-9]
     }
 
-    /// @dev Sends an order to withdraw shares from the vault, with a slippage limit
-    /// @param maxShares Number of shares to withdraw
-    ///  @param maxLoss Maximal slippage on withdrawal in basis points
-    /// The input token does not need to be disabled, because this does not spend the entire
-    /// balance, generally
-    function withdraw(uint256 maxShares, address, uint256 maxLoss) public override creditFacadeOnly {
-        address creditAccount = _creditAccount(); // F:[AYV2-3]
-        _withdrawMaxLoss(creditAccount, maxShares, maxLoss); // F:[AYV2-10,11]
+    /// @notice Burn given amount of yTokens to withdraw corresponding amount of underlying from the vault
+    /// @param maxShares Amout of yTokens to burn
+    /// @param maxLoss Maximal slippage on withdrawal in basis points
+    /// @dev Second param (`recipient`) is ignored because it can only be the credit account
+    function withdraw(uint256 maxShares, address, uint256 maxLoss) external override creditFacadeOnly {
+        address creditAccount = _creditAccount(); // F: [AYV2-3]
+        _withdraw(maxShares, creditAccount, maxLoss); // F: [AYV2-10, AYV2-11]
     }
 
-    /// @dev Internal implementation for `withdraw` functions
-    /// - Makes a safe allowance fast check call to `withdraw(uint256)` in target
-    /// @param creditAccount The credit account that will withdraw tokens
-    /// @param maxShares Number of shares to withdraw
-    /// @notice Fast check parameters:
-    /// Input token: Yearn vault share
-    /// Output token: Vault underlying token
-    /// Input token does not have to be allowed, since the vault burns the shares directly
-    function _withdraw(address creditAccount, uint256 maxShares, bool disableTokenIn) internal {
-        _executeSwapNoApprove(
-            creditAccount,
-            targetContract,
-            token,
-            abi.encodeWithSignature("withdraw(uint256)", maxShares),
-            disableTokenIn
-        ); // F:[AYV2-7,8,9]
+    /// @dev Internal implementation of `withdraw` functions
+    ///      - yToken is not approved because vault doesn't need permission to burn it
+    ///      - underlying is enabled after the call
+    ///      - yToken is only disabled when withdrawing the entire balance
+    function _withdraw(uint256 maxShares, bool disableTokenIn) internal {
+        _execute(abi.encodeWithSignature("withdraw(uint256)", maxShares));
+        _changeEnabledTokens(tokenMask, disableTokenIn ? yTokenMask : 0);
     }
 
-    /// @dev Internal implementation for the `withdraw` function with maxLoss
-    /// - Makes a safe allowance fast check call to `withdraw(uint256,address,uint256)` in target
-    /// @param creditAccount The credit account that will withdraw tokens
-    /// @param maxShares Number of shares to withdraw
-    /// @param maxLoss Maximal slippage on withdrawal, in basis points
-    /// @notice Fast check parameters:
-    /// Input token: Yearn vault share
-    /// Output token: Vault underlying token
-    /// Input token does not have to be allowed, since the vault burns the shares directly
-    function _withdrawMaxLoss(address creditAccount, uint256 maxShares, uint256 maxLoss) internal {
-        _executeSwapNoApprove(
-            creditAccount,
-            targetContract,
-            token,
-            abi.encodeWithSignature("withdraw(uint256,address,uint256)", maxShares, creditAccount, maxLoss),
-            false
-        ); // F:[AYV2-10,11]
+    /// @dev Internal implementation of `withdraw` function with `maxLoss` argument
+    ///      - yToken is not approved because vault doesn't need permission to burn it
+    ///      - underlying is enabled after the call
+    ///      - yToken is not disabled after the call
+    function _withdraw(uint256 maxShares, address creditAccount, uint256 maxLoss) internal {
+        _execute(abi.encodeWithSignature("withdraw(uint256,address,uint256)", maxShares, creditAccount, maxLoss));
+        _changeEnabledTokens(tokenMask, 0);
     }
 }

@@ -12,13 +12,19 @@ import {IEToken} from "../../integrations/euler/IEToken.sol";
 import {IEulerV1_ETokenAdapter} from "../../interfaces/euler/IEulerV1_ETokenAdapter.sol";
 
 /// @title Euler eToken adapter
-/// @notice Implements logic for CAs to interact with Euler's eTokens
+/// @notice Implements logic allowing CAs to interact with Euler's eTokens
 contract EulerV1_ETokenAdapter is AbstractAdapter, IEulerV1_ETokenAdapter {
     /// @notice Address of the eToken's underlying token
     address public immutable override underlying;
 
-    AdapterType public constant _gearboxAdapterType = AdapterType.EULER_V1_ETOKEN;
-    uint16 public constant _gearboxAdapterVersion = 1;
+    /// @notice Collateral token mask of underlying token in the credit manager
+    uint256 public immutable override tokenMask;
+
+    /// @notice Collateral token mask of eToken in the credit manager
+    uint256 public immutable override eTokenMask;
+
+    AdapterType public constant override _gearboxAdapterType = AdapterType.EULER_V1_ETOKEN;
+    uint16 public constant override _gearboxAdapterVersion = 1;
 
     /// @notice Constructor
     /// @param _creditManager Credit manager address
@@ -26,11 +32,13 @@ contract EulerV1_ETokenAdapter is AbstractAdapter, IEulerV1_ETokenAdapter {
     constructor(address _creditManager, address _eToken) AbstractAdapter(_creditManager, _eToken) {
         underlying = IEToken(_eToken).underlyingAsset();
 
-        if (creditManager.tokenMasksMap(underlying) == 0) {
+        tokenMask = creditManager.tokenMasksMap(underlying);
+        if (tokenMask == 0) {
             revert TokenIsNotInAllowedList(underlying);
         }
 
-        if (creditManager.tokenMasksMap(targetContract) == 0) {
+        eTokenMask = creditManager.tokenMasksMap(targetContract);
+        if (eTokenMask == 0) {
             revert TokenIsNotInAllowedList(targetContract);
         }
     }
@@ -57,19 +65,20 @@ contract EulerV1_ETokenAdapter is AbstractAdapter, IEulerV1_ETokenAdapter {
     }
 
     /// @dev Internal implementation of `deposit` functionality
-    ///      - Calls `_executeSwapSafeApprove` because Euler needs permission to transfer underlying
-    ///      - `tokenIn` is eToken's underlying token
-    ///      - `tokenOut` is eToken
-    ///      - `disableTokenIn` is set to false because operation doesn't spend the entire balance
+    ///      - underlying is approved before the call because Euler needs permission to transfer it
+    ///      - eToken is enabled after the call
+    ///      - underlying is not disabled because operation doesn't spend the entire balance
     function _deposit(uint256 amount) internal {
-        _executeSwapSafeApprove(underlying, targetContract, _encodeDeposit(amount), false);
+        _approveToken(underlying, type(uint256).max);
+        _execute(_encodeDeposit(amount));
+        _approveToken(underlying, 1);
+        _changeEnabledTokens(eTokenMask, 0);
     }
 
     /// @dev Internal implementation of `depositAll` functionality
-    ///      - Calls `_executeSwapSafeApprove` because Euler needs permission to transfer underlying
-    ///      - `tokenIn` is eToken's underlying token
-    ///      - `tokenOut` is eToken
-    ///      - `disableTokenIn` is set to true because operation spends the entire balance
+    ///      - underlying is approved before the call because Euler needs permission to transfer it
+    ///      - eToken is enabled after the call
+    ///      - underlying is disabled because operation spends the entire balance
     function _depositAll() internal {
         address creditAccount = _creditAccount();
         uint256 balance = IERC20(underlying).balanceOf(creditAccount);
@@ -79,7 +88,11 @@ contract EulerV1_ETokenAdapter is AbstractAdapter, IEulerV1_ETokenAdapter {
         unchecked {
             amount = balance - 1;
         }
-        _executeSwapSafeApprove(creditAccount, underlying, targetContract, _encodeDeposit(amount), true);
+
+        _approveToken(underlying, type(uint256).max);
+        _execute(_encodeDeposit(amount));
+        _approveToken(underlying, 1);
+        _changeEnabledTokens(eTokenMask, tokenMask);
     }
 
     /// @dev Returns calldata for `IEToken.deposit` call
@@ -109,19 +122,18 @@ contract EulerV1_ETokenAdapter is AbstractAdapter, IEulerV1_ETokenAdapter {
     }
 
     /// @dev Internal implementation of `withdraw` functionality
-    ///      - Calls `_executeSwapNoApprove` because Euler doesn't need permission to burn eTokens
-    ///      - `tokenIn` is eToken
-    ///      - `tokenOut` is eToken's underlying token
-    ///      - `disableTokenIn` is set to false because operation doesn't spend the entire balance
+    ///      - eToken is not approved because Euler doesn't need permission to burn eTokens
+    ///      - underlying is enabled after the call
+    ///      - eToken is not disabled because oepration doesn't spend the entire balance balance
     function _withdraw(uint256 amount) internal {
-        _executeSwapNoApprove(targetContract, underlying, _encodeWithdraw(amount), false);
+        _execute(_encodeWithdraw(amount));
+        _changeEnabledTokens(tokenMask, 0);
     }
 
     /// @dev Implementation of `withdrawAll` functionality
-    ///      - Calls `_executeSwapNoApprove` because Euler doesn't need permission to burn eTokens
-    ///      - `tokenIn` is eToken
-    ///      - `tokenOut` is eToken's underlying token
-    ///      - `disableTokenIn` is set to true because operation spends the entire balance
+    ///      - eToken is not approved because Euler doesn't need permission to burn eTokens
+    ///      - underlying is enabled after the call
+    ///      - eToken is disabled because operation spends the entire balance
     function _withdrawAll() internal {
         address creditAccount = _creditAccount();
         // NOTE: there is no guaranteed way to keep precisely 1 eToken on the balance
@@ -133,7 +145,9 @@ contract EulerV1_ETokenAdapter is AbstractAdapter, IEulerV1_ETokenAdapter {
         unchecked {
             amount = balance - 1;
         }
-        _executeSwapNoApprove(creditAccount, targetContract, underlying, _encodeWithdraw(amount), true);
+
+        _execute(_encodeWithdraw(amount));
+        _changeEnabledTokens(tokenMask, eTokenMask);
     }
 
     /// @dev Returns calldata for `IEToken.withdraw` call

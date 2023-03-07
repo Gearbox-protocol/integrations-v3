@@ -16,14 +16,10 @@ library YearnV2_Calls {
         return MultiCall({target: address(c), callData: abi.encodeWithSignature("deposit(uint256)", amount)});
     }
 
-    function deposit(YearnV2_Multicaller c, uint256 amount, address recipient)
-        internal
-        pure
-        returns (MultiCall memory)
-    {
+    function deposit(YearnV2_Multicaller c, uint256 amount, address) internal pure returns (MultiCall memory) {
         return MultiCall({
             target: address(c),
-            callData: abi.encodeWithSignature("deposit(uint256,address)", amount, recipient)
+            callData: abi.encodeWithSignature("deposit(uint256,address)", amount, address(0))
         });
     }
 
@@ -35,25 +31,21 @@ library YearnV2_Calls {
         return MultiCall({target: address(c), callData: abi.encodeWithSignature("withdraw(uint256)", maxShares)});
     }
 
-    function withdraw(YearnV2_Multicaller c, uint256 maxShares, address recipient)
-        internal
-        pure
-        returns (MultiCall memory)
-    {
+    function withdraw(YearnV2_Multicaller c, uint256 maxShares, address) internal pure returns (MultiCall memory) {
         return MultiCall({
             target: address(c),
-            callData: abi.encodeWithSignature("withdraw(uint256,address)", maxShares, recipient)
+            callData: abi.encodeWithSignature("withdraw(uint256,address)", maxShares, address(0))
         });
     }
 
-    function withdraw(YearnV2_Multicaller c, uint256 maxShares, address recipient, uint256 maxLoss)
+    function withdraw(YearnV2_Multicaller c, uint256 maxShares, address, uint256 maxLoss)
         internal
         pure
         returns (MultiCall memory)
     {
         return MultiCall({
             target: address(c),
-            callData: abi.encodeWithSignature("withdraw(uint256,address,uint256)", maxShares, recipient, maxLoss)
+            callData: abi.encodeWithSignature("withdraw(uint256,address,uint256)", maxShares, address(0), maxLoss)
         });
     }
 }

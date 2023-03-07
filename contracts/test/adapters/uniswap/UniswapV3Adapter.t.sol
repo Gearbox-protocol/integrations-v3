@@ -225,7 +225,7 @@ contract UniswapV3AdapterTest is DSTest, AdapterTestHelper, IUniswapV3AdapterExc
             expectedCallData,
             exactInputSingleParams.tokenIn,
             exactInputSingleParams.tokenOut,
-            false
+            true
         );
 
         // MULTICALL
@@ -235,7 +235,7 @@ contract UniswapV3AdapterTest is DSTest, AdapterTestHelper, IUniswapV3AdapterExc
 
         expectBalance(Tokens.WETH, creditAccount, ((DAI_EXCHANGE_AMOUNT / DAI_WETH_RATE) * 997) / 1000);
 
-        expectAllowance(Tokens.DAI, creditAccount, address(uniswapMock), type(uint256).max);
+        expectAllowance(Tokens.DAI, creditAccount, address(uniswapMock), 1);
 
         expectTokenIsEnabled(Tokens.WETH, true);
     }
@@ -277,7 +277,7 @@ contract UniswapV3AdapterTest is DSTest, AdapterTestHelper, IUniswapV3AdapterExc
             expectedCallData,
             exactAllInputSingleParams.tokenIn,
             exactAllInputSingleParams.tokenOut,
-            false
+            true
         );
 
         // MULTICALL
@@ -289,7 +289,7 @@ contract UniswapV3AdapterTest is DSTest, AdapterTestHelper, IUniswapV3AdapterExc
             Tokens.WETH, creditAccount, (((initialDAIbalance - 1) / DAI_WETH_RATE) * (1_000_000 - 3000)) / 1_000_000
         );
 
-        expectAllowance(Tokens.DAI, creditAccount, address(uniswapMock), type(uint256).max);
+        expectAllowance(Tokens.DAI, creditAccount, address(uniswapMock), 1);
 
         expectTokenIsEnabled(Tokens.DAI, false);
         expectTokenIsEnabled(Tokens.WETH, true);
@@ -315,7 +315,7 @@ contract UniswapV3AdapterTest is DSTest, AdapterTestHelper, IUniswapV3AdapterExc
         address tokenOut = tokenTestSuite.addressOf(Tokens.WETH);
 
         expectMulticallStackCalls(
-            address(adapter), address(uniswapMock), USER, expectedCallData, tokenIn, tokenOut, false
+            address(adapter), address(uniswapMock), USER, expectedCallData, tokenIn, tokenOut, true
         );
 
         // MULTICALL
@@ -325,7 +325,7 @@ contract UniswapV3AdapterTest is DSTest, AdapterTestHelper, IUniswapV3AdapterExc
 
         expectBalance(Tokens.WETH, creditAccount, ((DAI_EXCHANGE_AMOUNT / DAI_WETH_RATE) * 997) / 1000);
 
-        expectAllowance(Tokens.DAI, creditAccount, address(uniswapMock), type(uint256).max);
+        expectAllowance(Tokens.DAI, creditAccount, address(uniswapMock), 1);
 
         expectTokenIsEnabled(Tokens.WETH, true);
     }
@@ -363,7 +363,7 @@ contract UniswapV3AdapterTest is DSTest, AdapterTestHelper, IUniswapV3AdapterExc
         bytes memory callData = abi.encodeCall(adapter.exactAllInput, (exactAllInputParams));
 
         expectMulticallStackCalls(
-            address(adapter), address(uniswapMock), USER, expectedCallData, tokenIn, tokenOut, false
+            address(adapter), address(uniswapMock), USER, expectedCallData, tokenIn, tokenOut, true
         );
 
         // MULTICALL
@@ -375,7 +375,7 @@ contract UniswapV3AdapterTest is DSTest, AdapterTestHelper, IUniswapV3AdapterExc
             Tokens.WETH, creditAccount, (((initialDAIbalance - 1) / DAI_WETH_RATE) * (1_000_000 - 3000)) / 1_000_000
         );
 
-        expectAllowance(Tokens.DAI, creditAccount, address(uniswapMock), type(uint256).max);
+        expectAllowance(Tokens.DAI, creditAccount, address(uniswapMock), 1);
 
         expectTokenIsEnabled(Tokens.DAI, false);
         expectTokenIsEnabled(Tokens.WETH, true);
@@ -404,7 +404,7 @@ contract UniswapV3AdapterTest is DSTest, AdapterTestHelper, IUniswapV3AdapterExc
             expectedCallData,
             exactOutputSingleParams.tokenIn,
             exactOutputSingleParams.tokenOut,
-            false
+            true
         );
 
         // MULTICALL
@@ -414,7 +414,7 @@ contract UniswapV3AdapterTest is DSTest, AdapterTestHelper, IUniswapV3AdapterExc
 
         expectBalance(Tokens.WETH, creditAccount, DAI_EXCHANGE_AMOUNT / DAI_WETH_RATE / 2);
 
-        expectAllowance(Tokens.DAI, creditAccount, address(uniswapMock), type(uint256).max);
+        expectAllowance(Tokens.DAI, creditAccount, address(uniswapMock), 1);
 
         expectTokenIsEnabled(Tokens.WETH, true);
     }
@@ -439,7 +439,7 @@ contract UniswapV3AdapterTest is DSTest, AdapterTestHelper, IUniswapV3AdapterExc
         address tokenOut = tokenTestSuite.addressOf(Tokens.WETH);
 
         expectMulticallStackCalls(
-            address(adapter), address(uniswapMock), USER, expectedCallData, tokenIn, tokenOut, false
+            address(adapter), address(uniswapMock), USER, expectedCallData, tokenIn, tokenOut, true
         );
 
         // MULTICALL
@@ -449,7 +449,7 @@ contract UniswapV3AdapterTest is DSTest, AdapterTestHelper, IUniswapV3AdapterExc
 
         expectBalance(Tokens.WETH, creditAccount, DAI_EXCHANGE_AMOUNT / DAI_WETH_RATE / 2);
 
-        expectAllowance(Tokens.DAI, creditAccount, address(uniswapMock), type(uint256).max);
+        expectAllowance(Tokens.DAI, creditAccount, address(uniswapMock), 1);
 
         expectTokenIsEnabled(Tokens.WETH, true);
     }
@@ -472,7 +472,7 @@ contract UniswapV3AdapterTest is DSTest, AdapterTestHelper, IUniswapV3AdapterExc
         bytes memory expectedCallData = abi.encodeCall(ISwapRouter.exactOutput, (exactOutputParams));
 
         expectMulticallStackCalls(
-            address(adapter), address(uniswapMock), USER, expectedCallData, tokenIn, tokenOut, false
+            address(adapter), address(uniswapMock), USER, expectedCallData, tokenIn, tokenOut, true
         );
 
         exactOutputParams.recipient = address(0);
@@ -482,7 +482,7 @@ contract UniswapV3AdapterTest is DSTest, AdapterTestHelper, IUniswapV3AdapterExc
 
         expectBalance(Tokens.WETH, creditAccount, DAI_EXCHANGE_AMOUNT / DAI_WETH_RATE / 2);
 
-        expectAllowance(Tokens.DAI, creditAccount, address(uniswapMock), type(uint256).max);
+        expectAllowance(Tokens.DAI, creditAccount, address(uniswapMock), 1);
 
         expectAllowance(Tokens.USDC, creditAccount, address(uniswapMock), 0);
 

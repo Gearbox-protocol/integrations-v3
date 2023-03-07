@@ -82,7 +82,7 @@ contract CurveV1AdapterBaseTest is DSTest, CurveV1AdapterHelper {
 
         expectBalance(tokenOut, creditAccount, LINK_EXCHANGE_AMOUNT * 100);
 
-        expectAllowance(tokenIn, creditAccount, address(curveV1Mock), type(uint256).max);
+        expectAllowance(tokenIn, creditAccount, address(curveV1Mock), 1);
 
         expectTokenIsEnabled(tokenOut, true);
     }
@@ -114,7 +114,7 @@ contract CurveV1AdapterBaseTest is DSTest, CurveV1AdapterHelper {
 
         expectBalance(tokenOut, creditAccount, (LINK_ACCOUNT_AMOUNT - 1) * 100);
 
-        expectAllowance(tokenIn, creditAccount, address(curveV1Mock), type(uint256).max);
+        expectAllowance(tokenIn, creditAccount, address(curveV1Mock), 1);
 
         expectTokenIsEnabled(tokenIn, false);
         expectTokenIsEnabled(tokenOut, true);
@@ -148,7 +148,7 @@ contract CurveV1AdapterBaseTest is DSTest, CurveV1AdapterHelper {
 
         expectBalance(Tokens.cUSDT, creditAccount, LINK_EXCHANGE_AMOUNT * 99);
 
-        expectAllowance(tokenIn, creditAccount, address(curveV1Mock), type(uint256).max);
+        expectAllowance(tokenIn, creditAccount, address(curveV1Mock), 1);
 
         expectTokenIsEnabled(tokenOut, true);
     }
@@ -210,7 +210,7 @@ contract CurveV1AdapterBaseTest is DSTest, CurveV1AdapterHelper {
             expectedCallData = abi.encodeCall(ICurvePool2Assets.add_liquidity, (amounts, (LINK_ACCOUNT_AMOUNT - 1) / 2));
 
             expectMulticallStackCalls(
-                address(adapter), address(curveV1Mock), USER, expectedCallData, tokenIn, tokenOut, false, true
+                address(adapter), address(curveV1Mock), USER, expectedCallData, tokenIn, tokenOut, true
             );
 
             executeOneLineMulticall(address(adapter), callData);
@@ -222,7 +222,7 @@ contract CurveV1AdapterBaseTest is DSTest, CurveV1AdapterHelper {
             expectTokenIsEnabled(tokenIn, false);
             expectTokenIsEnabled(curveV1Mock.token(), true);
 
-            expectAllowance(tokenIn, creditAccount, address(curveV1Mock), type(uint256).max);
+            expectAllowance(tokenIn, creditAccount, address(curveV1Mock), 1);
 
             _closeTestCreditAccount();
         }
@@ -253,7 +253,7 @@ contract CurveV1AdapterBaseTest is DSTest, CurveV1AdapterHelper {
             expectedCallData = abi.encodeCall(ICurvePool2Assets.add_liquidity, (amounts, LINK_ACCOUNT_AMOUNT / 4));
 
             expectMulticallStackCalls(
-                address(adapter), address(curveV1Mock), USER, expectedCallData, tokenIn, tokenOut, false, true
+                address(adapter), address(curveV1Mock), USER, expectedCallData, tokenIn, tokenOut, true
             );
 
             executeOneLineMulticall(address(adapter), callData);
@@ -264,7 +264,7 @@ contract CurveV1AdapterBaseTest is DSTest, CurveV1AdapterHelper {
 
             expectTokenIsEnabled(curveV1Mock.token(), true);
 
-            expectAllowance(tokenIn, creditAccount, address(curveV1Mock), type(uint256).max);
+            expectAllowance(tokenIn, creditAccount, address(curveV1Mock), 1);
 
             _closeTestCreditAccount();
         }
@@ -293,7 +293,7 @@ contract CurveV1AdapterBaseTest is DSTest, CurveV1AdapterHelper {
             tokenTestSuite.mint(tokenOut, address(curveV1Mock), USDT_ACCOUNT_AMOUNT);
 
             expectMulticallStackCalls(
-                address(adapter), address(curveV1Mock), USER, expectedCallData, tokenIn, tokenOut, false, false
+                address(adapter), address(curveV1Mock), USER, expectedCallData, tokenIn, tokenOut, false
             );
 
             executeOneLineMulticall(address(adapter), expectedCallData);
@@ -332,7 +332,7 @@ contract CurveV1AdapterBaseTest is DSTest, CurveV1AdapterHelper {
             );
 
             expectMulticallStackCalls(
-                address(adapter), address(curveV1Mock), USER, expectedCallData, tokenIn, tokenOut, false, false
+                address(adapter), address(curveV1Mock), USER, expectedCallData, tokenIn, tokenOut, false
             );
 
             executeOneLineMulticall(

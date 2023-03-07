@@ -21,6 +21,8 @@ import {CreditConfigurator} from "@gearbox-protocol/core-v2/contracts/credit/Cre
 import {CreditManager} from "@gearbox-protocol/core-v2/contracts/credit/CreditManager.sol";
 import {CreditManagerLiveMock} from "../mocks/credit/CreditManagerLiveMock.sol";
 import {Balance} from "@gearbox-protocol/core-v2/contracts/libraries/Balances.sol";
+import {IAdapter, AdapterType} from "@gearbox-protocol/core-v2/contracts/interfaces/adapters/IAdapter.sol";
+import {IConvexV1BoosterAdapter} from "../../interfaces/convex/IConvexV1BoosterAdapter.sol";
 
 import {CreditManagerFactory} from "../../factories/CreditManagerFactory.sol";
 import {CreditManagerMockFactory} from "../mocks/credit/CreditManagerMockFactory.sol";
@@ -225,6 +227,8 @@ contract LiveEnvTestSuite is CreditConfigLive {
                             creditManagers[underlyingT] = cmf.creditManager();
                             creditFacades[underlyingT] = cmf.creditFacade();
                             creditConfigurators[underlyingT] = cmf.creditConfigurator();
+
+                            _configureConvexPhantomTokens(underlyingT);
                         }
 
                         // MOCK CREDIT MANAGERS
@@ -317,6 +321,21 @@ contract LiveEnvTestSuite is CreditConfigLive {
         }
 
         return false;
+    }
+
+    function _configureConvexPhantomTokens(Tokens underlying) internal {
+        address[] memory adapters = getAdapters(underlying);
+        uint256 len = adapters.length;
+
+        evm.startPrank(ROOT_ADDRESS);
+        for (uint256 i = 0; i < len; ++i) {
+            if (adapters[i] == address(0)) continue;
+            AdapterType aType = IAdapter(adapters[i])._gearboxAdapterType();
+            if (aType == AdapterType.CONVEX_V1_BOOSTER) {
+                IConvexV1BoosterAdapter(adapters[i]).updateStakedPhantomTokensMap();
+            }
+        }
+        evm.stopPrank();
     }
 
     // function testFacadeWithDegenNFT() external {

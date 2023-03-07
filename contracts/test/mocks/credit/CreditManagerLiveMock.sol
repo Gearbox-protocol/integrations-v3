@@ -14,4 +14,12 @@ contract CreditManagerLiveMock is CreditManager {
     {}
 
     function _checkAndEnableToken(address creditAccount, address token) internal override {}
+
+    function _disableToken(address creditAccount, address token) internal override returns (bool) {}
+
+    function _changeEnabledTokens(address creditAccount, uint256 tokensToEnable, uint256 tokensToDisable)
+        internal
+        override
+        returns (bool, bool)
+    {}
 }

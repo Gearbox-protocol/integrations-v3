@@ -6,6 +6,7 @@ pragma solidity ^0.8.17;
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {ICreditFacade} from "@gearbox-protocol/core-v2/contracts/interfaces/ICreditFacade.sol";
 import {IBaseRewardPool} from "../../../integrations/convex/IBaseRewardPool.sol";
+import {IRewards} from "../../../integrations/convex/IRewards.sol";
 import {IBooster} from "../../../integrations/convex/IBooster.sol";
 import {IConvexV1BaseRewardPoolAdapter} from "../../../interfaces/convex/IConvexV1BaseRewardPoolAdapter.sol";
 import {
@@ -92,7 +93,7 @@ contract Live_ConvexEquivalenceTest is DSTest, LiveEnvHelper {
             ConvexV1_BoosterMulticaller booster = ConvexV1_BoosterMulticaller(boosterAddress);
             ConvexV1_BaseRewardPoolMulticaller basePool = ConvexV1_BaseRewardPoolMulticaller(basePoolAddress);
 
-            uint256 pid = IConvexV1BaseRewardPoolAdapter(basePoolAddress).pid();
+            uint256 pid = IBaseRewardPool((IConvexV1BaseRewardPoolAdapter(basePoolAddress).targetContract())).pid();
 
             evm.prank(USER);
             creditFacade.multicall(multicallBuilder(booster.deposit(pid, WAD, false)));
@@ -255,16 +256,24 @@ contract Live_ConvexEquivalenceTest is DSTest, LiveEnvHelper {
     }
 
     function prepareComparator(address basePoolAdapter) internal returns (BalanceComparator comparator) {
+        address targetContract = IConvexV1BaseRewardPoolAdapter(basePoolAdapter).targetContract();
+
         address[] memory tokensToTrack = new address[](7);
 
         tokensToTrack[0] = IConvexV1BaseRewardPoolAdapter(basePoolAdapter).curveLPtoken();
-        tokensToTrack[1] = address(IConvexV1BaseRewardPoolAdapter(basePoolAdapter).stakingToken());
+        tokensToTrack[1] = IConvexV1BaseRewardPoolAdapter(basePoolAdapter).stakingToken();
         tokensToTrack[2] = IConvexV1BaseRewardPoolAdapter(basePoolAdapter).stakedPhantomToken();
-        tokensToTrack[3] = address(IConvexV1BaseRewardPoolAdapter(basePoolAdapter).rewardToken());
-        tokensToTrack[4] = IConvexV1BaseRewardPoolAdapter(basePoolAdapter).cvx();
-        tokensToTrack[5] = IConvexV1BaseRewardPoolAdapter(basePoolAdapter).extraReward1();
-        tokensToTrack[6] = IConvexV1BaseRewardPoolAdapter(basePoolAdapter).extraReward2();
+        tokensToTrack[3] = tokenTestSuite.addressOf(Tokens.CRV);
+        tokensToTrack[4] = tokenTestSuite.addressOf(Tokens.CVX);
 
+        uint256 extraRewardLength = IBaseRewardPool(targetContract).extraRewardsLength();
+        if (extraRewardLength >= 1) {
+            tokensToTrack[5] = IRewards(IBaseRewardPool(targetContract).extraRewards(0)).rewardToken();
+
+            if (extraRewardLength >= 2) {
+                tokensToTrack[6] = IRewards(IBaseRewardPool(targetContract).extraRewards(1)).rewardToken();
+            }
+        }
         tokensToTrack = tokensToTrack.trim();
 
         Tokens[] memory _tokensToTrack = new Tokens[](tokensToTrack.length);

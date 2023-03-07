@@ -82,8 +82,18 @@ contract LidoV1AdapterTest is
     /// @dev [LDOV1-1]: Constructor sets correct parameters
     function test_LDOV1_01_constructor_sets_correct_params() public {
         assertEq(lidoV1Adapter.stETH(), address(lidoV1Mock), "stETH address incorrect");
+        assertEq(
+            lidoV1Adapter.stETHTokenMask(),
+            creditManager.tokenMasksMap(address(lidoV1Mock)),
+            "stETH token mask incorrect"
+        );
 
         assertEq(lidoV1Adapter.weth(), tokenTestSuite.addressOf(Tokens.WETH), "WETH address incorrect");
+        assertEq(
+            lidoV1Adapter.wethTokenMask(),
+            creditManager.tokenMasksMap(tokenTestSuite.addressOf(Tokens.WETH)),
+            "WETH token mask incorrect"
+        );
 
         assertEq(lidoV1Adapter.treasury(), cft.addressProvider().getTreasuryContract(), "Treasury address incorrect");
 

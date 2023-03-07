@@ -6,6 +6,7 @@ pragma solidity ^0.8.17;
 import {IAdapter} from "@gearbox-protocol/core-v2/contracts/interfaces/adapters/IAdapter.sol";
 
 /// @title Aave V2 LendingPool adapter interface
+/// @notice Implements logic allowing CAs to interact with Aave's lending pool
 interface IAaveV2_LendingPoolAdapter is IAdapter {
     /// @notice Deposit underlying tokens into Aave in exchange for aTokens
     /// @param asset Address of underlying token to deposit

@@ -110,7 +110,7 @@ contract UniswapV2AdapterTest is AdapterTestHelper, IUniswapV2AdapterExceptions 
         );
 
         expectMulticallStackCalls(
-            address(adapter), address(uniswapMock), USER, expectedCallData, path[0], path[1], false
+            address(adapter), address(uniswapMock), USER, expectedCallData, path[0], path[1], true
         );
 
         // MULTICALL
@@ -132,7 +132,7 @@ contract UniswapV2AdapterTest is AdapterTestHelper, IUniswapV2AdapterExceptions 
 
         expectBalance(Tokens.WETH, creditAccount, DAI_EXCHANGE_AMOUNT / DAI_WETH_RATE / 2);
 
-        expectAllowance(creditManager.underlying(), creditAccount, address(uniswapMock), type(uint256).max);
+        expectAllowance(creditManager.underlying(), creditAccount, address(uniswapMock), 1);
 
         expectTokenIsEnabled(Tokens.WETH, true);
     }
@@ -160,7 +160,7 @@ contract UniswapV2AdapterTest is AdapterTestHelper, IUniswapV2AdapterExceptions 
         );
 
         expectMulticallStackCalls(
-            address(adapter), address(uniswapMock), USER, expectedCallData, path[0], path[1], false
+            address(adapter), address(uniswapMock), USER, expectedCallData, path[0], path[1], true
         );
 
         // MULTICALL
@@ -182,7 +182,7 @@ contract UniswapV2AdapterTest is AdapterTestHelper, IUniswapV2AdapterExceptions 
 
         expectBalance(Tokens.WETH, creditAccount, ((DAI_EXCHANGE_AMOUNT / DAI_WETH_RATE) * 997) / 1000);
 
-        expectAllowance(path[0], creditAccount, address(uniswapMock), type(uint256).max);
+        expectAllowance(path[0], creditAccount, address(uniswapMock), 1);
 
         expectTokenIsEnabled(path[1], true);
     }
@@ -210,7 +210,7 @@ contract UniswapV2AdapterTest is AdapterTestHelper, IUniswapV2AdapterExceptions 
         );
 
         expectMulticallStackCalls(
-            address(adapter), address(uniswapMock), USER, expectedCallData, path[0], path[1], false
+            address(adapter), address(uniswapMock), USER, expectedCallData, path[0], path[1], true
         );
 
         // MULTICALL
@@ -226,7 +226,7 @@ contract UniswapV2AdapterTest is AdapterTestHelper, IUniswapV2AdapterExceptions 
 
         expectBalance(Tokens.WETH, creditAccount, (((initialDAIbalance - 1) / DAI_WETH_RATE) * 997) / 1000);
 
-        expectAllowance(path[0], creditAccount, address(uniswapMock), type(uint256).max);
+        expectAllowance(path[0], creditAccount, address(uniswapMock), 1);
 
         expectTokenIsEnabled(path[0], false);
         expectTokenIsEnabled(path[1], true);
