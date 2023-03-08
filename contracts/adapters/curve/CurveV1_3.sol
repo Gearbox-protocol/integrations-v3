@@ -9,46 +9,43 @@ import {N_COINS} from "../../integrations/curve/ICurvePool_3.sol";
 import {ICurveV1_3AssetsAdapter} from "../../interfaces/curve/ICurveV1_3AssetsAdapter.sol";
 import {CurveV1AdapterBase} from "./CurveV1_Base.sol";
 
-/// @title CurveV1Adapter3Assets adapter
-/// @dev Implements logic for interacting with a Curve pool with 3 assets
+/// @title Curve V1 3 assets adapter
+/// @notice Implements logic allowing to interact with Curve pools with 3 assets
 contract CurveV1Adapter3Assets is CurveV1AdapterBase, ICurveV1_3AssetsAdapter {
     AdapterType public constant override(CurveV1AdapterBase, IAdapter) _gearboxAdapterType =
         AdapterType.CURVE_V1_3ASSETS;
 
-    /// @dev Constructor
-    /// @param _creditManager Address of the Credit manager
-    /// @param _curvePool Address of the target contract Curve pool
-    /// @param _lp_token Address of the pool's LP token
-    /// @param _metapoolBase The base pool if this pool is a metapool, otherwise 0x0
+    /// @notice Constructor
+    /// @param _creditManager Credit manager address
+    /// @param _curvePool Target Curve pool address
+    /// @param _lp_token Pool LP token address
+    /// @param _metapoolBase Base pool address (for metapools only) or zero address
     constructor(address _creditManager, address _curvePool, address _lp_token, address _metapoolBase)
         CurveV1AdapterBase(_creditManager, _curvePool, _lp_token, _metapoolBase, N_COINS)
     {}
 
-    /// @dev Sends an order to add liquidity to a Curve pool
+    /// @notice Add liquidity to the pool
     /// @param amounts Amounts of tokens to add
-    /// @notice 'min_mint_amount' is ignored since the calldata is routed directly to the target
-    /// @notice Internal implementation details in CurveV1Base
+    /// @dev `min_mint_amount` parameter is ignored because calldata is passed directly to the target contract
     function add_liquidity(uint256[N_COINS] calldata amounts, uint256) external creditFacadeOnly {
-        _add_liquidity(amounts[0] > 1, amounts[1] > 1, amounts[2] > 1, false); // F:[ACV1_3-4]
+        _add_liquidity(amounts[0] > 1, amounts[1] > 1, amounts[2] > 1, false); // F: [ACV1_3-4]
     }
 
-    /// @dev Sends an order to remove liquidity from a Curve pool
-    /// @notice '_amount' and 'min_amounts' are ignored since the calldata is routed directly to the target
-    /// @notice Internal implementation details in CurveV1Base
+    /// @notice Remove liquidity from the pool
+    /// @dev '_amount' and 'min_amounts' parameters are ignored because calldata is directly passed to the target contract
     function remove_liquidity(uint256, uint256[N_COINS] calldata) external virtual creditFacadeOnly {
-        _remove_liquidity(); // F:[ACV1_3-5]
+        _remove_liquidity(); // F: [ACV1_3-5]
     }
 
-    /// @dev Sends an order to remove liquidity from a Curve pool in exact token amounts
-    /// @param amounts Amounts of coins to withdraw
-    /// @notice `max_burn_amount` is ignored since the calldata is routed directly to the target
-    /// @notice Internal implementation details in CurveV1Base
+    /// @notice Withdraw exact amounts of tokens from the pool
+    /// @param amounts Amounts of tokens to withdraw
+    /// @dev `max_burn_amount` parameter is ignored because calldata is directly passed to the target contract
     function remove_liquidity_imbalance(uint256[N_COINS] calldata amounts, uint256)
         external
         virtual
         override
         creditFacadeOnly
     {
-        _remove_liquidity_imbalance(amounts[0] > 1, amounts[1] > 1, amounts[2] > 1, false); // F:[ACV1_3-6]
+        _remove_liquidity_imbalance(amounts[0] > 1, amounts[1] > 1, amounts[2] > 1, false); // F: [ACV1_3-6]
     }
 }

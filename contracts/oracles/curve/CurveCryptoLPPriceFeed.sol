@@ -14,8 +14,6 @@ import {
     ZeroAddressException, NotImplementedException
 } from "@gearbox-protocol/core-v2/contracts/interfaces/IErrors.sol";
 
-import "hardhat/console.sol";
-
 uint256 constant DECIMALS = 10 ** 18;
 uint256 constant USD_FEED_DECIMALS = 10 ** 8;
 

@@ -12,10 +12,10 @@ import {ILendingPool} from "../../integrations/aave/ILendingPool.sol";
 import {IAaveV2_LendingPoolAdapter} from "../../interfaces/aave/IAaveV2_LendingPoolAdapter.sol";
 
 /// @title Aave V2 LendingPool adapter
-/// @notice Implements logic for CAs to interact with Aave's lending pool
+/// @notice Implements logic allowing CAs to interact with Aave's lending pool
 contract AaveV2_LendingPoolAdapter is AbstractAdapter, IAaveV2_LendingPoolAdapter {
-    AdapterType public constant _gearboxAdapterType = AdapterType.AAVE_V2_LENDING_POOL;
-    uint16 public constant _gearboxAdapterVersion = 1;
+    AdapterType public constant override _gearboxAdapterType = AdapterType.AAVE_V2_LENDING_POOL;
+    uint16 public constant override _gearboxAdapterVersion = 1;
 
     /// @notice Constructor
     /// @param _creditManager Credit manager address
@@ -56,14 +56,12 @@ contract AaveV2_LendingPoolAdapter is AbstractAdapter, IAaveV2_LendingPoolAdapte
     }
 
     /// @dev Internal implementation of `deposit` and `depositAll` functions
-    ///      - Calls `_executeSwapSafeApprove` because lending pool needs approval to transfer underlying
-    ///      - `tokenIn` is aToken's underlying token
-    ///      - `tokenOut` is aToken
-    ///      - `disableTokenIn` is only true when called from `depositAll` because in this case operation
-    ///      spends the entire balance
+    ///      - using `_executeSwap` because need to check if tokens are recognized by the system
+    ///      - underlying is approved before the call because lending pool needs permission to transfer it
+    ///      - aToken is enabled after the call
+    ///      - underlying is only disabled when depositing the entire balance
     function _deposit(address creditAccount, address asset, uint256 amount, bool disableTokenIn) internal {
         _executeSwapSafeApprove(
-            creditAccount,
             asset,
             _aToken(asset),
             abi.encodeCall(ILendingPool.deposit, (asset, amount, creditAccount, 0)),
@@ -97,21 +95,19 @@ contract AaveV2_LendingPoolAdapter is AbstractAdapter, IAaveV2_LendingPoolAdapte
     }
 
     /// @dev Internal implementation of `withdraw` functionality
-    ///      - Calls `_executeSwapNoApprove` because lending pool doesn't need permission to burn aTokens
-    ///      - `tokenIn` is aToken
-    ///      - `tokenOut` is aToken's underlying token
-    ///      - `disableTokenIn` is false because operation doesn't generally spend the entire balance
+    ///      - using `_executeSwap` because need to check if tokens are recognized by the system
+    ///      - aToken is not approved before the call because lending pool doesn't need permission to burn it
+    ///      - underlying is enabled after the call
+    ///      - aToken is not disabled because operation doesn't spend the entire balance
     function _withdraw(address creditAccount, address asset, uint256 amount) internal {
-        _executeSwapNoApprove(
-            creditAccount, _aToken(asset), asset, _encodeWithdraw(creditAccount, asset, amount), false
-        );
+        _executeSwapNoApprove(_aToken(asset), asset, _encodeWithdraw(creditAccount, asset, amount), false);
     }
 
     /// @dev Internal implementation of `withdrawAll` functionality
-    ///      - Calls `_executeSwapNoApprove` because lending pool doesn't need permission to burn aTokens
-    ///      - `tokenIn` is aToken
-    ///      - `tokenOut` is aToken's underlying token
-    ///      - `disableTokenIn` is true because operation spends the entire balance
+    ///      - using `_executeSwap` because need to check if tokens are recognized by the system
+    ///      - aToken is not approved before the call because lending pool doesn't need permission to burn it
+    ///      - underlying is enabled after the call
+    ///      - aToken is not disabled because operation spends the entire balance
     function _withdrawAll(address creditAccount, address asset) internal {
         address aToken = _aToken(asset);
         uint256 balance = IERC20(aToken).balanceOf(creditAccount);
@@ -122,7 +118,7 @@ contract AaveV2_LendingPoolAdapter is AbstractAdapter, IAaveV2_LendingPoolAdapte
             amount = balance - 1;
         }
 
-        _executeSwapNoApprove(creditAccount, aToken, asset, _encodeWithdraw(creditAccount, asset, amount), true);
+        _executeSwapNoApprove(aToken, asset, _encodeWithdraw(creditAccount, asset, amount), true);
     }
 
     /// @dev Returns calldata for `ILendingPool.withdraw` call

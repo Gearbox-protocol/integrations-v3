@@ -19,8 +19,14 @@ contract CompoundV2_CEtherAdapter is CompoundV2_CTokenAdapter {
     /// @notice cToken's underlying token
     address public immutable override underlying;
 
-    AdapterType public constant _gearboxAdapterType = AdapterType.COMPOUND_V2_CETHER;
-    uint16 public constant _gearboxAdapterVersion = 1;
+    /// @notice Collateral token mask of underlying token in the credit manager
+    uint256 public immutable override tokenMask;
+
+    /// @notice Collateral token mask of cToken in the credit manager
+    uint256 public immutable override cTokenMask;
+
+    AdapterType public constant override _gearboxAdapterType = AdapterType.COMPOUND_V2_CETHER;
+    uint16 public constant override _gearboxAdapterVersion = 1;
 
     /// @notice Constructor
     /// @param _creditManager Credit manager address
@@ -29,11 +35,13 @@ contract CompoundV2_CEtherAdapter is CompoundV2_CTokenAdapter {
         cToken = address(CEtherGateway(payable(targetContract)).ceth());
         underlying = address(CEtherGateway(payable(targetContract)).weth());
 
-        if (creditManager.tokenMasksMap(cToken) == 0) {
+        cTokenMask = creditManager.tokenMasksMap(cToken);
+        if (cTokenMask == 0) {
             revert TokenIsNotInAllowedList(cToken);
         }
 
-        if (creditManager.tokenMasksMap(underlying) == 0) {
+        tokenMask = creditManager.tokenMasksMap(underlying);
+        if (tokenMask == 0) {
             revert TokenIsNotInAllowedList(underlying);
         }
     }
@@ -43,19 +51,20 @@ contract CompoundV2_CEtherAdapter is CompoundV2_CTokenAdapter {
     /// -------------------------------- ///
 
     /// @dev Internal implementation of `mint`
-    ///      - Calls `_executeSwapSafeApprove` because Gateway needs permission to transfer WETH
-    ///      - `tokenIn` is WETH
-    ///      - `tokenOut` is cETH
-    ///      - `disableTokenIn` is set to false because operation doesn't spend the entire balance
+    ///      - WETH is approved before the call because Gateway needs permission to transfer it
+    ///      - cETH is enabled after the call
+    ///      - WETH is not disabled after the call because operation doesn't spend the entire balance
     function _mint(uint256 amount) internal override returns (uint256 error) {
-        error = abi.decode(_executeSwapSafeApprove(underlying, cToken, _encodeMint(amount), false), (uint256));
+        _approveToken(underlying, type(uint256).max);
+        error = abi.decode(_execute(_encodeMint(amount)), (uint256));
+        _approveToken(underlying, 1);
+        _changeEnabledTokens(cTokenMask, 0);
     }
 
     /// @dev Internal implementation of `mintAll`
-    ///      - Calls `_executeSwapSafeApprove` because Gateway needs permission to transfer WETH
-    ///      - `tokenIn` is WETH
-    ///      - `tokenOut` is cETH
-    ///      - `disableTokenIn` is set to true because operation spends the entire balance
+    ///      - WETH is approved before the call because Gateway needs permission to transfer it
+    ///      - cETH is enabled after the call
+    ///      - WETH is disabled after the call because operation spends the entire balance
     function _mintAll() internal override returns (uint256 error) {
         address creditAccount = _creditAccount();
         uint256 balance = IERC20(underlying).balanceOf(creditAccount);
@@ -66,24 +75,27 @@ contract CompoundV2_CEtherAdapter is CompoundV2_CTokenAdapter {
             amount = balance - 1;
         }
 
-        error =
-            abi.decode(_executeSwapSafeApprove(creditAccount, underlying, cToken, _encodeMint(amount), true), (uint256));
+        _approveToken(underlying, type(uint256).max);
+        error = abi.decode(_execute(_encodeMint(amount)), (uint256));
+        _approveToken(underlying, 1);
+        _changeEnabledTokens(cTokenMask, tokenMask);
     }
 
     /// @dev Internal implementation of `redeem`
-    ///      - Calls `_executeSwapSafeApprove` because Gateway needs permission to transfer cETH
-    ///      - `tokenIn` is cETH
-    ///      - `tokenOut` is WETH
-    ///      - `disableTokenIn` is set to false because operation doesn't spend the entire balance
+    ///      - cETH is approved before the call because Gateway needs permission to transfer it
+    ///      - WETH is enabled after the call
+    ///      - cETH is not disabled after the call because operation doesn't spend the entire balance
     function _redeem(uint256 amount) internal override returns (uint256 error) {
-        error = abi.decode(_executeSwapSafeApprove(cToken, underlying, _encodeRedeem(amount), false), (uint256));
+        _approveToken(cToken, type(uint256).max);
+        error = abi.decode(_execute(_encodeRedeem(amount)), (uint256));
+        _approveToken(cToken, 1);
+        _changeEnabledTokens(tokenMask, 0);
     }
 
     /// @dev Internal implementation of `redeemAll`
-    ///      - Calls `_executeSwapSafeApprove` because Gateway needs permission to transfer cETH
-    ///      - `tokenIn` is cETH
-    ///      - `tokenOut` is WETH
-    ///      - `disableTokenIn` is set to true because operation spends the entire balance
+    ///      - cETH is approved before the call because Gateway needs permission to transfer it
+    ///      - WETH is enabled after the call
+    ///      - cETH is disabled after the call because operation spends the entire balance
     function _redeemAll() internal override returns (uint256 error) {
         address creditAccount = _creditAccount();
         uint256 balance = ICEther(cToken).balanceOf(creditAccount);
@@ -94,18 +106,20 @@ contract CompoundV2_CEtherAdapter is CompoundV2_CTokenAdapter {
             amount = balance - 1;
         }
 
-        error = abi.decode(
-            _executeSwapSafeApprove(creditAccount, cToken, underlying, _encodeRedeem(amount), true), (uint256)
-        );
+        _approveToken(cToken, type(uint256).max);
+        error = abi.decode(_execute(_encodeRedeem(amount)), (uint256));
+        _approveToken(cToken, 1);
+        _changeEnabledTokens(tokenMask, cTokenMask);
     }
 
     /// @dev Internal implementation of `redeemUnderlying`
-    ///      - Calls `_executeSwapSafeApprove` because Gateway needs permission to transfer cETH
-    ///      - `tokenIn` is cETH
-    ///      - `tokenOut` is WETH
-    ///      - `disableTokenIn` is set to false because operation doesn't spend the entire balance
+    ///      - cETH is approved before the call because Gateway needs permission to transfer it
+    ///      - WETH is enabled after the call
+    ///      - cETH is not disabled after the call because operation doesn't spend the entire balance
     function _redeemUnderlying(uint256 amount) internal override returns (uint256 error) {
-        error =
-            abi.decode(_executeSwapSafeApprove(cToken, underlying, _encodeRedeemUnderlying(amount), false), (uint256));
+        _approveToken(cToken, type(uint256).max);
+        error = abi.decode(_encodeRedeemUnderlying(amount), (uint256));
+        _approveToken(cToken, 1);
+        _changeEnabledTokens(tokenMask, 0);
     }
 }

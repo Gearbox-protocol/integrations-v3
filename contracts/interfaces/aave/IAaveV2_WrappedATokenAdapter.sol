@@ -6,12 +6,22 @@ pragma solidity ^0.8.17;
 import {IAdapter} from "@gearbox-protocol/core-v2/contracts/interfaces/adapters/IAdapter.sol";
 
 /// @title Aave V2 Wrapped aToken adapter interface
+/// @notice Implements logic allowing CAs to convert between waTokens, aTokens and underlying tokens
 interface IAaveV2_WrappedATokenAdapter is IAdapter {
     /// @notice Underlying aToken
     function aToken() external view returns (address);
 
     /// @notice Underlying token
     function underlying() external view returns (address);
+
+    /// @notice Collateral token mask of waToken in the credit manager
+    function waTokenMask() external view returns (uint256);
+
+    /// @notice Collateral token mask of aToken in the credit manager
+    function aTokenMask() external view returns (uint256);
+
+    /// @notice Collateral token mask of underlying token in the credit manager
+    function tokenMask() external view returns (uint256);
 
     /// @notice Deposit given amount of aTokens
     /// @param assets Amount of aTokens to deposit in exchange for waTokens

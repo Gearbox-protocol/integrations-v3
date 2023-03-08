@@ -1,43 +1,33 @@
 // SPDX-License-Identifier: MIT
 // Gearbox Protocol. Generalized leverage for DeFi protocols
-// (c) Gearbox Holdings, 2022
-pragma solidity ^0.8.10;
+// (c) Gearbox Holdings, 2023
+pragma solidity ^0.8.17;
 
 import {IAdapter} from "@gearbox-protocol/core-v2/contracts/interfaces/adapters/IAdapter.sol";
 
+/// @title wstETH adapter interface
+/// @notice Implements logic for wrapping / unwrapping stETH
 interface IwstETHV1Adapter is IAdapter {
-    /// @dev Address of the Lido contract
+    /// @notice Address of the Lido contract
     function stETH() external view returns (address);
 
-    /**
-     * @notice Exchanges stETH to wstETH
-     * @param _stETHAmount amount of stETH to wrap in exchange for wstETH
-     * @dev Requirements:
-     *  - `_stETHAmount` must be non-zero
-     *  - msg.sender must approve at least `_stETHAmount` stETH to this
-     *    contract.
-     *  - msg.sender must have at least `_stETHAmount` of stETH.
-     * User should first approve _stETHAmount to the WstETH contract
-     */
-    function wrap(uint256 _stETHAmount) external;
+    /// @notice Collateral token mask of stETH in the credit manager
+    function stETHTokenMask() external view returns (uint256);
 
-    /**
-     * @notice Exchanges all stETH to wstETH
-     * User should first approve _stETHAmount to the WstETH contract
-     */
+    /// @notice Collateral token mask of wstETH in the credit manager
+    function wstETHTokenMask() external view returns (uint256);
+
+    /// @notice Wraps given amount of stETH into wstETH
+    /// @param amount Amount of stETH to wrap
+    function wrap(uint256 amount) external;
+
+    /// @notice Wraps the entire balance of stETH into wstETH, disables stETH
     function wrapAll() external;
 
-    /**
-     * @notice Exchanges wstETH to stETH
-     * @param _wstETHAmount amount of wstETH to uwrap in exchange for stETH
-     * @dev Requirements:
-     *  - `_wstETHAmount` must be non-zero
-     *  - msg.sender must have at least `_wstETHAmount` wstETH.
-     */
-    function unwrap(uint256 _wstETHAmount) external;
+    /// @notice Unwraps given amount of wstETH into stETH
+    /// @param amount Amount of wstETH to unwrap
+    function unwrap(uint256 amount) external;
 
-    /**
-     * @notice Exchanges all wstETH to stETH
-     */
+    /// @notice Unwraps the entire balance of wstETH to stETH, disables wstETH
     function unwrapAll() external;
 }

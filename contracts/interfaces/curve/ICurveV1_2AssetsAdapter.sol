@@ -3,24 +3,23 @@
 // (c) Gearbox Holdings, 2023
 pragma solidity ^0.8.17;
 
-import {ICurveV1Adapter} from "./ICurveV1Adapter.sol";
 import {N_COINS} from "../../integrations/curve/ICurvePool_2.sol";
+import {ICurveV1Adapter} from "./ICurveV1Adapter.sol";
 
+/// @title Curve V1 2 assets adapter interface
+/// @notice Implements logic allowing to interact with Curve pools with 2 assets
 interface ICurveV1_2AssetsAdapter is ICurveV1Adapter {
-    /// @dev Sends an order to add liquidity to a Curve pool
+    /// @notice Add liquidity to the pool
     /// @param amounts Amounts of tokens to add
-    /// @notice 'min_mint_amount' is ignored since the calldata is routed directly to the target
-    /// @notice Internal implementation details in CurveV1Base
+    /// @dev `min_mint_amount` parameter is ignored because calldata is passed directly to the target contract
     function add_liquidity(uint256[N_COINS] calldata amounts, uint256) external;
 
-    /// @dev Sends an order to remove liquidity from a Curve pool
-    /// @notice '_amount' and 'min_amounts' are ignored since the calldata is routed directly to the target
-    /// @notice Internal implementation details in CurveV1Base
+    /// @notice Remove liquidity from the pool
+    /// @dev '_amount' and 'min_amounts' parameters are ignored because calldata is directly passed to the target contract
     function remove_liquidity(uint256, uint256[N_COINS] calldata) external;
 
-    /// @dev Sends an order to remove liquidity from a Curve pool in exact token amounts
-    /// @param amounts Amounts of coins to withdraw
-    /// @notice `max_burn_amount` is ignored since the calldata is routed directly to the target
-    /// @notice Internal implementation details in CurveV1Base
+    /// @notice Withdraw exact amounts of tokens from the pool
+    /// @param amounts Amounts of tokens to withdraw
+    /// @dev `max_burn_amount` parameter is ignored because calldata is directly passed to the target contract
     function remove_liquidity_imbalance(uint256[N_COINS] calldata amounts, uint256) external;
 }

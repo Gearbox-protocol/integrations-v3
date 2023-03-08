@@ -13,36 +13,27 @@ import {IUniswapV2Router02} from "../../integrations/uniswap/IUniswapV2Router02.
 import {IUniswapV2Adapter} from "../../interfaces/uniswap/IUniswapV2Adapter.sol";
 import {UniswapConnectorChecker} from "./UniswapConnectorChecker.sol";
 
-/// @title Uniswap V2 Router adapter
+/// @title Uniswap V2 Router adapter interface
+/// @notice Implements logic allowing CAs to perform swaps via Uniswap V2 and its forks
 contract UniswapV2Adapter is AbstractAdapter, UniswapConnectorChecker, IUniswapV2Adapter {
-    AdapterType public constant _gearboxAdapterType = AdapterType.UNISWAP_V2_ROUTER;
-    uint16 public constant _gearboxAdapterVersion = 3;
+    AdapterType public constant override _gearboxAdapterType = AdapterType.UNISWAP_V2_ROUTER;
+    uint16 public constant override _gearboxAdapterVersion = 3;
 
-    /// @dev Constructor
-    /// @param _creditManager Address Credit manager
-    /// @param _router Address of IUniswapV2Router02
+    /// @notice Constructor
+    /// @param _creditManager Credit manager address
+    /// @param _router Uniswap V2 Router address
     constructor(address _creditManager, address _router, address[] memory _connectorTokensInit)
         AbstractAdapter(_creditManager, _router)
         UniswapConnectorChecker(_connectorTokensInit)
     {}
 
-    /**
-     * @dev Sends an order to swap tokens to exact tokens using a Uniswap-compatible protocol
-     * - Makes a max allowance fast check call to target, replacing the `to` parameter with the CA address
-     * @param amountOut The amount of output tokens to receive.
-     * @param amountInMax The maximum amount of input tokens that can be required before the transaction reverts.
-     * @param path An array of token addresses. path.length must be >= 2. Pools for each consecutive pair of
-     *        addresses must exist and have liquidity.
-     * @param deadline Unix timestamp after which the transaction will revert.
-     * for more information, see: https://uniswap.org/docs/v2/smart-contracts/router02/
-     * @notice `to` is ignored, since it is forbidden to transfer funds from a CA
-     * @notice Fast check parameters:
-     * Input token: First token in the path
-     * Output token: Last token in the path
-     * Input token is allowed, since the target does a transferFrom for the input token
-     * The input token does not need to be disabled, because this does not spend the entire
-     * balance, generally
-     */
+    /// @notice Swap input token for given amount of output token
+    /// @param amountOut Amount of output token to receive
+    /// @param amountInMax Maximum amount of input token to spend
+    /// @param path Array of token addresses representing swap path, which must have at most 3 hops
+    ///        through registered connector tokens
+    /// @param deadline Maximum timestamp until which the transaction is valid
+    /// @dev Parameter `to` is ignored since swap recipient can only be the credit account
     function swapTokensForExactTokens(
         uint256 amountOut,
         uint256 amountInMax,
@@ -50,41 +41,31 @@ contract UniswapV2Adapter is AbstractAdapter, UniswapConnectorChecker, IUniswapV
         address,
         uint256 deadline
     ) external override creditFacadeOnly {
-        address creditAccount = _creditAccount(); // F:[AUV2-1]
+        address creditAccount = _creditAccount(); // F: [AUV2-1]
 
-        (bool valid, address tokenIn, address tokenOut) = _parseUniV2Path(path); // F:[AUV2-2, UPC-3]
+        (bool valid, address tokenIn, address tokenOut) = _parseUniV2Path(path); // F: [AUV2-2]
         if (!valid) {
-            revert InvalidPathException(); // F:[AUV2-5]
+            revert InvalidPathException(); // F: [AUV2-5]
         }
 
-        _executeSwapMaxApprove(
-            creditAccount,
+        // calling `_executeSwap` because we need to check if output token is registered as collateral token in the CM
+        _executeSwapSafeApprove(
             tokenIn,
             tokenOut,
             abi.encodeCall(
                 IUniswapV2Router02.swapTokensForExactTokens, (amountOut, amountInMax, path, creditAccount, deadline)
             ),
             false
-        ); // F:[AUV2-2]
+        ); // F: [AUV2-2]
     }
 
-    /**
-     * @dev Sends an order to swap an exact amount of token to another token using a Uniswap-compatible protocol
-     * - Makes a max allowance fast check call to target, replacing the `to` parameter with the CA address
-     * @param amountIn The amount of input tokens to send.
-     * @param amountOutMin The minimum amount of output tokens that must be received for the transaction not to revert.
-     * @param path An array of token addresses. path.length must be >= 2. Pools for each consecutive pair of
-     *        addresses must exist and have liquidity.
-     * @param deadline Unix timestamp after which the transaction will revert.
-     * for more information, see: https://uniswap.org/docs/v2/smart-contracts/router02/
-     * @notice `to` is ignored, since it is forbidden to transfer funds from a CA
-     * @notice Fast check parameters:
-     * Input token: First token in the path
-     * Output token: Last token in the path
-     * Input token is allowed, since the target does a transferFrom for the input token
-     * The input token does not need to be disabled, because this does not spend the entire
-     * balance, generally
-     */
+    /// @notice Swap given amount of input token to output token
+    /// @param amountIn Amount of input token to spend
+    /// @param amountOutMin Minumum amount of output token to receive
+    /// @param path Array of token addresses representing swap path, which must have at most 3 hops
+    ///        through registered connector tokens
+    /// @param deadline Maximum timestamp until which the transaction is valid
+    /// @dev Parameter `to` is ignored since swap recipient can only be the credit account
     function swapExactTokensForTokens(
         uint256 amountIn,
         uint256 amountOutMin,
@@ -92,81 +73,63 @@ contract UniswapV2Adapter is AbstractAdapter, UniswapConnectorChecker, IUniswapV
         address,
         uint256 deadline
     ) external override creditFacadeOnly {
-        address creditAccount = _creditAccount(); // F:[AUV2-1]
+        address creditAccount = _creditAccount(); // F: [AUV2-1]
 
-        (bool valid, address tokenIn, address tokenOut) = _parseUniV2Path(path); // F:[AUV2-3, UPC-3]
+        (bool valid, address tokenIn, address tokenOut) = _parseUniV2Path(path); // F: [AUV2-3]
         if (!valid) {
-            revert InvalidPathException(); // F:[AUV2-5]
+            revert InvalidPathException(); // F: [AUV2-5]
         }
 
-        _executeSwapMaxApprove(
-            creditAccount,
+        // calling `_executeSwap` because we need to check if output token is registered as collateral token in the CM
+        _executeSwapSafeApprove(
             tokenIn,
             tokenOut,
             abi.encodeCall(
                 IUniswapV2Router02.swapExactTokensForTokens, (amountIn, amountOutMin, path, creditAccount, deadline)
             ),
             false
-        ); // F:[AUV2-3]
+        ); // F: [AUV2-3]
     }
 
-    /**
-     * @dev Sends an order to swap the entire token balance to another token using a Uniswap-compatible protocol
-     * - Makes a max allowance fast check call to target, replacing the `to` parameter with the CA address
-     * @param rateMinRAY The minimal exchange rate between the input and the output tokens.
-     * @param path An array of token addresses. path.length must be >= 2. Pools for each consecutive pair of
-     *        addresses must exist and have liquidity.
-     * @param deadline Unix timestamp after which the transaction will revert.
-     * for more information, see: https://uniswap.org/docs/v2/smart-contracts/router02/
-     * @notice Under the hood, calls swapExactTokensForTokens, passing balance minus 1 as the amount
-     * @notice Fast check parameters:
-     * Input token: First token in the path
-     * Output token: Last token in the path
-     * Input token is allowed, since the target does a transferFrom for the input token
-     * The input token does need to be disabled, because this spends the entire balance
-     */
+    /// @notice Swap the entire balance of input token to output token, disables input token
+    /// @param rateMinRAY Minimum exchange rate between input and output tokens, scaled by 1e27
+    /// @param path Array of token addresses representing swap path, which must have at most 3 hops
+    ///        through registered connector tokens
+    /// @param deadline Maximum timestamp until which the transaction is valid
     function swapAllTokensForTokens(uint256 rateMinRAY, address[] calldata path, uint256 deadline)
         external
         override
         creditFacadeOnly
     {
-        address creditAccount = _creditAccount(); // F:[AUV2-1]
+        address creditAccount = _creditAccount(); // F: [AUV2-1]
 
-        address tokenIn;
-        address tokenOut;
-        {
-            bool valid;
-            (valid, tokenIn, tokenOut) = _parseUniV2Path(path); // F:[AUV2-4, UPC-3]
-
-            if (!valid) {
-                revert InvalidPathException(); // F:[AUV2-5]
-            }
+        (bool valid, address tokenIn, address tokenOut) = _parseUniV2Path(path); // F: [AUV2-4]
+        if (!valid) {
+            revert InvalidPathException(); // F: [AUV2-5]
         }
 
-        uint256 balanceInBefore = IERC20(tokenIn).balanceOf(creditAccount); // F:[AUV2-4]
+        uint256 balanceInBefore = IERC20(tokenIn).balanceOf(creditAccount); // F: [AUV2-4]
+        if (balanceInBefore <= 1) return;
 
-        if (balanceInBefore > 1) {
-            unchecked {
-                balanceInBefore--;
-            }
-
-            _executeSwapMaxApprove(
-                creditAccount,
-                tokenIn,
-                tokenOut,
-                abi.encodeCall(
-                    IUniswapV2Router02.swapExactTokensForTokens,
-                    (balanceInBefore, (balanceInBefore * rateMinRAY) / RAY, path, creditAccount, deadline)
-                ),
-                true
-            ); // F:[AUV2-4]
+        unchecked {
+            balanceInBefore--;
         }
+
+        // calling `_executeSwap` because we need to check if output token is registered as collateral token in the CM
+        _executeSwapSafeApprove(
+            tokenIn,
+            tokenOut,
+            abi.encodeCall(
+                IUniswapV2Router02.swapExactTokensForTokens,
+                (balanceInBefore, (balanceInBefore * rateMinRAY) / RAY, path, creditAccount, deadline)
+            ),
+            true
+        ); // F: [AUV2-4]
     }
 
-    /// @dev Performs sanity checks on a Uniswap V2 path and returns the input and output tokens
-    /// @param path Path to check
-    /// @notice Sanity checks include path length not being more than 4 (more than 3 hops) and intermediary tokens
-    ///         being allowed as connectors
+    /// @dev Performs sanity check on a swap path, returns input and output tokens
+    ///      - Path length must be no more than 4 (i.e., at most 3 hops)
+    ///      - Each intermediary token must be a registered connector tokens
     function _parseUniV2Path(address[] memory path)
         internal
         view

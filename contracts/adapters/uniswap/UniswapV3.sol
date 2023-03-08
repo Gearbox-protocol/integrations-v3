@@ -14,199 +14,167 @@ import {Path} from "../../integrations/uniswap/Path.sol";
 import {IUniswapV3Adapter} from "../../interfaces/uniswap/IUniswapV3Adapter.sol";
 import {UniswapConnectorChecker} from "./UniswapConnectorChecker.sol";
 
-/// @dev The length of the bytes encoded address
-uint256 constant ADDR_SIZE = 20;
-
-/// @dev The length of the uint24 encoded address
-uint256 constant FEE_SIZE = 3;
-
-/// @dev Minimal path length in bytes
-uint256 constant MIN_PATH_LENGTH = 2 * ADDR_SIZE + FEE_SIZE;
-
-/// @dev Number of bytes in path per single token
-uint256 constant ADDR_PLUS_FEE_LENGTH = ADDR_SIZE + FEE_SIZE;
-
-/// @dev Maximal allowed path length in bytes (3 hops)
-uint256 constant MAX_PATH_LENGTH = 4 * ADDR_SIZE + 3 * FEE_SIZE;
-
-/// @title Uniswap V3 Router adapter
+/// @title Uniswap V3 Router adapter interface
+/// @notice Implements logic allowing CAs to perform swaps via Uniswap V3
 contract UniswapV3Adapter is AbstractAdapter, UniswapConnectorChecker, IUniswapV3Adapter {
     using Path for bytes;
 
-    AdapterType public constant _gearboxAdapterType = AdapterType.UNISWAP_V3_ROUTER;
-    uint16 public constant _gearboxAdapterVersion = 3;
+    /// @dev The length of the bytes encoded address
+    uint256 private constant ADDR_SIZE = 20;
 
-    /// @dev Constructor
-    /// @param _creditManager Address Credit manager
-    /// @param _router Address of ISwapRouter
+    /// @dev The length of the uint24 encoded address
+    uint256 private constant FEE_SIZE = 3;
+
+    /// @dev Minimal path length in bytes
+    uint256 private constant MIN_PATH_LENGTH = 2 * ADDR_SIZE + FEE_SIZE;
+
+    /// @dev Maximal allowed path length in bytes (3 hops)
+    uint256 private constant MAX_PATH_LENGTH = 4 * ADDR_SIZE + 3 * FEE_SIZE;
+
+    AdapterType public constant override _gearboxAdapterType = AdapterType.UNISWAP_V3_ROUTER;
+    uint16 public constant override _gearboxAdapterVersion = 3;
+
+    /// @notice Constructor
+    /// @param _creditManager Credit manager address
+    /// @param _router Uniswap V3 Router address
     constructor(address _creditManager, address _router, address[] memory _connectorTokensInit)
         AbstractAdapter(_creditManager, _router)
         UniswapConnectorChecker(_connectorTokensInit)
     {}
 
-    /// @notice Sends an order to swap `amountIn` of one token for as much as possible of another token
-    /// - Makes a max allowance fast check call, replacing the recipient with the Credit Account
-    /// @param params The parameters necessary for the swap, encoded as `ExactInputSingleParams` in calldata
+    /// @notice Swaps given amount of input token for output token through a single pool
+    /// @param params Swap params, see `ISwapRouter.ExactInputSingleParams` for details
+    /// @dev `params.recipient` is ignored since it can only be the credit account
     function exactInputSingle(ISwapRouter.ExactInputSingleParams calldata params) external override creditFacadeOnly {
-        address creditAccount = _creditAccount(); // F:[AUV3-1]
+        address creditAccount = _creditAccount(); // F: [AUV3-1]
 
-        ISwapRouter.ExactInputSingleParams memory paramsUpdate = params; // F:[AUV3-2,10]
-        paramsUpdate.recipient = creditAccount; // F:[AUV3-2,10]
+        ISwapRouter.ExactInputSingleParams memory paramsUpdate = params; // F: [AUV3-2]
+        paramsUpdate.recipient = creditAccount; // F: [AUV3-2]
 
-        _executeSwapMaxApprove(
-            creditAccount,
-            params.tokenIn,
-            params.tokenOut,
-            abi.encodeCall(ISwapRouter.exactInputSingle, (paramsUpdate)),
-            false
-        ); // F:[AUV2-2,10]
+        // calling `_executeSwap` because we need to check if output token is registered as collateral token in the CM
+        _executeSwapSafeApprove(
+            params.tokenIn, params.tokenOut, abi.encodeCall(ISwapRouter.exactInputSingle, (paramsUpdate)), false
+        ); // F: [AUV3-2]
     }
 
-    /// @notice Sends an order to swap the entire balance of one token for as much as possible of another token
-    /// - Fills the `ExactInputSingleParams` struct
-    /// - Makes a max allowance fast check call, passing the new struct as params
-    /// @param params The parameters necessary for the swap, encoded as `ExactAllInputSingleParams` in calldata
-    /// `ExactAllInputSingleParams` has the following fields:
-    /// - tokenIn - same as normal params
-    /// - tokenOut - same as normal params
-    /// - fee - same as normal params
-    /// - deadline - same as normal params
-    /// - rateMinRAY - Minimal exchange rate between the input and the output tokens
-    /// - sqrtPriceLimitX96 - same as normal params
+    /// @notice Swaps all balance of input token for output token through a single pool, disables input token
+    /// @param params Swap params, see `ExactAllInputSingleParams` for details
     function exactAllInputSingle(ExactAllInputSingleParams calldata params) external override creditFacadeOnly {
-        address creditAccount = _creditAccount(); // F:[AUV3-1]
+        address creditAccount = _creditAccount(); // F: [AUV3-1]
 
-        uint256 balanceInBefore = IERC20(params.tokenIn).balanceOf(creditAccount); // F:[AUV3-3]
+        uint256 balanceInBefore = IERC20(params.tokenIn).balanceOf(creditAccount); // F: [AUV3-3]
+        if (balanceInBefore <= 1) return;
 
-        // We keep 1 on tokenIn balance for gas efficiency
-        if (balanceInBefore > 1) {
-            unchecked {
-                balanceInBefore--;
-            }
-
-            ISwapRouter.ExactInputSingleParams memory paramsUpdate = ISwapRouter.ExactInputSingleParams({
-                tokenIn: params.tokenIn,
-                tokenOut: params.tokenOut,
-                fee: params.fee,
-                recipient: creditAccount,
-                deadline: params.deadline,
-                amountIn: balanceInBefore,
-                amountOutMinimum: (balanceInBefore * params.rateMinRAY) / RAY,
-                sqrtPriceLimitX96: params.sqrtPriceLimitX96
-            }); // F:[AUV3-3]
-
-            _executeSwapMaxApprove(
-                creditAccount,
-                params.tokenIn,
-                params.tokenOut,
-                abi.encodeCall(ISwapRouter.exactInputSingle, (paramsUpdate)),
-                true
-            ); // F:[AUV3-3]
+        unchecked {
+            balanceInBefore--;
         }
+
+        ISwapRouter.ExactInputSingleParams memory paramsUpdate = ISwapRouter.ExactInputSingleParams({
+            tokenIn: params.tokenIn,
+            tokenOut: params.tokenOut,
+            fee: params.fee,
+            recipient: creditAccount,
+            deadline: params.deadline,
+            amountIn: balanceInBefore,
+            amountOutMinimum: (balanceInBefore * params.rateMinRAY) / RAY,
+            sqrtPriceLimitX96: params.sqrtPriceLimitX96
+        }); // F: [AUV3-3]
+
+        // calling `_executeSwap` because we need to check if output token is registered as collateral token in the CM
+        _executeSwapSafeApprove(
+            params.tokenIn, params.tokenOut, abi.encodeCall(ISwapRouter.exactInputSingle, (paramsUpdate)), true
+        ); // F: [AUV3-3]
     }
 
-    /// @notice Sends an order to swap `amountIn` of one token for as much as possible of another along the specified path
-    /// - Makes a max allowance fast check call, replacing the recipient with the Credit Account
-    /// @param params The parameters necessary for the multi-hop swap, encoded as `ExactInputParams` in calldata
+    /// @notice Swaps given amount of input token for output token through multiple pools
+    /// @param params Swap params, see `ISwapRouter.ExactInputParams` for details
+    /// @dev `params.recipient` is ignored since it can only be the credit account
+    /// @dev `params.path` must have at most 3 hops through registered connector tokens
     function exactInput(ISwapRouter.ExactInputParams calldata params) external override creditFacadeOnly {
-        address creditAccount = _creditAccount(); // F:[AUV3-1]
+        address creditAccount = _creditAccount(); // F: [AUV3-1]
 
         (bool valid, address tokenIn, address tokenOut) = _parseUniV3Path(params.path);
         if (!valid) {
-            revert InvalidPathException(); // F:[AUV3-9]
+            revert InvalidPathException(); // F: [AUV3-9]
         }
 
-        ISwapRouter.ExactInputParams memory paramsUpdate = params; // F:[AUV3-4]
-        paramsUpdate.recipient = creditAccount; // F:[AUV3-4]
+        ISwapRouter.ExactInputParams memory paramsUpdate = params; // F: [AUV3-4]
+        paramsUpdate.recipient = creditAccount; // F: [AUV3-4]
 
-        _executeSwapMaxApprove(
-            creditAccount, tokenIn, tokenOut, abi.encodeCall(ISwapRouter.exactInput, (paramsUpdate)), false
-        ); // F:[AUV3-4]
+        // calling `_executeSwap` because we need to check if output token is registered as collateral token in the CM
+        _executeSwapSafeApprove(tokenIn, tokenOut, abi.encodeCall(ISwapRouter.exactInput, (paramsUpdate)), false); // F: [AUV3-4]
     }
 
-    /// @notice Swaps the entire balance of one token for as much as possible of another along the specified path
-    /// - Fills the `ExactAllInputParams` struct
-    /// - Makes a max allowance fast check call, passing the new struct as `params`
-    /// @param params The parameters necessary for the multi-hop swap, encoded as `ExactAllInputParams` in calldata
-    /// `ExactAllInputParams` has the following fields:
-    /// - path - same as normal params
-    /// - deadline - same as normal params
-    /// - rateMinRAY - minimal exchange rate between the input and the output tokens
+    /// @notice Swaps all balance of input token for output token through multiple pools, disables input token
+    /// @param params Swap params, see `ExactAllInputParams` for details
+    /// @dev `params.path` must have at most 3 hops through registered connector tokens
     function exactAllInput(ExactAllInputParams calldata params) external override creditFacadeOnly {
-        address creditAccount = _creditAccount(); // F:[AUV3-1]
+        address creditAccount = _creditAccount(); // F: [AUV3-1]
 
         (bool valid, address tokenIn, address tokenOut) = _parseUniV3Path(params.path);
         if (!valid) {
-            revert InvalidPathException(); // F:[AUV3-9]
+            revert InvalidPathException(); // F: [AUV3-9]
         }
 
-        uint256 balanceInBefore = IERC20(tokenIn).balanceOf(creditAccount); // F:[AUV3-5]
+        uint256 balanceInBefore = IERC20(tokenIn).balanceOf(creditAccount); // F: [AUV3-5]
+        if (balanceInBefore <= 1) return;
 
-        // We keep 1 on tokenIn balance for gas efficiency
-        if (balanceInBefore > 1) {
-            unchecked {
-                balanceInBefore--;
-            }
-            ISwapRouter.ExactInputParams memory paramsUpdate = ISwapRouter.ExactInputParams({
-                path: params.path,
-                recipient: creditAccount,
-                deadline: params.deadline,
-                amountIn: balanceInBefore,
-                amountOutMinimum: (balanceInBefore * params.rateMinRAY) / RAY
-            }); // F:[AUV3-5]
-
-            _executeSwapMaxApprove(
-                creditAccount, tokenIn, tokenOut, abi.encodeCall(ISwapRouter.exactInput, (paramsUpdate)), true
-            ); // F:[AUV3-5]
+        unchecked {
+            balanceInBefore--;
         }
+        ISwapRouter.ExactInputParams memory paramsUpdate = ISwapRouter.ExactInputParams({
+            path: params.path,
+            recipient: creditAccount,
+            deadline: params.deadline,
+            amountIn: balanceInBefore,
+            amountOutMinimum: (balanceInBefore * params.rateMinRAY) / RAY
+        }); // F: [AUV3-5]
+
+        // calling `_executeSwap` because we need to check if output token is registered as collateral token in the CM
+        _executeSwapSafeApprove(tokenIn, tokenOut, abi.encodeCall(ISwapRouter.exactInput, (paramsUpdate)), true); // F: [AUV3-5]
     }
 
-    /// @notice Sends an order to swap as little as possible of one token for `amountOut` of another token
-    /// - Makes a max allowance fast check call, replacing the recipient with the Credit Account
-    /// @param params The parameters necessary for the swap, encoded as `ExactOutputSingleParams` in calldata
+    /// @notice Swaps input token for given amount of output token through a single pool
+    /// @param params Swap params, see `ISwapRouter.ExactOutputSingleParams` for details
+    /// @dev `params.recipient` is ignored since it can only be the credit account
     function exactOutputSingle(ISwapRouter.ExactOutputSingleParams calldata params)
         external
         override
         creditFacadeOnly
     {
-        address creditAccount = _creditAccount(); // F:[AUV3-1]
+        address creditAccount = _creditAccount(); // F: [AUV3-1]
 
-        ISwapRouter.ExactOutputSingleParams memory paramsUpdate = params; // F:[AUV3-6]
-        paramsUpdate.recipient = creditAccount; // F:[AUV3-6]
+        ISwapRouter.ExactOutputSingleParams memory paramsUpdate = params; // F: [AUV3-6]
+        paramsUpdate.recipient = creditAccount; // F: [AUV3-6]
 
-        _executeSwapMaxApprove(
-            creditAccount,
-            paramsUpdate.tokenIn,
-            paramsUpdate.tokenOut,
-            abi.encodeCall(ISwapRouter.exactOutputSingle, (paramsUpdate)),
-            false
-        ); // F:[AUV3-6]
+        // calling `_executeSwap` because we need to check if output token is registered as collateral token in the CM
+        _executeSwapSafeApprove(
+            params.tokenIn, params.tokenOut, abi.encodeCall(ISwapRouter.exactOutputSingle, (paramsUpdate)), false
+        ); // F: [AUV3-6]
     }
 
-    /// @notice Sends an order to swap as little as possible of one token for
-    /// `amountOut` of another along the specified path (reversed)
-    /// - Makes a max allowance fast check call, replacing the recipient with the Credit Account
-    /// @param params The parameters necessary for the multi-hop swap, encoded as `ExactOutputParams` in calldata
+    /// @notice Swaps input token for given amount of output token through multiple pools
+    /// @param params Swap params, see `ISwapRouter.ExactOutputParams` for details
+    /// @dev `params.recipient` is ignored since it can only be the credit account
+    /// @dev `params.path` must have at most 3 hops through registered connector tokens
     function exactOutput(ISwapRouter.ExactOutputParams calldata params) external override creditFacadeOnly {
-        address creditAccount = _creditAccount(); // F:[AUV3-1]
+        address creditAccount = _creditAccount(); // F: [AUV3-1]
 
         (bool valid, address tokenOut, address tokenIn) = _parseUniV3Path(params.path);
         if (!valid) {
-            revert InvalidPathException(); // F:[AUV3-9]
+            revert InvalidPathException(); // F: [AUV3-9]
         }
 
-        ISwapRouter.ExactOutputParams memory paramsUpdate = params; // F:[AUV3-7]
-        paramsUpdate.recipient = creditAccount; // F:[AUV3-7]
+        ISwapRouter.ExactOutputParams memory paramsUpdate = params; // F: [AUV3-7]
+        paramsUpdate.recipient = creditAccount; // F: [AUV3-7]
 
-        _executeSwapMaxApprove(
-            creditAccount, tokenIn, tokenOut, abi.encodeCall(ISwapRouter.exactOutput, (paramsUpdate)), false
-        ); // F:[AUV3-7]
+        // calling `_executeSwap` because we need to check if output token is registered as collateral token in the CM
+        _executeSwapSafeApprove(tokenIn, tokenOut, abi.encodeCall(ISwapRouter.exactOutput, (paramsUpdate)), false); // F: [AUV3-7]
     }
 
-    /// @dev Performs sanity checks on a Uniswap V3 path and returns the input and output tokens
-    /// @param path Path to check
-    /// @notice Sanity checks include path length not being more than 3 hops and intermediary tokens
-    ///         being allowed as connectors
+    /// @dev Performs sanity check on a swap path, returns input and output tokens
+    ///      - Path length must be no more than 4 (i.e., at most 3 hops)
+    ///      - Each intermediary token must be a registered connector tokens
     function _parseUniV3Path(bytes memory path) internal view returns (bool valid, address tokenIn, address tokenOut) {
         valid = true;
 

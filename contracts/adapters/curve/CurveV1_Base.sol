@@ -6,97 +6,116 @@ pragma solidity ^0.8.17;
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 
+import {IAdapter, AdapterType} from "@gearbox-protocol/core-v2/contracts/interfaces/adapters/IAdapter.sol";
 import {AbstractAdapter} from "@gearbox-protocol/core-v2/contracts/adapters/AbstractAdapter.sol";
+import {ZeroAddressException} from "@gearbox-protocol/core-v2/contracts/interfaces/IErrors.sol";
+import {RAY} from "@gearbox-protocol/core-v2/contracts/libraries/Constants.sol";
+
+import {ICurvePool} from "../../integrations/curve/ICurvePool.sol";
 import {ICurvePool2Assets} from "../../integrations/curve/ICurvePool_2.sol";
 import {ICurvePool3Assets} from "../../integrations/curve/ICurvePool_3.sol";
 import {ICurvePool4Assets} from "../../integrations/curve/ICurvePool_4.sol";
-import {ICurveV1Adapter} from "../../interfaces/curve/ICurveV1Adapter.sol";
-import {IAdapter, AdapterType} from "@gearbox-protocol/core-v2/contracts/interfaces/adapters/IAdapter.sol";
-import {ICurvePool} from "../../integrations/curve/ICurvePool.sol";
-import {RAY} from "@gearbox-protocol/core-v2/contracts/libraries/Constants.sol";
 
-// EXCEPTIONS
-import {
-    ZeroAddressException, NotImplementedException
-} from "@gearbox-protocol/core-v2/contracts/interfaces/IErrors.sol";
+import {ICurveV1Adapter} from "../../interfaces/curve/ICurveV1Adapter.sol";
 
 uint256 constant ZERO = 0;
 
-/// @title CurveV1Base adapter
-/// @dev Implements common logic for interacting with all Curve pools, regardless of N_COINS
+/// @title Curve V1 base adapter
+/// @notice Implements logic allowing to interact with all Curve pools, regardless of number of coins
 contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
     using SafeCast for uint256;
     using SafeCast for int256;
-    // LP token, it could be named differently in some Curve Pools,
-    // so we set the same value to cover all possible cases
 
-    // coins
-    /// @dev Token in the pool under index 0
-    address public immutable token0;
-
-    /// @dev Token in the pool under index 1
-    address public immutable token1;
-
-    /// @dev Token in the pool under index 2
-    address public immutable token2;
-
-    /// @dev Token in the pool under index 3
-    address public immutable token3;
-
-    // underlying coins
-    /// @dev Underlying in the pool under index 0
-    address public immutable underlying0;
-
-    /// @dev Underlying in the pool under index 1
-    address public immutable underlying1;
-
-    /// @dev Underlying in the pool under index 2
-    address public immutable underlying2;
-
-    /// @dev Underlying in the pool under index 3
-    address public immutable underlying3;
-
-    /// @dev The pool LP token
-    address public immutable override token;
-
-    /// @dev The pool LP token
-    /// @notice The LP token can be named differently in different Curve pools,
-    /// so 2 getters are needed for backward compatibility
-    address public immutable override lp_token;
-
-    /// @dev Address of the base pool (for metapools only)
-    address public immutable override metapoolBase;
-
-    /// @dev Number of coins in the pool
-    uint256 public immutable nCoins;
-
-    /// @dev Whether to use uint256 for token indexes in write functions
-    bool public immutable use256;
-
-    uint16 public constant _gearboxAdapterVersion = 2;
+    uint16 public constant override _gearboxAdapterVersion = 2;
 
     function _gearboxAdapterType() external pure virtual override returns (AdapterType) {
         return AdapterType.CURVE_V1_EXCHANGE_ONLY;
     }
 
-    /// @dev Constructor
-    /// @param _creditManager Address of the Credit manager
-    /// @param _curvePool Address of the target contract Curve pool
-    /// @param _lp_token Address of the pool's LP token
-    /// @param _metapoolBase The base pool if this pool is a metapool, otherwise 0x0
+    /// @notice Pool LP token address (added for backward compatibility)
+    address public immutable override token;
+
+    /// @notice Pool LP token address
+    address public immutable override lp_token;
+
+    /// @notice Collateral token mask of pool LP token in the credit manager
+    uint256 public immutable override lpTokenMask;
+
+    /// @notice Base pool address (for metapools only)
+    address public immutable override metapoolBase;
+
+    /// @notice Number of coins in the pool
+    uint256 public immutable override nCoins;
+
+    /// @notice Whether to use uint256 for token indexes in write functions
+    bool public immutable override use256;
+
+    /// @notice Token in the pool under index 0
+    address public immutable token0;
+
+    /// @notice Token in the pool under index 1
+    address public immutable token1;
+
+    /// @notice Token in the pool under index 2
+    address public immutable token2;
+
+    /// @notice Token in the pool under index 3
+    address public immutable token3;
+
+    /// @notice Collateral token mask of token0 in the credit manager
+    uint256 public immutable override token0Mask;
+
+    /// @notice Collateral token mask of token1 in the credit manager
+    uint256 public immutable override token1Mask;
+
+    /// @notice Collateral token mask of token2 in the credit manager
+    uint256 public immutable override token2Mask;
+
+    /// @notice Collateral token mask of token3 in the credit manager
+    uint256 public immutable override token3Mask;
+
+    /// @notice Underlying in the pool under index 0
+    address public immutable override underlying0;
+
+    /// @notice Underlying in the pool under index 1
+    address public immutable override underlying1;
+
+    /// @notice Underlying in the pool under index 2
+    address public immutable override underlying2;
+
+    /// @notice Underlying in the pool under index 3
+    address public immutable override underlying3;
+
+    /// @notice Collateral token mask of underlying0 in the credit manager
+    uint256 public immutable override underlying0Mask;
+
+    /// @notice Collateral token mask of underlying1 in the credit manager
+    uint256 public immutable override underlying1Mask;
+
+    /// @notice Collateral token mask of underlying2 in the credit manager
+    uint256 public immutable override underlying2Mask;
+
+    /// @notice Collateral token mask of underlying3 in the credit manager
+    uint256 public immutable override underlying3Mask;
+
+    /// @notice Constructor
+    /// @param _creditManager Credit manager address
+    /// @param _curvePool Target Curve pool address
+    /// @param _lp_token Pool LP token address
+    /// @param _metapoolBase Base pool address (for metapools only) or zero address
+    /// @param _nCoins Number of coins in the pool
     constructor(address _creditManager, address _curvePool, address _lp_token, address _metapoolBase, uint256 _nCoins)
         AbstractAdapter(_creditManager, _curvePool)
     {
-        if (_lp_token == address(0)) revert ZeroAddressException(); // F:[ACV1-1]
+        if (_lp_token == address(0)) revert ZeroAddressException(); // F: [ACV1-1]
 
-        if (creditManager.tokenMasksMap(_lp_token) == 0) {
-            revert TokenIsNotInAllowedList(_lp_token);
-        } // F:[ACV1-1]
+        lpTokenMask = creditManager.tokenMasksMap(_lp_token); // F: [ACV1-2]
+        if (lpTokenMask == 0) revert TokenIsNotInAllowedList(_lp_token);
 
-        token = _lp_token; // F:[ACV1-2]
-        lp_token = _lp_token; // F:[ACV1-2]
-        metapoolBase = _metapoolBase; // F:[ACV1-2]
-        nCoins = _nCoins; // F:[ACV1-2]
+        token = _lp_token; // F: [ACV1-2]
+        lp_token = _lp_token; // F: [ACV1-2]
+        metapoolBase = _metapoolBase; // F: [ACV1-2]
+        nCoins = _nCoins; // F: [ACV1-2]
 
         {
             bool _use256;
@@ -113,10 +132,9 @@ contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
         }
 
         address[4] memory tokens;
-
+        uint256[4] memory tokenMasks;
         for (uint256 i = 0; i < nCoins;) {
             address currentCoin;
-
             try ICurvePool(targetContract).coins(i) returns (address tokenAddress) {
                 currentCoin = tokenAddress;
             } catch {
@@ -125,27 +143,34 @@ contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
                 } catch {}
             }
 
-            if (currentCoin == address(0)) revert ZeroAddressException();
-            if (creditManager.tokenMasksMap(currentCoin) == 0) {
-                revert TokenIsNotInAllowedList(currentCoin);
-            }
+            if (currentCoin == address(0)) revert ZeroAddressException(); // F: [ACV1-1]
+            uint256 currentMask = creditManager.tokenMasksMap(currentCoin);
+            if (currentMask == 0) revert TokenIsNotInAllowedList(currentCoin);
 
             tokens[i] = currentCoin;
+            tokenMasks[i] = currentMask;
 
             unchecked {
                 ++i;
             }
         }
 
-        token0 = tokens[0]; // F:[ACV1-2]
-        token1 = tokens[1]; // F:[ACV1-2]
-        token2 = tokens[2]; // F:[ACV1-2]
-        token3 = tokens[3]; // F:[ACV1-2]
+        token0 = tokens[0]; // F: [ACV1-2]
+        token1 = tokens[1]; // F: [ACV1-2]
+        token2 = tokens[2]; // F: [ACV1-2]
+        token3 = tokens[3]; // F: [ACV1-2]
+
+        token0Mask = tokenMasks[0]; // F: [ACV1-2]
+        token1Mask = tokenMasks[1]; // F: [ACV1-2]
+        token2Mask = tokenMasks[2]; // F: [ACV1-2]
+        token3Mask = tokenMasks[3]; // F: [ACV1-2]
 
         tokens = [address(0), address(0), address(0), address(0)];
+        tokenMasks = [ZERO, ZERO, ZERO, ZERO];
 
         for (uint256 i = 0; i < 4;) {
             address currentCoin;
+            uint256 currentMask;
 
             if (metapoolBase != address(0)) {
                 if (i == 0) {
@@ -167,274 +192,379 @@ contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
                 }
             }
 
-            if (currentCoin != address(0) && creditManager.tokenMasksMap(currentCoin) == 0) {
-                revert TokenIsNotInAllowedList(currentCoin); // F:[ACV1-1]
+            if (currentCoin != address(0)) {
+                currentMask = creditManager.tokenMasksMap(currentCoin);
+                if (currentMask == 0) revert TokenIsNotInAllowedList(currentCoin); // F: [ACV1-1]
             }
 
             tokens[i] = currentCoin;
+            tokenMasks[i] = currentMask;
 
             unchecked {
                 ++i;
             }
         }
 
-        underlying0 = tokens[0]; // F:[ACV1-2]
-        underlying1 = tokens[1]; // F:[ACV1-2]
-        underlying2 = tokens[2]; // F:[ACV1-2]
-        underlying3 = tokens[3]; // F:[ACV1-2]
+        underlying0 = tokens[0]; // F: [ACV1-2]
+        underlying1 = tokens[1]; // F: [ACV1-2]
+        underlying2 = tokens[2]; // F: [ACV1-2]
+        underlying3 = tokens[3]; // F: [ACV1-2]
+
+        underlying0Mask = tokenMasks[0]; // F: [ACV1-2]
+        underlying1Mask = tokenMasks[1]; // F: [ACV1-2]
+        underlying2Mask = tokenMasks[2]; // F: [ACV1-2]
+        underlying3Mask = tokenMasks[3]; // F: [ACV1-2]
     }
 
-    /// @dev Sends an order to exchange one asset to another
-    /// @param i Index for the coin sent
-    /// @param j Index for the coin received
-    /// @notice Fast check parameters:
-    /// Input token: Coin under index i
-    /// Output token: Coin under index j
-    /// Input token is allowed, since the target does a transferFrom for coin i
-    /// The input token does not need to be disabled, because this does not spend the entire
-    /// balance, generally
+    /// -------- ///
+    /// EXCHANGE ///
+    /// -------- ///
+
+    /// @notice Exchanges one pool asset to another
+    /// @param i Index of the asset to spend
+    /// @param j Index of the asset to receive
+    /// @dev `dx` and `min_dy` parameters are ignored because calldata is passed directly to the target contract
     function exchange(int128 i, int128 j, uint256, uint256) public override creditFacadeOnly {
-        address tokenIn = _get_token(i); // F:[ACV1-4,ACV1S-3]
-        address tokenOut = _get_token(j); // F:[ACV1-4,ACV1S-3]
-        _executeSwapMaxApprove(tokenIn, tokenOut, msg.data, false); // F:[ACV1-4,ACV1S-3]
+        _exchange(i, j, msg.data, false, false); // F: [ACV1-4]
     }
 
-    /// @dev `exchange` wrapper to support newer pools, which accept uint256 for token indices
+    /// @notice `exchange` wrapper to support newer pools which accept uint256 for token indices
     function exchange(uint256 i, uint256 j, uint256 dx, uint256 min_dy) external override creditFacadeOnly {
         exchange(i.toInt256().toInt128(), j.toInt256().toInt128(), dx, min_dy);
     }
 
-    /// @dev Sends an order to exchange the entire balance of one asset to another
-    /// @param i Index for the coin sent
-    /// @param j Index for the coin received
-    /// @param rateMinRAY Minimum exchange rate between coins i and j
-    /// @notice Fast check parameters:
-    /// Input token: Coin under index i
-    /// Output token: Coin under index j
-    /// Input token is allowed, since the target does a transferFrom for coin i
-    /// The input token does need to be disabled, because this spends the entire balance
-    /// @notice Calls `exchange` under the hood, passing current balance - 1 as the amount
+    /// @notice Exchanges the entire balance of one pool asset to another, disables input asset
+    /// @param i Index of the asset to spend
+    /// @param j Index of the asset to receive
+    /// @param rateMinRAY Minimum exchange rate between assets i and j, scaled by 1e27
     function exchange_all(int128 i, int128 j, uint256 rateMinRAY) public override creditFacadeOnly {
-        address creditAccount = _creditAccount(); //F:[ACV1-3]
+        address creditAccount = _creditAccount(); // F: [ACV1-3]
 
-        address tokenIn = _get_token(i); //F:[ACV1-5]
-        address tokenOut = _get_token(j); // F:[ACV1-5]
+        address tokenIn = _get_token(i, false); // F: [ACV1-5]
+        uint256 dx = IERC20(tokenIn).balanceOf(creditAccount); // F: [ACV1-5]
+        if (dx <= 1) return;
 
-        uint256 dx = IERC20(tokenIn).balanceOf(creditAccount); //F:[ACV1-5]
-
-        if (dx > 1) {
-            unchecked {
-                dx--;
-            }
-            uint256 min_dy = (dx * rateMinRAY) / RAY; //F:[ACV1-5]
-
-            _executeSwapMaxApprove(creditAccount, tokenIn, tokenOut, _getExchangeCall(i, j, dx, min_dy), true); //F:[ACV1-5]
+        unchecked {
+            dx--;
         }
+        uint256 min_dy = (dx * rateMinRAY) / RAY; // F: [ACV1-5]
+        _exchange(i, j, _getExchangeCallData(i, j, dx, min_dy, false), false, true); // F: [ACV1-5]
     }
 
-    /// @dev `exchange_all` wrapper to support newer pools, which accept uint256 for token indices
+    /// @notice `exchange_all` wrapper to support newer pools which accept uint256 for token indices
     function exchange_all(uint256 i, uint256 j, uint256 rateMinRAY) external override creditFacadeOnly {
         exchange_all(i.toInt256().toInt128(), j.toInt256().toInt128(), rateMinRAY);
     }
 
-    /// @dev Returns the call to exchange, accounting for different possible signatures
-    function _getExchangeCall(int128 i, int128 j, uint256 dx, uint256 min_dy) internal view returns (bytes memory) {
-        if (use256) {
-            return abi.encodeWithSignature(
-                "exchange(uint256,uint256,uint256,uint256)", uint256(int256(i)), uint256(int256(j)), dx, min_dy
-            );
-        } else {
-            return abi.encodeWithSignature("exchange(int128,int128,uint256,uint256)", i, j, dx, min_dy);
-        }
-    }
-
-    /// @dev Sends an order to exchange one underlying asset to another
-    /// @param i Index for the underlying coin sent
-    /// @param j Index for the underlying coin received
-    /// @notice Fast check parameters:
-    /// Input token: Underlying coin under index i
-    /// Output token: Underlying coin under index j
-    /// Input token is allowed, since the target does a transferFrom for underlying i
-    /// The input token does not need to be disabled, because this does not spend the entire
-    /// balance, generally
+    /// @notice Exchanges one pool's underlying asset to another
+    /// @param i Index of the underlying asset to spend
+    /// @param j Index of the underlying asset to receive
+    /// @dev `dx` and `min_dy` parameters are ignored because calldata is passed directly to the target contract
     function exchange_underlying(int128 i, int128 j, uint256, uint256) public override creditFacadeOnly {
-        address tokenIn = _get_underlying(i); // F:[ACV1-6]
-        address tokenOut = _get_underlying(j); // F:[ACV1-6]
-        _executeSwapMaxApprove(tokenIn, tokenOut, msg.data, false); // F:[ACV1-6]
+        _exchange(i, j, msg.data, true, false); // F: [ACV1-6]
     }
 
-    /// @dev `exchange_underlying` wrapper to support newer pools, which accept uint256 for token indices
+    /// @notice `exchange_underlying` wrapper to support newer pools which accept uint256 for token indices
     function exchange_underlying(uint256 i, uint256 j, uint256 dx, uint256 min_dy) external override creditFacadeOnly {
         exchange_underlying(i.toInt256().toInt128(), j.toInt256().toInt128(), dx, min_dy);
     }
 
-    /// @dev Sends an order to exchange the entire balance of one underlying asset to another
-    /// @param i Index for the underlying coin sent
-    /// @param j Index for the underlying coin received
-    /// @param rateMinRAY Minimum exchange rate between underlyings i and j
-    /// @notice Fast check parameters:
-    /// Input token: Underlying coin under index i
-    /// Output token: Underlying coin under index j
-    /// Input token is allowed, since the target does a transferFrom for underlying i
-    /// The input token does need to be disabled, because this spends the entire balance
-    /// @notice Calls `exchange_underlying` under the hood, passing current balance - 1 as the amount
+    /// @notice Exchanges the entire balance of one pool's underlying asset to another, disables input asset
+    /// @param i Index of the underlying asset to spend
+    /// @param j Index of the underlying asset to receive
+    /// @param rateMinRAY Minimum exchange rate between underlying assets i and j, scaled by 1e27
     function exchange_all_underlying(int128 i, int128 j, uint256 rateMinRAY) public creditFacadeOnly {
-        address creditAccount = _creditAccount(); //F:[ACV1-3]
+        address creditAccount = _creditAccount(); //F: [ACV1-3]
 
-        address tokenIn = _get_underlying(i); //F:[ACV1-7]
-        address tokenOut = _get_underlying(j); // F:[ACV1-7]
+        address tokenIn = _get_token(i, true); // F: [ACV1-7]
+        uint256 dx = IERC20(tokenIn).balanceOf(creditAccount); // F: [ACV1-7]
+        if (dx <= 1) return;
 
-        uint256 dx = IERC20(tokenIn).balanceOf(creditAccount); //F:[ACV1-7]
-
-        if (dx > 1) {
-            unchecked {
-                dx--;
-            }
-            uint256 min_dy = (dx * rateMinRAY) / RAY; //F:[ACV1-7]
-
-            _executeSwapMaxApprove(creditAccount, tokenIn, tokenOut, _getExchangeUnderlyingCall(i, j, dx, min_dy), true); //F:[ACV1-7]
+        unchecked {
+            dx--; // F: [ACV1-7]
         }
+        uint256 min_dy = (dx * rateMinRAY) / RAY; // F: [ACV1-7]
+        _exchange(i, j, _getExchangeCallData(i, j, dx, min_dy, true), true, true); // F: [ACV1-7]
     }
 
-    /// @dev `exchange_all_underlying` wrapper to support newer pools, which accept uint256 for token indices
+    /// @notice `exchange_all_underlying` wrapper to support newer pools which accept uint256 for token indices
     function exchange_all_underlying(uint256 i, uint256 j, uint256 rateMinRAY) external creditFacadeOnly {
         exchange_all_underlying(i.toInt256().toInt128(), j.toInt256().toInt128(), rateMinRAY);
     }
 
-    /// @dev Returns the call to exchange, accounting for different possible signatures
-    function _getExchangeUnderlyingCall(int128 i, int128 j, uint256 dx, uint256 min_dy)
+    /// @dev Internal implementation of exchange functions
+    ///      - passes calldata to the target contract
+    ///      - sets max approval for the input token before the call and resets it to 1 after
+    ///      - enables output asset after the call
+    ///      - disables input asset only when exchanging the entire balance
+    function _exchange(int128 i, int128 j, bytes memory callData, bool underlying, bool disableTokenIn) internal {
+        _approve_token(i, underlying, type(uint256).max);
+        _execute(callData);
+        _approve_token(i, underlying, 1);
+        _changeEnabledTokens(_get_token_mask(j, underlying), disableTokenIn ? _get_token_mask(i, underlying) : 0);
+    }
+
+    /// @dev Returns calldata for `ICurvePool.exchange` and `ICurvePool.exchange_underlying` calls
+    function _getExchangeCallData(int128 i, int128 j, uint256 dx, uint256 min_dy, bool underlying)
         internal
         view
         returns (bytes memory)
     {
         if (use256) {
-            return abi.encodeWithSignature(
-                "exchange_underlying(uint256,uint256,uint256,uint256)",
-                uint256(int256(i)),
-                uint256(int256(j)),
-                dx,
-                min_dy
-            );
+            return underlying
+                ? abi.encodeWithSignature(
+                    "exchange_underlying(uint256,uint256,uint256,uint256)",
+                    uint256(int256(i)),
+                    uint256(int256(j)),
+                    dx,
+                    min_dy
+                )
+                : abi.encodeWithSignature(
+                    "exchange(uint256,uint256,uint256,uint256)", uint256(int256(i)), uint256(int256(j)), dx, min_dy
+                );
         } else {
-            return abi.encodeWithSignature("exchange_underlying(int128,int128,uint256,uint256)", i, j, dx, min_dy);
+            return underlying
+                ? abi.encodeWithSignature("exchange_underlying(int128,int128,uint256,uint256)", i, j, dx, min_dy)
+                : abi.encodeWithSignature("exchange(int128,int128,uint256,uint256)", i, j, dx, min_dy);
         }
     }
 
-    /// @dev Internal implementation for `add_liquidity`
-    /// - Sets allowances for tokens that are added
-    /// - Enables the pool LP token on the CA
-    /// - Executes the order with a full check (this is required since >2 tokens are involved)
-    /// - Resets allowance for tokens that are added
+    /// ------------- ///
+    /// ADD LIQUIDITY ///
+    /// ------------- ///
 
+    /// @dev Internal implementation of `add_liquidity`
+    ///      - passes calldata to the target contract
+    ///      - sets max approvals for the specified tokens before the call and resets them to 1 after
+    ///      - enables LP token
     function _add_liquidity(bool t0Approve, bool t1Approve, bool t2Approve, bool t3Approve) internal {
-        address creditAccount = _creditAccount(); // F:[ACV1_2-3, ACV1_3-3, ACV1_3-4]
-
-        _approve_coins(t0Approve, t1Approve, t2Approve, t3Approve); // F:[ACV1_2-4, ACV1_3-4, ACV1_4-4]
-
-        _enableToken(creditAccount, address(lp_token)); // F:[ACV1_2-4, ACV1_3-4, ACV1_4-4]
-        _execute(msg.data); // F:[ACV1_2-4, ACV1_3-4, ACV1_4-4]
-
-        _approve_coins(t0Approve, t1Approve, t2Approve, t3Approve);
-
-        /// F:[ACV1_2-4, ACV1_3-4, ACV1_4-4]
+        _approve_tokens(t0Approve, t1Approve, t2Approve, t3Approve, type(uint256).max);
+        _execute(msg.data);
+        _approve_tokens(t0Approve, t1Approve, t2Approve, t3Approve, 1);
+        _changeEnabledTokens(lpTokenMask, 0);
     }
 
-    /// @dev Sends an order to add liquidity with only 1 input asset
-    /// - Picks a selector based on the number of coins
-    /// - Makes a fast check call to target
-    /// @param amount Amount of asset to deposit
+    /// @notice Adds given amount of asset as liquidity to the pool
+    /// @param amount Amount to deposit
     /// @param i Index of the asset to deposit
-    /// @param minAmount Minimal number of LP tokens to receive
-    /// @notice Fast check parameters:
-    /// Input token: Pool asset under index i
-    /// Output token: Pool LP token
-    /// Input token is allowed, since the target does a transferFrom for the deposited asset
-    /// The input token does not need to be disabled, because this does not spend the entire
-    /// balance, generally
-    /// @notice Calls `add_liquidity` under the hood with only one amount being non-zero
+    /// @param minAmount Minimum amount of LP tokens to receive
     function add_liquidity_one_coin(uint256 amount, int128 i, uint256 minAmount) public override creditFacadeOnly {
-        address tokenIn = _get_token(i);
-
-        _executeSwapMaxApprove(tokenIn, lp_token, _getAddLiquidityCallData(i, amount, minAmount), false); // F:[ACV1-8A]
+        _add_liquidity_one_coin(i, _getAddLiquidityOneCoinCallData(i, amount, minAmount), false); // F: [ACV1-8]
     }
 
-    /// @dev `add_liquidity_one_coin` wrapper to support newer pools, which accept uint256 for token indices
+    /// @notice `add_liquidity_one_coin` wrapper to support newer pools which accept uint256 for token indices
     function add_liquidity_one_coin(uint256 amount, uint256 i, uint256 minAmount) external override creditFacadeOnly {
         add_liquidity_one_coin(amount, i.toInt256().toInt128(), minAmount);
     }
 
-    /// @dev Sends an order to add liquidity with only 1 input asset, using the entire balance
-    /// - Computes the amount of asset to deposit (balance - 1)
-    /// - Picks a selector based on the number of coins
-    /// - Makes a fast check call to target
+    /// @notice Adds the entire balance of asset as liquidity to the pool, disables this asset
     /// @param i Index of the asset to deposit
-    /// @param rateMinRAY Minimal exchange rate between the deposited asset and the LP token
-    /// @notice Fast check parameters:
-    /// Input token: Pool asset under index i
-    /// Output token: Pool LP token
-    /// Input token is allowed, since the target does a transferFrom for the deposited asset
-    /// The input token does need to be disabled, because this spends the entire balance
-    /// @notice Calls `add_liquidity` under the hood with only one amount being non-zero
+    /// @param rateMinRAY Minimum exchange rate between deposited asset and LP token, scaled by 1e27
     function add_all_liquidity_one_coin(int128 i, uint256 rateMinRAY) public override creditFacadeOnly {
-        address tokenIn = _get_token(i);
+        address creditAccount = _creditAccount();
 
-        address creditAccount = _creditAccount(); // F:[ACV1-8]
+        address tokenIn = _get_token(i, false);
+        uint256 amount = IERC20(tokenIn).balanceOf(creditAccount); // F: [ACV1-9]
+        if (amount <= 1) return;
 
-        uint256 amount = IERC20(tokenIn).balanceOf(creditAccount);
-
-        /// F:[ACV1-8]
-
-        if (amount > 1) {
-            unchecked {
-                amount--; // F:[ACV1-8]
-            }
-
-            uint256 minAmount = (amount * rateMinRAY) / RAY; // F:[ACV1-8]
-
-            _executeSwapMaxApprove(
-                creditAccount, tokenIn, lp_token, _getAddLiquidityCallData(i, amount, minAmount), true
-            ); // F:[ACV1-8]
+        unchecked {
+            amount--; // F: [ACV1-9]
         }
+        uint256 minAmount = (amount * rateMinRAY) / RAY; // F: [ACV1-9]
+        _add_liquidity_one_coin(i, _getAddLiquidityOneCoinCallData(i, amount, minAmount), true); // F: [ACV1-9]
     }
 
-    /// @dev `add_all_liquidity_one_coin` wrapper to support newer pools, which accept uint256 for token indices
+    /// @notice `add_all_liquidity_one_coin` wrapper to support newer pools which accept uint256 for token indices
     function add_all_liquidity_one_coin(uint256 i, uint256 rateMinRAY) external override creditFacadeOnly {
         add_all_liquidity_one_coin(i.toInt256().toInt128(), rateMinRAY);
     }
 
-    function _getAddLiquidityCallData(int128 i, uint256 amount, uint256 minAmount)
+    /// @dev Internal implementation of `add_liquidity_one_coin` and `add_all_liquidity_one_coin`
+    ///      - passes calldata to the target contract
+    ///      - sets max approval for the input token before the call and resets it to 1 after
+    ///      - enables LP token
+    ///      - disables input token only when adding the entire balance
+    function _add_liquidity_one_coin(int128 i, bytes memory callData, bool disableTokenIn) internal {
+        _approve_token(i, false, type(uint256).max);
+        _execute(callData);
+        _approve_token(i, false, 1);
+        _changeEnabledTokens(lpTokenMask, disableTokenIn ? _get_token_mask(i, false) : 0);
+    }
+
+    /// @dev Returns calldata for `ICurvePool.add_liquidity` with one input asset
+    function _getAddLiquidityOneCoinCallData(int128 i, uint256 amount, uint256 minAmount)
         internal
         view
         returns (bytes memory)
     {
         if (nCoins == 2) {
-            return i == 0
-                ? abi.encodeCall(ICurvePool2Assets.add_liquidity, ([amount, ZERO], minAmount))
-                : abi.encodeCall(ICurvePool2Assets.add_liquidity, ([ZERO, amount], minAmount)); // F:[ACV1-8]
+            uint256[2] memory amounts;
+            if (i > 1) revert IncorrectIndexException();
+            amounts[uint256(uint128(i))] = amount;
+            return abi.encodeCall(ICurvePool2Assets.add_liquidity, (amounts, minAmount)); // F: [ACV1-8, ACV1-9]
         }
         if (nCoins == 3) {
-            return i == 0
-                ? abi.encodeCall(ICurvePool3Assets.add_liquidity, ([amount, ZERO, ZERO], minAmount))
-                : i == 1
-                    ? abi.encodeCall(ICurvePool3Assets.add_liquidity, ([ZERO, amount, ZERO], minAmount))
-                    : abi.encodeCall(ICurvePool3Assets.add_liquidity, ([ZERO, ZERO, amount], minAmount)); // F:[ACV1-8]
+            uint256[3] memory amounts;
+            if (i > 2) revert IncorrectIndexException();
+            amounts[uint256(uint128(i))] = amount;
+            return abi.encodeCall(ICurvePool3Assets.add_liquidity, (amounts, minAmount)); // F: [ACV1-8, ACV1-9]
         }
         if (nCoins == 4) {
-            return i == 0
-                ? abi.encodeCall(ICurvePool4Assets.add_liquidity, ([amount, ZERO, ZERO, ZERO], minAmount))
-                : i == 1
-                    ? abi.encodeCall(ICurvePool4Assets.add_liquidity, ([ZERO, amount, ZERO, ZERO], minAmount))
-                    : i == 2
-                        ? abi.encodeCall(ICurvePool4Assets.add_liquidity, ([ZERO, ZERO, amount, ZERO], minAmount))
-                        : abi.encodeCall(ICurvePool4Assets.add_liquidity, ([ZERO, ZERO, ZERO, amount], minAmount)); // F:[ACV1-8]
+            uint256[4] memory amounts;
+            if (i > 3) revert IncorrectIndexException();
+            amounts[uint256(uint128(i))] = amount;
+            return abi.encodeCall(ICurvePool4Assets.add_liquidity, (amounts, minAmount)); // F: [ACV1-8, ACV1-9]
         }
-
         revert("Incorrect nCoins");
     }
 
-    /// @dev Returns the amount of lp token received when adding a single coin to the pool
-    /// @param amount Amount of coin to be deposited
-    /// @param i Index of a coin to be deposited
+    /// ---------------- ///
+    /// REMOVE LIQUIDITY ///
+    /// ---------------- ///
+
+    /// @dev Internal implementation of `remove_liquidity`
+    ///      - passes calldata to the target contract
+    ///      - enables all pool tokens
+    function _remove_liquidity() internal {
+        _execute(msg.data);
+        _changeEnabledTokens(token0Mask | token1Mask | token2Mask | token3Mask, 0); // F: [ACV1_2-5, ACV1_3-5, ACV1_4-5]
+    }
+
+    /// @dev Internal implementation of `remove_liquidity_imbalance`
+    ///      - passes calldata to the target contract
+    ///      - enables specified pool tokens
+    function _remove_liquidity_imbalance(bool t0Enable, bool t1Enable, bool t2Enable, bool t3Enable) internal {
+        _execute(msg.data);
+
+        uint256 tokensMask;
+        if (t0Enable) tokensMask |= _get_token_mask(0, false); // F: [ACV1_2-6, ACV1_3-6, ACV1_4-6]
+        if (t1Enable) tokensMask |= _get_token_mask(1, false); // F: [ACV1_2-6, ACV1_3-6, ACV1_4-6]
+        if (t2Enable) tokensMask |= _get_token_mask(2, false); // F: [ACV1_3-6, ACV1_4-6]
+        if (t3Enable) tokensMask |= _get_token_mask(3, false); // F: [ACV1_4-6]
+        _changeEnabledTokens(tokensMask, 0); // F: [ACV1_2-6, ACV1_3-6, ACV1_4-6]
+    }
+
+    /// @notice Removes liquidity from the pool in a specified asset
+    /// @param i Index of the asset to withdraw
+    /// @dev `_token_amount` and `min_amount` parameters are ignored because calldata is passed directly to the target contract
+    function remove_liquidity_one_coin(uint256, int128 i, uint256) public virtual override creditFacadeOnly {
+        _remove_liquidity_one_coin(i);
+    }
+
+    /// @notice `remove_liquidity_one_coin` wrapper to support newer pools which accept uint256 for token indices
+    function remove_liquidity_one_coin(uint256 _token_amount, uint256 i, uint256 minAmount)
+        external
+        override
+        creditFacadeOnly
+    {
+        remove_liquidity_one_coin(_token_amount, i.toInt256().toInt128(), minAmount);
+    }
+
+    /// @dev Internal implementation of `remove_liquidity_one_coin`
+    function _remove_liquidity_one_coin(int128 i) internal {
+        _remove_liquidity_one_coin_impl(i, msg.data, false); // F: [ACV1-10]
+    }
+
+    /// @notice Removes all liquidity from the pool in a specified asset
+    /// @param i Index of the asset to withdraw
+    /// @param rateMinRAY Minimum exchange rate between LP token and received token
+    function remove_all_liquidity_one_coin(int128 i, uint256 rateMinRAY) public virtual override creditFacadeOnly {
+        _remove_all_liquidity_one_coin(i, rateMinRAY);
+    }
+
+    /// @notice `remove_all_liquidity_one_coin` wrapper to support newer pools which accept uint256 for token indices
+    function remove_all_liquidity_one_coin(uint256 i, uint256 rateMinRAY) external override creditFacadeOnly {
+        remove_all_liquidity_one_coin(i.toInt256().toInt128(), rateMinRAY);
+    }
+
+    /// @dev Internal implementation of `remove_all_liquidity_one_coin`
+    function _remove_all_liquidity_one_coin(int128 i, uint256 rateMinRAY) internal {
+        address creditAccount = _creditAccount();
+
+        uint256 amount = IERC20(lp_token).balanceOf(creditAccount); // F: [ACV1-11]
+        if (amount <= 1) return;
+
+        unchecked {
+            amount--; // F: [ACV1-11]
+        }
+        uint256 minAmount = (amount * rateMinRAY) / RAY; // F: [ACV1-11]
+        _remove_liquidity_one_coin_impl(i, _getRemoveLiquidityOneCoinCallData(i, amount, minAmount), true); // F: [ACV1-11]
+    }
+
+    /// @dev Internal implementation of `remove_liquidity_one_coin` and `remove_all_liquidity_one_coin`
+    ///      - passes calldata to the targe contract
+    ///      - enables received asset
+    ///      - disables LP token only when removing all liquidity
+    function _remove_liquidity_one_coin_impl(int128 i, bytes memory callData, bool disableLP) internal {
+        _execute(callData);
+        _changeEnabledTokens(_get_token_mask(i, false), disableLP ? lpTokenMask : 0);
+    }
+
+    /// @dev Returns calldata for `ICurvePool.remove_liquidity_one_coin` call
+    function _getRemoveLiquidityOneCoinCallData(int128 i, uint256 amount, uint256 minAmount)
+        internal
+        view
+        returns (bytes memory)
+    {
+        if (use256) {
+            return abi.encodeWithSignature(
+                "remove_liquidity_one_coin(uint256,uint256,uint256)", amount, uint256(int256(i)), minAmount
+            );
+        } else {
+            return abi.encodeWithSignature("remove_liquidity_one_coin(uint256,int128,uint256)", amount, i, minAmount);
+        }
+    }
+
+    /// ------- ///
+    /// HELPERS ///
+    /// ------- ///
+
+    /// @dev Returns token `i`'s address
+    function _get_token(int128 i, bool underlying) internal view returns (address addr) {
+        if (i == 0) {
+            addr = underlying ? underlying0 : token0;
+        } else if (i == 1) {
+            addr = underlying ? underlying1 : token1;
+        } else if (i == 2) {
+            addr = underlying ? underlying2 : token2;
+        } else if (i == 3) {
+            addr = underlying ? underlying3 : token3;
+        }
+
+        if (addr == address(0)) revert IncorrectIndexException();
+    }
+
+    /// @dev Returns token `i`'s mask
+    function _get_token_mask(int128 i, bool underlying) internal view returns (uint256 mask) {
+        if (i == 0) {
+            mask = underlying ? underlying0Mask : token0Mask;
+        } else if (i == 1) {
+            mask = underlying ? underlying1Mask : token1Mask;
+        } else if (i == 2) {
+            mask = underlying ? underlying2Mask : token2Mask;
+        } else if (i == 3) {
+            mask = underlying ? underlying3Mask : token3Mask;
+        }
+
+        if (mask == 0) revert IncorrectIndexException();
+    }
+
+    /// @dev Sets target contract's approval for token `i` to `amount`
+    function _approve_token(int128 i, bool underlying, uint256 amount) internal {
+        _approveToken(_get_token(i, underlying), amount);
+    }
+
+    /// @dev Sets target contract's approval for specified tokens to `amount`
+    function _approve_tokens(bool t0Approve, bool t1Approve, bool t2Approve, bool t3Approve, uint256 amount) internal {
+        if (t0Approve) _approveToken(token0, amount); // F: [ACV1_2-4, ACV1_3-4, ACV1_4-4]
+        if (t1Approve) _approveToken(token1, amount); // F: [ACV1_2-4, ACV1_3-4, ACV1_4-4]
+        if (t2Approve) _approveToken(token2, amount); // F: [ACV1_3-4, ACV1_4-4]
+        if (t3Approve) _approveToken(token3, amount); // F: [ACV1_4-4]
+    }
+
+    /// @notice Returns the amount of LP token received for adding a single asset to the pool
+    /// @param amount Amount to deposit
+    /// @param i Index of the asset to deposit
     function calc_add_one_coin(uint256 amount, int128 i) public view returns (uint256) {
         if (nCoins == 2) {
             return i == 0
@@ -459,211 +589,8 @@ contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
         }
     }
 
-    /// @dev `calc_add_one_coin` wrapper to support newer pools, which accept uint256 for token indices
+    /// @notice `calc_add_one_coin` wrapper to support newer pools which accept uint256 for token indices
     function calc_add_one_coin(uint256 amount, uint256 i) external view returns (uint256) {
         return calc_add_one_coin(amount, i.toInt256().toInt128());
-    }
-
-    /// @dev Internal implementation for `remove_liquidity`
-    /// - Enables all of the pool tokens (since remove_liquidity will always
-    /// return non-zero amounts for all tokens)
-    /// - Executes the order with a full check (this is required since >2 tokens are involved)
-    /// @notice The LP token does not need to be approved since the pool burns it
-    function _remove_liquidity() internal {
-        address creditAccount = _creditAccount(); // F:[ACV1_2-3, ACV1_3-3, ACV1_3-4]
-
-        _enableToken(creditAccount, token0); // F:[ACV1_2-5, ACV1_3-5, ACV1_4-5]
-        _enableToken(creditAccount, token1); // F:[ACV1_2-5, ACV1_3-5, ACV1_4-5]
-
-        if (token2 != address(0)) {
-            _enableToken(creditAccount, token2); // F:[ACV1_3-5, ACV1_4-5]
-
-            if (token3 != address(0)) {
-                _enableToken(creditAccount, token3); // F:[ACV1_4-5]
-            }
-        }
-        _execute(msg.data);
-    }
-
-    /// @dev Sends an order to remove liquidity from a pool in a single asset
-    /// - Makes a fast check call to target, with passed calldata
-    /// @param i Index of the asset to withdraw
-    /// @notice `_token_amount` and `min_amount` are ignored since the calldata is routed directly to the target
-    /// @notice Fast check parameters:
-    /// Input token: Pool LP token
-    /// Output token: Coin under index i
-    /// Input token is not approved, since the pool directly burns the LP token
-    /// The input token does not need to be disabled, because this does not spend the entire
-    /// balance, generally
-    function remove_liquidity_one_coin(
-        uint256, // _token_amount,
-        int128 i,
-        uint256 // min_amount
-    ) public virtual override creditFacadeOnly {
-        address tokenOut = _get_token(i); // F:[ACV1-9]
-        _remove_liquidity_one_coin(tokenOut); // F:[ACV1-9]
-    }
-
-    /// @dev `remove_liquidity_one_coin` wrapper to support newer pools, which accept uint256 for token indices
-    function remove_liquidity_one_coin(uint256 _token_amount, uint256 i, uint256 minAmount)
-        external
-        override
-        creditFacadeOnly
-    {
-        remove_liquidity_one_coin(_token_amount, i.toInt256().toInt128(), minAmount);
-    }
-
-    /// @dev Internal implementation for `remove_liquidity_one_coin` operations
-    /// - Makes a fast check call to target, with passed calldata
-    /// @param tokenOut The coin received from the pool
-    /// @notice Fast check parameters:
-    /// Input token: Pool LP token
-    /// Output token: Coin under index i
-    /// Input token is not approved, since the pool directly burns the LP token
-    /// The input token does not need to be disabled, because this does not spend the entire
-    /// balance, generally
-    function _remove_liquidity_one_coin(address tokenOut) internal {
-        _executeSwapNoApprove(lp_token, tokenOut, msg.data, false); // F:[ACV1-9]
-    }
-
-    /// @dev Sends an order to remove all liquidity from the pool in a single asset
-    /// @param i Index of the asset to withdraw
-    /// @param minRateRAY Minimal exchange rate between the LP token and the received token
-    function remove_all_liquidity_one_coin(int128 i, uint256 minRateRAY) public virtual override creditFacadeOnly {
-        address tokenOut = _get_token(i); // F:[ACV1-4]
-        _remove_all_liquidity_one_coin(i, tokenOut, minRateRAY); // F:[ACV1-10]
-    }
-
-    /// @dev `remove_all_liquidity_one_coin` wrapper to support newer pools, which accept uint256 for token indices
-    function remove_all_liquidity_one_coin(uint256 i, uint256 minRateRAY) external override creditFacadeOnly {
-        remove_all_liquidity_one_coin(i.toInt256().toInt128(), minRateRAY);
-    }
-
-    /// @dev Internal implementation for `remove_all_liquidity_one_coin` operations
-    /// - Computes the amount of LP token to burn (balance - 1)
-    /// - Makes a max allowance fast check call to target
-    /// @param i Index of the coin received from the pool
-    /// @param tokenOut The coin received from the pool
-    /// @param rateMinRAY The minimal exchange rate between the LP token and received token
-    /// @notice Fast check parameters:
-    /// Input token: Pool LP token
-    /// Output token: Coin under index i
-    /// Input token is not approved, since the pool directly burns the LP token
-    /// The input token does need to be disabled, because this spends the entire balance
-    function _remove_all_liquidity_one_coin(int128 i, address tokenOut, uint256 rateMinRAY) internal {
-        address creditAccount = _creditAccount(); //F:[ACV1-3]
-
-        uint256 amount = IERC20(lp_token).balanceOf(creditAccount); // F:[ACV1-10]
-
-        if (amount > 1) {
-            unchecked {
-                amount--; // F:[ACV1-10]
-            }
-
-            _executeSwapNoApprove(
-                creditAccount,
-                lp_token,
-                tokenOut,
-                _getRemoveLiquidityOneCoinCall(amount, i, (amount * rateMinRAY) / RAY),
-                true
-            ); // F:[ACV1-10]
-        }
-    }
-
-    /// @dev Returns the call to exchange, accounting for different possible signatures
-    function _getRemoveLiquidityOneCoinCall(uint256 amount, int128 i, uint256 minAmount)
-        internal
-        view
-        returns (bytes memory)
-    {
-        if (use256) {
-            return abi.encodeWithSignature(
-                "remove_liquidity_one_coin(uint256,uint256,uint256)", amount, uint256(int256(i)), minAmount
-            );
-        } else {
-            return abi.encodeWithSignature("remove_liquidity_one_coin(uint256,int128,uint256)", amount, i, minAmount);
-        }
-    }
-
-    /// @dev Internal implementation for `remove_liquidity_imbalance`
-    /// - Enables tokens with a non-zero amount withdrawn
-    /// - Executes the order with a full check (this is required since >2 tokens are involved)
-    /// @notice The LP token does not need to be approved since the pool burns it
-    function _remove_liquidity_imbalance(bool t0Enable, bool t1Enable, bool t2Enable, bool t3Enable) internal {
-        address creditAccount = _creditAccount(); // F:[ACV1_2-3, ACV1_3-3, ACV1_3-4]
-
-        if (t0Enable) {
-            _enableToken(creditAccount, token0); // F:[ACV1_2-6, ACV1_3-6, ACV1_4-6]
-        }
-
-        if (t1Enable) {
-            _enableToken(creditAccount, token1); // F:[ACV1_2-6, ACV1_3-6, ACV1_4-6]
-        }
-
-        if (t2Enable) {
-            _enableToken(creditAccount, token2); // F:[ACV1_3-6, ACV1_4-6]
-        }
-
-        if (t3Enable) {
-            _enableToken(creditAccount, token3); // F:[ACV1_4-6]
-        }
-
-        _execute(msg.data);
-    }
-
-    /// @dev Return the token i's address gas-efficiently
-    function _get_token(int128 i) internal view returns (address addr) {
-        if (i == 0) {
-            addr = token0;
-        } // F:[ACV1-14]
-        else if (i == 1) {
-            addr = token1;
-        } // F:[ACV1-14]
-        else if (i == 2) {
-            addr = token2;
-        } // F:[ACV1-14]
-        else if (i == 3) {
-            addr = token3;
-        } // F:[ACV1-14]
-
-        if (addr == address(0)) revert IncorrectIndexException(); // F:[ACV1-13]
-    }
-
-    /// @dev Return the underlying i's address gas-efficiently
-    function _get_underlying(int128 i) internal view returns (address addr) {
-        if (i == 0) {
-            addr = underlying0;
-        } // F:[ACV1-14]
-        else if (i == 1) {
-            addr = underlying1;
-        } // F:[ACV1-14]
-        else if (i == 2) {
-            addr = underlying2;
-        } // F:[ACV1-14]
-        else if (i == 3) {
-            addr = underlying3;
-        } // F:[ACV1-14]
-
-        if (addr == address(0)) revert IncorrectIndexException(); // F:[ACV1-13]
-    }
-
-    /// @dev Gives max approval for a coin to target contract
-    function _approve_coins(bool t0Enable, bool t1Enable, bool t2Enable, bool t3Enable) internal {
-        if (t0Enable) {
-            _approveToken(token0, type(uint256).max); // F:[ACV1_2-4, ACV1_3-4, ACV1_4-4]
-        }
-        if (t1Enable) {
-            _approveToken(token1, type(uint256).max); // F:[ACV1_2-4, ACV1_3-4, ACV1_4-4]
-        }
-        if (t2Enable) {
-            _approveToken(token2, type(uint256).max); // F:[ACV1_3-4, ACV1_4-4]
-        }
-        if (t3Enable) {
-            _approveToken(token3, type(uint256).max); // F:[ACV1_4-4]
-        }
-    }
-
-    function _enableToken(address creditAccount, address tokenToEnable) internal {
-        creditManager.checkAndEnableToken(creditAccount, tokenToEnable);
     }
 }

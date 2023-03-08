@@ -1,24 +1,11 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Gearbox Protocol. Generalized leverage for DeFi protocols
 // (c) Gearbox Holdings, 2022
-pragma solidity ^0.8.10;
+pragma solidity ^0.8.17;
 
-/// @dev The length of the bytes encoded address
-uint256 constant ADDR_SIZE = 20;
+import {IUniswapConnectorChecker} from "../../interfaces/uniswap/IUniswapConnectorChecker.sol";
 
-/// @dev The length of the uint24 encoded address
-uint256 constant FEE_SIZE = 3;
-
-/// @dev Minimal path length in bytes
-uint256 constant MIN_PATH_LENGTH = 2 * ADDR_SIZE + FEE_SIZE;
-
-/// @dev Number of bytes in path per single token
-uint256 constant ADDR_PLUS_FEE_LENGTH = ADDR_SIZE + FEE_SIZE;
-
-/// @dev Maximal allowed path length in bytes (3 hops)
-uint256 constant MAX_PATH_LENGTH = 4 * ADDR_SIZE + 3 * FEE_SIZE;
-
-abstract contract UniswapConnectorChecker {
+abstract contract UniswapConnectorChecker is IUniswapConnectorChecker {
     address public immutable connectorToken0;
     address public immutable connectorToken1;
     address public immutable connectorToken2;
@@ -54,13 +41,15 @@ abstract contract UniswapConnectorChecker {
         numConnectors = len;
     }
 
-    function isConnector(address token) public view returns (bool) {
+    /// @notice Returns true if given token is a registered connector token
+    function isConnector(address token) public view override returns (bool) {
         return token == connectorToken0 || token == connectorToken1 || token == connectorToken2
             || token == connectorToken3 || token == connectorToken4 || token == connectorToken5 || token == connectorToken6
             || token == connectorToken7 || token == connectorToken8 || token == connectorToken9;
     }
 
-    function getConnectors() external view returns (address[] memory connectors) {
+    /// @notice Returns the array of registered connector tokens
+    function getConnectors() external view override returns (address[] memory connectors) {
         uint256 len = numConnectors;
 
         connectors = new address[](len);
