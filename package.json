@@ -1,6 +1,6 @@
 {
-  "name": "@gearbox-protocol/integrations-v2",
-  "description": "Core smart contracts of Gearbox V1",
+  "name": "@gearbox-protocol/integrations-v3",
+  "description": "Integration contracts for Gearbox V3",
   "version": "1.0.0",
   "homepage": "https://gearbox.fi",
   "keywords": [
@@ -8,7 +8,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/Gearbox-protocol/integrations-v2"
+    "url": "https://github.com/Gearbox-protocol/integrations-v3"
   },
   "files": [
     "contracts"
