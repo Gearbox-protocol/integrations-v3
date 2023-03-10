@@ -20,7 +20,12 @@ import {
     JoinPoolRequest,
     ExitPoolRequest
 } from "../../../integrations/balancer/IBalancerV2Vault.sol";
-import {IBalancerV2VaultAdapter, SingleSwapAll} from "../../../interfaces/balancer/IBalancerV2VaultAdapter.sol";
+import {
+    IBalancerV2VaultAdapter,
+    IBalancerV2VaultAdapterExceptions,
+    SingleSwapAll,
+    PoolStatus
+} from "../../../interfaces/balancer/IBalancerV2VaultAdapter.sol";
 import {IAsset} from "../../../integrations/balancer/IAsset.sol";
 import {BalancerV2VaultAdapter} from "../../../adapters/balancer/BalancerV2VaultAdapter.sol";
 import {BPTStablePriceFeed} from "../../../oracles/balancer/BPTStablePriceFeed.sol";
@@ -39,7 +44,7 @@ bytes32 constant POOL_ID_2 = bytes32(uint256(2));
 
 /// @title Balancer V2 Vault adapter test
 /// @notice Designed for unit test purposes only
-contract BalancerV2VaultAdapterTest is AdapterTestHelper {
+contract BalancerV2VaultAdapterTest is AdapterTestHelper, IBalancerV2VaultAdapterExceptions {
     IBalancerV2VaultAdapter public adapter;
     BalancerVaultMock public balancerMock;
     uint256 public deadline;
@@ -190,6 +195,11 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper {
 
         evm.label(address(adapter), "ADAPTER");
         evm.label(address(balancerMock), "BALANCER_MOCK");
+
+        evm.startPrank(CONFIGURATOR);
+        BalancerV2VaultAdapter(address(adapter)).setPoolIDStatus(POOL_ID_1, PoolStatus.ALLOWED);
+        BalancerV2VaultAdapter(address(adapter)).setPoolIDStatus(POOL_ID_2, PoolStatus.ALLOWED);
+        evm.stopPrank();
 
         deadline = _getUniswapDeadline();
     }
@@ -990,5 +1000,166 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper {
         expectBalance(pool, creditAccount, 1);
 
         expectTokenIsEnabled(Tokens.USDT, true);
+    }
+
+    /// @dev [ABV2-10]: swap and joinPool functions revert when the pool doesn't have appropriate status
+    function test_ABV2_10_swap_join_revert_on_poolId_status() public {
+        (address creditAccount, uint256 initialDAIBalance) = _openTestCreditAccount();
+
+        evm.startPrank(CONFIGURATOR);
+        BalancerV2VaultAdapter(address(adapter)).setPoolIDStatus(POOL_ID_1, PoolStatus.SWAP_ONLY);
+        BalancerV2VaultAdapter(address(adapter)).setPoolIDStatus(POOL_ID_2, PoolStatus.NOT_ALLOWED);
+        evm.stopPrank();
+
+        {
+            FundManagement memory fundManagement = FundManagement({
+                sender: USER,
+                fromInternalBalance: true,
+                recipient: payable(USER),
+                toInternalBalance: true
+            });
+
+            SingleSwap memory singleSwapData = SingleSwap({
+                poolId: POOL_ID_2,
+                kind: SwapKind.GIVEN_IN,
+                assetIn: IAsset(tokenTestSuite.addressOf(Tokens.DAI)),
+                assetOut: IAsset(tokenTestSuite.addressOf(Tokens.WETH)),
+                amount: DAI_EXCHANGE_AMOUNT,
+                userData: ""
+            });
+
+            bytes memory passedCallData = abi.encodeWithSelector(
+                IBalancerV2Vault.swap.selector,
+                singleSwapData,
+                fundManagement,
+                DAI_EXCHANGE_AMOUNT / (DAI_WETH_RATE * 2),
+                deadline
+            );
+
+            evm.expectRevert(PoolIDNotSupportedException.selector);
+            executeOneLineMulticall(address(adapter), passedCallData);
+        }
+
+        {
+            SingleSwapAll memory singleSwapAllData = SingleSwapAll({
+                poolId: POOL_ID_2,
+                assetIn: IAsset(tokenTestSuite.addressOf(Tokens.DAI)),
+                assetOut: IAsset(tokenTestSuite.addressOf(Tokens.WETH)),
+                userData: ""
+            });
+
+            bytes memory passedCallData = abi.encodeWithSelector(
+                IBalancerV2VaultAdapter.swapAll.selector, singleSwapAllData, RAY / (DAI_WETH_RATE * 2), deadline
+            );
+
+            evm.expectRevert(PoolIDNotSupportedException.selector);
+            executeOneLineMulticall(address(adapter), passedCallData);
+        }
+
+        {
+            BatchSwapStep[] memory batchSteps = new BatchSwapStep[](2);
+
+            IAsset[] memory assets = new IAsset[](3);
+            int256[] memory limits = new int256[](3);
+
+            assets[0] = IAsset(tokenTestSuite.addressOf(Tokens.DAI));
+            assets[1] = IAsset(tokenTestSuite.addressOf(Tokens.WETH));
+            assets[2] = IAsset(tokenTestSuite.addressOf(Tokens.USDC));
+
+            limits[0] = 0;
+            limits[1] = int256(WETH_EXCHANGE_AMOUNT);
+            limits[2] = (-int256(WETH_EXCHANGE_AMOUNT * DAI_WETH_RATE)) / (2 * 1e12);
+
+            batchSteps[0] = BatchSwapStep({
+                poolId: POOL_ID_2,
+                assetInIndex: 1,
+                assetOutIndex: 0,
+                amount: WETH_EXCHANGE_AMOUNT,
+                userData: ""
+            });
+
+            batchSteps[1] =
+                BatchSwapStep({poolId: POOL_ID_1, assetInIndex: 0, assetOutIndex: 2, amount: 0, userData: ""});
+
+            FundManagement memory fundManagement = FundManagement({
+                sender: USER,
+                fromInternalBalance: true,
+                recipient: payable(USER),
+                toInternalBalance: true
+            });
+
+            evm.expectRevert(PoolIDNotSupportedException.selector);
+            executeOneLineMulticall(
+                address(adapter),
+                abi.encodeWithSelector(
+                    IBalancerV2Vault.batchSwap.selector,
+                    SwapKind.GIVEN_IN,
+                    batchSteps,
+                    assets,
+                    fundManagement,
+                    limits,
+                    deadline
+                )
+            );
+        }
+
+        {
+            IAsset[] memory assets = new IAsset[](3);
+
+            assets[0] = IAsset(tokenTestSuite.addressOf(Tokens.DAI));
+            assets[1] = IAsset(tokenTestSuite.addressOf(Tokens.USDC));
+            assets[2] = IAsset(tokenTestSuite.addressOf(Tokens.USDT));
+
+            uint256[] memory maxAmountsIn = new uint256[](3);
+
+            maxAmountsIn[0] = DAI_EXCHANGE_AMOUNT;
+            maxAmountsIn[1] = 0;
+            maxAmountsIn[2] = DAI_EXCHANGE_AMOUNT;
+
+            JoinPoolRequest memory request;
+
+            {
+                bytes memory userData =
+                    abi.encode(JoinKind.EXACT_TOKENS_IN_FOR_BPT_OUT, maxAmountsIn, DAI_EXCHANGE_AMOUNT);
+
+                request = JoinPoolRequest({
+                    assets: assets,
+                    maxAmountsIn: maxAmountsIn,
+                    userData: userData,
+                    fromInternalBalance: true
+                });
+            }
+
+            bytes memory passedCallData =
+                abi.encodeWithSelector(IBalancerV2Vault.joinPool.selector, POOL_ID_1, USER, USER, request);
+
+            evm.expectRevert(PoolIDNotSupportedException.selector);
+            executeOneLineMulticall(address(adapter), passedCallData);
+        }
+
+        {
+            bytes memory passedCallData = abi.encodeWithSelector(
+                IBalancerV2VaultAdapter.joinPoolSingleAsset.selector,
+                POOL_ID_1,
+                tokenTestSuite.addressOf(Tokens.DAI),
+                DAI_EXCHANGE_AMOUNT,
+                DAI_EXCHANGE_AMOUNT / 2
+            );
+
+            evm.expectRevert(PoolIDNotSupportedException.selector);
+            executeOneLineMulticall(address(adapter), passedCallData);
+        }
+
+        {
+            bytes memory passedCallData = abi.encodeWithSelector(
+                IBalancerV2VaultAdapter.joinPoolSingleAssetAll.selector,
+                POOL_ID_1,
+                tokenTestSuite.addressOf(Tokens.DAI),
+                RAY / 2
+            );
+
+            evm.expectRevert(PoolIDNotSupportedException.selector);
+            executeOneLineMulticall(address(adapter), passedCallData);
+        }
     }
 }

@@ -15,6 +15,12 @@ import {
     ExitPoolRequest
 } from "../../integrations/balancer/IBalancerV2Vault.sol";
 
+enum PoolStatus {
+    NOT_ALLOWED,
+    ALLOWED,
+    SWAP_ONLY
+}
+
 struct SingleSwapAll {
     bytes32 poolId;
     IAsset assetIn;
@@ -22,9 +28,17 @@ struct SingleSwapAll {
     bytes userData;
 }
 
+interface IBalancerV2VaultAdapterExceptions {
+    /// @dev Thrown when attempting to swap or change liqudity in the pool that is not supported for that action
+    error PoolIDNotSupportedException();
+}
+
 /// @title Balancer V2 Vault adapter interface
 /// @notice Implements logic allowing CAs to swap through and LP in Balancer vaults
-interface IBalancerV2VaultAdapter is IAdapter {
+interface IBalancerV2VaultAdapter is IAdapter, IBalancerV2VaultAdapterExceptions {
+    /// @dev Mapping from poolId to status of the pool: whether it is not supported, fully supported or swap-only
+    function poolIdStatus(bytes32 poolId) external view returns (PoolStatus);
+
     /// @notice Swaps a token for another token within a single pool
     /// @param singleSwap Struct containing swap parameters
     ///        * `poolId` - ID of the pool to perform a swap in

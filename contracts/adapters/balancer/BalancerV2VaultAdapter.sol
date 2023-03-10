@@ -4,7 +4,10 @@
 pragma solidity ^0.8.17;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {IPoolService} from "@gearbox-protocol/core-v2/contracts/interfaces/IPoolService.sol";
+import {ICreditManagerV2} from "@gearbox-protocol/core-v2/contracts/interfaces/ICreditManagerV2.sol";
 
+import {ACLNonReentrantTrait} from "@gearbox-protocol/core-v2/contracts/core/ACLNonReentrantTrait.sol";
 import {AbstractAdapter} from "@gearbox-protocol/core-v2/contracts/adapters/AbstractAdapter.sol";
 import {IAdapter, AdapterType} from "@gearbox-protocol/core-v2/contracts/interfaces/adapters/IAdapter.sol";
 import {RAY} from "@gearbox-protocol/core-v2/contracts/libraries/Constants.sol";
@@ -19,18 +22,26 @@ import {
     JoinPoolRequest,
     ExitPoolRequest
 } from "../../integrations/balancer/IBalancerV2Vault.sol";
-import {IBalancerV2VaultAdapter, SingleSwapAll} from "../../interfaces/balancer/IBalancerV2VaultAdapter.sol";
+import {
+    IBalancerV2VaultAdapter, SingleSwapAll, PoolStatus
+} from "../../interfaces/balancer/IBalancerV2VaultAdapter.sol";
 
 /// @title Balancer V2 Vault adapter
 /// @notice Implements logic allowing CAs to swap through and LP in Balancer vaults
-contract BalancerV2VaultAdapter is AbstractAdapter, IBalancerV2VaultAdapter {
+contract BalancerV2VaultAdapter is AbstractAdapter, ACLNonReentrantTrait, IBalancerV2VaultAdapter {
     AdapterType public constant override _gearboxAdapterType = AdapterType.BALANCER_VAULT;
     uint16 public constant override _gearboxAdapterVersion = 1;
+
+    /// @dev Mapping from poolId to status of the pool: whether it is not supported, fully supported or swap-only
+    mapping(bytes32 => PoolStatus) public poolIdStatus;
 
     /// @notice Constructor
     /// @param _creditManager Credit manager address
     /// @param _vault Balancer vault address
-    constructor(address _creditManager, address _vault) AbstractAdapter(_creditManager, _vault) {}
+    constructor(address _creditManager, address _vault)
+        ACLNonReentrantTrait(address(IPoolService(ICreditManagerV2(_creditManager).pool()).addressProvider()))
+        AbstractAdapter(_creditManager, _vault)
+    {}
 
     /// ----- ///
     /// SWAPS ///
@@ -48,11 +59,16 @@ contract BalancerV2VaultAdapter is AbstractAdapter, IBalancerV2VaultAdapter {
     /// @param deadline The latest timestamp at which the swap would be executed
     /// @dev `fundManagement` param from the original interface is ignored, as the adapter does not use internal balances and
     ///       only has one sender/recipient
+    /// @dev The function reverts if the poolId status is not ALLOWED or SWAP_ONLY
     function swap(SingleSwap memory singleSwap, FundManagement memory, uint256 limit, uint256 deadline)
         external
         override
         creditFacadeOnly
     {
+        if (poolIdStatus[singleSwap.poolId] == PoolStatus.NOT_ALLOWED) {
+            revert PoolIDNotSupportedException();
+        }
+
         address creditAccount = _creditAccount();
 
         address tokenIn = address(singleSwap.assetIn);
@@ -77,11 +93,16 @@ contract BalancerV2VaultAdapter is AbstractAdapter, IBalancerV2VaultAdapter {
     ///        * `userData` - additional generic blob used to pass extra data
     /// @param limitRateRAY The minimal resulting exchange rate of assetOut to assetIn, scaled by 1e27
     /// @param deadline The latest timestamp at which the swap would be executed
+    /// @dev The function reverts if the poolId status is not ALLOWED or SWAP_ONLY
     function swapAll(SingleSwapAll memory singleSwapAll, uint256 limitRateRAY, uint256 deadline)
         external
         override
         creditFacadeOnly
     {
+        if (poolIdStatus[singleSwapAll.poolId] == PoolStatus.NOT_ALLOWED) {
+            revert PoolIDNotSupportedException();
+        }
+
         address creditAccount = _creditAccount();
 
         address tokenIn = address(singleSwapAll.assetIn);
@@ -134,6 +155,7 @@ contract BalancerV2VaultAdapter is AbstractAdapter, IBalancerV2VaultAdapter {
     /// @param deadline The latest timestamp at which the swap would be executed
     /// @dev `fundManagement` param from the original interface is ignored, as the adapter does not use internal balances and
     ///       only has one sender/recipient
+    /// @dev The function reverts if any of the poolId statuses is not ALLOWED or SWAP_ONLY
     function batchSwap(
         SwapKind kind,
         BatchSwapStep[] memory swaps,
@@ -142,6 +164,15 @@ contract BalancerV2VaultAdapter is AbstractAdapter, IBalancerV2VaultAdapter {
         int256[] memory limits,
         uint256 deadline
     ) external override creditFacadeOnly {
+        for (uint256 i = 0; i < swaps.length;) {
+            if (poolIdStatus[swaps[i].poolId] == PoolStatus.NOT_ALLOWED) {
+                revert PoolIDNotSupportedException();
+            }
+            unchecked {
+                ++i;
+            }
+        }
+
         address creditAccount = _creditAccount();
 
         FundManagement memory fundManagement = _getDefaultFundManagement(creditAccount);
@@ -174,11 +205,16 @@ contract BalancerV2VaultAdapter is AbstractAdapter, IBalancerV2VaultAdapter {
     ///        * `fromInternalBalance` - whether to use internal balances for assets
     ///          (ignored as the adapter does not use internal balances)
     /// @dev `sender` and `recipient` are ignored, since they are always set to the CA address
+    /// @dev The function reverts if poolId status is not ALLOWED
     function joinPool(bytes32 poolId, address, address, JoinPoolRequest memory request)
         external
         override
         creditFacadeOnly
     {
+        if (poolIdStatus[poolId] != PoolStatus.ALLOWED) {
+            revert PoolIDNotSupportedException();
+        }
+
         address creditAccount = _creditAccount();
 
         (address bpt,) = IBalancerV2Vault(targetContract).getPool(poolId);
@@ -196,11 +232,16 @@ contract BalancerV2VaultAdapter is AbstractAdapter, IBalancerV2VaultAdapter {
     /// @param assetIn Asset to deposit
     /// @param amountIn Amount of asset to deposit
     /// @param minAmountOut The minimal amount of BPT to receive
+    /// @dev The function reverts if poolId status is not ALLOWED
     function joinPoolSingleAsset(bytes32 poolId, IAsset assetIn, uint256 amountIn, uint256 minAmountOut)
         external
         override
         creditFacadeOnly
     {
+        if (poolIdStatus[poolId] != PoolStatus.ALLOWED) {
+            revert PoolIDNotSupportedException();
+        }
+
         address creditAccount = _creditAccount();
 
         (address bpt,) = IBalancerV2Vault(targetContract).getPool(poolId);
@@ -226,11 +267,16 @@ contract BalancerV2VaultAdapter is AbstractAdapter, IBalancerV2VaultAdapter {
     /// @param poolId ID of the pool to deposit into
     /// @param assetIn Asset to deposit
     /// @param minRateRAY The minimal exchange rate of assetIn to BPT, scaled by 1e27
+    /// @dev The function reverts if poolId status is not ALLOWED
     function joinPoolSingleAssetAll(bytes32 poolId, IAsset assetIn, uint256 minRateRAY)
         external
         override
         creditFacadeOnly
     {
+        if (poolIdStatus[poolId] != PoolStatus.ALLOWED) {
+            revert PoolIDNotSupportedException();
+        }
+
         address creditAccount = _creditAccount();
 
         uint256 balanceInBefore = IERC20(address(assetIn)).balanceOf(creditAccount);
@@ -484,5 +530,14 @@ contract BalancerV2VaultAdapter is AbstractAdapter, IBalancerV2VaultAdapter {
             recipient: payable(creditAccount),
             toInternalBalance: false
         });
+    }
+
+    /// ------------- ///
+    /// CONFIGURATION ///
+    /// ------------- ///
+
+    /// @dev Sets the pool ID status: whether the pool ID is not supported, fully supported, or swap-only
+    function setPoolIDStatus(bytes32 poolId, PoolStatus newStatus) external configuratorOnly {
+        poolIdStatus[poolId] = newStatus;
     }
 }
