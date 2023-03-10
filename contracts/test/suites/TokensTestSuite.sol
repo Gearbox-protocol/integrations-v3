@@ -16,10 +16,10 @@ import {Tokens} from "../config/Tokens.sol";
 import {ERC20Mock} from "@gearbox-protocol/core-v2/contracts/test/mocks/token/ERC20Mock.sol";
 import {cERC20Mock} from "../mocks/token/cERC20Mock.sol";
 
-import "@gearbox-protocol/core-v2/contracts/test/lib/test.sol";
+import "@gearbox-protocol/core-v3/contracts/test/lib/test.sol";
 import {TokensData, TestToken} from "../config/TokensData.sol";
 import {TokensDataLive} from "../config/TokensDataLive.sol";
-import {TokensTestSuiteHelper} from "@gearbox-protocol/core-v2/contracts/test/suites/TokensTestSuiteHelper.sol";
+import {TokensTestSuiteHelper} from "@gearbox-protocol/core-v3/contracts/test/suites/TokensTestSuiteHelper.sol";
 import {IstETH} from "../../integrations/lido/IstETH.sol";
 
 import "../lib/constants.sol";

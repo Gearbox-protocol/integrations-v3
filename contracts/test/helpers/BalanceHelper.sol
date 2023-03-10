@@ -6,7 +6,7 @@ pragma solidity ^0.8.10;
 import {TokensTestSuite} from "../suites/TokensTestSuite.sol";
 import {Tokens} from "../config/Tokens.sol";
 
-import {BalanceEngine} from "@gearbox-protocol/core-v2/contracts/test/helpers/BalanceEngine.sol";
+import {BalanceEngine} from "@gearbox-protocol/core-v3/contracts/test/helpers/BalanceEngine.sol";
 
 /// @title CreditManagerTestSuite
 /// @notice Deploys contract for unit testing of CreditManager.sol

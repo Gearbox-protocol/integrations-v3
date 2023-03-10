@@ -3,7 +3,7 @@
 // (c) Gearbox Holdings, 2022
 pragma solidity ^0.8.10;
 
-import {LPPriceFeed} from "@gearbox-protocol/core-v2/contracts/oracles/LPPriceFeed.sol";
+import {LPPriceFeed} from "@gearbox-protocol/core-v3/contracts/oracles/LPPriceFeed.sol";
 import {ICurvePool} from "../../integrations/curve/ICurvePool.sol";
 
 // EXCEPTIONS

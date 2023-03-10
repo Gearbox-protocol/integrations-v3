@@ -3,9 +3,9 @@
 // (c) Gearbox Holdings, 2023
 pragma solidity ^0.8.17;
 
-import {AbstractAdapter} from "@gearbox-protocol/core-v2/contracts/adapters/AbstractAdapter.sol";
-import {IAdapter, AdapterType} from "@gearbox-protocol/core-v2/contracts/interfaces/adapters/IAdapter.sol";
-import {ACLNonReentrantTrait} from "@gearbox-protocol/core-v2/contracts/core/ACLNonReentrantTrait.sol";
+import {AbstractAdapter} from "@gearbox-protocol/core-v3/contracts/adapters/AbstractAdapter.sol";
+import {IAdapter, AdapterType} from "@gearbox-protocol/core-v3/contracts/interfaces/adapters/IAdapter.sol";
+import {ACLNonReentrantTrait} from "@gearbox-protocol/core-v3/contracts/core/ACLNonReentrantTrait.sol";
 import {IPoolService} from "@gearbox-protocol/core-v2/contracts/interfaces/IPoolService.sol";
 import {ICreditManagerV2} from "@gearbox-protocol/core-v2/contracts/interfaces/ICreditManagerV2.sol";
 import {ICreditConfigurator} from "@gearbox-protocol/core-v2/contracts/interfaces/ICreditConfigurator.sol";

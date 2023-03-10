@@ -5,7 +5,7 @@ pragma solidity ^0.8.10;
 
 import {AbstractCurveLPPriceFeed} from "./AbstractCurveLPPriceFeed.sol";
 import {AggregatorV3Interface} from "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
-import {IPriceFeedType, PriceFeedType} from "@gearbox-protocol/core-v2/contracts/interfaces/IPriceFeedType.sol";
+import {IPriceFeedType, PriceFeedType} from "@gearbox-protocol/core-v3/contracts/interfaces/IPriceFeedType.sol";
 
 // EXCEPTIONS
 import {

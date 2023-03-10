@@ -3,7 +3,7 @@
 // (c) Gearbox Holdings, 2023
 pragma solidity ^0.8.17;
 
-import {IAdapter} from "@gearbox-protocol/core-v2/contracts/interfaces/adapters/IAdapter.sol";
+import {IAdapter} from "@gearbox-protocol/core-v3/contracts/interfaces/adapters/IAdapter.sol";
 
 /// @title Aave V2 Wrapped aToken adapter interface
 /// @notice Implements logic allowing CAs to convert between waTokens, aTokens and underlying tokens

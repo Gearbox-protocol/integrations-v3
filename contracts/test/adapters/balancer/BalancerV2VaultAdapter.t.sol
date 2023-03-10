@@ -6,7 +6,7 @@ pragma solidity ^0.8.17;
 import {
     ICreditManagerV2,
     ICreditManagerV2Exceptions
-} from "@gearbox-protocol/core-v2/contracts/interfaces/ICreditManagerV2.sol";
+} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditManagerV2.sol";
 
 import {
     IBalancerV2Vault,

@@ -21,8 +21,8 @@ import {
     ZeroAddressException,
     CallerNotConfiguratorException,
     NotImplementedException
-} from "@gearbox-protocol/core-v2/contracts/interfaces/IErrors.sol";
-import {ICreditManagerV2Exceptions} from "@gearbox-protocol/core-v2/contracts/interfaces/ICreditManagerV2.sol";
+} from "@gearbox-protocol/core-v3/contracts/interfaces/IErrors.sol";
+import {ICreditManagerV2Exceptions} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditManagerV2.sol";
 
 uint256 constant STETH_POOLED_ETH = 2 * WAD;
 uint256 constant STETH_TOTAL_SHARES = WAD;

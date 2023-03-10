@@ -14,7 +14,7 @@ import {ICurveV1Adapter, ICurveV1AdapterExceptions} from "../../../interfaces/cu
 import {ICurvePoolStETH} from "../../../integrations/curve/ICurvePoolStETH.sol";
 import {ICurvePool} from "../../../integrations/curve/ICurvePool.sol";
 import {ICRVToken} from "../../../integrations/curve/ICRVToken.sol";
-import {ICreditManagerV2} from "@gearbox-protocol/core-v2/contracts/interfaces/ICreditManagerV2.sol";
+import {ICreditManagerV2} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditManagerV2.sol";
 import {CurveV1StETHMock} from "../../mocks/integrations/CurveV1StETHMock.sol";
 
 import {CurveV1Mock} from "../../mocks/integrations/CurveV1Mock.sol";

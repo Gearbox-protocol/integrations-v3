@@ -3,7 +3,7 @@
 // (c) Gearbox Holdings, 2023
 pragma solidity ^0.8.17;
 
-import {CreditManager} from "@gearbox-protocol/core-v2/contracts/credit/CreditManager.sol";
+import {CreditManager} from "@gearbox-protocol/core-v3/contracts/credit/CreditManager.sol";
 
 import {IBooster} from "../../../integrations/convex/IBooster.sol";
 import {IBaseRewardPool} from "../../../integrations/convex/IBaseRewardPool.sol";

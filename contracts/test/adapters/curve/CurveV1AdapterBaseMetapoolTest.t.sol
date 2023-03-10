@@ -8,7 +8,7 @@ import {ICurveV1Adapter} from "../../../interfaces/curve/ICurveV1Adapter.sol";
 import {ICurvePool} from "../../../integrations/curve/ICurvePool.sol";
 
 import {CurveV1MetapoolMock} from "../../mocks/integrations/CurveV1MetapoolMock.sol";
-import {MultiCall} from "@gearbox-protocol/core-v2/contracts/interfaces/ICreditFacade.sol";
+import {MultiCall} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacade.sol";
 
 import {Tokens} from "../../config/Tokens.sol";
 

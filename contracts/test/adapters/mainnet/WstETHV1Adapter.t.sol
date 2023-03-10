@@ -4,9 +4,9 @@
 pragma solidity ^0.8.10;
 
 import {PoolService} from "@gearbox-protocol/core-v2/contracts/pool/PoolService.sol";
-import {CreditFacade} from "@gearbox-protocol/core-v2/contracts/credit/CreditFacade.sol";
+import {CreditFacade} from "@gearbox-protocol/core-v3/contracts/credit/CreditFacade.sol";
 
-import {CreditManager} from "@gearbox-protocol/core-v2/contracts/credit/CreditManager.sol";
+import {CreditManager} from "@gearbox-protocol/core-v3/contracts/credit/CreditManager.sol";
 
 // TEST
 import "../../lib/constants.sol";

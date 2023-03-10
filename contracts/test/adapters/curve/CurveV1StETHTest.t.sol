@@ -21,7 +21,7 @@ import {CurveV1AdapterHelper} from "./CurveV1AdapterHelper.sol";
 // EXCEPTIONS
 import {
     ZeroAddressException, NotImplementedException
-} from "@gearbox-protocol/core-v2/contracts/interfaces/IErrors.sol";
+} from "@gearbox-protocol/core-v3/contracts/interfaces/IErrors.sol";
 
 uint256 constant STETH_ADD_LIQUIDITY_AMOUNT = STETH_ACCOUNT_AMOUNT / 10;
 uint256 constant WETH_ADD_LIQUIDITY_AMOUNT = WETH_ACCOUNT_AMOUNT / 5;

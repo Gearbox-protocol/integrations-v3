@@ -3,13 +3,13 @@
 // (c) Gearbox Holdings, 2022
 pragma solidity ^0.8.10;
 
-import {ITokenTestSuite} from "@gearbox-protocol/core-v2/contracts/test/interfaces/ITokenTestSuite.sol";
+import {ITokenTestSuite} from "@gearbox-protocol/core-v3/contracts/test/interfaces/ITokenTestSuite.sol";
 
 import {IAddressProvider} from "@gearbox-protocol/core-v2/contracts/interfaces/IAddressProvider.sol";
 import {PoolService} from "@gearbox-protocol/core-v2/contracts/pool/PoolService.sol";
 
 import {ContractsRegister} from "@gearbox-protocol/core-v2/contracts/core/ContractsRegister.sol";
-import {LinearInterestRateModel} from "@gearbox-protocol/core-v2/contracts/pool/LinearInterestRateModel.sol";
+import {LinearInterestRateModel} from "@gearbox-protocol/core-v3/contracts/pool/LinearInterestRateModel.sol";
 
 import {IwstETH} from "../../integrations/lido/IwstETH.sol";
 import "../lib/constants.sol";

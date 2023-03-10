@@ -5,7 +5,7 @@ pragma solidity ^0.8.17;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-import {AdapterType} from "@gearbox-protocol/core-v2/contracts/interfaces/adapters/IAdapter.sol";
+import {AdapterType} from "@gearbox-protocol/core-v3/contracts/interfaces/adapters/IAdapter.sol";
 
 import {CompoundV2_CTokenAdapter} from "./CompoundV2_CTokenAdapter.sol";
 import {ICErc20} from "../../integrations/compound/ICErc20.sol";

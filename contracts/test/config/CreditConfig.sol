@@ -6,11 +6,11 @@ pragma solidity ^0.8.17;
 import {TokensTestSuite} from "../suites/TokensTestSuite.sol";
 import {Tokens} from "./Tokens.sol";
 
-import {CreditManagerOpts, CollateralToken} from "@gearbox-protocol/core-v2/contracts/credit/CreditConfigurator.sol";
+import {CreditManagerOpts, CollateralToken} from "@gearbox-protocol/core-v3/contracts/credit/CreditConfigurator.sol";
 
 import {PriceFeedConfig} from "@gearbox-protocol/core-v2/contracts/oracles/PriceOracle.sol";
-import {ICreditConfig} from "@gearbox-protocol/core-v2/contracts/test/interfaces/ICreditConfig.sol";
-import {ITokenTestSuite} from "@gearbox-protocol/core-v2/contracts/test/interfaces/ITokenTestSuite.sol";
+import {ICreditConfig} from "@gearbox-protocol/core-v3/contracts/test/interfaces/ICreditConfig.sol";
+import {ITokenTestSuite} from "@gearbox-protocol/core-v3/contracts/test/interfaces/ITokenTestSuite.sol";
 import {TokensData} from "./TokensData.sol";
 import {ChainlinkPriceFeedData} from "./PriceFeedDataLive.sol";
 

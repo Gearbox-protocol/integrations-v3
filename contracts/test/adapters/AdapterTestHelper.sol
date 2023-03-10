@@ -6,9 +6,9 @@ pragma solidity ^0.8.17;
 import {
     ICreditManagerV2,
     ICreditManagerV2Events
-} from "@gearbox-protocol/core-v2/contracts/interfaces/ICreditManagerV2.sol";
-import {ICreditFacadeEvents} from "@gearbox-protocol/core-v2/contracts/interfaces/ICreditFacade.sol";
-import {IAdapterExceptions} from "@gearbox-protocol/core-v2/contracts/interfaces/adapters/IAdapter.sol";
+} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditManagerV2.sol";
+import {ICreditFacadeEvents} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacade.sol";
+import {IAdapterExceptions} from "@gearbox-protocol/core-v3/contracts/interfaces/adapters/IAdapter.sol";
 
 // TEST
 import "../lib/constants.sol";
@@ -17,7 +17,7 @@ import "../lib/constants.sol";
 import {TokensTestSuite} from "../suites/TokensTestSuite.sol";
 import {Tokens} from "../config/Tokens.sol";
 
-import {CreditFacadeTestSuite} from "@gearbox-protocol/core-v2/contracts/test/suites/CreditFacadeTestSuite.sol";
+import {CreditFacadeTestSuite} from "@gearbox-protocol/core-v3/contracts/test/suites/CreditFacadeTestSuite.sol";
 
 import {BalanceHelper} from "../helpers/BalanceHelper.sol";
 import {CreditFacadeTestHelper} from "../helpers/CreditFacadeTestHelper.sol";

@@ -3,13 +3,13 @@
 // (c) Gearbox Holdings, 2023
 pragma solidity ^0.8.17;
 
-import {Adapter} from "@gearbox-protocol/core-v2/contracts/factories/CreditManagerFactoryBase.sol";
+import {Adapter} from "@gearbox-protocol/core-v3/contracts/factories/CreditManagerFactoryBase.sol";
 import {ContractsRegister} from "@gearbox-protocol/core-v2/contracts/core/ContractsRegister.sol";
 import {ContractUpgrader} from "@gearbox-protocol/core-v2/contracts/support/ContractUpgrader.sol";
 import {
     CreditConfigurator, CreditManagerOpts
-} from "@gearbox-protocol/core-v2/contracts/credit/CreditConfigurator.sol";
-import {CreditFacade} from "@gearbox-protocol/core-v2/contracts/credit/CreditFacade.sol";
+} from "@gearbox-protocol/core-v3/contracts/credit/CreditConfigurator.sol";
+import {CreditFacade} from "@gearbox-protocol/core-v3/contracts/credit/CreditFacade.sol";
 import {PoolService} from "@gearbox-protocol/core-v2/contracts/pool/PoolService.sol";
 
 import {CreditManagerLiveMock} from "./CreditManagerLiveMock.sol";

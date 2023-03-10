@@ -3,7 +3,7 @@
 // (c) Gearbox Holdings, 2022
 pragma solidity ^0.8.10;
 
-import {ILPPriceFeedExceptions} from "@gearbox-protocol/core-v2/contracts/interfaces/ILPPriceFeed.sol";
+import {ILPPriceFeedExceptions} from "@gearbox-protocol/core-v3/contracts/interfaces/ILPPriceFeed.sol";
 import {CurveCryptoLPPriceFeed} from "../../oracles/curve/CurveCryptoLPPriceFeed.sol";
 
 // LIBRARIES
@@ -14,7 +14,7 @@ import "../lib/constants.sol";
 // MOCKS
 import {CurveV1Mock} from "../mocks/integrations/CurveV1Mock.sol";
 import {PriceFeedMock} from "@gearbox-protocol/core-v2/contracts/test/mocks/oracles/PriceFeedMock.sol";
-import {AddressProviderACLMock} from "@gearbox-protocol/core-v2/contracts/test/mocks/core/AddressProviderACLMock.sol";
+import {AddressProviderACLMock} from "@gearbox-protocol/core-v3/contracts/test/mocks/core/AddressProviderACLMock.sol";
 
 // SUITES
 import {TokensTestSuite, Tokens} from "../suites/TokensTestSuite.sol";
@@ -22,7 +22,7 @@ import {TokensTestSuite, Tokens} from "../suites/TokensTestSuite.sol";
 // EXCEPTIONS
 import {
     ZeroAddressException, NotImplementedException
-} from "@gearbox-protocol/core-v2/contracts/interfaces/IErrors.sol";
+} from "@gearbox-protocol/core-v3/contracts/interfaces/IErrors.sol";
 
 /// @title CurveLPPriceFeedTest
 /// @notice Designed for unit test purposes only

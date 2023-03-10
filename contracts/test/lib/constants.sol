@@ -3,4 +3,4 @@
 // (c) Gearbox Holdings, 2023
 pragma solidity ^0.8.17;
 
-import "@gearbox-protocol/core-v2/contracts/test/lib/constants.sol";
+import "@gearbox-protocol/core-v3/contracts/test/lib/constants.sol";

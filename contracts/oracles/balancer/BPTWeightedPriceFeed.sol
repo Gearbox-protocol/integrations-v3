@@ -5,8 +5,8 @@ pragma solidity ^0.8.17;
 
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {AggregatorV3Interface} from "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
-import {PriceFeedType} from "@gearbox-protocol/core-v2/contracts/interfaces/IPriceFeedType.sol";
-import {LPPriceFeed} from "@gearbox-protocol/core-v2/contracts/oracles/LPPriceFeed.sol";
+import {PriceFeedType} from "@gearbox-protocol/core-v3/contracts/interfaces/IPriceFeedType.sol";
+import {LPPriceFeed} from "@gearbox-protocol/core-v3/contracts/oracles/LPPriceFeed.sol";
 
 import {BPTWeightedPriceFeedSetup} from "./BPTWeightedPriceFeedSetup.sol";
 import {IBalancerV2VaultGetters} from "../../integrations/balancer/IBalancerV2Vault.sol";

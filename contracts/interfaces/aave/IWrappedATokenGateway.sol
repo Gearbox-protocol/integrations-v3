@@ -3,7 +3,7 @@
 // (c) Gearbox Holdings, 2023
 pragma solidity ^0.8.17;
 
-import {IPool4626} from "@gearbox-protocol/core-v2/contracts/interfaces/IPool4626.sol";
+import {IPool4626} from "@gearbox-protocol/core-v3/contracts/interfaces/IPool4626.sol";
 import {IAToken} from "../../integrations/aave/IAToken.sol";
 import {IWrappedAToken} from "./IWrappedAToken.sol";
 

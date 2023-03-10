@@ -3,9 +3,9 @@
 // (c) Gearbox Holdings, 2023
 pragma solidity ^0.8.17;
 
-import {MultiCall} from "@gearbox-protocol/core-v2/contracts/interfaces/ICreditFacade.sol";
-import {ICreditManagerV2Exceptions} from "@gearbox-protocol/core-v2/contracts/interfaces/ICreditManagerV2.sol";
-import {NotImplementedException} from "@gearbox-protocol/core-v2/contracts/interfaces/IErrors.sol";
+import {MultiCall} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacade.sol";
+import {ICreditManagerV2Exceptions} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditManagerV2.sol";
+import {NotImplementedException} from "@gearbox-protocol/core-v3/contracts/interfaces/IErrors.sol";
 
 import {
     ConvexAdapterHelper,
@@ -19,7 +19,7 @@ import {ERC20Mock} from "@gearbox-protocol/core-v2/contracts/test/mocks/token/ER
 
 import {USER, CONFIGURATOR, FRIEND} from "../../lib/constants.sol";
 
-import "@gearbox-protocol/core-v2/contracts/test/lib/test.sol";
+import "@gearbox-protocol/core-v3/contracts/test/lib/test.sol";
 
 contract ConvexV1BaseRewardPoolAdapterTest is DSTest, ConvexAdapterHelper, ICreditManagerV2Exceptions {
     function setUp() public {

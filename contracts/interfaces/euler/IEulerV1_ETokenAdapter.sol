@@ -3,7 +3,7 @@
 // (c) Gearbox Holdings, 2023
 pragma solidity ^0.8.17;
 
-import {IAdapter} from "@gearbox-protocol/core-v2/contracts/interfaces/adapters/IAdapter.sol";
+import {IAdapter} from "@gearbox-protocol/core-v3/contracts/interfaces/adapters/IAdapter.sol";
 
 /// @title Euler V1 eToken adapter interface
 /// @notice Implements logic allowing CAs to interact with Euler's eTokens
