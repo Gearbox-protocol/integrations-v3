@@ -36,7 +36,8 @@
     "bindings": "yarn ts-node ./bindings/generate.ts"
   },
   "dependencies": {
-    "@gearbox-protocol/core-v2": "^1.8.0-next.44",
+    "@gearbox-protocol/core-v2": "^1.7.2",
+    "@gearbox-protocol/core-v3": "^1.0.6",
     "@gearbox-protocol/sdk": "^1.20.7",
     "axios": "^1.1.3"
   },
