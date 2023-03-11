@@ -68,5 +68,6 @@ enum Tokens {
     dWBTC,
     dWETH,
     dwstETH,
+    dFRAX,
     GEAR
 }
