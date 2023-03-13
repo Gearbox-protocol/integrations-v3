@@ -14,7 +14,7 @@ contract TokensDataLive {
         TokenData[] memory td;
 
         if (networkId == 1) {
-            td = new TokenData[](58);
+            td = new TokenData[](59);
             td[0] = TokenData({
                 id: Tokens._1INCH,
                 addr: 0x111111111117dC0aa78b770fA6A738034120C302,
@@ -358,13 +358,19 @@ contract TokensDataLive {
                 tokenType: TokenType.DIESEL_LP_TOKEN
             });
             td[57] = TokenData({
+                id: Tokens.dFRAX,
+                addr: 0x8A1112AFef7F4FC7c066a77AABBc01b3Fff31D47,
+                symbol: "dFRAX",
+                tokenType: TokenType.DIESEL_LP_TOKEN
+            });
+            td[58] = TokenData({
                 id: Tokens.GEAR,
                 addr: 0xBa3335588D9403515223F109EdC4eB7269a9Ab5D,
                 symbol: "GEAR",
                 tokenType: TokenType.GEAR_TOKEN
             });
         } else if (networkId == 2) {
-            td = new TokenData[](58);
+            td = new TokenData[](59);
             td[0] = TokenData({
                 id: Tokens._1INCH,
                 addr: 0xC69D4e2940950bf26977b421BDB9a06F40D37db4,
@@ -707,9 +713,9 @@ contract TokensDataLive {
                 symbol: "dwstETH",
                 tokenType: TokenType.DIESEL_LP_TOKEN
             });
-            td[57] = TokenData({
+            td[58] = TokenData({
                 id: Tokens.GEAR,
-                addr: 0x52555B61b8c1243C63682F75eB28214d7A62F221,
+                addr: 0x3321F5dA65165042903eDe71617F912942f4E70F,
                 symbol: "GEAR",
                 tokenType: TokenType.GEAR_TOKEN
             });

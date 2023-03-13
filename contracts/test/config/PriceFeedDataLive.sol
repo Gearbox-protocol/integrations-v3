@@ -76,25 +76,16 @@ contract PriceFeedDataLive {
                 ChainlinkPriceFeedData({token: Tokens.USDT, priceFeed: 0x3E7d1eAB13ad0104d2750B8863b489D65364e32D})
             );
             chainlinkPriceFeeds.push(
-                ChainlinkPriceFeedData({token: Tokens.WBTC, priceFeed: 0xF4030086522a5bEEa4988F8cA5B36dbC97BeE88c})
-            );
-            chainlinkPriceFeeds.push(
                 ChainlinkPriceFeedData({token: Tokens.WETH, priceFeed: 0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419})
             );
             chainlinkPriceFeeds.push(
                 ChainlinkPriceFeedData({token: Tokens.YFI, priceFeed: 0xA027702dbb89fbd58938e4324ac03B58d812b0E1})
             );
             chainlinkPriceFeeds.push(
-                ChainlinkPriceFeedData({token: Tokens.STETH, priceFeed: 0xCfE54B5cD566aB89272946F602D76Ea879CAb4a8})
-            );
-            chainlinkPriceFeeds.push(
                 ChainlinkPriceFeedData({token: Tokens.CVX, priceFeed: 0xd962fC30A72A84cE50161031391756Bf2876Af5D})
             );
             chainlinkPriceFeeds.push(
                 ChainlinkPriceFeedData({token: Tokens.FRAX, priceFeed: 0xB9E1E3A9feFf48998E45Fa90847ed4D467E8BcfD})
-            );
-            chainlinkPriceFeeds.push(
-                ChainlinkPriceFeedData({token: Tokens.LUSD, priceFeed: 0x3D7aE7E594f2f2091Ad8798313450130d0Aba3a0})
             );
             chainlinkPriceFeeds.push(
                 ChainlinkPriceFeedData({token: Tokens.sUSD, priceFeed: 0xad35Bd71b9aFE6e4bDc266B345c198eaDEf9Ad94})
@@ -169,25 +160,16 @@ contract PriceFeedDataLive {
                 ChainlinkPriceFeedData({token: Tokens.USDT, priceFeed: 0x45a963a68848a850262Cb5aa1F5Be7dC4a6f0Abd})
             );
             chainlinkPriceFeeds.push(
-                ChainlinkPriceFeedData({token: Tokens.WBTC, priceFeed: 0x048F634279BE1CC4De3F17fD4c31101bAD0826c8})
-            );
-            chainlinkPriceFeeds.push(
                 ChainlinkPriceFeedData({token: Tokens.WETH, priceFeed: 0x491741d9F426130d1bC27Aee82f8b4Bd4E6E5f5D})
             );
             chainlinkPriceFeeds.push(
                 ChainlinkPriceFeedData({token: Tokens.YFI, priceFeed: 0x2d764833c4985A90Beb7DB43d4FFAD5Bb9675B9e})
             );
             chainlinkPriceFeeds.push(
-                ChainlinkPriceFeedData({token: Tokens.STETH, priceFeed: 0xf4f054C2E3269730c781dc7e1Fe2a3ca745784bd})
-            );
-            chainlinkPriceFeeds.push(
                 ChainlinkPriceFeedData({token: Tokens.CVX, priceFeed: 0xF958760fd9c0E019e355f31c3D69f0E5239597D0})
             );
             chainlinkPriceFeeds.push(
                 ChainlinkPriceFeedData({token: Tokens.FRAX, priceFeed: 0xC095CEa800dBAdcCc742124b68399Ac6ADF5d8eC})
-            );
-            chainlinkPriceFeeds.push(
-                ChainlinkPriceFeedData({token: Tokens.LUSD, priceFeed: 0xd6852347062aB885B6Fb9F7220BedCc5A39CE862})
             );
             chainlinkPriceFeeds.push(
                 ChainlinkPriceFeedData({token: Tokens.sUSD, priceFeed: 0x725F188BF87DaF7A7c3de39276ad78a2b8559793})
