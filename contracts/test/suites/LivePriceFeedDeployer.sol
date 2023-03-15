@@ -10,6 +10,8 @@ import {PriceFeedConfig} from "@gearbox-protocol/core-v2/contracts/oracles/Price
 import {ZeroPriceFeed} from "@gearbox-protocol/core-v3/contracts/oracles/ZeroPriceFeed.sol";
 import {YearnPriceFeed} from "../../oracles/yearn/YearnPriceFeed.sol";
 import {WstETHPriceFeed} from "../../oracles/lido/WstETHPriceFeed.sol";
+import {CompositePriceFeed} from "@gearbox-protocol/core-v3/contracts/oracles/CompositePriceFeed.sol";
+import {BoundedPriceFeed} from "@gearbox-protocol/core-v3/contracts/oracles/BoundedPriceFeed.sol";
 import {CurveV1StETHPoolGateway} from "../../adapters/curve/CurveV1_stETHGateway.sol";
 
 import {ISupportedContracts, Contracts} from "../config/SupportedContracts.sol";
@@ -45,6 +47,50 @@ contract LivePriceFeedDeployer is PriceFeedDataLive {
                 address pf = chainlinkPriceFeeds[i].priceFeed;
                 Tokens t = chainlinkPriceFeeds[i].token;
                 setPriceFeed(tokenTestSuite.addressOf(t), pf);
+
+                string memory description = string(abi.encodePacked("PRICEFEED_", tokenTestSuite.symbols(t)));
+                evm.label(pf, description);
+            }
+        }
+
+        // BOUNDED_PRICE_FEEDS
+        len = boundedPriceFeeds.length;
+        unchecked {
+            for (uint256 i = 0; i < len; ++i) {
+                Tokens t = boundedPriceFeeds[i].token;
+
+                address token = tokenTestSuite.addressOf(t);
+
+                address pf = address(
+                    new BoundedPriceFeed(
+                        boundedPriceFeeds[i].priceFeed,
+                        int256(boundedPriceFeeds[i].upperBound)
+                    )
+                );
+
+                setPriceFeed(token, pf);
+
+                string memory description = string(abi.encodePacked("PRICEFEED_", tokenTestSuite.symbols(t)));
+                evm.label(pf, description);
+            }
+        }
+
+        // COMPOSITE_PRICE_FEEDS
+        len = compositePriceFeeds.length;
+        unchecked {
+            for (uint256 i = 0; i < len; ++i) {
+                Tokens t = compositePriceFeeds[i].token;
+
+                address token = tokenTestSuite.addressOf(t);
+
+                address pf = address(
+                    new CompositePriceFeed(
+                        compositePriceFeeds[i].targetToBaseFeed,
+                        compositePriceFeeds[i].baseToUSDFeed
+                    )
+                );
+
+                setPriceFeed(token, pf);
 
                 string memory description = string(abi.encodePacked("PRICEFEED_", tokenTestSuite.symbols(t)));
                 evm.label(pf, description);
