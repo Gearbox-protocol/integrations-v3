@@ -5,7 +5,7 @@ pragma solidity ^0.8.17;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-import {AdapterType} from "@gearbox-protocol/core-v3/contracts/interfaces/adapters/IAdapter.sol";
+import {AdapterType} from "../../interfaces/IAdapter.sol";
 
 import {CEtherGateway} from "./CEtherGateway.sol";
 import {CompoundV2_CTokenAdapter} from "./CompoundV2_CTokenAdapter.sol";
@@ -35,15 +35,8 @@ contract CompoundV2_CEtherAdapter is CompoundV2_CTokenAdapter {
         cToken = address(CEtherGateway(payable(targetContract)).ceth());
         underlying = address(CEtherGateway(payable(targetContract)).weth());
 
-        cTokenMask = creditManager.tokenMasksMap(cToken);
-        if (cTokenMask == 0) {
-            revert TokenIsNotInAllowedList(cToken);
-        }
-
-        tokenMask = creditManager.tokenMasksMap(underlying);
-        if (tokenMask == 0) {
-            revert TokenIsNotInAllowedList(underlying);
-        }
+        cTokenMask = _checkToken(cToken);
+        tokenMask = _checkToken(underlying);
     }
 
     /// -------------------------------- ///

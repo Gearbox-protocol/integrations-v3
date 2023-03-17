@@ -6,8 +6,8 @@ pragma abicoder v1;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-import {AbstractAdapter} from "@gearbox-protocol/core-v3/contracts/adapters/AbstractAdapter.sol";
-import {IAdapter, AdapterType} from "@gearbox-protocol/core-v3/contracts/interfaces/adapters/IAdapter.sol";
+import {AbstractAdapter} from "../AbstractAdapter.sol";
+import {AdapterType} from "../../interfaces/IAdapter.sol";
 
 import {IClaimZap} from "../../integrations/convex/IClaimZap.sol";
 import {IRewards, IBasicRewards} from "../../integrations/convex/IRewards.sol";

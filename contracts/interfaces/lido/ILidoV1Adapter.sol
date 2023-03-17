@@ -3,7 +3,7 @@
 // (c) Gearbox Holdings, 2023
 pragma solidity ^0.8.17;
 
-import {IAdapter} from "@gearbox-protocol/core-v3/contracts/interfaces/adapters/IAdapter.sol";
+import {IAdapter} from "../IAdapter.sol";
 
 interface ILidoV1AdapterEvents {
     /// @notice Emitted when configurator sets new deposit limit

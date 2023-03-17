@@ -3,8 +3,8 @@
 // (c) Gearbox Holdings, 2023
 pragma solidity ^0.8.17;
 
-import {AdapterType} from "@gearbox-protocol/core-v3/contracts/interfaces/adapters/IAdapter.sol";
-import {AbstractAdapter} from "@gearbox-protocol/core-v3/contracts/adapters/AbstractAdapter.sol";
+import {AbstractAdapter} from "../AbstractAdapter.sol";
+import {AdapterType} from "../../interfaces/IAdapter.sol";
 
 import {IBooster} from "../../integrations/convex/IBooster.sol";
 import {IBaseRewardPool} from "../../integrations/convex/IBaseRewardPool.sol";
@@ -46,40 +46,25 @@ contract ConvexV1BaseRewardPoolAdapter is AbstractAdapter, IConvexV1BaseRewardPo
         AbstractAdapter(_creditManager, _baseRewardPool)
     {
         stakingToken = address(IBaseRewardPool(_baseRewardPool).stakingToken()); // F: [ACVX1_P-1]
-        stakingTokenMask = creditManager.tokenMasksMap(stakingToken); // F: [ACVX1_P-1]
-        if (stakingTokenMask == 0) {
-            revert TokenIsNotInAllowedList(stakingToken); // F: [ACVX1_P-2]
-        }
+        stakingTokenMask = _checkToken(stakingToken); // F: [ACVX1_P-1, ACVX1_P-2]
 
         stakedPhantomToken = _stakedPhantomToken; // F: [ACVX1_P-1]
-        stakedTokenMask = creditManager.tokenMasksMap(stakedPhantomToken); // F: [ACVX1_P-1]
-        if (stakedTokenMask == 0) {
-            revert TokenIsNotInAllowedList(stakedPhantomToken); // F: [ACVX1_P-2]
-        }
+        stakedTokenMask = _checkToken(stakedPhantomToken); // F: [ACVX1_P-1, ACVX1_P-2]
 
         address booster = IBaseRewardPool(_baseRewardPool).operator();
         IBooster.PoolInfo memory poolInfo = IBooster(booster).poolInfo(IBaseRewardPool(_baseRewardPool).pid());
         curveLPtoken = poolInfo.lptoken; // F: [ACVX1_P-1]
-        curveLPTokenMask = creditManager.tokenMasksMap(curveLPtoken); // F: [ACVX1_P-1]
-        if (curveLPTokenMask == 0) {
-            revert TokenIsNotInAllowedList(curveLPtoken); // F: [ACVX1_P-2]
-        }
+        curveLPTokenMask = _checkToken(curveLPtoken); // F: [ACVX1_P-1, ACVX1_P-2]
 
         uint256 _rewardTokensMask;
         uint256 mask;
 
         address rewardToken = address(IBaseRewardPool(_baseRewardPool).rewardToken());
-        mask = creditManager.tokenMasksMap(rewardToken);
-        if (mask == 0) {
-            revert TokenIsNotInAllowedList(rewardToken); // F: [ACVX1_P-2]
-        }
+        mask = _checkToken(rewardToken); // F: [ACVX1_P-2]
         _rewardTokensMask |= mask;
 
         address cvx = IBooster(booster).minter();
-        mask = creditManager.tokenMasksMap(cvx);
-        if (mask == 0) {
-            revert TokenIsNotInAllowedList(cvx); // F: [ACVX1_P-2]
-        }
+        mask = _checkToken(cvx); // F: [ACVX1_P-2]
         _rewardTokensMask |= mask;
 
         address _extraReward1;
@@ -93,16 +78,10 @@ contract ConvexV1BaseRewardPoolAdapter is AbstractAdapter, IConvexV1BaseRewardPo
             }
         }
 
-        mask = _extraReward1 != address(0) ? creditManager.tokenMasksMap(_extraReward1) : 0;
-        if (_extraReward1 != address(0) && mask == 0) {
-            revert TokenIsNotInAllowedList(_extraReward1); // F: [ACVX1_P-2]
-        }
+        mask = _extraReward1 != address(0) ? _checkToken(_extraReward1) : 0; // F: [ACVX1_P-2]
         _rewardTokensMask |= mask;
 
-        mask = _extraReward2 != address(0) ? creditManager.tokenMasksMap(_extraReward2) : 0;
-        if (_extraReward2 != address(0) && mask == 0) {
-            revert TokenIsNotInAllowedList(_extraReward2); // F: [ACVX1_P-2]
-        }
+        mask = _extraReward2 != address(0) ? _checkToken(_extraReward2) : 0; // F: [ACVX1_P-2]
         _rewardTokensMask |= mask;
 
         rewardTokensMask = _rewardTokensMask; // F: [ACVX1_P-1]

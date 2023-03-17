@@ -4,13 +4,11 @@
 pragma solidity ^0.8.17;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {IPoolService} from "@gearbox-protocol/core-v2/contracts/interfaces/IPoolService.sol";
-import {ICreditManagerV2} from "@gearbox-protocol/core-v2/contracts/interfaces/ICreditManagerV2.sol";
 
-import {ACLNonReentrantTrait} from "@gearbox-protocol/core-v3/contracts/core/ACLNonReentrantTrait.sol";
-import {AbstractAdapter} from "@gearbox-protocol/core-v3/contracts/adapters/AbstractAdapter.sol";
-import {IAdapter, AdapterType} from "@gearbox-protocol/core-v3/contracts/interfaces/adapters/IAdapter.sol";
 import {RAY} from "@gearbox-protocol/core-v2/contracts/libraries/Constants.sol";
+
+import {AbstractAdapter} from "../AbstractAdapter.sol";
+import {AdapterType} from "../../interfaces/IAdapter.sol";
 
 import {IAsset} from "../../integrations/balancer/IAsset.sol";
 import {
@@ -28,20 +26,17 @@ import {
 
 /// @title Balancer V2 Vault adapter
 /// @notice Implements logic allowing CAs to swap through and LP in Balancer vaults
-contract BalancerV2VaultAdapter is AbstractAdapter, ACLNonReentrantTrait, IBalancerV2VaultAdapter {
+contract BalancerV2VaultAdapter is AbstractAdapter, IBalancerV2VaultAdapter {
     AdapterType public constant override _gearboxAdapterType = AdapterType.BALANCER_VAULT;
     uint16 public constant override _gearboxAdapterVersion = 1;
 
-    /// @dev Mapping from poolId to status of the pool: whether it is not supported, fully supported or swap-only
+    /// @notice Mapping from poolId to status of the pool: whether it is not supported, fully supported or swap-only
     mapping(bytes32 => PoolStatus) public poolIdStatus;
 
     /// @notice Constructor
     /// @param _creditManager Credit manager address
     /// @param _vault Balancer vault address
-    constructor(address _creditManager, address _vault)
-        ACLNonReentrantTrait(address(IPoolService(ICreditManagerV2(_creditManager).pool()).addressProvider()))
-        AbstractAdapter(_creditManager, _vault)
-    {}
+    constructor(address _creditManager, address _vault) AbstractAdapter(_creditManager, _vault) {}
 
     /// ----- ///
     /// SWAPS ///

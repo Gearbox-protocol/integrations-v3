@@ -5,8 +5,8 @@ pragma solidity ^0.8.17;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-import {AbstractAdapter} from "@gearbox-protocol/core-v3/contracts/adapters/AbstractAdapter.sol";
-import {AdapterType} from "@gearbox-protocol/core-v3/contracts/interfaces/adapters/IAdapter.sol";
+import {AbstractAdapter} from "../AbstractAdapter.sol";
+import {AdapterType} from "../../interfaces/IAdapter.sol";
 
 import {IWrappedAToken} from "../../interfaces/aave/IWrappedAToken.sol";
 import {IAaveV2_WrappedATokenAdapter} from "../../interfaces/aave/IAaveV2_WrappedATokenAdapter.sol";
@@ -36,22 +36,13 @@ contract AaveV2_WrappedATokenAdapter is AbstractAdapter, IAaveV2_WrappedATokenAd
     /// @param _creditManager Credit manager address
     /// @param _waToken Wrapped aToken address
     constructor(address _creditManager, address _waToken) AbstractAdapter(_creditManager, _waToken) {
-        waTokenMask = creditManager.tokenMasksMap(targetContract);
-        if (waTokenMask == 0) {
-            revert TokenIsNotInAllowedList(targetContract);
-        }
+        waTokenMask = _checkToken(targetContract);
 
         aToken = address(IWrappedAToken(targetContract).aToken());
-        aTokenMask = creditManager.tokenMasksMap(aToken);
-        if (aTokenMask == 0) {
-            revert TokenIsNotInAllowedList(aToken);
-        }
+        aTokenMask = _checkToken(aToken);
 
         underlying = address(IWrappedAToken(targetContract).underlying());
-        tokenMask = creditManager.tokenMasksMap(underlying);
-        if (tokenMask == 0) {
-            revert TokenIsNotInAllowedList(underlying);
-        }
+        tokenMask = _checkToken(underlying);
     }
 
     /// -------- ///

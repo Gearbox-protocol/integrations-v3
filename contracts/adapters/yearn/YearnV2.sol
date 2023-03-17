@@ -5,8 +5,8 @@ pragma solidity ^0.8.17;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-import {AdapterType} from "@gearbox-protocol/core-v3/contracts/interfaces/adapters/IAdapter.sol";
-import {AbstractAdapter} from "@gearbox-protocol/core-v3/contracts/adapters/AbstractAdapter.sol";
+import {AbstractAdapter} from "../AbstractAdapter.sol";
+import {AdapterType} from "../../interfaces/IAdapter.sol";
 
 import {IYVault} from "../../integrations/yearn/IYVault.sol";
 import {IYearnV2Adapter} from "../../interfaces/yearn/IYearnV2Adapter.sol";
@@ -31,16 +31,8 @@ contract YearnV2Adapter is AbstractAdapter, IYearnV2Adapter {
     /// @param _vault Yearn vault address
     constructor(address _creditManager, address _vault) AbstractAdapter(_creditManager, _vault) {
         token = IYVault(targetContract).token(); // F: [AYV2-1]
-
-        tokenMask = creditManager.tokenMasksMap(token); // F: [AYV2-1]
-        if (tokenMask == 0) {
-            revert TokenIsNotInAllowedList(token); // F: [AYV2-2]
-        }
-
-        yTokenMask = creditManager.tokenMasksMap(_vault); // F: [AYV2-1]
-        if (yTokenMask == 0) {
-            revert TokenIsNotInAllowedList(_vault); // F: [AYV2-2]
-        }
+        tokenMask = _checkToken(token); // F: [AYV2-1, AYV2-2]
+        yTokenMask = _checkToken(_vault); // F: [AYV2-1, AYV2-2]
     }
 
     /// -------- ///

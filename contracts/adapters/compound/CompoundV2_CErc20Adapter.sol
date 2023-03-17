@@ -5,7 +5,7 @@ pragma solidity ^0.8.17;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-import {AdapterType} from "@gearbox-protocol/core-v3/contracts/interfaces/adapters/IAdapter.sol";
+import {AdapterType} from "../../interfaces/IAdapter.sol";
 
 import {CompoundV2_CTokenAdapter} from "./CompoundV2_CTokenAdapter.sol";
 import {ICErc20} from "../../integrations/compound/ICErc20.sol";
@@ -30,15 +30,8 @@ contract CompoundV2_CErc20Adapter is CompoundV2_CTokenAdapter {
     constructor(address _creditManager, address _cToken) CompoundV2_CTokenAdapter(_creditManager, _cToken) {
         underlying = ICErc20(targetContract).underlying();
 
-        cTokenMask = creditManager.tokenMasksMap(targetContract);
-        if (cTokenMask == 0) {
-            revert TokenIsNotInAllowedList(targetContract);
-        }
-
-        tokenMask = creditManager.tokenMasksMap(underlying);
-        if (tokenMask == 0) {
-            revert TokenIsNotInAllowedList(underlying);
-        }
+        cTokenMask = _checkToken(targetContract);
+        tokenMask = _checkToken(underlying);
     }
 
     /// @notice cToken that this adapter is connected to

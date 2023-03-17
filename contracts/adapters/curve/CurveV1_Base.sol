@@ -6,10 +6,11 @@ pragma solidity ^0.8.17;
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 
-import {IAdapter, AdapterType} from "@gearbox-protocol/core-v3/contracts/interfaces/adapters/IAdapter.sol";
-import {AbstractAdapter} from "@gearbox-protocol/core-v3/contracts/adapters/AbstractAdapter.sol";
 import {ZeroAddressException} from "@gearbox-protocol/core-v2/contracts/interfaces/IErrors.sol";
 import {RAY} from "@gearbox-protocol/core-v2/contracts/libraries/Constants.sol";
+
+import {AbstractAdapter} from "../AbstractAdapter.sol";
+import {AdapterType} from "../../interfaces/IAdapter.sol";
 
 import {ICurvePool} from "../../integrations/curve/ICurvePool.sol";
 import {ICurvePool2Assets} from "../../integrations/curve/ICurvePool_2.sol";
@@ -109,8 +110,7 @@ contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
     {
         if (_lp_token == address(0)) revert ZeroAddressException(); // F: [ACV1-1]
 
-        lpTokenMask = creditManager.tokenMasksMap(_lp_token); // F: [ACV1-2]
-        if (lpTokenMask == 0) revert TokenIsNotInAllowedList(_lp_token);
+        lpTokenMask = _checkToken(_lp_token); // F: [ACV1-2]
 
         token = _lp_token; // F: [ACV1-2]
         lp_token = _lp_token; // F: [ACV1-2]
@@ -144,8 +144,7 @@ contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
             }
 
             if (currentCoin == address(0)) revert ZeroAddressException(); // F: [ACV1-1]
-            uint256 currentMask = creditManager.tokenMasksMap(currentCoin);
-            if (currentMask == 0) revert TokenIsNotInAllowedList(currentCoin);
+            uint256 currentMask = _checkToken(currentCoin);
 
             tokens[i] = currentCoin;
             tokenMasks[i] = currentMask;
@@ -193,8 +192,7 @@ contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
             }
 
             if (currentCoin != address(0)) {
-                currentMask = creditManager.tokenMasksMap(currentCoin);
-                if (currentMask == 0) revert TokenIsNotInAllowedList(currentCoin); // F: [ACV1-1]
+                currentMask = _checkToken(currentCoin); // F: [ACV1-1]
             }
 
             tokens[i] = currentCoin;

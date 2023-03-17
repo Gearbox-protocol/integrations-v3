@@ -5,8 +5,8 @@ pragma solidity ^0.8.17;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-import {AbstractAdapter} from "@gearbox-protocol/core-v3/contracts/adapters/AbstractAdapter.sol";
-import {AdapterType} from "@gearbox-protocol/core-v3/contracts/interfaces/adapters/IAdapter.sol";
+import {AbstractAdapter} from "../AbstractAdapter.sol";
+import {AdapterType} from "../../interfaces/IAdapter.sol";
 
 import {IwstETH} from "../../integrations/lido/IwstETH.sol";
 import {IwstETHV1Adapter} from "../../interfaces/lido/IwstETHV1Adapter.sol";
@@ -31,16 +31,8 @@ contract WstETHV1Adapter is AbstractAdapter, IwstETHV1Adapter {
     /// @param _wstETH wstETH token address
     constructor(address _creditManager, address _wstETH) AbstractAdapter(_creditManager, _wstETH) {
         stETH = IwstETH(_wstETH).stETH(); // F: [AWSTV1-1]
-
-        wstETHTokenMask = creditManager.tokenMasksMap(_wstETH); // F: [AWSTV1-1]
-        if (wstETHTokenMask == 0) {
-            revert TokenIsNotInAllowedList(_wstETH); // F: [AWSTV1-2]
-        }
-
-        stETHTokenMask = creditManager.tokenMasksMap(stETH); // F: [AWSTV1-1]
-        if (stETHTokenMask == 0) {
-            revert TokenIsNotInAllowedList(stETH); // F: [AWSTV1-2]
-        }
+        wstETHTokenMask = _checkToken(_wstETH); // F: [AWSTV1-1, AWSTV1-2]
+        stETHTokenMask = _checkToken(stETH); // F: [AWSTV1-1, AWSTV1-2]
     }
 
     /// ---- ///

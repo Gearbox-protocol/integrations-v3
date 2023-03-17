@@ -5,12 +5,8 @@ pragma solidity ^0.8.17;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-import {AbstractAdapter} from "@gearbox-protocol/core-v3/contracts/adapters/AbstractAdapter.sol";
-import {IAdapter, AdapterType} from "@gearbox-protocol/core-v3/contracts/interfaces/adapters/IAdapter.sol";
-import {ACLNonReentrantTrait} from "@gearbox-protocol/core-v3/contracts/core/ACLNonReentrantTrait.sol";
-import {IAddressProvider} from "@gearbox-protocol/core-v2/contracts/interfaces/IAddressProvider.sol";
-import {ICreditManagerV2} from "@gearbox-protocol/core-v2/contracts/interfaces/ICreditManagerV2.sol";
-import {IPoolService} from "@gearbox-protocol/core-v2/contracts/interfaces/IPoolService.sol";
+import {AbstractAdapter} from "../AbstractAdapter.sol";
+import {AdapterType} from "../../interfaces/IAdapter.sol";
 
 import {IstETH} from "../../integrations/lido/IstETH.sol";
 import {ILidoV1Adapter} from "../../interfaces/lido/ILidoV1Adapter.sol";
@@ -20,7 +16,7 @@ uint256 constant LIDO_STETH_LIMIT = 20000 ether;
 
 /// @title Lido V1 adapter
 /// @notice Implements logic for interacting with the Lido contract through the gateway
-contract LidoV1Adapter is AbstractAdapter, ILidoV1Adapter, ACLNonReentrantTrait {
+contract LidoV1Adapter is AbstractAdapter, ILidoV1Adapter {
     /// @notice Address of the Lido contract
     address public immutable override stETH;
 
@@ -45,25 +41,14 @@ contract LidoV1Adapter is AbstractAdapter, ILidoV1Adapter, ACLNonReentrantTrait 
     /// @notice Constructor
     /// @param _creditManager Credit manager address
     /// @param _lidoGateway Lido gateway address
-    constructor(address _creditManager, address _lidoGateway)
-        ACLNonReentrantTrait(address(IPoolService(ICreditManagerV2(_creditManager).poolService()).addressProvider()))
-        AbstractAdapter(_creditManager, _lidoGateway)
-    {
-        IAddressProvider ap = IPoolService(ICreditManagerV2(_creditManager).poolService()).addressProvider();
-
+    constructor(address _creditManager, address _lidoGateway) AbstractAdapter(_creditManager, _lidoGateway) {
         stETH = address(LidoV1Gateway(payable(_lidoGateway)).stETH()); // F: [LDOV1-1]
-        stETHTokenMask = creditManager.tokenMasksMap(stETH); // F: [LDOV1-1]
-        if (stETHTokenMask == 0) {
-            revert TokenIsNotInAllowedList(stETH);
-        }
+        stETHTokenMask = _checkToken(stETH); // F: [LDOV1-1]
 
-        weth = ap.getWethToken(); // F: [LDOV1-1]
-        wethTokenMask = creditManager.tokenMasksMap(weth); // F: [LDOV1-1]
-        if (wethTokenMask == 0) {
-            revert TokenIsNotInAllowedList(weth);
-        }
+        weth = addressProvider.getWethToken(); // F: [LDOV1-1]
+        wethTokenMask = _checkToken(weth); // F: [LDOV1-1]
 
-        treasury = ap.getTreasuryContract(); // F: [LDOV1-1]
+        treasury = addressProvider.getTreasuryContract(); // F: [LDOV1-1]
         limit = LIDO_STETH_LIMIT; // F: [LDOV1-1]
     }
 

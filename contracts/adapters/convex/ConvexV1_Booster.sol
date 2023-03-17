@@ -3,12 +3,10 @@
 // (c) Gearbox Holdings, 2023
 pragma solidity ^0.8.17;
 
-import {AbstractAdapter} from "@gearbox-protocol/core-v3/contracts/adapters/AbstractAdapter.sol";
-import {IAdapter, AdapterType} from "@gearbox-protocol/core-v3/contracts/interfaces/adapters/IAdapter.sol";
-import {ACLNonReentrantTrait} from "@gearbox-protocol/core-v3/contracts/core/ACLNonReentrantTrait.sol";
-import {IPoolService} from "@gearbox-protocol/core-v2/contracts/interfaces/IPoolService.sol";
-import {ICreditManagerV2} from "@gearbox-protocol/core-v2/contracts/interfaces/ICreditManagerV2.sol";
 import {ICreditConfigurator} from "@gearbox-protocol/core-v2/contracts/interfaces/ICreditConfigurator.sol";
+
+import {AbstractAdapter} from "../AbstractAdapter.sol";
+import {IAdapter, AdapterType} from "../../interfaces/IAdapter.sol";
 
 import {IBooster} from "../../integrations/convex/IBooster.sol";
 import {IBaseRewardPool} from "../../integrations/convex/IBaseRewardPool.sol";
@@ -17,7 +15,7 @@ import {IConvexV1BaseRewardPoolAdapter} from "../../interfaces/convex/IConvexV1B
 
 /// @title Convex V1 Booster adapter interface
 /// @notice Implements logic allowing CAs to interact with Convex Booster
-contract ConvexV1BoosterAdapter is AbstractAdapter, ACLNonReentrantTrait, IConvexV1BoosterAdapter {
+contract ConvexV1BoosterAdapter is AbstractAdapter, IConvexV1BoosterAdapter {
     AdapterType public constant override _gearboxAdapterType = AdapterType.CONVEX_V1_BOOSTER;
     uint16 public constant override _gearboxAdapterVersion = 2;
 
@@ -27,10 +25,7 @@ contract ConvexV1BoosterAdapter is AbstractAdapter, ACLNonReentrantTrait, IConve
     /// @notice Constructor
     /// @param _creditManager Credit manager address
     /// @param _booster Booster contract address
-    constructor(address _creditManager, address _booster)
-        ACLNonReentrantTrait(address(IPoolService(ICreditManagerV2(_creditManager).poolService()).addressProvider()))
-        AbstractAdapter(_creditManager, _booster)
-    {}
+    constructor(address _creditManager, address _booster) AbstractAdapter(_creditManager, _booster) {}
 
     /// ------- ///
     /// DEPOSIT ///
