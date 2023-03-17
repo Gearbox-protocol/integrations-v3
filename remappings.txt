@@ -1,6 +1,5 @@
-ds-test/=lib/ds-test/src/
-hardhat/=node_modules/hardhat/
-forge-std/=node_modules/forge-std/
+ds-test/=lib/forge-std/lib/ds-test/src/
+forge-std/=lib/forge-std/src/
 @openzeppelin/=node_modules/@openzeppelin/
 @chainlink/=node_modules/@chainlink/
 @gearbox-protocol=node_modules/@gearbox-protocol/

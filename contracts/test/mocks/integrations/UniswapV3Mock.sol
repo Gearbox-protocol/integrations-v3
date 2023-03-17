@@ -11,8 +11,6 @@ import {ISwapRouter} from "../../../integrations/uniswap/IUniswapV3.sol";
 import {RAY} from "@gearbox-protocol/core-v2/contracts/libraries/Constants.sol";
 import "@gearbox-protocol/core-v3/contracts/test/lib/test.sol";
 
-import "hardhat/console.sol";
-
 uint256 constant ADDR_SIZE = 20;
 uint256 constant FEE_SIZE = 3;
 
