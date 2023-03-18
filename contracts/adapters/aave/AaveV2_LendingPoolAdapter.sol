@@ -31,18 +31,13 @@ contract AaveV2_LendingPoolAdapter is AbstractAdapter, IAaveV2_LendingPoolAdapte
     /// DEPOSITS ///
     /// -------- ///
 
-    /// @notice Deposit underlying tokens into Aave in exchange for aTokens
-    /// @param asset Address of underlying token to deposit
-    /// @param amount Amount of underlying tokens to deposit
-    /// @dev Last two parameters are ignored as `onBehalfOf` can only be credit account,
-    ///      and `referralCode` is set to zero
+    /// @inheritdoc IAaveV2_LendingPoolAdapter
     function deposit(address asset, uint256 amount, address, uint16) external override creditFacadeOnly {
         address creditAccount = _creditAccount();
         _deposit(creditAccount, asset, amount, false);
     }
 
-    /// @notice Deposit all underlying tokens into Aave in exchange for aTokens, disables underlying
-    /// @param asset Address of underlying token to deposit
+    /// @inheritdoc IAaveV2_LendingPoolAdapter
     function depositAll(address asset) external override creditFacadeOnly {
         address creditAccount = _creditAccount();
         uint256 balance = IERC20(asset).balanceOf(creditAccount);
@@ -73,11 +68,7 @@ contract AaveV2_LendingPoolAdapter is AbstractAdapter, IAaveV2_LendingPoolAdapte
     /// WITHDRAWALS ///
     /// ----------- ///
 
-    /// @notice Withdraw underlying tokens from Aave and burn aTokens
-    /// @param asset Address of underlying token to deposit
-    /// @param amount Amount of underlying tokens to withdraw
-    ///        If `type(uint256).max`, will withdraw the full amount
-    /// @dev Last parameter is ignored because underlying recepient can only be credit account
+    /// @inheritdoc IAaveV2_LendingPoolAdapter
     function withdraw(address asset, uint256 amount, address) external override creditFacadeOnly {
         address creditAccount = _creditAccount();
         if (amount == type(uint256).max) {
@@ -87,8 +78,7 @@ contract AaveV2_LendingPoolAdapter is AbstractAdapter, IAaveV2_LendingPoolAdapte
         }
     }
 
-    /// @notice Withdraw all underlying tokens from Aave and burn aTokens, disables aToken
-    /// @param asset Address of underlying token to withdraw
+    /// @inheritdoc IAaveV2_LendingPoolAdapter
     function withdrawAll(address asset) external override creditFacadeOnly {
         address creditAccount = _creditAccount();
         _withdrawAll(creditAccount, asset);

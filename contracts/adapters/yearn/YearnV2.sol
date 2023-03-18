@@ -14,13 +14,13 @@ import {IYearnV2Adapter} from "../../interfaces/yearn/IYearnV2Adapter.sol";
 /// @title Yearn V2 Vault adapter
 /// @notice Implements logic allowing CAs to deposit into Yearn vaults
 contract YearnV2Adapter is AbstractAdapter, IYearnV2Adapter {
-    /// @notice Vault's underlying token address
+    /// @inheritdoc IYearnV2Adapter
     address public immutable override token;
 
-    /// @notice Collateral token mask of underlying token in the credit manager
+    /// @inheritdoc IYearnV2Adapter
     uint256 public immutable override tokenMask;
 
-    /// @notice Collateral token mask of eToken in the credit manager
+    /// @inheritdoc IYearnV2Adapter
     uint256 public immutable override yTokenMask;
 
     AdapterType public constant override _gearboxAdapterType = AdapterType.YEARN_V2;
@@ -39,7 +39,7 @@ contract YearnV2Adapter is AbstractAdapter, IYearnV2Adapter {
     /// DEPOSITS ///
     /// -------- ///
 
-    /// @notice Deposit the entire balance of underlying tokens into the vault, disables underlying
+    /// @inheritdoc IYearnV2Adapter
     function deposit() external override creditFacadeOnly {
         address creditAccount = _creditAccount(); // F: [AYV2-3]
 
@@ -52,15 +52,12 @@ contract YearnV2Adapter is AbstractAdapter, IYearnV2Adapter {
         }
     }
 
-    /// @notice Deposit given amount of underlying tokens into the vault
-    /// @param amount Amount of underlying tokens to deposit
+    /// @inheritdoc IYearnV2Adapter
     function deposit(uint256 amount) external override creditFacadeOnly {
         _deposit(amount, false); // F: [AYV2-5]
     }
 
-    /// @notice Deposit given amount of underlying tokens into the vault
-    /// @param amount Amount of underlying tokens to deposit
-    /// @dev Second param (`recipient`) is ignored because it can only be the credit account
+    /// @inheritdoc IYearnV2Adapter
     function deposit(uint256 amount, address) external override creditFacadeOnly {
         _deposit(amount, false); // F: [AYV2-6]
     }
@@ -80,7 +77,7 @@ contract YearnV2Adapter is AbstractAdapter, IYearnV2Adapter {
     /// WITHDRAWALS ///
     /// ----------- ///
 
-    /// @notice Withdraw the entire balance of underlying from the vault, disables yToken
+    /// @inheritdoc IYearnV2Adapter
     function withdraw() external override creditFacadeOnly {
         address creditAccount = _creditAccount(); // F: [AYV2-3]
 
@@ -93,23 +90,17 @@ contract YearnV2Adapter is AbstractAdapter, IYearnV2Adapter {
         }
     }
 
-    /// @notice Burn given amount of yTokens to withdraw corresponding amount of underlying from the vault
-    /// @param maxShares Amout of yTokens to burn
+    /// @inheritdoc IYearnV2Adapter
     function withdraw(uint256 maxShares) external override creditFacadeOnly {
         _withdraw(maxShares, false); // F: [AYV2-8]
     }
 
-    /// @notice Burn given amount of yTokens to withdraw corresponding amount of underlying from the vault
-    /// @param maxShares Amout of yTokens to burn
-    /// @dev Second param (`recipient`) is ignored because it can only be the credit account
+    /// @inheritdoc IYearnV2Adapter
     function withdraw(uint256 maxShares, address) external override creditFacadeOnly {
         _withdraw(maxShares, false); // F: [AYV2-9]
     }
 
-    /// @notice Burn given amount of yTokens to withdraw corresponding amount of underlying from the vault
-    /// @param maxShares Amout of yTokens to burn
-    /// @param maxLoss Maximal slippage on withdrawal in basis points
-    /// @dev Second param (`recipient`) is ignored because it can only be the credit account
+    /// @inheritdoc IYearnV2Adapter
     function withdraw(uint256 maxShares, address, uint256 maxLoss) external override creditFacadeOnly {
         address creditAccount = _creditAccount(); // F: [AYV2-3]
         _withdraw(maxShares, creditAccount, maxLoss); // F: [AYV2-10, AYV2-11]

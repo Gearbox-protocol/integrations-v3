@@ -76,7 +76,7 @@ interface ICurveV1Adapter is IAdapter, ICurveV1AdapterExceptions {
 
     /// @notice Removes all liquidity from the pool in a specified asset
     /// @param i Index of the asset to withdraw
-    /// @param rateMinRAY Minimum exchange rate between LP token and received token
+    /// @param rateMinRAY Minimum exchange rate between LP token and received token, scaled by 1e27
     function remove_all_liquidity_one_coin(int128 i, uint256 rateMinRAY) external;
 
     /// @notice `remove_all_liquidity_one_coin` wrapper to support newer pools which accept uint256 for token indices
@@ -97,7 +97,7 @@ interface ICurveV1Adapter is IAdapter, ICurveV1AdapterExceptions {
     /// @notice Number of coins in the pool
     function nCoins() external view returns (uint256);
 
-    /// @dev Whether to use uint256 for token indexes in write functions
+    /// @notice Whether to use uint256 for token indexes in write functions
     function use256() external view returns (bool);
 
     /// @notice Token in the pool under index 0

@@ -27,27 +27,27 @@ interface IAaveV2_WrappedATokenAdapter is IAdapter {
     /// @param assets Amount of aTokens to deposit in exchange for waTokens
     function deposit(uint256 assets) external;
 
-    /// @notice Deposit all balance of aTokens
+    /// @notice Deposit all balance of aTokens, disables aToken
     function depositAll() external;
 
     /// @notice Deposit given amount underlying tokens
     /// @param assets Amount of underlying tokens to deposit in exchange for waTokens
     function depositUnderlying(uint256 assets) external;
 
-    /// @notice Deposit all balance of underlying tokens
+    /// @notice Deposit all balance of underlying tokens, disables underlying
     function depositAllUnderlying() external;
 
     /// @notice Withdraw given amount of waTokens for aTokens
     /// @param shares Amount of waTokens to burn in exchange for aTokens
     function withdraw(uint256 shares) external;
 
-    /// @notice Withdraw all balance of waTokens for aTokens
+    /// @notice Withdraw all balance of waTokens for aTokens, disables waToken
     function withdrawAll() external;
 
     /// @notice Withdraw given amount of waTokens for underlying tokens
     /// @param shares Amount of waTokens to burn in exchange for underlying tokens
     function withdrawUnderlying(uint256 shares) external;
 
-    /// @notice Withdraw all balance of waTokens for underlying tokens
+    /// @notice Withdraw all balance of waTokens for underlying tokens, disables waToken
     function withdrawAllUnderlying() external;
 }

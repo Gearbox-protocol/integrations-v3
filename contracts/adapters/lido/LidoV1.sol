@@ -17,22 +17,22 @@ uint256 constant LIDO_STETH_LIMIT = 20000 ether;
 /// @title Lido V1 adapter
 /// @notice Implements logic for interacting with the Lido contract through the gateway
 contract LidoV1Adapter is AbstractAdapter, ILidoV1Adapter {
-    /// @notice Address of the Lido contract
+    /// @inheritdoc ILidoV1Adapter
     address public immutable override stETH;
 
-    /// @notice Address of WETH
+    /// @inheritdoc ILidoV1Adapter
     address public immutable override weth;
 
-    /// @notice Collateral token mask of WETH in the credit manager
+    /// @inheritdoc ILidoV1Adapter
     uint256 public immutable override wethTokenMask;
 
-    /// @notice Collateral token mask of stETH in the credit manager
+    /// @inheritdoc ILidoV1Adapter
     uint256 public immutable override stETHTokenMask;
 
-    /// @notice Address of Gearbox treasury
+    /// @inheritdoc ILidoV1Adapter
     address public immutable override treasury;
 
-    /// @notice The amount of WETH that can be deposited through this adapter
+    /// @inheritdoc ILidoV1Adapter
     uint256 public override limit;
 
     AdapterType public constant override _gearboxAdapterType = AdapterType.LIDO_V1;
@@ -52,15 +52,12 @@ contract LidoV1Adapter is AbstractAdapter, ILidoV1Adapter {
         limit = LIDO_STETH_LIMIT; // F: [LDOV1-1]
     }
 
-    /// @notice Stakes given amount of WETH in Lido via Gateway
-    /// @param amount Amount of WETH to deposit
-    /// @dev The referral address is set to Gearbox treasury
+    /// @inheritdoc ILidoV1Adapter
     function submit(uint256 amount) external override creditFacadeOnly {
         _submit(amount, false); // F: [LDOV1-3]
     }
 
-    /// @notice Stakes the entire balance of WETH in Lido via Gateway, disables WETH
-    /// @dev The referral address is set to Gearbox treasury
+    /// @inheritdoc ILidoV1Adapter
     function submitAll() external override creditFacadeOnly {
         address creditAccount = _creditAccount(); // F: [LDOV1-2]
 
@@ -88,8 +85,7 @@ contract LidoV1Adapter is AbstractAdapter, ILidoV1Adapter {
         _changeEnabledTokens(stETHTokenMask, disableWETH ? wethTokenMask : 0);
     }
 
-    /// @notice Set a new deposit limit
-    /// @param _limit New value for the limit
+    /// @inheritdoc ILidoV1Adapter
     function setLimit(uint256 _limit)
         external
         override

@@ -19,7 +19,7 @@ contract ConvexV1BoosterAdapter is AbstractAdapter, IConvexV1BoosterAdapter {
     AdapterType public constant override _gearboxAdapterType = AdapterType.CONVEX_V1_BOOSTER;
     uint16 public constant override _gearboxAdapterVersion = 2;
 
-    /// @notice Maps pool ID to phantom token representing staked position
+    /// @inheritdoc IConvexV1BoosterAdapter
     mapping(uint256 => address) public override pidToPhantomToken;
 
     /// @notice Constructor
@@ -31,17 +31,12 @@ contract ConvexV1BoosterAdapter is AbstractAdapter, IConvexV1BoosterAdapter {
     /// DEPOSIT ///
     /// ------- ///
 
-    /// @notice Deposits Curve LP tokens into Booster
-    /// @param _pid ID of the pool to deposit to
-    /// @param _stake Whether to stake Convex LP tokens in the rewards pool
-    /// @dev `_amount` parameter is ignored since calldata is passed directly to the target contract
+    /// @inheritdoc IConvexV1BoosterAdapter
     function deposit(uint256 _pid, uint256, bool _stake) external override creditFacadeOnly {
         _deposit(_pid, _stake, msg.data, false);
     }
 
-    /// @notice Deposits the entire balance of Curve LP tokens into Booster, disables Curve LP token
-    /// @param _pid ID of the pool to deposit to
-    /// @param _stake Whether to stake Convex LP tokens in the rewards pool
+    /// @inheritdoc IConvexV1BoosterAdapter
     function depositAll(uint256 _pid, bool _stake) external override creditFacadeOnly {
         _deposit(_pid, _stake, msg.data, true);
     }
@@ -64,16 +59,12 @@ contract ConvexV1BoosterAdapter is AbstractAdapter, IConvexV1BoosterAdapter {
     /// WITHDRAW ///
     /// -------- ///
 
-    /// @notice Withdraws Curve LP tokens from Booster
-    /// @param _pid ID of the pool to withdraw from
-    /// @dev `_amount` parameter is ignored since calldata is passed directly to the target contract
+    /// @inheritdoc IConvexV1BoosterAdapter
     function withdraw(uint256 _pid, uint256) external override creditFacadeOnly {
         _withdraw(_pid, msg.data, false);
     }
 
-    /// @notice Withdraws all Curve LP tokens from Booster, disables Convex LP token
-    /// @param _pid ID of the pool to withdraw from
-    /// @dev `_amount` parameter is ignored since calldata is passed directly to the target contract
+    /// @inheritdoc IConvexV1BoosterAdapter
     function withdrawAll(uint256 _pid) external override creditFacadeOnly {
         _withdraw(_pid, msg.data, true);
     }
@@ -95,9 +86,10 @@ contract ConvexV1BoosterAdapter is AbstractAdapter, IConvexV1BoosterAdapter {
     /// CONFIG ///
     /// ------ ///
 
-    /// @notice Updates the mapping of pool IDs to phantom staked token addresses
+    /// @inheritdoc IConvexV1BoosterAdapter
     function updateStakedPhantomTokensMap()
         external
+        override
         configuratorOnly // F: [ACVX1_B-1]
     {
         ICreditConfigurator cc = ICreditConfigurator(creditManager.creditConfigurator());

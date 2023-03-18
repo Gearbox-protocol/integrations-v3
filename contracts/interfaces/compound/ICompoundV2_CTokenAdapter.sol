@@ -5,12 +5,14 @@ pragma solidity ^0.8.17;
 
 import {IAdapter} from "../IAdapter.sol";
 
-/// @notice When cToken operation produces an error
-error CTokenError(uint256 errorCode);
+interface ICompoundV2_Exceptions {
+    /// @notice Thrown when cToken operation produces an error
+    error CTokenError(uint256 errorCode);
+}
 
 /// @title Compound V2 cToken adapter interface
 /// @notice Implements logic allowing CAs to interact with Compound's cTokens
-interface ICompoundV2_CTokenAdapter is IAdapter {
+interface ICompoundV2_CTokenAdapter is IAdapter, ICompoundV2_Exceptions {
     /// @notice cToken that this adapter is connected to
     function cToken() external view returns (address);
 
