@@ -30,7 +30,10 @@ contract WrappedAToken is ERC20, IWrappedAToken {
     /// @notice Aave lending pool
     ILendingPool public immutable override lendingPool;
 
-    /// @dev Constructor
+    /// @dev aToken's normalized income (aka interest accumulator) at the moment of waToken creation
+    uint256 private immutable _normalizedIncome;
+
+    /// @notice Constructor
     /// @param _aToken Underlying aToken
     constructor(IAToken _aToken)
         ERC20(
@@ -43,6 +46,8 @@ contract WrappedAToken is ERC20, IWrappedAToken {
         aToken = _aToken;
         underlying = IERC20(aToken.UNDERLYING_ASSET_ADDRESS());
         lendingPool = aToken.POOL();
+        _normalizedIncome = lendingPool.getReserveNormalizedIncome(address(underlying));
+        underlying.safeApprove(address(lendingPool), type(uint256).max);
     }
 
     /// @notice waToken decimals, same as underlying and aToken
@@ -57,9 +62,7 @@ contract WrappedAToken is ERC20, IWrappedAToken {
 
     /// @notice Returns amount of aTokens per waToken, scaled by 1e18
     function exchangeRate() public view override returns (uint256) {
-        uint256 supply = totalSupply();
-        if (supply == 0) return WAD;
-        return (aToken.balanceOf(address(this)) * WAD) / supply;
+        return WAD * lendingPool.getReserveNormalizedIncome(address(underlying)) / _normalizedIncome;
     }
 
     /// @notice Deposit given amount of aTokens (aToken must be approved before the call)
@@ -75,7 +78,7 @@ contract WrappedAToken is ERC20, IWrappedAToken {
     /// @return shares Amount of waTokens minted to the caller
     function depositUnderlying(uint256 assets) external override returns (uint256 shares) {
         underlying.safeTransferFrom(msg.sender, address(this), assets);
-        underlying.safeApprove(address(lendingPool), assets);
+        _ensureAllowance(assets);
         lendingPool.deposit(address(underlying), assets, address(this), 0);
         shares = _deposit(assets);
     }
@@ -108,5 +111,12 @@ contract WrappedAToken is ERC20, IWrappedAToken {
         assets = (shares * exchangeRate()) / WAD;
         _burn(msg.sender, shares);
         emit Withdraw(msg.sender, assets, shares);
+    }
+
+    /// @dev Gives lending pool max approval for underlying if it falls below `amount`
+    function _ensureAllowance(uint256 amount) internal {
+        if (underlying.allowance(address(this), address(lendingPool)) < amount) {
+            underlying.safeApprove(address(lendingPool), type(uint256).max);
+        }
     }
 }
