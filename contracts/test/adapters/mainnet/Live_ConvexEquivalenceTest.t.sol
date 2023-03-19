@@ -4,7 +4,7 @@
 pragma solidity ^0.8.17;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {ICreditFacade} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacade.sol";
+import {ICreditFacade} from "@gearbox-protocol/core-v2/contracts/interfaces/ICreditFacade.sol";
 import {IBaseRewardPool} from "../../../integrations/convex/IBaseRewardPool.sol";
 import {IRewards} from "../../../integrations/convex/IRewards.sol";
 import {IBooster} from "../../../integrations/convex/IBooster.sol";
@@ -22,10 +22,10 @@ import {MultiCall} from "@gearbox-protocol/core-v2/contracts/libraries/MultiCall
 import {
     CreditFacadeCalls,
     CreditFacadeMulticaller
-} from "@gearbox-protocol/core-v3/contracts/multicall/CreditFacadeCalls.sol";
+} from "@gearbox-protocol/core-v2/contracts/multicall/CreditFacadeCalls.sol";
 import {AddressList} from "@gearbox-protocol/core-v2/contracts/libraries/AddressList.sol";
 // TEST
-import "@gearbox-protocol/core-v3/contracts/test/lib/constants.sol";
+import "@gearbox-protocol/core-v2/contracts/test/lib/constants.sol";
 
 // SUITES
 import {LiveEnvTestSuite} from "../../suites/LiveEnvTestSuite.sol";

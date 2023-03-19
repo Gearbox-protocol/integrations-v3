@@ -28,31 +28,24 @@ export const mainnetCreditManagers: Array<CMConfig> = [
 
       { symbol: "steCRV", liquidationThreshold: 82.5 }, // Token address is token from priceFeed map above
       { symbol: "cvxsteCRV", liquidationThreshold: 82.5 }, // Token address is token from priceFeed map above
-      { symbol: "stkcvxsteCRV", liquidationThreshold: 82.5 },
 
       { symbol: "3Crv", liquidationThreshold: 90 }, // Token address is token from priceFeed map above
       { symbol: "cvx3Crv", liquidationThreshold: 90 }, // Token address is token from priceFeed map above
-      { symbol: "stkcvx3Crv", liquidationThreshold: 90 },
 
       { symbol: "FRAX3CRV", liquidationThreshold: 90 }, // Token address is token from priceFeed map above
       { symbol: "cvxFRAX3CRV", liquidationThreshold: 90 }, // Token address is token from priceFeed map above
-      { symbol: "stkcvxFRAX3CRV", liquidationThreshold: 90 },
 
       { symbol: "LUSD3CRV", liquidationThreshold: 90 }, // Token address is token from priceFeed map above
       { symbol: "cvxLUSD3CRV", liquidationThreshold: 90 }, // Token address is token from priceFeed map above
-      { symbol: "stkcvxLUSD3CRV", liquidationThreshold: 90 },
 
       { symbol: "crvPlain3andSUSD", liquidationThreshold: 90 }, // Token address is token from priceFeed map above
       { symbol: "cvxcrvPlain3andSUSD", liquidationThreshold: 90 }, // Token address is token from priceFeed map above
-      { symbol: "stkcvxcrvPlain3andSUSD", liquidationThreshold: 90 },
 
       { symbol: "gusd3CRV", liquidationThreshold: 90 }, // Token address is token from priceFeed map above
       { symbol: "cvxgusd3CRV", liquidationThreshold: 90 }, // Token address is token from priceFeed map above
-      { symbol: "stkcvxgusd3CRV", liquidationThreshold: 90 }, // Token address is token from priceFeed map above
 
       { symbol: "crvFRAX", liquidationThreshold: 90 }, // Token address is token from priceFeed map above
       { symbol: "cvxcrvFRAX", liquidationThreshold: 90 }, // Token address is token from priceFeed map above
-      { symbol: "stkcvxcrvFRAX", liquidationThreshold: 90 }, // Token address is token from priceFeed map above
 
       { symbol: "yvDAI", liquidationThreshold: 90 }, // Token address is token from priceFeed map above
       { symbol: "yvUSDC", liquidationThreshold: 90 }, // Token address is token from priceFeed map above
@@ -89,31 +82,24 @@ export const mainnetCreditManagers: Array<CMConfig> = [
 
       { symbol: "steCRV", liquidationThreshold: 82.5 }, // Token address is token from priceFeed map above
       { symbol: "cvxsteCRV", liquidationThreshold: 82.5 }, // Token address is token from priceFeed map above
-      { symbol: "stkcvxsteCRV", liquidationThreshold: 82.5 },
 
       { symbol: "3Crv", liquidationThreshold: 90 }, // Token address is token from priceFeed map above
       { symbol: "cvx3Crv", liquidationThreshold: 90 }, // Token address is token from priceFeed map above
-      { symbol: "stkcvx3Crv", liquidationThreshold: 90 },
 
       { symbol: "FRAX3CRV", liquidationThreshold: 90 }, // Token address is token from priceFeed map above
       { symbol: "cvxFRAX3CRV", liquidationThreshold: 90 }, // Token address is token from priceFeed map above
-      { symbol: "stkcvxFRAX3CRV", liquidationThreshold: 90 },
 
       { symbol: "LUSD3CRV", liquidationThreshold: 90 }, // Token address is token from priceFeed map above
       { symbol: "cvxLUSD3CRV", liquidationThreshold: 90 }, // Token address is token from priceFeed map above
-      { symbol: "stkcvxLUSD3CRV", liquidationThreshold: 90 },
 
       { symbol: "crvPlain3andSUSD", liquidationThreshold: 90 }, // Token address is token from priceFeed map above
       { symbol: "cvxcrvPlain3andSUSD", liquidationThreshold: 90 }, // Token address is token from priceFeed map above
-      { symbol: "stkcvxcrvPlain3andSUSD", liquidationThreshold: 90 },
 
       { symbol: "gusd3CRV", liquidationThreshold: 90 }, // Token address is token from priceFeed map above
       { symbol: "cvxgusd3CRV", liquidationThreshold: 90 }, // Token address is token from priceFeed map above
-      { symbol: "stkcvxgusd3CRV", liquidationThreshold: 90 }, // Token address is token from priceFeed map above
 
       { symbol: "crvFRAX", liquidationThreshold: 90 }, // Token address is token from priceFeed map above
       { symbol: "cvxcrvFRAX", liquidationThreshold: 90 }, // Token address is token from priceFeed map above
-      { symbol: "stkcvxcrvFRAX", liquidationThreshold: 90 }, // Token address is token from priceFeed map above
 
       { symbol: "yvDAI", liquidationThreshold: 90 }, // Token address is token from priceFeed map above
       { symbol: "yvUSDC", liquidationThreshold: 90 }, // Token address is token from priceFeed map above
@@ -152,31 +138,24 @@ export const mainnetCreditManagers: Array<CMConfig> = [
 
       { symbol: "steCRV", liquidationThreshold: 90 }, // Token address is token from priceFeed map above
       { symbol: "cvxsteCRV", liquidationThreshold: 90 }, // Token address is token from priceFeed map above
-      { symbol: "stkcvxsteCRV", liquidationThreshold: 90 }, // Token address is token from priceFeed map above
 
       { symbol: "3Crv", liquidationThreshold: 80 }, // Token address is token from priceFeed map above
       { symbol: "cvx3Crv", liquidationThreshold: 80 }, // Token address is token from priceFeed map above
-      { symbol: "stkcvx3Crv", liquidationThreshold: 80 }, // Token address is token from priceFeed map above
 
       { symbol: "FRAX3CRV", liquidationThreshold: 80 }, // Token address is token from priceFeed map above
       { symbol: "cvxFRAX3CRV", liquidationThreshold: 80 }, // Token address is token from priceFeed map above
-      { symbol: "stkcvxFRAX3CRV", liquidationThreshold: 80 }, // Token address is token from priceFeed map above
 
       { symbol: "LUSD3CRV", liquidationThreshold: 80 }, // Token address is token from priceFeed map above
       { symbol: "cvxLUSD3CRV", liquidationThreshold: 80 }, // Token address is token from priceFeed map above
-      { symbol: "stkcvxLUSD3CRV", liquidationThreshold: 80 }, // Token address is token from priceFeed map above
 
       { symbol: "crvPlain3andSUSD", liquidationThreshold: 80 }, // Token address is token from priceFeed map above
       { symbol: "cvxcrvPlain3andSUSD", liquidationThreshold: 80 }, // Token address is token from priceFeed map above
-      { symbol: "stkcvxcrvPlain3andSUSD", liquidationThreshold: 80 }, // Token address is token from priceFeed map above
 
       { symbol: "gusd3CRV", liquidationThreshold: 80 }, // Token address is token from priceFeed map above
       { symbol: "cvxgusd3CRV", liquidationThreshold: 80 }, // Token address is token from priceFeed map above
-      { symbol: "stkcvxgusd3CRV", liquidationThreshold: 80 }, // Token address is token from priceFeed map above
 
       { symbol: "crvFRAX", liquidationThreshold: 80 }, // Token address is token from priceFeed map above
       { symbol: "cvxcrvFRAX", liquidationThreshold: 80 }, // Token address is token from priceFeed map above
-      { symbol: "stkcvxcrvFRAX", liquidationThreshold: 80 }, // Token address is token from priceFeed map above
 
       { symbol: "yvDAI", liquidationThreshold: 80 }, // Token address is token from priceFeed map above
       { symbol: "yvUSDC", liquidationThreshold: 80 }, // Token address is token from priceFeed map above
@@ -214,33 +193,26 @@ export const mainnetCreditManagers: Array<CMConfig> = [
       { symbol: "GUSD", liquidationThreshold: 82.5 }, // Token address is token from priceFeed map above
       { symbol: "LUSD", liquidationThreshold: 82.5 }, // Token address is token from priceFeed map above
 
-      { symbol: "steCRV", liquidationThreshold: 90 }, // Token address is token from priceFeed map above
-      { symbol: "cvxsteCRV", liquidationThreshold: 90 }, // Token address is token from priceFeed map above
-      { symbol: "stkcvxsteCRV", liquidationThreshold: 90 }, // Token address is token from priceFeed map above
-
       { symbol: "3Crv", liquidationThreshold: 80 }, // Token address is token from priceFeed map above
       { symbol: "cvx3Crv", liquidationThreshold: 80 }, // Token address is token from priceFeed map above
-      { symbol: "stkcvx3Crv", liquidationThreshold: 80 }, // Token address is token from priceFeed map above
-
-      { symbol: "FRAX3CRV", liquidationThreshold: 80 }, // Token address is token from priceFeed map above
-      { symbol: "cvxFRAX3CRV", liquidationThreshold: 80 }, // Token address is token from priceFeed map above
-      { symbol: "stkcvxFRAX3CRV", liquidationThreshold: 80 }, // Token address is token from priceFeed map above
-
-      { symbol: "LUSD3CRV", liquidationThreshold: 80 }, // Token address is token from priceFeed map above
-      { symbol: "cvxLUSD3CRV", liquidationThreshold: 80 }, // Token address is token from priceFeed map above
-      { symbol: "stkcvxLUSD3CRV", liquidationThreshold: 80 }, // Token address is token from priceFeed map above
-
-      { symbol: "crvPlain3andSUSD", liquidationThreshold: 80 }, // Token address is token from priceFeed map above
-      { symbol: "cvxcrvPlain3andSUSD", liquidationThreshold: 80 }, // Token address is token from priceFeed map above
-      { symbol: "stkcvxcrvPlain3andSUSD", liquidationThreshold: 80 }, // Token address is token from priceFeed map above
-
-      { symbol: "gusd3CRV", liquidationThreshold: 80 }, // Token address is token from priceFeed map above
-      { symbol: "cvxgusd3CRV", liquidationThreshold: 80 }, // Token address is token from priceFeed map above
-      { symbol: "stkcvxgusd3CRV", liquidationThreshold: 80 }, // Token address is token from priceFeed map above
 
       { symbol: "crvFRAX", liquidationThreshold: 80 }, // Token address is token from priceFeed map above
       { symbol: "cvxcrvFRAX", liquidationThreshold: 80 }, // Token address is token from priceFeed map above
-      { symbol: "stkcvxcrvFRAX", liquidationThreshold: 80 }, // Token address is token from priceFeed map above
+
+      { symbol: "steCRV", liquidationThreshold: 90 }, // Token address is token from priceFeed map above
+      { symbol: "cvxsteCRV", liquidationThreshold: 90 }, // Token address is token from priceFeed map above
+
+      { symbol: "FRAX3CRV", liquidationThreshold: 80 }, // Token address is token from priceFeed map above
+      { symbol: "cvxFRAX3CRV", liquidationThreshold: 80 }, // Token address is token from priceFeed map above
+
+      { symbol: "crvPlain3andSUSD", liquidationThreshold: 80 }, // Token address is token from priceFeed map above
+      { symbol: "cvxcrvPlain3andSUSD", liquidationThreshold: 80 }, // Token address is token from priceFeed map above
+
+      { symbol: "LUSD3CRV", liquidationThreshold: 80 }, // Token address is token from priceFeed map above
+      { symbol: "cvxLUSD3CRV", liquidationThreshold: 80 }, // Token address is token from priceFeed map above
+
+      { symbol: "gusd3CRV", liquidationThreshold: 80 }, // Token address is token from priceFeed map above
+      { symbol: "cvxgusd3CRV", liquidationThreshold: 80 }, // Token address is token from priceFeed map above
 
       { symbol: "yvDAI", liquidationThreshold: 80 }, // Token address is token from priceFeed map above
       { symbol: "yvUSDC", liquidationThreshold: 80 }, // Token address is token from priceFeed map above
@@ -277,33 +249,26 @@ export const mainnetCreditManagers: Array<CMConfig> = [
       { symbol: "GUSD", liquidationThreshold: 82.5 }, // Token address is token from priceFeed map above
       { symbol: "LUSD", liquidationThreshold: 82.5 }, // Token address is token from priceFeed map above
 
-      { symbol: "steCRV", liquidationThreshold: 90 }, // Token address is token from priceFeed map above
-      { symbol: "cvxsteCRV", liquidationThreshold: 90 }, // Token address is token from priceFeed map above
-      { symbol: "stkcvxsteCRV", liquidationThreshold: 90 }, // Token address is token from priceFeed map above
+      { symbol: "steCRV", liquidationThreshold: 82.5 }, // Token address is token from priceFeed map above
+      { symbol: "cvxsteCRV", liquidationThreshold: 82.5 }, // Token address is token from priceFeed map above
 
       { symbol: "3Crv", liquidationThreshold: 80 }, // Token address is token from priceFeed map above
       { symbol: "cvx3Crv", liquidationThreshold: 80 }, // Token address is token from priceFeed map above
-      { symbol: "stkcvx3Crv", liquidationThreshold: 80 }, // Token address is token from priceFeed map above
 
       { symbol: "FRAX3CRV", liquidationThreshold: 80 }, // Token address is token from priceFeed map above
       { symbol: "cvxFRAX3CRV", liquidationThreshold: 80 }, // Token address is token from priceFeed map above
-      { symbol: "stkcvxFRAX3CRV", liquidationThreshold: 80 }, // Token address is token from priceFeed map above
 
       { symbol: "LUSD3CRV", liquidationThreshold: 80 }, // Token address is token from priceFeed map above
       { symbol: "cvxLUSD3CRV", liquidationThreshold: 80 }, // Token address is token from priceFeed map above
-      { symbol: "stkcvxLUSD3CRV", liquidationThreshold: 80 }, // Token address is token from priceFeed map above
 
       { symbol: "crvPlain3andSUSD", liquidationThreshold: 80 }, // Token address is token from priceFeed map above
       { symbol: "cvxcrvPlain3andSUSD", liquidationThreshold: 80 }, // Token address is token from priceFeed map above
-      { symbol: "stkcvxcrvPlain3andSUSD", liquidationThreshold: 80 }, // Token address is token from priceFeed map above
 
       { symbol: "gusd3CRV", liquidationThreshold: 80 }, // Token address is token from priceFeed map above
       { symbol: "cvxgusd3CRV", liquidationThreshold: 80 }, // Token address is token from priceFeed map above
-      { symbol: "stkcvxgusd3CRV", liquidationThreshold: 80 }, // Token address is token from priceFeed map above
 
       { symbol: "crvFRAX", liquidationThreshold: 80 }, // Token address is token from priceFeed map above
       { symbol: "cvxcrvFRAX", liquidationThreshold: 80 }, // Token address is token from priceFeed map above
-      { symbol: "stkcvxcrvFRAX", liquidationThreshold: 80 }, // Token address is token from priceFeed map above
 
       { symbol: "yvDAI", liquidationThreshold: 80 }, // Token address is token from priceFeed map above
       { symbol: "yvUSDC", liquidationThreshold: 80 }, // Token address is token from priceFeed map above

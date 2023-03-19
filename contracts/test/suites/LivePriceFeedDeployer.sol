@@ -7,11 +7,9 @@ import {Tokens} from "../config/Tokens.sol";
 
 import {PriceFeedDataLive} from "../config/PriceFeedDataLive.sol";
 import {PriceFeedConfig} from "@gearbox-protocol/core-v2/contracts/oracles/PriceOracle.sol";
-import {ZeroPriceFeed} from "@gearbox-protocol/core-v3/contracts/oracles/ZeroPriceFeed.sol";
+import {ZeroPriceFeed} from "@gearbox-protocol/core-v2/contracts/oracles/ZeroPriceFeed.sol";
 import {YearnPriceFeed} from "../../oracles/yearn/YearnPriceFeed.sol";
 import {WstETHPriceFeed} from "../../oracles/lido/WstETHPriceFeed.sol";
-import {CompositePriceFeed} from "@gearbox-protocol/core-v3/contracts/oracles/CompositePriceFeed.sol";
-import {BoundedPriceFeed} from "@gearbox-protocol/core-v3/contracts/oracles/BoundedPriceFeed.sol";
 import {CurveV1StETHPoolGateway} from "../../adapters/curve/CurveV1_stETHGateway.sol";
 
 import {ISupportedContracts, Contracts} from "../config/SupportedContracts.sol";
@@ -23,7 +21,7 @@ import {CurveLP4PriceFeed} from "../../oracles/curve/CurveLP4PriceFeed.sol";
 import {IYVault} from "../../integrations/yearn/IYVault.sol";
 import {IwstETH} from "../../integrations/lido/IwstETH.sol";
 
-import {CheatCodes, HEVM_ADDRESS} from "@gearbox-protocol/core-v3/contracts/test/lib/cheatCodes.sol";
+import {CheatCodes, HEVM_ADDRESS} from "@gearbox-protocol/core-v2/contracts/test/lib/cheatCodes.sol";
 
 import {TokensTestSuite} from "./TokensTestSuite.sol";
 
@@ -47,50 +45,6 @@ contract LivePriceFeedDeployer is PriceFeedDataLive {
                 address pf = chainlinkPriceFeeds[i].priceFeed;
                 Tokens t = chainlinkPriceFeeds[i].token;
                 setPriceFeed(tokenTestSuite.addressOf(t), pf);
-
-                string memory description = string(abi.encodePacked("PRICEFEED_", tokenTestSuite.symbols(t)));
-                evm.label(pf, description);
-            }
-        }
-
-        // BOUNDED_PRICE_FEEDS
-        len = boundedPriceFeeds.length;
-        unchecked {
-            for (uint256 i = 0; i < len; ++i) {
-                Tokens t = boundedPriceFeeds[i].token;
-
-                address token = tokenTestSuite.addressOf(t);
-
-                address pf = address(
-                    new BoundedPriceFeed(
-                        boundedPriceFeeds[i].priceFeed,
-                        int256(boundedPriceFeeds[i].upperBound)
-                    )
-                );
-
-                setPriceFeed(token, pf);
-
-                string memory description = string(abi.encodePacked("PRICEFEED_", tokenTestSuite.symbols(t)));
-                evm.label(pf, description);
-            }
-        }
-
-        // COMPOSITE_PRICE_FEEDS
-        len = compositePriceFeeds.length;
-        unchecked {
-            for (uint256 i = 0; i < len; ++i) {
-                Tokens t = compositePriceFeeds[i].token;
-
-                address token = tokenTestSuite.addressOf(t);
-
-                address pf = address(
-                    new CompositePriceFeed(
-                        compositePriceFeeds[i].targetToBaseFeed,
-                        compositePriceFeeds[i].baseToUSDFeed
-                    )
-                );
-
-                setPriceFeed(token, pf);
 
                 string memory description = string(abi.encodePacked("PRICEFEED_", tokenTestSuite.symbols(t)));
                 evm.label(pf, description);
