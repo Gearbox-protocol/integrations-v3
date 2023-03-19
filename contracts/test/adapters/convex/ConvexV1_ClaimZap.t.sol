@@ -18,7 +18,7 @@ import {Tokens} from "../../config/Tokens.sol";
 import {USER, CONFIGURATOR} from "../../lib/constants.sol";
 
 import {MultiCall} from "@gearbox-protocol/core-v2/contracts/libraries/MultiCall.sol";
-import "@gearbox-protocol/core-v3/contracts/test/lib/test.sol";
+import "@gearbox-protocol/core-v2/contracts/test/lib/test.sol";
 
 contract ConvexV1ClaimZapAdapterTest is DSTest, ConvexAdapterHelper {
     address creditAccount;

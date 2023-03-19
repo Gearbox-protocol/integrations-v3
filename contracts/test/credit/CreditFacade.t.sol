@@ -6,22 +6,22 @@ pragma solidity ^0.8.10;
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IWETH} from "@gearbox-protocol/core-v2/contracts/interfaces/external/IWETH.sol";
 
-import {CreditFacade} from "@gearbox-protocol/core-v3/contracts/credit/CreditFacade.sol";
-import {CreditManager} from "@gearbox-protocol/core-v3/contracts/credit/CreditManager.sol";
+import {CreditFacade} from "@gearbox-protocol/core-v2/contracts/credit/CreditFacade.sol";
+import {CreditManager} from "@gearbox-protocol/core-v2/contracts/credit/CreditManager.sol";
 
 import {CreditAccount} from "@gearbox-protocol/core-v2/contracts/credit/CreditAccount.sol";
 import {AccountFactory} from "@gearbox-protocol/core-v2/contracts/core/AccountFactory.sol";
 
-import {ICreditFacade, ICreditFacadeExtended} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacade.sol";
+import {ICreditFacade, ICreditFacadeExtended} from "@gearbox-protocol/core-v2/contracts/interfaces/ICreditFacade.sol";
 import {
     ICreditManagerV2,
     ICreditManagerV2Events,
     ClosureAction
-} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditManagerV2.sol";
+} from "@gearbox-protocol/core-v2/contracts/interfaces/ICreditManagerV2.sol";
 import {
     ICreditFacadeEvents,
     ICreditFacadeExceptions
-} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacade.sol";
+} from "@gearbox-protocol/core-v2/contracts/interfaces/ICreditFacade.sol";
 import {IDegenNFT, IDegenNFTExceptions} from "@gearbox-protocol/core-v2/contracts/interfaces/IDegenNFT.sol";
 
 // DATA
@@ -31,7 +31,7 @@ import {Balance} from "@gearbox-protocol/core-v2/contracts/libraries/Balances.so
 import {
     CreditFacadeMulticaller,
     CreditFacadeCalls
-} from "@gearbox-protocol/core-v3/contracts/multicall/CreditFacadeCalls.sol";
+} from "@gearbox-protocol/core-v2/contracts/multicall/CreditFacadeCalls.sol";
 
 // CONSTANTS
 
@@ -45,11 +45,11 @@ import {BalanceHelper} from "../helpers/BalanceHelper.sol";
 import {CreditFacadeTestHelper} from "../helpers/CreditFacadeTestHelper.sol";
 
 // EXCEPTIONS
-import {ZeroAddressException} from "@gearbox-protocol/core-v3/contracts/interfaces/IErrors.sol";
-import {ICreditManagerV2Exceptions} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditManagerV2.sol";
+import {ZeroAddressException} from "@gearbox-protocol/core-v2/contracts/interfaces/IErrors.sol";
+import {ICreditManagerV2Exceptions} from "@gearbox-protocol/core-v2/contracts/interfaces/ICreditManagerV2.sol";
 
 // MOCKS
-import {AdapterMock} from "@gearbox-protocol/core-v3/contracts/test/mocks/adapters/AdapterMock.sol";
+import {AdapterMock} from "@gearbox-protocol/core-v2/contracts/test/mocks/adapters/AdapterMock.sol";
 import {TargetContractMock} from "@gearbox-protocol/core-v2/contracts/test/mocks/adapters/TargetContractMock.sol";
 
 import {UniswapV2Mock} from "../mocks/integrations/UniswapV2Mock.sol";
@@ -57,7 +57,7 @@ import {UniswapV2Adapter} from "../../adapters/uniswap/UniswapV2.sol";
 
 // SUITES
 import {TokensTestSuite, Tokens} from "../suites/TokensTestSuite.sol";
-import {CreditFacadeTestSuite} from "@gearbox-protocol/core-v3/contracts/test/suites/CreditFacadeTestSuite.sol";
+import {CreditFacadeTestSuite} from "@gearbox-protocol/core-v2/contracts/test/suites/CreditFacadeTestSuite.sol";
 import {CreditConfig} from "../config/CreditConfig.sol";
 
 uint256 constant WETH_TEST_AMOUNT = 5 * WAD;
@@ -106,6 +106,11 @@ contract CreditFacadeTest is
 
         evm.label(address(adapterMock), "AdapterMock");
         evm.label(address(targetMock), "TargetContractMock");
+
+        evm.startPrank(CONFIGURATOR);
+        cft.acl().addPausableAdmin(address(creditFacade));
+        creditConfigurator.setMaxCumulativeLoss(type(uint128).max);
+        evm.stopPrank();
     }
 
     ///

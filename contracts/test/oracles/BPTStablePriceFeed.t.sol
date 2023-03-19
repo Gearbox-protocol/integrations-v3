@@ -3,7 +3,7 @@
 // (c) Gearbox Holdings, 2022
 pragma solidity ^0.8.10;
 
-import {ILPPriceFeedExceptions} from "@gearbox-protocol/core-v3/contracts/interfaces/ILPPriceFeed.sol";
+import {ILPPriceFeedExceptions} from "@gearbox-protocol/core-v2/contracts/interfaces/ILPPriceFeed.sol";
 import {
     IBalancerV2Vault,
     PoolSpecialization,
@@ -26,7 +26,7 @@ import "../lib/constants.sol";
 import {BalancerVaultMock} from "../mocks/integrations/BalancerVaultMock.sol";
 import {BPTStableMock} from "../mocks/integrations/BPTStableMock.sol";
 import {PriceFeedMock} from "@gearbox-protocol/core-v2/contracts/test/mocks/oracles/PriceFeedMock.sol";
-import {AddressProviderACLMock} from "@gearbox-protocol/core-v3/contracts/test/mocks/core/AddressProviderACLMock.sol";
+import {AddressProviderACLMock} from "@gearbox-protocol/core-v2/contracts/test/mocks/core/AddressProviderACLMock.sol";
 
 // SUITES
 import {TokensTestSuite, Tokens} from "../suites/TokensTestSuite.sol";
@@ -36,7 +36,7 @@ import {
     ZeroAddressException,
     NotImplementedException,
     IncorrectPriceFeedException
-} from "@gearbox-protocol/core-v3/contracts/interfaces/IErrors.sol";
+} from "@gearbox-protocol/core-v2/contracts/interfaces/IErrors.sol";
 
 /// @title BPTWeightedPriceFeedTest
 /// @notice Designed for unit test purposes only

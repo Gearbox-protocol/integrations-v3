@@ -5,7 +5,7 @@ pragma solidity ^0.8.10;
 
 import {Tokens} from "./Tokens.sol";
 import {Contracts} from "./SupportedContracts.sol";
-import {AdapterType} from "@gearbox-protocol/core-v3/contracts/interfaces/adapters/IAdapter.sol";
+import {AdapterType} from "@gearbox-protocol/core-v2/contracts/interfaces/adapters/IAdapter.sol";
 
 struct SimpleAdapter {
     Contracts targetContract;

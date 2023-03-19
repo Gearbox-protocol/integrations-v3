@@ -11,7 +11,7 @@ import {WstETHGateway} from "../../../adapters/lido/WstETHGateway.sol";
 import {IwstETHGateWay} from "../../../integrations/lido/IwstETHGateway.sol";
 import {WstETHV1Mock} from "../../mocks/integrations/WstETHV1Mock.sol";
 
-import {ZeroAddressException} from "@gearbox-protocol/core-v3/contracts/interfaces/IErrors.sol";
+import {ZeroAddressException} from "@gearbox-protocol/core-v2/contracts/interfaces/IErrors.sol";
 
 // TEST
 import "../../lib/constants.sol";

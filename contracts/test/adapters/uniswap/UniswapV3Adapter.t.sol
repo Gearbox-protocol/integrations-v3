@@ -3,7 +3,7 @@
 // (c) Gearbox Holdings, 2023
 pragma solidity ^0.8.17;
 
-import {ICreditManagerV2Exceptions} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditManagerV2.sol";
+import {ICreditManagerV2Exceptions} from "@gearbox-protocol/core-v2/contracts/interfaces/ICreditManagerV2.sol";
 
 import {BytesLib} from "../../../integrations/uniswap/BytesLib.sol";
 

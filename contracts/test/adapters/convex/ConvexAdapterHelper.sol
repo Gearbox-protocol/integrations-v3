@@ -3,7 +3,7 @@
 // (c) Gearbox Holdings, 2023
 pragma solidity ^0.8.17;
 
-import {CreditManager} from "@gearbox-protocol/core-v3/contracts/credit/CreditManager.sol";
+import {CreditManager} from "@gearbox-protocol/core-v2/contracts/credit/CreditManager.sol";
 
 import {IBooster} from "../../../integrations/convex/IBooster.sol";
 import {IBaseRewardPool} from "../../../integrations/convex/IBaseRewardPool.sol";
@@ -319,33 +319,44 @@ contract ConvexAdapterHelper is AdapterTestHelper {
             false
         );
 
-        uint256 stakingTokenMask = creditManager.tokenMasksMap(unwrap ? curveLPToken : convexLPToken);
-        uint256 stakedTokenMask = creditManager.tokenMasksMap(phantomToken);
-        uint256 rewardTokensMask = _makeRewardTokensMask(numExtras);
+        address creditAccount = creditManager.getCreditAccountOrRevert(borrower);
         evm.expectCall(
             address(creditManager),
-            abi.encodeCall(
-                creditManager.changeEnabledTokens,
-                (rewardTokensMask | stakingTokenMask, withdrawAll ? stakedTokenMask : 0)
-            )
+            abi.encodeCall(creditManager.checkAndEnableToken, (creditAccount, unwrap ? curveLPToken : convexLPToken))
         );
+        evm.expectCall(address(creditManager), abi.encodeCall(creditManager.checkAndEnableToken, (creditAccount, crv)));
+        evm.expectCall(address(creditManager), abi.encodeCall(creditManager.checkAndEnableToken, (creditAccount, cvx)));
+        if (numExtras >= 1) {
+            evm.expectCall(
+                address(creditManager),
+                abi.encodeCall(creditManager.checkAndEnableToken, (creditAccount, extraRewardToken1))
+            );
+        }
+        if (numExtras >= 2) {
+            evm.expectCall(
+                address(creditManager),
+                abi.encodeCall(creditManager.checkAndEnableToken, (creditAccount, extraRewardToken2))
+            );
+        }
+        if (withdrawAll) {
+            evm.expectCall(
+                address(creditManager), abi.encodeCall(creditManager.disableToken, (creditAccount, phantomToken))
+            );
+        }
     }
 
     function expectClaimZapStackCalls(address borrower, address[] memory enabledTokens) internal {
         evm.expectEmit(true, false, false, false);
         emit MultiCallStarted(borrower);
 
+        address creditAccount = creditManager.getCreditAccountOrRevert(borrower);
+
         for (uint256 i = 0; i < enabledTokens.length; i++) {
             evm.expectCall(
-                address(creditManager), abi.encodeCall(CreditManager.checkAndEnableToken, (enabledTokens[i]))
+                address(creditManager),
+                abi.encodeCall(CreditManager.checkAndEnableToken, (creditAccount, enabledTokens[i]))
             );
         }
-
-        // uint256 tokensMask = 0;
-        // for (uint256 i = 0; i < enabledTokens.length; ++i) {
-        //     tokensMask |= creditManager.tokenMasksMap(enabledTokens[i]);
-        // }
-        // evm.expectCall(address(creditManager), abi.encodeCall(creditManager.changeEnabledTokens, (tokensMask, 0)));
 
         evm.expectEmit(false, false, false, false);
         emit MultiCallFinished();
@@ -355,14 +366,26 @@ contract ConvexAdapterHelper is AdapterTestHelper {
         evm.expectEmit(true, false, false, false);
         emit MultiCallStarted(borrower);
 
-        evm.expectEmit(true, false, false, false);
-        emit ExecuteOrder(address(basePoolMock));
+        evm.expectEmit(true, true, false, false);
+        emit ExecuteOrder(address(creditFacade), address(basePoolMock));
 
         evm.expectCall(address(basePoolMock), abi.encodeWithSignature("getReward()"));
-        evm.expectCall(
-            address(creditManager),
-            abi.encodeCall(creditManager.changeEnabledTokens, (_makeRewardTokensMask(numExtras), 0))
-        );
+
+        address creditAccount = creditManager.getCreditAccountOrRevert(borrower);
+        evm.expectCall(address(creditManager), abi.encodeCall(creditManager.checkAndEnableToken, (creditAccount, crv)));
+        evm.expectCall(address(creditManager), abi.encodeCall(creditManager.checkAndEnableToken, (creditAccount, cvx)));
+        if (numExtras >= 1) {
+            evm.expectCall(
+                address(creditManager),
+                abi.encodeCall(creditManager.checkAndEnableToken, (creditAccount, extraRewardToken1))
+            );
+        }
+        if (numExtras >= 2) {
+            evm.expectCall(
+                address(creditManager),
+                abi.encodeCall(creditManager.checkAndEnableToken, (creditAccount, extraRewardToken2))
+            );
+        }
 
         evm.expectEmit(false, false, false, false);
         emit MultiCallFinished();
