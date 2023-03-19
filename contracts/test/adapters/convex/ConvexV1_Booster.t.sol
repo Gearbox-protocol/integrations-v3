@@ -10,9 +10,9 @@ import {ERC20Mock} from "@gearbox-protocol/core-v2/contracts/test/mocks/token/ER
 
 import {USER, CONFIGURATOR} from "../../lib/constants.sol";
 
-import "@gearbox-protocol/core-v3/contracts/test/lib/test.sol";
+import "@gearbox-protocol/core-v2/contracts/test/lib/test.sol";
 
-import {CallerNotConfiguratorException} from "@gearbox-protocol/core-v3/contracts/interfaces/IErrors.sol";
+import {CallerNotConfiguratorException} from "@gearbox-protocol/core-v2/contracts/interfaces/IErrors.sol";
 
 contract ConvexV1BoosterAdapterTest is DSTest, ConvexAdapterHelper {
     address creditAccount;

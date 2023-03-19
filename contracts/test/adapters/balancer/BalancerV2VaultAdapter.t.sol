@@ -6,7 +6,7 @@ pragma solidity ^0.8.17;
 import {
     ICreditManagerV2,
     ICreditManagerV2Exceptions
-} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditManagerV2.sol";
+} from "@gearbox-protocol/core-v2/contracts/interfaces/ICreditManagerV2.sol";
 
 import {
     IBalancerV2Vault,
@@ -216,7 +216,7 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper, IBalancerV2VaultAdapte
     function expectBatchSwapStackCalls(
         address targetContract,
         address borrower,
-        address, // creditAccount,
+        address creditAccount,
         bytes memory callData,
         IAsset[] memory assets,
         int256[] memory limits
@@ -229,24 +229,29 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper, IBalancerV2VaultAdapte
                 evm.expectCall(
                     address(creditManager),
                     abi.encodeCall(
-                        ICreditManagerV2.approveCreditAccount, (targetContract, address(assets[i]), type(uint256).max)
+                        ICreditManagerV2.approveCreditAccount,
+                        (address(creditFacade), targetContract, address(assets[i]), type(uint256).max)
                     )
                 );
             }
         }
 
         evm.expectCall(
-            address(creditManager), abi.encodeCall(ICreditManagerV2.executeOrder, (targetContract, callData))
+            address(creditManager),
+            abi.encodeCall(ICreditManagerV2.executeOrder, (address(creditFacade), targetContract, callData))
         );
 
-        evm.expectEmit(true, false, false, false);
-        emit ExecuteOrder(targetContract);
+        evm.expectEmit(true, true, false, false);
+        emit ExecuteOrder(address(creditFacade), targetContract);
 
         for (uint256 i = 0; i < assets.length; ++i) {
             if (limits[i] > 1) {
                 evm.expectCall(
                     address(creditManager),
-                    abi.encodeCall(ICreditManagerV2.approveCreditAccount, (targetContract, address(assets[i]), 1))
+                    abi.encodeCall(
+                        ICreditManagerV2.approveCreditAccount,
+                        (address(creditFacade), targetContract, address(assets[i]), 1)
+                    )
                 );
             }
         }
@@ -254,7 +259,8 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper, IBalancerV2VaultAdapte
         for (uint256 i = 0; i < assets.length; ++i) {
             if (limits[i] < -1) {
                 evm.expectCall(
-                    address(creditManager), abi.encodeCall(ICreditManagerV2.checkAndEnableToken, (address(assets[i])))
+                    address(creditManager),
+                    abi.encodeCall(ICreditManagerV2.checkAndEnableToken, (creditAccount, address(assets[i])))
                 );
             }
         }
@@ -266,7 +272,7 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper, IBalancerV2VaultAdapte
     function expectJoinPoolStackCalls(
         address targetContract,
         address borrower,
-        address, // creditAccount,
+        address creditAccount,
         bytes32 poolId,
         bytes memory callData,
         IAsset[] memory assets,
@@ -280,7 +286,8 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper, IBalancerV2VaultAdapte
                 evm.expectCall(
                     address(creditManager),
                     abi.encodeCall(
-                        ICreditManagerV2.approveCreditAccount, (targetContract, address(assets[i]), type(uint256).max)
+                        ICreditManagerV2.approveCreditAccount,
+                        (address(creditFacade), targetContract, address(assets[i]), type(uint256).max)
                     )
                 );
             }
@@ -288,20 +295,26 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper, IBalancerV2VaultAdapte
 
         (address pool,) = balancerMock.getPool(poolId);
 
-        evm.expectCall(address(creditManager), abi.encodeCall(ICreditManagerV2.checkAndEnableToken, (pool)));
-
         evm.expectCall(
-            address(creditManager), abi.encodeCall(ICreditManagerV2.executeOrder, (targetContract, callData))
+            address(creditManager), abi.encodeCall(ICreditManagerV2.checkAndEnableToken, (creditAccount, pool))
         );
 
-        evm.expectEmit(true, false, false, false);
-        emit ExecuteOrder(targetContract);
+        evm.expectCall(
+            address(creditManager),
+            abi.encodeCall(ICreditManagerV2.executeOrder, (address(creditFacade), targetContract, callData))
+        );
+
+        evm.expectEmit(true, true, false, false);
+        emit ExecuteOrder(address(creditFacade), targetContract);
 
         for (uint256 i = 0; i < assets.length; ++i) {
             if (maxAmountsIn[i] > 1) {
                 evm.expectCall(
                     address(creditManager),
-                    abi.encodeCall(ICreditManagerV2.approveCreditAccount, (targetContract, address(assets[i]), 1))
+                    abi.encodeCall(
+                        ICreditManagerV2.approveCreditAccount,
+                        (address(creditFacade), targetContract, address(assets[i]), 1)
+                    )
                 );
             }
         }
@@ -313,7 +326,7 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper, IBalancerV2VaultAdapte
     function expectExitPoolStackCalls(
         address targetContract,
         address borrower,
-        address, // creditAccount,
+        address creditAccount,
         bytes memory callData,
         IAsset[] memory assets
     ) internal {
@@ -321,15 +334,17 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper, IBalancerV2VaultAdapte
         emit MultiCallStarted(borrower);
 
         evm.expectCall(
-            address(creditManager), abi.encodeCall(ICreditManagerV2.executeOrder, (targetContract, callData))
+            address(creditManager),
+            abi.encodeCall(ICreditManagerV2.executeOrder, (address(creditFacade), targetContract, callData))
         );
 
-        evm.expectEmit(true, false, false, false);
-        emit ExecuteOrder(targetContract);
+        evm.expectEmit(true, true, false, false);
+        emit ExecuteOrder(address(creditFacade), targetContract);
 
         for (uint256 i = 0; i < assets.length; ++i) {
             evm.expectCall(
-                address(creditManager), abi.encodeCall(ICreditManagerV2.checkAndEnableToken, (address(assets[i])))
+                address(creditManager),
+                abi.encodeCall(ICreditManagerV2.checkAndEnableToken, (creditAccount, address(assets[i])))
             );
         }
 

@@ -23,9 +23,9 @@ import {CurveV1AdapterHelper} from "./CurveV1AdapterHelper.sol";
 // EXCEPTIONS
 import {
     ZeroAddressException, NotImplementedException
-} from "@gearbox-protocol/core-v3/contracts/interfaces/IErrors.sol";
-import {IAdapterExceptions} from "@gearbox-protocol/core-v3/contracts/interfaces/adapters/IAdapter.sol";
-import {ICreditManagerV2Exceptions} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditManagerV2.sol";
+} from "@gearbox-protocol/core-v2/contracts/interfaces/IErrors.sol";
+import {IAdapterExceptions} from "@gearbox-protocol/core-v2/contracts/interfaces/adapters/IAdapter.sol";
+import {ICreditManagerV2Exceptions} from "@gearbox-protocol/core-v2/contracts/interfaces/ICreditManagerV2.sol";
 
 /// @title CurveV1AdapterBaseTest
 /// @notice Designed for unit test purposes only

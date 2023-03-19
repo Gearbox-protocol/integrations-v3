@@ -7,7 +7,7 @@ import {IAdapterExceptions} from "@gearbox-protocol/core-v3/contracts/interfaces
 import {
     ICreditManagerV2,
     ICreditManagerV2Exceptions
-} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditManagerV2.sol";
+} from "@gearbox-protocol/core-v2/contracts/interfaces/ICreditManagerV2.sol";
 
 import {YearnV2Adapter} from "../../../adapters/yearn/YearnV2.sol";
 

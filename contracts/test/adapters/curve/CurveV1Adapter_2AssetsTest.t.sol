@@ -17,9 +17,9 @@ import "../../lib/constants.sol";
 import {CurveV1AdapterHelper, DAI_TO_LP, USDC_TO_LP} from "./CurveV1AdapterHelper.sol";
 
 // EXCEPTIONS
-import {ZeroAddressException} from "@gearbox-protocol/core-v3/contracts/interfaces/IErrors.sol";
-import {IAdapterExceptions} from "@gearbox-protocol/core-v3/contracts/interfaces/adapters/IAdapter.sol";
-import {ICreditManagerV2Exceptions} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditManagerV2.sol";
+import {ZeroAddressException} from "@gearbox-protocol/core-v2/contracts/interfaces/IErrors.sol";
+import {IAdapterExceptions} from "@gearbox-protocol/core-v2/contracts/interfaces/adapters/IAdapter.sol";
+import {ICreditManagerV2Exceptions} from "@gearbox-protocol/core-v2/contracts/interfaces/ICreditManagerV2.sol";
 
 /// @title CurveV1Adapter2AssetsTest
 /// @notice Designed for unit test purposes only

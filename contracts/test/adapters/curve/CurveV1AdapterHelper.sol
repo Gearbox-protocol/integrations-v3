@@ -14,7 +14,7 @@ import {ICurveV1Adapter, ICurveV1AdapterExceptions} from "../../../interfaces/cu
 import {ICurvePoolStETH} from "../../../integrations/curve/ICurvePoolStETH.sol";
 import {ICurvePool} from "../../../integrations/curve/ICurvePool.sol";
 import {ICRVToken} from "../../../integrations/curve/ICRVToken.sol";
-import {ICreditManagerV2} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditManagerV2.sol";
+import {ICreditManagerV2} from "@gearbox-protocol/core-v2/contracts/interfaces/ICreditManagerV2.sol";
 import {CurveV1StETHMock} from "../../mocks/integrations/CurveV1StETHMock.sol";
 
 import {CurveV1Mock} from "../../mocks/integrations/CurveV1Mock.sol";
@@ -517,22 +517,32 @@ contract CurveV1AdapterHelper is DSTest, AdapterTestHelper, ICurveV1AdapterExcep
         for (uint256 i = 0; i < nCoins; i++) {
             evm.expectCall(
                 address(creditManager),
-                abi.encodeCall(ICreditManagerV2.approveCreditAccount, (pool, curvePoolTokens[i], type(uint256).max))
+                abi.encodeCall(
+                    ICreditManagerV2.approveCreditAccount,
+                    (address(creditFacade), pool, curvePoolTokens[i], type(uint256).max)
+                )
             );
         }
 
-        uint256 lpTokenMask = creditManager.tokenMasksMap(lpToken);
-        evm.expectCall(address(creditManager), abi.encodeCall(ICreditManagerV2.changeEnabledTokens, (lpTokenMask, 0)));
+        address creditAccount = creditManager.getCreditAccountOrRevert(borrower);
+        evm.expectCall(
+            address(creditManager), abi.encodeCall(ICreditManagerV2.checkAndEnableToken, (creditAccount, lpToken))
+        );
 
-        evm.expectCall(address(creditManager), abi.encodeCall(ICreditManagerV2.executeOrder, (pool, callData)));
+        evm.expectCall(
+            address(creditManager),
+            abi.encodeCall(ICreditManagerV2.executeOrder, (address(creditFacade), pool, callData))
+        );
 
-        evm.expectEmit(true, false, false, false);
-        emit ExecuteOrder(pool);
+        evm.expectEmit(true, true, false, false);
+        emit ExecuteOrder(address(creditFacade), pool);
 
         for (uint256 i = 0; i < nCoins; i++) {
             evm.expectCall(
                 address(creditManager),
-                abi.encodeCall(ICreditManagerV2.approveCreditAccount, (pool, curvePoolTokens[i], 1))
+                abi.encodeCall(
+                    ICreditManagerV2.approveCreditAccount, (address(creditFacade), pool, curvePoolTokens[i], 1)
+                )
             );
         }
 
@@ -568,16 +578,21 @@ contract CurveV1AdapterHelper is DSTest, AdapterTestHelper, ICurveV1AdapterExcep
         evm.expectEmit(true, false, false, false);
         emit MultiCallStarted(borrower);
 
-        uint256 tokensMask;
+        address creditAccount = creditManager.getCreditAccountOrRevert(borrower);
         for (uint256 i = 0; i < nCoins; i++) {
-            tokensMask |= creditManager.tokenMasksMap(curvePoolTokens[i]);
+            evm.expectCall(
+                address(creditManager),
+                abi.encodeCall(ICreditManagerV2.checkAndEnableToken, (creditAccount, curvePoolTokens[i]))
+            );
         }
-        evm.expectCall(address(creditManager), abi.encodeCall(ICreditManagerV2.changeEnabledTokens, (tokensMask, 0)));
 
-        evm.expectCall(address(creditManager), abi.encodeCall(ICreditManagerV2.executeOrder, (pool, callData)));
+        evm.expectCall(
+            address(creditManager),
+            abi.encodeCall(ICreditManagerV2.executeOrder, (address(creditFacade), pool, callData))
+        );
 
-        evm.expectEmit(true, false, false, false);
-        emit ExecuteOrder(pool);
+        evm.expectEmit(true, true, false, false);
+        emit ExecuteOrder(address(creditFacade), pool);
 
         evm.expectEmit(false, false, false, false);
         emit MultiCallFinished();
@@ -623,18 +638,23 @@ contract CurveV1AdapterHelper is DSTest, AdapterTestHelper, ICurveV1AdapterExcep
         evm.expectEmit(true, false, false, false);
         emit MultiCallStarted(borrower);
 
-        uint256 tokensMask;
+        address creditAccount = creditManager.getCreditAccountOrRevert(borrower);
         for (uint256 i = 0; i < nCoins; i++) {
             if (amounts[i] > 0) {
-                tokensMask |= creditManager.tokenMasksMap(curvePoolTokens[i]);
+                evm.expectCall(
+                    address(creditManager),
+                    abi.encodeCall(ICreditManagerV2.checkAndEnableToken, (creditAccount, curvePoolTokens[i]))
+                );
             }
         }
-        evm.expectCall(address(creditManager), abi.encodeCall(ICreditManagerV2.changeEnabledTokens, (tokensMask, 0)));
 
-        evm.expectCall(address(creditManager), abi.encodeCall(ICreditManagerV2.executeOrder, (pool, callData)));
+        evm.expectCall(
+            address(creditManager),
+            abi.encodeCall(ICreditManagerV2.executeOrder, (address(creditFacade), pool, callData))
+        );
 
-        evm.expectEmit(true, false, false, false);
-        emit ExecuteOrder(pool);
+        evm.expectEmit(true, true, false, false);
+        emit ExecuteOrder(address(creditFacade), pool);
 
         evm.expectEmit(false, false, false, false);
         emit MultiCallFinished();
