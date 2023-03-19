@@ -98,7 +98,7 @@ contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
     {
         if (_lp_token == address(0)) revert ZeroAddressException(); // F: [ACV1-1]
 
-        lpTokenMask = _checkToken(_lp_token); // F: [ACV1-2]
+        lpTokenMask = _getMaskOrRevert(_lp_token); // F: [ACV1-2]
 
         token = _lp_token; // F: [ACV1-2]
         lp_token = _lp_token; // F: [ACV1-2]
@@ -132,7 +132,7 @@ contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
             }
 
             if (currentCoin == address(0)) revert ZeroAddressException(); // F: [ACV1-1]
-            uint256 currentMask = _checkToken(currentCoin);
+            uint256 currentMask = _getMaskOrRevert(currentCoin);
 
             tokens[i] = currentCoin;
             tokenMasks[i] = currentMask;
@@ -180,7 +180,7 @@ contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
             }
 
             if (currentCoin != address(0)) {
-                currentMask = _checkToken(currentCoin); // F: [ACV1-1]
+                currentMask = _getMaskOrRevert(currentCoin); // F: [ACV1-1]
             }
 
             tokens[i] = currentCoin;

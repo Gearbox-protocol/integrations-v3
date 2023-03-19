@@ -456,40 +456,13 @@ contract UniswapV3AdapterTest is DSTest, AdapterTestHelper, IUniswapV3AdapterExc
 
     /// @dev [AUV3-8]: UniswapV3 adapter can't be exploited with an incorrectly-formed path
     function test_AUV3_08_exactOutput_cannot_be_exploited_with_tailored_path_parameter() public {
-        address tokenIn = tokenTestSuite.addressOf(Tokens.DAI);
-        address tokenOut = tokenTestSuite.addressOf(Tokens.WETH);
+        _openTestCreditAccount();
 
         ISwapRouter.ExactOutputParams memory exactOutputParams = _getExactOutputParams();
-
         exactOutputParams.path = exactOutputParams.path.concat(abi.encodePacked(tokenTestSuite.addressOf(Tokens.USDC)));
-
-        (address creditAccount, uint256 initialDAIbalance) = _openTestCreditAccount();
-
-        expectAllowance(Tokens.DAI, creditAccount, address(uniswapMock), 0);
-
-        // exactOutputParams.recipient = creditAccount;
-
-        // bytes memory expectedCallData = abi.encodeCall(ISwapRouter.exactOutput, (exactOutputParams));
-
-        // expectMulticallStackCalls(
-        //     address(adapter), address(uniswapMock), USER, expectedCallData, tokenIn, tokenOut, true
-        // );
-
-        // exactOutputParams.recipient = address(0);
 
         evm.expectRevert(InvalidPathException.selector);
         executeOneLineMulticall(address(adapter), abi.encodeCall(adapter.exactOutput, (exactOutputParams)));
-
-        // expectBalance(Tokens.DAI, creditAccount, initialDAIbalance - ((DAI_EXCHANGE_AMOUNT / 2) * 1000) / 997);
-
-        // expectBalance(Tokens.WETH, creditAccount, DAI_EXCHANGE_AMOUNT / DAI_WETH_RATE / 2);
-
-        // expectAllowance(Tokens.DAI, creditAccount, address(uniswapMock), 1);
-
-        // expectAllowance(Tokens.USDC, creditAccount, address(uniswapMock), 0);
-
-        // expectTokenIsEnabled(Tokens.WETH, true);
-        // expectTokenIsEnabled(Tokens.USDC, false);
     }
 
     /// @dev [AUV3-9]: Path validity checks are correct

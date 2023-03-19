@@ -12,13 +12,7 @@ import {CurveV1AdapterBase} from "./CurveV1_Base.sol";
 /// @title Curve V1 2 assets adapter
 /// @notice Implements logic allowing to interact with Curve pools with 2 assets
 contract CurveV1Adapter2Assets is CurveV1AdapterBase, ICurveV1_2AssetsAdapter {
-    function _gearboxAdapterType()
-        external
-        pure
-        virtual
-        override (CurveV1AdapterBase, IAdapter)
-        returns (AdapterType)
-    {
+    function _gearboxAdapterType() external pure virtual override(CurveV1AdapterBase, IAdapter) returns (AdapterType) {
         return AdapterType.CURVE_V1_2ASSETS;
     }
 

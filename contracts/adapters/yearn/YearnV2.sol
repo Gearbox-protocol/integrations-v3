@@ -31,8 +31,8 @@ contract YearnV2Adapter is AbstractAdapter, IYearnV2Adapter {
     /// @param _vault Yearn vault address
     constructor(address _creditManager, address _vault) AbstractAdapter(_creditManager, _vault) {
         token = IYVault(targetContract).token(); // F: [AYV2-1]
-        tokenMask = _checkToken(token); // F: [AYV2-1, AYV2-2]
-        yTokenMask = _checkToken(_vault); // F: [AYV2-1, AYV2-2]
+        tokenMask = _getMaskOrRevert(token); // F: [AYV2-1, AYV2-2]
+        yTokenMask = _getMaskOrRevert(_vault); // F: [AYV2-1, AYV2-2]
     }
 
     /// -------- ///

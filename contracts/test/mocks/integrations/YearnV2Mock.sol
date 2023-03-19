@@ -74,15 +74,15 @@ contract YearnV2Mock is IYVault, ERC20, Ownable {
         pricePerShare = newPrice;
     }
 
-    function name() public view override (IYVault, ERC20) returns (string memory) {
+    function name() public view override(IYVault, ERC20) returns (string memory) {
         return ERC20.name();
     }
 
-    function symbol() public view override (IYVault, ERC20) returns (string memory) {
+    function symbol() public view override(IYVault, ERC20) returns (string memory) {
         return ERC20.symbol();
     }
 
-    function decimals() public view override (IYVault, ERC20) returns (uint8) {
+    function decimals() public view override(IYVault, ERC20) returns (uint8) {
         return ERC20.decimals();
     }
 

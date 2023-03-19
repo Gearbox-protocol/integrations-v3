@@ -46,25 +46,25 @@ contract ConvexV1BaseRewardPoolAdapter is AbstractAdapter, IConvexV1BaseRewardPo
         AbstractAdapter(_creditManager, _baseRewardPool)
     {
         stakingToken = address(IBaseRewardPool(_baseRewardPool).stakingToken()); // F: [ACVX1_P-1]
-        stakingTokenMask = _checkToken(stakingToken); // F: [ACVX1_P-1, ACVX1_P-2]
+        stakingTokenMask = _getMaskOrRevert(stakingToken); // F: [ACVX1_P-1, ACVX1_P-2]
 
         stakedPhantomToken = _stakedPhantomToken; // F: [ACVX1_P-1]
-        stakedTokenMask = _checkToken(stakedPhantomToken); // F: [ACVX1_P-1, ACVX1_P-2]
+        stakedTokenMask = _getMaskOrRevert(stakedPhantomToken); // F: [ACVX1_P-1, ACVX1_P-2]
 
         address booster = IBaseRewardPool(_baseRewardPool).operator();
         IBooster.PoolInfo memory poolInfo = IBooster(booster).poolInfo(IBaseRewardPool(_baseRewardPool).pid());
         curveLPtoken = poolInfo.lptoken; // F: [ACVX1_P-1]
-        curveLPTokenMask = _checkToken(curveLPtoken); // F: [ACVX1_P-1, ACVX1_P-2]
+        curveLPTokenMask = _getMaskOrRevert(curveLPtoken); // F: [ACVX1_P-1, ACVX1_P-2]
 
         uint256 _rewardTokensMask;
         uint256 mask;
 
         address rewardToken = address(IBaseRewardPool(_baseRewardPool).rewardToken());
-        mask = _checkToken(rewardToken); // F: [ACVX1_P-2]
+        mask = _getMaskOrRevert(rewardToken); // F: [ACVX1_P-2]
         _rewardTokensMask |= mask;
 
         address cvx = IBooster(booster).minter();
-        mask = _checkToken(cvx); // F: [ACVX1_P-2]
+        mask = _getMaskOrRevert(cvx); // F: [ACVX1_P-2]
         _rewardTokensMask |= mask;
 
         address _extraReward1;
@@ -78,10 +78,10 @@ contract ConvexV1BaseRewardPoolAdapter is AbstractAdapter, IConvexV1BaseRewardPo
             }
         }
 
-        mask = _extraReward1 != address(0) ? _checkToken(_extraReward1) : 0; // F: [ACVX1_P-2]
+        mask = _extraReward1 != address(0) ? _getMaskOrRevert(_extraReward1) : 0; // F: [ACVX1_P-2]
         _rewardTokensMask |= mask;
 
-        mask = _extraReward2 != address(0) ? _checkToken(_extraReward2) : 0; // F: [ACVX1_P-2]
+        mask = _extraReward2 != address(0) ? _getMaskOrRevert(_extraReward2) : 0; // F: [ACVX1_P-2]
         _rewardTokensMask |= mask;
 
         rewardTokensMask = _rewardTokensMask; // F: [ACVX1_P-1]

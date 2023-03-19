@@ -36,13 +36,13 @@ contract AaveV2_WrappedATokenAdapter is AbstractAdapter, IAaveV2_WrappedATokenAd
     /// @param _creditManager Credit manager address
     /// @param _waToken Wrapped aToken address
     constructor(address _creditManager, address _waToken) AbstractAdapter(_creditManager, _waToken) {
-        waTokenMask = _checkToken(targetContract);
+        waTokenMask = _getMaskOrRevert(targetContract);
 
         aToken = address(IWrappedAToken(targetContract).aToken());
-        aTokenMask = _checkToken(aToken);
+        aTokenMask = _getMaskOrRevert(aToken);
 
         underlying = address(IWrappedAToken(targetContract).underlying());
-        tokenMask = _checkToken(underlying);
+        tokenMask = _getMaskOrRevert(underlying);
     }
 
     /// -------- ///

@@ -43,10 +43,10 @@ contract LidoV1Adapter is AbstractAdapter, ILidoV1Adapter {
     /// @param _lidoGateway Lido gateway address
     constructor(address _creditManager, address _lidoGateway) AbstractAdapter(_creditManager, _lidoGateway) {
         stETH = address(LidoV1Gateway(payable(_lidoGateway)).stETH()); // F: [LDOV1-1]
-        stETHTokenMask = _checkToken(stETH); // F: [LDOV1-1]
+        stETHTokenMask = _getMaskOrRevert(stETH); // F: [LDOV1-1]
 
         weth = addressProvider.getWethToken(); // F: [LDOV1-1]
-        wethTokenMask = _checkToken(weth); // F: [LDOV1-1]
+        wethTokenMask = _getMaskOrRevert(weth); // F: [LDOV1-1]
 
         treasury = addressProvider.getTreasuryContract(); // F: [LDOV1-1]
         limit = LIDO_STETH_LIMIT; // F: [LDOV1-1]
