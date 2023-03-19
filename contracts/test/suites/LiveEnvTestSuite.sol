@@ -33,7 +33,6 @@ import {IConvexV1BoosterAdapter} from "../../interfaces/convex/IConvexV1BoosterA
 import {CreditManagerFactory} from "../../factories/CreditManagerFactory.sol";
 import {CreditManagerMockFactory} from "../mocks/credit/CreditManagerMockFactory.sol";
 import {CreditManagerOpts, CollateralToken} from "@gearbox-protocol/core-v3/contracts/credit/CreditConfigurator.sol";
-import {WstETHPoolSetup} from "./WstETHPoolSetup.sol";
 
 import {DegenNFT} from "@gearbox-protocol/core-v2/contracts/tokens/DegenNFT.sol";
 
