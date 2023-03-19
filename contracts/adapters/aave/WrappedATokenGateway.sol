@@ -15,13 +15,13 @@ import {IWrappedATokenGateway} from "../../interfaces/aave/IWrappedATokenGateway
 /// @title waToken Gateway
 /// @notice Allows LPs to add/remove aTokens to/from waToken liquidity pool
 contract WrappedATokenGateway is IWrappedATokenGateway {
-    /// @notice waToken pool
+    /// @inheritdoc IWrappedATokenGateway
     IPool4626 public immutable override pool;
 
-    /// @notice waToken address
+    /// @inheritdoc IWrappedATokenGateway
     IWrappedAToken public immutable override waToken;
 
-    /// @notice aToken address
+    /// @inheritdoc IWrappedATokenGateway
     IAToken public immutable override aToken;
 
     /// @notice Constructor
@@ -37,16 +37,11 @@ contract WrappedATokenGateway is IWrappedATokenGateway {
         waToken = IWrappedAToken(pool.underlyingToken());
         aToken = waToken.aToken();
 
-        waToken.approve(address(pool), type(uint256).max); // non-spendable
         aToken.approve(address(waToken), type(uint256).max); // spendable
+        waToken.approve(address(pool), type(uint256).max); // non-spendable
     }
 
-    /// @notice Deposit aTokens into waToken liquidity pool
-    /// @dev Gateway must be approved to spend aTokens from `msg.sender` before the call
-    /// @param assets Amount of aTokens to deposit to the pool
-    /// @param receiver Account that should receive dTokens
-    /// @param referralCode Referral code, for potential rewards
-    /// @return shares Amount of dTokens minted to `receiver`
+    /// @inheritdoc IWrappedATokenGateway
     function depositReferral(uint256 assets, address receiver, uint16 referralCode)
         external
         override
@@ -60,12 +55,7 @@ contract WrappedATokenGateway is IWrappedATokenGateway {
         shares = pool.depositReferral(waTokenAmount, receiver, referralCode);
     }
 
-    /// @notice Redeem aTokens from waToken liquidity pool
-    /// @dev Gateway must be approved to spend dTokens from `owner` before the call
-    /// @param shares Amount of dTokens to burn
-    /// @param receiver Account that should receive aTokens
-    /// @param owner Account to burn dTokens from
-    /// @return assets Amount of aTokens sent to `receiver`
+    /// @inheritdoc IWrappedATokenGateway
     function redeem(uint256 shares, address receiver, address owner) external override returns (uint256 assets) {
         uint256 waTokenAmount = pool.redeem(shares, address(this), owner);
 

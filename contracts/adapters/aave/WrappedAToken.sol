@@ -21,13 +21,13 @@ import {IWrappedAToken} from "../../interfaces/aave/IWrappedAToken.sol";
 contract WrappedAToken is ERC20, IWrappedAToken {
     using SafeERC20 for IERC20;
 
-    /// @notice Underlying aToken
+    /// @inheritdoc IWrappedAToken
     IAToken public immutable override aToken;
 
-    /// @notice Underlying token
+    /// @inheritdoc IWrappedAToken
     IERC20 public immutable override underlying;
 
-    /// @notice Aave lending pool
+    /// @inheritdoc IWrappedAToken
     ILendingPool public immutable override lendingPool;
 
     /// @dev aToken's normalized income (aka interest accumulator) at the moment of waToken creation
@@ -55,27 +55,23 @@ contract WrappedAToken is ERC20, IWrappedAToken {
         return aToken.decimals();
     }
 
-    /// @notice Returns amount of aTokens belonging to given account (increases as interest is accrued)
+    /// @inheritdoc IWrappedAToken
     function balanceOfUnderlying(address account) external view override returns (uint256) {
         return (balanceOf(account) * exchangeRate()) / WAD;
     }
 
-    /// @notice Returns amount of aTokens per waToken, scaled by 1e18
+    /// @inheritdoc IWrappedAToken
     function exchangeRate() public view override returns (uint256) {
         return WAD * lendingPool.getReserveNormalizedIncome(address(underlying)) / _normalizedIncome;
     }
 
-    /// @notice Deposit given amount of aTokens (aToken must be approved before the call)
-    /// @param assets Amount of aTokens to deposit in exchange for waTokens
-    /// @return shares Amount of waTokens minted to the caller
+    /// @inheritdoc IWrappedAToken
     function deposit(uint256 assets) external override returns (uint256 shares) {
         aToken.transferFrom(msg.sender, address(this), assets);
         shares = _deposit(assets);
     }
 
-    /// @notice Deposit given amount underlying tokens (underlying must be approved before the call)
-    /// @param assets Amount of underlying tokens to deposit in exchange for waTokens
-    /// @return shares Amount of waTokens minted to the caller
+    /// @inheritdoc IWrappedAToken
     function depositUnderlying(uint256 assets) external override returns (uint256 shares) {
         underlying.safeTransferFrom(msg.sender, address(this), assets);
         _ensureAllowance(assets);
@@ -83,17 +79,13 @@ contract WrappedAToken is ERC20, IWrappedAToken {
         shares = _deposit(assets);
     }
 
-    /// @notice Withdraw given amount of waTokens for aTokens
-    /// @param shares Amount of waTokens to burn in exchange for aTokens
-    /// @return assets Amount of aTokens sent to the caller
+    /// @inheritdoc IWrappedAToken
     function withdraw(uint256 shares) external override returns (uint256 assets) {
         assets = _withdraw(shares);
         aToken.transfer(msg.sender, assets);
     }
 
-    /// @notice Withdraw given amount of waTokens for underlying tokens
-    /// @param shares Amount of waTokens to burn in exchange for underlying tokens
-    /// @return assets Amount of underlying tokens sent to the caller
+    /// @inheritdoc IWrappedAToken
     function withdrawUnderlying(uint256 shares) external override returns (uint256 assets) {
         assets = _withdraw(shares);
         lendingPool.withdraw(address(underlying), assets, msg.sender);
