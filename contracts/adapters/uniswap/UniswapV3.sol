@@ -11,13 +11,9 @@ import {AbstractAdapter} from "../AbstractAdapter.sol";
 import {AdapterType} from "../../interfaces/IAdapter.sol";
 
 import {ISwapRouter} from "../../integrations/uniswap/IUniswapV3.sol";
-
-using BytesLib for bytes;
-
+import {BytesLib} from "../../integrations/uniswap/BytesLib.sol";
 import {IUniswapV3Adapter} from "../../interfaces/uniswap/IUniswapV3Adapter.sol";
 import {UniswapConnectorChecker} from "./UniswapConnectorChecker.sol";
-
-import "../../integrations/uniswap/BytesLib.sol";
 
 /// @title Uniswap V3 Router adapter interface
 /// @notice Implements logic allowing CAs to perform swaps via Uniswap V3
@@ -33,12 +29,13 @@ contract UniswapV3Adapter is AbstractAdapter, UniswapConnectorChecker, IUniswapV
     /// @dev The offset of a single token address and pool fee
     uint256 private constant NEXT_OFFSET = ADDR_SIZE + FEE_SIZE;
 
-    /// @dev Minimal path length in bytes
+    /// @dev The length of the path with 1 hop
     uint256 private constant PATH_2_LENGTH = 2 * ADDR_SIZE + FEE_SIZE;
 
+    /// @dev The length of the path with 2 hops
     uint256 private constant PATH_3_LENGTH = 3 * ADDR_SIZE + 2 * FEE_SIZE;
 
-    /// @dev Maximal allowed path length in bytes (3 hops)
+    /// @dev The length of the path with 3 hops
     uint256 private constant PATH_4_LENGTH = 4 * ADDR_SIZE + 3 * FEE_SIZE;
 
     AdapterType public constant override _gearboxAdapterType = AdapterType.UNISWAP_V3_ROUTER;
@@ -185,8 +182,7 @@ contract UniswapV3Adapter is AbstractAdapter, UniswapConnectorChecker, IUniswapV
         }
 
         if (len == PATH_4_LENGTH) {
-            valid = isConnector(path.toAddress(NEXT_OFFSET));
-            valid = valid && isConnector(path.toAddress(2 * NEXT_OFFSET));
+            valid = isConnector(path.toAddress(NEXT_OFFSET)) && isConnector(path.toAddress(2 * NEXT_OFFSET));
             return (valid, path.toAddress(0), path.toAddress(3 * NEXT_OFFSET));
         }
     }

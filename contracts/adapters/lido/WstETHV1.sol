@@ -31,8 +31,8 @@ contract WstETHV1Adapter is AbstractAdapter, IwstETHV1Adapter {
     /// @param _wstETH wstETH token address
     constructor(address _creditManager, address _wstETH) AbstractAdapter(_creditManager, _wstETH) {
         stETH = IwstETH(_wstETH).stETH(); // F: [AWSTV1-1]
-        wstETHTokenMask = _checkToken(_wstETH); // F: [AWSTV1-1, AWSTV1-2]
-        stETHTokenMask = _checkToken(stETH); // F: [AWSTV1-1, AWSTV1-2]
+        wstETHTokenMask = _getMaskOrRevert(_wstETH); // F: [AWSTV1-1, AWSTV1-2]
+        stETHTokenMask = _getMaskOrRevert(stETH); // F: [AWSTV1-1, AWSTV1-2]
     }
 
     /// ---- ///

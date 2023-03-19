@@ -51,7 +51,7 @@ contract WrappedAToken is ERC20, IWrappedAToken {
     }
 
     /// @notice waToken decimals, same as underlying and aToken
-    function decimals() public view override (ERC20, IERC20Metadata) returns (uint8) {
+    function decimals() public view override(ERC20, IERC20Metadata) returns (uint8) {
         return aToken.decimals();
     }
 

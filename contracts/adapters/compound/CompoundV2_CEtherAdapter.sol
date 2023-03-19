@@ -36,8 +36,8 @@ contract CompoundV2_CEtherAdapter is CompoundV2_CTokenAdapter {
         cToken = address(CEtherGateway(payable(targetContract)).ceth());
         underlying = address(CEtherGateway(payable(targetContract)).weth());
 
-        cTokenMask = _checkToken(cToken);
-        tokenMask = _checkToken(underlying);
+        cTokenMask = _getMaskOrRevert(cToken);
+        tokenMask = _getMaskOrRevert(underlying);
     }
 
     /// -------------------------------- ///

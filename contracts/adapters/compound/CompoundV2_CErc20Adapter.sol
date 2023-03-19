@@ -31,8 +31,8 @@ contract CompoundV2_CErc20Adapter is CompoundV2_CTokenAdapter {
     constructor(address _creditManager, address _cToken) CompoundV2_CTokenAdapter(_creditManager, _cToken) {
         underlying = ICErc20(targetContract).underlying();
 
-        cTokenMask = _checkToken(targetContract);
-        tokenMask = _checkToken(underlying);
+        cTokenMask = _getMaskOrRevert(targetContract);
+        tokenMask = _getMaskOrRevert(underlying);
     }
 
     /// @inheritdoc ICompoundV2_CTokenAdapter

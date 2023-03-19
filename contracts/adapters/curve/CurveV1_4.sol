@@ -12,7 +12,7 @@ import {CurveV1AdapterBase} from "./CurveV1_Base.sol";
 /// @title Curve V1 4 assets adapter interface
 /// @notice Implements logic allowing to interact with Curve pools with 4 assets
 contract CurveV1Adapter4Assets is CurveV1AdapterBase, ICurveV1_4AssetsAdapter {
-    AdapterType public constant override (CurveV1AdapterBase, IAdapter) _gearboxAdapterType =
+    AdapterType public constant override(CurveV1AdapterBase, IAdapter) _gearboxAdapterType =
         AdapterType.CURVE_V1_4ASSETS;
 
     /// @notice Constructor
