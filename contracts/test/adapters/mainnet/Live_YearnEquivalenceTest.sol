@@ -5,7 +5,7 @@ pragma solidity ^0.8.17;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
-import {ICreditFacade} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacade.sol";
+import {ICreditFacade} from "@gearbox-protocol/core-v2/contracts/interfaces/ICreditFacade.sol";
 import {IYVault} from "../../../integrations/yearn/IYVault.sol";
 import {IYearnV2Adapter} from "../../../interfaces/yearn/IYearnV2Adapter.sol";
 import {YearnV2_Calls, YearnV2_Multicaller} from "../../../multicall/yearn/YearnV2_Calls.sol";
@@ -17,10 +17,10 @@ import {MultiCall} from "@gearbox-protocol/core-v2/contracts/libraries/MultiCall
 import {
     CreditFacadeCalls,
     CreditFacadeMulticaller
-} from "@gearbox-protocol/core-v3/contracts/multicall/CreditFacadeCalls.sol";
+} from "@gearbox-protocol/core-v2/contracts/multicall/CreditFacadeCalls.sol";
 import {AddressList} from "@gearbox-protocol/core-v2/contracts/libraries/AddressList.sol";
 // TEST
-import "@gearbox-protocol/core-v3/contracts/test/lib/constants.sol";
+import "@gearbox-protocol/core-v2/contracts/test/lib/constants.sol";
 
 // SUITES
 import {LiveEnvTestSuite} from "../../suites/LiveEnvTestSuite.sol";
