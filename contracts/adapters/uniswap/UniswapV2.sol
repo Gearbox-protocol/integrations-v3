@@ -125,19 +125,16 @@ contract UniswapV2Adapter is AbstractAdapter, UniswapConnectorChecker, IUniswapV
         tokenOut = path[path.length - 1];
 
         uint256 len = path.length;
+        if (len > 2) {
+            valid = isConnector(path[1]);
+        }
+
+        if (valid && len > 3) {
+            valid = isConnector(path[2]);
+        }
 
         if (len > 4) {
             valid = false;
-        }
-
-        for (uint256 i = 1; i < len - 1;) {
-            if (!isConnector(path[i])) {
-                valid = false;
-            }
-
-            unchecked {
-                ++i;
-            }
         }
     }
 }

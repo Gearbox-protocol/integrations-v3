@@ -467,27 +467,8 @@ contract UniswapV3AdapterTest is DSTest, AdapterTestHelper, IUniswapV3AdapterExc
 
         expectAllowance(Tokens.DAI, creditAccount, address(uniswapMock), 0);
 
-        exactOutputParams.recipient = creditAccount;
-
-        bytes memory expectedCallData = abi.encodeCall(ISwapRouter.exactOutput, (exactOutputParams));
-
-        expectMulticallStackCalls(
-            address(adapter), address(uniswapMock), USER, expectedCallData, tokenIn, tokenOut, true
-        );
-
-        exactOutputParams.recipient = address(0);
+        evm.expectRevert(InvalidPathException.selector);
         executeOneLineMulticall(address(adapter), abi.encodeCall(adapter.exactOutput, (exactOutputParams)));
-
-        expectBalance(Tokens.DAI, creditAccount, initialDAIbalance - ((DAI_EXCHANGE_AMOUNT / 2) * 1000) / 997);
-
-        expectBalance(Tokens.WETH, creditAccount, DAI_EXCHANGE_AMOUNT / DAI_WETH_RATE / 2);
-
-        expectAllowance(Tokens.DAI, creditAccount, address(uniswapMock), 1);
-
-        expectAllowance(Tokens.USDC, creditAccount, address(uniswapMock), 0);
-
-        expectTokenIsEnabled(Tokens.WETH, true);
-        expectTokenIsEnabled(Tokens.USDC, false);
     }
 
     /// @dev [AUV3-9]: Path validity checks are correct
