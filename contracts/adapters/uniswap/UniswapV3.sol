@@ -10,14 +10,18 @@ import {AbstractAdapter} from "@gearbox-protocol/core-v3/contracts/adapters/Abst
 import {RAY} from "@gearbox-protocol/core-v2/contracts/libraries/Constants.sol";
 
 import {ISwapRouter} from "../../integrations/uniswap/IUniswapV3.sol";
-import {Path} from "../../integrations/uniswap/Path.sol";
+
+using BytesLib for bytes;
+
 import {IUniswapV3Adapter} from "../../interfaces/uniswap/IUniswapV3Adapter.sol";
 import {UniswapConnectorChecker} from "./UniswapConnectorChecker.sol";
+
+import "../../integrations/uniswap/BytesLib.sol";
 
 /// @title Uniswap V3 Router adapter interface
 /// @notice Implements logic allowing CAs to perform swaps via Uniswap V3
 contract UniswapV3Adapter is AbstractAdapter, UniswapConnectorChecker, IUniswapV3Adapter {
-    using Path for bytes;
+    using BytesLib for bytes;
 
     /// @dev The length of the bytes encoded address
     uint256 private constant ADDR_SIZE = 20;
@@ -25,11 +29,16 @@ contract UniswapV3Adapter is AbstractAdapter, UniswapConnectorChecker, IUniswapV
     /// @dev The length of the uint24 encoded address
     uint256 private constant FEE_SIZE = 3;
 
+    /// @dev The offset of a single token address and pool fee
+    uint256 private constant NEXT_OFFSET = ADDR_SIZE + FEE_SIZE;
+
     /// @dev Minimal path length in bytes
-    uint256 private constant MIN_PATH_LENGTH = 2 * ADDR_SIZE + FEE_SIZE;
+    uint256 private constant PATH_2_LENGTH = 2 * ADDR_SIZE + FEE_SIZE;
+
+    uint256 private constant PATH_3_LENGTH = 3 * ADDR_SIZE + 2 * FEE_SIZE;
 
     /// @dev Maximal allowed path length in bytes (3 hops)
-    uint256 private constant MAX_PATH_LENGTH = 4 * ADDR_SIZE + 3 * FEE_SIZE;
+    uint256 private constant PATH_4_LENGTH = 4 * ADDR_SIZE + 3 * FEE_SIZE;
 
     AdapterType public constant override _gearboxAdapterType = AdapterType.UNISWAP_V3_ROUTER;
     uint16 public constant override _gearboxAdapterVersion = 3;
@@ -176,24 +185,21 @@ contract UniswapV3Adapter is AbstractAdapter, UniswapConnectorChecker, IUniswapV
     ///      - Path length must be no more than 4 (i.e., at most 3 hops)
     ///      - Each intermediary token must be a registered connector tokens
     function _parseUniV3Path(bytes memory path) internal view returns (bool valid, address tokenIn, address tokenOut) {
-        valid = true;
+        uint256 len = path.length;
 
-        if (path.length < MIN_PATH_LENGTH || path.length > MAX_PATH_LENGTH) {
-            valid = false;
+        if (len == PATH_2_LENGTH) {
+            return (true, path.toAddress(0), path.toAddress(NEXT_OFFSET));
         }
 
-        (tokenIn,,) = path.decodeFirstPool();
-
-        while (path.hasMultiplePools()) {
-            (, address midToken,) = path.decodeFirstPool();
-
-            if (!isConnector(midToken)) {
-                valid = false;
-            }
-
-            path = path.skipToken();
+        if (len == PATH_3_LENGTH) {
+            valid = isConnector(path.toAddress(NEXT_OFFSET));
+            return (valid, path.toAddress(0), path.toAddress(2 * NEXT_OFFSET));
         }
 
-        (, tokenOut,) = path.decodeFirstPool();
+        if (len == PATH_4_LENGTH) {
+            valid = isConnector(path.toAddress(NEXT_OFFSET));
+            valid = valid && isConnector(path.toAddress(2 * NEXT_OFFSET));
+            return (valid, path.toAddress(0), path.toAddress(3 * NEXT_OFFSET));
+        }
     }
 }
