@@ -9,12 +9,12 @@ import {Contracts} from "../config/SupportedContracts.sol";
 import {AdapterData} from "../config/AdapterData.sol";
 import {SupportedContracts} from "../config/SupportedContracts.sol";
 
-import {Adapter} from "@gearbox-protocol/core-v3/contracts/factories/CreditManagerFactoryBase.sol";
+import {Adapter} from "@gearbox-protocol/core-v2/contracts/factories/CreditManagerFactoryBase.sol";
 
-import {AdapterType} from "@gearbox-protocol/core-v3/contracts/interfaces/adapters/IAdapter.sol";
+import {AdapterType} from "@gearbox-protocol/core-v2/contracts/interfaces/adapters/IAdapter.sol";
 
-import "@gearbox-protocol/core-v3/contracts/test/lib/test.sol";
-import {CheatCodes, HEVM_ADDRESS} from "@gearbox-protocol/core-v3/contracts/test/lib/cheatCodes.sol";
+import "@gearbox-protocol/core-v2/contracts/test/lib/test.sol";
+import {CheatCodes, HEVM_ADDRESS} from "@gearbox-protocol/core-v2/contracts/test/lib/cheatCodes.sol";
 
 // SIMPLE ADAPTERS
 import {UniswapV2Adapter} from "../../adapters/uniswap/UniswapV2.sol";
@@ -25,7 +25,7 @@ import {ConvexV1ClaimZapAdapter} from "../../adapters/convex/ConvexV1_ClaimZap.s
 import {LidoV1Adapter} from "../../adapters/lido/LidoV1.sol";
 import {WstETHV1Adapter} from "../../adapters/lido/WstETHV1.sol";
 
-import {UniversalAdapter} from "@gearbox-protocol/core-v3/contracts/adapters/UniversalAdapter.sol";
+import {UniversalAdapter} from "@gearbox-protocol/core-v2/contracts/adapters/UniversalAdapter.sol";
 
 import {CurveV1Adapter2Assets} from "../../adapters/curve/CurveV1_2.sol";
 import {CurveV1Adapter3Assets} from "../../adapters/curve/CurveV1_3.sol";
