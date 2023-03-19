@@ -930,18 +930,6 @@
   resolved "https://registry.yarnpkg.com/@gearbox-protocol/core-v2/-/core-v2-1.12.1.tgz#6cc3c00baaee0dca7b5bc9794fc08982b26b61ba"
   integrity sha512-vRdtSHQDYnN4BRY1x2mWXDYtU9leHDsRZb3eazfMDrB6MDr6OQTXvTUBAoKcn0mtBcpX1vtCryTLSi6v9j6rHw==
 
-"@gearbox-protocol/core-v2@^1.7.2":
-  version "1.7.2"
-  resolved "https://registry.yarnpkg.com/@gearbox-protocol/core-v2/-/core-v2-1.7.2.tgz#a116672ab9d04a8f29bc15f3104bed15f6f853b8"
-  integrity sha512-mxFxHXqROg1tutki3MbBiff5rbZsO/ephzqdeOcVbpEYPTouHD+tYablOFf2dPX2mVQhLbR2Ccj6Yh1IRWUzMw==
-
-"@gearbox-protocol/core-v3@^1.3.3":
-  version "1.3.3"
-  resolved "https://registry.yarnpkg.com/@gearbox-protocol/core-v3/-/core-v3-1.3.3.tgz#89b4dae89862d33c813dcd1df532b764dcf3dc7d"
-  integrity sha512-vbRR+QKBHURej5bTQbgJ3B0cE9X3zZ0izmQk7L5CP/sRBt5t02zOhRQosOXi4KxYNjJnAcFqa3BpVUb049xdOA==
-  dependencies:
-    "@gearbox-protocol/core-v2" "^1.7.2"
-
 "@gearbox-protocol/eslint-config@^1.6.1":
   version "1.6.1"
   resolved "https://registry.yarnpkg.com/@gearbox-protocol/eslint-config/-/eslint-config-1.6.1.tgz#315a5c0b19593e925db32de72c27964adc44d2f8"
