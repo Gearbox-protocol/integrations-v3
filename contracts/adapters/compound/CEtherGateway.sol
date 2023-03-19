@@ -8,13 +8,13 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IWETH} from "@gearbox-protocol/core-v2/contracts/interfaces/external/IWETH.sol";
 import {ZeroAddressException} from "@gearbox-protocol/core-v2/contracts/interfaces/IErrors.sol";
 
-import {CTokenError} from "../../interfaces/compound/ICompoundV2_CTokenAdapter.sol";
+import {ICompoundV2_Exceptions} from "../../interfaces/compound/ICompoundV2_CTokenAdapter.sol";
 import {ICEther} from "../../integrations/compound/ICEther.sol";
 import {ICErc20Actions} from "../../integrations/compound/ICErc20.sol";
 
 /// @title CEther gateway
 /// @notice Wrapper around CEther that uses WETH for all operations instead of ETH
-contract CEtherGateway is ICErc20Actions {
+contract CEtherGateway is ICErc20Actions, ICompoundV2_Exceptions {
     /// @notice WETH token address
     IWETH public immutable weth;
     /// @notice cETH token address

@@ -5,8 +5,8 @@ pragma solidity ^0.8.17;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-import {AbstractAdapter} from "@gearbox-protocol/core-v3/contracts/adapters/AbstractAdapter.sol";
-import {AdapterType} from "@gearbox-protocol/core-v3/contracts/interfaces/adapters/IAdapter.sol";
+import {AbstractAdapter} from "../AbstractAdapter.sol";
+import {AdapterType} from "../../interfaces/IAdapter.sol";
 
 import {IWrappedAToken} from "../../interfaces/aave/IWrappedAToken.sol";
 import {IAaveV2_WrappedATokenAdapter} from "../../interfaces/aave/IAaveV2_WrappedATokenAdapter.sol";
@@ -14,19 +14,19 @@ import {IAaveV2_WrappedATokenAdapter} from "../../interfaces/aave/IAaveV2_Wrappe
 /// @title Aave V2 Wrapped aToken adapter
 /// @notice Implements logic allowing CAs to convert between waTokens, aTokens and underlying tokens
 contract AaveV2_WrappedATokenAdapter is AbstractAdapter, IAaveV2_WrappedATokenAdapter {
-    /// @notice Underlying aToken
+    /// @inheritdoc IAaveV2_WrappedATokenAdapter
     address public immutable override aToken;
 
-    /// @notice Underlying token
+    /// @inheritdoc IAaveV2_WrappedATokenAdapter
     address public immutable override underlying;
 
-    /// @notice Collateral token mask of waToken
+    /// @inheritdoc IAaveV2_WrappedATokenAdapter
     uint256 public immutable override waTokenMask;
 
-    /// @notice Collateral token mask of aToken
+    /// @inheritdoc IAaveV2_WrappedATokenAdapter
     uint256 public immutable override aTokenMask;
 
-    /// @notice Collateral token mask of underlying token
+    /// @inheritdoc IAaveV2_WrappedATokenAdapter
     uint256 public immutable override tokenMask;
 
     AdapterType public constant override _gearboxAdapterType = AdapterType.AAVE_V2_WRAPPED_ATOKEN;
@@ -36,46 +36,35 @@ contract AaveV2_WrappedATokenAdapter is AbstractAdapter, IAaveV2_WrappedATokenAd
     /// @param _creditManager Credit manager address
     /// @param _waToken Wrapped aToken address
     constructor(address _creditManager, address _waToken) AbstractAdapter(_creditManager, _waToken) {
-        waTokenMask = creditManager.tokenMasksMap(targetContract);
-        if (waTokenMask == 0) {
-            revert TokenIsNotInAllowedList(targetContract);
-        }
+        waTokenMask = _checkToken(targetContract);
 
         aToken = address(IWrappedAToken(targetContract).aToken());
-        aTokenMask = creditManager.tokenMasksMap(aToken);
-        if (aTokenMask == 0) {
-            revert TokenIsNotInAllowedList(aToken);
-        }
+        aTokenMask = _checkToken(aToken);
 
         underlying = address(IWrappedAToken(targetContract).underlying());
-        tokenMask = creditManager.tokenMasksMap(underlying);
-        if (tokenMask == 0) {
-            revert TokenIsNotInAllowedList(underlying);
-        }
+        tokenMask = _checkToken(underlying);
     }
 
     /// -------- ///
     /// DEPOSITS ///
     /// -------- ///
 
-    /// @notice Deposit given amount of aTokens
-    /// @param assets Amount of aTokens to deposit in exchange for waTokens
+    /// @inheritdoc IAaveV2_WrappedATokenAdapter
     function deposit(uint256 assets) external override creditFacadeOnly {
         _deposit(assets, false);
     }
 
-    /// @notice Deposit all balance of aTokens
+    /// @inheritdoc IAaveV2_WrappedATokenAdapter
     function depositAll() external override creditFacadeOnly {
         _depositAll(false);
     }
 
-    /// @notice Deposit given amount underlying tokens
-    /// @param assets Amount of underlying tokens to deposit in exchange for waTokens
+    /// @inheritdoc IAaveV2_WrappedATokenAdapter
     function depositUnderlying(uint256 assets) external override creditFacadeOnly {
         _deposit(assets, true);
     }
 
-    /// @notice Deposit all balance of underlying tokens
+    /// @inheritdoc IAaveV2_WrappedATokenAdapter
     function depositAllUnderlying() external override creditFacadeOnly {
         _depositAll(true);
     }
@@ -126,24 +115,22 @@ contract AaveV2_WrappedATokenAdapter is AbstractAdapter, IAaveV2_WrappedATokenAd
     /// WITHDRAWALS ///
     /// ----------- ///
 
-    /// @notice Withdraw given amount of waTokens for aTokens
-    /// @param shares Amount of waTokens to burn in exchange for aTokens
+    /// @inheritdoc IAaveV2_WrappedATokenAdapter
     function withdraw(uint256 shares) external override creditFacadeOnly {
         _withdraw(shares, false);
     }
 
-    /// @notice Withdraw all balance of waTokens for aTokens
+    /// @inheritdoc IAaveV2_WrappedATokenAdapter
     function withdrawAll() external override creditFacadeOnly {
         _withdrawAll(false);
     }
 
-    /// @notice Withdraw given amount of waTokens for underlying tokens
-    /// @param shares Amount of waTokens to burn in exchange for underlying tokens
+    /// @inheritdoc IAaveV2_WrappedATokenAdapter
     function withdrawUnderlying(uint256 shares) external override creditFacadeOnly {
         _withdraw(shares, true);
     }
 
-    /// @notice Withdraw all balance of waTokens for underlying tokens
+    /// @inheritdoc IAaveV2_WrappedATokenAdapter
     function withdrawAllUnderlying() external override creditFacadeOnly {
         _withdrawAll(true);
     }

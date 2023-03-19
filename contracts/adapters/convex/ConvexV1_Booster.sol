@@ -3,12 +3,10 @@
 // (c) Gearbox Holdings, 2023
 pragma solidity ^0.8.17;
 
-import {AbstractAdapter} from "@gearbox-protocol/core-v3/contracts/adapters/AbstractAdapter.sol";
-import {IAdapter, AdapterType} from "@gearbox-protocol/core-v3/contracts/interfaces/adapters/IAdapter.sol";
-import {ACLNonReentrantTrait} from "@gearbox-protocol/core-v3/contracts/core/ACLNonReentrantTrait.sol";
-import {IPoolService} from "@gearbox-protocol/core-v2/contracts/interfaces/IPoolService.sol";
-import {ICreditManagerV2} from "@gearbox-protocol/core-v2/contracts/interfaces/ICreditManagerV2.sol";
 import {ICreditConfigurator} from "@gearbox-protocol/core-v2/contracts/interfaces/ICreditConfigurator.sol";
+
+import {AbstractAdapter} from "../AbstractAdapter.sol";
+import {IAdapter, AdapterType} from "../../interfaces/IAdapter.sol";
 
 import {IBooster} from "../../integrations/convex/IBooster.sol";
 import {IBaseRewardPool} from "../../integrations/convex/IBaseRewardPool.sol";
@@ -17,36 +15,28 @@ import {IConvexV1BaseRewardPoolAdapter} from "../../interfaces/convex/IConvexV1B
 
 /// @title Convex V1 Booster adapter interface
 /// @notice Implements logic allowing CAs to interact with Convex Booster
-contract ConvexV1BoosterAdapter is AbstractAdapter, ACLNonReentrantTrait, IConvexV1BoosterAdapter {
+contract ConvexV1BoosterAdapter is AbstractAdapter, IConvexV1BoosterAdapter {
     AdapterType public constant override _gearboxAdapterType = AdapterType.CONVEX_V1_BOOSTER;
     uint16 public constant override _gearboxAdapterVersion = 2;
 
-    /// @notice Maps pool ID to phantom token representing staked position
+    /// @inheritdoc IConvexV1BoosterAdapter
     mapping(uint256 => address) public override pidToPhantomToken;
 
     /// @notice Constructor
     /// @param _creditManager Credit manager address
     /// @param _booster Booster contract address
-    constructor(address _creditManager, address _booster)
-        ACLNonReentrantTrait(address(IPoolService(ICreditManagerV2(_creditManager).poolService()).addressProvider()))
-        AbstractAdapter(_creditManager, _booster)
-    {}
+    constructor(address _creditManager, address _booster) AbstractAdapter(_creditManager, _booster) {}
 
     /// ------- ///
     /// DEPOSIT ///
     /// ------- ///
 
-    /// @notice Deposits Curve LP tokens into Booster
-    /// @param _pid ID of the pool to deposit to
-    /// @param _stake Whether to stake Convex LP tokens in the rewards pool
-    /// @dev `_amount` parameter is ignored since calldata is passed directly to the target contract
+    /// @inheritdoc IConvexV1BoosterAdapter
     function deposit(uint256 _pid, uint256, bool _stake) external override creditFacadeOnly {
         _deposit(_pid, _stake, msg.data, false);
     }
 
-    /// @notice Deposits the entire balance of Curve LP tokens into Booster, disables Curve LP token
-    /// @param _pid ID of the pool to deposit to
-    /// @param _stake Whether to stake Convex LP tokens in the rewards pool
+    /// @inheritdoc IConvexV1BoosterAdapter
     function depositAll(uint256 _pid, bool _stake) external override creditFacadeOnly {
         _deposit(_pid, _stake, msg.data, true);
     }
@@ -69,16 +59,12 @@ contract ConvexV1BoosterAdapter is AbstractAdapter, ACLNonReentrantTrait, IConve
     /// WITHDRAW ///
     /// -------- ///
 
-    /// @notice Withdraws Curve LP tokens from Booster
-    /// @param _pid ID of the pool to withdraw from
-    /// @dev `_amount` parameter is ignored since calldata is passed directly to the target contract
+    /// @inheritdoc IConvexV1BoosterAdapter
     function withdraw(uint256 _pid, uint256) external override creditFacadeOnly {
         _withdraw(_pid, msg.data, false);
     }
 
-    /// @notice Withdraws all Curve LP tokens from Booster, disables Convex LP token
-    /// @param _pid ID of the pool to withdraw from
-    /// @dev `_amount` parameter is ignored since calldata is passed directly to the target contract
+    /// @inheritdoc IConvexV1BoosterAdapter
     function withdrawAll(uint256 _pid) external override creditFacadeOnly {
         _withdraw(_pid, msg.data, true);
     }
@@ -100,9 +86,10 @@ contract ConvexV1BoosterAdapter is AbstractAdapter, ACLNonReentrantTrait, IConve
     /// CONFIG ///
     /// ------ ///
 
-    /// @notice Updates the mapping of pool IDs to phantom staked token addresses
+    /// @inheritdoc IConvexV1BoosterAdapter
     function updateStakedPhantomTokensMap()
         external
+        override
         configuratorOnly // F: [ACVX1_B-1]
     {
         ICreditConfigurator cc = ICreditConfigurator(creditManager.creditConfigurator());

@@ -5,8 +5,8 @@ pragma solidity ^0.8.17;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-import {AbstractAdapter} from "@gearbox-protocol/core-v3/contracts/adapters/AbstractAdapter.sol";
-import {AdapterType} from "@gearbox-protocol/core-v3/contracts/interfaces/adapters/IAdapter.sol";
+import {AbstractAdapter} from "../AbstractAdapter.sol";
+import {AdapterType} from "../../interfaces/IAdapter.sol";
 
 import {IwstETH} from "../../integrations/lido/IwstETH.sol";
 import {IwstETHV1Adapter} from "../../interfaces/lido/IwstETHV1Adapter.sol";
@@ -14,13 +14,13 @@ import {IwstETHV1Adapter} from "../../interfaces/lido/IwstETHV1Adapter.sol";
 /// @title wstETH adapter
 /// @notice Implements logic for wrapping / unwrapping stETH
 contract WstETHV1Adapter is AbstractAdapter, IwstETHV1Adapter {
-    /// @notice Address of the Lido contract
+    /// @inheritdoc IwstETHV1Adapter
     address public immutable override stETH;
 
-    /// @notice Collateral token mask of stETH in the credit manager
+    /// @inheritdoc IwstETHV1Adapter
     uint256 public immutable override stETHTokenMask;
 
-    /// @notice Collateral token mask of wstETH in the credit manager
+    /// @inheritdoc IwstETHV1Adapter
     uint256 public immutable override wstETHTokenMask;
 
     AdapterType public constant override _gearboxAdapterType = AdapterType.LIDO_WSTETH_V1;
@@ -31,29 +31,20 @@ contract WstETHV1Adapter is AbstractAdapter, IwstETHV1Adapter {
     /// @param _wstETH wstETH token address
     constructor(address _creditManager, address _wstETH) AbstractAdapter(_creditManager, _wstETH) {
         stETH = IwstETH(_wstETH).stETH(); // F: [AWSTV1-1]
-
-        wstETHTokenMask = creditManager.tokenMasksMap(_wstETH); // F: [AWSTV1-1]
-        if (wstETHTokenMask == 0) {
-            revert TokenIsNotInAllowedList(_wstETH); // F: [AWSTV1-2]
-        }
-
-        stETHTokenMask = creditManager.tokenMasksMap(stETH); // F: [AWSTV1-1]
-        if (stETHTokenMask == 0) {
-            revert TokenIsNotInAllowedList(stETH); // F: [AWSTV1-2]
-        }
+        wstETHTokenMask = _checkToken(_wstETH); // F: [AWSTV1-1, AWSTV1-2]
+        stETHTokenMask = _checkToken(stETH); // F: [AWSTV1-1, AWSTV1-2]
     }
 
     /// ---- ///
     /// WRAP ///
     /// ---- ///
 
-    /// @notice Wraps given amount of stETH into wstETH
-    /// @param amount Amount of stETH to wrap
+    /// @inheritdoc IwstETHV1Adapter
     function wrap(uint256 amount) external override creditFacadeOnly {
         _wrap(amount, false); // F: [AWSTV1-5]
     }
 
-    /// @notice Wraps the entire balance of stETH into wstETH, disables stETH
+    /// @inheritdoc IwstETHV1Adapter
     function wrapAll() external override creditFacadeOnly {
         address creditAccount = _creditAccount(); // F: [AWSTV1-3]
 
@@ -80,13 +71,12 @@ contract WstETHV1Adapter is AbstractAdapter, IwstETHV1Adapter {
     /// UNWRAP ///
     /// ------ ///
 
-    /// @notice Unwraps given amount of wstETH into stETH
-    /// @param amount Amount of wstETH to unwrap
+    /// @inheritdoc IwstETHV1Adapter
     function unwrap(uint256 amount) external override creditFacadeOnly {
         _unwrap(amount, false); // F: [AWSTV1-7]
     }
 
-    /// @notice Unwraps the entire balance of wstETH to stETH, disables wstETH
+    /// @inheritdoc IwstETHV1Adapter
     function unwrapAll() external override creditFacadeOnly {
         address creditAccount = _creditAccount(); // F: [AWSTV1-3]
 

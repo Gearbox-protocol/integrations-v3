@@ -5,9 +5,10 @@ pragma solidity ^0.8.17;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-import {AdapterType} from "@gearbox-protocol/core-v3/contracts/interfaces/adapters/IAdapter.sol";
-import {AbstractAdapter} from "@gearbox-protocol/core-v3/contracts/adapters/AbstractAdapter.sol";
 import {RAY} from "@gearbox-protocol/core-v2/contracts/libraries/Constants.sol";
+
+import {AbstractAdapter} from "../AbstractAdapter.sol";
+import {AdapterType} from "../../interfaces/IAdapter.sol";
 
 import {IUniswapV2Router02} from "../../integrations/uniswap/IUniswapV2Router02.sol";
 import {IUniswapV2Adapter} from "../../interfaces/uniswap/IUniswapV2Adapter.sol";
@@ -27,13 +28,7 @@ contract UniswapV2Adapter is AbstractAdapter, UniswapConnectorChecker, IUniswapV
         UniswapConnectorChecker(_connectorTokensInit)
     {}
 
-    /// @notice Swap input token for given amount of output token
-    /// @param amountOut Amount of output token to receive
-    /// @param amountInMax Maximum amount of input token to spend
-    /// @param path Array of token addresses representing swap path, which must have at most 3 hops
-    ///        through registered connector tokens
-    /// @param deadline Maximum timestamp until which the transaction is valid
-    /// @dev Parameter `to` is ignored since swap recipient can only be the credit account
+    /// @inheritdoc IUniswapV2Adapter
     function swapTokensForExactTokens(
         uint256 amountOut,
         uint256 amountInMax,
@@ -59,13 +54,7 @@ contract UniswapV2Adapter is AbstractAdapter, UniswapConnectorChecker, IUniswapV
         ); // F: [AUV2-2]
     }
 
-    /// @notice Swap given amount of input token to output token
-    /// @param amountIn Amount of input token to spend
-    /// @param amountOutMin Minumum amount of output token to receive
-    /// @param path Array of token addresses representing swap path, which must have at most 3 hops
-    ///        through registered connector tokens
-    /// @param deadline Maximum timestamp until which the transaction is valid
-    /// @dev Parameter `to` is ignored since swap recipient can only be the credit account
+    /// @inheritdoc IUniswapV2Adapter
     function swapExactTokensForTokens(
         uint256 amountIn,
         uint256 amountOutMin,
@@ -91,11 +80,7 @@ contract UniswapV2Adapter is AbstractAdapter, UniswapConnectorChecker, IUniswapV
         ); // F: [AUV2-3]
     }
 
-    /// @notice Swap the entire balance of input token to output token, disables input token
-    /// @param rateMinRAY Minimum exchange rate between input and output tokens, scaled by 1e27
-    /// @param path Array of token addresses representing swap path, which must have at most 3 hops
-    ///        through registered connector tokens
-    /// @param deadline Maximum timestamp until which the transaction is valid
+    /// @inheritdoc IUniswapV2Adapter
     function swapAllTokensForTokens(uint256 rateMinRAY, address[] calldata path, uint256 deadline)
         external
         override

@@ -3,7 +3,7 @@
 // (c) Gearbox Holdings, 2023
 pragma solidity ^0.8.17;
 
-import {IAdapter} from "@gearbox-protocol/core-v3/contracts/interfaces/adapters/IAdapter.sol";
+import {IAdapter} from "../IAdapter.sol";
 
 import {
     IAsset,
@@ -29,14 +29,14 @@ struct SingleSwapAll {
 }
 
 interface IBalancerV2VaultAdapterExceptions {
-    /// @dev Thrown when attempting to swap or change liqudity in the pool that is not supported for that action
+    /// @notice Thrown when attempting to swap or change liqudity in the pool that is not supported for that action
     error PoolIDNotSupportedException();
 }
 
 /// @title Balancer V2 Vault adapter interface
 /// @notice Implements logic allowing CAs to swap through and LP in Balancer vaults
 interface IBalancerV2VaultAdapter is IAdapter, IBalancerV2VaultAdapterExceptions {
-    /// @dev Mapping from poolId to status of the pool: whether it is not supported, fully supported or swap-only
+    /// @notice Mapping from poolId to status of the pool: whether it is not supported, fully supported or swap-only
     function poolIdStatus(bytes32 poolId) external view returns (PoolStatus);
 
     /// @notice Swaps a token for another token within a single pool
@@ -51,6 +51,7 @@ interface IBalancerV2VaultAdapter is IAdapter, IBalancerV2VaultAdapterExceptions
     /// @param deadline The latest timestamp at which the swap would be executed
     /// @dev `fundManagement` param from the original interface is ignored, as the adapter does not use internal balances and
     ///       only has one sender/recipient
+    /// @dev The function reverts if the poolId status is not ALLOWED or SWAP_ONLY
     function swap(SingleSwap memory singleSwap, FundManagement memory, uint256 limit, uint256 deadline) external;
 
     /// @notice Swaps the entire balance of a token for another token within a single pool, disables input token
@@ -61,6 +62,7 @@ interface IBalancerV2VaultAdapter is IAdapter, IBalancerV2VaultAdapterExceptions
     ///        * `userData` - additional generic blob used to pass extra data
     /// @param limitRateRAY The minimal resulting exchange rate of assetOut to assetIn, scaled by 1e27
     /// @param deadline The latest timestamp at which the swap would be executed
+    /// @dev The function reverts if the poolId status is not ALLOWED or SWAP_ONLY
     function swapAll(SingleSwapAll memory singleSwapAll, uint256 limitRateRAY, uint256 deadline) external;
 
     /// @notice Performs a multi-hop swap through several Balancer pools
@@ -77,6 +79,7 @@ interface IBalancerV2VaultAdapter is IAdapter, IBalancerV2VaultAdapterExceptions
     /// @param deadline The latest timestamp at which the swap would be executed
     /// @dev `fundManagement` param from the original interface is ignored, as the adapter does not use internal balances and
     ///       only has one sender/recipient
+    /// @dev The function reverts if any of the poolId statuses is not ALLOWED or SWAP_ONLY
     function batchSwap(
         SwapKind kind,
         BatchSwapStep[] memory swaps,
@@ -96,6 +99,7 @@ interface IBalancerV2VaultAdapter is IAdapter, IBalancerV2VaultAdapterExceptions
     ///        * `fromInternalBalance` - whether to use internal balances for assets
     ///          (ignored as the adapter does not use internal balances)
     /// @dev `sender` and `recipient` are ignored, since they are always set to the CA address
+    /// @dev The function reverts if poolId status is not ALLOWED
     function joinPool(bytes32 poolId, address, address, JoinPoolRequest memory request) external;
 
     /// @notice Deposits single asset as liquidity into a Balancer pool
@@ -103,12 +107,14 @@ interface IBalancerV2VaultAdapter is IAdapter, IBalancerV2VaultAdapterExceptions
     /// @param assetIn Asset to deposit
     /// @param amountIn Amount of asset to deposit
     /// @param minAmountOut The minimal amount of BPT to receive
+    /// @dev The function reverts if poolId status is not ALLOWED
     function joinPoolSingleAsset(bytes32 poolId, IAsset assetIn, uint256 amountIn, uint256 minAmountOut) external;
 
     /// @notice Deposits the entire balance of given asset as liquidity into a Balancer pool, disables said asset
     /// @param poolId ID of the pool to deposit into
     /// @param assetIn Asset to deposit
     /// @param minRateRAY The minimal exchange rate of assetIn to BPT, scaled by 1e27
+    /// @dev The function reverts if poolId status is not ALLOWED
     function joinPoolSingleAssetAll(bytes32 poolId, IAsset assetIn, uint256 minRateRAY) external;
 
     /// @notice Withdraws liquidity from a Balancer pool, burning BPT and receiving assets
@@ -135,4 +141,7 @@ interface IBalancerV2VaultAdapter is IAdapter, IBalancerV2VaultAdapterExceptions
     /// @param assetOut Asset to withdraw
     /// @param minRateRAY Minimal exchange rate of BPT to assetOut, scaled by 1e27
     function exitPoolSingleAssetAll(bytes32 poolId, IAsset assetOut, uint256 minRateRAY) external;
+
+    /// @notice Sets the pool ID status: whether the pool ID is not supported, fully supported, or swap-only
+    function setPoolIDStatus(bytes32 poolId, PoolStatus newStatus) external;
 }

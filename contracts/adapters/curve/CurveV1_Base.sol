@@ -6,10 +6,11 @@ pragma solidity ^0.8.17;
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 
-import {IAdapter, AdapterType} from "@gearbox-protocol/core-v3/contracts/interfaces/adapters/IAdapter.sol";
-import {AbstractAdapter} from "@gearbox-protocol/core-v3/contracts/adapters/AbstractAdapter.sol";
 import {ZeroAddressException} from "@gearbox-protocol/core-v2/contracts/interfaces/IErrors.sol";
 import {RAY} from "@gearbox-protocol/core-v2/contracts/libraries/Constants.sol";
+
+import {AbstractAdapter} from "../AbstractAdapter.sol";
+import {AdapterType} from "../../interfaces/IAdapter.sol";
 
 import {ICurvePool} from "../../integrations/curve/ICurvePool.sol";
 import {ICurvePool2Assets} from "../../integrations/curve/ICurvePool_2.sol";
@@ -32,70 +33,58 @@ contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
         return AdapterType.CURVE_V1_EXCHANGE_ONLY;
     }
 
-    /// @notice Pool LP token address (added for backward compatibility)
+    /// @inheritdoc ICurveV1Adapter
     address public immutable override token;
 
-    /// @notice Pool LP token address
+    /// @inheritdoc ICurveV1Adapter
     address public immutable override lp_token;
 
-    /// @notice Collateral token mask of pool LP token in the credit manager
+    /// @inheritdoc ICurveV1Adapter
     uint256 public immutable override lpTokenMask;
 
-    /// @notice Base pool address (for metapools only)
+    /// @inheritdoc ICurveV1Adapter
     address public immutable override metapoolBase;
 
-    /// @notice Number of coins in the pool
+    /// @inheritdoc ICurveV1Adapter
     uint256 public immutable override nCoins;
 
-    /// @notice Whether to use uint256 for token indexes in write functions
+    /// @inheritdoc ICurveV1Adapter
     bool public immutable override use256;
 
-    /// @notice Token in the pool under index 0
+    /// @inheritdoc ICurveV1Adapter
     address public immutable token0;
-
-    /// @notice Token in the pool under index 1
+    /// @inheritdoc ICurveV1Adapter
     address public immutable token1;
-
-    /// @notice Token in the pool under index 2
+    /// @inheritdoc ICurveV1Adapter
     address public immutable token2;
-
-    /// @notice Token in the pool under index 3
+    /// @inheritdoc ICurveV1Adapter
     address public immutable token3;
 
-    /// @notice Collateral token mask of token0 in the credit manager
+    /// @inheritdoc ICurveV1Adapter
     uint256 public immutable override token0Mask;
-
-    /// @notice Collateral token mask of token1 in the credit manager
+    /// @inheritdoc ICurveV1Adapter
     uint256 public immutable override token1Mask;
-
-    /// @notice Collateral token mask of token2 in the credit manager
+    /// @inheritdoc ICurveV1Adapter
     uint256 public immutable override token2Mask;
-
-    /// @notice Collateral token mask of token3 in the credit manager
+    /// @inheritdoc ICurveV1Adapter
     uint256 public immutable override token3Mask;
 
-    /// @notice Underlying in the pool under index 0
+    /// @inheritdoc ICurveV1Adapter
     address public immutable override underlying0;
-
-    /// @notice Underlying in the pool under index 1
+    /// @inheritdoc ICurveV1Adapter
     address public immutable override underlying1;
-
-    /// @notice Underlying in the pool under index 2
+    /// @inheritdoc ICurveV1Adapter
     address public immutable override underlying2;
-
-    /// @notice Underlying in the pool under index 3
+    /// @inheritdoc ICurveV1Adapter
     address public immutable override underlying3;
 
-    /// @notice Collateral token mask of underlying0 in the credit manager
+    /// @inheritdoc ICurveV1Adapter
     uint256 public immutable override underlying0Mask;
-
-    /// @notice Collateral token mask of underlying1 in the credit manager
+    /// @inheritdoc ICurveV1Adapter
     uint256 public immutable override underlying1Mask;
-
-    /// @notice Collateral token mask of underlying2 in the credit manager
+    /// @inheritdoc ICurveV1Adapter
     uint256 public immutable override underlying2Mask;
-
-    /// @notice Collateral token mask of underlying3 in the credit manager
+    /// @inheritdoc ICurveV1Adapter
     uint256 public immutable override underlying3Mask;
 
     /// @notice Constructor
@@ -109,8 +98,7 @@ contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
     {
         if (_lp_token == address(0)) revert ZeroAddressException(); // F: [ACV1-1]
 
-        lpTokenMask = creditManager.tokenMasksMap(_lp_token); // F: [ACV1-2]
-        if (lpTokenMask == 0) revert TokenIsNotInAllowedList(_lp_token);
+        lpTokenMask = _checkToken(_lp_token); // F: [ACV1-2]
 
         token = _lp_token; // F: [ACV1-2]
         lp_token = _lp_token; // F: [ACV1-2]
@@ -144,8 +132,7 @@ contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
             }
 
             if (currentCoin == address(0)) revert ZeroAddressException(); // F: [ACV1-1]
-            uint256 currentMask = creditManager.tokenMasksMap(currentCoin);
-            if (currentMask == 0) revert TokenIsNotInAllowedList(currentCoin);
+            uint256 currentMask = _checkToken(currentCoin);
 
             tokens[i] = currentCoin;
             tokenMasks[i] = currentMask;
@@ -193,8 +180,7 @@ contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
             }
 
             if (currentCoin != address(0)) {
-                currentMask = creditManager.tokenMasksMap(currentCoin);
-                if (currentMask == 0) revert TokenIsNotInAllowedList(currentCoin); // F: [ACV1-1]
+                currentMask = _checkToken(currentCoin); // F: [ACV1-1]
             }
 
             tokens[i] = currentCoin;
@@ -220,23 +206,17 @@ contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
     /// EXCHANGE ///
     /// -------- ///
 
-    /// @notice Exchanges one pool asset to another
-    /// @param i Index of the asset to spend
-    /// @param j Index of the asset to receive
-    /// @dev `dx` and `min_dy` parameters are ignored because calldata is passed directly to the target contract
+    /// @inheritdoc ICurveV1Adapter
     function exchange(int128 i, int128 j, uint256, uint256) public override creditFacadeOnly {
         _exchange(i, j, msg.data, false, false); // F: [ACV1-4]
     }
 
-    /// @notice `exchange` wrapper to support newer pools which accept uint256 for token indices
+    /// @inheritdoc ICurveV1Adapter
     function exchange(uint256 i, uint256 j, uint256 dx, uint256 min_dy) external override creditFacadeOnly {
         exchange(i.toInt256().toInt128(), j.toInt256().toInt128(), dx, min_dy);
     }
 
-    /// @notice Exchanges the entire balance of one pool asset to another, disables input asset
-    /// @param i Index of the asset to spend
-    /// @param j Index of the asset to receive
-    /// @param rateMinRAY Minimum exchange rate between assets i and j, scaled by 1e27
+    /// @inheritdoc ICurveV1Adapter
     function exchange_all(int128 i, int128 j, uint256 rateMinRAY) public override creditFacadeOnly {
         address creditAccount = _creditAccount(); // F: [ACV1-3]
 
@@ -251,28 +231,22 @@ contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
         _exchange(i, j, _getExchangeCallData(i, j, dx, min_dy, false), false, true); // F: [ACV1-5]
     }
 
-    /// @notice `exchange_all` wrapper to support newer pools which accept uint256 for token indices
+    /// @inheritdoc ICurveV1Adapter
     function exchange_all(uint256 i, uint256 j, uint256 rateMinRAY) external override creditFacadeOnly {
         exchange_all(i.toInt256().toInt128(), j.toInt256().toInt128(), rateMinRAY);
     }
 
-    /// @notice Exchanges one pool's underlying asset to another
-    /// @param i Index of the underlying asset to spend
-    /// @param j Index of the underlying asset to receive
-    /// @dev `dx` and `min_dy` parameters are ignored because calldata is passed directly to the target contract
+    /// @inheritdoc ICurveV1Adapter
     function exchange_underlying(int128 i, int128 j, uint256, uint256) public override creditFacadeOnly {
         _exchange(i, j, msg.data, true, false); // F: [ACV1-6]
     }
 
-    /// @notice `exchange_underlying` wrapper to support newer pools which accept uint256 for token indices
+    /// @inheritdoc ICurveV1Adapter
     function exchange_underlying(uint256 i, uint256 j, uint256 dx, uint256 min_dy) external override creditFacadeOnly {
         exchange_underlying(i.toInt256().toInt128(), j.toInt256().toInt128(), dx, min_dy);
     }
 
-    /// @notice Exchanges the entire balance of one pool's underlying asset to another, disables input asset
-    /// @param i Index of the underlying asset to spend
-    /// @param j Index of the underlying asset to receive
-    /// @param rateMinRAY Minimum exchange rate between underlying assets i and j, scaled by 1e27
+    /// @inheritdoc ICurveV1Adapter
     function exchange_all_underlying(int128 i, int128 j, uint256 rateMinRAY) public creditFacadeOnly {
         address creditAccount = _creditAccount(); //F: [ACV1-3]
 
@@ -287,7 +261,7 @@ contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
         _exchange(i, j, _getExchangeCallData(i, j, dx, min_dy, true), true, true); // F: [ACV1-7]
     }
 
-    /// @notice `exchange_all_underlying` wrapper to support newer pools which accept uint256 for token indices
+    /// @inheritdoc ICurveV1Adapter
     function exchange_all_underlying(uint256 i, uint256 j, uint256 rateMinRAY) external creditFacadeOnly {
         exchange_all_underlying(i.toInt256().toInt128(), j.toInt256().toInt128(), rateMinRAY);
     }
@@ -344,22 +318,17 @@ contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
         _changeEnabledTokens(lpTokenMask, 0);
     }
 
-    /// @notice Adds given amount of asset as liquidity to the pool
-    /// @param amount Amount to deposit
-    /// @param i Index of the asset to deposit
-    /// @param minAmount Minimum amount of LP tokens to receive
+    /// @inheritdoc ICurveV1Adapter
     function add_liquidity_one_coin(uint256 amount, int128 i, uint256 minAmount) public override creditFacadeOnly {
         _add_liquidity_one_coin(i, _getAddLiquidityOneCoinCallData(i, amount, minAmount), false); // F: [ACV1-8]
     }
 
-    /// @notice `add_liquidity_one_coin` wrapper to support newer pools which accept uint256 for token indices
+    /// @inheritdoc ICurveV1Adapter
     function add_liquidity_one_coin(uint256 amount, uint256 i, uint256 minAmount) external override creditFacadeOnly {
         add_liquidity_one_coin(amount, i.toInt256().toInt128(), minAmount);
     }
 
-    /// @notice Adds the entire balance of asset as liquidity to the pool, disables this asset
-    /// @param i Index of the asset to deposit
-    /// @param rateMinRAY Minimum exchange rate between deposited asset and LP token, scaled by 1e27
+    /// @inheritdoc ICurveV1Adapter
     function add_all_liquidity_one_coin(int128 i, uint256 rateMinRAY) public override creditFacadeOnly {
         address creditAccount = _creditAccount();
 
@@ -374,7 +343,7 @@ contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
         _add_liquidity_one_coin(i, _getAddLiquidityOneCoinCallData(i, amount, minAmount), true); // F: [ACV1-9]
     }
 
-    /// @notice `add_all_liquidity_one_coin` wrapper to support newer pools which accept uint256 for token indices
+    /// @inheritdoc ICurveV1Adapter
     function add_all_liquidity_one_coin(uint256 i, uint256 rateMinRAY) external override creditFacadeOnly {
         add_all_liquidity_one_coin(i.toInt256().toInt128(), rateMinRAY);
     }
@@ -444,14 +413,12 @@ contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
         _changeEnabledTokens(tokensMask, 0); // F: [ACV1_2-6, ACV1_3-6, ACV1_4-6]
     }
 
-    /// @notice Removes liquidity from the pool in a specified asset
-    /// @param i Index of the asset to withdraw
-    /// @dev `_token_amount` and `min_amount` parameters are ignored because calldata is passed directly to the target contract
+    /// @inheritdoc ICurveV1Adapter
     function remove_liquidity_one_coin(uint256, int128 i, uint256) public virtual override creditFacadeOnly {
         _remove_liquidity_one_coin(i);
     }
 
-    /// @notice `remove_liquidity_one_coin` wrapper to support newer pools which accept uint256 for token indices
+    /// @inheritdoc ICurveV1Adapter
     function remove_liquidity_one_coin(uint256 _token_amount, uint256 i, uint256 minAmount)
         external
         override
@@ -465,14 +432,12 @@ contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
         _remove_liquidity_one_coin_impl(i, msg.data, false); // F: [ACV1-10]
     }
 
-    /// @notice Removes all liquidity from the pool in a specified asset
-    /// @param i Index of the asset to withdraw
-    /// @param rateMinRAY Minimum exchange rate between LP token and received token
+    /// @inheritdoc ICurveV1Adapter
     function remove_all_liquidity_one_coin(int128 i, uint256 rateMinRAY) public virtual override creditFacadeOnly {
         _remove_all_liquidity_one_coin(i, rateMinRAY);
     }
 
-    /// @notice `remove_all_liquidity_one_coin` wrapper to support newer pools which accept uint256 for token indices
+    /// @inheritdoc ICurveV1Adapter
     function remove_all_liquidity_one_coin(uint256 i, uint256 rateMinRAY) external override creditFacadeOnly {
         remove_all_liquidity_one_coin(i.toInt256().toInt128(), rateMinRAY);
     }
@@ -562,9 +527,7 @@ contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
         if (t3Approve) _approveToken(token3, amount); // F: [ACV1_4-4]
     }
 
-    /// @notice Returns the amount of LP token received for adding a single asset to the pool
-    /// @param amount Amount to deposit
-    /// @param i Index of the asset to deposit
+    /// @inheritdoc ICurveV1Adapter
     function calc_add_one_coin(uint256 amount, int128 i) public view returns (uint256) {
         if (nCoins == 2) {
             return i == 0
@@ -589,7 +552,7 @@ contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
         }
     }
 
-    /// @notice `calc_add_one_coin` wrapper to support newer pools which accept uint256 for token indices
+    /// @inheritdoc ICurveV1Adapter
     function calc_add_one_coin(uint256 amount, uint256 i) external view returns (uint256) {
         return calc_add_one_coin(amount, i.toInt256().toInt128());
     }

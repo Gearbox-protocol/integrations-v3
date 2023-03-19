@@ -5,8 +5,9 @@ pragma solidity ^0.8.17;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-import {IAdapter, AdapterType} from "@gearbox-protocol/core-v3/contracts/interfaces/adapters/IAdapter.sol";
 import {RAY} from "@gearbox-protocol/core-v2/contracts/libraries/Constants.sol";
+
+import {AdapterType} from "../../interfaces/IAdapter.sol";
 
 import {CurveV1AdapterBase} from "./CurveV1_Base.sol";
 
@@ -31,8 +32,7 @@ contract CurveV1AdapterDeposit is CurveV1AdapterBase {
         CurveV1AdapterBase(_creditManager, _curveDeposit, _lp_token, address(0), _nCoins)
     {}
 
-    /// @notice Removes liquidity from the pool in a single asset using deposit zap contract
-    /// @param i Index of the token to withdraw from the pool
+    /// @inheritdoc CurveV1AdapterBase
     /// @dev Unlike other adapters, approves the LP token to the target
     function remove_liquidity_one_coin(uint256, int128 i, uint256)
         public
@@ -44,9 +44,7 @@ contract CurveV1AdapterDeposit is CurveV1AdapterBase {
         _remove_liquidity_one_coin(i);
     }
 
-    /// @notice Removes all liquidity from the pool in a single asset using deposit zap contract
-    /// @param i Index of the token to withdraw from the pool
-    /// @param rateMinRAY Minimum exchange rate between LP token and received asset, scaled by 1e27
+    /// @inheritdoc CurveV1AdapterBase
     /// @dev Unlike other adapters, approves the LP token to the target
     function remove_all_liquidity_one_coin(int128 i, uint256 rateMinRAY)
         public

@@ -5,24 +5,25 @@ pragma solidity ^0.8.17;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-import {AdapterType} from "@gearbox-protocol/core-v3/contracts/interfaces/adapters/IAdapter.sol";
+import {AdapterType} from "../../interfaces/IAdapter.sol";
 
 import {CEtherGateway} from "./CEtherGateway.sol";
 import {CompoundV2_CTokenAdapter} from "./CompoundV2_CTokenAdapter.sol";
 import {ICEther} from "../../integrations/compound/ICEther.sol";
+import {ICompoundV2_CTokenAdapter} from "../../interfaces/compound/ICompoundV2_CTokenAdapter.sol";
 
 /// @title Compound V2 CEther adapter
 contract CompoundV2_CEtherAdapter is CompoundV2_CTokenAdapter {
-    /// @notice cToken that this adapter is connected to
+    /// @inheritdoc ICompoundV2_CTokenAdapter
     address public immutable override cToken;
 
-    /// @notice cToken's underlying token
+    /// @inheritdoc ICompoundV2_CTokenAdapter
     address public immutable override underlying;
 
-    /// @notice Collateral token mask of underlying token in the credit manager
+    /// @inheritdoc ICompoundV2_CTokenAdapter
     uint256 public immutable override tokenMask;
 
-    /// @notice Collateral token mask of cToken in the credit manager
+    /// @inheritdoc ICompoundV2_CTokenAdapter
     uint256 public immutable override cTokenMask;
 
     AdapterType public constant override _gearboxAdapterType = AdapterType.COMPOUND_V2_CETHER;
@@ -35,15 +36,8 @@ contract CompoundV2_CEtherAdapter is CompoundV2_CTokenAdapter {
         cToken = address(CEtherGateway(payable(targetContract)).ceth());
         underlying = address(CEtherGateway(payable(targetContract)).weth());
 
-        cTokenMask = creditManager.tokenMasksMap(cToken);
-        if (cTokenMask == 0) {
-            revert TokenIsNotInAllowedList(cToken);
-        }
-
-        tokenMask = creditManager.tokenMasksMap(underlying);
-        if (tokenMask == 0) {
-            revert TokenIsNotInAllowedList(underlying);
-        }
+        cTokenMask = _checkToken(cToken);
+        tokenMask = _checkToken(underlying);
     }
 
     /// -------------------------------- ///

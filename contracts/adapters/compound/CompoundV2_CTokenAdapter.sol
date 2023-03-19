@@ -3,10 +3,10 @@
 // (c) Gearbox Holdings, 2023
 pragma solidity ^0.8.17;
 
-import {AbstractAdapter} from "@gearbox-protocol/core-v3/contracts/adapters/AbstractAdapter.sol";
+import {AbstractAdapter} from "../AbstractAdapter.sol";
 
 import {ICErc20Actions} from "../../integrations/compound/ICErc20.sol";
-import {ICompoundV2_CTokenAdapter, CTokenError} from "../../interfaces/compound/ICompoundV2_CTokenAdapter.sol";
+import {ICompoundV2_CTokenAdapter} from "../../interfaces/compound/ICompoundV2_CTokenAdapter.sol";
 
 /// @title Compound V2 cToken adapter
 /// @notice Implements logic allowing CAs to interact with Compound's cTokens
@@ -26,13 +26,12 @@ abstract contract CompoundV2_CTokenAdapter is AbstractAdapter, ICompoundV2_CToke
     /// MINTING ///
     /// ------- ///
 
-    /// @notice Deposit given amount of underlying tokens into Compound in exchange for cTokens
-    /// @param mintAmount Amount of underlying tokens to deposit
+    /// @inheritdoc ICompoundV2_CTokenAdapter
     function mint(uint256 mintAmount) external override creditFacadeOnly {
         _revertOnError(_mint(mintAmount));
     }
 
-    /// @notice Deposit all underlying tokens into Compound in exchange for cTokens, disables underlying
+    /// @inheritdoc ICompoundV2_CTokenAdapter
     function mintAll() external override creditFacadeOnly {
         _revertOnError(_mintAll());
     }
@@ -56,13 +55,12 @@ abstract contract CompoundV2_CTokenAdapter is AbstractAdapter, ICompoundV2_CToke
     /// REDEEMING ///
     /// --------- ///
 
-    /// @notice Burn given amount of cTokens to withdraw underlying from Compound
-    /// @param amount Amount of cTokens to burn
+    /// @inheritdoc ICompoundV2_CTokenAdapter
     function redeem(uint256 amount) external override creditFacadeOnly {
         _revertOnError(_redeem(amount));
     }
 
-    /// @notice Burn all balance of CTokens to Compound to withdraw all underlying, disables CToken
+    /// @inheritdoc ICompoundV2_CTokenAdapter
     function redeemAll() external override creditFacadeOnly {
         _revertOnError(_redeemAll());
     }
@@ -86,8 +84,7 @@ abstract contract CompoundV2_CTokenAdapter is AbstractAdapter, ICompoundV2_CToke
     /// REDEEMING UNDERLYING ///
     /// -------------------- ///
 
-    /// @notice Burn cTokens to withdraw given amount of underlying from Compound
-    /// @param amount Amount of underlying to withdraw
+    /// @inheritdoc ICompoundV2_CTokenAdapter
     function redeemUnderlying(uint256 amount) external override creditFacadeOnly {
         _revertOnError(_redeemUnderlying(amount));
     }

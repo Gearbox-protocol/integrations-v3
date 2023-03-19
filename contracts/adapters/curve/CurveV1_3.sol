@@ -3,7 +3,7 @@
 // (c) Gearbox Holdings, 2023
 pragma solidity ^0.8.17;
 
-import {IAdapter, AdapterType} from "@gearbox-protocol/core-v3/contracts/interfaces/adapters/IAdapter.sol";
+import {IAdapter, AdapterType} from "../../interfaces/IAdapter.sol";
 
 import {N_COINS} from "../../integrations/curve/ICurvePool_3.sol";
 import {ICurveV1_3AssetsAdapter} from "../../interfaces/curve/ICurveV1_3AssetsAdapter.sol";
@@ -24,22 +24,17 @@ contract CurveV1Adapter3Assets is CurveV1AdapterBase, ICurveV1_3AssetsAdapter {
         CurveV1AdapterBase(_creditManager, _curvePool, _lp_token, _metapoolBase, N_COINS)
     {}
 
-    /// @notice Add liquidity to the pool
-    /// @param amounts Amounts of tokens to add
-    /// @dev `min_mint_amount` parameter is ignored because calldata is passed directly to the target contract
+    /// @inheritdoc ICurveV1_3AssetsAdapter
     function add_liquidity(uint256[N_COINS] calldata amounts, uint256) external creditFacadeOnly {
         _add_liquidity(amounts[0] > 1, amounts[1] > 1, amounts[2] > 1, false); // F: [ACV1_3-4]
     }
 
-    /// @notice Remove liquidity from the pool
-    /// @dev '_amount' and 'min_amounts' parameters are ignored because calldata is directly passed to the target contract
+    /// @inheritdoc ICurveV1_3AssetsAdapter
     function remove_liquidity(uint256, uint256[N_COINS] calldata) external virtual creditFacadeOnly {
         _remove_liquidity(); // F: [ACV1_3-5]
     }
 
-    /// @notice Withdraw exact amounts of tokens from the pool
-    /// @param amounts Amounts of tokens to withdraw
-    /// @dev `max_burn_amount` parameter is ignored because calldata is directly passed to the target contract
+    /// @inheritdoc ICurveV1_3AssetsAdapter
     function remove_liquidity_imbalance(uint256[N_COINS] calldata amounts, uint256)
         external
         virtual

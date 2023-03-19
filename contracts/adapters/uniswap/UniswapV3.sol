@@ -5,9 +5,10 @@ pragma solidity ^0.8.17;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-import {AdapterType} from "@gearbox-protocol/core-v3/contracts/interfaces/adapters/IAdapter.sol";
-import {AbstractAdapter} from "@gearbox-protocol/core-v3/contracts/adapters/AbstractAdapter.sol";
 import {RAY} from "@gearbox-protocol/core-v2/contracts/libraries/Constants.sol";
+
+import {AbstractAdapter} from "../AbstractAdapter.sol";
+import {AdapterType} from "../../interfaces/IAdapter.sol";
 
 import {ISwapRouter} from "../../integrations/uniswap/IUniswapV3.sol";
 import {Path} from "../../integrations/uniswap/Path.sol";
@@ -42,9 +43,7 @@ contract UniswapV3Adapter is AbstractAdapter, UniswapConnectorChecker, IUniswapV
         UniswapConnectorChecker(_connectorTokensInit)
     {}
 
-    /// @notice Swaps given amount of input token for output token through a single pool
-    /// @param params Swap params, see `ISwapRouter.ExactInputSingleParams` for details
-    /// @dev `params.recipient` is ignored since it can only be the credit account
+    /// @inheritdoc IUniswapV3Adapter
     function exactInputSingle(ISwapRouter.ExactInputSingleParams calldata params) external override creditFacadeOnly {
         address creditAccount = _creditAccount(); // F: [AUV3-1]
 
@@ -57,8 +56,7 @@ contract UniswapV3Adapter is AbstractAdapter, UniswapConnectorChecker, IUniswapV
         ); // F: [AUV3-2]
     }
 
-    /// @notice Swaps all balance of input token for output token through a single pool, disables input token
-    /// @param params Swap params, see `ExactAllInputSingleParams` for details
+    /// @inheritdoc IUniswapV3Adapter
     function exactAllInputSingle(ExactAllInputSingleParams calldata params) external override creditFacadeOnly {
         address creditAccount = _creditAccount(); // F: [AUV3-1]
 
@@ -86,10 +84,7 @@ contract UniswapV3Adapter is AbstractAdapter, UniswapConnectorChecker, IUniswapV
         ); // F: [AUV3-3]
     }
 
-    /// @notice Swaps given amount of input token for output token through multiple pools
-    /// @param params Swap params, see `ISwapRouter.ExactInputParams` for details
-    /// @dev `params.recipient` is ignored since it can only be the credit account
-    /// @dev `params.path` must have at most 3 hops through registered connector tokens
+    /// @inheritdoc IUniswapV3Adapter
     function exactInput(ISwapRouter.ExactInputParams calldata params) external override creditFacadeOnly {
         address creditAccount = _creditAccount(); // F: [AUV3-1]
 
@@ -105,9 +100,7 @@ contract UniswapV3Adapter is AbstractAdapter, UniswapConnectorChecker, IUniswapV
         _executeSwapSafeApprove(tokenIn, tokenOut, abi.encodeCall(ISwapRouter.exactInput, (paramsUpdate)), false); // F: [AUV3-4]
     }
 
-    /// @notice Swaps all balance of input token for output token through multiple pools, disables input token
-    /// @param params Swap params, see `ExactAllInputParams` for details
-    /// @dev `params.path` must have at most 3 hops through registered connector tokens
+    /// @inheritdoc IUniswapV3Adapter
     function exactAllInput(ExactAllInputParams calldata params) external override creditFacadeOnly {
         address creditAccount = _creditAccount(); // F: [AUV3-1]
 
@@ -134,9 +127,7 @@ contract UniswapV3Adapter is AbstractAdapter, UniswapConnectorChecker, IUniswapV
         _executeSwapSafeApprove(tokenIn, tokenOut, abi.encodeCall(ISwapRouter.exactInput, (paramsUpdate)), true); // F: [AUV3-5]
     }
 
-    /// @notice Swaps input token for given amount of output token through a single pool
-    /// @param params Swap params, see `ISwapRouter.ExactOutputSingleParams` for details
-    /// @dev `params.recipient` is ignored since it can only be the credit account
+    /// @inheritdoc IUniswapV3Adapter
     function exactOutputSingle(ISwapRouter.ExactOutputSingleParams calldata params)
         external
         override
@@ -153,10 +144,7 @@ contract UniswapV3Adapter is AbstractAdapter, UniswapConnectorChecker, IUniswapV
         ); // F: [AUV3-6]
     }
 
-    /// @notice Swaps input token for given amount of output token through multiple pools
-    /// @param params Swap params, see `ISwapRouter.ExactOutputParams` for details
-    /// @dev `params.recipient` is ignored since it can only be the credit account
-    /// @dev `params.path` must have at most 3 hops through registered connector tokens
+    /// @inheritdoc IUniswapV3Adapter
     function exactOutput(ISwapRouter.ExactOutputParams calldata params) external override creditFacadeOnly {
         address creditAccount = _creditAccount(); // F: [AUV3-1]
 
