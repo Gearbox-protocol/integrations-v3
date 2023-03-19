@@ -925,22 +925,10 @@
     "@ethersproject/properties" "^5.7.0"
     "@ethersproject/strings" "^5.7.0"
 
-"@gearbox-protocol/core-v2@^1.11.0":
-  version "1.11.0"
-  resolved "https://registry.yarnpkg.com/@gearbox-protocol/core-v2/-/core-v2-1.11.0.tgz#e30caf25cdffbb33609855fc75c7517915b3dae0"
-  integrity sha512-bSqrW74yTqNdXEKTI3zl0q30aOgJJ8KDEz5WnnNCfPvDTiGWbwDHsfOTFhVylhkPnQ+j4Voq2l/aMj4iXdWttA==
-
-"@gearbox-protocol/core-v2@^1.7.2":
-  version "1.7.2"
-  resolved "https://registry.yarnpkg.com/@gearbox-protocol/core-v2/-/core-v2-1.7.2.tgz#a116672ab9d04a8f29bc15f3104bed15f6f853b8"
-  integrity sha512-mxFxHXqROg1tutki3MbBiff5rbZsO/ephzqdeOcVbpEYPTouHD+tYablOFf2dPX2mVQhLbR2Ccj6Yh1IRWUzMw==
-
-"@gearbox-protocol/core-v3@^1.3.2":
-  version "1.3.2"
-  resolved "https://registry.yarnpkg.com/@gearbox-protocol/core-v3/-/core-v3-1.3.2.tgz#20e6ecd8bc024fcdd46ce34643900537d950b8aa"
-  integrity sha512-UXvglw0u3skij8+1F8HfJMO2Mm9Lfcw6xT3j09S+LVfVDhB06qoOTH1j+pFbWRENJhJzD14uFdYLaDMxlK+fnw==
-  dependencies:
-    "@gearbox-protocol/core-v2" "^1.7.2"
+"@gearbox-protocol/core-v2@^1.12.0":
+  version "1.12.0"
+  resolved "https://registry.yarnpkg.com/@gearbox-protocol/core-v2/-/core-v2-1.12.0.tgz#d9c8683aa83280332a54dce848855c80efd75984"
+  integrity sha512-rgb4/Gil+snv5SbkW2IBOP4Tyy1D4lJSsbQG6L1LhAjyGvikh5gj2lnaz/R8ROIP9gI1Vi4v5yVRBOuc+JOKOQ==
 
 "@gearbox-protocol/eslint-config@^1.6.1":
   version "1.6.1"
