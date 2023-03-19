@@ -16,17 +16,17 @@ import {ContractsRegister} from "@gearbox-protocol/core-v2/contracts/core/Contra
 import {PriceOracle} from "@gearbox-protocol/core-v2/contracts/oracles/PriceOracle.sol";
 import {IPoolService} from "@gearbox-protocol/core-v2/contracts/interfaces/IPoolService.sol";
 
-import {CreditFacade} from "@gearbox-protocol/core-v3/contracts/credit/CreditFacade.sol";
-import {CreditConfigurator} from "@gearbox-protocol/core-v3/contracts/credit/CreditConfigurator.sol";
-import {CreditManager} from "@gearbox-protocol/core-v3/contracts/credit/CreditManager.sol";
+import {CreditFacade} from "@gearbox-protocol/core-v2/contracts/credit/CreditFacade.sol";
+import {CreditConfigurator} from "@gearbox-protocol/core-v2/contracts/credit/CreditConfigurator.sol";
+import {CreditManager} from "@gearbox-protocol/core-v2/contracts/credit/CreditManager.sol";
 import {CreditManagerLiveMock} from "../mocks/credit/CreditManagerLiveMock.sol";
 import {Balance} from "@gearbox-protocol/core-v2/contracts/libraries/Balances.sol";
-import {IAdapter, AdapterType} from "@gearbox-protocol/core-v3/contracts/interfaces/adapters/IAdapter.sol";
+import {IAdapter, AdapterType} from "@gearbox-protocol/core-v2/contracts/interfaces/adapters/IAdapter.sol";
 import {IConvexV1BoosterAdapter} from "../../interfaces/convex/IConvexV1BoosterAdapter.sol";
 
 import {CreditManagerFactory} from "../../factories/CreditManagerFactory.sol";
 import {CreditManagerMockFactory} from "../mocks/credit/CreditManagerMockFactory.sol";
-import {CreditManagerOpts, CollateralToken} from "@gearbox-protocol/core-v3/contracts/credit/CreditConfigurator.sol";
+import {CreditManagerOpts, CollateralToken} from "@gearbox-protocol/core-v2/contracts/credit/CreditConfigurator.sol";
 import {WstETHPoolSetup} from "./WstETHPoolSetup.sol";
 
 import {DegenNFT} from "@gearbox-protocol/core-v2/contracts/tokens/DegenNFT.sol";

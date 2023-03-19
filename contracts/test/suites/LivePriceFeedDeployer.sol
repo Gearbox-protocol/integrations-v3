@@ -7,7 +7,7 @@ import {Tokens} from "../config/Tokens.sol";
 
 import {PriceFeedDataLive} from "../config/PriceFeedDataLive.sol";
 import {PriceFeedConfig} from "@gearbox-protocol/core-v2/contracts/oracles/PriceOracle.sol";
-import {ZeroPriceFeed} from "@gearbox-protocol/core-v3/contracts/oracles/ZeroPriceFeed.sol";
+import {ZeroPriceFeed} from "@gearbox-protocol/core-v2/contracts/oracles/ZeroPriceFeed.sol";
 import {YearnPriceFeed} from "../../oracles/yearn/YearnPriceFeed.sol";
 import {WstETHPriceFeed} from "../../oracles/lido/WstETHPriceFeed.sol";
 import {CurveV1StETHPoolGateway} from "../../adapters/curve/CurveV1_stETHGateway.sol";
@@ -21,7 +21,7 @@ import {CurveLP4PriceFeed} from "../../oracles/curve/CurveLP4PriceFeed.sol";
 import {IYVault} from "../../integrations/yearn/IYVault.sol";
 import {IwstETH} from "../../integrations/lido/IwstETH.sol";
 
-import {CheatCodes, HEVM_ADDRESS} from "@gearbox-protocol/core-v3/contracts/test/lib/cheatCodes.sol";
+import {CheatCodes, HEVM_ADDRESS} from "@gearbox-protocol/core-v2/contracts/test/lib/cheatCodes.sol";
 
 import {TokensTestSuite} from "./TokensTestSuite.sol";
 
