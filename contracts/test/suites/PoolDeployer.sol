@@ -8,8 +8,6 @@ import {LinearInterestRateModel} from "@gearbox-protocol/core-v3/contracts/pool/
 import {Pool4626} from "@gearbox-protocol/core-v3/contracts/pool/Pool4626.sol";
 import {PoolQuotaKeeper} from "@gearbox-protocol/core-v3/contracts/pool/PoolQuotaKeeper.sol";
 import {Gauge} from "@gearbox-protocol/core-v3/contracts/pool/Gauge.sol";
-import {ContractsRegister} from "@gearbox-protocol/core-v2/contracts/core/ContractsRegister.sol";
-import {AddressProvider} from "@gearbox-protocol/core-v2/contracts/core/AddressProvider.sol";
 
 import {Pool4626Opts} from "@gearbox-protocol/core-v3/contracts/interfaces/IPool4626.sol";
 import {GaugeOpts} from "@gearbox-protocol/core-v3/contracts/interfaces/IGauge.sol";
@@ -24,7 +22,7 @@ import {TokensTestSuite} from "./TokensTestSuite.sol";
 contract LivePoolDeployer is PoolConfigLive {
     CheatCodes evm = CheatCodes(HEVM_ADDRESS);
     GearStaking public gearStaking;
-    Pool4626[] internal _pools;
+    Pool4626[] public pools;
 
     constructor(address addressProvider, TokensTestSuite tokenTestSuite, address ROOT_ADDRESS) PoolConfigLive() {
         gearStaking = new GearStaking(
@@ -55,12 +53,7 @@ contract LivePoolDeployer is PoolConfigLive {
 
             Pool4626 pool = new Pool4626(poolOpts);
 
-            _pools.push(pool);
-
-            ContractsRegister cr = ContractsRegister(AddressProvider(addressProvider).getContractsRegister());
-
-            evm.prank(ROOT_ADDRESS);
-            cr.addPool(address(pool));
+            pools.push(pool);
 
             PoolQuotaKeeper pqk = new PoolQuotaKeeper(
                 address(pool)
@@ -69,7 +62,8 @@ contract LivePoolDeployer is PoolConfigLive {
             evm.prank(ROOT_ADDRESS);
             pool.connectPoolQuotaManager(address(pqk));
 
-            GaugeOpts memory gaugeOpts = GaugeOpts({pool: address(pool), gearStaking: address(gearStaking)});
+            GaugeOpts memory gaugeOpts =
+                GaugeOpts({addressProvider: addressProvider, pool: address(pool), gearStaking: address(gearStaking)});
 
             Gauge gauge = new Gauge(gaugeOpts);
 
@@ -86,9 +80,5 @@ contract LivePoolDeployer is PoolConfigLive {
                 evm.stopPrank();
             }
         }
-    }
-
-    function pools() external view returns (Pool4626[] memory) {
-        return _pools;
     }
 }
