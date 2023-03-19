@@ -12,7 +12,7 @@ import {ICRVToken} from "../../../integrations/curve/ICRVToken.sol";
 import {ERC20Mock} from "@gearbox-protocol/core-v2/contracts/test/mocks/token/ERC20Mock.sol";
 
 // EXCEPTIONS
-import {NotImplementedException} from "@gearbox-protocol/core-v3/contracts/interfaces/IErrors.sol";
+import {NotImplementedException} from "@gearbox-protocol/core-v2/contracts/interfaces/IErrors.sol";
 
 contract CurveV1StETHMock is ICurvePoolStETH {
     using SafeERC20 for IERC20;
