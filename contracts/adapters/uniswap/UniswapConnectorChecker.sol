@@ -54,21 +54,15 @@ abstract contract UniswapConnectorChecker is IUniswapConnectorChecker {
 
         connectors = new address[](len);
 
-        for (uint256 i = 0; i < len;) {
-            if (i == 0) connectors[0] = connectorToken0;
-            if (i == 1) connectors[1] = connectorToken1;
-            if (i == 2) connectors[2] = connectorToken2;
-            if (i == 3) connectors[3] = connectorToken3;
-            if (i == 4) connectors[4] = connectorToken4;
-            if (i == 5) connectors[5] = connectorToken5;
-            if (i == 6) connectors[6] = connectorToken6;
-            if (i == 7) connectors[7] = connectorToken7;
-            if (i == 8) connectors[8] = connectorToken8;
-            if (i == 9) connectors[9] = connectorToken9;
-
-            unchecked {
-                ++i;
-            }
-        }
+        if (len > 0) connectors[0] = connectorToken0;
+        if (len > 1) connectors[1] = connectorToken1;
+        if (len > 2) connectors[2] = connectorToken2;
+        if (len > 3) connectors[3] = connectorToken3;
+        if (len > 4) connectors[4] = connectorToken4;
+        if (len > 5) connectors[5] = connectorToken5;
+        if (len > 6) connectors[6] = connectorToken6;
+        if (len > 7) connectors[7] = connectorToken7;
+        if (len > 8) connectors[8] = connectorToken8;
+        if (len > 9) connectors[9] = connectorToken9;
     }
 }
