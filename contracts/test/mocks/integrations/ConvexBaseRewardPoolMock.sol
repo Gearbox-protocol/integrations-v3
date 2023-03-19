@@ -8,8 +8,8 @@ import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {ERC20Mock} from "@gearbox-protocol/core-v2/contracts/test/mocks/token/ERC20Mock.sol";
-import {CheatCodes, HEVM_ADDRESS} from "@gearbox-protocol/core-v3/contracts/test/lib/cheatCodes.sol";
-import {MathUtil} from "@gearbox-protocol/core-v3/contracts/test/lib/MathUtil.sol";
+import {CheatCodes, HEVM_ADDRESS} from "@gearbox-protocol/core-v2/contracts/test/lib/cheatCodes.sol";
+import {MathUtil} from "@gearbox-protocol/core-v2/contracts/test/lib/MathUtil.sol";
 
 contract BaseRewardPoolMock {
     CheatCodes evm = CheatCodes(HEVM_ADDRESS);

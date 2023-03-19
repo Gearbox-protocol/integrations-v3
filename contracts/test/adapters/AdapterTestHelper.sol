@@ -6,9 +6,9 @@ pragma solidity ^0.8.17;
 import {
     ICreditManagerV2,
     ICreditManagerV2Events
-} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditManagerV2.sol";
-import {ICreditFacadeEvents} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacade.sol";
-import {IAdapterExceptions} from "@gearbox-protocol/core-v3/contracts/interfaces/adapters/IAdapter.sol";
+} from "@gearbox-protocol/core-v2/contracts/interfaces/ICreditManagerV2.sol";
+import {ICreditFacadeEvents} from "@gearbox-protocol/core-v2/contracts/interfaces/ICreditFacade.sol";
+import {IAdapterExceptions} from "@gearbox-protocol/core-v2/contracts/interfaces/adapters/IAdapter.sol";
 
 // TEST
 import "../lib/constants.sol";
@@ -17,7 +17,7 @@ import "../lib/constants.sol";
 import {TokensTestSuite} from "../suites/TokensTestSuite.sol";
 import {Tokens} from "../config/Tokens.sol";
 
-import {CreditFacadeTestSuite} from "@gearbox-protocol/core-v3/contracts/test/suites/CreditFacadeTestSuite.sol";
+import {CreditFacadeTestSuite} from "@gearbox-protocol/core-v2/contracts/test/suites/CreditFacadeTestSuite.sol";
 
 import {BalanceHelper} from "../helpers/BalanceHelper.sol";
 import {CreditFacadeTestHelper} from "../helpers/CreditFacadeTestHelper.sol";
@@ -72,21 +72,27 @@ contract AdapterTestHelper is
         if (allowTokenIn) {
             evm.expectCall(
                 address(creditManager),
-                abi.encodeCall(ICreditManagerV2.approveCreditAccount, (targetContract, tokenIn, type(uint256).max))
+                abi.encodeCall(
+                    ICreditManagerV2.approveCreditAccount,
+                    (address(creditFacade), targetContract, tokenIn, type(uint256).max)
+                )
             );
         }
 
         evm.expectCall(
-            address(creditManager), abi.encodeCall(ICreditManagerV2.executeOrder, (targetContract, callData))
+            address(creditManager),
+            abi.encodeCall(ICreditManagerV2.executeOrder, (address(creditFacade), targetContract, callData))
         );
 
-        evm.expectEmit(true, false, false, false);
-        emit ExecuteOrder(targetContract);
+        evm.expectEmit(true, true, false, false);
+        emit ExecuteOrder(address(creditFacade), targetContract);
 
         if (allowTokenIn) {
             evm.expectCall(
                 address(creditManager),
-                abi.encodeCall(ICreditManagerV2.approveCreditAccount, (targetContract, tokenIn, 1))
+                abi.encodeCall(
+                    ICreditManagerV2.approveCreditAccount, (address(creditFacade), targetContract, tokenIn, 1)
+                )
             );
         }
 

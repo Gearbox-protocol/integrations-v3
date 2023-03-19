@@ -7,7 +7,7 @@ import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IER
 import {
     ICreditManagerV2,
     ICreditManagerV2Exceptions
-} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditManagerV2.sol";
+} from "@gearbox-protocol/core-v2/contracts/interfaces/ICreditManagerV2.sol";
 
 import {WstETHV1Adapter} from "../../../adapters/lido/WstETHV1.sol";
 import {WstETHV1Mock} from "../../mocks/integrations/WstETHV1Mock.sol";
@@ -20,7 +20,7 @@ import {Tokens} from "../../suites/TokensTestSuite.sol";
 
 import {AdapterTestHelper} from "../AdapterTestHelper.sol";
 import {ERC20Mock} from "@gearbox-protocol/core-v2/contracts/test/mocks/token/ERC20Mock.sol";
-import {StringUtils} from "@gearbox-protocol/core-v3/contracts/test/lib/StringUtils.sol";
+import {StringUtils} from "@gearbox-protocol/core-v2/contracts/test/lib/StringUtils.sol";
 
 uint256 constant STETH_PER_TOKEN = (110 * WAD) / 100;
 
