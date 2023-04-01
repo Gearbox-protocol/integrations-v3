@@ -25,14 +25,14 @@ contract CEtherGateway is ICErc20Actions, ICompoundV2_Exceptions {
     /// @param _ceth cETH token address
     constructor(address _weth, address _ceth) {
         if (_weth == address(0) || _ceth == address(0)) {
-            revert ZeroAddressException();
+            revert ZeroAddressException(); // F: [CEG-1]
         }
-        weth = IWETH(_weth);
-        ceth = ICEther(_ceth);
+        weth = IWETH(_weth); // F: [CEG-2]
+        ceth = ICEther(_ceth); // F: [CEG-2]
     }
 
     /// @notice Allows receiving ETH
-    receive() external payable {}
+    receive() external payable {} // F: [CEG-3]
 
     /// @notice Deposit given amount of WETH into Compound
     ///         WETH must be approved from caller to gateway before the call
@@ -41,10 +41,10 @@ contract CEtherGateway is ICErc20Actions, ICompoundV2_Exceptions {
     function mint(uint256 mintAmount) external override returns (uint256 error) {
         // transfer WETH from caller and unwrap it
         IERC20(address(weth)).transferFrom(msg.sender, address(this), mintAmount);
-        weth.withdraw(mintAmount);
+        weth.withdraw(mintAmount); // F: [CEG-4]
 
         // deposit ETH to Compound
-        ceth.mint{value: mintAmount}();
+        ceth.mint{value: mintAmount}(); // F: [CEG-4]
         error = 0;
 
         // send cETH to caller
@@ -60,12 +60,12 @@ contract CEtherGateway is ICErc20Actions, ICompoundV2_Exceptions {
         ceth.transferFrom(msg.sender, address(this), redeemTokens);
 
         // redeem ETH from Compound
-        error = ceth.redeem(redeemTokens);
-        if (error != 0) revert CTokenError(error);
+        error = ceth.redeem(redeemTokens); // F: [CEG-5]
+        if (error != 0) revert CTokenError(error); // F: [CEG-6]
 
         // wrap ETH and send to caller
         uint256 ethBalance = address(this).balance;
-        weth.deposit{value: ethBalance}();
+        weth.deposit{value: ethBalance}(); // F: [CEG-5]
         weth.transfer(msg.sender, ethBalance);
     }
 
@@ -78,8 +78,8 @@ contract CEtherGateway is ICErc20Actions, ICompoundV2_Exceptions {
         ceth.transferFrom(msg.sender, address(this), ceth.balanceOf(msg.sender));
 
         // redeem ETH from Compound
-        error = ceth.redeemUnderlying(redeemAmount);
-        if (error != 0) revert CTokenError(error);
+        error = ceth.redeemUnderlying(redeemAmount); // F: [CEG-7]
+        if (error != 0) revert CTokenError(error); // F: [CEG-8]
 
         // return the remaining cETH (if any) back to caller
         uint256 cethBalance = ceth.balanceOf(address(this));
@@ -87,7 +87,7 @@ contract CEtherGateway is ICErc20Actions, ICompoundV2_Exceptions {
 
         // wrap ETH and send to caller
         uint256 ethBalance = address(this).balance;
-        weth.deposit{value: ethBalance}();
+        weth.deposit{value: ethBalance}(); // F: [CEG-7]
         weth.transfer(msg.sender, ethBalance);
     }
 }

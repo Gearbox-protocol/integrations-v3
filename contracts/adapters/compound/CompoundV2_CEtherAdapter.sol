@@ -33,11 +33,11 @@ contract CompoundV2_CEtherAdapter is CompoundV2_CTokenAdapter {
     /// @param _creditManager Credit manager address
     /// @param _cethGateway CEther gateway contract address
     constructor(address _creditManager, address _cethGateway) CompoundV2_CTokenAdapter(_creditManager, _cethGateway) {
-        cToken = address(CEtherGateway(payable(targetContract)).ceth());
-        underlying = address(CEtherGateway(payable(targetContract)).weth());
+        cToken = address(CEtherGateway(payable(targetContract)).ceth()); // F: [ACV2CETH-1]
+        underlying = address(CEtherGateway(payable(targetContract)).weth()); // F: [ACV2CETH-1]
 
-        cTokenMask = _getMaskOrRevert(cToken);
-        tokenMask = _getMaskOrRevert(underlying);
+        cTokenMask = _getMaskOrRevert(cToken); // F: [ACV2CETH-1]
+        tokenMask = _getMaskOrRevert(underlying); // F: [ACV2CETH-1]
     }
 
     /// -------------------------------- ///

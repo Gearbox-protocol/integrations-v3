@@ -36,13 +36,13 @@ contract AaveV2_WrappedATokenAdapter is AbstractAdapter, IAaveV2_WrappedATokenAd
     /// @param _creditManager Credit manager address
     /// @param _waToken Wrapped aToken address
     constructor(address _creditManager, address _waToken) AbstractAdapter(_creditManager, _waToken) {
-        waTokenMask = _getMaskOrRevert(targetContract);
+        waTokenMask = _getMaskOrRevert(targetContract); // F: [AAV2W-1, AAV2W-2]
 
-        aToken = address(IWrappedAToken(targetContract).aToken());
-        aTokenMask = _getMaskOrRevert(aToken);
+        aToken = address(IWrappedAToken(targetContract).aToken()); // F: [AAV2W-2]
+        aTokenMask = _getMaskOrRevert(aToken); // F: [AAV2W-2]
 
-        underlying = address(IWrappedAToken(targetContract).underlying());
-        tokenMask = _getMaskOrRevert(underlying);
+        underlying = address(IWrappedAToken(targetContract).underlying()); // F: [AAV2W-2]
+        tokenMask = _getMaskOrRevert(underlying); // F: [AAV2W-2]
     }
 
     /// -------- ///
@@ -50,23 +50,39 @@ contract AaveV2_WrappedATokenAdapter is AbstractAdapter, IAaveV2_WrappedATokenAd
     /// -------- ///
 
     /// @inheritdoc IAaveV2_WrappedATokenAdapter
-    function deposit(uint256 assets) external override creditFacadeOnly {
-        _deposit(assets, false);
+    function deposit(uint256 assets)
+        external
+        override
+        creditFacadeOnly // F: [AAV2W-3]
+    {
+        _deposit(assets, false); // F: [AAV2W-4]
     }
 
     /// @inheritdoc IAaveV2_WrappedATokenAdapter
-    function depositAll() external override creditFacadeOnly {
-        _depositAll(false);
+    function depositAll()
+        external
+        override
+        creditFacadeOnly // F: [AAV2W-3]
+    {
+        _depositAll(false); // F: [AAV2W-5]
     }
 
     /// @inheritdoc IAaveV2_WrappedATokenAdapter
-    function depositUnderlying(uint256 assets) external override creditFacadeOnly {
-        _deposit(assets, true);
+    function depositUnderlying(uint256 assets)
+        external
+        override
+        creditFacadeOnly // F: [AAV2W-3]
+    {
+        _deposit(assets, true); // F: [AAV2W-4]
     }
 
     /// @inheritdoc IAaveV2_WrappedATokenAdapter
-    function depositAllUnderlying() external override creditFacadeOnly {
-        _depositAll(true);
+    function depositAllUnderlying()
+        external
+        override
+        creditFacadeOnly // F: [AAV2W-3]
+    {
+        _depositAll(true); // F: [AAV2W-5]
     }
 
     /// @dev Internal implementation of `deposit` and `depositUnderlying`
@@ -116,23 +132,39 @@ contract AaveV2_WrappedATokenAdapter is AbstractAdapter, IAaveV2_WrappedATokenAd
     /// ----------- ///
 
     /// @inheritdoc IAaveV2_WrappedATokenAdapter
-    function withdraw(uint256 shares) external override creditFacadeOnly {
-        _withdraw(shares, false);
+    function withdraw(uint256 shares)
+        external
+        override
+        creditFacadeOnly // F: [AAV2W-3]
+    {
+        _withdraw(shares, false); // F: [AAV2W-6]
     }
 
     /// @inheritdoc IAaveV2_WrappedATokenAdapter
-    function withdrawAll() external override creditFacadeOnly {
-        _withdrawAll(false);
+    function withdrawAll()
+        external
+        override
+        creditFacadeOnly // F: [AAV2W-3]
+    {
+        _withdrawAll(false); // F: [AAV2W-7]
     }
 
     /// @inheritdoc IAaveV2_WrappedATokenAdapter
-    function withdrawUnderlying(uint256 shares) external override creditFacadeOnly {
-        _withdraw(shares, true);
+    function withdrawUnderlying(uint256 shares)
+        external
+        override
+        creditFacadeOnly // F: [AAV2W-3]
+    {
+        _withdraw(shares, true); // F: [AAV2W-6]
     }
 
     /// @inheritdoc IAaveV2_WrappedATokenAdapter
-    function withdrawAllUnderlying() external override creditFacadeOnly {
-        _withdrawAll(true);
+    function withdrawAllUnderlying()
+        external
+        override
+        creditFacadeOnly // F: [AAV2W-3]
+    {
+        _withdrawAll(true); // F: [AAV2W-7]
     }
 
     /// @dev Internal implementation of `withdraw` and `withdrawUnderlying`

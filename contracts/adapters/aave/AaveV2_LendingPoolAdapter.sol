@@ -32,13 +32,21 @@ contract AaveV2_LendingPoolAdapter is AbstractAdapter, IAaveV2_LendingPoolAdapte
     /// -------- ///
 
     /// @inheritdoc IAaveV2_LendingPoolAdapter
-    function deposit(address asset, uint256 amount, address, uint16) external override creditFacadeOnly {
+    function deposit(address asset, uint256 amount, address, uint16)
+        external
+        override
+        creditFacadeOnly // F: [AAV2LP-1]
+    {
         address creditAccount = _creditAccount();
-        _deposit(creditAccount, asset, amount, false);
+        _deposit(creditAccount, asset, amount, false); // F: [AAV2LP-3]
     }
 
     /// @inheritdoc IAaveV2_LendingPoolAdapter
-    function depositAll(address asset) external override creditFacadeOnly {
+    function depositAll(address asset)
+        external
+        override
+        creditFacadeOnly // F: [AAV2LP-1]
+    {
         address creditAccount = _creditAccount();
         uint256 balance = IERC20(asset).balanceOf(creditAccount);
         if (balance <= 1) return;
@@ -47,7 +55,7 @@ contract AaveV2_LendingPoolAdapter is AbstractAdapter, IAaveV2_LendingPoolAdapte
         unchecked {
             amount = balance - 1;
         }
-        _deposit(creditAccount, asset, amount, true);
+        _deposit(creditAccount, asset, amount, true); // F: [AAV2LP-4]
     }
 
     /// @dev Internal implementation of `deposit` and `depositAll` functions
@@ -61,7 +69,7 @@ contract AaveV2_LendingPoolAdapter is AbstractAdapter, IAaveV2_LendingPoolAdapte
             _aToken(asset),
             abi.encodeCall(ILendingPool.deposit, (asset, amount, creditAccount, 0)),
             disableTokenIn
-        );
+        ); // F: [AAV2LP-2]
     }
 
     /// ----------- ///
@@ -69,19 +77,27 @@ contract AaveV2_LendingPoolAdapter is AbstractAdapter, IAaveV2_LendingPoolAdapte
     /// ----------- ///
 
     /// @inheritdoc IAaveV2_LendingPoolAdapter
-    function withdraw(address asset, uint256 amount, address) external override creditFacadeOnly {
+    function withdraw(address asset, uint256 amount, address)
+        external
+        override
+        creditFacadeOnly // F: [AAV2LP-1]
+    {
         address creditAccount = _creditAccount();
         if (amount == type(uint256).max) {
-            _withdrawAll(creditAccount, asset);
+            _withdrawAll(creditAccount, asset); // F: [AAV2LP-5B]
         } else {
-            _withdraw(creditAccount, asset, amount);
+            _withdraw(creditAccount, asset, amount); // F: [AAV2LP-5A]
         }
     }
 
     /// @inheritdoc IAaveV2_LendingPoolAdapter
-    function withdrawAll(address asset) external override creditFacadeOnly {
+    function withdrawAll(address asset)
+        external
+        override
+        creditFacadeOnly // F: [AAV2LP-1]
+    {
         address creditAccount = _creditAccount();
-        _withdrawAll(creditAccount, asset);
+        _withdrawAll(creditAccount, asset); // F: [AAV2LP-6]
     }
 
     /// @dev Internal implementation of `withdraw` functionality
@@ -90,7 +106,7 @@ contract AaveV2_LendingPoolAdapter is AbstractAdapter, IAaveV2_LendingPoolAdapte
     ///      - underlying is enabled after the call
     ///      - aToken is not disabled because operation doesn't spend the entire balance
     function _withdraw(address creditAccount, address asset, uint256 amount) internal {
-        _executeSwapNoApprove(_aToken(asset), asset, _encodeWithdraw(creditAccount, asset, amount), false);
+        _executeSwapNoApprove(_aToken(asset), asset, _encodeWithdraw(creditAccount, asset, amount), false); // F: [AAV2LP-2]
     }
 
     /// @dev Internal implementation of `withdrawAll` functionality
@@ -108,7 +124,7 @@ contract AaveV2_LendingPoolAdapter is AbstractAdapter, IAaveV2_LendingPoolAdapte
             amount = balance - 1;
         }
 
-        _executeSwapNoApprove(aToken, asset, _encodeWithdraw(creditAccount, asset, amount), true);
+        _executeSwapNoApprove(aToken, asset, _encodeWithdraw(creditAccount, asset, amount), true); // F: [AAV2LP-2]
     }
 
     /// @dev Returns calldata for `ILendingPool.withdraw` call
