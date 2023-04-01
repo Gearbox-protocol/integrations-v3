@@ -107,7 +107,7 @@ contract CompoundV2_CErc20Adapter is CompoundV2_CTokenAdapter {
     ///      - underlying is enabled after the call
     ///      - cToken is not disabled after the call because operation doesn't spend the entire balance
     function _redeemUnderlying(uint256 amount) internal override returns (uint256 error) {
-        error = abi.decode(_encodeRedeemUnderlying(amount), (uint256));
+        error = abi.decode(_execute(_encodeRedeemUnderlying(amount)), (uint256));
         _changeEnabledTokens(tokenMask, 0);
     }
 }

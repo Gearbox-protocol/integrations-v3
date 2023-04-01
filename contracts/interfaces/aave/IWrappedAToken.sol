@@ -15,13 +15,13 @@ interface IWrappedAToken is IERC20Metadata {
     /// @param account Account that performed deposit
     /// @param assets Amount of deposited aTokens
     /// @param shares Amount of waTokens minted to account
-    event Deposit(address account, uint256 assets, uint256 shares);
+    event Deposit(address indexed account, uint256 assets, uint256 shares);
 
     /// @notice Emitted on withdrawal
     /// @param account Account that performed withdrawal
     /// @param assets Amount of withdrawn aTokens
     /// @param shares Amount of waTokens burnt from account
-    event Withdraw(address account, uint256 assets, uint256 shares);
+    event Withdraw(address indexed account, uint256 assets, uint256 shares);
 
     /// @notice Underlying aToken
     function aToken() external view returns (IAToken);
