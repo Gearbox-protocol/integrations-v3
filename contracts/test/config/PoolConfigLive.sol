@@ -13,12 +13,12 @@ struct QuotedTokenParams {
 }
 
 struct PoolParams {
-    uint256 U_optimal;
-    uint256 U_reserve;
-    uint256 R_base;
-    uint256 R_slope1;
-    uint256 R_slope2;
-    uint256 R_slope3;
+    uint16 U_optimal;
+    uint16 U_reserve;
+    uint16 R_base;
+    uint16 R_slope1;
+    uint16 R_slope2;
+    uint16 R_slope3;
     uint256 expectedLiquidityLimit;
     bool supportsQuotas;
     QuotedTokenParams[] quotedTokens;

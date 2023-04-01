@@ -13,6 +13,7 @@ import {CurveV1AdapterHelper, DAI_TO_LP, USDC_TO_LP, USDT_TO_LP} from "./CurveV1
 
 // EXCEPTIONS
 import {ZeroAddressException} from "@gearbox-protocol/core-v3/contracts/interfaces/IErrors.sol";
+import {IAdapterExceptions} from "@gearbox-protocol/core-v3/contracts/interfaces/adapters/IAdapter.sol";
 import {ICreditManagerV2Exceptions} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditManagerV2.sol";
 
 /// @title CurveV1Adapter3AssetsTest
@@ -78,9 +79,7 @@ contract CurveV1Adapter3AssetsTest is DSTest, CurveV1AdapterHelper {
             evm.prank(CONFIGURATOR);
             creditConfigurator.addCollateralToken(lp_token, 8800);
 
-            evm.expectRevert(
-                abi.encodeWithSelector(TokenIsNotInAllowedList.selector, tokenTestSuite.addressOf(Tokens.LUNA))
-            );
+            evm.expectRevert(IAdapterExceptions.TokenNotAllowedException.selector);
             adapter = new CurveV1Adapter3Assets(
                 address(creditManager),
                 address(curveV1Mock),

@@ -4,6 +4,7 @@
 pragma solidity ^0.8.17;
 
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import {IAdapterExceptions} from "@gearbox-protocol/core-v3/contracts/interfaces/adapters/IAdapter.sol";
 import {
     ICreditManagerV2,
     ICreditManagerV2Exceptions
@@ -123,7 +124,7 @@ contract WstETHV1AdapterTest is DSTest, AdapterTestHelper {
             address(forbiddenToken)
         );
 
-        evm.expectRevert(abi.encodeWithSelector(TokenIsNotInAllowedList.selector, address(forbidWstETHV1Mock)));
+        evm.expectRevert(IAdapterExceptions.TokenNotAllowedException.selector);
         new WstETHV1Adapter(
             address(creditManager),
             address(forbidWstETHV1Mock)
@@ -132,7 +133,7 @@ contract WstETHV1AdapterTest is DSTest, AdapterTestHelper {
         WstETHV1Mock notAllowedWstETHV1Mock = new WstETHV1Mock(
             tokenTestSuite.addressOf(Tokens.STETH)
         );
-        evm.expectRevert(abi.encodeWithSelector(TokenIsNotInAllowedList.selector, address(notAllowedWstETHV1Mock)));
+        evm.expectRevert(IAdapterExceptions.TokenNotAllowedException.selector);
         new WstETHV1Adapter(
             address(creditManager),
             address(notAllowedWstETHV1Mock)
