@@ -43,7 +43,6 @@ enum Contracts {
     CONVEX_STECRV_POOL,
     CONVEX_FRAX3CRV_POOL,
     CONVEX_LUSD3CRV_POOL,
-    CONVEX_CLAIM_ZAP,
     LIDO_STETH_GATEWAY,
     LIDO_WSTETH,
     UNIVERSAL_ADAPTER
@@ -67,7 +66,7 @@ contract SupportedContracts is ISupportedContracts {
     constructor(uint8 networkId) {
         ContractData[] memory cd;
         if (networkId == 1) {
-            cd = new  ContractData[](30);
+            cd = new  ContractData[](29);
             cd[0] = ContractData({
                 id: Contracts.UNISWAP_V2_ROUTER,
                 addr: 0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D,
@@ -199,21 +198,16 @@ contract SupportedContracts is ISupportedContracts {
                 name: "CONVEX_LUSD3CRV_POOL"
             });
             cd[26] = ContractData({
-                id: Contracts.CONVEX_CLAIM_ZAP,
-                addr: 0x92Cf9E5e4D1Dfbf7dA0d2BB3e884a68416a65070,
-                name: "CONVEX_CLAIM_ZAP"
-            });
-            cd[27] = ContractData({
                 id: Contracts.LIDO_STETH_GATEWAY,
                 addr: 0x6f4b4aB5142787c05b7aB9A9692A0f46b997C29D,
                 name: "LIDO_STETH_GATEWAY"
             });
-            cd[28] = ContractData({
+            cd[27] = ContractData({
                 id: Contracts.LIDO_WSTETH,
                 addr: 0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0,
                 name: "LIDO_WSTETH"
             });
-            cd[29] = ContractData({
+            cd[28] = ContractData({
                 id: Contracts.UNIVERSAL_ADAPTER,
                 addr: 0xCcCCccccCCCCcCCCCCCcCcCccCcCCCcCcccccccC,
                 name: "UNIVERSAL_ADAPTER"
@@ -346,21 +340,16 @@ contract SupportedContracts is ISupportedContracts {
                 name: "CONVEX_LUSD3CRV_POOL"
             });
             cd[26] = ContractData({
-                id: Contracts.CONVEX_CLAIM_ZAP,
-                addr: 0x74C7Bb6493C5EcfDb49E3ED5Ee4B60012b724b4b,
-                name: "CONVEX_CLAIM_ZAP"
-            });
-            cd[27] = ContractData({
                 id: Contracts.LIDO_STETH_GATEWAY,
                 addr: 0x9290E44f5f819b7de0Fb88b10641f9F08a999BF7,
                 name: "LIDO_STETH_GATEWAY"
             });
-            cd[28] = ContractData({
+            cd[27] = ContractData({
                 id: Contracts.LIDO_WSTETH,
                 addr: 0x5E590e6c887A84098F3fa465267a44AaE058eBbb,
                 name: "LIDO_WSTETH"
             });
-            cd[29] = ContractData({
+            cd[28] = ContractData({
                 id: Contracts.UNIVERSAL_ADAPTER,
                 addr: 0xCcCCccccCCCCcCCCCCCcCcCccCcCCCcCcccccccC,
                 name: "UNIVERSAL_ADAPTER"

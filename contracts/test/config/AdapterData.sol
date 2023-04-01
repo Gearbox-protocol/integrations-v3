@@ -77,9 +77,6 @@ contract AdapterData {
             SimpleAdapter({targetContract: Contracts.CONVEX_BOOSTER, adapterType: AdapterType.CONVEX_V1_BOOSTER})
         );
         simpleAdapters.push(
-            SimpleAdapter({targetContract: Contracts.CONVEX_CLAIM_ZAP, adapterType: AdapterType.CONVEX_V1_CLAIM_ZAP})
-        );
-        simpleAdapters.push(
             SimpleAdapter({targetContract: Contracts.LIDO_STETH_GATEWAY, adapterType: AdapterType.LIDO_V1})
         );
         simpleAdapters.push(
