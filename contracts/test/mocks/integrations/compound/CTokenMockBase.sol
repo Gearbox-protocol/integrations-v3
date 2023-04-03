@@ -38,6 +38,11 @@ abstract contract CTokenMockBase is ICToken, ERC20 {
         lastUpdate = block.timestamp;
     }
 
+    /// @notice Accrues interest, updates stored exchange rate
+    function accrueInterest() external {
+        _accrueInterest();
+    }
+
     /// @inheritdoc IERC20Metadata
     function decimals() public pure override(ERC20, IERC20Metadata) returns (uint8) {
         return 8;

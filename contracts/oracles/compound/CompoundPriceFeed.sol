@@ -41,14 +41,14 @@ contract CompoundPriceFeed is LPPriceFeed {
         )
     {
         if (_cToken == address(0) || _priceFeed == address(0)) {
-            revert ZeroAddressException();
+            revert ZeroAddressException(); // F: [OCPF-1]
         }
 
-        cToken = ICToken(_cToken);
-        priceFeed = AggregatorV3Interface(_priceFeed);
+        cToken = ICToken(_cToken); // F: [OCPF-2]
+        priceFeed = AggregatorV3Interface(_priceFeed); // F: [OCPF-2]
 
         uint256 exchangeRate = cToken.exchangeRateCurrent();
-        _setLimiter(exchangeRate);
+        _setLimiter(exchangeRate); // F: [OCPF-2]
     }
 
     /// @dev Returns the USD price of the cToken
@@ -59,7 +59,7 @@ contract CompoundPriceFeed is LPPriceFeed {
         override
         returns (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound)
     {
-        (roundId, answer, startedAt, updatedAt, answeredInRound) = priceFeed.latestRoundData();
+        (roundId, answer, startedAt, updatedAt, answeredInRound) = priceFeed.latestRoundData(); // F: [OCPF-3]
 
         // Sanity check for chainlink pricefeed
         _checkAnswer(roundId, answer, updatedAt, answeredInRound);
@@ -67,15 +67,15 @@ contract CompoundPriceFeed is LPPriceFeed {
         uint256 exchangeRate = cToken.exchangeRateStored();
 
         // Checks that exchangeRate is within bounds
-        exchangeRate = _checkAndUpperBoundValue(exchangeRate);
+        exchangeRate = _checkAndUpperBoundValue(exchangeRate); // F: [OCPF-4]
 
-        answer = int256((exchangeRate * uint256(answer)) / decimalsDivider);
+        answer = int256((exchangeRate * uint256(answer)) / decimalsDivider); // F: [OCPF-3]
     }
 
     function _checkCurrentValueInBounds(uint256 _lowerBound, uint256 _uBound) internal view override returns (bool) {
         uint256 rate = cToken.exchangeRateStored();
         if (rate < _lowerBound || rate > _uBound) {
-            return false;
+            return false; // F: [OCPF-5]
         }
         return true;
     }
