@@ -107,8 +107,11 @@ contract WrappedAToken is ERC20, IWrappedAToken {
 
     /// @dev Gives lending pool max approval for underlying if it falls below `amount`
     function _ensureAllowance(uint256 amount) internal {
-        if (underlying.allowance(address(this), address(lendingPool)) < amount) {
-            underlying.safeApprove(address(lendingPool), type(uint256).max); // [WAT-9]
+        uint256 allowance = underlying.allowance(address(this), address(lendingPool));
+        if (allowance < amount) {
+            unchecked {
+                underlying.safeIncreaseAllowance(address(lendingPool), type(uint256).max - allowance); // [WAT-9]
+            }
         }
     }
 }

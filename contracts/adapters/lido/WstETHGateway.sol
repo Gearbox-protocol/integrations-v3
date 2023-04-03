@@ -42,8 +42,8 @@ contract WstETHGateway is IwstETHGateway {
         wstETH = IwstETH(pool.underlyingToken());
         stETH = IstETH(wstETH.stETH());
 
-        wstETH.approve(address(pool), type(uint256).max);
-        stETH.approve(address(wstETH), type(uint256).max);
+        IERC20(wstETH).safeApprove(address(pool), type(uint256).max);
+        IERC20(stETH).safeApprove(address(wstETH), type(uint256).max);
     }
 
     /// @inheritdoc IwstETHGateway
@@ -54,10 +54,10 @@ contract WstETHGateway is IwstETHGateway {
     {
         IERC20(stETH).safeTransferFrom(msg.sender, address(this), assets);
 
-        _ensureWrapperAllowance(assets);
+        _ensureAllowance(address(stETH), address(wstETH), assets);
         uint256 wstETHAmount = wstETH.wrap(assets);
 
-        _ensurePoolAllowance(wstETHAmount);
+        _ensureAllowance(address(wstETH), address(pool), wstETHAmount);
         shares = pool.depositReferral(wstETHAmount, receiver, referralCode);
     }
 
@@ -70,17 +70,13 @@ contract WstETHGateway is IwstETHGateway {
         IERC20(stETH).safeTransfer(receiver, assets);
     }
 
-    /// @dev Sets wstETH's allowance for gateway's stETH to `type(uint256).max` if it falls below `amount`
-    function _ensureWrapperAllowance(uint256 amount) internal {
-        if (stETH.allowance(address(this), address(wstETH)) < amount) {
-            IERC20(stETH).safeApprove(address(wstETH), type(uint256).max);
-        }
-    }
-
-    /// @dev Sets pool's allowance for gateway's wstETH to `type(uint256).max` if it falls below `amount`
-    function _ensurePoolAllowance(uint256 amount) internal {
-        if (wstETH.allowance(address(this), address(pool)) < amount) {
-            IERC20(wstETH).safeApprove(address(pool), type(uint256).max);
+    /// @dev Gives `spender` max approval for gateway's `token` if it falls below `amount`
+    function _ensureAllowance(address token, address spender, uint256 amount) internal {
+        uint256 allowance = IERC20(token).allowance(address(this), spender);
+        if (allowance < amount) {
+            unchecked {
+                IERC20(token).safeIncreaseAllowance(spender, type(uint256).max - allowance);
+            }
         }
     }
 }

@@ -112,7 +112,7 @@ contract CompoundV2_CEtherAdapter is CompoundV2_CTokenAdapter {
     ///      - cETH is not disabled after the call because operation doesn't spend the entire balance
     function _redeemUnderlying(uint256 amount) internal override returns (uint256 error) {
         _approveToken(cToken, type(uint256).max);
-        error = abi.decode(_encodeRedeemUnderlying(amount), (uint256));
+        error = abi.decode(_execute(_encodeRedeemUnderlying(amount)), (uint256));
         _approveToken(cToken, 1);
         _changeEnabledTokens(tokenMask, 0);
     }
