@@ -7,6 +7,11 @@
       "name": "next",
       "channel": "next",
       "prerelease": "next"
+    },
+    {
+      "name": "v2.1",
+      "channel": "backward-compatible",
+      "prerelease": "backward-compatible"
     }
   ],
   "plugins": [
