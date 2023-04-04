@@ -36,9 +36,6 @@ jobs:
       - name: Run forge unit tests
         run: forge test
 
-      - name: Run forge integration tests
-        run: forge t --match-test _live_ --fork-url ${{ secrets.LIVE_TESTS_FORK }} --chain-id 1337
-
       - name: Perform checks
         run: |
           yarn typecheck:ci
