@@ -431,7 +431,6 @@ let adapters = Object.entries(contractParams)
       contractParam.type === AdapterInterface.UNISWAP_V3_ROUTER ||
       contractParam.type === AdapterInterface.YEARN_V2 ||
       contractParam.type === AdapterInterface.CONVEX_V1_BOOSTER ||
-      contractParam.type === AdapterInterface.CONVEX_V1_CLAIM_ZAP ||
       contractParam.type === AdapterInterface.LIDO_V1 ||
       contractParam.type === AdapterInterface.UNIVERSAL ||
       contractParam.type === AdapterInterface.LIDO_WSTETH_V1,

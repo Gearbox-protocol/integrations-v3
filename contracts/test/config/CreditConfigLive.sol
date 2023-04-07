@@ -121,7 +121,6 @@ contract CreditConfigLive {
         cm.contracts.push(Contracts.CONVEX_FRAX_USDC_POOL);
         cm.contracts.push(Contracts.CONVEX_STECRV_POOL);
         cm.contracts.push(Contracts.CONVEX_BOOSTER);
-        cm.contracts.push(Contracts.CONVEX_CLAIM_ZAP);
         cm.contracts.push(Contracts.UNIVERSAL_ADAPTER);
         cm = creditManagerHumanOpts[numOpts];
         ++numOpts;
@@ -202,7 +201,6 @@ contract CreditConfigLive {
         cm.contracts.push(Contracts.CONVEX_FRAX_USDC_POOL);
         cm.contracts.push(Contracts.CONVEX_STECRV_POOL);
         cm.contracts.push(Contracts.CONVEX_BOOSTER);
-        cm.contracts.push(Contracts.CONVEX_CLAIM_ZAP);
         cm.contracts.push(Contracts.UNIVERSAL_ADAPTER);
         cm = creditManagerHumanOpts[numOpts];
         ++numOpts;
@@ -283,7 +281,6 @@ contract CreditConfigLive {
         cm.contracts.push(Contracts.CONVEX_FRAX_USDC_POOL);
         cm.contracts.push(Contracts.CONVEX_STECRV_POOL);
         cm.contracts.push(Contracts.CONVEX_BOOSTER);
-        cm.contracts.push(Contracts.CONVEX_CLAIM_ZAP);
         cm.contracts.push(Contracts.UNIVERSAL_ADAPTER);
         cm = creditManagerHumanOpts[numOpts];
         ++numOpts;
@@ -365,7 +362,6 @@ contract CreditConfigLive {
         cm.contracts.push(Contracts.CONVEX_FRAX_USDC_POOL);
         cm.contracts.push(Contracts.CONVEX_STECRV_POOL);
         cm.contracts.push(Contracts.CONVEX_BOOSTER);
-        cm.contracts.push(Contracts.CONVEX_CLAIM_ZAP);
         cm.contracts.push(Contracts.UNIVERSAL_ADAPTER);
         cm.contracts.push(Contracts.LIDO_WSTETH);
         cm = creditManagerHumanOpts[numOpts];
@@ -447,7 +443,6 @@ contract CreditConfigLive {
         cm.contracts.push(Contracts.CONVEX_FRAX_USDC_POOL);
         cm.contracts.push(Contracts.CONVEX_STECRV_POOL);
         cm.contracts.push(Contracts.CONVEX_BOOSTER);
-        cm.contracts.push(Contracts.CONVEX_CLAIM_ZAP);
         cm.contracts.push(Contracts.UNIVERSAL_ADAPTER);
     }
 }

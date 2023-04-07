@@ -21,7 +21,6 @@ import {UniswapV2Adapter} from "../../adapters/uniswap/UniswapV2.sol";
 import {UniswapV3Adapter} from "../../adapters/uniswap/UniswapV3.sol";
 import {YearnV2Adapter} from "../../adapters/yearn/YearnV2.sol";
 import {ConvexV1BoosterAdapter} from "../../adapters/convex/ConvexV1_Booster.sol";
-import {ConvexV1ClaimZapAdapter} from "../../adapters/convex/ConvexV1_ClaimZap.sol";
 import {LidoV1Adapter} from "../../adapters/lido/LidoV1.sol";
 import {WstETHV1Adapter} from "../../adapters/lido/WstETHV1.sol";
 
@@ -122,13 +121,6 @@ contract AdapterDeployer is AdapterData, DSTest {
                     } else if (at == AdapterType.CONVEX_V1_BOOSTER) {
                         result.adapter = address(
                             new ConvexV1BoosterAdapter(
-                                creditManager,
-                                result.targetContract
-                            )
-                        );
-                    } else if (at == AdapterType.CONVEX_V1_CLAIM_ZAP) {
-                        result.adapter = address(
-                            new ConvexV1ClaimZapAdapter(
                                 creditManager,
                                 result.targetContract
                             )

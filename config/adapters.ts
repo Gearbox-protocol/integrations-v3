@@ -34,7 +34,6 @@ export const adapters: Array<SupportedContract> = [
   "CONVEX_FRAX_USDC_POOL",
   "CONVEX_STECRV_POOL",
   "CONVEX_BOOSTER",
-  "CONVEX_CLAIM_ZAP",
 
   // UNIVERSAL
   "UNIVERSAL_ADAPTER",

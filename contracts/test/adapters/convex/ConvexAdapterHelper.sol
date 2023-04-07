@@ -12,13 +12,11 @@ import {IPriceOracleV2Ext} from "@gearbox-protocol/core-v2/contracts/interfaces/
 
 import {ConvexV1BaseRewardPoolAdapter} from "../../../adapters/convex/ConvexV1_BaseRewardPool.sol";
 import {ConvexV1BoosterAdapter} from "../../../adapters/convex/ConvexV1_Booster.sol";
-import {ConvexV1ClaimZapAdapter} from "../../../adapters/convex/ConvexV1_ClaimZap.sol";
 import {ConvexStakedPositionToken} from "../../../adapters/convex/ConvexV1_StakedPositionToken.sol";
 
 import {BoosterMock} from "../../mocks/integrations/ConvexBoosterMock.sol";
 import {BaseRewardPoolMock} from "../../mocks/integrations/ConvexBaseRewardPoolMock.sol";
 import {ExtraRewardPoolMock} from "../../mocks/integrations/ConvexExtraRewardPoolMock.sol";
-import {ClaimZapMock} from "../../mocks/integrations/ConvexClaimZapMock.sol";
 
 import {PriceFeedMock} from "@gearbox-protocol/core-v2/contracts/test/mocks/oracles/PriceFeedMock.sol";
 
@@ -54,11 +52,9 @@ contract ConvexAdapterHelper is AdapterTestHelper {
     BaseRewardPoolMock public basePoolMock;
     ExtraRewardPoolMock public extraPoolMock1;
     ExtraRewardPoolMock public extraPoolMock2;
-    ClaimZapMock public claimZapMock;
 
     ConvexV1BaseRewardPoolAdapter public basePoolAdapter;
     ConvexV1BoosterAdapter public boosterAdapter;
-    ConvexV1ClaimZapAdapter public claimZapAdapter;
 
     struct PoolInfo {
         address lptoken;
@@ -124,8 +120,6 @@ contract ConvexAdapterHelper is AdapterTestHelper {
             basePoolMock.addExtraReward(address(extraPoolMock2));
         }
 
-        claimZapMock = new ClaimZapMock(crv, cvx);
-
         phantomToken = address(new ConvexStakedPositionToken(address(basePoolMock), convexLPToken));
         _addToken(phantomToken);
 
@@ -145,14 +139,6 @@ contract ConvexAdapterHelper is AdapterTestHelper {
 
         evm.prank(CONFIGURATOR);
         creditConfigurator.allowContract(address(boosterMock), address(boosterAdapter));
-
-        claimZapAdapter = new ConvexV1ClaimZapAdapter(
-            address(creditManager),
-            address(claimZapMock)
-        );
-
-        evm.prank(CONFIGURATOR);
-        creditConfigurator.allowContract(address(claimZapMock), address(claimZapAdapter));
 
         evm.prank(CONFIGURATOR);
         boosterAdapter.updateStakedPhantomTokensMap();
@@ -329,26 +315,6 @@ contract ConvexAdapterHelper is AdapterTestHelper {
                 (rewardTokensMask | stakingTokenMask, withdrawAll ? stakedTokenMask : 0)
             )
         );
-    }
-
-    function expectClaimZapStackCalls(address borrower, address[] memory enabledTokens) internal {
-        evm.expectEmit(true, false, false, false);
-        emit MultiCallStarted(borrower);
-
-        for (uint256 i = 0; i < enabledTokens.length; i++) {
-            evm.expectCall(
-                address(creditManager), abi.encodeCall(CreditManager.checkAndEnableToken, (enabledTokens[i]))
-            );
-        }
-
-        // uint256 tokensMask = 0;
-        // for (uint256 i = 0; i < enabledTokens.length; ++i) {
-        //     tokensMask |= creditManager.tokenMasksMap(enabledTokens[i]);
-        // }
-        // evm.expectCall(address(creditManager), abi.encodeCall(creditManager.changeEnabledTokens, (tokensMask, 0)));
-
-        evm.expectEmit(false, false, false, false);
-        emit MultiCallFinished();
     }
 
     function expectClaimStackCalls(address borrower, uint256 numExtras) internal {
