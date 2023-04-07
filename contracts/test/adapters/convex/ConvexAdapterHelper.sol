@@ -4,6 +4,7 @@
 pragma solidity ^0.8.17;
 
 import {CreditManager} from "@gearbox-protocol/core-v3/contracts/credit/CreditManager.sol";
+import {IAdapterExceptions} from "@gearbox-protocol/core-v3/contracts/interfaces/adapters/IAdapter.sol";
 
 import {IBooster} from "../../../integrations/convex/IBooster.sol";
 import {IBaseRewardPool} from "../../../integrations/convex/IBaseRewardPool.sol";
@@ -220,7 +221,7 @@ contract ConvexAdapterHelper is AdapterTestHelper {
             _addToken(extraRewardToken2_c);
         }
 
-        evm.expectRevert(abi.encodeWithSelector(TokenIsNotInAllowedList.selector, forgottenTokenAddr));
+        evm.expectRevert(IAdapterExceptions.TokenNotAllowedException.selector);
         new ConvexV1BaseRewardPoolAdapter(
             address(creditManager),
             address(basePoolMock_c),

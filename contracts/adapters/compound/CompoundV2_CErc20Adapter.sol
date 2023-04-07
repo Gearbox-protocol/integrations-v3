@@ -29,15 +29,15 @@ contract CompoundV2_CErc20Adapter is CompoundV2_CTokenAdapter {
     /// @param _creditManager Credit manager address
     /// @param _cToken CErc20 token address
     constructor(address _creditManager, address _cToken) CompoundV2_CTokenAdapter(_creditManager, _cToken) {
-        underlying = ICErc20(targetContract).underlying();
+        underlying = ICErc20(targetContract).underlying(); // F: [ACV2CERC-2]
 
-        cTokenMask = _getMaskOrRevert(targetContract);
-        tokenMask = _getMaskOrRevert(underlying);
+        cTokenMask = _getMaskOrRevert(targetContract); // F: [ACV2CERC-1, ACV2CERC-2]
+        tokenMask = _getMaskOrRevert(underlying); // F: [ACV2CERC-2]
     }
 
     /// @inheritdoc ICompoundV2_CTokenAdapter
     function cToken() external view override returns (address) {
-        return targetContract;
+        return targetContract; // F: [ACV2CERC-2]
     }
 
     /// -------------------------------- ///

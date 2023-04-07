@@ -3,6 +3,7 @@
 // (c) Gearbox Holdings, 2023
 pragma solidity ^0.8.17;
 
+import {IAdapterExceptions} from "@gearbox-protocol/core-v3/contracts/interfaces/adapters/IAdapter.sol";
 import {
     ICreditManagerV2,
     ICreditManagerV2Exceptions
@@ -112,14 +113,14 @@ contract YearnV2AdapterTest is DSTest, AdapterTestHelper {
             address(forbiddenToken)
         );
 
-        evm.expectRevert(abi.encodeWithSelector(TokenIsNotInAllowedList.selector, address(forbiddenToken)));
+        evm.expectRevert(IAdapterExceptions.TokenNotAllowedException.selector);
         new YearnV2Adapter(address(creditManager), address(forbidYearnV2Mock));
 
         YearnV2Mock notAllowedYearnV2Mock = new YearnV2Mock(
             tokenTestSuite.addressOf(Tokens.DAI)
         );
 
-        evm.expectRevert(abi.encodeWithSelector(TokenIsNotInAllowedList.selector, address(notAllowedYearnV2Mock)));
+        evm.expectRevert(IAdapterExceptions.TokenNotAllowedException.selector);
 
         new YearnV2Adapter(
             address(creditManager),

@@ -42,14 +42,14 @@ contract AavePriceFeed is LPPriceFeed {
         )
     {
         if (_waToken == address(0) || _priceFeed == address(0)) {
-            revert ZeroAddressException();
+            revert ZeroAddressException(); // F: [OAPF-1]
         }
 
-        waToken = IWrappedAToken(_waToken);
-        priceFeed = AggregatorV3Interface(_priceFeed);
+        waToken = IWrappedAToken(_waToken); // F: [OAPF-2]
+        priceFeed = AggregatorV3Interface(_priceFeed); // F: [OAPF-2]
 
         uint256 exchangeRate = waToken.exchangeRate();
-        _setLimiter(exchangeRate);
+        _setLimiter(exchangeRate); // F: [OAPF-2]
     }
 
     /// @dev Returns the USD price of the waToken
@@ -60,7 +60,7 @@ contract AavePriceFeed is LPPriceFeed {
         override
         returns (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound)
     {
-        (roundId, answer, startedAt, updatedAt, answeredInRound) = priceFeed.latestRoundData();
+        (roundId, answer, startedAt, updatedAt, answeredInRound) = priceFeed.latestRoundData(); // F: [OAPF-3]
 
         // Sanity check for chainlink pricefeed
         _checkAnswer(roundId, answer, updatedAt, answeredInRound);
@@ -68,15 +68,15 @@ contract AavePriceFeed is LPPriceFeed {
         uint256 exchangeRate = waToken.exchangeRate();
 
         // Checks that exchangeRate is within bounds
-        exchangeRate = _checkAndUpperBoundValue(exchangeRate);
+        exchangeRate = _checkAndUpperBoundValue(exchangeRate); // F: [OAPF-4]
 
-        answer = int256((exchangeRate * uint256(answer)) / decimalsDivider);
+        answer = int256((exchangeRate * uint256(answer)) / decimalsDivider); // F: [OAPF-3]
     }
 
     function _checkCurrentValueInBounds(uint256 _lowerBound, uint256 _uBound) internal view override returns (bool) {
         uint256 rate = waToken.exchangeRate();
         if (rate < _lowerBound || rate > _uBound) {
-            return false;
+            return false; // F: [OAPF-5]
         }
         return true;
     }

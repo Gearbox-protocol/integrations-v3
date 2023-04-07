@@ -27,13 +27,21 @@ abstract contract CompoundV2_CTokenAdapter is AbstractAdapter, ICompoundV2_CToke
     /// ------- ///
 
     /// @inheritdoc ICompoundV2_CTokenAdapter
-    function mint(uint256 mintAmount) external override creditFacadeOnly {
-        _revertOnError(_mint(mintAmount));
+    function mint(uint256 mintAmount)
+        external
+        override
+        creditFacadeOnly // F: [ACV2CT-1]
+    {
+        _revertOnError(_mint(mintAmount)); // F: [ACV2CT-2, ACV2CT-3]
     }
 
     /// @inheritdoc ICompoundV2_CTokenAdapter
-    function mintAll() external override creditFacadeOnly {
-        _revertOnError(_mintAll());
+    function mintAll()
+        external
+        override
+        creditFacadeOnly // F: [ACV2CT-1]
+    {
+        _revertOnError(_mintAll()); // F: [ACV2CT-4, ACV2CT-5]
     }
 
     /// @dev Internal implementation of `mint`
@@ -48,7 +56,7 @@ abstract contract CompoundV2_CTokenAdapter is AbstractAdapter, ICompoundV2_CToke
 
     /// @dev Encodes calldata for `ICErc20Actions.mint` call
     function _encodeMint(uint256 amount) internal pure returns (bytes memory callData) {
-        callData = abi.encodeCall(ICErc20Actions.mint, (amount));
+        callData = abi.encodeCall(ICErc20Actions.mint, (amount)); // F: [ACV2CT-2, ACV2CT-4]
     }
 
     /// --------- ///
@@ -56,13 +64,21 @@ abstract contract CompoundV2_CTokenAdapter is AbstractAdapter, ICompoundV2_CToke
     /// --------- ///
 
     /// @inheritdoc ICompoundV2_CTokenAdapter
-    function redeem(uint256 amount) external override creditFacadeOnly {
-        _revertOnError(_redeem(amount));
+    function redeem(uint256 amount)
+        external
+        override
+        creditFacadeOnly // F: [ACV2CT-1]
+    {
+        _revertOnError(_redeem(amount)); // F: [ACV2CT-6, ACV2CT-7]
     }
 
     /// @inheritdoc ICompoundV2_CTokenAdapter
-    function redeemAll() external override creditFacadeOnly {
-        _revertOnError(_redeemAll());
+    function redeemAll()
+        external
+        override
+        creditFacadeOnly // F: [ACV2CT-1]
+    {
+        _revertOnError(_redeemAll()); // F: [ACV2CT-8, ACV2CT-9]
     }
 
     /// @dev Internal implementation of `redeem`
@@ -77,7 +93,7 @@ abstract contract CompoundV2_CTokenAdapter is AbstractAdapter, ICompoundV2_CToke
 
     /// @dev Encodes calldata for `ICErc20Actions.redeem` call
     function _encodeRedeem(uint256 amount) internal pure returns (bytes memory callData) {
-        callData = abi.encodeCall(ICErc20Actions.redeem, (amount));
+        callData = abi.encodeCall(ICErc20Actions.redeem, (amount)); // F: [ACV2CT-6, ACV2CT-8]
     }
 
     /// -------------------- ///
@@ -85,8 +101,12 @@ abstract contract CompoundV2_CTokenAdapter is AbstractAdapter, ICompoundV2_CToke
     /// -------------------- ///
 
     /// @inheritdoc ICompoundV2_CTokenAdapter
-    function redeemUnderlying(uint256 amount) external override creditFacadeOnly {
-        _revertOnError(_redeemUnderlying(amount));
+    function redeemUnderlying(uint256 amount)
+        external
+        override
+        creditFacadeOnly // F: [ACV2CT-1]
+    {
+        _revertOnError(_redeemUnderlying(amount)); // F: [ACV2CT-10, ACV2CT-11]
     }
 
     /// @dev Internal implementation of `redeemUnderlying`
@@ -96,6 +116,6 @@ abstract contract CompoundV2_CTokenAdapter is AbstractAdapter, ICompoundV2_CToke
 
     /// @dev Encodes calldata for `ICErc20Actions.redeemUnderlying` call
     function _encodeRedeemUnderlying(uint256 amount) internal pure returns (bytes memory callData) {
-        callData = abi.encodeCall(ICErc20Actions.redeemUnderlying, (amount));
+        callData = abi.encodeCall(ICErc20Actions.redeemUnderlying, (amount)); // F: [ACV2CT-10]
     }
 }

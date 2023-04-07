@@ -8,7 +8,6 @@ import {
     ICreditManagerV2Events
 } from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditManagerV2.sol";
 import {ICreditFacadeEvents} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacade.sol";
-import {IAdapterExceptions} from "@gearbox-protocol/core-v3/contracts/interfaces/adapters/IAdapter.sol";
 
 // TEST
 import "../lib/constants.sol";
@@ -30,8 +29,6 @@ contract AdapterTestHelper is
     BalanceHelper,
     CreditFacadeTestHelper
 {
-    error TokenIsNotInAllowedList(address);
-
     function _setUp() internal {
         _setUp(Tokens.DAI);
     }

@@ -24,6 +24,7 @@ import {CurveV1AdapterHelper} from "./CurveV1AdapterHelper.sol";
 import {
     ZeroAddressException, NotImplementedException
 } from "@gearbox-protocol/core-v3/contracts/interfaces/IErrors.sol";
+import {IAdapterExceptions} from "@gearbox-protocol/core-v3/contracts/interfaces/adapters/IAdapter.sol";
 import {ICreditManagerV2Exceptions} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditManagerV2.sol";
 
 /// @title CurveV1AdapterBaseTest
@@ -82,7 +83,7 @@ contract CurveV1AdapterBaseTest is DSTest, CurveV1AdapterHelper {
             2
         );
 
-        evm.expectRevert(abi.encodeWithSelector(TokenIsNotInAllowedList.selector, DUMB_ADDRESS));
+        evm.expectRevert(IAdapterExceptions.TokenNotAllowedException.selector);
 
         new CurveV1AdapterBase(
             address(creditManager),
@@ -132,7 +133,7 @@ contract CurveV1AdapterBaseTest is DSTest, CurveV1AdapterHelper {
             coins[i] = DUMB_ADDRESS;
 
             mock = address(new CurveV1Mock(coins, underlying_coins));
-            evm.expectRevert(abi.encodeWithSelector(TokenIsNotInAllowedList.selector, DUMB_ADDRESS));
+            evm.expectRevert(IAdapterExceptions.TokenNotAllowedException.selector);
             new CurveV1AdapterBase(
                 address(creditManager),
                 address(mock),
@@ -145,7 +146,7 @@ contract CurveV1AdapterBaseTest is DSTest, CurveV1AdapterHelper {
             underlying_coins[i] = DUMB_ADDRESS;
 
             mock = address(new CurveV1Mock(coins, underlying_coins));
-            evm.expectRevert(abi.encodeWithSelector(TokenIsNotInAllowedList.selector, DUMB_ADDRESS));
+            evm.expectRevert(IAdapterExceptions.TokenNotAllowedException.selector);
             new CurveV1AdapterBase(
                 address(creditManager),
                 address(mock),

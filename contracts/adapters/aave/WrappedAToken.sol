@@ -41,68 +41,68 @@ contract WrappedAToken is ERC20, IWrappedAToken {
             address(_aToken) != address(0) ? string(abi.encodePacked("w", _aToken.symbol())) : ""
         )
     {
-        if (address(_aToken) == address(0)) revert ZeroAddressException();
+        if (address(_aToken) == address(0)) revert ZeroAddressException(); // F: [WAT-1]
 
-        aToken = _aToken;
-        underlying = IERC20(aToken.UNDERLYING_ASSET_ADDRESS());
-        lendingPool = aToken.POOL();
+        aToken = _aToken; // F: [WAT-2]
+        underlying = IERC20(aToken.UNDERLYING_ASSET_ADDRESS()); // F: [WAT-2]
+        lendingPool = aToken.POOL(); // F: [WAT-2]
         _normalizedIncome = lendingPool.getReserveNormalizedIncome(address(underlying));
         underlying.safeApprove(address(lendingPool), type(uint256).max);
     }
 
     /// @notice waToken decimals, same as underlying and aToken
     function decimals() public view override(ERC20, IERC20Metadata) returns (uint8) {
-        return aToken.decimals();
+        return aToken.decimals(); // F: [WAT-2]
     }
 
     /// @inheritdoc IWrappedAToken
     function balanceOfUnderlying(address account) external view override returns (uint256) {
-        return (balanceOf(account) * exchangeRate()) / WAD;
+        return (balanceOf(account) * exchangeRate()) / WAD; // F: [WAT-3]
     }
 
     /// @inheritdoc IWrappedAToken
     function exchangeRate() public view override returns (uint256) {
-        return WAD * lendingPool.getReserveNormalizedIncome(address(underlying)) / _normalizedIncome;
+        return WAD * lendingPool.getReserveNormalizedIncome(address(underlying)) / _normalizedIncome; // F: [WAT-4]
     }
 
     /// @inheritdoc IWrappedAToken
     function deposit(uint256 assets) external override returns (uint256 shares) {
         aToken.transferFrom(msg.sender, address(this), assets);
-        shares = _deposit(assets);
+        shares = _deposit(assets); // F: [WAT-5]
     }
 
     /// @inheritdoc IWrappedAToken
     function depositUnderlying(uint256 assets) external override returns (uint256 shares) {
         underlying.safeTransferFrom(msg.sender, address(this), assets);
         _ensureAllowance(assets);
-        lendingPool.deposit(address(underlying), assets, address(this), 0);
-        shares = _deposit(assets);
+        lendingPool.deposit(address(underlying), assets, address(this), 0); // F: [WAT-6]
+        shares = _deposit(assets); // F: [WAT-6]
     }
 
     /// @inheritdoc IWrappedAToken
     function withdraw(uint256 shares) external override returns (uint256 assets) {
-        assets = _withdraw(shares);
+        assets = _withdraw(shares); // F: [WAT-7]
         aToken.transfer(msg.sender, assets);
     }
 
     /// @inheritdoc IWrappedAToken
     function withdrawUnderlying(uint256 shares) external override returns (uint256 assets) {
-        assets = _withdraw(shares);
-        lendingPool.withdraw(address(underlying), assets, msg.sender);
+        assets = _withdraw(shares); // F: [WAT-8]
+        lendingPool.withdraw(address(underlying), assets, msg.sender); // F: [WAT-8]
     }
 
     /// @dev Internal implementation of deposit
     function _deposit(uint256 assets) internal returns (uint256 shares) {
         shares = (assets * WAD) / exchangeRate();
-        _mint(msg.sender, shares);
-        emit Deposit(msg.sender, assets, shares);
+        _mint(msg.sender, shares); // F: [WAT-5, WAT-6]
+        emit Deposit(msg.sender, assets, shares); // F: [WAT-5, WAT-6]
     }
 
     /// @dev Internal implementation of withdraw
     function _withdraw(uint256 shares) internal returns (uint256 assets) {
         assets = (shares * exchangeRate()) / WAD;
-        _burn(msg.sender, shares);
-        emit Withdraw(msg.sender, assets, shares);
+        _burn(msg.sender, shares); // F: [WAT-7, WAT-8]
+        emit Withdraw(msg.sender, assets, shares); // F: [WAT-7, WAT-8]
     }
 
     /// @dev Gives lending pool max approval for underlying if it falls below `amount`
@@ -110,7 +110,7 @@ contract WrappedAToken is ERC20, IWrappedAToken {
         uint256 allowance = underlying.allowance(address(this), address(lendingPool));
         if (allowance < amount) {
             unchecked {
-                underlying.safeIncreaseAllowance(address(lendingPool), type(uint256).max - allowance);
+                underlying.safeIncreaseAllowance(address(lendingPool), type(uint256).max - allowance); // [WAT-9]
             }
         }
     }
