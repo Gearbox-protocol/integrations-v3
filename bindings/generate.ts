@@ -15,7 +15,7 @@ import {
 } from "@gearbox-protocol/sdk";
 import * as fs from "fs";
 
-import { mainnetCreditManagers, mainnetPools } from "../config/liveTests";
+import { mainnetCreditManagers } from "../config/liveTests";
 
 function safeEnum(t: string): string {
   if (!isNaN(parseInt(t.charAt(0), 10))) {
@@ -419,36 +419,3 @@ file = fs.readFileSync("./bindings/AdapterData.sol").toString();
 file = file.replace("// $ADAPTERS_LIST", adapters);
 
 fs.writeFileSync("./contracts/test/config/AdapterData.sol", file);
-
-/// ---------------- PoolDataLive.sol -----------------------------
-
-config = "";
-
-for (let p of mainnetPools) {
-  config += `underlyings.push(Tokens.${safeEnum(p.symbol)});`;
-  config += `pp = poolParams[Tokens.${safeEnum(p.symbol)}];`;
-  config += `pp.U_optimal = ${p.U_optimal.toString()};`;
-  config += `pp.U_reserve = ${p.U_reserve.toString()};`;
-  config += `pp.R_base = ${p.R_base.toString()};`;
-  config += `pp.R_slope1 = ${p.R_slope1.toString()};`;
-  config += `pp.R_slope2 = ${p.R_slope2.toString()};`;
-  config += `pp.R_slope3 = ${p.R_slope3.toString()};`;
-  config += `pp.expectedLiquidityLimit = ${p.expectedLiquidityLimit.toString()};`;
-  config += `pp.supportsQuotas = ${p.supportsQuotas.toString()};`;
-
-  config += p.quotedTokens
-    .map(
-      qt => `pp.quotedTokens.push(QuotedTokenParams({
-    token: Tokens.${safeEnum(qt.symbol)},
-    minRiskRate: ${qt.minRate.toString()},
-    maxRate: ${qt.maxRate.toString()},
-    limit: ${qt.totalLimit.toString()}
-  }));`,
-    )
-    .join("\n");
-}
-file = fs.readFileSync("./bindings/PoolConfigLive.sol").toString();
-
-file = file.replace("// $POOL_CONFIG", config);
-
-fs.writeFileSync("./contracts/test/config/PoolConfigLive.sol", file);
