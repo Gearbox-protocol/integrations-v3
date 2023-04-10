@@ -26,26 +26,12 @@ struct SingeTokenPriceFeedData {
     Tokens token;
 }
 
-struct CompositePriceFeedData {
-    Tokens token;
-    address targetToBaseFeed;
-    address baseToUSDFeed;
-}
-
-struct BoundedPriceFeedData {
-    Tokens token;
-    address priceFeed;
-    uint256 upperBound;
-}
-
 contract PriceFeedDataLive {
     ChainlinkPriceFeedData[] chainlinkPriceFeeds;
     SingeTokenPriceFeedData[] zeroPriceFeeds;
     CurvePriceFeedData[] curvePriceFeeds;
     CurveLikePriceFeedData[] likeCurvePriceFeeds;
     SingeTokenPriceFeedData[] yearnPriceFeeds;
-    BoundedPriceFeedData[] boundedPriceFeeds;
-    CompositePriceFeedData[] compositePriceFeeds;
     SingeTokenPriceFeedData wstethPriceFeed;
 
     constructor(uint8 networkId) {
@@ -133,27 +119,6 @@ contract PriceFeedDataLive {
             likeCurvePriceFeeds.push(
                 CurveLikePriceFeedData({lpToken: Tokens.stkcvxgusd3CRV, curveToken: Tokens.gusd3CRV})
             );
-            compositePriceFeeds.push(
-                CompositePriceFeedData({
-                    token: Tokens.WBTC,
-                    targetToBaseFeed: 0xfdFD9C85aD200c506Cf9e21F1FD8dd01932FBB23,
-                    baseToUSDFeed: 0xF4030086522a5bEEa4988F8cA5B36dbC97BeE88c
-                })
-            );
-            compositePriceFeeds.push(
-                CompositePriceFeedData({
-                    token: Tokens.STETH,
-                    targetToBaseFeed: 0x86392dC19c0b719886221c78AB11eb8Cf5c52812,
-                    baseToUSDFeed: 0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419
-                })
-            );
-            boundedPriceFeeds.push(
-                BoundedPriceFeedData({
-                    token: Tokens.LUSD,
-                    priceFeed: 0x3D7aE7E594f2f2091Ad8798313450130d0Aba3a0,
-                    upperBound: 110000000
-                })
-            );
         } else if (networkId == 2) {
             chainlinkPriceFeeds.push(
                 ChainlinkPriceFeedData({token: Tokens._1INCH, priceFeed: 0x4813419C6783c36d10F97f08552310bf483fBD97})
@@ -237,20 +202,6 @@ contract PriceFeedDataLive {
             );
             likeCurvePriceFeeds.push(
                 CurveLikePriceFeedData({lpToken: Tokens.stkcvxgusd3CRV, curveToken: Tokens.gusd3CRV})
-            );
-            compositePriceFeeds.push(
-                CompositePriceFeedData({
-                    token: Tokens.STETH,
-                    targetToBaseFeed: 0x78622A939324C5dC1B646D113358f54f0BA4353B,
-                    baseToUSDFeed: 0x491741d9F426130d1bC27Aee82f8b4Bd4E6E5f5D
-                })
-            );
-            boundedPriceFeeds.push(
-                BoundedPriceFeedData({
-                    token: Tokens.LUSD,
-                    priceFeed: 0xd6852347062aB885B6Fb9F7220BedCc5A39CE862,
-                    upperBound: 110000000
-                })
             );
         }
 

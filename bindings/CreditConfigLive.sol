@@ -16,7 +16,6 @@ struct CollateralTokenHuman {
 
 /// @dev A struct representing the initial Credit Manager configuration parameters
 struct CreditManagerHumanOpts {
-    Tokens underlying;
     /// @dev The minimal debt principal amount
     uint128 minBorrowedAmount;
     /// @dev The maximal debt principal amount
@@ -36,8 +35,7 @@ struct CreditManagerHumanOpts {
 }
 
 contract CreditConfigLive {
-    mapping(uint256 => CreditManagerHumanOpts) creditManagerHumanOpts;
-    uint256 numOpts;
+    mapping(Tokens => CreditManagerHumanOpts) creditManagerHumanOpts;
 
     constructor() {
         CreditManagerHumanOpts storage cm;

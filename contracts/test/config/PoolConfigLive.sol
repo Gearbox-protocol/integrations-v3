@@ -42,67 +42,16 @@ contract PoolConfigLive {
         pp.expectedLiquidityLimit = 30000000000000000000000;
         pp.supportsQuotas = true;
         pp.quotedTokens.push(
-            QuotedTokenParams({token: Tokens.CVX, minRiskRate: 10, maxRate: 300, limit: 300000000000000000000})
+            QuotedTokenParams({token: Tokens.STETH, minRiskRate: 10, maxRate: 300, limit: 3000000000000000000000})
         );
         pp.quotedTokens.push(
-            QuotedTokenParams({token: Tokens.FXS, minRiskRate: 10, maxRate: 300, limit: 300000000000000000000})
+            QuotedTokenParams({
+                token: Tokens.stkcvxsteCRV,
+                minRiskRate: 50,
+                maxRate: 1000,
+                limit: 3000000000000000000000
+            })
         );
-        pp.quotedTokens.push(
-            QuotedTokenParams({token: Tokens.LQTY, minRiskRate: 10, maxRate: 300, limit: 300000000000000000000})
-        );
-        pp.quotedTokens.push(
-            QuotedTokenParams({token: Tokens.CRV, minRiskRate: 10, maxRate: 300, limit: 300000000000000000000})
-        );
-        pp.quotedTokens.push(
-            QuotedTokenParams({token: Tokens.LDO, minRiskRate: 10, maxRate: 300, limit: 300000000000000000000})
-        );
-        pp.quotedTokens.push(
-            QuotedTokenParams({token: Tokens.SNX, minRiskRate: 10, maxRate: 300, limit: 300000000000000000000})
-        );
-        underlyings.push(Tokens.wstETH);
-        pp = poolParams[Tokens.wstETH];
-        pp.U_optimal = 8000;
-        pp.U_reserve = 9000;
-        pp.R_base = 0;
-        pp.R_slope1 = 250;
-        pp.R_slope2 = 2000;
-        pp.R_slope3 = 10000;
-        pp.expectedLiquidityLimit = 30000000000000000000000;
-        pp.supportsQuotas = true;
-        pp.quotedTokens.push(
-            QuotedTokenParams({token: Tokens.CVX, minRiskRate: 10, maxRate: 300, limit: 300000000000000000000})
-        );
-        pp.quotedTokens.push(
-            QuotedTokenParams({token: Tokens.FXS, minRiskRate: 10, maxRate: 300, limit: 300000000000000000000})
-        );
-        pp.quotedTokens.push(
-            QuotedTokenParams({token: Tokens.LQTY, minRiskRate: 10, maxRate: 300, limit: 300000000000000000000})
-        );
-        pp.quotedTokens.push(
-            QuotedTokenParams({token: Tokens.CRV, minRiskRate: 10, maxRate: 300, limit: 300000000000000000000})
-        );
-        pp.quotedTokens.push(
-            QuotedTokenParams({token: Tokens.LDO, minRiskRate: 10, maxRate: 300, limit: 300000000000000000000})
-        );
-        pp.quotedTokens.push(
-            QuotedTokenParams({token: Tokens.SNX, minRiskRate: 10, maxRate: 300, limit: 300000000000000000000})
-        );
-        underlyings.push(Tokens.WBTC);
-        pp = poolParams[Tokens.WBTC];
-        pp.U_optimal = 8000;
-        pp.U_reserve = 9000;
-        pp.R_base = 0;
-        pp.R_slope1 = 250;
-        pp.R_slope2 = 2000;
-        pp.R_slope3 = 10000;
-        pp.expectedLiquidityLimit = 20000000000;
-        pp.supportsQuotas = true;
-        pp.quotedTokens.push(QuotedTokenParams({token: Tokens.CVX, minRiskRate: 10, maxRate: 300, limit: 2000000000}));
-        pp.quotedTokens.push(QuotedTokenParams({token: Tokens.FXS, minRiskRate: 10, maxRate: 300, limit: 2000000000}));
-        pp.quotedTokens.push(QuotedTokenParams({token: Tokens.LQTY, minRiskRate: 10, maxRate: 300, limit: 2000000000}));
-        pp.quotedTokens.push(QuotedTokenParams({token: Tokens.CRV, minRiskRate: 10, maxRate: 300, limit: 2000000000}));
-        pp.quotedTokens.push(QuotedTokenParams({token: Tokens.LDO, minRiskRate: 10, maxRate: 300, limit: 2000000000}));
-        pp.quotedTokens.push(QuotedTokenParams({token: Tokens.SNX, minRiskRate: 10, maxRate: 300, limit: 2000000000}));
         underlyings.push(Tokens.DAI);
         pp = poolParams[Tokens.DAI];
         pp.U_optimal = 8000;
@@ -114,50 +63,12 @@ contract PoolConfigLive {
         pp.expectedLiquidityLimit = 50000000000000000000000000;
         pp.supportsQuotas = true;
         pp.quotedTokens.push(
-            QuotedTokenParams({token: Tokens.CVX, minRiskRate: 10, maxRate: 300, limit: 5000000000000000000000000})
-        );
-        pp.quotedTokens.push(
-            QuotedTokenParams({token: Tokens.FXS, minRiskRate: 10, maxRate: 300, limit: 5000000000000000000000000})
-        );
-        pp.quotedTokens.push(
-            QuotedTokenParams({token: Tokens.LQTY, minRiskRate: 10, maxRate: 300, limit: 5000000000000000000000000})
-        );
-        pp.quotedTokens.push(
-            QuotedTokenParams({token: Tokens.CRV, minRiskRate: 10, maxRate: 300, limit: 5000000000000000000000000})
-        );
-        pp.quotedTokens.push(
-            QuotedTokenParams({token: Tokens.LDO, minRiskRate: 10, maxRate: 300, limit: 5000000000000000000000000})
-        );
-        pp.quotedTokens.push(
-            QuotedTokenParams({token: Tokens.SNX, minRiskRate: 10, maxRate: 300, limit: 5000000000000000000000000})
-        );
-        underlyings.push(Tokens.USDC);
-        pp = poolParams[Tokens.USDC];
-        pp.U_optimal = 8000;
-        pp.U_reserve = 9000;
-        pp.R_base = 0;
-        pp.R_slope1 = 100;
-        pp.R_slope2 = 1000;
-        pp.R_slope3 = 10000;
-        pp.expectedLiquidityLimit = 50000000000000;
-        pp.supportsQuotas = true;
-        pp.quotedTokens.push(
-            QuotedTokenParams({token: Tokens.CVX, minRiskRate: 10, maxRate: 300, limit: 5000000000000})
-        );
-        pp.quotedTokens.push(
-            QuotedTokenParams({token: Tokens.FXS, minRiskRate: 10, maxRate: 300, limit: 5000000000000})
-        );
-        pp.quotedTokens.push(
-            QuotedTokenParams({token: Tokens.LQTY, minRiskRate: 10, maxRate: 300, limit: 5000000000000})
-        );
-        pp.quotedTokens.push(
-            QuotedTokenParams({token: Tokens.CRV, minRiskRate: 10, maxRate: 300, limit: 5000000000000})
-        );
-        pp.quotedTokens.push(
-            QuotedTokenParams({token: Tokens.LDO, minRiskRate: 10, maxRate: 300, limit: 5000000000000})
-        );
-        pp.quotedTokens.push(
-            QuotedTokenParams({token: Tokens.SNX, minRiskRate: 10, maxRate: 300, limit: 5000000000000})
+            QuotedTokenParams({
+                token: Tokens.stkcvxcrvPlain3andSUSD,
+                minRiskRate: 10,
+                maxRate: 300,
+                limit: 3000000000000000000000000
+            })
         );
     }
 }

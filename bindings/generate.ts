@@ -201,106 +201,6 @@ const curveLikePriceFeedsGoerli = Object.entries(priceFeedsByNetwork)
   .filter(t => t !== "")
   .join("\n");
 
-const boundedPriceFeeds = Object.entries(priceFeedsByNetwork)
-  .filter(
-    ([token, oracleData]) =>
-      oracleData.priceFeedUSD?.type === OracleType.BOUNDED_ORACLE &&
-      tokenDataByNetwork.Mainnet[token as SupportedToken] !== "",
-  )
-  .map(([token, oracleData]) => {
-    if (oracleData.priceFeedUSD?.type === OracleType.BOUNDED_ORACLE) {
-      const targetPriceFeed: string | undefined =
-        oracleData.priceFeedUSD!.targetPriceFeed.Mainnet;
-
-      return targetPriceFeed
-        ? `boundedPriceFeeds.push(BoundedPriceFeedData({
-  token: Tokens.${safeEnum(token as SupportedToken)},
-  priceFeed: ${targetPriceFeed},
-  upperBound: ${oracleData.priceFeedUSD!.upperBound}
-}));`
-        : "";
-    }
-    return "";
-  })
-  .filter(t => t !== "")
-  .join("\n");
-
-const boundedPriceFeedsGoerli = Object.entries(priceFeedsByNetwork)
-  .filter(
-    ([token, oracleData]) =>
-      oracleData.priceFeedUSD?.type === OracleType.BOUNDED_ORACLE &&
-      tokenDataByNetwork.Goerli[token as SupportedToken] !== "",
-  )
-  .map(([token, oracleData]) => {
-    if (oracleData.priceFeedUSD?.type === OracleType.BOUNDED_ORACLE) {
-      const targetPriceFeed: string | undefined =
-        oracleData.priceFeedUSD!.targetPriceFeed.Goerli;
-
-      return targetPriceFeed
-        ? `boundedPriceFeeds.push(BoundedPriceFeedData({
-  token: Tokens.${safeEnum(token as SupportedToken)},
-  priceFeed: ${targetPriceFeed},
-  upperBound: ${oracleData.priceFeedUSD!.upperBound}
-}));`
-        : "";
-    }
-    return "";
-  })
-  .filter(t => t !== "")
-  .join("\n");
-
-const compositePriceFeeds = Object.entries(priceFeedsByNetwork)
-  .filter(
-    ([token, oracleData]) =>
-      oracleData.priceFeedUSD?.type === OracleType.COMPOSITE_ORACLE &&
-      tokenDataByNetwork.Mainnet[token as SupportedToken] !== "",
-  )
-  .map(([token, oracleData]) => {
-    if (oracleData.priceFeedUSD?.type === OracleType.COMPOSITE_ORACLE) {
-      const targetToBaseFeed: string | undefined =
-        oracleData.priceFeedUSD!.targetToBasePriceFeed.Mainnet;
-      const baseToUSDFeed: string | undefined =
-        oracleData.priceFeedUSD!.baseToUsdPriceFeed.Mainnet;
-
-      return targetToBaseFeed && baseToUSDFeed
-        ? `compositePriceFeeds.push(CompositePriceFeedData({
-        token: Tokens.${safeEnum(token as SupportedToken)},
-        targetToBaseFeed: ${targetToBaseFeed},
-        baseToUSDFeed: ${baseToUSDFeed}
-      }));`
-        : "";
-    }
-    return "";
-  })
-  .filter(t => t !== "")
-  .join("\n");
-
-const compositePriceFeedsGoerli = Object.entries(priceFeedsByNetwork)
-  .filter(
-    ([token, oracleData]) =>
-      oracleData.priceFeedUSD?.type === OracleType.COMPOSITE_ORACLE &&
-      tokenDataByNetwork.Goerli[token as SupportedToken] !== "",
-  )
-  .map(([token, oracleData]) => {
-    if (oracleData.priceFeedUSD?.type === OracleType.COMPOSITE_ORACLE) {
-      const targetToBaseFeed: string | undefined =
-        oracleData.priceFeedUSD!.targetToBasePriceFeed.Goerli;
-      const baseToUSDFeed: string | undefined =
-        oracleData.priceFeedUSD!.baseToUsdPriceFeed.Goerli;
-
-      return targetToBaseFeed && baseToUSDFeed
-        ? `compositePriceFeeds.push(CompositePriceFeedData({
-        token: Tokens.${safeEnum(token as SupportedToken)},
-        targetToBaseFeed: ${targetToBaseFeed},
-        baseToUSDFeed: ${baseToUSDFeed}
-      }));`
-        : "";
-    }
-    return "";
-  })
-  .filter(t => t !== "")
-  .join("\n");
-
 const yearnPriceFeeds = Object.entries(priceFeedsByNetwork)
   .filter(
     ([, oracleData]) =>
@@ -341,13 +241,6 @@ file = file.replace("// $CURVE_LIKE_PRICE_FEEDS", curveLikePriceFeeds);
 file = file.replace(
   "// $GOERLI_CURVE_LIKE_PRICE_FEEDS",
   curveLikePriceFeedsGoerli,
-);
-file = file.replace("// $BOUNDED_PRICE_FEEDS", boundedPriceFeeds);
-file = file.replace("// $GOERLI_BOUNDED_PRICE_FEEDS", boundedPriceFeedsGoerli);
-file = file.replace("// $COMPOSITE_PRICE_FEEDS", compositePriceFeeds);
-file = file.replace(
-  "// $GOERLI_COMPOSITE_PRICE_FEEDS",
-  compositePriceFeedsGoerli,
 );
 file = file.replace("// $YEARN_PRICE_FEEDS", yearnPriceFeeds);
 file = file.replace("// $WSTETH_PRICE_FEED", wstethPriceFeed);
@@ -390,9 +283,7 @@ fs.writeFileSync("./contracts/test/config/SupportedContracts.sol", file);
 let config = "";
 
 for (let c of mainnetCreditManagers) {
-  config += `cm = creditManagerHumanOpts[numOpts];`;
-  config += `++numOpts;`;
-  config += `cm.underlying = Tokens.${safeEnum(c.symbol)};`;
+  config += `cm = creditManagerHumanOpts[Tokens.${safeEnum(c.symbol)}];`;
   config += `cm.minBorrowedAmount = ${c.minAmount.toString()};`;
   config += `cm.maxBorrowedAmount = ${c.maxAmount.toString()};`;
   config += `cm.degenNFT = address(0);`;
