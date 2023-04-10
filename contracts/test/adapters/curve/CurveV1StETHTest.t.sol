@@ -28,7 +28,7 @@ uint256 constant WETH_ADD_LIQUIDITY_AMOUNT = WETH_ACCOUNT_AMOUNT / 5;
 uint256 constant WETH_REMOVE_LIQUIDITY_AMOUNT = WETH_ACCOUNT_AMOUNT / 5;
 uint256 constant RATE = 2;
 
-/// @title CurveV1AdapterBaseTest
+/// @title CurveV1StEthAdapterTest
 /// @notice Designed for unit test purposes only
 contract CurveV1StEthAdapterTest is DSTest, CurveV1AdapterHelper {
     CurveV1AdapterStETH public adapter;

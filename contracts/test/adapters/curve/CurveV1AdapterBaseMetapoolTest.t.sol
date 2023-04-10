@@ -19,7 +19,7 @@ import {CurveV1AdapterHelper} from "./CurveV1AdapterHelper.sol";
 
 // EXCEPTIONS
 
-/// @title CurveV1AdapterBaseTest
+/// @title CurveV1AdapterBaseMetaPoolTest
 /// @notice Designed for unit test purposes only
 contract CurveV1AdapterBaseMetaPoolTest is DSTest, CurveV1AdapterHelper {
     ICurveV1Adapter public adapter;

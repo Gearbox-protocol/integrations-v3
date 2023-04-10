@@ -24,7 +24,7 @@ import {CompoundTestHelper} from "./CompoundTestHelper.sol";
 
 /// @title Compound V2 CToken adapter test
 /// @notice [ACV2CT]: Unit tests for Compound V2 CToken adapter
-contract CompoundV2_CEtherAdapter_Test is CompoundTestHelper {
+contract CompoundV2_CTokenAdapter_Test is CompoundTestHelper {
     CompoundV2_CEtherAdapter cethAdapter;
     CompoundV2_CErc20Adapter cusdcAdapter;
 
