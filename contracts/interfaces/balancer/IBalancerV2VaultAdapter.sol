@@ -74,7 +74,7 @@ interface IBalancerV2VaultAdapter is IAdapter, IBalancerV2VaultAdapterExceptions
     ///        * `amount` - amount of asset to send / receive. 0 signals to either spend the entire amount received from the last step,
     ///                     or to receive the exact amount needed for the next step
     ///        * `userData` - generic blob used to pass extra data
-    /// @param assets Alphanumerically sorted array of assets participating in the swap
+    /// @param assets Array of all assets participating in the swap
     /// @param limits Array of minimal received (negative) / maximal spent (positive) amounts, in the same order as the assets array
     /// @param deadline The latest timestamp at which the swap would be executed
     /// @dev `fundManagement` param from the original interface is ignored, as the adapter does not use internal balances and

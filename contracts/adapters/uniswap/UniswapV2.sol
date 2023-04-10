@@ -120,11 +120,12 @@ contract UniswapV2Adapter is AbstractAdapter, UniswapConnectorChecker, IUniswapV
         view
         returns (bool valid, address tokenIn, address tokenOut)
     {
+        uint256 len = path.length;
+
         valid = true;
         tokenIn = path[0];
-        tokenOut = path[path.length - 1];
+        tokenOut = path[len - 1];
 
-        uint256 len = path.length;
         if (len > 2) {
             valid = isConnector(path[1]);
         }
