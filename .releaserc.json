@@ -4,9 +4,9 @@
       "name": "main"
     },
     {
-      "name": "next",
-      "channel": "next",
-      "prerelease": "next"
+      "name": "legacy",
+      "channel": "legacy",
+      "prerelease": "legacy"
     }
   ],
   "plugins": [
