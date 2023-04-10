@@ -22,6 +22,8 @@ interface ICurvePoolStETH {
 
     function get_virtual_price() external view returns (uint256);
 
+    function virtual_price() external view returns (uint256);
+
     function lp_token() external view returns (address);
 
     function remove_liquidity_one_coin(uint256 _token_amount, int128 i, uint256 min_amount) external;

@@ -238,6 +238,10 @@ contract CurveV1MetapoolMock is ICurvePool, ICurvePool2Assets {
         virtualPrice = _price;
     }
 
+    function virtual_price() external view override returns (uint256) {
+        return virtualPrice;
+    }
+
     function balances(int128 i) external view returns (uint256) {
         return balances(uint256(uint128(i)));
     }

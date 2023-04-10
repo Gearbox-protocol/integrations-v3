@@ -138,6 +138,10 @@ contract CurveV1StETHMock is ICurvePoolStETH {
         virtualPrice = _price;
     }
 
+    function virtual_price() external view override returns (uint256) {
+        return virtualPrice;
+    }
+
     function remove_liquidity_one_coin(uint256 _token_amount, int128 i, uint256 min_amount) external {
         ICRVToken(lp_token).burnFrom(msg.sender, _token_amount);
         if (real_liquidity_mode) {
