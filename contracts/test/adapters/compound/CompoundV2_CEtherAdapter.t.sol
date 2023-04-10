@@ -3,7 +3,7 @@
 // (c) Gearbox Holdings, 2023
 pragma solidity ^0.8.17;
 
-import {CONFIGURATOR} from "@gearbox-protocol/core-v3/contracts/test/lib/constants.sol";
+import {CONFIGURATOR} from "@gearbox-protocol/core-v2/contracts/test/lib/constants.sol";
 
 import {CompoundV2_CEtherAdapter} from "../../../adapters/compound/CompoundV2_CEtherAdapter.sol";
 

@@ -3,7 +3,7 @@
 // (c) Gearbox Holdings, 2023
 pragma solidity ^0.8.17;
 
-import {IAdapterExceptions} from "@gearbox-protocol/core-v3/contracts/interfaces/adapters/IAdapter.sol";
+import {IAdapterExceptions} from "@gearbox-protocol/core-v2/contracts/interfaces/adapters/IAdapter.sol";
 import {
     ICreditManagerV2,
     ICreditManagerV2Exceptions

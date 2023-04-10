@@ -4,8 +4,8 @@
 pragma solidity ^0.8.17;
 
 import {WAD} from "@gearbox-protocol/core-v2/contracts/libraries/Constants.sol";
-import {IAdapterExceptions} from "@gearbox-protocol/core-v3/contracts/interfaces/adapters/IAdapter.sol";
-import {CONFIGURATOR, USER} from "@gearbox-protocol/core-v3/contracts/test/lib/constants.sol";
+import {IAdapterExceptions} from "@gearbox-protocol/core-v2/contracts/interfaces/adapters/IAdapter.sol";
+import {CONFIGURATOR, USER} from "@gearbox-protocol/core-v2/contracts/test/lib/constants.sol";
 
 import {CompoundV2_CErc20Adapter} from "../../../adapters/compound/CompoundV2_CErc20Adapter.sol";
 import {CompoundV2_CEtherAdapter} from "../../../adapters/compound/CompoundV2_CEtherAdapter.sol";

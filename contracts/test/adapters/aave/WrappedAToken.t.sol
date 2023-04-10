@@ -4,8 +4,8 @@
 pragma solidity ^0.8.17;
 
 import {WAD} from "@gearbox-protocol/core-v2/contracts/libraries/Constants.sol";
-import {ZeroAddressException} from "@gearbox-protocol/core-v3/contracts/interfaces/IErrors.sol";
-import {USDC_EXCHANGE_AMOUNT, FRIEND, USER} from "@gearbox-protocol/core-v3/contracts/test/lib/constants.sol";
+import {ZeroAddressException} from "@gearbox-protocol/core-v2/contracts/interfaces/IErrors.sol";
+import {USDC_EXCHANGE_AMOUNT, FRIEND, USER} from "@gearbox-protocol/core-v2/contracts/test/lib/constants.sol";
 
 import {WrappedAToken} from "../../../adapters/aave/WrappedAToken.sol";
 import {IAToken} from "../../../integrations/aave/IAToken.sol";

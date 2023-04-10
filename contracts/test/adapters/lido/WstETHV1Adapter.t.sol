@@ -4,7 +4,7 @@
 pragma solidity ^0.8.17;
 
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
-import {IAdapterExceptions} from "@gearbox-protocol/core-v3/contracts/interfaces/adapters/IAdapter.sol";
+import {IAdapterExceptions} from "@gearbox-protocol/core-v2/contracts/interfaces/adapters/IAdapter.sol";
 import {
     ICreditManagerV2,
     ICreditManagerV2Exceptions

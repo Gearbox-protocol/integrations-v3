@@ -3,8 +3,8 @@
 // (c) Gearbox Holdings, 2023
 pragma solidity ^0.8.17;
 
-import {IAdapterExceptions} from "@gearbox-protocol/core-v3/contracts/interfaces/adapters/IAdapter.sol";
-import {USER, CONFIGURATOR} from "@gearbox-protocol/core-v3/contracts/test/lib/constants.sol";
+import {IAdapterExceptions} from "@gearbox-protocol/core-v2/contracts/interfaces/adapters/IAdapter.sol";
+import {USER, CONFIGURATOR} from "@gearbox-protocol/core-v2/contracts/test/lib/constants.sol";
 
 import {AaveV2_LendingPoolAdapter} from "../../../adapters/aave/AaveV2_LendingPoolAdapter.sol";
 

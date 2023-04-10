@@ -11,7 +11,7 @@ import {
     USDC_EXCHANGE_AMOUNT,
     USER,
     WETH_EXCHANGE_AMOUNT
-} from "@gearbox-protocol/core-v3/contracts/test/lib/constants.sol";
+} from "@gearbox-protocol/core-v2/contracts/test/lib/constants.sol";
 
 import {WrappedAToken} from "../../../adapters/aave/WrappedAToken.sol";
 import {IAToken} from "../../../integrations/aave/IAToken.sol";
