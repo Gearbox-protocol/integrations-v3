@@ -1,82 +1,99 @@
 // SPDX-License-Identifier: BUSL-1.1
 // Gearbox Protocol. Generalized leverage for DeFi protocols
-// (c) Gearbox Holdings, 2023
-pragma solidity ^0.8.17;
+// (c) Gearbox Holdings, 2022
+pragma solidity ^0.8.10;
 
+import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
-import {IPool4626} from "@gearbox-protocol/core-v3/contracts/interfaces/IPool4626.sol";
 import {IAddressProvider} from "@gearbox-protocol/core-v2/contracts/interfaces/IAddressProvider.sol";
 import {IContractsRegister} from "@gearbox-protocol/core-v2/contracts/interfaces/IContractsRegister.sol";
+
+import {IPoolService} from "@gearbox-protocol/core-v2/contracts/interfaces/IPoolService.sol";
+
+import {IwstETH} from "../../integrations/lido/IwstETH.sol";
+import {IwstETHGateWay} from "../../integrations/lido/IwstETHGateway.sol";
 import {ZeroAddressException} from "@gearbox-protocol/core-v2/contracts/interfaces/IErrors.sol";
 
-import {IstETH} from "../../integrations/lido/IstETH.sol";
-import {IwstETH} from "../../integrations/lido/IwstETH.sol";
-import {IwstETHGateway} from "../../interfaces/lido/IwstETHGateway.sol";
-
-/// @title wstETH Gateway
-/// @notice Allows LPs to add/remove stETH to/from wstETH liquidity pool
-contract WstETHGateway is IwstETHGateway {
+/// @title WstETHGateway
+/// @notice Used for converting stETH <> WstETH
+contract WstETHGateway is IwstETHGateWay {
     using SafeERC20 for IERC20;
+    using Address for address payable;
 
-    /// @inheritdoc IwstETHGateway
-    IPool4626 public immutable override pool;
+    IwstETH public immutable wstETH;
+    address public immutable stETH;
 
-    /// @inheritdoc IwstETHGateway
-    IwstETH public immutable override wstETH;
+    address public immutable pool;
 
-    /// @inheritdoc IwstETHGateway
-    IstETH public immutable override stETH;
+    // Contract version
+    uint256 public constant version = 1;
 
-    /// @notice Constructor
+    //
+    // CONSTRUCTOR
+    //
+
+    /// @dev Constructor
     /// @param _pool wstETH pool address
     constructor(address _pool) {
-        if (_pool == address(0)) revert ZeroAddressException();
+        if (_pool == address(0)) revert ZeroAddressException(); // F: [WSTGV1-2]
 
-        IContractsRegister cr =
-            IContractsRegister(IAddressProvider(IPool4626(_pool).addressProvider()).getContractsRegister());
-        if (!cr.isPool(_pool)) revert NotRegisteredPoolException();
+        IContractsRegister contractsRegister =
+            IContractsRegister(IAddressProvider(IPoolService(_pool).addressProvider()).getContractsRegister()); // F: [WSTGV1-2]
 
-        pool = IPool4626(_pool);
-        wstETH = IwstETH(pool.underlyingToken());
-        stETH = IstETH(wstETH.stETH());
+        if (!contractsRegister.isPool(_pool)) revert NonRegisterPoolException(); // F: [WSTGV1-2]
 
-        IERC20(wstETH).safeApprove(address(pool), type(uint256).max);
-        IERC20(stETH).safeApprove(address(wstETH), type(uint256).max);
+        pool = _pool; // F: [WSTGV1-1]
+
+        wstETH = IwstETH(IPoolService(_pool).underlyingToken()); // F: [WSTGV1-1]
+
+        stETH = wstETH.stETH(); // F: [WSTGV1-1]
+
+        IERC20(wstETH.stETH()).approve(address(wstETH), type(uint256).max); // F: [WSTGV1-1]
     }
 
-    /// @inheritdoc IwstETHGateway
-    function depositReferral(uint256 assets, address receiver, uint16 referralCode)
-        external
-        override
-        returns (uint256 shares)
-    {
-        IERC20(stETH).safeTransferFrom(msg.sender, address(this), assets);
+    /**
+     * @dev Adds stETH liquidity to wstETH pool
+     * - transfers the underlying to the pool
+     * - mints Diesel (LP) tokens to onBehalfOf
+     * @param amount Amount of tokens to be deposited
+     * @param onBehalfOf The address that will receive the dToken
+     * @param referralCode Code used to register the integrator originating the operation, for potential rewards.
+     *   0 if the action is executed directly by the user, without a facilitator.
+     */
+    function addLiquidity(uint256 amount, address onBehalfOf, uint256 referralCode) external override {
+        IERC20(stETH).safeTransferFrom(msg.sender, address(this), amount); // F: [WSTGV1-3]
 
-        _ensureAllowance(address(stETH), address(wstETH), assets);
-        uint256 wstETHAmount = wstETH.wrap(assets);
+        uint256 amountWstETH = wstETH.wrap(amount); // F: [WSTGV1-3]
 
-        _ensureAllowance(address(wstETH), address(pool), wstETHAmount);
-        shares = pool.depositReferral(wstETHAmount, receiver, referralCode);
+        _checkAllowance(address(wstETH), amountWstETH);
+        IPoolService(pool).addLiquidity(amountWstETH, onBehalfOf, referralCode); // F: [WSTGV1-3]
     }
 
-    /// @inheritdoc IwstETHGateway
-    function redeem(uint256 shares, address receiver, address owner) external override returns (uint256 assets) {
-        uint256 wstETHAmount = pool.redeem(shares, address(this), owner);
+    /// @dev Removes liquidity from pool
+    ///  - burns LP's Diesel (LP) tokens
+    ///  - returns the equivalent amount of underlying to 'to'
+    /// @param amount Amount of Diesel tokens to burn
+    /// @param to Address to transfer the underlying to
+    function removeLiquidity(uint256 amount, address to) external override returns (uint256 amountGet) {
+        address dieselToken = IPoolService(pool).dieselToken(); // F: [WSTGV1-3]
+        IERC20(dieselToken).safeTransferFrom(msg.sender, address(this), amount); // F: [WSTGV1-3]
 
-        assets = wstETH.unwrap(wstETHAmount);
+        _checkAllowance(dieselToken, amount); // F: [WSTGV1-3]
+        uint256 amountWstETH = IPoolService(pool).removeLiquidity(amount, address(this)); // F: [WSTGV1-3]
 
-        IERC20(stETH).safeTransfer(receiver, assets);
+        amountGet = wstETH.unwrap(amountWstETH); // F: [WSTGV1-3]
+        IERC20(stETH).safeTransfer(to, amountGet); // F: [WSTGV1-3]
     }
 
-    /// @dev Gives `spender` max approval for gateway's `token` if it falls below `amount`
-    function _ensureAllowance(address token, address spender, uint256 amount) internal {
-        uint256 allowance = IERC20(token).allowance(address(this), spender);
-        if (allowance < amount) {
-            unchecked {
-                IERC20(token).safeIncreaseAllowance(spender, type(uint256).max - allowance);
-            }
+    /// @dev Checks that the allowance is sufficient before a transaction, and sets to max if not
+    /// @param token Token to approve for pool
+    /// @param amount Amount to compare allowance with
+    function _checkAllowance(address token, uint256 amount) internal {
+        if (IERC20(token).allowance(address(this), pool) < amount) {
+            IERC20(token).safeApprove(pool, type(uint256).max);
         }
     }
 }
