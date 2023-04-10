@@ -26,9 +26,9 @@ import {
 } from "@gearbox-protocol/core-v3/contracts/interfaces/IErrors.sol";
 import {ICreditManagerV2Exceptions} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditManagerV2.sol";
 
-/// @title CurveV1AdapterBaseTest
+/// @title CurveV1AdapterCryptoTest
 /// @notice Designed for unit test purposes only
-contract CurveV1AdapterBaseTest is DSTest, CurveV1AdapterHelper {
+contract CurveV1AdapterCryptoTest is DSTest, CurveV1AdapterHelper {
     ICurveV1Adapter public adapter;
     CurveV1Mock public curveV1Mock;
 

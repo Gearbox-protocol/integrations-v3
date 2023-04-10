@@ -32,6 +32,8 @@ interface ICurvePool {
 
     function get_virtual_price() external view returns (uint256);
 
+    function virtual_price() external view returns (uint256);
+
     function token() external view returns (address);
 
     function remove_liquidity_one_coin(uint256 _token_amount, int128 i, uint256 min_amount) external;

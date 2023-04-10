@@ -173,6 +173,10 @@ contract CurveV1Mock is ICurvePool {
         virtualPrice = _price;
     }
 
+    function virtual_price() external view override returns (uint256) {
+        return virtualPrice;
+    }
+
     function mintLP(address to, uint256 amount) external {
         ICRVToken(token).mint(to, amount);
     }

@@ -210,9 +210,14 @@ contract CurveV1StETHPoolGateway is ICurvePool2Assets {
         revert NotImplementedException();
     }
 
-    /// @dev Returns the price of the pool's LP token
+    /// @dev Returns the current price of the pool's LP token
     function get_virtual_price() external view override returns (uint256) {
         return ICurvePoolStETH(pool).get_virtual_price();
+    }
+
+    /// @dev Returns the cached price of the pool's LP token
+    function virtual_price() external view override returns (uint256) {
+        return ICurvePoolStETH(pool).virtual_price();
     }
 
     /// @dev Returns the pool's LP token

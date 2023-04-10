@@ -27,7 +27,7 @@ import {ICreditManagerV2Exceptions} from "@gearbox-protocol/core-v3/contracts/in
 uint256 constant STETH_POOLED_ETH = 2 * WAD;
 uint256 constant STETH_TOTAL_SHARES = WAD;
 
-/// @title CurveV1AdapterBaseTest
+/// @title LidoV1AdapterTest
 /// @notice Designed for unit test purposes only
 contract LidoV1AdapterTest is
     DSTest,

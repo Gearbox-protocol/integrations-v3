@@ -10,9 +10,7 @@ import {PriceFeedType} from "../LPPriceFeed.sol";
 import {FixedPoint} from "../../integrations/balancer/FixedPoint.sol";
 
 // EXCEPTIONS
-import {
-    ZeroAddressException, NotImplementedException
-} from "@gearbox-protocol/core-v2/contracts/interfaces/IErrors.sol";
+import {ZeroAddressException} from "@gearbox-protocol/core-v2/contracts/interfaces/IErrors.sol";
 
 uint256 constant DECIMALS = 10 ** 18;
 uint256 constant USD_FEED_DECIMALS = 10 ** 8;
@@ -54,9 +52,8 @@ contract CurveCryptoLPPriceFeed is AbstractCurveLPPriceFeed {
         nCoins = _priceFeed3 == address(0) ? 2 : 3;
     }
 
-    /// @dev Returns the USD price of the pool's LP token
-    /// @notice Computes the LP token price as (min_t(price(coin_t)) * virtual_price())
-    ///         See more at https://dev.gearbox.fi/docs/documentation/oracle/curve-pricefeed
+    /// @dev Returns the USD price of Curve Tricrypto pool's LP token
+    /// @notice Computes the LP token price as n * (prod_i(price(coin_i)))^(1/n) * virtual_price()
     function latestRoundData()
         external
         view
@@ -92,7 +89,7 @@ contract CurveCryptoLPPriceFeed is AbstractCurveLPPriceFeed {
             product = product.mulDown(uint256(answerCurrent) * DECIMALS / USD_FEED_DECIMALS);
         }
 
-        uint256 virtualPrice = curvePool.get_virtual_price();
+        uint256 virtualPrice = curvePool.virtual_price();
 
         // Checks that virtual_price is within bounds
         virtualPrice = _checkAndUpperBoundValue(virtualPrice);

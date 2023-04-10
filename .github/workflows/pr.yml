@@ -34,10 +34,10 @@ jobs:
           version: nightly
 
       - name: Run forge unit tests
-        run: forge test
+        run: forge test --no-match-test _live_
 
       - name: Run forge integration tests
-        run: forge t --match-test _live_ --fork-url ${{ secrets.LIVE_TESTS_FORK }} --chain-id 1337
+        run: forge test --match-test _live_ --fork-url ${{ secrets.LIVE_TESTS_FORK }} --chain-id 1337
 
       - name: Perform checks
         run: |

@@ -38,9 +38,9 @@ import {
     IncorrectPriceFeedException
 } from "@gearbox-protocol/core-v3/contracts/interfaces/IErrors.sol";
 
-/// @title BPTWeightedPriceFeedTest
+/// @title BPTStablePriceFeedTest
 /// @notice Designed for unit test purposes only
-contract BPTWeightedPriceFeedTest is DSTest, ILPPriceFeedExceptions {
+contract BPTStablePriceFeedTest is DSTest, ILPPriceFeedExceptions {
     CheatCodes evm = CheatCodes(HEVM_ADDRESS);
 
     bytes32 public constant POOL_ID = bytes32(uint256(1));
