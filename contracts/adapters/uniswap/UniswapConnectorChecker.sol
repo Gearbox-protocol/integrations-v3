@@ -21,10 +21,10 @@ abstract contract UniswapConnectorChecker is IUniswapConnectorChecker {
 
     constructor(address[] memory _connectorTokensInit) {
         address[10] memory _connectorTokens;
-        uint256 len = _connectorTokensInit.length;
+        numConnectors = _connectorTokensInit.length > 10 ? 10 : _connectorTokensInit.length;
 
-        for (uint256 i = 0; i < 10; ++i) {
-            _connectorTokens[i] = i >= len ? address(0) : _connectorTokensInit[i];
+        for (uint256 i = 0; i < numConnectors; ++i) {
+            _connectorTokens[i] = _connectorTokensInit[i];
         }
 
         connectorToken0 = _connectorTokens[0];
@@ -37,8 +37,6 @@ abstract contract UniswapConnectorChecker is IUniswapConnectorChecker {
         connectorToken7 = _connectorTokens[7];
         connectorToken8 = _connectorTokens[8];
         connectorToken9 = _connectorTokens[9];
-
-        numConnectors = len;
     }
 
     /// @notice Returns true if given token is a registered connector token
