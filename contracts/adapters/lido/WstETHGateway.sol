@@ -42,8 +42,8 @@ contract WstETHGateway is IwstETHGateway {
         wstETH = IwstETH(pool.underlyingToken());
         stETH = IstETH(wstETH.stETH());
 
-        IERC20(wstETH).safeApprove(address(pool), type(uint256).max);
-        IERC20(stETH).safeApprove(address(wstETH), type(uint256).max);
+        IERC20(wstETH).approve(address(pool), type(uint256).max);
+        IERC20(stETH).approve(address(wstETH), type(uint256).max);
     }
 
     /// @inheritdoc IwstETHGateway
@@ -72,11 +72,8 @@ contract WstETHGateway is IwstETHGateway {
 
     /// @dev Gives `spender` max approval for gateway's `token` if it falls below `amount`
     function _ensureAllowance(address token, address spender, uint256 amount) internal {
-        uint256 allowance = IERC20(token).allowance(address(this), spender);
-        if (allowance < amount) {
-            unchecked {
-                IERC20(token).safeIncreaseAllowance(spender, type(uint256).max - allowance);
-            }
+        if (IERC20(token).allowance(address(this), spender) < amount) {
+            IERC20(token).approve(spender, type(uint256).max);
         }
     }
 }
