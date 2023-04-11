@@ -20,9 +20,12 @@ abstract contract UniswapConnectorChecker is IUniswapConnectorChecker {
     uint256 public immutable numConnectors;
 
     constructor(address[] memory _connectorTokensInit) {
-        address[10] memory _connectorTokens;
-        numConnectors = _connectorTokensInit.length > 10 ? 10 : _connectorTokensInit.length;
+        numConnectors = _connectorTokensInit.length;
+        if (numConnectors > 10) {
+            revert TooManyConnectorsException();
+        }
 
+        address[10] memory _connectorTokens;
         for (uint256 i = 0; i < numConnectors; ++i) {
             _connectorTokens[i] = _connectorTokensInit[i];
         }
