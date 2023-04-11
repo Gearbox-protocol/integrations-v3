@@ -9,7 +9,7 @@ import "solidity-coverage";
 
 import { LOCAL_NETWORK, MAINNET_NETWORK } from "@gearbox-protocol/sdk";
 import { config as dotEnvConfig } from "dotenv";
-import { HardhatUserConfig } from "hardhat/types";
+import { HardhatUserConfig } from "hardhat/types/config";
 
 // gets data from .env file
 dotEnvConfig();
