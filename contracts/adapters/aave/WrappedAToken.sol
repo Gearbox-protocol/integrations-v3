@@ -47,7 +47,7 @@ contract WrappedAToken is ERC20, IWrappedAToken {
         underlying = IERC20(aToken.UNDERLYING_ASSET_ADDRESS()); // F: [WAT-2]
         lendingPool = aToken.POOL(); // F: [WAT-2]
         _normalizedIncome = lendingPool.getReserveNormalizedIncome(address(underlying));
-        underlying.safeApprove(address(lendingPool), type(uint256).max);
+        underlying.approve(address(lendingPool), type(uint256).max);
     }
 
     /// @notice waToken decimals, same as underlying and aToken
@@ -107,11 +107,8 @@ contract WrappedAToken is ERC20, IWrappedAToken {
 
     /// @dev Gives lending pool max approval for underlying if it falls below `amount`
     function _ensureAllowance(uint256 amount) internal {
-        uint256 allowance = underlying.allowance(address(this), address(lendingPool));
-        if (allowance < amount) {
-            unchecked {
-                underlying.safeIncreaseAllowance(address(lendingPool), type(uint256).max - allowance); // [WAT-9]
-            }
+        if (underlying.allowance(address(this), address(lendingPool)) < amount) {
+            underlying.approve(address(lendingPool), type(uint256).max); // [WAT-9]
         }
     }
 }
