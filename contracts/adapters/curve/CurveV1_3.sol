@@ -25,13 +25,22 @@ contract CurveV1Adapter3Assets is CurveV1AdapterBase, ICurveV1_3AssetsAdapter {
     {}
 
     /// @inheritdoc ICurveV1_3AssetsAdapter
-    function add_liquidity(uint256[N_COINS] calldata amounts, uint256) external creditFacadeOnly {
-        _add_liquidity(amounts[0] > 1, amounts[1] > 1, amounts[2] > 1, false); // F: [ACV1_3-4]
+    function add_liquidity(uint256[N_COINS] calldata amounts, uint256)
+        external
+        creditFacadeOnly
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+    {
+        (tokensToEnable, tokensToDisable) = _add_liquidity(amounts[0] > 1, amounts[1] > 1, amounts[2] > 1, false); // F: [ACV1_3-4]
     }
 
     /// @inheritdoc ICurveV1_3AssetsAdapter
-    function remove_liquidity(uint256, uint256[N_COINS] calldata) external virtual creditFacadeOnly {
-        _remove_liquidity(); // F: [ACV1_3-5]
+    function remove_liquidity(uint256, uint256[N_COINS] calldata)
+        external
+        virtual
+        creditFacadeOnly
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+    {
+        (tokensToEnable, tokensToDisable) = _remove_liquidity(); // F: [ACV1_3-5]
     }
 
     /// @inheritdoc ICurveV1_3AssetsAdapter
@@ -40,7 +49,9 @@ contract CurveV1Adapter3Assets is CurveV1AdapterBase, ICurveV1_3AssetsAdapter {
         virtual
         override
         creditFacadeOnly
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        _remove_liquidity_imbalance(amounts[0] > 1, amounts[1] > 1, amounts[2] > 1, false); // F: [ACV1_3-6]
+        (tokensToEnable, tokensToDisable) =
+            _remove_liquidity_imbalance(amounts[0] > 1, amounts[1] > 1, amounts[2] > 1, false); // F: [ACV1_3-6]
     }
 }

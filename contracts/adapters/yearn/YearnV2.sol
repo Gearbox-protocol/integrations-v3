@@ -40,37 +40,49 @@ contract YearnV2Adapter is AbstractAdapter, IYearnV2Adapter {
     /// -------- ///
 
     /// @inheritdoc IYearnV2Adapter
-    function deposit() external override creditFacadeOnly {
+    function deposit() external override creditFacadeOnly returns (uint256 tokensToEnable, uint256 tokensToDisable) {
         address creditAccount = _creditAccount(); // F: [AYV2-3]
 
         uint256 balance = IERC20(token).balanceOf(creditAccount);
-
         if (balance > 1) {
             unchecked {
-                _deposit(balance - 1, true); // F: [AYV2-4]
+                (tokensToEnable, tokensToDisable) = _deposit(balance - 1, true); // F: [AYV2-4]
             }
         }
     }
 
     /// @inheritdoc IYearnV2Adapter
-    function deposit(uint256 amount) external override creditFacadeOnly {
-        _deposit(amount, false); // F: [AYV2-5]
+    function deposit(uint256 amount)
+        external
+        override
+        creditFacadeOnly
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+    {
+        (tokensToEnable, tokensToDisable) = _deposit(amount, false); // F: [AYV2-5]
     }
 
     /// @inheritdoc IYearnV2Adapter
-    function deposit(uint256 amount, address) external override creditFacadeOnly {
-        _deposit(amount, false); // F: [AYV2-6]
+    function deposit(uint256 amount, address)
+        external
+        override
+        creditFacadeOnly
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+    {
+        (tokensToEnable, tokensToDisable) = _deposit(amount, false); // F: [AYV2-6]
     }
 
     /// @dev Internal implementation of `deposit` functions
     ///      - underlying is approved before the call because vault needs permission to transfer it
     ///      - yToken is enabled after the call
     ///      - underlying is only disabled when depositing the entire balance
-    function _deposit(uint256 amount, bool disableTokenIn) internal {
+    function _deposit(uint256 amount, bool disableTokenIn)
+        internal
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+    {
         _approveToken(token, type(uint256).max);
         _execute(abi.encodeWithSignature("deposit(uint256)", amount));
         _approveToken(token, 1);
-        _changeEnabledTokens(yTokenMask, disableTokenIn ? tokenMask : 0);
+        (tokensToEnable, tokensToDisable) = (yTokenMask, disableTokenIn ? tokenMask : 0);
     }
 
     /// ----------- ///
@@ -78,49 +90,70 @@ contract YearnV2Adapter is AbstractAdapter, IYearnV2Adapter {
     /// ----------- ///
 
     /// @inheritdoc IYearnV2Adapter
-    function withdraw() external override creditFacadeOnly {
+    function withdraw() external override creditFacadeOnly returns (uint256 tokensToEnable, uint256 tokensToDisable) {
         address creditAccount = _creditAccount(); // F: [AYV2-3]
 
         uint256 balance = IERC20(targetContract).balanceOf(creditAccount);
 
         if (balance > 1) {
             unchecked {
-                _withdraw(balance - 1, true); // F: [AYV2-7]
+                (tokensToEnable, tokensToDisable) = _withdraw(balance - 1, true); // F: [AYV2-7]
             }
         }
     }
 
     /// @inheritdoc IYearnV2Adapter
-    function withdraw(uint256 maxShares) external override creditFacadeOnly {
-        _withdraw(maxShares, false); // F: [AYV2-8]
+    function withdraw(uint256 maxShares)
+        external
+        override
+        creditFacadeOnly
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+    {
+        (tokensToEnable, tokensToDisable) = _withdraw(maxShares, false); // F: [AYV2-8]
     }
 
     /// @inheritdoc IYearnV2Adapter
-    function withdraw(uint256 maxShares, address) external override creditFacadeOnly {
-        _withdraw(maxShares, false); // F: [AYV2-9]
+    function withdraw(uint256 maxShares, address)
+        external
+        override
+        creditFacadeOnly
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+    {
+        (tokensToEnable, tokensToDisable) = _withdraw(maxShares, false); // F: [AYV2-9]
     }
 
     /// @inheritdoc IYearnV2Adapter
-    function withdraw(uint256 maxShares, address, uint256 maxLoss) external override creditFacadeOnly {
+    function withdraw(uint256 maxShares, address, uint256 maxLoss)
+        external
+        override
+        creditFacadeOnly
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+    {
         address creditAccount = _creditAccount(); // F: [AYV2-3]
-        _withdraw(maxShares, creditAccount, maxLoss); // F: [AYV2-10, AYV2-11]
+        (tokensToEnable, tokensToDisable) = _withdraw(maxShares, creditAccount, maxLoss); // F: [AYV2-10, AYV2-11]
     }
 
     /// @dev Internal implementation of `withdraw` functions
     ///      - yToken is not approved because vault doesn't need permission to burn it
     ///      - underlying is enabled after the call
     ///      - yToken is only disabled when withdrawing the entire balance
-    function _withdraw(uint256 maxShares, bool disableTokenIn) internal {
+    function _withdraw(uint256 maxShares, bool disableTokenIn)
+        internal
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+    {
         _execute(abi.encodeWithSignature("withdraw(uint256)", maxShares));
-        _changeEnabledTokens(tokenMask, disableTokenIn ? yTokenMask : 0);
+        (tokensToEnable, tokensToDisable) = (tokenMask, disableTokenIn ? yTokenMask : 0);
     }
 
     /// @dev Internal implementation of `withdraw` function with `maxLoss` argument
     ///      - yToken is not approved because vault doesn't need permission to burn it
     ///      - underlying is enabled after the call
     ///      - yToken is not disabled after the call
-    function _withdraw(uint256 maxShares, address creditAccount, uint256 maxLoss) internal {
+    function _withdraw(uint256 maxShares, address creditAccount, uint256 maxLoss)
+        internal
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+    {
         _execute(abi.encodeWithSignature("withdraw(uint256,address,uint256)", maxShares, creditAccount, maxLoss));
-        _changeEnabledTokens(tokenMask, 0);
+        (tokensToEnable, tokensToDisable) = (tokenMask, 0);
     }
 }

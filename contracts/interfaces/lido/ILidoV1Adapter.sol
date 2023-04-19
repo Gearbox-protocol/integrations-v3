@@ -39,11 +39,11 @@ interface ILidoV1Adapter is IAdapter, ILidoV1AdapterEvents, ILidoV1AdapterExcept
     /// @notice Stakes given amount of WETH in Lido via Gateway
     /// @param amount Amount of WETH to deposit
     /// @dev The referral address is set to Gearbox treasury
-    function submit(uint256 amount) external;
+    function submit(uint256 amount) external returns (uint256 tokensToEnable, uint256 tokensToDisable);
 
     /// @notice Stakes the entire balance of WETH in Lido via Gateway, disables WETH
     /// @dev The referral address is set to Gearbox treasury
-    function submitAll() external;
+    function submitAll() external returns (uint256 tokensToEnable, uint256 tokensToDisable);
 
     /// @notice Set a new deposit limit
     /// @param _limit New value for the limit

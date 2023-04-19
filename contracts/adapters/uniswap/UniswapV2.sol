@@ -35,7 +35,7 @@ contract UniswapV2Adapter is AbstractAdapter, UniswapConnectorChecker, IUniswapV
         address[] calldata path,
         address,
         uint256 deadline
-    ) external override creditFacadeOnly {
+    ) external override creditFacadeOnly returns (uint256 tokensToEnable, uint256 tokensToDisable) {
         address creditAccount = _creditAccount(); // F: [AUV2-1]
 
         (bool valid, address tokenIn, address tokenOut) = _parseUniV2Path(path); // F: [AUV2-2]
@@ -44,7 +44,7 @@ contract UniswapV2Adapter is AbstractAdapter, UniswapConnectorChecker, IUniswapV
         }
 
         // calling `_executeSwap` because we need to check if output token is registered as collateral token in the CM
-        _executeSwapSafeApprove(
+        (tokensToEnable, tokensToDisable,) = _executeSwapSafeApprove(
             tokenIn,
             tokenOut,
             abi.encodeCall(
@@ -61,7 +61,7 @@ contract UniswapV2Adapter is AbstractAdapter, UniswapConnectorChecker, IUniswapV
         address[] calldata path,
         address,
         uint256 deadline
-    ) external override creditFacadeOnly {
+    ) external override creditFacadeOnly returns (uint256 tokensToEnable, uint256 tokensToDisable) {
         address creditAccount = _creditAccount(); // F: [AUV2-1]
 
         (bool valid, address tokenIn, address tokenOut) = _parseUniV2Path(path); // F: [AUV2-3]
@@ -70,7 +70,7 @@ contract UniswapV2Adapter is AbstractAdapter, UniswapConnectorChecker, IUniswapV
         }
 
         // calling `_executeSwap` because we need to check if output token is registered as collateral token in the CM
-        _executeSwapSafeApprove(
+        (tokensToEnable, tokensToDisable,) = _executeSwapSafeApprove(
             tokenIn,
             tokenOut,
             abi.encodeCall(
@@ -85,6 +85,7 @@ contract UniswapV2Adapter is AbstractAdapter, UniswapConnectorChecker, IUniswapV
         external
         override
         creditFacadeOnly
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
         address creditAccount = _creditAccount(); // F: [AUV2-1]
 
@@ -94,14 +95,14 @@ contract UniswapV2Adapter is AbstractAdapter, UniswapConnectorChecker, IUniswapV
         }
 
         uint256 balanceInBefore = IERC20(tokenIn).balanceOf(creditAccount); // F: [AUV2-4]
-        if (balanceInBefore <= 1) return;
+        if (balanceInBefore <= 1) return (0, 0);
 
         unchecked {
             balanceInBefore--;
         }
 
         // calling `_executeSwap` because we need to check if output token is registered as collateral token in the CM
-        _executeSwapSafeApprove(
+        (tokensToEnable, tokensToDisable,) = _executeSwapSafeApprove(
             tokenIn,
             tokenOut,
             abi.encodeCall(

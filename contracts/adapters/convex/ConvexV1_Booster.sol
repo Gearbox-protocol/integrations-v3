@@ -32,27 +32,40 @@ contract ConvexV1BoosterAdapter is AbstractAdapter, IConvexV1BoosterAdapter {
     /// ------- ///
 
     /// @inheritdoc IConvexV1BoosterAdapter
-    function deposit(uint256 _pid, uint256, bool _stake) external override creditFacadeOnly {
-        _deposit(_pid, _stake, msg.data, false);
+    function deposit(uint256 _pid, uint256, bool _stake)
+        external
+        override
+        creditFacadeOnly
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+    {
+        (tokensToEnable, tokensToDisable) = _deposit(_pid, _stake, msg.data, false);
     }
 
     /// @inheritdoc IConvexV1BoosterAdapter
-    function depositAll(uint256 _pid, bool _stake) external override creditFacadeOnly {
-        _deposit(_pid, _stake, msg.data, true);
+    function depositAll(uint256 _pid, bool _stake)
+        external
+        override
+        creditFacadeOnly
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+    {
+        (tokensToEnable, tokensToDisable) = _deposit(_pid, _stake, msg.data, true);
     }
 
     /// @dev Internal implementation of `deposit` and `depositAll`
     ///      - Curve LP token is approved before the call
     ///      - Convex LP token (or staked phantom token, if `_stake` is true) is enabled after the call
     ///      - Curve LP token is only disabled when depositing the entire balance
-    function _deposit(uint256 _pid, bool _stake, bytes memory callData, bool disableCurveLP) internal {
+    function _deposit(uint256 _pid, bool _stake, bytes memory callData, bool disableCurveLP)
+        internal
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+    {
         IBooster.PoolInfo memory pool = IBooster(targetContract).poolInfo(_pid);
 
         address tokenIn = pool.lptoken; // F: [ACVX1_B-2, ACVX1_B-3]
         address tokenOut = _stake ? pidToPhantomToken[_pid] : pool.token; // F: [ACVX1_B-2, ACVX1_B-3]
 
         // using `_executeSwap` because tokens are not known in advance and need to check if they are registered
-        _executeSwapSafeApprove(tokenIn, tokenOut, callData, disableCurveLP);
+        (tokensToEnable, tokensToDisable,) = _executeSwapSafeApprove(tokenIn, tokenOut, callData, disableCurveLP);
     }
 
     /// -------- ///
@@ -60,26 +73,39 @@ contract ConvexV1BoosterAdapter is AbstractAdapter, IConvexV1BoosterAdapter {
     /// -------- ///
 
     /// @inheritdoc IConvexV1BoosterAdapter
-    function withdraw(uint256 _pid, uint256) external override creditFacadeOnly {
-        _withdraw(_pid, msg.data, false);
+    function withdraw(uint256 _pid, uint256)
+        external
+        override
+        creditFacadeOnly
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+    {
+        (tokensToEnable, tokensToDisable) = _withdraw(_pid, msg.data, false);
     }
 
     /// @inheritdoc IConvexV1BoosterAdapter
-    function withdrawAll(uint256 _pid) external override creditFacadeOnly {
-        _withdraw(_pid, msg.data, true);
+    function withdrawAll(uint256 _pid)
+        external
+        override
+        creditFacadeOnly
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+    {
+        (tokensToEnable, tokensToDisable) = _withdraw(_pid, msg.data, true);
     }
 
     /// @dev Internal implementation of `withdraw` and `withdrawAll`
     ///      - Curve LP token is enabled after the call
     ///      - Convex LP token is only disabled when withdrawing the entire stake
-    function _withdraw(uint256 _pid, bytes memory callData, bool disableConvexLP) internal {
+    function _withdraw(uint256 _pid, bytes memory callData, bool disableConvexLP)
+        internal
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+    {
         IBooster.PoolInfo memory pool = IBooster(targetContract).poolInfo(_pid);
 
         address tokenIn = pool.token; // F: [ACVX1_B-4, ACVX1_B-5]
         address tokenOut = pool.lptoken; // F: [ACVX1_B-4, ACVX1_B-5]
 
         // using `_executeSwap` because tokens are not known in advance and need to check if they are registered
-        _executeSwapNoApprove(tokenIn, tokenOut, callData, disableConvexLP);
+        (tokensToEnable, tokensToDisable,) = _executeSwapNoApprove(tokenIn, tokenOut, callData, disableConvexLP);
     }
 
     /// ------ ///

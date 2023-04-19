@@ -13,20 +13,24 @@ interface IAaveV2_LendingPoolAdapter is IAdapter {
     /// @param amount Amount of underlying tokens to deposit
     /// @dev Last two parameters are ignored as `onBehalfOf` can only be credit account,
     ///      and `referralCode` is set to zero
-    function deposit(address asset, uint256 amount, address, uint16) external;
+    function deposit(address asset, uint256 amount, address, uint16)
+        external
+        returns (uint256 tokensToEnable, uint256 tokensToDisable);
 
     /// @notice Deposit all underlying tokens into Aave in exchange for aTokens, disables underlying
     /// @param asset Address of underlying token to deposit
-    function depositAll(address asset) external;
+    function depositAll(address asset) external returns (uint256 tokensToEnable, uint256 tokensToDisable);
 
     /// @notice Withdraw underlying tokens from Aave and burn aTokens
     /// @param asset Address of underlying token to deposit
     /// @param amount Amount of underlying tokens to withdraw
     ///        If `type(uint256).max`, will withdraw the full amount
     /// @dev Last parameter is ignored because underlying recepient can only be credit account
-    function withdraw(address asset, uint256 amount, address) external;
+    function withdraw(address asset, uint256 amount, address)
+        external
+        returns (uint256 tokensToEnable, uint256 tokensToDisable);
 
     /// @notice Withdraw all underlying tokens from Aave and burn aTokens, disables aToken
     /// @param asset Address of underlying token to withdraw
-    function withdrawAll(address asset) external;
+    function withdrawAll(address asset) external returns (uint256 tokensToEnable, uint256 tokensToDisable);
 }

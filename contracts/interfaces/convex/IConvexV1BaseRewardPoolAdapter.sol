@@ -31,30 +31,32 @@ interface IConvexV1BaseRewardPoolAdapter is IAdapter {
 
     /// @notice Stakes Convex LP token in the reward pool
     /// @dev `amount` parameter is ignored since calldata is passed directly to the target contract
-    function stake(uint256) external;
+    function stake(uint256) external returns (uint256 tokensToEnable, uint256 tokensToDisable);
 
     /// @notice Stakes the entire balance of Convex LP token in the reward pool, disables LP token
-    function stakeAll() external;
+    function stakeAll() external returns (uint256 tokensToEnable, uint256 tokensToDisable);
 
     /// @notice Claims rewards on the current position, enables reward tokens
-    function getReward() external;
+    function getReward() external returns (uint256 tokensToEnable, uint256 tokensToDisable);
 
     /// @notice Withdraws Convex LP token from the reward pool
     /// @param claim Whether to claim staking rewards
     /// @dev `amount` parameter is ignored since calldata is passed directly to the target contract
-    function withdraw(uint256, bool claim) external;
+    function withdraw(uint256, bool claim) external returns (uint256 tokensToEnable, uint256 tokensToDisable);
 
     /// @notice Withdraws the entire balance of Convex LP token from the reward pool, disables staked token
     /// @param claim Whether to claim staking rewards
-    function withdrawAll(bool claim) external;
+    function withdrawAll(bool claim) external returns (uint256 tokensToEnable, uint256 tokensToDisable);
 
     /// @notice Withdraws Convex LP token from the reward pool and unwraps it into Curve LP token
     /// @param claim Whether to claim staking rewards
     /// @dev `amount` parameter is ignored since calldata is passed directly to the target contract
-    function withdrawAndUnwrap(uint256, bool claim) external;
+    function withdrawAndUnwrap(uint256, bool claim)
+        external
+        returns (uint256 tokensToEnable, uint256 tokensToDisable);
 
     /// @notice Withdraws the entire balance of Convex LP token from the reward pool and unwraps it into Curve LP token,
     ///         disables staked token
     /// @param claim Whether to claim staking rewards
-    function withdrawAllAndUnwrap(bool claim) external;
+    function withdrawAllAndUnwrap(bool claim) external returns (uint256 tokensToEnable, uint256 tokensToDisable);
 }

@@ -31,8 +31,11 @@ abstract contract CompoundV2_CTokenAdapter is AbstractAdapter, ICompoundV2_CToke
         external
         override
         creditFacadeOnly // F: [ACV2CT-1]
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        _revertOnError(_mint(mintAmount)); // F: [ACV2CT-2, ACV2CT-3]
+        uint256 error;
+        (tokensToEnable, tokensToDisable, error) = _mint(mintAmount); // F: [ACV2CT-2, ACV2CT-3]
+        _revertOnError(error);
     }
 
     /// @inheritdoc ICompoundV2_CTokenAdapter
@@ -40,19 +43,25 @@ abstract contract CompoundV2_CTokenAdapter is AbstractAdapter, ICompoundV2_CToke
         external
         override
         creditFacadeOnly // F: [ACV2CT-1]
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        _revertOnError(_mintAll()); // F: [ACV2CT-4, ACV2CT-5]
+        uint256 error;
+        (tokensToEnable, tokensToDisable, error) = _mintAll(); // F: [ACV2CT-4, ACV2CT-5]
+        _revertOnError(error);
     }
 
     /// @dev Internal implementation of `mint`
     ///      Since minting process might be different for CErc20 and CEther,
     ///      it's up to deriving adapters to implement this function
-    function _mint(uint256 amount) internal virtual returns (uint256 error);
+    function _mint(uint256 amount)
+        internal
+        virtual
+        returns (uint256 tokensToEnable, uint256 tokensToDisable, uint256 error);
 
     /// @dev Internal implementation of `mintAll`
     ///      Since minting process might be different for CErc20 and CEther,
     ///      it's up to deriving adapters to implement this function
-    function _mintAll() internal virtual returns (uint256 error);
+    function _mintAll() internal virtual returns (uint256 tokensToEnable, uint256 tokensToDisable, uint256 error);
 
     /// @dev Encodes calldata for `ICErc20Actions.mint` call
     function _encodeMint(uint256 amount) internal pure returns (bytes memory callData) {
@@ -68,8 +77,11 @@ abstract contract CompoundV2_CTokenAdapter is AbstractAdapter, ICompoundV2_CToke
         external
         override
         creditFacadeOnly // F: [ACV2CT-1]
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        _revertOnError(_redeem(amount)); // F: [ACV2CT-6, ACV2CT-7]
+        uint256 error;
+        (tokensToEnable, tokensToDisable, error) = _redeem(amount); // F: [ACV2CT-6, ACV2CT-7]
+        _revertOnError(error);
     }
 
     /// @inheritdoc ICompoundV2_CTokenAdapter
@@ -77,19 +89,25 @@ abstract contract CompoundV2_CTokenAdapter is AbstractAdapter, ICompoundV2_CToke
         external
         override
         creditFacadeOnly // F: [ACV2CT-1]
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        _revertOnError(_redeemAll()); // F: [ACV2CT-8, ACV2CT-9]
+        uint256 error;
+        (tokensToEnable, tokensToDisable, error) = _redeemAll(); // F: [ACV2CT-8, ACV2CT-9]
+        _revertOnError(error);
     }
 
     /// @dev Internal implementation of `redeem`
     ///      Since redeeming process might be different for CErc20 and CEther,
     ///      it's up to deriving adapters to implement this function
-    function _redeem(uint256 amount) internal virtual returns (uint256 error);
+    function _redeem(uint256 amount)
+        internal
+        virtual
+        returns (uint256 tokensToEnable, uint256 tokensToDisable, uint256 error);
 
     /// @dev Internal implementation of `redeemAll`
     ///      Since redeeming process might be different for CErc20 and CEther,
     ///      it's up to deriving adapters to implement this function
-    function _redeemAll() internal virtual returns (uint256 error);
+    function _redeemAll() internal virtual returns (uint256 tokensToEnable, uint256 tokensToDisable, uint256 error);
 
     /// @dev Encodes calldata for `ICErc20Actions.redeem` call
     function _encodeRedeem(uint256 amount) internal pure returns (bytes memory callData) {
@@ -105,14 +123,20 @@ abstract contract CompoundV2_CTokenAdapter is AbstractAdapter, ICompoundV2_CToke
         external
         override
         creditFacadeOnly // F: [ACV2CT-1]
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        _revertOnError(_redeemUnderlying(amount)); // F: [ACV2CT-10, ACV2CT-11]
+        uint256 error;
+        (tokensToEnable, tokensToDisable, error) = _redeemUnderlying(amount); // F: [ACV2CT-10, ACV2CT-11]
+        _revertOnError(error);
     }
 
     /// @dev Internal implementation of `redeemUnderlying`
     ///      Since redeeming process might be different for CErc20 and CEther,
     ///      it's up to deriving adapters to implement this function
-    function _redeemUnderlying(uint256 amount) internal virtual returns (uint256 error);
+    function _redeemUnderlying(uint256 amount)
+        internal
+        virtual
+        returns (uint256 tokensToEnable, uint256 tokensToDisable, uint256 error);
 
     /// @dev Encodes calldata for `ICErc20Actions.redeemUnderlying` call
     function _encodeRedeemUnderlying(uint256 amount) internal pure returns (bytes memory callData) {

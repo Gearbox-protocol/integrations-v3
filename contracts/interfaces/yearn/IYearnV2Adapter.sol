@@ -18,32 +18,34 @@ interface IYearnV2Adapter is IAdapter {
     function yTokenMask() external view returns (uint256);
 
     /// @notice Deposit the entire balance of underlying tokens into the vault, disables underlying
-    function deposit() external;
+    function deposit() external returns (uint256 tokensToEnable, uint256 tokensToDisable);
 
     /// @notice Deposit given amount of underlying tokens into the vault
     /// @param amount Amount of underlying tokens to deposit
-    function deposit(uint256 amount) external;
+    function deposit(uint256 amount) external returns (uint256 tokensToEnable, uint256 tokensToDisable);
 
     /// @notice Deposit given amount of underlying tokens into the vault
     /// @param amount Amount of underlying tokens to deposit
     /// @dev Second param (`recipient`) is ignored because it can only be the credit account
-    function deposit(uint256 amount, address) external;
+    function deposit(uint256 amount, address) external returns (uint256 tokensToEnable, uint256 tokensToDisable);
 
     /// @notice Withdraw the entire balance of underlying from the vault, disables yToken
-    function withdraw() external;
+    function withdraw() external returns (uint256 tokensToEnable, uint256 tokensToDisable);
 
     /// @notice Burn given amount of yTokens to withdraw corresponding amount of underlying from the vault
     /// @param maxShares Amout of yTokens to burn
-    function withdraw(uint256 maxShares) external;
+    function withdraw(uint256 maxShares) external returns (uint256 tokensToEnable, uint256 tokensToDisable);
 
     /// @notice Burn given amount of yTokens to withdraw corresponding amount of underlying from the vault
     /// @param maxShares Amout of yTokens to burn
     /// @dev Second param (`recipient`) is ignored because it can only be the credit account
-    function withdraw(uint256 maxShares, address) external;
+    function withdraw(uint256 maxShares, address) external returns (uint256 tokensToEnable, uint256 tokensToDisable);
 
     /// @notice Burn given amount of yTokens to withdraw corresponding amount of underlying from the vault
     /// @param maxShares Amout of yTokens to burn
     /// @param maxLoss Maximal slippage on withdrawal in basis points
     /// @dev Second param (`recipient`) is ignored because it can only be the credit account
-    function withdraw(uint256 maxShares, address, uint256 maxLoss) external;
+    function withdraw(uint256 maxShares, address, uint256 maxLoss)
+        external
+        returns (uint256 tokensToEnable, uint256 tokensToDisable);
 }

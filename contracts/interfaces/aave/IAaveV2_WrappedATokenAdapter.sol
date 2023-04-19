@@ -25,29 +25,29 @@ interface IAaveV2_WrappedATokenAdapter is IAdapter {
 
     /// @notice Deposit given amount of aTokens
     /// @param assets Amount of aTokens to deposit in exchange for waTokens
-    function deposit(uint256 assets) external;
+    function deposit(uint256 assets) external returns (uint256 tokensToEnable, uint256 tokensToDisable);
 
     /// @notice Deposit all balance of aTokens, disables aToken
-    function depositAll() external;
+    function depositAll() external returns (uint256 tokensToEnable, uint256 tokensToDisable);
 
     /// @notice Deposit given amount underlying tokens
     /// @param assets Amount of underlying tokens to deposit in exchange for waTokens
-    function depositUnderlying(uint256 assets) external;
+    function depositUnderlying(uint256 assets) external returns (uint256 tokensToEnable, uint256 tokensToDisable);
 
     /// @notice Deposit all balance of underlying tokens, disables underlying
-    function depositAllUnderlying() external;
+    function depositAllUnderlying() external returns (uint256 tokensToEnable, uint256 tokensToDisable);
 
     /// @notice Withdraw given amount of waTokens for aTokens
     /// @param shares Amount of waTokens to burn in exchange for aTokens
-    function withdraw(uint256 shares) external;
+    function withdraw(uint256 shares) external returns (uint256 tokensToEnable, uint256 tokensToDisable);
 
     /// @notice Withdraw all balance of waTokens for aTokens, disables waToken
-    function withdrawAll() external;
+    function withdrawAll() external returns (uint256 tokensToEnable, uint256 tokensToDisable);
 
     /// @notice Withdraw given amount of waTokens for underlying tokens
     /// @param shares Amount of waTokens to burn in exchange for underlying tokens
-    function withdrawUnderlying(uint256 shares) external;
+    function withdrawUnderlying(uint256 shares) external returns (uint256 tokensToEnable, uint256 tokensToDisable);
 
     /// @notice Withdraw all balance of waTokens for underlying tokens, disables waToken
-    function withdrawAllUnderlying() external;
+    function withdrawAllUnderlying() external returns (uint256 tokensToEnable, uint256 tokensToDisable);
 }

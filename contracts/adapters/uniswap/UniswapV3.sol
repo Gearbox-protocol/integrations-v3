@@ -50,24 +50,34 @@ contract UniswapV3Adapter is AbstractAdapter, UniswapConnectorChecker, IUniswapV
     {}
 
     /// @inheritdoc IUniswapV3Adapter
-    function exactInputSingle(ISwapRouter.ExactInputSingleParams calldata params) external override creditFacadeOnly {
+    function exactInputSingle(ISwapRouter.ExactInputSingleParams calldata params)
+        external
+        override
+        creditFacadeOnly
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+    {
         address creditAccount = _creditAccount(); // F: [AUV3-1]
 
         ISwapRouter.ExactInputSingleParams memory paramsUpdate = params; // F: [AUV3-2]
         paramsUpdate.recipient = creditAccount; // F: [AUV3-2]
 
-        // calling `_executeSwap` because we need to check if output token is registered as collateral token in the CM
-        _executeSwapSafeApprove(
+        // // calling `_executeSwap` because we need to check if output token is registered as collateral token in the CM
+        (tokensToEnable, tokensToDisable,) = _executeSwapSafeApprove(
             params.tokenIn, params.tokenOut, abi.encodeCall(ISwapRouter.exactInputSingle, (paramsUpdate)), false
         ); // F: [AUV3-2]
     }
 
     /// @inheritdoc IUniswapV3Adapter
-    function exactAllInputSingle(ExactAllInputSingleParams calldata params) external override creditFacadeOnly {
+    function exactAllInputSingle(ExactAllInputSingleParams calldata params)
+        external
+        override
+        creditFacadeOnly
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+    {
         address creditAccount = _creditAccount(); // F: [AUV3-1]
 
         uint256 balanceInBefore = IERC20(params.tokenIn).balanceOf(creditAccount); // F: [AUV3-3]
-        if (balanceInBefore <= 1) return;
+        if (balanceInBefore <= 1) return (0, 0);
 
         unchecked {
             balanceInBefore--;
@@ -85,13 +95,18 @@ contract UniswapV3Adapter is AbstractAdapter, UniswapConnectorChecker, IUniswapV
         }); // F: [AUV3-3]
 
         // calling `_executeSwap` because we need to check if output token is registered as collateral token in the CM
-        _executeSwapSafeApprove(
+        (tokensToEnable, tokensToDisable,) = _executeSwapSafeApprove(
             params.tokenIn, params.tokenOut, abi.encodeCall(ISwapRouter.exactInputSingle, (paramsUpdate)), true
         ); // F: [AUV3-3]
     }
 
     /// @inheritdoc IUniswapV3Adapter
-    function exactInput(ISwapRouter.ExactInputParams calldata params) external override creditFacadeOnly {
+    function exactInput(ISwapRouter.ExactInputParams calldata params)
+        external
+        override
+        creditFacadeOnly
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+    {
         address creditAccount = _creditAccount(); // F: [AUV3-1]
 
         (bool valid, address tokenIn, address tokenOut) = _parseUniV3Path(params.path);
@@ -103,11 +118,17 @@ contract UniswapV3Adapter is AbstractAdapter, UniswapConnectorChecker, IUniswapV
         paramsUpdate.recipient = creditAccount; // F: [AUV3-4]
 
         // calling `_executeSwap` because we need to check if output token is registered as collateral token in the CM
-        _executeSwapSafeApprove(tokenIn, tokenOut, abi.encodeCall(ISwapRouter.exactInput, (paramsUpdate)), false); // F: [AUV3-4]
+        (tokensToEnable, tokensToDisable,) =
+            _executeSwapSafeApprove(tokenIn, tokenOut, abi.encodeCall(ISwapRouter.exactInput, (paramsUpdate)), false); // F: [AUV3-4]
     }
 
     /// @inheritdoc IUniswapV3Adapter
-    function exactAllInput(ExactAllInputParams calldata params) external override creditFacadeOnly {
+    function exactAllInput(ExactAllInputParams calldata params)
+        external
+        override
+        creditFacadeOnly
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+    {
         address creditAccount = _creditAccount(); // F: [AUV3-1]
 
         (bool valid, address tokenIn, address tokenOut) = _parseUniV3Path(params.path);
@@ -116,7 +137,7 @@ contract UniswapV3Adapter is AbstractAdapter, UniswapConnectorChecker, IUniswapV
         }
 
         uint256 balanceInBefore = IERC20(tokenIn).balanceOf(creditAccount); // F: [AUV3-5]
-        if (balanceInBefore <= 1) return;
+        if (balanceInBefore <= 1) return (0, 0);
 
         unchecked {
             balanceInBefore--;
@@ -130,7 +151,8 @@ contract UniswapV3Adapter is AbstractAdapter, UniswapConnectorChecker, IUniswapV
         }); // F: [AUV3-5]
 
         // calling `_executeSwap` because we need to check if output token is registered as collateral token in the CM
-        _executeSwapSafeApprove(tokenIn, tokenOut, abi.encodeCall(ISwapRouter.exactInput, (paramsUpdate)), true); // F: [AUV3-5]
+        (tokensToEnable, tokensToDisable,) =
+            _executeSwapSafeApprove(tokenIn, tokenOut, abi.encodeCall(ISwapRouter.exactInput, (paramsUpdate)), true); // F: [AUV3-5]
     }
 
     /// @inheritdoc IUniswapV3Adapter
@@ -138,6 +160,7 @@ contract UniswapV3Adapter is AbstractAdapter, UniswapConnectorChecker, IUniswapV
         external
         override
         creditFacadeOnly
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
         address creditAccount = _creditAccount(); // F: [AUV3-1]
 
@@ -145,13 +168,18 @@ contract UniswapV3Adapter is AbstractAdapter, UniswapConnectorChecker, IUniswapV
         paramsUpdate.recipient = creditAccount; // F: [AUV3-6]
 
         // calling `_executeSwap` because we need to check if output token is registered as collateral token in the CM
-        _executeSwapSafeApprove(
+        (tokensToEnable, tokensToDisable,) = _executeSwapSafeApprove(
             params.tokenIn, params.tokenOut, abi.encodeCall(ISwapRouter.exactOutputSingle, (paramsUpdate)), false
         ); // F: [AUV3-6]
     }
 
     /// @inheritdoc IUniswapV3Adapter
-    function exactOutput(ISwapRouter.ExactOutputParams calldata params) external override creditFacadeOnly {
+    function exactOutput(ISwapRouter.ExactOutputParams calldata params)
+        external
+        override
+        creditFacadeOnly
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+    {
         address creditAccount = _creditAccount(); // F: [AUV3-1]
 
         (bool valid, address tokenOut, address tokenIn) = _parseUniV3Path(params.path);
@@ -163,7 +191,8 @@ contract UniswapV3Adapter is AbstractAdapter, UniswapConnectorChecker, IUniswapV
         paramsUpdate.recipient = creditAccount; // F: [AUV3-7]
 
         // calling `_executeSwap` because we need to check if output token is registered as collateral token in the CM
-        _executeSwapSafeApprove(tokenIn, tokenOut, abi.encodeCall(ISwapRouter.exactOutput, (paramsUpdate)), false); // F: [AUV3-7]
+        (tokensToEnable, tokensToDisable,) =
+            _executeSwapSafeApprove(tokenIn, tokenOut, abi.encodeCall(ISwapRouter.exactOutput, (paramsUpdate)), false); // F: [AUV3-7]
     }
 
     /// @dev Performs sanity check on a swap path, returns input and output tokens

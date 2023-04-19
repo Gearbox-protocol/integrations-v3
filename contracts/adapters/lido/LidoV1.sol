@@ -53,19 +53,24 @@ contract LidoV1Adapter is AbstractAdapter, ILidoV1Adapter {
     }
 
     /// @inheritdoc ILidoV1Adapter
-    function submit(uint256 amount) external override creditFacadeOnly {
-        _submit(amount, false); // F: [LDOV1-3]
+    function submit(uint256 amount)
+        external
+        override
+        creditFacadeOnly
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+    {
+        (tokensToEnable, tokensToDisable) = _submit(amount, false); // F: [LDOV1-3]
     }
 
     /// @inheritdoc ILidoV1Adapter
-    function submitAll() external override creditFacadeOnly {
+    function submitAll() external override creditFacadeOnly returns (uint256 tokensToEnable, uint256 tokensToDisable) {
         address creditAccount = _creditAccount(); // F: [LDOV1-2]
 
         uint256 balance = IERC20(weth).balanceOf(creditAccount);
-        if (balance <= 1) return;
-
-        unchecked {
-            _submit(balance - 1, true); // F: [LDOV1-4]
+        if (balance > 1) {
+            unchecked {
+                (tokensToEnable, tokensToDisable) = _submit(balance - 1, true); // F: [LDOV1-4]
+            }
         }
     }
 
@@ -73,7 +78,10 @@ contract LidoV1Adapter is AbstractAdapter, ILidoV1Adapter {
     ///      - WETH is approved before the call because Gateway needs permission to transfer it
     ///      - stETH is enabled after the call
     ///      - WETH is only disabled when staking the entire balance
-    function _submit(uint256 amount, bool disableWETH) internal {
+    function _submit(uint256 amount, bool disableWETH)
+        internal
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+    {
         if (amount > limit) revert LimitIsOverException(); // F: [LDOV1-5]
         unchecked {
             limit -= amount; // F: [LDOV1-5]
@@ -82,7 +90,7 @@ contract LidoV1Adapter is AbstractAdapter, ILidoV1Adapter {
         _approveToken(weth, type(uint256).max);
         _execute(abi.encodeCall(LidoV1Gateway.submit, (amount, treasury)));
         _approveToken(weth, 1);
-        _changeEnabledTokens(stETHTokenMask, disableWETH ? wethTokenMask : 0);
+        (tokensToEnable, tokensToDisable) = (stETHTokenMask, disableWETH ? wethTokenMask : 0);
     }
 
     /// @inheritdoc ILidoV1Adapter

@@ -40,8 +40,9 @@ contract CurveV1AdapterDeposit is CurveV1AdapterBase {
         override
         creditFacadeOnly
         withLPTokenApproval
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        _remove_liquidity_one_coin(i);
+        (tokensToEnable, tokensToDisable) = _remove_liquidity_one_coin(i);
     }
 
     /// @inheritdoc CurveV1AdapterBase
@@ -52,7 +53,8 @@ contract CurveV1AdapterDeposit is CurveV1AdapterBase {
         override
         creditFacadeOnly
         withLPTokenApproval
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        _remove_all_liquidity_one_coin(i, rateMinRAY);
+        (tokensToEnable, tokensToDisable) = _remove_all_liquidity_one_coin(i, rateMinRAY);
     }
 }

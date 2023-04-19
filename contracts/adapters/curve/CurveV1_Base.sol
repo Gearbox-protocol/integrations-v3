@@ -207,83 +207,135 @@ contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
     /// -------- ///
 
     /// @inheritdoc ICurveV1Adapter
-    function exchange(int128 i, int128 j, uint256, uint256) external override creditFacadeOnly {
-        _exchange(i, j);
+    function exchange(int128 i, int128 j, uint256, uint256)
+        external
+        override
+        creditFacadeOnly
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+    {
+        (tokensToEnable, tokensToDisable) = _exchange(i, j);
     }
 
     /// @inheritdoc ICurveV1Adapter
-    function exchange(uint256 i, uint256 j, uint256, uint256) external override creditFacadeOnly {
-        _exchange(i.toInt256().toInt128(), j.toInt256().toInt128());
+    function exchange(uint256 i, uint256 j, uint256, uint256)
+        external
+        override
+        creditFacadeOnly
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+    {
+        (tokensToEnable, tokensToDisable) = _exchange(i.toInt256().toInt128(), j.toInt256().toInt128());
     }
 
     /// @dev Internal implementation of `exchange`
-    function _exchange(int128 i, int128 j) internal {
-        _exchange_impl(i, j, msg.data, false, false); // F: [ACV1-4]
+    function _exchange(int128 i, int128 j) internal returns (uint256 tokensToEnable, uint256 tokensToDisable) {
+        (tokensToEnable, tokensToDisable) = _exchange_impl(i, j, msg.data, false, false); // F: [ACV1-4]
     }
 
     /// @inheritdoc ICurveV1Adapter
-    function exchange_all(int128 i, int128 j, uint256 rateMinRAY) external override creditFacadeOnly {
-        _exchange_all(i, j, rateMinRAY);
+    function exchange_all(int128 i, int128 j, uint256 rateMinRAY)
+        external
+        override
+        creditFacadeOnly
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+    {
+        (tokensToEnable, tokensToDisable) = _exchange_all(i, j, rateMinRAY);
     }
 
     /// @inheritdoc ICurveV1Adapter
-    function exchange_all(uint256 i, uint256 j, uint256 rateMinRAY) external override creditFacadeOnly {
-        _exchange_all(i.toInt256().toInt128(), j.toInt256().toInt128(), rateMinRAY);
+    function exchange_all(uint256 i, uint256 j, uint256 rateMinRAY)
+        external
+        override
+        creditFacadeOnly
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+    {
+        (tokensToEnable, tokensToDisable) = _exchange_all(i.toInt256().toInt128(), j.toInt256().toInt128(), rateMinRAY);
     }
 
     /// @dev Internal implementation of `exchange_all`
-    function _exchange_all(int128 i, int128 j, uint256 rateMinRAY) internal {
+    function _exchange_all(int128 i, int128 j, uint256 rateMinRAY)
+        internal
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+    {
         address creditAccount = _creditAccount(); // F: [ACV1-3]
 
         address tokenIn = _get_token(i, false); // F: [ACV1-5]
         uint256 dx = IERC20(tokenIn).balanceOf(creditAccount); // F: [ACV1-5]
-        if (dx <= 1) return;
+        if (dx <= 1) return (0, 0);
 
         unchecked {
             dx--;
         }
         uint256 min_dy = (dx * rateMinRAY) / RAY; // F: [ACV1-5]
-        _exchange_impl(i, j, _getExchangeCallData(i, j, dx, min_dy, false), false, true); // F: [ACV1-5]
+        (tokensToEnable, tokensToDisable) =
+            _exchange_impl(i, j, _getExchangeCallData(i, j, dx, min_dy, false), false, true); // F: [ACV1-5]
     }
 
     /// @inheritdoc ICurveV1Adapter
-    function exchange_underlying(int128 i, int128 j, uint256, uint256) external override creditFacadeOnly {
-        _exchange_underlying(i, j);
+    function exchange_underlying(int128 i, int128 j, uint256, uint256)
+        external
+        override
+        creditFacadeOnly
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+    {
+        (tokensToEnable, tokensToDisable) = _exchange_underlying(i, j);
     }
 
     /// @inheritdoc ICurveV1Adapter
-    function exchange_underlying(uint256 i, uint256 j, uint256, uint256) external override creditFacadeOnly {
-        _exchange_underlying(i.toInt256().toInt128(), j.toInt256().toInt128());
+    function exchange_underlying(uint256 i, uint256 j, uint256, uint256)
+        external
+        override
+        creditFacadeOnly
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+    {
+        (tokensToEnable, tokensToDisable) = _exchange_underlying(i.toInt256().toInt128(), j.toInt256().toInt128());
     }
 
     /// @dev Internal implementation of `exchange_underlying`
-    function _exchange_underlying(int128 i, int128 j) internal {
-        _exchange_impl(i, j, msg.data, true, false); // F: [ACV1-6]
+    function _exchange_underlying(int128 i, int128 j)
+        internal
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+    {
+        (tokensToEnable, tokensToDisable) = _exchange_impl(i, j, msg.data, true, false); // F: [ACV1-6]
     }
 
     /// @inheritdoc ICurveV1Adapter
-    function exchange_all_underlying(int128 i, int128 j, uint256 rateMinRAY) external override creditFacadeOnly {
-        _exchange_all_underlying(i, j, rateMinRAY);
+    function exchange_all_underlying(int128 i, int128 j, uint256 rateMinRAY)
+        external
+        override
+        creditFacadeOnly
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+    {
+        (tokensToEnable, tokensToDisable) = _exchange_all_underlying(i, j, rateMinRAY);
     }
 
     /// @inheritdoc ICurveV1Adapter
-    function exchange_all_underlying(uint256 i, uint256 j, uint256 rateMinRAY) external override creditFacadeOnly {
-        _exchange_all_underlying(i.toInt256().toInt128(), j.toInt256().toInt128(), rateMinRAY);
+    function exchange_all_underlying(uint256 i, uint256 j, uint256 rateMinRAY)
+        external
+        override
+        creditFacadeOnly
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+    {
+        (tokensToEnable, tokensToDisable) =
+            _exchange_all_underlying(i.toInt256().toInt128(), j.toInt256().toInt128(), rateMinRAY);
     }
 
     /// @dev Internal implementation of `exchange_all_underlying`
-    function _exchange_all_underlying(int128 i, int128 j, uint256 rateMinRAY) internal {
+    function _exchange_all_underlying(int128 i, int128 j, uint256 rateMinRAY)
+        internal
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+    {
         address creditAccount = _creditAccount(); //F: [ACV1-3]
 
         address tokenIn = _get_token(i, true); // F: [ACV1-7]
         uint256 dx = IERC20(tokenIn).balanceOf(creditAccount); // F: [ACV1-7]
-        if (dx <= 1) return;
+        if (dx <= 1) return (0, 0);
 
         unchecked {
             dx--; // F: [ACV1-7]
         }
         uint256 min_dy = (dx * rateMinRAY) / RAY; // F: [ACV1-7]
-        _exchange_impl(i, j, _getExchangeCallData(i, j, dx, min_dy, true), true, true); // F: [ACV1-7]
+        (tokensToEnable, tokensToDisable) =
+            _exchange_impl(i, j, _getExchangeCallData(i, j, dx, min_dy, true), true, true); // F: [ACV1-7]
     }
 
     /// @dev Internal implementation of exchange functions
@@ -291,11 +343,15 @@ contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
     ///      - sets max approval for the input token before the call and resets it to 1 after
     ///      - enables output asset after the call
     ///      - disables input asset only when exchanging the entire balance
-    function _exchange_impl(int128 i, int128 j, bytes memory callData, bool underlying, bool disableTokenIn) internal {
+    function _exchange_impl(int128 i, int128 j, bytes memory callData, bool underlying, bool disableTokenIn)
+        internal
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+    {
         _approve_token(i, underlying, type(uint256).max);
         _execute(callData);
         _approve_token(i, underlying, 1);
-        _changeEnabledTokens(_get_token_mask(j, underlying), disableTokenIn ? _get_token_mask(i, underlying) : 0);
+        (tokensToEnable, tokensToDisable) =
+            (_get_token_mask(j, underlying), disableTokenIn ? _get_token_mask(i, underlying) : 0);
     }
 
     /// @dev Returns calldata for `ICurvePool.exchange` and `ICurvePool.exchange_underlying` calls
@@ -331,51 +387,82 @@ contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
     ///      - passes calldata to the target contract
     ///      - sets max approvals for the specified tokens before the call and resets them to 1 after
     ///      - enables LP token
-    function _add_liquidity(bool t0Approve, bool t1Approve, bool t2Approve, bool t3Approve) internal {
+    function _add_liquidity(bool t0Approve, bool t1Approve, bool t2Approve, bool t3Approve)
+        internal
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+    {
         _approve_tokens(t0Approve, t1Approve, t2Approve, t3Approve, type(uint256).max);
         _execute(msg.data);
         _approve_tokens(t0Approve, t1Approve, t2Approve, t3Approve, 1);
-        _changeEnabledTokens(lpTokenMask, 0);
+        (tokensToEnable, tokensToDisable) = (lpTokenMask, 0);
     }
 
     /// @inheritdoc ICurveV1Adapter
-    function add_liquidity_one_coin(uint256 amount, int128 i, uint256 minAmount) external override creditFacadeOnly {
-        _add_liquidity_one_coin(amount, i, minAmount);
+    function add_liquidity_one_coin(uint256 amount, int128 i, uint256 minAmount)
+        external
+        override
+        creditFacadeOnly
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+    {
+        (tokensToEnable, tokensToDisable) = _add_liquidity_one_coin(amount, i, minAmount);
     }
 
     /// @inheritdoc ICurveV1Adapter
-    function add_liquidity_one_coin(uint256 amount, uint256 i, uint256 minAmount) external override creditFacadeOnly {
-        _add_liquidity_one_coin(amount, i.toInt256().toInt128(), minAmount);
+    function add_liquidity_one_coin(uint256 amount, uint256 i, uint256 minAmount)
+        external
+        override
+        creditFacadeOnly
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+    {
+        (tokensToEnable, tokensToDisable) = _add_liquidity_one_coin(amount, i.toInt256().toInt128(), minAmount);
     }
 
     /// @dev Internal implementation of `add_liquidity_one_coin`
-    function _add_liquidity_one_coin(uint256 amount, int128 i, uint256 minAmount) internal {
-        _add_liquidity_one_coin_impl(i, _getAddLiquidityOneCoinCallData(i, amount, minAmount), false); // F: [ACV1-8]
+    function _add_liquidity_one_coin(uint256 amount, int128 i, uint256 minAmount)
+        internal
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+    {
+        (tokensToEnable, tokensToDisable) =
+            _add_liquidity_one_coin_impl(i, _getAddLiquidityOneCoinCallData(i, amount, minAmount), false); // F: [ACV1-8]
     }
 
     /// @inheritdoc ICurveV1Adapter
-    function add_all_liquidity_one_coin(int128 i, uint256 rateMinRAY) external override creditFacadeOnly {
-        _add_all_liquidity_one_coin(i, rateMinRAY);
+    function add_all_liquidity_one_coin(int128 i, uint256 rateMinRAY)
+        external
+        override
+        creditFacadeOnly
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+    {
+        (tokensToEnable, tokensToDisable) = _add_all_liquidity_one_coin(i, rateMinRAY);
     }
 
     /// @inheritdoc ICurveV1Adapter
-    function add_all_liquidity_one_coin(uint256 i, uint256 rateMinRAY) external override creditFacadeOnly {
-        _add_all_liquidity_one_coin(i.toInt256().toInt128(), rateMinRAY);
+    function add_all_liquidity_one_coin(uint256 i, uint256 rateMinRAY)
+        external
+        override
+        creditFacadeOnly
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+    {
+        (tokensToEnable, tokensToDisable) = _add_all_liquidity_one_coin(i.toInt256().toInt128(), rateMinRAY);
     }
 
     /// @dev Internal implementation of `add_all_liquidity_one_coin`
-    function _add_all_liquidity_one_coin(int128 i, uint256 rateMinRAY) internal {
+    function _add_all_liquidity_one_coin(int128 i, uint256 rateMinRAY)
+        internal
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+    {
         address creditAccount = _creditAccount();
 
         address tokenIn = _get_token(i, false);
         uint256 amount = IERC20(tokenIn).balanceOf(creditAccount); // F: [ACV1-9]
-        if (amount <= 1) return;
+        if (amount <= 1) return (0, 0);
 
         unchecked {
             amount--; // F: [ACV1-9]
         }
         uint256 minAmount = (amount * rateMinRAY) / RAY; // F: [ACV1-9]
-        _add_liquidity_one_coin_impl(i, _getAddLiquidityOneCoinCallData(i, amount, minAmount), true); // F: [ACV1-9]
+        (tokensToEnable, tokensToDisable) =
+            _add_liquidity_one_coin_impl(i, _getAddLiquidityOneCoinCallData(i, amount, minAmount), true); // F: [ACV1-9]
     }
 
     /// @dev Internal implementation of `add_liquidity_one_coin` and `add_all_liquidity_one_coin`
@@ -383,11 +470,14 @@ contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
     ///      - sets max approval for the input token before the call and resets it to 1 after
     ///      - enables LP token
     ///      - disables input token only when adding the entire balance
-    function _add_liquidity_one_coin_impl(int128 i, bytes memory callData, bool disableTokenIn) internal {
+    function _add_liquidity_one_coin_impl(int128 i, bytes memory callData, bool disableTokenIn)
+        internal
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+    {
         _approve_token(i, false, type(uint256).max);
         _execute(callData);
         _approve_token(i, false, 1);
-        _changeEnabledTokens(lpTokenMask, disableTokenIn ? _get_token_mask(i, false) : 0);
+        (tokensToEnable, tokensToDisable) = (lpTokenMask, disableTokenIn ? _get_token_mask(i, false) : 0);
     }
 
     /// @dev Returns calldata for `ICurvePool.add_liquidity` with one input asset
@@ -424,71 +514,102 @@ contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
     /// @dev Internal implementation of `remove_liquidity`
     ///      - passes calldata to the target contract
     ///      - enables all pool tokens
-    function _remove_liquidity() internal {
+    function _remove_liquidity() internal returns (uint256 tokensToEnable, uint256 tokensToDisable) {
         _execute(msg.data);
-        _changeEnabledTokens(token0Mask | token1Mask | token2Mask | token3Mask, 0); // F: [ACV1_2-5, ACV1_3-5, ACV1_4-5]
+        (tokensToEnable, tokensToDisable) = (token0Mask | token1Mask | token2Mask | token3Mask, 0); // F: [ACV1_2-5, ACV1_3-5, ACV1_4-5]
     }
 
     /// @dev Internal implementation of `remove_liquidity_imbalance`
     ///      - passes calldata to the target contract
     ///      - enables specified pool tokens
-    function _remove_liquidity_imbalance(bool t0Enable, bool t1Enable, bool t2Enable, bool t3Enable) internal {
+    function _remove_liquidity_imbalance(bool t0Enable, bool t1Enable, bool t2Enable, bool t3Enable)
+        internal
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+    {
         _execute(msg.data);
 
-        uint256 tokensMask;
-        if (t0Enable) tokensMask |= _get_token_mask(0, false); // F: [ACV1_2-6, ACV1_3-6, ACV1_4-6]
-        if (t1Enable) tokensMask |= _get_token_mask(1, false); // F: [ACV1_2-6, ACV1_3-6, ACV1_4-6]
-        if (t2Enable) tokensMask |= _get_token_mask(2, false); // F: [ACV1_3-6, ACV1_4-6]
-        if (t3Enable) tokensMask |= _get_token_mask(3, false); // F: [ACV1_4-6]
-        _changeEnabledTokens(tokensMask, 0); // F: [ACV1_2-6, ACV1_3-6, ACV1_4-6]
+        if (t0Enable) tokensToEnable |= _get_token_mask(0, false); // F: [ACV1_2-6, ACV1_3-6, ACV1_4-6]
+        if (t1Enable) tokensToEnable |= _get_token_mask(1, false); // F: [ACV1_2-6, ACV1_3-6, ACV1_4-6]
+        if (t2Enable) tokensToEnable |= _get_token_mask(2, false); // F: [ACV1_3-6, ACV1_4-6]
+        if (t3Enable) tokensToEnable |= _get_token_mask(3, false); // F: [ACV1_4-6]
+        tokensToDisable = 0; // F: [ACV1_2-6, ACV1_3-6, ACV1_4-6]
     }
 
     /// @inheritdoc ICurveV1Adapter
-    function remove_liquidity_one_coin(uint256, int128 i, uint256) external virtual override creditFacadeOnly {
-        _remove_liquidity_one_coin(i);
+    function remove_liquidity_one_coin(uint256, int128 i, uint256)
+        external
+        virtual
+        override
+        creditFacadeOnly
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+    {
+        (tokensToEnable, tokensToDisable) = _remove_liquidity_one_coin(i);
     }
 
     /// @inheritdoc ICurveV1Adapter
-    function remove_liquidity_one_coin(uint256, uint256 i, uint256) external override creditFacadeOnly {
-        _remove_liquidity_one_coin(i.toInt256().toInt128());
+    function remove_liquidity_one_coin(uint256, uint256 i, uint256)
+        external
+        override
+        creditFacadeOnly
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+    {
+        (tokensToEnable, tokensToDisable) = _remove_liquidity_one_coin(i.toInt256().toInt128());
     }
 
     /// @dev Internal implementation of `remove_liquidity_one_coin`
-    function _remove_liquidity_one_coin(int128 i) internal {
-        _remove_liquidity_one_coin_impl(i, msg.data, false); // F: [ACV1-10]
+    function _remove_liquidity_one_coin(int128 i) internal returns (uint256 tokensToEnable, uint256 tokensToDisable) {
+        (tokensToEnable, tokensToDisable) = _remove_liquidity_one_coin_impl(i, msg.data, false); // F: [ACV1-10]
     }
 
     /// @inheritdoc ICurveV1Adapter
-    function remove_all_liquidity_one_coin(int128 i, uint256 rateMinRAY) external virtual override creditFacadeOnly {
-        _remove_all_liquidity_one_coin(i, rateMinRAY);
+    function remove_all_liquidity_one_coin(int128 i, uint256 rateMinRAY)
+        external
+        virtual
+        override
+        creditFacadeOnly
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+    {
+        (tokensToEnable, tokensToDisable) = _remove_all_liquidity_one_coin(i, rateMinRAY);
     }
 
     /// @inheritdoc ICurveV1Adapter
-    function remove_all_liquidity_one_coin(uint256 i, uint256 rateMinRAY) external override creditFacadeOnly {
-        _remove_all_liquidity_one_coin(i.toInt256().toInt128(), rateMinRAY);
+    function remove_all_liquidity_one_coin(uint256 i, uint256 rateMinRAY)
+        external
+        override
+        creditFacadeOnly
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+    {
+        (tokensToEnable, tokensToDisable) = _remove_all_liquidity_one_coin(i.toInt256().toInt128(), rateMinRAY);
     }
 
     /// @dev Internal implementation of `remove_all_liquidity_one_coin`
-    function _remove_all_liquidity_one_coin(int128 i, uint256 rateMinRAY) internal {
+    function _remove_all_liquidity_one_coin(int128 i, uint256 rateMinRAY)
+        internal
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+    {
         address creditAccount = _creditAccount();
 
         uint256 amount = IERC20(lp_token).balanceOf(creditAccount); // F: [ACV1-11]
-        if (amount <= 1) return;
+        if (amount <= 1) return (0, 0);
 
         unchecked {
             amount--; // F: [ACV1-11]
         }
         uint256 minAmount = (amount * rateMinRAY) / RAY; // F: [ACV1-11]
-        _remove_liquidity_one_coin_impl(i, _getRemoveLiquidityOneCoinCallData(i, amount, minAmount), true); // F: [ACV1-11]
+        (tokensToEnable, tokensToDisable) =
+            _remove_liquidity_one_coin_impl(i, _getRemoveLiquidityOneCoinCallData(i, amount, minAmount), true); // F: [ACV1-11]
     }
 
     /// @dev Internal implementation of `remove_liquidity_one_coin` and `remove_all_liquidity_one_coin`
     ///      - passes calldata to the targe contract
     ///      - enables received asset
     ///      - disables LP token only when removing all liquidity
-    function _remove_liquidity_one_coin_impl(int128 i, bytes memory callData, bool disableLP) internal {
+    function _remove_liquidity_one_coin_impl(int128 i, bytes memory callData, bool disableLP)
+        internal
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+    {
         _execute(callData);
-        _changeEnabledTokens(_get_token_mask(i, false), disableLP ? lpTokenMask : 0);
+        (tokensToEnable, tokensToDisable) = (_get_token_mask(i, false), disableLP ? lpTokenMask : 0);
     }
 
     /// @dev Returns calldata for `ICurvePool.remove_liquidity_one_coin` call

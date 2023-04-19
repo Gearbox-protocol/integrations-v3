@@ -52,7 +52,9 @@ interface IBalancerV2VaultAdapter is IAdapter, IBalancerV2VaultAdapterExceptions
     /// @dev `fundManagement` param from the original interface is ignored, as the adapter does not use internal balances and
     ///       only has one sender/recipient
     /// @dev The function reverts if the poolId status is not ALLOWED or SWAP_ONLY
-    function swap(SingleSwap memory singleSwap, FundManagement memory, uint256 limit, uint256 deadline) external;
+    function swap(SingleSwap memory singleSwap, FundManagement memory, uint256 limit, uint256 deadline)
+        external
+        returns (uint256 tokensToEnable, uint256 tokensToDisable);
 
     /// @notice Swaps the entire balance of a token for another token within a single pool, disables input token
     /// @param singleSwapAll Struct containing swap parameters
@@ -63,7 +65,9 @@ interface IBalancerV2VaultAdapter is IAdapter, IBalancerV2VaultAdapterExceptions
     /// @param limitRateRAY The minimal resulting exchange rate of assetOut to assetIn, scaled by 1e27
     /// @param deadline The latest timestamp at which the swap would be executed
     /// @dev The function reverts if the poolId status is not ALLOWED or SWAP_ONLY
-    function swapAll(SingleSwapAll memory singleSwapAll, uint256 limitRateRAY, uint256 deadline) external;
+    function swapAll(SingleSwapAll memory singleSwapAll, uint256 limitRateRAY, uint256 deadline)
+        external
+        returns (uint256 tokensToEnable, uint256 tokensToDisable);
 
     /// @notice Performs a multi-hop swap through several Balancer pools
     /// @param kind Type of swap (GIVEN IN or GIVEN OUT)
@@ -87,7 +91,7 @@ interface IBalancerV2VaultAdapter is IAdapter, IBalancerV2VaultAdapterExceptions
         FundManagement memory,
         int256[] memory limits,
         uint256 deadline
-    ) external;
+    ) external returns (uint256 tokensToEnable, uint256 tokensToDisable);
 
     /// @notice Deposits liquidity into a Balancer pool in exchange for BPT
     /// @param poolId ID of the pool to deposit into
@@ -100,7 +104,9 @@ interface IBalancerV2VaultAdapter is IAdapter, IBalancerV2VaultAdapterExceptions
     ///          (ignored as the adapter does not use internal balances)
     /// @dev `sender` and `recipient` are ignored, since they are always set to the CA address
     /// @dev The function reverts if poolId status is not ALLOWED
-    function joinPool(bytes32 poolId, address, address, JoinPoolRequest memory request) external;
+    function joinPool(bytes32 poolId, address, address, JoinPoolRequest memory request)
+        external
+        returns (uint256 tokensToEnable, uint256 tokensToDisable);
 
     /// @notice Deposits single asset as liquidity into a Balancer pool
     /// @param poolId ID of the pool to deposit into
@@ -108,14 +114,18 @@ interface IBalancerV2VaultAdapter is IAdapter, IBalancerV2VaultAdapterExceptions
     /// @param amountIn Amount of asset to deposit
     /// @param minAmountOut The minimal amount of BPT to receive
     /// @dev The function reverts if poolId status is not ALLOWED
-    function joinPoolSingleAsset(bytes32 poolId, IAsset assetIn, uint256 amountIn, uint256 minAmountOut) external;
+    function joinPoolSingleAsset(bytes32 poolId, IAsset assetIn, uint256 amountIn, uint256 minAmountOut)
+        external
+        returns (uint256 tokensToEnable, uint256 tokensToDisable);
 
     /// @notice Deposits the entire balance of given asset as liquidity into a Balancer pool, disables said asset
     /// @param poolId ID of the pool to deposit into
     /// @param assetIn Asset to deposit
     /// @param minRateRAY The minimal exchange rate of assetIn to BPT, scaled by 1e27
     /// @dev The function reverts if poolId status is not ALLOWED
-    function joinPoolSingleAssetAll(bytes32 poolId, IAsset assetIn, uint256 minRateRAY) external;
+    function joinPoolSingleAssetAll(bytes32 poolId, IAsset assetIn, uint256 minRateRAY)
+        external
+        returns (uint256 tokensToEnable, uint256 tokensToDisable);
 
     /// @notice Withdraws liquidity from a Balancer pool, burning BPT and receiving assets
     /// @param poolId ID of the pool to withdraw from
@@ -127,20 +137,26 @@ interface IBalancerV2VaultAdapter is IAdapter, IBalancerV2VaultAdapterExceptions
     ///        * `toInternalBalance` - whether to use internal balances for assets
     ///          (ignored as the adapter does not use internal balances)
     /// @dev `sender` and `recipient` are ignored, since they are always set to the CA address
-    function exitPool(bytes32 poolId, address, address payable, ExitPoolRequest memory request) external;
+    function exitPool(bytes32 poolId, address, address payable, ExitPoolRequest memory request)
+        external
+        returns (uint256 tokensToEnable, uint256 tokensToDisable);
 
     /// @notice Withdraws liquidity from a Balancer pool, burning BPT and receiving a single asset
     /// @param poolId ID of the pool to withdraw from
     /// @param assetOut Asset to withdraw
     /// @param amountIn Amount of BPT to burn
     /// @param minAmountOut Minimal amount of asset to receive
-    function exitPoolSingleAsset(bytes32 poolId, IAsset assetOut, uint256 amountIn, uint256 minAmountOut) external;
+    function exitPoolSingleAsset(bytes32 poolId, IAsset assetOut, uint256 amountIn, uint256 minAmountOut)
+        external
+        returns (uint256 tokensToEnable, uint256 tokensToDisable);
 
     /// @notice Withdraws liquidity from a Balancer pool, burning BPT and receiving a single asset, disables BPT
     /// @param poolId ID of the pool to withdraw from
     /// @param assetOut Asset to withdraw
     /// @param minRateRAY Minimal exchange rate of BPT to assetOut, scaled by 1e27
-    function exitPoolSingleAssetAll(bytes32 poolId, IAsset assetOut, uint256 minRateRAY) external;
+    function exitPoolSingleAssetAll(bytes32 poolId, IAsset assetOut, uint256 minRateRAY)
+        external
+        returns (uint256 tokensToEnable, uint256 tokensToDisable);
 
     /// @notice Sets the pool ID status: whether the pool ID is not supported, fully supported, or swap-only
     function setPoolIDStatus(bytes32 poolId, PoolStatus newStatus) external;

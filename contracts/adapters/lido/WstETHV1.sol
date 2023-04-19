@@ -40,19 +40,24 @@ contract WstETHV1Adapter is AbstractAdapter, IwstETHV1Adapter {
     /// ---- ///
 
     /// @inheritdoc IwstETHV1Adapter
-    function wrap(uint256 amount) external override creditFacadeOnly {
-        _wrap(amount, false); // F: [AWSTV1-5]
+    function wrap(uint256 amount)
+        external
+        override
+        creditFacadeOnly
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+    {
+        (tokensToEnable, tokensToDisable) = _wrap(amount, false); // F: [AWSTV1-5]
     }
 
     /// @inheritdoc IwstETHV1Adapter
-    function wrapAll() external override creditFacadeOnly {
+    function wrapAll() external override creditFacadeOnly returns (uint256 tokensToEnable, uint256 tokensToDisable) {
         address creditAccount = _creditAccount(); // F: [AWSTV1-3]
 
         uint256 balance = IERC20(stETH).balanceOf(creditAccount);
-        if (balance <= 1) return;
-
-        unchecked {
-            _wrap(balance - 1, true); // F: [AWSTV1-4]
+        if (balance > 1) {
+            unchecked {
+                (tokensToEnable, tokensToDisable) = _wrap(balance - 1, true); // F: [AWSTV1-4]
+            }
         }
     }
 
@@ -60,11 +65,14 @@ contract WstETHV1Adapter is AbstractAdapter, IwstETHV1Adapter {
     ///      - stETH is approved before the call
     ///      - wstETH is enabled after the call
     ///      - stETH is only disabled if wrapping the entire balance
-    function _wrap(uint256 amount, bool disableStETH) internal {
+    function _wrap(uint256 amount, bool disableStETH)
+        internal
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+    {
         _approveToken(stETH, type(uint256).max);
         _execute(abi.encodeCall(IwstETH.wrap, (amount)));
         _approveToken(stETH, 1);
-        _changeEnabledTokens(wstETHTokenMask, disableStETH ? stETHTokenMask : 0);
+        (tokensToEnable, tokensToDisable) = (wstETHTokenMask, disableStETH ? stETHTokenMask : 0);
     }
 
     /// ------ ///
@@ -72,19 +80,24 @@ contract WstETHV1Adapter is AbstractAdapter, IwstETHV1Adapter {
     /// ------ ///
 
     /// @inheritdoc IwstETHV1Adapter
-    function unwrap(uint256 amount) external override creditFacadeOnly {
-        _unwrap(amount, false); // F: [AWSTV1-7]
+    function unwrap(uint256 amount)
+        external
+        override
+        creditFacadeOnly
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+    {
+        (tokensToEnable, tokensToDisable) = _unwrap(amount, false); // F: [AWSTV1-7]
     }
 
     /// @inheritdoc IwstETHV1Adapter
-    function unwrapAll() external override creditFacadeOnly {
+    function unwrapAll() external override creditFacadeOnly returns (uint256 tokensToEnable, uint256 tokensToDisable) {
         address creditAccount = _creditAccount(); // F: [AWSTV1-3]
 
         uint256 balance = IERC20(targetContract).balanceOf(creditAccount);
-        if (balance <= 1) return;
-
-        unchecked {
-            _unwrap(balance - 1, true); // F: [AWSTV1-6]
+        if (balance > 1) {
+            unchecked {
+                (tokensToEnable, tokensToDisable) = _unwrap(balance - 1, true); // F: [AWSTV1-6]
+            }
         }
     }
 
@@ -92,8 +105,11 @@ contract WstETHV1Adapter is AbstractAdapter, IwstETHV1Adapter {
     ///      - wstETH is not approved before the call
     ///      - stETH is enabled after the call
     ///      - wstETH is only disabled if unwrapping the entire balance
-    function _unwrap(uint256 amount, bool disableWstETH) internal {
+    function _unwrap(uint256 amount, bool disableWstETH)
+        internal
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+    {
         _execute(abi.encodeCall(IwstETH.unwrap, (amount)));
-        _changeEnabledTokens(stETHTokenMask, disableWstETH ? wstETHTokenMask : 0);
+        (tokensToEnable, tokensToDisable) = (stETHTokenMask, disableWstETH ? wstETHTokenMask : 0);
     }
 }
