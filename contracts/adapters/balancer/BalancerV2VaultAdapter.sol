@@ -287,8 +287,11 @@ contract BalancerV2VaultAdapter is AbstractAdapter, IBalancerV2VaultAdapter {
     {
         address creditAccount = _creditAccount();
 
+        (address bpt,) = IBalancerV2Vault(targetContract).getPool(poolId);
+
         request.toInternalBalance = false;
 
+        _getMaskOrRevert(bpt);
         _execute(abi.encodeCall(IBalancerV2Vault.exitPool, (poolId, creditAccount, payable(creditAccount), request))); // F: [ABV2-7]
         _enableAssets(request.assets, _getBalancesFilter(creditAccount, request.assets));
     }
