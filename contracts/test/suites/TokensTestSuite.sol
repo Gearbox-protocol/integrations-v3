@@ -41,6 +41,7 @@ contract TokensTestSuite is DSTest, TokensTestSuiteHelper {
 
     mapping(Tokens => string) public symbols;
     mapping(Tokens => uint256) public prices;
+    mapping(string => Tokens) public symbolToAsset;
 
     mapping(address => Tokens) public tokenIndexes;
 
@@ -78,6 +79,7 @@ contract TokensTestSuite is DSTest, TokensTestSuiteHelper {
                 tokenIndexes[td[i].addr] = td[i].id;
                 symbols[td[i].id] = td[i].symbol;
                 tokenTypes[td[i].id] = td[i].tokenType;
+                symbolToAsset[td[i].symbol] = td[i].id;
 
                 _flushAccounts(td[i].addr);
 
@@ -149,6 +151,25 @@ contract TokensTestSuite is DSTest, TokensTestSuiteHelper {
     // ) external view returns (uint256) {
     //     return IERC20(addressOf[t]).allowance(holder, targetContract);
     // }
+
+    function transferFrom(Tokens t, address from, address to, uint256 amount) external {
+        evm.prank(from);
+        IERC20(addressOf[t]).transfer(to, amount);
+    }
+
+    function alignBalances(Tokens[] memory tokensToAlign, address targetAccount, address alignedAccount) external {
+        for (uint256 i = 0; i < tokensToAlign.length; ++i) {
+            uint256 targetBalance = balanceOf(tokensToAlign[i], targetAccount);
+            uint256 currentBalance = balanceOf(tokensToAlign[i], alignedAccount);
+
+            if (targetBalance > currentBalance) {
+                mint(tokensToAlign[i], alignedAccount, targetBalance - currentBalance);
+            } else if (currentBalance > targetBalance) {
+                evm.prank(alignedAccount);
+                IERC20(addressOf[tokensToAlign[i]]).transfer(address(0), currentBalance - targetBalance);
+            }
+        }
+    }
 
     function burn(Tokens t, address from, uint256 amount) external {
         if (tokenTypes[t] != TokenType.NORMAL_TOKEN && mockTokens) {

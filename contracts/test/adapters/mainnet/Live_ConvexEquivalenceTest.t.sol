@@ -81,7 +81,36 @@ contract Live_ConvexEquivalenceTest is DSTest, LiveEnvHelper {
 
     /// HELPER
 
+    function _getTokensToTrack(address basePoolAdapter) internal view returns (Tokens[] memory tokensToTrack) {
+        address targetContract = IConvexV1BaseRewardPoolAdapter(basePoolAdapter).targetContract();
+
+        address[] memory _tokensToTrack = new address[](7);
+
+        _tokensToTrack[0] = IConvexV1BaseRewardPoolAdapter(basePoolAdapter).curveLPtoken();
+        _tokensToTrack[1] = IConvexV1BaseRewardPoolAdapter(basePoolAdapter).stakingToken();
+        _tokensToTrack[2] = IConvexV1BaseRewardPoolAdapter(basePoolAdapter).stakedPhantomToken();
+        _tokensToTrack[3] = tokenTestSuite.addressOf(Tokens.CRV);
+        _tokensToTrack[4] = tokenTestSuite.addressOf(Tokens.CVX);
+
+        uint256 extraRewardLength = IBaseRewardPool(targetContract).extraRewardsLength();
+        if (extraRewardLength >= 1) {
+            _tokensToTrack[5] = IRewards(IBaseRewardPool(targetContract).extraRewards(0)).rewardToken();
+
+            if (extraRewardLength >= 2) {
+                _tokensToTrack[6] = IRewards(IBaseRewardPool(targetContract).extraRewards(1)).rewardToken();
+            }
+        }
+        _tokensToTrack = _tokensToTrack.trim();
+
+        tokensToTrack = new Tokens[](_tokensToTrack.length);
+
+        for (uint256 j = 0; j < _tokensToTrack.length; ++j) {
+            tokensToTrack[j] = tokenTestSuite.tokenIndexes(_tokensToTrack[j]);
+        }
+    }
+
     function compareBehavior(
+        ICreditFacade creditFacade,
         address boosterAddress,
         address basePoolAddress,
         address accountToSaveBalances,
@@ -89,7 +118,6 @@ contract Live_ConvexEquivalenceTest is DSTest, LiveEnvHelper {
         BalanceComparator comparator
     ) internal {
         if (adapters) {
-            ICreditFacade creditFacade = lts.creditFacades(Tokens.DAI);
             ConvexV1_BoosterMulticaller booster = ConvexV1_BoosterMulticaller(boosterAddress);
             ConvexV1_BaseRewardPoolMulticaller basePool = ConvexV1_BaseRewardPoolMulticaller(basePoolAddress);
 
@@ -226,23 +254,25 @@ contract Live_ConvexEquivalenceTest is DSTest, LiveEnvHelper {
         }
     }
 
-    function openCreditAccountWithUnderlying(address token, uint256 amount) internal returns (address creditAccount) {
-        ICreditFacade creditFacade = lts.creditFacades(Tokens.DAI);
-
-        (uint256 minAmount,) = creditFacade.limits();
-
-        tokenTestSuite.mint(Tokens.DAI, USER, minAmount);
+    function openCreditAccountWithUnderlying(
+        ICreditFacade creditFacade,
+        address token,
+        uint256 accountAmount,
+        uint256 mintAmount,
+        address basePoolAdapter
+    ) internal returns (address creditAccount) {
+        tokenTestSuite.mint(creditFacade.underlying(), USER, accountAmount);
 
         // Approve tokens
-        tokenTestSuite.approve(Tokens.DAI, USER, address(lts.creditManagers(Tokens.DAI)));
+        tokenTestSuite.approve(creditFacade.underlying(), USER, address(creditFacade.creditManager()));
 
         evm.startPrank(USER);
         creditFacade.openCreditAccountMulticall(
-            minAmount,
+            accountAmount,
             USER,
             multicallBuilder(
                 CreditFacadeMulticaller(address(creditFacade)).addCollateral(
-                    USER, tokenTestSuite.addressOf(Tokens.DAI), minAmount
+                    USER, creditFacade.underlying(), accountAmount
                 )
             ),
             0
@@ -250,52 +280,39 @@ contract Live_ConvexEquivalenceTest is DSTest, LiveEnvHelper {
 
         evm.stopPrank();
 
-        creditAccount = lts.creditManagers(Tokens.DAI).getCreditAccountOrRevert(USER);
+        creditAccount = creditFacade.creditManager().getCreditAccountOrRevert(USER);
 
-        tokenTestSuite.mint(token, creditAccount, amount);
+        tokenTestSuite.mint(token, creditAccount, mintAmount);
+
+        tokenTestSuite.alignBalances(_getTokensToTrack(basePoolAdapter), creditAccount, USER);
     }
 
     function prepareComparator(address basePoolAdapter) internal returns (BalanceComparator comparator) {
-        address targetContract = IConvexV1BaseRewardPoolAdapter(basePoolAdapter).targetContract();
-
-        address[] memory tokensToTrack = new address[](7);
-
-        tokensToTrack[0] = IConvexV1BaseRewardPoolAdapter(basePoolAdapter).curveLPtoken();
-        tokensToTrack[1] = IConvexV1BaseRewardPoolAdapter(basePoolAdapter).stakingToken();
-        tokensToTrack[2] = IConvexV1BaseRewardPoolAdapter(basePoolAdapter).stakedPhantomToken();
-        tokensToTrack[3] = tokenTestSuite.addressOf(Tokens.CRV);
-        tokensToTrack[4] = tokenTestSuite.addressOf(Tokens.CVX);
-
-        uint256 extraRewardLength = IBaseRewardPool(targetContract).extraRewardsLength();
-        if (extraRewardLength >= 1) {
-            tokensToTrack[5] = IRewards(IBaseRewardPool(targetContract).extraRewards(0)).rewardToken();
-
-            if (extraRewardLength >= 2) {
-                tokensToTrack[6] = IRewards(IBaseRewardPool(targetContract).extraRewards(1)).rewardToken();
-            }
-        }
-        tokensToTrack = tokensToTrack.trim();
-
-        Tokens[] memory _tokensToTrack = new Tokens[](tokensToTrack.length);
-
-        for (uint256 j = 0; j < tokensToTrack.length; ++j) {
-            _tokensToTrack[j] = tokenTestSuite.tokenIndexes(tokensToTrack[j]);
-        }
-
         comparator = new BalanceComparator(
             _stages,
-            _tokensToTrack,
+            _getTokensToTrack(basePoolAdapter),
             tokenTestSuite
         );
     }
 
     /// @dev [L-CVXET-1]: convex adapters and original contracts work identically
     function test_live_CVXET_01_Convex_adapters_and_original_contracts_are_equivalent() public liveOnly {
+        (, ICreditFacade creditFacade,, uint256 accountAmount) = lts.getActiveCM();
+
         for (uint256 i = 0; i < convexPools.length; ++i) {
             uint256 snapshot0 = evm.snapshot();
-            uint256 snapshot1 = evm.snapshot();
 
-            address basePoolAdapter = lts.getAdapter(Tokens.DAI, convexPools[i]);
+            address basePoolAdapter = lts.getAdapter(address(creditFacade.creditManager()), convexPools[i]);
+
+            address creditAccount = openCreditAccountWithUnderlying(
+                creditFacade,
+                IConvexV1BaseRewardPoolAdapter(basePoolAdapter).curveLPtoken(),
+                accountAmount,
+                3000 * WAD,
+                lts.getAdapter(address(creditFacade.creditManager()), convexPools[i])
+            );
+
+            uint256 snapshot1 = evm.snapshot();
 
             BalanceComparator comparator = prepareComparator(basePoolAdapter);
 
@@ -311,9 +328,8 @@ contract Live_ConvexEquivalenceTest is DSTest, LiveEnvHelper {
                 supportedContracts.addressOf(convexPools[i])
             );
 
-            tokenTestSuite.mint(IConvexV1BaseRewardPoolAdapter(basePoolAdapter).curveLPtoken(), USER, 3000 * WAD);
-
             compareBehavior(
+                creditFacade,
                 supportedContracts.addressOf(Contracts.CONVEX_BOOSTER),
                 supportedContracts.addressOf(convexPools[i]),
                 USER,
@@ -327,13 +343,10 @@ contract Live_ConvexEquivalenceTest is DSTest, LiveEnvHelper {
 
             comparator = prepareComparator(basePoolAdapter);
 
-            address creditAccount = openCreditAccountWithUnderlying(
-                IConvexV1BaseRewardPoolAdapter(basePoolAdapter).curveLPtoken(), 3000 * WAD
-            );
-
             compareBehavior(
-                lts.getAdapter(Tokens.DAI, Contracts.CONVEX_BOOSTER),
-                lts.getAdapter(Tokens.DAI, convexPools[i]),
+                creditFacade,
+                lts.getAdapter(address(creditFacade.creditManager()), Contracts.CONVEX_BOOSTER),
+                lts.getAdapter(address(creditFacade.creditManager()), convexPools[i]),
                 creditAccount,
                 true,
                 comparator

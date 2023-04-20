@@ -30,12 +30,10 @@ contract Live_3CRVEquivalenceTest is DSTest, LiveEnvHelper {
     using CurveV1Calls for CurveV1Multicaller;
 
     BalanceComparator comparator;
+    Tokens[4] tokensToTrack = [Tokens._3Crv, Tokens.DAI, Tokens.USDC, Tokens.USDT];
 
     function setUp() public liveOnly {
         _setUp();
-
-        // TOKENS TO TRACK ["3Crv", "DAI", "USDC", "USDT"]
-        Tokens[4] memory tokensToTrack = [Tokens._3Crv, Tokens.DAI, Tokens.USDC, Tokens.USDT];
 
         // STAGES
         string[9] memory stages = [
@@ -60,7 +58,20 @@ contract Live_3CRVEquivalenceTest is DSTest, LiveEnvHelper {
             }
         }
 
-        len = tokensToTrack.length;
+        comparator = new BalanceComparator(
+            _stages,
+            _getTokensToTrack(),
+            tokenTestSuite
+        );
+
+        /// @notice Approves all tracked tokens for USER
+        tokenTestSuite.approveMany(_getTokensToTrack(), USER, supportedContracts.addressOf(Contracts.CURVE_3CRV_POOL));
+    }
+
+    /// HELPER
+
+    function _getTokensToTrack() internal view returns (Tokens[] memory) {
+        uint256 len = tokensToTrack.length;
         Tokens[] memory _tokensToTrack = new Tokens[](len);
         unchecked {
             for (uint256 i; i < len; ++i) {
@@ -68,21 +79,16 @@ contract Live_3CRVEquivalenceTest is DSTest, LiveEnvHelper {
             }
         }
 
-        comparator = new BalanceComparator(
-            _stages,
-            _tokensToTrack,
-            tokenTestSuite
-        );
-
-        /// @notice Approves all tracked tokens for USER
-        tokenTestSuite.approveMany(_tokensToTrack, USER, supportedContracts.addressOf(Contracts.CURVE_3CRV_POOL));
+        return _tokensToTrack;
     }
 
-    /// HELPER
-
-    function compareBehavior(address curvePoolAddr, address accountToSaveBalances, bool isAdapter) internal {
+    function compareBehavior(
+        ICreditFacade creditFacade,
+        address curvePoolAddr,
+        address accountToSaveBalances,
+        bool isAdapter
+    ) internal {
         if (isAdapter) {
-            ICreditFacade creditFacade = lts.creditFacades(Tokens.DAI);
             CurveV1Multicaller pool = CurveV1Multicaller(curvePoolAddr);
 
             evm.prank(USER);
@@ -178,21 +184,22 @@ contract Live_3CRVEquivalenceTest is DSTest, LiveEnvHelper {
 
     /// @dev Opens credit account for USER and make amount of desired token equal
     /// amounts for USER and CA to be able to launch test for both
-    function openCreditAccountWithEqualAmount(uint256 amount) internal returns (address creditAccount) {
-        ICreditFacade creditFacade = lts.creditFacades(Tokens.DAI);
-
-        tokenTestSuite.mint(Tokens.DAI, USER, 3 * amount);
+    function openCreditAccountWithEqualAmount(ICreditFacade creditFacade, uint256 accountAmount, uint256 amountToMint)
+        internal
+        returns (address creditAccount)
+    {
+        tokenTestSuite.mint(Tokens.DAI, USER, amountToMint);
 
         // Approve tokens
-        tokenTestSuite.approve(Tokens.DAI, USER, address(lts.creditManagers(Tokens.DAI)));
+        tokenTestSuite.approve(Tokens.DAI, USER, address(creditFacade.creditManager()));
 
         evm.startPrank(USER);
         creditFacade.openCreditAccountMulticall(
-            amount,
+            accountAmount,
             USER,
             multicallBuilder(
                 CreditFacadeMulticaller(address(creditFacade)).addCollateral(
-                    USER, tokenTestSuite.addressOf(Tokens.DAI), amount
+                    USER, tokenTestSuite.addressOf(Tokens.DAI), amountToMint
                 )
             ),
             0
@@ -200,27 +207,35 @@ contract Live_3CRVEquivalenceTest is DSTest, LiveEnvHelper {
 
         evm.stopPrank();
 
-        creditAccount = lts.creditManagers(Tokens.DAI).getCreditAccountOrRevert(USER);
+        creditAccount = creditFacade.creditManager().getCreditAccountOrRevert(USER);
+
+        tokenTestSuite.alignBalances(_getTokensToTrack(), creditAccount, USER);
     }
 
     /// @dev [L-CRVET-1]: 3CRV adapter and normal account works identically
     function test_live_CRVET_01_3CRV_adapter_and_normal_account_works_identically() public liveOnly {
-        ICreditFacade creditFacade = lts.creditFacades(Tokens.DAI);
+        (, ICreditFacade creditFacade,, uint256 accountAmount) = lts.getActiveCM();
 
-        (uint256 minAmount,) = creditFacade.limits();
+        uint256 amountToMint =
+            lts.priceOracle().convert(accountAmount, creditFacade.underlying(), tokenTestSuite.addressOf(Tokens.DAI));
 
-        address creditAccount = openCreditAccountWithEqualAmount(minAmount);
+        address creditAccount = openCreditAccountWithEqualAmount(creditFacade, accountAmount, amountToMint);
 
         uint256 snapshot = evm.snapshot();
 
-        compareBehavior(supportedContracts.addressOf(Contracts.CURVE_3CRV_POOL), USER, false);
+        compareBehavior(creditFacade, supportedContracts.addressOf(Contracts.CURVE_3CRV_POOL), USER, false);
 
         /// Stores save balances in memory, because all state data would be reverted afer snapshot
         BalanceBackup[] memory savedBalanceSnapshots = comparator.exportSnapshots(USER);
 
         evm.revertTo(snapshot);
 
-        compareBehavior(lts.getAdapter(Tokens.DAI, Contracts.CURVE_3CRV_POOL), creditAccount, true);
+        compareBehavior(
+            creditFacade,
+            lts.getAdapter(address(creditFacade.creditManager()), Contracts.CURVE_3CRV_POOL),
+            creditAccount,
+            true
+        );
 
         comparator.compareAllSnapshots(creditAccount, savedBalanceSnapshots);
     }

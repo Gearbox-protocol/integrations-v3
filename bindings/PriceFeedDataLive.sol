@@ -26,21 +26,39 @@ struct SingeTokenPriceFeedData {
     Tokens token;
 }
 
+struct CompositePriceFeedData {
+    Tokens token;
+    address targetToBaseFeed;
+    address baseToUSDFeed;
+}
+
+struct BoundedPriceFeedData {
+    Tokens token;
+    address priceFeed;
+    uint256 upperBound;
+}
+
 contract PriceFeedDataLive {
     ChainlinkPriceFeedData[] chainlinkPriceFeeds;
     SingeTokenPriceFeedData[] zeroPriceFeeds;
     CurvePriceFeedData[] curvePriceFeeds;
     CurveLikePriceFeedData[] likeCurvePriceFeeds;
     SingeTokenPriceFeedData[] yearnPriceFeeds;
+    BoundedPriceFeedData[] boundedPriceFeeds;
+    CompositePriceFeedData[] compositePriceFeeds;
     SingeTokenPriceFeedData wstethPriceFeed;
 
     constructor(uint8 networkId) {
         if (networkId == 1) {
             // $CHAINLINK_PRICE_FEEDS
             // $CURVE_LIKE_PRICE_FEEDS
+            // $COMPOSITE_PRICE_FEEDS
+            // $BOUNDED_PRICE_FEEDS
         } else if (networkId == 2) {
             // $GOERLI_CHAINLINK_PRICE_FEEDS
             // $GOERLI_CURVE_LIKE_PRICE_FEEDS
+            // $GOERLI_COMPOSITE_PRICE_FEEDS
+            // $GOERLI_BOUNDED_PRICE_FEEDS
         }
 
         // $ZERO_PRICE_FEEDS
