@@ -31,11 +31,11 @@ contract Live_FraxUsdcEquivalenceTest is DSTest, LiveEnvHelper {
 
     BalanceComparator comparator;
 
+    // TOKENS TO TRACK ["crvFRAX", "FRAX", "USDC"]
+    Tokens[3] tokensToTrack = [Tokens.crvFRAX, Tokens.FRAX, Tokens.USDC];
+
     function setUp() public liveOnly {
         _setUp();
-
-        // TOKENS TO TRACK ["crvFRAX", "FRAX", "USDC"]
-        Tokens[3] memory tokensToTrack = [Tokens.crvFRAX, Tokens.FRAX, Tokens.USDC];
 
         // STAGES
         string[9] memory stages = [
@@ -60,7 +60,20 @@ contract Live_FraxUsdcEquivalenceTest is DSTest, LiveEnvHelper {
             }
         }
 
-        len = tokensToTrack.length;
+        comparator = new BalanceComparator(
+            _stages,
+            _getTokensToTrack(),
+            tokenTestSuite
+        );
+
+        /// @notice Approves all tracked tokens for USER
+        tokenTestSuite.approveMany(
+            _getTokensToTrack(), USER, supportedContracts.addressOf(Contracts.CURVE_FRAX_USDC_POOL)
+        );
+    }
+
+    function _getTokensToTrack() internal view returns (Tokens[] memory) {
+        uint256 len = tokensToTrack.length;
         Tokens[] memory _tokensToTrack = new Tokens[](len);
         unchecked {
             for (uint256 i; i < len; ++i) {
@@ -68,21 +81,18 @@ contract Live_FraxUsdcEquivalenceTest is DSTest, LiveEnvHelper {
             }
         }
 
-        comparator = new BalanceComparator(
-            _stages,
-            _tokensToTrack,
-            tokenTestSuite
-        );
-
-        /// @notice Approves all tracked tokens for USER
-        tokenTestSuite.approveMany(_tokensToTrack, USER, supportedContracts.addressOf(Contracts.CURVE_FRAX_USDC_POOL));
+        return _tokensToTrack;
     }
 
     /// HELPER
 
-    function compareBehavior(address curvePoolAddr, address accountToSaveBalances, bool isAdapter) internal {
+    function compareBehavior(
+        ICreditFacade creditFacade,
+        address curvePoolAddr,
+        address accountToSaveBalances,
+        bool isAdapter
+    ) internal {
         if (isAdapter) {
-            ICreditFacade creditFacade = lts.creditFacades(Tokens.FRAX);
             CurveV1Multicaller pool = CurveV1Multicaller(curvePoolAddr);
 
             evm.prank(USER);
@@ -178,21 +188,22 @@ contract Live_FraxUsdcEquivalenceTest is DSTest, LiveEnvHelper {
 
     /// @dev Opens credit account for USER and make amount of desired token equal
     /// amounts for USER and CA to be able to launch test for both
-    function openCreditAccountWithEqualAmount(uint256 amount) internal returns (address creditAccount) {
-        ICreditFacade creditFacade = lts.creditFacades(Tokens.FRAX);
-
-        tokenTestSuite.mint(Tokens.FRAX, USER, 3 * amount);
+    function openCreditAccountWithEqualAmount(ICreditFacade creditFacade, uint256 accountAmount, uint256 amountToMint)
+        internal
+        returns (address creditAccount)
+    {
+        tokenTestSuite.mint(Tokens.FRAX, USER, amountToMint);
 
         // Approve tokens
-        tokenTestSuite.approve(Tokens.FRAX, USER, address(lts.creditManagers(Tokens.FRAX)));
+        tokenTestSuite.approve(Tokens.FRAX, USER, address(creditFacade.creditManager()));
 
         evm.startPrank(USER);
         creditFacade.openCreditAccountMulticall(
-            amount,
+            accountAmount,
             USER,
             multicallBuilder(
                 CreditFacadeMulticaller(address(creditFacade)).addCollateral(
-                    USER, tokenTestSuite.addressOf(Tokens.FRAX), amount
+                    USER, tokenTestSuite.addressOf(Tokens.FRAX), amountToMint
                 )
             ),
             0
@@ -200,27 +211,35 @@ contract Live_FraxUsdcEquivalenceTest is DSTest, LiveEnvHelper {
 
         evm.stopPrank();
 
-        creditAccount = lts.creditManagers(Tokens.FRAX).getCreditAccountOrRevert(USER);
+        creditAccount = creditFacade.creditManager().getCreditAccountOrRevert(USER);
+
+        tokenTestSuite.alignBalances(_getTokensToTrack(), creditAccount, USER);
     }
 
     /// @dev [L-CRVET-5]: FraxUsdc adapter and normal account works identically
     function test_live_CRVET_05_FraxUsdc_adapter_and_normal_account_works_identically() public liveOnly {
-        ICreditFacade creditFacade = lts.creditFacades(Tokens.FRAX);
+        (, ICreditFacade creditFacade,, uint256 accountAmount) = lts.getActiveCM();
 
-        (uint256 minAmount,) = creditFacade.limits();
+        uint256 amountToMint =
+            lts.priceOracle().convert(accountAmount, creditFacade.underlying(), tokenTestSuite.addressOf(Tokens.FRAX));
 
-        address creditAccount = openCreditAccountWithEqualAmount(minAmount);
+        address creditAccount = openCreditAccountWithEqualAmount(creditFacade, accountAmount, amountToMint);
 
         uint256 snapshot = evm.snapshot();
 
-        compareBehavior(supportedContracts.addressOf(Contracts.CURVE_FRAX_USDC_POOL), USER, false);
+        compareBehavior(creditFacade, supportedContracts.addressOf(Contracts.CURVE_FRAX_USDC_POOL), USER, false);
 
         /// Stores save balances in memory, because all state data would be reverted afer snapshot
         BalanceBackup[] memory savedBalanceSnapshots = comparator.exportSnapshots(USER);
 
         evm.revertTo(snapshot);
 
-        compareBehavior(lts.getAdapter(Tokens.FRAX, Contracts.CURVE_FRAX_USDC_POOL), creditAccount, true);
+        compareBehavior(
+            creditFacade,
+            lts.getAdapter(address(creditFacade.creditManager()), Contracts.CURVE_FRAX_USDC_POOL),
+            creditAccount,
+            true
+        );
 
         comparator.compareAllSnapshots(creditAccount, savedBalanceSnapshots);
     }

@@ -61,6 +61,8 @@ contract LiveEnvTestSuite is CreditConfigLive {
     mapping(Tokens => CreditFacade) public creditFacadeMocks;
     mapping(Tokens => CreditConfigurator) public creditConfiguratorMocks;
 
+    CreditManager public activeCM;
+
     DegenNFT public degenNFT;
 
     constructor() CreditConfigLive() {
@@ -290,6 +292,30 @@ contract LiveEnvTestSuite is CreditConfigLive {
                     }
                 }
             }
+
+            string memory testedSymbol;
+
+            try evm.envString("ETH_FORK_TESTED_CM_ASSET") returns (string memory asset) {
+                testedSymbol = asset;
+            } catch {
+                testedSymbol = "DAI";
+            }
+
+            Tokens testedAsset = tokenTestSuite.symbolToAsset(testedSymbol);
+            activeCM = creditManagers[testedAsset];
+
+            uint256 accountAmount;
+            {
+                (uint128 minAmount, uint128 maxAmount) = creditFacades[testedAsset].limits();
+
+                accountAmount = uint256(minAmount + maxAmount) / 2;
+            }
+
+            IPoolService pool = IPoolService(activeCM.pool());
+
+            if (pool.availableLiquidity() < accountAmount) {
+                tokenTestSuite.mint(activeCM.underlying(), address(pool), accountAmount);
+            }
         }
 
         // // Charge USER
@@ -405,6 +431,10 @@ contract LiveEnvTestSuite is CreditConfigLive {
         return creditManagers[underlying].contractToAdapter(supportedContracts.addressOf(target));
     }
 
+    function getAdapter(address creditManager, Contracts target) public view returns (address) {
+        return CreditManager(creditManager).contractToAdapter(supportedContracts.addressOf(target));
+    }
+
     function getMockAdapter(Tokens underlying, Contracts target) public view returns (address) {
         return creditManagerMocks[underlying].contractToAdapter(supportedContracts.addressOf(target));
     }
@@ -427,5 +457,19 @@ contract LiveEnvTestSuite is CreditConfigLive {
         for (uint256 i = 0; i < tokenCount; ++i) {
             balances[i].token = tokenTestSuite.addressOf(Tokens(i));
         }
+    }
+
+    function getActiveCM()
+        public
+        view
+        returns (CreditManager cm, CreditFacade cf, CreditConfigurator cc, uint256 accountAmount)
+    {
+        cm = activeCM;
+        cf = CreditFacade(cm.creditFacade());
+        cc = CreditConfigurator(cm.creditConfigurator());
+
+        (uint128 minBorrowAmount, uint128 maxBorrowAmount) = cf.limits();
+
+        accountAmount = uint256(minBorrowAmount + maxBorrowAmount) / 2;
     }
 }

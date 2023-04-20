@@ -67,9 +67,27 @@ contract Live_YearnEquivalenceTest is DSTest, LiveEnvHelper {
         }
     }
 
+    function _getTokensToTrack(address vaultAdapter) internal view returns (Tokens[] memory) {
+        address[] memory tokensToTrack = new address[](2);
+
+        tokensToTrack[0] = IYearnV2Adapter(vaultAdapter).token();
+        tokensToTrack[1] = IYearnV2Adapter(vaultAdapter).targetContract();
+
+        uint256 len = tokensToTrack.length;
+        Tokens[] memory _tokensToTrack = new Tokens[](len);
+        unchecked {
+            for (uint256 i; i < len; ++i) {
+                _tokensToTrack[i] = tokenTestSuite.tokenIndexes(tokensToTrack[i]);
+            }
+        }
+
+        return _tokensToTrack;
+    }
+
     /// HELPER
 
     function compareBehavior(
+        ICreditFacade creditFacade,
         address vaultAddress,
         address accountToSaveBalances,
         uint256 baseUnit,
@@ -77,15 +95,14 @@ contract Live_YearnEquivalenceTest is DSTest, LiveEnvHelper {
         BalanceComparator comparator
     ) internal {
         if (isAdapter) {
-            ICreditFacade creditFacade = lts.creditFacades(Tokens.DAI);
             YearnV2_Multicaller vault = YearnV2_Multicaller(vaultAddress);
 
             evm.prank(USER);
-            creditFacade.multicall(multicallBuilder(vault.deposit(100 * baseUnit, accountToSaveBalances)));
+            creditFacade.multicall(multicallBuilder(vault.deposit(5 * baseUnit, accountToSaveBalances)));
             comparator.takeSnapshot("after_deposit_uint256_address", accountToSaveBalances);
 
             evm.prank(USER);
-            creditFacade.multicall(multicallBuilder(vault.deposit(100 * baseUnit)));
+            creditFacade.multicall(multicallBuilder(vault.deposit(5 * baseUnit)));
             comparator.takeSnapshot("after_deposit_uint256_address", accountToSaveBalances);
 
             evm.prank(USER);
@@ -93,15 +110,15 @@ contract Live_YearnEquivalenceTest is DSTest, LiveEnvHelper {
             comparator.takeSnapshot("after_deposit", accountToSaveBalances);
 
             evm.prank(USER);
-            creditFacade.multicall(multicallBuilder(vault.withdraw(50 * baseUnit, accountToSaveBalances, 10)));
+            creditFacade.multicall(multicallBuilder(vault.withdraw(3 * baseUnit, accountToSaveBalances, 10)));
             comparator.takeSnapshot("after_withdraw_uint256_address_uint256", accountToSaveBalances);
 
             evm.prank(USER);
-            creditFacade.multicall(multicallBuilder(vault.withdraw(10 * baseUnit, accountToSaveBalances)));
+            creditFacade.multicall(multicallBuilder(vault.withdraw(2 * baseUnit, accountToSaveBalances)));
             comparator.takeSnapshot("after_withdraw_uint256_address", accountToSaveBalances);
 
             evm.prank(USER);
-            creditFacade.multicall(multicallBuilder(vault.withdraw(10 * baseUnit)));
+            creditFacade.multicall(multicallBuilder(vault.withdraw(baseUnit)));
             comparator.takeSnapshot("after_withdraw_uint256", accountToSaveBalances);
 
             evm.prank(USER);
@@ -111,11 +128,11 @@ contract Live_YearnEquivalenceTest is DSTest, LiveEnvHelper {
             IYVault vault = IYVault(vaultAddress);
 
             evm.prank(USER);
-            vault.deposit(100 * baseUnit, accountToSaveBalances);
+            vault.deposit(5 * baseUnit, accountToSaveBalances);
             comparator.takeSnapshot("after_deposit_uint256_address", accountToSaveBalances);
 
             evm.prank(USER);
-            vault.deposit(100 * baseUnit);
+            vault.deposit(5 * baseUnit);
             comparator.takeSnapshot("after_deposit_uint256_address", accountToSaveBalances);
 
             evm.prank(USER);
@@ -123,15 +140,15 @@ contract Live_YearnEquivalenceTest is DSTest, LiveEnvHelper {
             comparator.takeSnapshot("after_deposit", accountToSaveBalances);
 
             evm.prank(USER);
-            vault.withdraw(50 * baseUnit, accountToSaveBalances, 10);
+            vault.withdraw(3 * baseUnit, accountToSaveBalances, 10);
             comparator.takeSnapshot("after_withdraw_uint256_address_uint256", accountToSaveBalances);
 
             evm.prank(USER);
-            vault.withdraw(10 * baseUnit, accountToSaveBalances);
+            vault.withdraw(2 * baseUnit, accountToSaveBalances);
             comparator.takeSnapshot("after_withdraw_uint256_address", accountToSaveBalances);
 
             evm.prank(USER);
-            vault.withdraw(10 * baseUnit);
+            vault.withdraw(baseUnit);
             comparator.takeSnapshot("after_withdraw_uint256", accountToSaveBalances);
 
             evm.prank(USER);
@@ -140,83 +157,65 @@ contract Live_YearnEquivalenceTest is DSTest, LiveEnvHelper {
         }
     }
 
-    function openCreditAccountWithUnderlying(address token, uint256 amount) internal returns (address creditAccount) {
-        ICreditFacade creditFacade = lts.creditFacades(Tokens.DAI);
-
-        (uint256 minAmount,) = creditFacade.limits();
-
-        tokenTestSuite.mint(Tokens.DAI, USER, minAmount);
+    function openCreditAccountWithUnderlying(
+        ICreditFacade creditFacade,
+        address token,
+        address vaultAdapter,
+        uint256 accountAmount,
+        uint256 mintAmount
+    ) internal returns (address creditAccount) {
+        tokenTestSuite.mint(token, USER, mintAmount);
 
         // Approve tokens
-        tokenTestSuite.approve(Tokens.DAI, USER, address(lts.creditManagers(Tokens.DAI)));
+        tokenTestSuite.approve(token, USER, address(creditFacade.creditManager()));
 
         evm.startPrank(USER);
         creditFacade.openCreditAccountMulticall(
-            minAmount,
+            accountAmount,
             USER,
-            multicallBuilder(
-                CreditFacadeMulticaller(address(creditFacade)).addCollateral(
-                    USER, tokenTestSuite.addressOf(Tokens.DAI), minAmount
-                )
-            ),
+            multicallBuilder(CreditFacadeMulticaller(address(creditFacade)).addCollateral(USER, token, mintAmount)),
             0
         );
 
         evm.stopPrank();
 
-        creditAccount = lts.creditManagers(Tokens.DAI).getCreditAccountOrRevert(USER);
+        creditAccount = creditFacade.creditManager().getCreditAccountOrRevert(USER);
 
-        if (token != tokenTestSuite.addressOf(Tokens.DAI)) {
-            tokenTestSuite.mint(token, creditAccount, amount);
-        }
+        tokenTestSuite.alignBalances(_getTokensToTrack(vaultAdapter), creditAccount, USER);
     }
 
     function prepareComparator(address vaultAdapter) internal returns (BalanceComparator comparator) {
-        address[] memory tokensToTrack = new address[](2);
-
-        tokensToTrack[0] = IYearnV2Adapter(vaultAdapter).token();
-        tokensToTrack[1] = IYearnV2Adapter(vaultAdapter).targetContract();
-
-        Tokens[] memory _tokensToTrack = new Tokens[](tokensToTrack.length);
-
-        for (uint256 j = 0; j < tokensToTrack.length; ++j) {
-            _tokensToTrack[j] = tokenTestSuite.tokenIndexes(tokensToTrack[j]);
-        }
-
         comparator = new BalanceComparator(
             _stages,
-            _tokensToTrack,
+            _getTokensToTrack(vaultAdapter),
             tokenTestSuite
         );
     }
 
     /// @dev [L-YET-1]: yearn adapters and original contracts work identically
     function test_live_YET_01_Yearn_adapters_and_original_contracts_are_equivalent() public liveOnly {
+        (, ICreditFacade creditFacade,, uint256 accountAmount) = lts.getActiveCM();
+
         for (uint256 i = 0; i < yearnVaults.length; ++i) {
             uint256 snapshot0 = evm.snapshot();
-            uint256 snapshot1 = evm.snapshot();
 
-            address vaultAdapter = lts.getAdapter(Tokens.DAI, yearnVaults[i]);
+            address vaultAdapter = lts.getAdapter(address(creditFacade.creditManager()), yearnVaults[i]);
 
             address token = IYearnV2Adapter(vaultAdapter).token();
+
+            uint256 amountToMint = lts.priceOracle().convert(accountAmount, creditFacade.underlying(), token);
+
+            address creditAccount =
+                openCreditAccountWithUnderlying(creditFacade, token, vaultAdapter, accountAmount, amountToMint);
+
+            uint256 snapshot1 = evm.snapshot();
 
             BalanceComparator comparator = prepareComparator(vaultAdapter);
 
             tokenTestSuite.approve(token, USER, supportedContracts.addressOf(yearnVaults[i]));
 
-            ICreditFacade creditFacade = lts.creditFacades(Tokens.DAI);
-
-            (uint256 minAmount,) = creditFacade.limits();
-
-            tokenTestSuite.mint(
-                token,
-                USER,
-                yearnVaults[i] == Contracts.YEARN_DAI_VAULT
-                    ? minAmount * 2
-                    : 3000 * 10 ** IERC20Metadata(token).decimals()
-            );
-
             compareBehavior(
+                creditFacade,
                 supportedContracts.addressOf(yearnVaults[i]),
                 USER,
                 10 ** IERC20Metadata(token).decimals(),
@@ -230,18 +229,11 @@ contract Live_YearnEquivalenceTest is DSTest, LiveEnvHelper {
 
             comparator = prepareComparator(vaultAdapter);
 
-            address creditAccount =
-                openCreditAccountWithUnderlying(token, 3000 * 10 ** IERC20Metadata(token).decimals());
-
             compareBehavior(
-                lts.getAdapter(Tokens.DAI, yearnVaults[i]),
-                creditAccount,
-                10 ** IERC20Metadata(token).decimals(),
-                true,
-                comparator
+                creditFacade, vaultAdapter, creditAccount, 10 ** IERC20Metadata(token).decimals(), true, comparator
             );
 
-            comparator.compareAllSnapshots(creditAccount, savedBalanceSnapshots, 1);
+            comparator.compareAllSnapshots(creditAccount, savedBalanceSnapshots, 2);
 
             evm.revertTo(snapshot0);
         }

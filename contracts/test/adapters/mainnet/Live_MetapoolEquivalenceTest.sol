@@ -33,6 +33,8 @@ contract Live_MetapoolTest is DSTest, LiveEnvHelper {
 
     string[] _stages;
 
+    Contracts[2] metapools = [Contracts.CURVE_FRAX_POOL, Contracts.CURVE_LUSD_POOL];
+
     function setUp() public liveOnly {
         _setUp();
 
@@ -62,11 +64,38 @@ contract Live_MetapoolTest is DSTest, LiveEnvHelper {
         }
     }
 
+    function _getTokensToTrack(address adapter) internal view returns (Tokens[] memory) {
+        ICurvePool2Assets pool = ICurvePool2Assets(ICurveV1_2AssetsAdapter(adapter).targetContract());
+
+        Tokens[6] memory tokensToTrack;
+
+        tokensToTrack[0] = Tokens._3Crv;
+        tokensToTrack[1] = Tokens.DAI;
+        tokensToTrack[2] = Tokens.USDC;
+        tokensToTrack[3] = Tokens.USDT;
+        tokensToTrack[4] = tokenTestSuite.tokenIndexes(pool.coins(uint256(0)));
+        tokensToTrack[5] = tokenTestSuite.tokenIndexes(ICurveV1_2AssetsAdapter(adapter).lp_token());
+
+        uint256 len = tokensToTrack.length;
+        Tokens[] memory _tokensToTrack = new Tokens[](len);
+        unchecked {
+            for (uint256 i; i < len; ++i) {
+                _tokensToTrack[i] = tokensToTrack[i];
+            }
+        }
+
+        return _tokensToTrack;
+    }
+
     /// HELPER
 
-    function compareBehavior(address curvePoolAddr, address accountToSaveBalances, bool isAdapter) internal {
+    function compareBehavior(
+        ICreditFacade creditFacade,
+        address curvePoolAddr,
+        address accountToSaveBalances,
+        bool isAdapter
+    ) internal {
         if (isAdapter) {
-            ICreditFacade creditFacade = lts.creditFacades(Tokens.DAI);
             CurveV1Multicaller pool = CurveV1Multicaller(curvePoolAddr);
 
             evm.prank(USER);
@@ -182,30 +211,23 @@ contract Live_MetapoolTest is DSTest, LiveEnvHelper {
 
     /// @dev Opens credit account for USER and make amount of desired token equal
     /// amounts for USER and CA to be able to launch test for both
-    function openEquivalentCreditAccountWith3CRVAmount(uint256 amount) internal returns (address creditAccount) {
-        ICreditFacade creditFacade = lts.creditFacades(Tokens.DAI);
+    function openEquivalentCreditAccountWith3CRVAmount(
+        ICreditFacade creditFacade,
+        uint256 accountAmount,
+        uint256 mintAmount,
+        address adapter
+    ) internal returns (address creditAccount) {
+        tokenTestSuite.mint(Tokens._3Crv, USER, mintAmount);
 
-        (uint256 minAmount,) = creditFacade.limits();
-
-        tokenTestSuite.mint(Tokens.DAI, USER, 3 * minAmount);
-
-        tokenTestSuite.mint(Tokens._3Crv, USER, 2 * amount);
-
-        // Approve tokens
-        tokenTestSuite.approve(Tokens.DAI, USER, address(lts.creditManagers(Tokens.DAI)));
-
-        tokenTestSuite.approve(Tokens._3Crv, USER, address(lts.creditManagers(Tokens.DAI)));
+        tokenTestSuite.approve(Tokens._3Crv, USER, address(creditFacade.creditManager()));
 
         evm.startPrank(USER);
         creditFacade.openCreditAccountMulticall(
-            minAmount,
+            accountAmount,
             USER,
             multicallBuilder(
                 CreditFacadeMulticaller(address(creditFacade)).addCollateral(
-                    USER, tokenTestSuite.addressOf(Tokens.DAI), minAmount
-                ),
-                CreditFacadeMulticaller(address(creditFacade)).addCollateral(
-                    USER, tokenTestSuite.addressOf(Tokens._3Crv), amount
+                    USER, tokenTestSuite.addressOf(Tokens._3Crv), mintAmount
                 )
             ),
             0
@@ -213,82 +235,56 @@ contract Live_MetapoolTest is DSTest, LiveEnvHelper {
 
         evm.stopPrank();
 
-        creditAccount = lts.creditManagers(Tokens.DAI).getCreditAccountOrRevert(USER);
+        creditAccount = creditFacade.creditManager().getCreditAccountOrRevert(USER);
+
+        tokenTestSuite.alignBalances(_getTokensToTrack(adapter), creditAccount, USER);
     }
 
-    /// @dev [L-CRVET-2]: FRAX3CRV adapter and normal account works identically
-    function test_live_CRVET_02_FRAX3CRV_adapter_and_normal_account_works_identically() public liveOnly {
-        Tokens[6] memory tokensToTrack =
-            [Tokens.FRAX, Tokens._3Crv, Tokens.DAI, Tokens.USDC, Tokens.USDT, Tokens.FRAX3CRV];
+    /// @dev [L-CRVET-2]: Curve metapools adapter and normal account works identically
+    function test_live_CRVET_02_metapools_adapter_and_normal_account_works_identically() public liveOnly {
+        (, ICreditFacade creditFacade,, uint256 accountAmount) = lts.getActiveCM();
 
-        uint256 len = tokensToTrack.length;
-        Tokens[] memory _tokensToTrack = new Tokens[](len);
-        unchecked {
-            for (uint256 i; i < len; ++i) {
-                _tokensToTrack[i] = tokensToTrack[i];
-            }
+        for (uint256 i = 0; i < metapools.length; ++i) {
+            uint256 snapshot0 = evm.snapshot();
+
+            address adapter = lts.getAdapter(address(creditFacade.creditManager()), metapools[i]);
+
+            uint256 amountToMint = lts.priceOracle().convert(
+                accountAmount, creditFacade.underlying(), tokenTestSuite.addressOf(Tokens._3Crv)
+            );
+
+            address creditAccount =
+                openEquivalentCreditAccountWith3CRVAmount(creditFacade, accountAmount, amountToMint, adapter);
+
+            uint256 snapshot1 = evm.snapshot();
+
+            comparator = new BalanceComparator(
+                _stages,
+                _getTokensToTrack(adapter),
+                tokenTestSuite
+            );
+
+            tokenTestSuite.approveMany(_getTokensToTrack(adapter), USER, supportedContracts.addressOf(metapools[i]));
+
+            compareBehavior(creditFacade, supportedContracts.addressOf(metapools[i]), USER, false);
+
+            BalanceBackup[] memory savedBalanceSnapshots = comparator.exportSnapshots(USER);
+
+            evm.revertTo(snapshot1);
+
+            comparator = new BalanceComparator(
+                _stages,
+                _getTokensToTrack(adapter),
+                tokenTestSuite
+            );
+
+            compareBehavior(
+                creditFacade, lts.getAdapter(address(creditFacade.creditManager()), metapools[i]), creditAccount, true
+            );
+
+            comparator.compareAllSnapshots(creditAccount, savedBalanceSnapshots);
+
+            evm.revertTo(snapshot0);
         }
-
-        comparator = new BalanceComparator(
-            _stages,
-            _tokensToTrack,
-            tokenTestSuite
-        );
-
-        /// @notice Approves all tracked tokens for USER
-        tokenTestSuite.approveMany(_tokensToTrack, USER, supportedContracts.addressOf(Contracts.CURVE_FRAX_POOL));
-
-        address creditAccount = openEquivalentCreditAccountWith3CRVAmount(5000 * WAD);
-
-        uint256 snapshot = evm.snapshot();
-
-        compareBehavior(supportedContracts.addressOf(Contracts.CURVE_FRAX_POOL), USER, false);
-
-        /// Stores save balances in memory, because all state data would be reverted afer snapshot
-        BalanceBackup[] memory savedBalanceSnapshots = comparator.exportSnapshots(USER);
-
-        evm.revertTo(snapshot);
-
-        compareBehavior(lts.getAdapter(Tokens.DAI, Contracts.CURVE_FRAX_POOL), creditAccount, true);
-
-        comparator.compareAllSnapshots(creditAccount, savedBalanceSnapshots);
-    }
-
-    /// @dev [L-CRVET-3]: LUSD3CRV adapter and normal account works identically
-    function test_live_CRVET_03_LUSD3CRV_adapter_and_normal_account_works_identically() public liveOnly {
-        Tokens[6] memory tokensToTrack =
-            [Tokens.LUSD, Tokens._3Crv, Tokens.DAI, Tokens.USDC, Tokens.USDT, Tokens.LUSD3CRV];
-
-        uint256 len = tokensToTrack.length;
-        Tokens[] memory _tokensToTrack = new Tokens[](len);
-        unchecked {
-            for (uint256 i; i < len; ++i) {
-                _tokensToTrack[i] = tokensToTrack[i];
-            }
-        }
-
-        comparator = new BalanceComparator(
-            _stages,
-            _tokensToTrack,
-            tokenTestSuite
-        );
-
-        /// @notice Approves all tracked tokens for USER
-        tokenTestSuite.approveMany(_tokensToTrack, USER, supportedContracts.addressOf(Contracts.CURVE_LUSD_POOL));
-
-        address creditAccount = openEquivalentCreditAccountWith3CRVAmount(5000 * WAD);
-
-        uint256 snapshot = evm.snapshot();
-
-        compareBehavior(supportedContracts.addressOf(Contracts.CURVE_LUSD_POOL), USER, false);
-
-        /// Stores save balances in memory, because all state data would be reverted afer snapshot
-        BalanceBackup[] memory savedBalanceSnapshots = comparator.exportSnapshots(USER);
-
-        evm.revertTo(snapshot);
-
-        compareBehavior(lts.getAdapter(Tokens.DAI, Contracts.CURVE_LUSD_POOL), creditAccount, true);
-
-        comparator.compareAllSnapshots(creditAccount, savedBalanceSnapshots);
     }
 }

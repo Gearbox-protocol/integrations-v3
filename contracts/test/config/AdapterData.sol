@@ -101,6 +101,7 @@ contract AdapterData {
                 basePool: Contracts.NO_CONTRACT
             })
         );
+
         curveAdapters.push(
             CurveAdapter({
                 targetContract: Contracts.CURVE_FRAX_POOL,

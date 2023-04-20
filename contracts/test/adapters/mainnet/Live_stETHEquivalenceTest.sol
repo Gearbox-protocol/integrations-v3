@@ -31,11 +31,10 @@ contract Live_CurveStETHEquivalenceTest is DSTest, LiveEnvHelper {
 
     BalanceComparator comparator;
 
+    Tokens[3] tokensToTrack = [Tokens.steCRV, Tokens.WETH, Tokens.STETH];
+
     function setUp() public liveOnly {
         _setUp();
-
-        // TOKENS TO TRACK ["crvFRAX", "FRAX", "USDC"]
-        Tokens[3] memory tokensToTrack = [Tokens.steCRV, Tokens.WETH, Tokens.STETH];
 
         // STAGES
         string[9] memory stages = [
@@ -70,19 +69,37 @@ contract Live_CurveStETHEquivalenceTest is DSTest, LiveEnvHelper {
 
         comparator = new BalanceComparator(
             _stages,
-            _tokensToTrack,
+            _getTokensToTrack(),
             tokenTestSuite
         );
 
         /// @notice Approves all tracked tokens for USER
-        tokenTestSuite.approveMany(_tokensToTrack, USER, supportedContracts.addressOf(Contracts.CURVE_STETH_GATEWAY));
+        tokenTestSuite.approveMany(
+            _getTokensToTrack(), USER, supportedContracts.addressOf(Contracts.CURVE_STETH_GATEWAY)
+        );
+    }
+
+    function _getTokensToTrack() internal view returns (Tokens[] memory) {
+        uint256 len = tokensToTrack.length;
+        Tokens[] memory _tokensToTrack = new Tokens[](len);
+        unchecked {
+            for (uint256 i; i < len; ++i) {
+                _tokensToTrack[i] = tokensToTrack[i];
+            }
+        }
+
+        return _tokensToTrack;
     }
 
     /// HELPER
 
-    function compareBehavior(address curvePoolAddr, address accountToSaveBalances, bool isAdapter) internal {
+    function compareBehavior(
+        ICreditFacade creditFacade,
+        address curvePoolAddr,
+        address accountToSaveBalances,
+        bool isAdapter
+    ) internal {
         if (isAdapter) {
-            ICreditFacade creditFacade = lts.creditFacades(Tokens.WETH);
             CurveV1Multicaller pool = CurveV1Multicaller(curvePoolAddr);
 
             evm.prank(USER);
@@ -178,21 +195,22 @@ contract Live_CurveStETHEquivalenceTest is DSTest, LiveEnvHelper {
 
     /// @dev Opens credit account for USER and make amount of desired token equal
     /// amounts for USER and CA to be able to launch test for both
-    function openCreditAccountWithEqualAmount(uint256 amount) internal returns (address creditAccount) {
-        ICreditFacade creditFacade = lts.creditFacades(Tokens.WETH);
-
-        tokenTestSuite.mint(Tokens.WETH, USER, 3 * amount);
+    function openCreditAccountWithEqualAmount(ICreditFacade creditFacade, uint256 accountAmount, uint256 mintAmount)
+        internal
+        returns (address creditAccount)
+    {
+        tokenTestSuite.mint(Tokens.WETH, USER, mintAmount);
 
         // Approve tokens
-        tokenTestSuite.approve(Tokens.WETH, USER, address(lts.creditManagers(Tokens.WETH)));
+        tokenTestSuite.approve(Tokens.WETH, USER, address(creditFacade.creditManager()));
 
         evm.startPrank(USER);
         creditFacade.openCreditAccountMulticall(
-            amount,
+            accountAmount,
             USER,
             multicallBuilder(
                 CreditFacadeMulticaller(address(creditFacade)).addCollateral(
-                    USER, tokenTestSuite.addressOf(Tokens.WETH), amount
+                    USER, tokenTestSuite.addressOf(Tokens.WETH), mintAmount
                 )
             ),
             0
@@ -200,27 +218,35 @@ contract Live_CurveStETHEquivalenceTest is DSTest, LiveEnvHelper {
 
         evm.stopPrank();
 
-        creditAccount = lts.creditManagers(Tokens.WETH).getCreditAccountOrRevert(USER);
+        creditAccount = creditFacade.creditManager().getCreditAccountOrRevert(USER);
+
+        tokenTestSuite.alignBalances(_getTokensToTrack(), creditAccount, USER);
     }
 
     /// @dev [L-CRVET-6]: stETH adapter and normal account works identically
     function test_live_CRVET_06_stETH_adapter_and_normal_account_works_identically() public liveOnly {
-        ICreditFacade creditFacade = lts.creditFacades(Tokens.WETH);
+        (, ICreditFacade creditFacade,, uint256 accountAmount) = lts.getActiveCM();
 
-        (uint256 minAmount,) = creditFacade.limits();
+        uint256 amountToMint =
+            lts.priceOracle().convert(accountAmount, creditFacade.underlying(), tokenTestSuite.addressOf(Tokens.WETH));
 
-        address creditAccount = openCreditAccountWithEqualAmount(minAmount);
+        address creditAccount = openCreditAccountWithEqualAmount(creditFacade, accountAmount, amountToMint);
 
         uint256 snapshot = evm.snapshot();
 
-        compareBehavior(supportedContracts.addressOf(Contracts.CURVE_STETH_GATEWAY), USER, false);
+        compareBehavior(creditFacade, supportedContracts.addressOf(Contracts.CURVE_STETH_GATEWAY), USER, false);
 
         /// Stores save balances in memory, because all state data would be reverted afer snapshot
         BalanceBackup[] memory savedBalanceSnapshots = comparator.exportSnapshots(USER);
 
         evm.revertTo(snapshot);
 
-        compareBehavior(lts.getAdapter(Tokens.WETH, Contracts.CURVE_STETH_GATEWAY), creditAccount, true);
+        compareBehavior(
+            creditFacade,
+            lts.getAdapter(address(creditFacade.creditManager()), Contracts.CURVE_STETH_GATEWAY),
+            creditAccount,
+            true
+        );
 
         comparator.compareAllSnapshots(creditAccount, savedBalanceSnapshots);
     }

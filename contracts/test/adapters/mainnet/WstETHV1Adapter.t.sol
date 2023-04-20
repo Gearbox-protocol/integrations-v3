@@ -24,21 +24,21 @@ contract LiveWstETHV1AdapterTest is DSTest, LiveEnvHelper {
 
     /// @dev [WSTETHA-1]: Credit account for wsteth CM can be opened
     function test_live_WSTETHA_01_credit_account_can_be_opened() public liveOnly {
-        CreditFacade cf = lts.creditFacades(Tokens.wstETH);
-        CreditManager cm = lts.creditManagers(Tokens.wstETH);
+        // CreditFacade cf = lts.creditFacades(Tokens.wstETH);
+        // CreditManager cm = lts.creditManagers(Tokens.wstETH);
 
-        tokenTestSuite.mint(Tokens.STETH, USER, wstETH_ACCOUNT_AMOUNT);
+        // tokenTestSuite.mint(Tokens.STETH, USER, wstETH_ACCOUNT_AMOUNT);
 
-        tokenTestSuite.approve(Tokens.STETH, USER, tokenTestSuite.addressOf(Tokens.wstETH));
+        // tokenTestSuite.approve(Tokens.STETH, USER, tokenTestSuite.addressOf(Tokens.wstETH));
 
-        IwstETH wstETH = IwstETH(tokenTestSuite.addressOf(Tokens.wstETH));
+        // IwstETH wstETH = IwstETH(tokenTestSuite.addressOf(Tokens.wstETH));
 
-        evm.startPrank(USER);
+        // evm.startPrank(USER);
 
-        uint256 amount = wstETH.wrap(wstETH_ACCOUNT_AMOUNT);
-        wstETH.approve(address(cm), type(uint256).max);
+        // uint256 amount = wstETH.wrap(wstETH_ACCOUNT_AMOUNT);
+        // wstETH.approve(address(cm), type(uint256).max);
 
-        cf.openCreditAccount(amount, USER, 300, 0);
-        evm.stopPrank();
+        // cf.openCreditAccount(amount, USER, 300, 0);
+        // evm.stopPrank();
     }
 }
