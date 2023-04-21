@@ -3,6 +3,13 @@ name: Release
 on:
   workflow_dispatch:
   workflow_call:
+    secrets:
+      NPM_TOKEN:
+        description: 'NPM token passed from the caller workflow'
+        required: true
+      MAINNET_TESTS_FORK:
+        description: 'JSON RPC provider passed from the caller workflow'
+        required: true
 
 env:
   HUSKY: 0
