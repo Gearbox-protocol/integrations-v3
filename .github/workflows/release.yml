@@ -12,37 +12,15 @@ env:
   CI: true
 
 jobs:
+  tests:
+    uses: ./.github/workflows/tests.yml
+
   release:
+    needs: tests
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v3
-
-      - uses: actions/setup-node@v3
-        with:
-          cache: "yarn"
-          node-version-file: ".nvmrc"
-
-      - name: Configure access to private npm packages
-        run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > .npmrc
-
-      # prepare script runs before publish, and it needs husky
-      - name: Install dependencies
-        run: |
-          yarn install --frozen-lockfile
-
-      - name: Install Foundry
-        uses: foundry-rs/foundry-toolchain@v1
-        with:
-          version: nightly
-
-      - name: Mainnet tests
-        run: |
-          underlyings=("DAI" "USDC" "WETH" "WBTC" "wstETH" "FRAX")
-          for underlying in "${underlyings[@]}"; do
-            export ETH_FORK_TESTED_CM_ASSET=$underlying
-            forge t --match-test _live_ --chain-id 1337 --fork-url ${{ secrets.MAINNET_TESTS_FORK }}
-          done
 
       - name: Semantic Release
         if: github.event_name != 'workflow_dispatch'
