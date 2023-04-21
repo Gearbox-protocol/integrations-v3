@@ -925,10 +925,10 @@
     "@ethersproject/properties" "^5.7.0"
     "@ethersproject/strings" "^5.7.0"
 
-"@gearbox-protocol/core-v2@^1.16.1":
-  version "1.16.1"
-  resolved "https://registry.yarnpkg.com/@gearbox-protocol/core-v2/-/core-v2-1.16.1.tgz#c8a02a217486879bb272436880e405c4612f3e4d"
-  integrity sha512-LxyKY3SrX0oF/zo2c9k09HyKShcU/7PU8nqfTXSkEoWvuWEcE0EYghcL5NLt8AWCwUwi5wyzO0w1pPqQCJeeYQ==
+"@gearbox-protocol/core-v2@^1.16.2":
+  version "1.16.2"
+  resolved "https://registry.yarnpkg.com/@gearbox-protocol/core-v2/-/core-v2-1.16.2.tgz#89ebc011cdd7abb860c780093ee464721047342e"
+  integrity sha512-VcTXLAuL9P+NQzdTh55Kpw9VD8I0CKP/Zh1E6YcVqL1wbXRoGkOT6+jx3quMw+yOSsjkc8sAvggpzBeVXQI9oQ==
 
 "@gearbox-protocol/eslint-config@^1.6.1":
   version "1.6.1"
