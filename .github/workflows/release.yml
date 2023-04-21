@@ -5,6 +5,7 @@ on:
     branches:
       - "main"
       - "legacy"
+  workflow_dispatch:
 
 env:
   HUSKY: 0
@@ -30,7 +31,16 @@ jobs:
         run: |
           yarn install --frozen-lockfile
 
+      - name: Mainnet tests
+        run: |
+          underlyings=("DAI" "USDC" "WETH" "WBTC" "wstETH" "FRAX")
+          for underlying in "${underlyings[@]}"; do
+            export ETH_FORK_TESTED_CM_ASSET=$underlying
+            forge t --match-test _live_ --chain-id 1337 --fork-url ${{ secrets.MAINNET_TESTS_FORK }}
+          done
+
       - name: Semantic Release
+        if: github.event_name != 'workflow_dispatch'
         uses: cycjimmy/semantic-release-action@v3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
