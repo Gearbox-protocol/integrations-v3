@@ -925,22 +925,20 @@
     "@ethersproject/properties" "^5.7.0"
     "@ethersproject/strings" "^5.7.0"
 
-"@gearbox-protocol/core-v2@^1.12.1":
-  version "1.12.1"
-  resolved "https://registry.yarnpkg.com/@gearbox-protocol/core-v2/-/core-v2-1.12.1.tgz#6cc3c00baaee0dca7b5bc9794fc08982b26b61ba"
-  integrity sha512-vRdtSHQDYnN4BRY1x2mWXDYtU9leHDsRZb3eazfMDrB6MDr6OQTXvTUBAoKcn0mtBcpX1vtCryTLSi6v9j6rHw==
-
-"@gearbox-protocol/core-v2@^1.7.2":
-  version "1.7.2"
-  resolved "https://registry.yarnpkg.com/@gearbox-protocol/core-v2/-/core-v2-1.7.2.tgz#a116672ab9d04a8f29bc15f3104bed15f6f853b8"
-  integrity sha512-mxFxHXqROg1tutki3MbBiff5rbZsO/ephzqdeOcVbpEYPTouHD+tYablOFf2dPX2mVQhLbR2Ccj6Yh1IRWUzMw==
-
-"@gearbox-protocol/core-v3@^1.5.0":
-  version "1.5.0"
-  resolved "https://registry.yarnpkg.com/@gearbox-protocol/core-v3/-/core-v3-1.5.0.tgz#998cbcf1a0483aec7d209ec6a548754ab2be9926"
-  integrity sha512-AXJP51dTloEoDkwPevZvvirJBqTIuTz0WtaHr6FLuuIPseYUCjHAwf2+tWI1HgA5SkaaYsRNl0CL5hx4YCDP1w==
+"@gearbox-protocol/core-v2@^1.19.0-base.3":
+  version "1.19.0-base.3"
+  resolved "https://registry.yarnpkg.com/@gearbox-protocol/core-v2/-/core-v2-1.19.0-base.3.tgz#df94ad2978d20630d39b46f653f0ced88ba8c805"
+  integrity sha512-AQLyerVwgD0FiiL4ynENm79KY315obN2U2HawZTZ34Z+oZjzKrPSjJnIOQhBXAydsN2zk7++KLyWH/CG3k3ctg==
   dependencies:
-    "@gearbox-protocol/core-v2" "^1.7.2"
+    "@typechain/ethers-v5" "^10.2.1"
+
+"@gearbox-protocol/core-v3@^1.19.3":
+  version "1.19.3"
+  resolved "https://registry.yarnpkg.com/@gearbox-protocol/core-v3/-/core-v3-1.19.3.tgz#27047e311d0fde10f76957b90de1f15b27547544"
+  integrity sha512-V+hnvBaEohe/SZjwoBZqh1rHMSZYe+s1TSbQae1vB8k5a0+mhsCn0515fxMzU1/2QD2e+XKA/WUg1/NntWbAyQ==
+  dependencies:
+    "@gearbox-protocol/core-v2" "^1.19.0-base.3"
+    "@gearbox-protocol/integration-types" "^1.2.0"
 
 "@gearbox-protocol/eslint-config@^1.6.1":
   version "1.6.1"
@@ -956,6 +954,11 @@
     eslint-plugin-react-hooks "^4.6.0"
     eslint-plugin-simple-import-sort "^7.0.0"
     eslint-plugin-unused-imports "^2.0.0"
+
+"@gearbox-protocol/integration-types@^1.2.0":
+  version "1.2.0"
+  resolved "https://registry.yarnpkg.com/@gearbox-protocol/integration-types/-/integration-types-1.2.0.tgz#865cde63923c5e0e61575b9b808b3f4ec266ebb4"
+  integrity sha512-YSVn5u4G/e7ZSJRe4AD7IZ3C76tdk5bnvChrgNZIsxvEC7LQ3mWHFVn8shADU8PIPLcftnCxVLp2WkVdR6jiNA==
 
 "@gearbox-protocol/prettier-config@^1.5.0":
   version "1.5.0"
@@ -1483,6 +1486,14 @@
   version "10.2.0"
   resolved "https://registry.yarnpkg.com/@typechain/ethers-v5/-/ethers-v5-10.2.0.tgz#68f5963efb5214cb2d881477228e4b5b315473e1"
   integrity sha512-ikaq0N/w9fABM+G01OFmU3U3dNnyRwEahkdvi9mqy1a3XwKiPZaF/lu54OcNaEWnpvEYyhhS0N7buCtLQqC92w==
+  dependencies:
+    lodash "^4.17.15"
+    ts-essentials "^7.0.1"
+
+"@typechain/ethers-v5@^10.2.1":
+  version "10.2.1"
+  resolved "https://registry.yarnpkg.com/@typechain/ethers-v5/-/ethers-v5-10.2.1.tgz#50241e6957683281ecfa03fb5a6724d8a3ce2391"
+  integrity sha512-n3tQmCZjRE6IU4h6lqUGiQ1j866n5MTCBJreNEHHVWXa2u9GJTaeYyU1/k+1qLutkyw+sS6VAN+AbeiTqsxd/A==
   dependencies:
     lodash "^4.17.15"
     ts-essentials "^7.0.1"

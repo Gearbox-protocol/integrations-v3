@@ -5,6 +5,13 @@ pragma solidity ^0.8.17;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
+import {
+    AP_TREASURY,
+    AP_WETH_TOKEN,
+    IAddressProviderV3,
+    NO_VERSION_CONTROL
+} from "@gearbox-protocol/core-v3/contracts/interfaces/IAddressProviderV3.sol";
+
 import {AbstractAdapter} from "../AbstractAdapter.sol";
 import {AdapterType} from "../../interfaces/IAdapter.sol";
 
@@ -45,10 +52,10 @@ contract LidoV1Adapter is AbstractAdapter, ILidoV1Adapter {
         stETH = address(LidoV1Gateway(payable(_lidoGateway)).stETH()); // F: [LDOV1-1]
         stETHTokenMask = _getMaskOrRevert(stETH); // F: [LDOV1-1]
 
-        weth = addressProvider.getWethToken(); // F: [LDOV1-1]
+        weth = IAddressProviderV3(addressProvider).getAddressOrRevert(AP_WETH_TOKEN, NO_VERSION_CONTROL); // F: [LDOV1-1]
         wethTokenMask = _getMaskOrRevert(weth); // F: [LDOV1-1]
 
-        treasury = addressProvider.getTreasuryContract(); // F: [LDOV1-1]
+        treasury = IAddressProviderV3(addressProvider).getAddressOrRevert(AP_TREASURY, NO_VERSION_CONTROL); // F: [LDOV1-1]
         limit = LIDO_STETH_LIMIT; // F: [LDOV1-1]
     }
 

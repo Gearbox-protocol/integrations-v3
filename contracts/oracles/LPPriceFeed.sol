@@ -4,4 +4,4 @@
 pragma solidity ^0.8.17;
 
 import {PriceFeedType} from "@gearbox-protocol/core-v3/contracts/interfaces/IPriceFeedType.sol";
-import {LPPriceFeed} from "@gearbox-protocol/core-v3/contracts/oracles/LPPriceFeed.sol";
+import {LPPriceFeed} from "@gearbox-protocol/core-v2/contracts/oracles/LPPriceFeed.sol";

@@ -3,7 +3,8 @@
 // (c) Gearbox Holdings, 2023
 pragma solidity ^0.8.17;
 
-import {ICreditConfigurator} from "@gearbox-protocol/core-v2/contracts/interfaces/ICreditConfigurator.sol";
+import {ICreditManagerV3} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditManagerV3.sol";
+import {ICreditConfiguratorV3} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditConfiguratorV3.sol";
 
 import {AbstractAdapter} from "../AbstractAdapter.sol";
 import {IAdapter, AdapterType} from "../../interfaces/IAdapter.sol";
@@ -118,15 +119,16 @@ contract ConvexV1BoosterAdapter is AbstractAdapter, IConvexV1BoosterAdapter {
         override
         configuratorOnly // F: [ACVX1_B-1]
     {
-        ICreditConfigurator cc = ICreditConfigurator(creditManager.creditConfigurator());
+        ICreditManagerV3 cm = ICreditManagerV3(creditManager);
+        ICreditConfiguratorV3 cc = ICreditConfiguratorV3(cm.creditConfigurator());
 
-        address[] memory allowedContracts = cc.allowedContracts();
+        address[] memory allowedContracts = cc.allowedAdapters();
         uint256 len = allowedContracts.length;
 
         for (uint256 i = 0; i < len;) {
             address allowedContract = allowedContracts[i];
 
-            address adapter = creditManager.contractToAdapter(allowedContract);
+            address adapter = cm.contractToAdapter(allowedContract);
             AdapterType aType = IAdapter(adapter)._gearboxAdapterType();
 
             if (aType == AdapterType.CONVEX_V1_BASE_REWARD_POOL) {
