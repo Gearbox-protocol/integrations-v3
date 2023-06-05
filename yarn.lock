@@ -932,10 +932,10 @@
   dependencies:
     "@typechain/ethers-v5" "^10.2.1"
 
-"@gearbox-protocol/core-v3@^1.19.3":
-  version "1.19.3"
-  resolved "https://registry.yarnpkg.com/@gearbox-protocol/core-v3/-/core-v3-1.19.3.tgz#27047e311d0fde10f76957b90de1f15b27547544"
-  integrity sha512-V+hnvBaEohe/SZjwoBZqh1rHMSZYe+s1TSbQae1vB8k5a0+mhsCn0515fxMzU1/2QD2e+XKA/WUg1/NntWbAyQ==
+"@gearbox-protocol/core-v3@^1.20.1":
+  version "1.20.1"
+  resolved "https://registry.yarnpkg.com/@gearbox-protocol/core-v3/-/core-v3-1.20.1.tgz#69fc52fe109098cefb1545e975b71ccd2afe0c81"
+  integrity sha512-LPSovQB99g2XI9AE40Z7IDHj+IGo2VXNoG1m41PSuOJkj0O0VoQqK28iJXKpPwKz1kNsuMAWP4P1y487kF1qzA==
   dependencies:
     "@gearbox-protocol/core-v2" "^1.19.0-base.3"
     "@gearbox-protocol/integration-types" "^1.2.0"

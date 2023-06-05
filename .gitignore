@@ -2,3 +2,4 @@
 /forge-out
 .DS_Store
 cache
+.env
