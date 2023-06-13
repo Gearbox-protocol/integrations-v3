@@ -23,17 +23,19 @@ import {CreditManagerLiveMock} from "../mocks/credit/CreditManagerLiveMock.sol";
 import {Balance} from "@gearbox-protocol/core-v2/contracts/libraries/Balances.sol";
 import {IAdapter, AdapterType} from "@gearbox-protocol/core-v2/contracts/interfaces/adapters/IAdapter.sol";
 import {IConvexV1BoosterAdapter} from "../../interfaces/convex/IConvexV1BoosterAdapter.sol";
+import {BalancerV2VaultAdapter} from "../../adapters/balancer/BalancerV2VaultAdapter.sol";
 
 import {CreditManagerFactory} from "../../factories/CreditManagerFactory.sol";
 import {CreditManagerMockFactory} from "../mocks/credit/CreditManagerMockFactory.sol";
 import {CreditManagerOpts, CollateralToken} from "@gearbox-protocol/core-v2/contracts/credit/CreditConfigurator.sol";
 import {WstETHPoolSetup} from "./WstETHPoolSetup.sol";
+import {OHMPoolSetup} from "./OHMPoolSetup.sol";
 
 import {DegenNFT} from "@gearbox-protocol/core-v2/contracts/tokens/DegenNFT.sol";
 
 import "../lib/constants.sol";
 
-import {CreditConfigLive, CreditManagerHumanOpts} from "../config/CreditConfigLive.sol";
+import {CreditConfigLive, CreditManagerHumanOpts, BalancerPool} from "../config/CreditConfigLive.sol";
 import {AdapterDeployer} from "./AdapterDeployer.sol";
 import {Contracts, SupportedContracts} from "../config/SupportedContracts.sol";
 
@@ -170,6 +172,14 @@ contract LiveEnvTestSuite is CreditConfigLive {
                     );
                 }
 
+                if (!_OHMPoolExists(cr)) {
+                    new OHMPoolSetup(
+                        ap,
+                        tokenTestSuite,
+                        ROOT_ADDRESS
+                    );
+                }
+
                 address[] memory pools = cr.getPools();
                 uint256 len = pools.length;
                 unchecked {
@@ -230,7 +240,8 @@ contract LiveEnvTestSuite is CreditConfigLive {
                             creditFacades[underlyingT] = cmf.creditFacade();
                             creditConfigurators[underlyingT] = cmf.creditConfigurator();
 
-                            _configureConvexPhantomTokens(underlyingT);
+                            _configureConvexPhantomTokens(underlyingT, false);
+                            _configureBalancerPools(underlyingT, false);
                         }
 
                         // MOCK CREDIT MANAGERS
@@ -288,6 +299,9 @@ contract LiveEnvTestSuite is CreditConfigLive {
                             creditManagerMocks[underlyingT] = cmf.creditManager();
                             creditFacadeMocks[underlyingT] = cmf.creditFacade();
                             creditConfiguratorMocks[underlyingT] = cmf.creditConfigurator();
+
+                            _configureConvexPhantomTokens(underlyingT, true);
+                            _configureBalancerPools(underlyingT, true);
                         }
                     }
                 }
@@ -349,19 +363,40 @@ contract LiveEnvTestSuite is CreditConfigLive {
         return false;
     }
 
-    function _configureConvexPhantomTokens(Tokens underlying) internal {
-        address[] memory adapters = getAdapters(underlying);
-        uint256 len = adapters.length;
+    function _OHMPoolExists(ContractsRegister cr) internal view returns (bool) {
+        address[] memory pools = cr.getPools();
 
-        evm.startPrank(ROOT_ADDRESS);
-        for (uint256 i = 0; i < len; ++i) {
-            if (adapters[i] == address(0)) continue;
-            AdapterType aType = IAdapter(adapters[i])._gearboxAdapterType();
-            if (aType == AdapterType.CONVEX_V1_BOOSTER) {
-                IConvexV1BoosterAdapter(adapters[i]).updateStakedPhantomTokensMap();
+        for (uint256 i = 0; i < pools.length; ++i) {
+            if (IPoolService(pools[i]).underlyingToken() == tokenTestSuite.addressOf(Tokens.OHM)) {
+                return true;
             }
         }
-        evm.stopPrank();
+
+        return false;
+    }
+
+    function _configureConvexPhantomTokens(Tokens underlying, bool mockCM) internal {
+        address boosterAdapter = mockCM
+            ? getMockAdapter(underlying, Contracts.CONVEX_BOOSTER)
+            : getAdapter(underlying, Contracts.CONVEX_BOOSTER);
+
+        evm.prank(ROOT_ADDRESS);
+        IConvexV1BoosterAdapter(boosterAdapter).updateStakedPhantomTokensMap();
+    }
+
+    function _configureBalancerPools(Tokens underlying, bool mockCM) internal {
+        BalancerPool[] memory pools = creditManagerHumanOpts[underlying].balancerPools;
+
+        if (pools.length == 0) return;
+
+        address balancerAdapter = mockCM
+            ? getMockAdapter(underlying, Contracts.BALANCER_VAULT)
+            : getAdapter(underlying, Contracts.BALANCER_VAULT);
+
+        for (uint256 i = 0; i < pools.length; ++i) {
+            evm.prank(ROOT_ADDRESS);
+            BalancerV2VaultAdapter(balancerAdapter).setPoolIDStatus(pools[i].poolId, pools[i].status);
+        }
     }
 
     // function testFacadeWithDegenNFT() external {

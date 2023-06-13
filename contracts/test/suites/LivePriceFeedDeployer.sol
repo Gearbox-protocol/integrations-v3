@@ -5,7 +5,7 @@ pragma solidity ^0.8.10;
 
 import {Tokens} from "../config/Tokens.sol";
 
-import {PriceFeedDataLive} from "../config/PriceFeedDataLive.sol";
+import {PriceFeedDataLive, CurvePoolType} from "../config/PriceFeedDataLive.sol";
 import {PriceFeedConfig} from "@gearbox-protocol/core-v2/contracts/oracles/PriceOracle.sol";
 import {ZeroPriceFeed} from "@gearbox-protocol/core-v2/contracts/oracles/ZeroPriceFeed.sol";
 import {YearnPriceFeed} from "../../oracles/yearn/YearnPriceFeed.sol";
@@ -19,6 +19,7 @@ import {ISupportedContracts, Contracts} from "../config/SupportedContracts.sol";
 import {CurveLP2PriceFeed} from "../../oracles/curve/CurveLP2PriceFeed.sol";
 import {CurveLP3PriceFeed} from "../../oracles/curve/CurveLP3PriceFeed.sol";
 import {CurveLP4PriceFeed} from "../../oracles/curve/CurveLP4PriceFeed.sol";
+import {CurveCryptoLPPriceFeed} from "../../oracles/curve/CurveCryptoLPPriceFeed.sol";
 
 import {IYVault} from "../../integrations/yearn/IYVault.sol";
 import {IwstETH} from "../../integrations/lido/IwstETH.sol";
@@ -126,9 +127,34 @@ contract LivePriceFeedDeployer is PriceFeedDataLive {
 
                 string memory description = string(abi.encodePacked("PRICEFEED_", tokenTestSuite.symbols(lpToken)));
 
-                if (nCoins == 2) {
+                if (curvePriceFeeds[i].poolType == CurvePoolType.CRYPTO) {
                     pf = address(
-                        new CurveLP2PriceFeed(
+                        new CurveCryptoLPPriceFeed(
+                            addressProvider,
+                            pool,
+                            priceFeeds[
+                                tokenTestSuite.addressOf(
+                                    curvePriceFeeds[i].assets[0]
+                                )
+                            ],
+                            priceFeeds[
+                                tokenTestSuite.addressOf(
+                                    curvePriceFeeds[i].assets[1]
+                                )
+                            ],
+                            nCoins == 3 ? 
+                            priceFeeds[
+                                tokenTestSuite.addressOf(
+                                    curvePriceFeeds[i].assets[2]
+                                )
+                            ] : address(0),
+                            description
+                        )
+                    );
+                } else if (curvePriceFeeds[i].poolType == CurvePoolType.STABLE) {
+                    if (nCoins == 2) {
+                        pf = address(
+                            new CurveLP2PriceFeed(
                             addressProvider,
                             pool,
                             priceFeeds[
@@ -142,11 +168,11 @@ contract LivePriceFeedDeployer is PriceFeedDataLive {
                                 )
                             ],
                             description
-                        )
-                    );
-                } else if (nCoins == 3) {
-                    pf = address(
-                        new CurveLP3PriceFeed(
+                            )
+                        );
+                    } else if (nCoins == 3) {
+                        pf = address(
+                            new CurveLP3PriceFeed(
                             addressProvider,
                             pool,
                             priceFeeds[
@@ -165,11 +191,11 @@ contract LivePriceFeedDeployer is PriceFeedDataLive {
                                 )
                             ],
                             description
-                        )
-                    );
-                } else if (nCoins == 4) {
-                    pf = address(
-                        new CurveLP4PriceFeed(
+                            )
+                        );
+                    } else if (nCoins == 4) {
+                        pf = address(
+                            new CurveLP4PriceFeed(
                             addressProvider,
                             pool,
                             priceFeeds[
@@ -193,8 +219,9 @@ contract LivePriceFeedDeployer is PriceFeedDataLive {
                                 )
                             ],
                             description
-                        )
-                    );
+                            )
+                        );
+                    }
                 }
 
                 setPriceFeed(tokenTestSuite.addressOf(lpToken), pf);

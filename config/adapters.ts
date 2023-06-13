@@ -35,6 +35,6 @@ export const adapters: Array<SupportedContract> = [
   "CONVEX_STECRV_POOL",
   "CONVEX_BOOSTER",
 
-  // UNIVERSAL
-  "UNIVERSAL_ADAPTER",
+  // BALANCER
+  "BALANCER_VAULT",
 ];

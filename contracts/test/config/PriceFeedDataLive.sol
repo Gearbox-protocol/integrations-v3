@@ -11,7 +11,13 @@ struct ChainlinkPriceFeedData {
     address priceFeed;
 }
 
+enum CurvePoolType {
+    STABLE,
+    CRYPTO
+}
+
 struct CurvePriceFeedData {
+    CurvePoolType poolType;
     Tokens lpToken;
     Tokens[] assets;
     Contracts pool;
@@ -116,6 +122,9 @@ contract PriceFeedDataLive {
                 CurveLikePriceFeedData({lpToken: Tokens.cvxcrvPlain3andSUSD, curveToken: Tokens.crvPlain3andSUSD})
             );
             likeCurvePriceFeeds.push(CurveLikePriceFeedData({lpToken: Tokens.cvxgusd3CRV, curveToken: Tokens.gusd3CRV}));
+            likeCurvePriceFeeds.push(
+                CurveLikePriceFeedData({lpToken: Tokens.cvxOHMFRAXBP, curveToken: Tokens.OHMFRAXBP})
+            );
             likeCurvePriceFeeds.push(CurveLikePriceFeedData({lpToken: Tokens.stkcvx3Crv, curveToken: Tokens._3Crv}));
             likeCurvePriceFeeds.push(
                 CurveLikePriceFeedData({lpToken: Tokens.stkcvxcrvFRAX, curveToken: Tokens.crvFRAX})
@@ -133,6 +142,9 @@ contract PriceFeedDataLive {
             likeCurvePriceFeeds.push(
                 CurveLikePriceFeedData({lpToken: Tokens.stkcvxgusd3CRV, curveToken: Tokens.gusd3CRV})
             );
+            likeCurvePriceFeeds.push(
+                CurveLikePriceFeedData({lpToken: Tokens.stkcvxOHMFRAXBP, curveToken: Tokens.OHMFRAXBP})
+            );
             compositePriceFeeds.push(
                 CompositePriceFeedData({
                     token: Tokens.WBTC,
@@ -144,6 +156,13 @@ contract PriceFeedDataLive {
                 CompositePriceFeedData({
                     token: Tokens.STETH,
                     targetToBaseFeed: 0x86392dC19c0b719886221c78AB11eb8Cf5c52812,
+                    baseToUSDFeed: 0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419
+                })
+            );
+            compositePriceFeeds.push(
+                CompositePriceFeedData({
+                    token: Tokens.OHM,
+                    targetToBaseFeed: 0x9a72298ae3886221820B1c878d12D872087D3a23,
                     baseToUSDFeed: 0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419
                 })
             );
@@ -221,6 +240,9 @@ contract PriceFeedDataLive {
                 CurveLikePriceFeedData({lpToken: Tokens.cvxcrvPlain3andSUSD, curveToken: Tokens.crvPlain3andSUSD})
             );
             likeCurvePriceFeeds.push(CurveLikePriceFeedData({lpToken: Tokens.cvxgusd3CRV, curveToken: Tokens.gusd3CRV}));
+            likeCurvePriceFeeds.push(
+                CurveLikePriceFeedData({lpToken: Tokens.cvxOHMFRAXBP, curveToken: Tokens.OHMFRAXBP})
+            );
             likeCurvePriceFeeds.push(CurveLikePriceFeedData({lpToken: Tokens.stkcvx3Crv, curveToken: Tokens._3Crv}));
             likeCurvePriceFeeds.push(
                 CurveLikePriceFeedData({lpToken: Tokens.stkcvxcrvFRAX, curveToken: Tokens.crvFRAX})
@@ -238,10 +260,20 @@ contract PriceFeedDataLive {
             likeCurvePriceFeeds.push(
                 CurveLikePriceFeedData({lpToken: Tokens.stkcvxgusd3CRV, curveToken: Tokens.gusd3CRV})
             );
+            likeCurvePriceFeeds.push(
+                CurveLikePriceFeedData({lpToken: Tokens.stkcvxOHMFRAXBP, curveToken: Tokens.OHMFRAXBP})
+            );
             compositePriceFeeds.push(
                 CompositePriceFeedData({
                     token: Tokens.STETH,
                     targetToBaseFeed: 0x78622A939324C5dC1B646D113358f54f0BA4353B,
+                    baseToUSDFeed: 0x491741d9F426130d1bC27Aee82f8b4Bd4E6E5f5D
+                })
+            );
+            compositePriceFeeds.push(
+                CompositePriceFeedData({
+                    token: Tokens.OHM,
+                    targetToBaseFeed: address(0),
                     baseToUSDFeed: 0x491741d9F426130d1bC27Aee82f8b4Bd4E6E5f5D
                 })
             );
@@ -258,6 +290,7 @@ contract PriceFeedDataLive {
         zeroPriceFeeds.push(SingeTokenPriceFeedData({token: Tokens.LQTY}));
         curvePriceFeeds.push(
             CurvePriceFeedData({
+                poolType: CurvePoolType.STABLE,
                 lpToken: Tokens._3Crv,
                 assets: assets(Tokens.DAI, Tokens.USDC, Tokens.USDT),
                 pool: Contracts.CURVE_3CRV_POOL
@@ -265,6 +298,7 @@ contract PriceFeedDataLive {
         );
         curvePriceFeeds.push(
             CurvePriceFeedData({
+                poolType: CurvePoolType.STABLE,
                 lpToken: Tokens.crvFRAX,
                 assets: assets(Tokens.FRAX, Tokens.USDC),
                 pool: Contracts.CURVE_FRAX_USDC_POOL
@@ -272,6 +306,7 @@ contract PriceFeedDataLive {
         );
         curvePriceFeeds.push(
             CurvePriceFeedData({
+                poolType: CurvePoolType.STABLE,
                 lpToken: Tokens.steCRV,
                 assets: assets(Tokens.STETH, Tokens.WETH),
                 pool: Contracts.CURVE_STETH_GATEWAY
@@ -279,6 +314,7 @@ contract PriceFeedDataLive {
         );
         curvePriceFeeds.push(
             CurvePriceFeedData({
+                poolType: CurvePoolType.STABLE,
                 lpToken: Tokens.FRAX3CRV,
                 assets: assets(Tokens.FRAX, Tokens.DAI, Tokens.USDC, Tokens.USDT),
                 pool: Contracts.CURVE_FRAX_POOL
@@ -286,6 +322,7 @@ contract PriceFeedDataLive {
         );
         curvePriceFeeds.push(
             CurvePriceFeedData({
+                poolType: CurvePoolType.STABLE,
                 lpToken: Tokens.LUSD3CRV,
                 assets: assets(Tokens.LUSD, Tokens.DAI, Tokens.USDC, Tokens.USDT),
                 pool: Contracts.CURVE_LUSD_POOL
@@ -293,6 +330,7 @@ contract PriceFeedDataLive {
         );
         curvePriceFeeds.push(
             CurvePriceFeedData({
+                poolType: CurvePoolType.STABLE,
                 lpToken: Tokens.crvPlain3andSUSD,
                 assets: assets(Tokens.DAI, Tokens.USDC, Tokens.USDT, Tokens.sUSD),
                 pool: Contracts.CURVE_SUSD_POOL
@@ -300,9 +338,18 @@ contract PriceFeedDataLive {
         );
         curvePriceFeeds.push(
             CurvePriceFeedData({
+                poolType: CurvePoolType.STABLE,
                 lpToken: Tokens.gusd3CRV,
                 assets: assets(Tokens.GUSD, Tokens.DAI, Tokens.USDC, Tokens.USDT),
                 pool: Contracts.CURVE_GUSD_POOL
+            })
+        );
+        curvePriceFeeds.push(
+            CurvePriceFeedData({
+                poolType: CurvePoolType.CRYPTO,
+                lpToken: Tokens.OHMFRAXBP,
+                assets: assets(Tokens.OHM, Tokens.crvFRAX),
+                pool: Contracts.CURVE_OHM_FRAXBP
             })
         );
         yearnPriceFeeds.push(SingeTokenPriceFeedData({token: Tokens.yvDAI}));
