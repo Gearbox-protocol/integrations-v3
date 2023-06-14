@@ -399,6 +399,7 @@ export const mainnetCreditManagers: Array<CMConfig> = [
       { symbol: "DAI", liquidationThreshold: 85 }, // Token address is token from priceFeed map above
       { symbol: "GUSD", liquidationThreshold: 85 }, // Token address is token from priceFeed map above
       { symbol: "LUSD", liquidationThreshold: 85 }, // Token address is token from priceFeed map above
+      { symbol: "FRAX", liquidationThreshold: 85 },
 
       { symbol: "3Crv", liquidationThreshold: 85 }, // Token address is token from priceFeed map above
       { symbol: "cvx3Crv", liquidationThreshold: 85 }, // Token address is token from priceFeed map above
@@ -424,11 +425,14 @@ export const mainnetCreditManagers: Array<CMConfig> = [
       { symbol: "cvxcrvFRAX", liquidationThreshold: 85 }, // Token address is token from priceFeed map above
       { symbol: "stkcvxcrvFRAX", liquidationThreshold: 85 }, // Token address is token from priceFeed map above
 
+      { symbol: "OHMFRAXBP", liquidationThreshold: 85 }, // Token address is token from priceFeed map above
+      { symbol: "cvxOHMFRAXBP", liquidationThreshold: 85 }, // Token address is token from priceFeed map above
+      { symbol: "stkcvxOHMFRAXBP", liquidationThreshold: 85 }, // Token address is token from priceFeed map above
+
       { symbol: "CVX", liquidationThreshold: 25 }, // Token address is token from priceFeed map above
       { symbol: "FXS", liquidationThreshold: 25 }, // Token address is token from priceFeed map above
       { symbol: "LQTY", liquidationThreshold: 0 },
       { symbol: "CRV", liquidationThreshold: 25 }, // Token address is token from priceFeed map above
-      { symbol: "LDO", liquidationThreshold: 0 },
       { symbol: "SNX", liquidationThreshold: 25 }, // Token address is token from priceFeed map above
     ],
     adapters: [
@@ -445,6 +449,7 @@ export const mainnetCreditManagers: Array<CMConfig> = [
       "CURVE_LUSD_POOL",
       "CURVE_GUSD_POOL",
       "CURVE_SUSD_DEPOSIT",
+      "CURVE_OHMFRAXBP_POOL",
 
       // CONVEX
       "CONVEX_FRAX3CRV_POOL",
@@ -453,6 +458,7 @@ export const mainnetCreditManagers: Array<CMConfig> = [
       "CONVEX_SUSD_POOL",
       "CONVEX_3CRV_POOL",
       "CONVEX_FRAX_USDC_POOL",
+      "CONVEX_OHMFRAXBP_POOL",
       "CONVEX_BOOSTER",
 
       // BALANCER
@@ -471,6 +477,57 @@ export const mainnetCreditManagers: Array<CMConfig> = [
         pool: "OHM_wstETH",
         status: "SWAP_ONLY",
       },
+    ],
+  },
+
+  {
+    symbol: "WETH",
+
+    minAmount: WAD.mul(100), // 0.3 WETH
+    maxAmount: WAD.mul(600), // 100WETH ~ 400K
+    collateralTokens: [
+      // Liquidation threshold will be multiplied x100 to be used as CreditFilter.sol contract parameter
+      { symbol: "WBTC", liquidationThreshold: 85 }, // Token address is token from priceFeed map above
+      { symbol: "USDT", liquidationThreshold: 85 }, // Token address is token from priceFeed map above
+
+      { symbol: "crvUSDTWBTCWETH", liquidationThreshold: 88 }, // Token address is token from priceFeed map above
+      { symbol: "cvxcrvUSDTWBTCWETH", liquidationThreshold: 88 }, // Token address is token from priceFeed map above
+      { symbol: "stkcvxcrvUSDTWBTCWETH", liquidationThreshold: 88 }, // Token address is token from priceFeed map above
+
+      { symbol: "crvCRVETH", liquidationThreshold: 82 }, // Token address is token from priceFeed map above
+      { symbol: "cvxcrvCRVETH", liquidationThreshold: 82 }, // Token address is token from priceFeed map above
+      { symbol: "stkcvxcrvCRVETH", liquidationThreshold: 82 }, // Token address is token from priceFeed map above
+
+      { symbol: "crvCVXETH", liquidationThreshold: 82 }, // Token address is token from priceFeed map above
+      { symbol: "cvxcrvCVXETH", liquidationThreshold: 82 }, // Token address is token from priceFeed map above
+      { symbol: "stkcvxcrvCVXETH", liquidationThreshold: 82 }, // Token address is token from priceFeed map above
+
+      { symbol: "LDOETH", liquidationThreshold: 82 }, // Token address is token from priceFeed map above
+      { symbol: "cvxLDOETH", liquidationThreshold: 82 }, // Token address is token from priceFeed map above
+      { symbol: "stkcvxLDOETH", liquidationThreshold: 82 }, // Token address is token from priceFeed map above
+
+      { symbol: "CVX", liquidationThreshold: 25 }, // Token address is token from priceFeed map above
+      { symbol: "CRV", liquidationThreshold: 25 }, // Token address is token from priceFeed map above
+      { symbol: "LDO", liquidationThreshold: 25 },
+    ],
+    adapters: [
+      /// SWAPPERS
+      "UNISWAP_V3_ROUTER",
+      "UNISWAP_V2_ROUTER",
+      "SUSHISWAP_ROUTER",
+
+      // CURVE
+      "CURVE_3CRYPTO_POOL",
+      "CURVE_CRVETH_POOL",
+      "CURVE_CVXETH_POOL",
+      "CURVE_LDOETH_POOL",
+
+      // CONVEX
+      "CONVEX_3CRYPTO_POOL",
+      "CONVEX_CRVETH_POOL",
+      "CONVEX_CVXETH_POOL",
+      "CONVEX_LDOETH_POOL",
+      "CONVEX_BOOSTER",
     ],
   },
 ];

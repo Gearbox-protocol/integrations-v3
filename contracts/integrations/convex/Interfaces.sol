@@ -213,3 +213,9 @@ interface IPools {
 interface IVestedEscrow {
     function fund(address[] calldata _recipient, uint256[] calldata _amount) external returns (bool);
 }
+
+interface IExtraRewardWrapper {
+    function booster() external view returns (address);
+
+    function token() external view returns (address);
+}

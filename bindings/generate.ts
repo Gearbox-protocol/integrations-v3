@@ -14,6 +14,7 @@ import {
   TokenType,
 } from "@gearbox-protocol/sdk";
 import { BalancerLpTokenData } from "@gearbox-protocol/sdk/lib/tokens/balancer";
+import { support } from "@gearbox-protocol/sdk/lib/types/contracts";
 import * as fs from "fs";
 
 import { mainnetCreditManagers } from "../config/liveTests";
@@ -85,7 +86,9 @@ const chainlinkPriceFeeds = Object.entries(priceFeedsByNetwork)
   .map(([token, oracleData]) => {
     if (oracleData.priceFeedUSD?.type === OracleType.CHAINLINK_ORACLE) {
       const address: string | undefined =
-        oracleData.priceFeedUSD!.address.Mainnet;
+        oracleData.priceFeedUSD!.address.Mainnet !== "deploy me"
+          ? oracleData.priceFeedUSD!.address.Mainnet
+          : "";
 
       return address
         ? `chainlinkPriceFeeds.push(ChainlinkPriceFeedData({
@@ -108,7 +111,9 @@ const chainlinkPriceFeedsGoerli = Object.entries(priceFeedsByNetwork)
   .map(([token, oracleData]) => {
     if (oracleData.priceFeedUSD?.type === OracleType.CHAINLINK_ORACLE) {
       const address: string | undefined =
-        oracleData.priceFeedUSD!.address.Goerli;
+        oracleData.priceFeedUSD!.address.Goerli !== "deploy me"
+          ? oracleData.priceFeedUSD!.address.Goerli
+          : "";
 
       return address
         ? `chainlinkPriceFeeds.push(ChainlinkPriceFeedData({
@@ -421,7 +426,9 @@ fs.writeFileSync("./contracts/test/config/SupportedContracts.sol", file);
 let config = "";
 
 for (let c of mainnetCreditManagers) {
-  config += `cm = creditManagerHumanOpts[Tokens.${safeEnum(c.symbol)}];`;
+  config += `cm = creditManagerHumanOpts[numOpts];`;
+  config += `++numOpts;`;
+  config += `cm.underlying = Tokens.${safeEnum(c.symbol)};`;
   config += `cm.minBorrowedAmount = ${c.minAmount.toString()};`;
   config += `cm.maxBorrowedAmount = ${c.maxAmount.toString()};`;
   config += `cm.degenNFT = address(0);`;
@@ -498,10 +505,13 @@ adapters += Object.entries(contractParams)
       contractParam.type === AdapterInterface.CURVE_V1_4ASSETS
     ) {
       if (contractParam.lpToken === "GEAR") return "";
-      const basePool: SupportedContract | "NO_CONTRACT" =
-        contractParam.tokens.includes("3Crv")
-          ? "CURVE_3CRV_POOL"
-          : "NO_CONTRACT";
+      let basePool: SupportedContract | "NO_CONTRACT" = "NO_CONTRACT";
+      for (let coin of contractParam.tokens) {
+        const coinParams = supportedTokens[coin];
+        if (coinParams.type === TokenType.CURVE_LP_TOKEN) {
+          basePool = coinParams.pool;
+        }
+      }
       return `curveAdapters.push(CurveAdapter({targetContract:  Contracts.${contract},
   adapterType: AdapterType.${
     AdapterInterface[contractParam.type]

@@ -279,8 +279,10 @@ contract LivePriceFeedDeployer is PriceFeedDataLive {
     }
 
     function setPriceFeed(address token, address priceFeed) internal {
-        priceFeeds[token] = priceFeed;
-        priceFeedConfig.push(PriceFeedConfig({token: token, priceFeed: priceFeed}));
+        if (token != address(0)) {
+            priceFeeds[token] = priceFeed;
+            priceFeedConfig.push(PriceFeedConfig({token: token, priceFeed: priceFeed}));
+        }
     }
 
     function getPriceFeeds() external view returns (PriceFeedConfig[] memory) {
