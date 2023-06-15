@@ -5,6 +5,7 @@ pragma solidity ^0.8.10;
 
 import {Tokens} from "./Tokens.sol";
 import {Contracts} from "./SupportedContracts.sol";
+import {PoolStatus} from "./ImportedDataTypes.sol";
 
 /// @dev A struct containing parameters for a recognized collateral token in the system
 struct CollateralTokenHuman {
@@ -14,8 +15,14 @@ struct CollateralTokenHuman {
     uint16 liquidationThreshold;
 }
 
+struct BalancerPool {
+    bytes32 poolId;
+    PoolStatus status;
+}
+
 /// @dev A struct representing the initial Credit Manager configuration parameters
 struct CreditManagerHumanOpts {
+    Tokens underlying;
     /// @dev The minimal debt principal amount
     uint128 minBorrowedAmount;
     /// @dev The maximal debt principal amount
@@ -32,15 +39,20 @@ struct CreditManagerHumanOpts {
     bool skipInit;
     /// @dev Contracts which should become adapters
     Contracts[] contracts;
+    /// @dev List of balancer pools to add to the balancer vault adapter
+    BalancerPool[] balancerPools;
 }
 
 contract CreditConfigLive {
-    mapping(Tokens => CreditManagerHumanOpts) creditManagerHumanOpts;
+    mapping(uint256 => CreditManagerHumanOpts) creditManagerHumanOpts;
+    uint256 numOpts;
 
     constructor() {
         CreditManagerHumanOpts storage cm;
 
-        cm = creditManagerHumanOpts[Tokens.DAI];
+        cm = creditManagerHumanOpts[numOpts];
+        ++numOpts;
+        cm.underlying = Tokens.DAI;
         cm.minBorrowedAmount = 150000000000000000000000;
         cm.maxBorrowedAmount = 1000000000000000000000000;
         cm.degenNFT = address(0);
@@ -117,8 +129,10 @@ contract CreditConfigLive {
         cm.contracts.push(Contracts.CONVEX_FRAX_USDC_POOL);
         cm.contracts.push(Contracts.CONVEX_STECRV_POOL);
         cm.contracts.push(Contracts.CONVEX_BOOSTER);
-        cm.contracts.push(Contracts.UNIVERSAL_ADAPTER);
-        cm = creditManagerHumanOpts[Tokens.USDC];
+        cm.contracts.push(Contracts.BALANCER_VAULT);
+        cm = creditManagerHumanOpts[numOpts];
+        ++numOpts;
+        cm.underlying = Tokens.USDC;
         cm.minBorrowedAmount = 150000000000;
         cm.maxBorrowedAmount = 1000000000000;
         cm.degenNFT = address(0);
@@ -195,8 +209,10 @@ contract CreditConfigLive {
         cm.contracts.push(Contracts.CONVEX_FRAX_USDC_POOL);
         cm.contracts.push(Contracts.CONVEX_STECRV_POOL);
         cm.contracts.push(Contracts.CONVEX_BOOSTER);
-        cm.contracts.push(Contracts.UNIVERSAL_ADAPTER);
-        cm = creditManagerHumanOpts[Tokens.WETH];
+        cm.contracts.push(Contracts.BALANCER_VAULT);
+        cm = creditManagerHumanOpts[numOpts];
+        ++numOpts;
+        cm.underlying = Tokens.WETH;
         cm.minBorrowedAmount = 100000000000000000000;
         cm.maxBorrowedAmount = 600000000000000000000;
         cm.degenNFT = address(0);
@@ -273,8 +289,10 @@ contract CreditConfigLive {
         cm.contracts.push(Contracts.CONVEX_FRAX_USDC_POOL);
         cm.contracts.push(Contracts.CONVEX_STECRV_POOL);
         cm.contracts.push(Contracts.CONVEX_BOOSTER);
-        cm.contracts.push(Contracts.UNIVERSAL_ADAPTER);
-        cm = creditManagerHumanOpts[Tokens.wstETH];
+        cm.contracts.push(Contracts.BALANCER_VAULT);
+        cm = creditManagerHumanOpts[numOpts];
+        ++numOpts;
+        cm.underlying = Tokens.wstETH;
         cm.minBorrowedAmount = 100000000000000000000;
         cm.maxBorrowedAmount = 600000000000000000000;
         cm.degenNFT = address(0);
@@ -352,9 +370,11 @@ contract CreditConfigLive {
         cm.contracts.push(Contracts.CONVEX_FRAX_USDC_POOL);
         cm.contracts.push(Contracts.CONVEX_STECRV_POOL);
         cm.contracts.push(Contracts.CONVEX_BOOSTER);
-        cm.contracts.push(Contracts.UNIVERSAL_ADAPTER);
+        cm.contracts.push(Contracts.BALANCER_VAULT);
         cm.contracts.push(Contracts.LIDO_WSTETH);
-        cm = creditManagerHumanOpts[Tokens.WBTC];
+        cm = creditManagerHumanOpts[numOpts];
+        ++numOpts;
+        cm.underlying = Tokens.WBTC;
         cm.minBorrowedAmount = 750000000;
         cm.maxBorrowedAmount = 5000000000;
         cm.degenNFT = address(0);
@@ -431,8 +451,10 @@ contract CreditConfigLive {
         cm.contracts.push(Contracts.CONVEX_FRAX_USDC_POOL);
         cm.contracts.push(Contracts.CONVEX_STECRV_POOL);
         cm.contracts.push(Contracts.CONVEX_BOOSTER);
-        cm.contracts.push(Contracts.UNIVERSAL_ADAPTER);
-        cm = creditManagerHumanOpts[Tokens.FRAX];
+        cm.contracts.push(Contracts.BALANCER_VAULT);
+        cm = creditManagerHumanOpts[numOpts];
+        ++numOpts;
+        cm.underlying = Tokens.FRAX;
         cm.minBorrowedAmount = 150000000000000000000000;
         cm.maxBorrowedAmount = 1000000000000000000000000;
         cm.degenNFT = address(0);
@@ -509,6 +531,130 @@ contract CreditConfigLive {
         cm.contracts.push(Contracts.CONVEX_FRAX_USDC_POOL);
         cm.contracts.push(Contracts.CONVEX_STECRV_POOL);
         cm.contracts.push(Contracts.CONVEX_BOOSTER);
-        cm.contracts.push(Contracts.UNIVERSAL_ADAPTER);
+        cm.contracts.push(Contracts.BALANCER_VAULT);
+        cm = creditManagerHumanOpts[numOpts];
+        ++numOpts;
+        cm.underlying = Tokens.OHM;
+        cm.minBorrowedAmount = 15000000000000000000000;
+        cm.maxBorrowedAmount = 100000000000000000000000;
+        cm.degenNFT = address(0);
+        cm.blacklistHelper = address(0);
+        cm.expirable = false;
+        cm.skipInit = false;
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.WETH, liquidationThreshold: 7500}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.WBTC, liquidationThreshold: 7500}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.USDC, liquidationThreshold: 8500}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.USDT, liquidationThreshold: 8500}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.sUSD, liquidationThreshold: 8500}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.DAI, liquidationThreshold: 8500}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.GUSD, liquidationThreshold: 8500}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.LUSD, liquidationThreshold: 8500}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.FRAX, liquidationThreshold: 8500}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens._3Crv, liquidationThreshold: 8500}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.cvx3Crv, liquidationThreshold: 8500}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.stkcvx3Crv, liquidationThreshold: 8500}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.FRAX3CRV, liquidationThreshold: 8500}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.cvxFRAX3CRV, liquidationThreshold: 8500}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.stkcvxFRAX3CRV, liquidationThreshold: 8500}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.LUSD3CRV, liquidationThreshold: 8500}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.cvxLUSD3CRV, liquidationThreshold: 8500}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.stkcvxLUSD3CRV, liquidationThreshold: 8500}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.crvPlain3andSUSD, liquidationThreshold: 8500}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.cvxcrvPlain3andSUSD, liquidationThreshold: 8500}));
+        cm.collateralTokens.push(
+            CollateralTokenHuman({token: Tokens.stkcvxcrvPlain3andSUSD, liquidationThreshold: 8500})
+        );
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.gusd3CRV, liquidationThreshold: 8500}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.cvxgusd3CRV, liquidationThreshold: 8500}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.stkcvxgusd3CRV, liquidationThreshold: 8500}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.crvFRAX, liquidationThreshold: 8500}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.cvxcrvFRAX, liquidationThreshold: 8500}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.stkcvxcrvFRAX, liquidationThreshold: 8500}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.OHMFRAXBP, liquidationThreshold: 8500}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.cvxOHMFRAXBP, liquidationThreshold: 8500}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.stkcvxOHMFRAXBP, liquidationThreshold: 8500}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.CVX, liquidationThreshold: 2500}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.FXS, liquidationThreshold: 2500}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.LQTY, liquidationThreshold: 1}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.CRV, liquidationThreshold: 2500}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.SNX, liquidationThreshold: 2500}));
+        cm.contracts.push(Contracts.UNISWAP_V3_ROUTER);
+        cm.contracts.push(Contracts.UNISWAP_V2_ROUTER);
+        cm.contracts.push(Contracts.SUSHISWAP_ROUTER);
+        cm.contracts.push(Contracts.CURVE_3CRV_POOL);
+        cm.contracts.push(Contracts.CURVE_FRAX_USDC_POOL);
+        cm.contracts.push(Contracts.CURVE_FRAX_POOL);
+        cm.contracts.push(Contracts.CURVE_SUSD_POOL);
+        cm.contracts.push(Contracts.CURVE_LUSD_POOL);
+        cm.contracts.push(Contracts.CURVE_GUSD_POOL);
+        cm.contracts.push(Contracts.CURVE_SUSD_DEPOSIT);
+        cm.contracts.push(Contracts.CURVE_OHMFRAXBP_POOL);
+        cm.contracts.push(Contracts.CONVEX_FRAX3CRV_POOL);
+        cm.contracts.push(Contracts.CONVEX_LUSD3CRV_POOL);
+        cm.contracts.push(Contracts.CONVEX_GUSD_POOL);
+        cm.contracts.push(Contracts.CONVEX_SUSD_POOL);
+        cm.contracts.push(Contracts.CONVEX_3CRV_POOL);
+        cm.contracts.push(Contracts.CONVEX_FRAX_USDC_POOL);
+        cm.contracts.push(Contracts.CONVEX_OHMFRAXBP_POOL);
+        cm.contracts.push(Contracts.CONVEX_BOOSTER);
+        cm.contracts.push(Contracts.BALANCER_VAULT);
+        cm.balancerPools.push(
+            BalancerPool({
+                poolId: 0x76fcf0e8c7ff37a47a799fa2cd4c13cde0d981c90002000000000000000003d2,
+                status: PoolStatus.SWAP_ONLY
+            })
+        );
+        cm.balancerPools.push(
+            BalancerPool({
+                poolId: 0xd1ec5e215e8148d76f4460e4097fd3d5ae0a35580002000000000000000003d3,
+                status: PoolStatus.SWAP_ONLY
+            })
+        );
+        cm.balancerPools.push(
+            BalancerPool({
+                poolId: 0xd4f79ca0ac83192693bce4699d0c10c66aa6cf0f00020000000000000000047e,
+                status: PoolStatus.SWAP_ONLY
+            })
+        );
+        cm = creditManagerHumanOpts[numOpts];
+        ++numOpts;
+        cm.underlying = Tokens.WETH;
+        cm.minBorrowedAmount = 100000000000000000000;
+        cm.maxBorrowedAmount = 600000000000000000000;
+        cm.degenNFT = address(0);
+        cm.blacklistHelper = address(0);
+        cm.expirable = false;
+        cm.skipInit = false;
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.WBTC, liquidationThreshold: 8500}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.USDT, liquidationThreshold: 8500}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.crvUSDTWBTCWETH, liquidationThreshold: 8800}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.cvxcrvUSDTWBTCWETH, liquidationThreshold: 8800}));
+        cm.collateralTokens.push(
+            CollateralTokenHuman({token: Tokens.stkcvxcrvUSDTWBTCWETH, liquidationThreshold: 8800})
+        );
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.crvCRVETH, liquidationThreshold: 8200}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.cvxcrvCRVETH, liquidationThreshold: 8200}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.stkcvxcrvCRVETH, liquidationThreshold: 8200}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.crvCVXETH, liquidationThreshold: 8200}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.cvxcrvCVXETH, liquidationThreshold: 8200}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.stkcvxcrvCVXETH, liquidationThreshold: 8200}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.LDOETH, liquidationThreshold: 8200}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.cvxLDOETH, liquidationThreshold: 8200}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.stkcvxLDOETH, liquidationThreshold: 8200}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.CVX, liquidationThreshold: 2500}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.CRV, liquidationThreshold: 2500}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.LDO, liquidationThreshold: 2500}));
+        cm.contracts.push(Contracts.UNISWAP_V3_ROUTER);
+        cm.contracts.push(Contracts.UNISWAP_V2_ROUTER);
+        cm.contracts.push(Contracts.SUSHISWAP_ROUTER);
+        cm.contracts.push(Contracts.CURVE_3CRYPTO_POOL);
+        cm.contracts.push(Contracts.CURVE_CRVETH_POOL);
+        cm.contracts.push(Contracts.CURVE_CVXETH_POOL);
+        cm.contracts.push(Contracts.CURVE_LDOETH_POOL);
+        cm.contracts.push(Contracts.CONVEX_3CRYPTO_POOL);
+        cm.contracts.push(Contracts.CONVEX_CRVETH_POOL);
+        cm.contracts.push(Contracts.CONVEX_CVXETH_POOL);
+        cm.contracts.push(Contracts.CONVEX_LDOETH_POOL);
+        cm.contracts.push(Contracts.CONVEX_BOOSTER);
     }
 }

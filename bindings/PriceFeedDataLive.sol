@@ -11,7 +11,13 @@ struct ChainlinkPriceFeedData {
     address priceFeed;
 }
 
+enum CurvePoolType {
+    STABLE,
+    CRYPTO
+}
+
 struct CurvePriceFeedData {
+    CurvePoolType poolType;
     Tokens lpToken;
     Tokens[] assets;
     Contracts pool;

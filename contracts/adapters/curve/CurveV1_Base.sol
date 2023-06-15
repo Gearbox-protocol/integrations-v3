@@ -168,14 +168,23 @@ contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
                     } catch {}
                 }
             } else {
-                try ICurvePool(targetContract).underlying_coins(i) returns (address tokenAddress) {
-                    currentCoin = tokenAddress;
-                } catch {
-                    try ICurvePool(targetContract).underlying_coins(i.toInt256().toInt128()) returns (
-                        address tokenAddress
-                    ) {
-                        currentCoin = tokenAddress;
-                    } catch {}
+                /// @dev Curve Crypto factory pools make a proxy call to implementation and send back received
+                ///      data raw, which means calls with unknown signatures can be successful
+                ///      while returning no data. This necessitates a low-level call.
+
+                bool success;
+                bytes memory returndata;
+
+                (success, returndata) = targetContract.call(abi.encodeWithSignature("underlying_coins(uint256)", i));
+
+                if (!success || returndata.length == 0) {
+                    (success, returndata) = targetContract.call(
+                        abi.encodeWithSignature("underlying_coins(int128)", i.toInt256().toInt128())
+                    );
+                }
+
+                if (success && returndata.length > 0) {
+                    currentCoin = abi.decode(returndata, (address));
                 }
             }
 

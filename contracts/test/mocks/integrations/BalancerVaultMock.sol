@@ -182,28 +182,30 @@ contract BalancerVaultMock is IBalancerV2Vault {
                     int256((amountIn * rate * (10000 - uint256(poolData[swaps[i].poolId].fee))) / (RAY * 10000));
             }
         } else {
-            for (uint256 i = swaps.length; i >= 0; --i) {
-                require(poolData[swaps[i].poolId].pool != address(0), "BalancerVault: Unknown pool");
+            for (uint256 i = swaps.length; i > 0; --i) {
+                uint256 ind = i - 1;
 
-                address assetIn = address(assets[swaps[i].assetInIndex]);
-                address assetOut = address(assets[swaps[i].assetOutIndex]);
+                require(poolData[swaps[ind].poolId].pool != address(0), "BalancerVault: Unknown pool");
+
+                address assetIn = address(assets[swaps[ind].assetInIndex]);
+                address assetOut = address(assets[swaps[ind].assetOutIndex]);
 
                 uint256 amountOut;
 
-                if (swaps[i].amount > 0) {
-                    amountOut = swaps[i].amount;
-                    assetDeltas[swaps[i].assetOutIndex] -= int256(swaps[i].amount);
+                if (swaps[ind].amount > 0) {
+                    amountOut = swaps[ind].amount;
+                    assetDeltas[swaps[ind].assetOutIndex] -= int256(swaps[ind].amount);
                 } else {
-                    amountOut = uint256(assetDeltas[swaps[i].assetOutIndex]);
-                    assetDeltas[swaps[i].assetOutIndex] = 0;
+                    amountOut = uint256(assetDeltas[swaps[ind].assetOutIndex]);
+                    assetDeltas[swaps[ind].assetOutIndex] = 0;
                 }
 
-                uint256 rate = poolData[swaps[i].poolId].ratesRAY[assetIn][assetOut];
+                uint256 rate = poolData[swaps[ind].poolId].ratesRAY[assetIn][assetOut];
 
                 require(rate != 0, "BalancerVault: Rate not set");
 
-                assetDeltas[swaps[i].assetInIndex] +=
-                    int256((amountOut * RAY * 10000) / (rate * (10000 - uint256(poolData[swaps[i].poolId].fee))));
+                assetDeltas[swaps[ind].assetInIndex] +=
+                    int256((amountOut * RAY * 10000) / (rate * (10000 - uint256(poolData[swaps[ind].poolId].fee))));
             }
         }
     }
