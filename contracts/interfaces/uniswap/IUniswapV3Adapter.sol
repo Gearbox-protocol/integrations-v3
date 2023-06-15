@@ -18,7 +18,9 @@ interface IUniswapV3Adapter is IAdapter, IUniswapConnectorChecker, IUniswapV3Ada
     /// @notice Swaps given amount of input token for output token through a single pool
     /// @param params Swap params, see `ISwapRouter.ExactInputSingleParams` for details
     /// @dev `params.recipient` is ignored since it can only be the credit account
-    function exactInputSingle(ISwapRouter.ExactInputSingleParams calldata params) external;
+    function exactInputSingle(ISwapRouter.ExactInputSingleParams calldata params)
+        external
+        returns (uint256 tokensToEnable, uint256 tokensToDisable);
 
     /// @notice Params for exact all input swap through a single pool
     /// @param tokenIn Input token
@@ -38,13 +40,17 @@ interface IUniswapV3Adapter is IAdapter, IUniswapConnectorChecker, IUniswapV3Ada
 
     /// @notice Swaps all balance of input token for output token through a single pool, disables input token
     /// @param params Swap params, see `ExactAllInputSingleParams` for details
-    function exactAllInputSingle(ExactAllInputSingleParams calldata params) external;
+    function exactAllInputSingle(ExactAllInputSingleParams calldata params)
+        external
+        returns (uint256 tokensToEnable, uint256 tokensToDisable);
 
     /// @notice Swaps given amount of input token for output token through multiple pools
     /// @param params Swap params, see `ISwapRouter.ExactInputParams` for details
     /// @dev `params.recipient` is ignored since it can only be the credit account
     /// @dev `params.path` must have at most 3 hops through registered connector tokens
-    function exactInput(ISwapRouter.ExactInputParams calldata params) external;
+    function exactInput(ISwapRouter.ExactInputParams calldata params)
+        external
+        returns (uint256 tokensToEnable, uint256 tokensToDisable);
 
     /// @notice Params for exact all input swap through multiple pools
     /// @param path Bytes-encoded swap path, see Uniswap docs for details
@@ -59,16 +65,22 @@ interface IUniswapV3Adapter is IAdapter, IUniswapConnectorChecker, IUniswapV3Ada
     /// @notice Swaps all balance of input token for output token through multiple pools, disables input token
     /// @param params Swap params, see `ExactAllInputParams` for details
     /// @dev `params.path` must have at most 3 hops through registered connector tokens
-    function exactAllInput(ExactAllInputParams calldata params) external;
+    function exactAllInput(ExactAllInputParams calldata params)
+        external
+        returns (uint256 tokensToEnable, uint256 tokensToDisable);
 
     /// @notice Swaps input token for given amount of output token through a single pool
     /// @param params Swap params, see `ISwapRouter.ExactOutputSingleParams` for details
     /// @dev `params.recipient` is ignored since it can only be the credit account
-    function exactOutputSingle(ISwapRouter.ExactOutputSingleParams calldata params) external;
+    function exactOutputSingle(ISwapRouter.ExactOutputSingleParams calldata params)
+        external
+        returns (uint256 tokensToEnable, uint256 tokensToDisable);
 
     /// @notice Swaps input token for given amount of output token through multiple pools
     /// @param params Swap params, see `ISwapRouter.ExactOutputParams` for details
     /// @dev `params.recipient` is ignored since it can only be the credit account
     /// @dev `params.path` must have at most 3 hops through registered connector tokens
-    function exactOutput(ISwapRouter.ExactOutputParams calldata params) external;
+    function exactOutput(ISwapRouter.ExactOutputParams calldata params)
+        external
+        returns (uint256 tokensToEnable, uint256 tokensToDisable);
 }

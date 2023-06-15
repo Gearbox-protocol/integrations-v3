@@ -48,21 +48,25 @@ contract CompoundV2_CEtherAdapter is CompoundV2_CTokenAdapter {
     ///      - WETH is approved before the call because Gateway needs permission to transfer it
     ///      - cETH is enabled after the call
     ///      - WETH is not disabled after the call because operation doesn't spend the entire balance
-    function _mint(uint256 amount) internal override returns (uint256 error) {
+    function _mint(uint256 amount)
+        internal
+        override
+        returns (uint256 tokensToEnable, uint256 tokensToDisable, uint256 error)
+    {
         _approveToken(underlying, type(uint256).max);
         error = abi.decode(_execute(_encodeMint(amount)), (uint256));
         _approveToken(underlying, 1);
-        _changeEnabledTokens(cTokenMask, 0);
+        (tokensToEnable, tokensToDisable) = (cTokenMask, 0);
     }
 
     /// @dev Internal implementation of `mintAll`
     ///      - WETH is approved before the call because Gateway needs permission to transfer it
     ///      - cETH is enabled after the call
     ///      - WETH is disabled after the call because operation spends the entire balance
-    function _mintAll() internal override returns (uint256 error) {
+    function _mintAll() internal override returns (uint256 tokensToEnable, uint256 tokensToDisable, uint256 error) {
         address creditAccount = _creditAccount();
         uint256 balance = IERC20(underlying).balanceOf(creditAccount);
-        if (balance <= 1) return 0;
+        if (balance <= 1) return (0, 0, 0);
 
         uint256 amount;
         unchecked {
@@ -72,28 +76,32 @@ contract CompoundV2_CEtherAdapter is CompoundV2_CTokenAdapter {
         _approveToken(underlying, type(uint256).max);
         error = abi.decode(_execute(_encodeMint(amount)), (uint256));
         _approveToken(underlying, 1);
-        _changeEnabledTokens(cTokenMask, tokenMask);
+        (tokensToEnable, tokensToDisable) = (cTokenMask, tokenMask);
     }
 
     /// @dev Internal implementation of `redeem`
     ///      - cETH is approved before the call because Gateway needs permission to transfer it
     ///      - WETH is enabled after the call
     ///      - cETH is not disabled after the call because operation doesn't spend the entire balance
-    function _redeem(uint256 amount) internal override returns (uint256 error) {
+    function _redeem(uint256 amount)
+        internal
+        override
+        returns (uint256 tokensToEnable, uint256 tokensToDisable, uint256 error)
+    {
         _approveToken(cToken, type(uint256).max);
         error = abi.decode(_execute(_encodeRedeem(amount)), (uint256));
         _approveToken(cToken, 1);
-        _changeEnabledTokens(tokenMask, 0);
+        (tokensToEnable, tokensToDisable) = (tokenMask, 0);
     }
 
     /// @dev Internal implementation of `redeemAll`
     ///      - cETH is approved before the call because Gateway needs permission to transfer it
     ///      - WETH is enabled after the call
     ///      - cETH is disabled after the call because operation spends the entire balance
-    function _redeemAll() internal override returns (uint256 error) {
+    function _redeemAll() internal override returns (uint256 tokensToEnable, uint256 tokensToDisable, uint256 error) {
         address creditAccount = _creditAccount();
         uint256 balance = ICEther(cToken).balanceOf(creditAccount);
-        if (balance <= 1) return 0;
+        if (balance <= 1) return (0, 0, 0);
 
         uint256 amount;
         unchecked {
@@ -103,17 +111,21 @@ contract CompoundV2_CEtherAdapter is CompoundV2_CTokenAdapter {
         _approveToken(cToken, type(uint256).max);
         error = abi.decode(_execute(_encodeRedeem(amount)), (uint256));
         _approveToken(cToken, 1);
-        _changeEnabledTokens(tokenMask, cTokenMask);
+        (tokensToEnable, tokensToDisable) = (tokenMask, cTokenMask);
     }
 
     /// @dev Internal implementation of `redeemUnderlying`
     ///      - cETH is approved before the call because Gateway needs permission to transfer it
     ///      - WETH is enabled after the call
     ///      - cETH is not disabled after the call because operation doesn't spend the entire balance
-    function _redeemUnderlying(uint256 amount) internal override returns (uint256 error) {
+    function _redeemUnderlying(uint256 amount)
+        internal
+        override
+        returns (uint256 tokensToEnable, uint256 tokensToDisable, uint256 error)
+    {
         _approveToken(cToken, type(uint256).max);
         error = abi.decode(_execute(_encodeRedeemUnderlying(amount)), (uint256));
         _approveToken(cToken, 1);
-        _changeEnabledTokens(tokenMask, 0);
+        (tokensToEnable, tokensToDisable) = (tokenMask, 0);
     }
 }

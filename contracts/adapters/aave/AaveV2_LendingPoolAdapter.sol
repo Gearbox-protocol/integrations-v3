@@ -36,9 +36,10 @@ contract AaveV2_LendingPoolAdapter is AbstractAdapter, IAaveV2_LendingPoolAdapte
         external
         override
         creditFacadeOnly // F: [AAV2LP-1]
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
         address creditAccount = _creditAccount();
-        _deposit(creditAccount, asset, amount, false); // F: [AAV2LP-3]
+        (tokensToEnable, tokensToDisable) = _deposit(creditAccount, asset, amount, false); // F: [AAV2LP-3]
     }
 
     /// @inheritdoc IAaveV2_LendingPoolAdapter
@@ -46,16 +47,17 @@ contract AaveV2_LendingPoolAdapter is AbstractAdapter, IAaveV2_LendingPoolAdapte
         external
         override
         creditFacadeOnly // F: [AAV2LP-1]
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
         address creditAccount = _creditAccount();
         uint256 balance = IERC20(asset).balanceOf(creditAccount);
-        if (balance <= 1) return;
+        if (balance <= 1) return (0, 0);
 
         uint256 amount;
         unchecked {
             amount = balance - 1;
         }
-        _deposit(creditAccount, asset, amount, true); // F: [AAV2LP-4]
+        (tokensToEnable, tokensToDisable) = _deposit(creditAccount, asset, amount, true); // F: [AAV2LP-4]
     }
 
     /// @dev Internal implementation of `deposit` and `depositAll` functions
@@ -63,8 +65,11 @@ contract AaveV2_LendingPoolAdapter is AbstractAdapter, IAaveV2_LendingPoolAdapte
     ///      - underlying is approved before the call because lending pool needs permission to transfer it
     ///      - aToken is enabled after the call
     ///      - underlying is only disabled when depositing the entire balance
-    function _deposit(address creditAccount, address asset, uint256 amount, bool disableTokenIn) internal {
-        _executeSwapSafeApprove(
+    function _deposit(address creditAccount, address asset, uint256 amount, bool disableTokenIn)
+        internal
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+    {
+        (tokensToEnable, tokensToDisable,) = _executeSwapSafeApprove(
             asset,
             _aToken(asset),
             abi.encodeCall(ILendingPool.deposit, (asset, amount, creditAccount, 0)),
@@ -81,12 +86,13 @@ contract AaveV2_LendingPoolAdapter is AbstractAdapter, IAaveV2_LendingPoolAdapte
         external
         override
         creditFacadeOnly // F: [AAV2LP-1]
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
         address creditAccount = _creditAccount();
         if (amount == type(uint256).max) {
-            _withdrawAll(creditAccount, asset); // F: [AAV2LP-5B]
+            (tokensToEnable, tokensToDisable) = _withdrawAll(creditAccount, asset); // F: [AAV2LP-5B]
         } else {
-            _withdraw(creditAccount, asset, amount); // F: [AAV2LP-5A]
+            (tokensToEnable, tokensToDisable) = _withdraw(creditAccount, asset, amount); // F: [AAV2LP-5A]
         }
     }
 
@@ -95,9 +101,10 @@ contract AaveV2_LendingPoolAdapter is AbstractAdapter, IAaveV2_LendingPoolAdapte
         external
         override
         creditFacadeOnly // F: [AAV2LP-1]
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
         address creditAccount = _creditAccount();
-        _withdrawAll(creditAccount, asset); // F: [AAV2LP-6]
+        (tokensToEnable, tokensToDisable) = _withdrawAll(creditAccount, asset); // F: [AAV2LP-6]
     }
 
     /// @dev Internal implementation of `withdraw` functionality
@@ -105,8 +112,12 @@ contract AaveV2_LendingPoolAdapter is AbstractAdapter, IAaveV2_LendingPoolAdapte
     ///      - aToken is not approved before the call because lending pool doesn't need permission to burn it
     ///      - underlying is enabled after the call
     ///      - aToken is not disabled because operation doesn't spend the entire balance
-    function _withdraw(address creditAccount, address asset, uint256 amount) internal {
-        _executeSwapNoApprove(_aToken(asset), asset, _encodeWithdraw(creditAccount, asset, amount), false); // F: [AAV2LP-2]
+    function _withdraw(address creditAccount, address asset, uint256 amount)
+        internal
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+    {
+        (tokensToEnable, tokensToDisable,) =
+            _executeSwapNoApprove(_aToken(asset), asset, _encodeWithdraw(creditAccount, asset, amount), false); // F: [AAV2LP-2]
     }
 
     /// @dev Internal implementation of `withdrawAll` functionality
@@ -114,17 +125,21 @@ contract AaveV2_LendingPoolAdapter is AbstractAdapter, IAaveV2_LendingPoolAdapte
     ///      - aToken is not approved before the call because lending pool doesn't need permission to burn it
     ///      - underlying is enabled after the call
     ///      - aToken is not disabled because operation spends the entire balance
-    function _withdrawAll(address creditAccount, address asset) internal {
+    function _withdrawAll(address creditAccount, address asset)
+        internal
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+    {
         address aToken = _aToken(asset);
         uint256 balance = IERC20(aToken).balanceOf(creditAccount);
-        if (balance <= 1) return;
+        if (balance <= 1) return (0, 0);
 
         uint256 amount;
         unchecked {
             amount = balance - 1;
         }
 
-        _executeSwapNoApprove(aToken, asset, _encodeWithdraw(creditAccount, asset, amount), true); // F: [AAV2LP-2]
+        (tokensToEnable, tokensToDisable,) =
+            _executeSwapNoApprove(aToken, asset, _encodeWithdraw(creditAccount, asset, amount), true); // F: [AAV2LP-2]
     }
 
     /// @dev Returns calldata for `ILendingPool.withdraw` call

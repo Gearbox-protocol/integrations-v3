@@ -15,22 +15,24 @@ interface IConvexV1BoosterAdapter is IAdapter {
     /// @param _pid ID of the pool to deposit to
     /// @param _stake Whether to stake Convex LP tokens in the rewards pool
     /// @dev `_amount` parameter is ignored since calldata is passed directly to the target contract
-    function deposit(uint256 _pid, uint256, bool _stake) external;
+    function deposit(uint256 _pid, uint256, bool _stake)
+        external
+        returns (uint256 tokensToEnable, uint256 tokensToDisable);
 
     /// @notice Deposits the entire balance of Curve LP tokens into Booster, disables Curve LP token
     /// @param _pid ID of the pool to deposit to
     /// @param _stake Whether to stake Convex LP tokens in the rewards pool
-    function depositAll(uint256 _pid, bool _stake) external;
+    function depositAll(uint256 _pid, bool _stake) external returns (uint256 tokensToEnable, uint256 tokensToDisable);
 
     /// @notice Withdraws Curve LP tokens from Booster
     /// @param _pid ID of the pool to withdraw from
     /// @dev `_amount` parameter is ignored since calldata is passed directly to the target contract
-    function withdraw(uint256 _pid, uint256) external;
+    function withdraw(uint256 _pid, uint256) external returns (uint256 tokensToEnable, uint256 tokensToDisable);
 
     /// @notice Withdraws all Curve LP tokens from Booster, disables Convex LP token
     /// @param _pid ID of the pool to withdraw from
     /// @dev `_amount` parameter is ignored since calldata is passed directly to the target contract
-    function withdrawAll(uint256 _pid) external;
+    function withdrawAll(uint256 _pid) external returns (uint256 tokensToEnable, uint256 tokensToDisable);
 
     /// @notice Updates the mapping of pool IDs to phantom staked token addresses
     function updateStakedPhantomTokensMap() external;

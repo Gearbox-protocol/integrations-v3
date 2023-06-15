@@ -43,30 +43,33 @@ contract CurveV1AdapterStETH is CurveV1Adapter2Assets {
         override
         creditFacadeOnly
         withLPTokenApproval // F: [ACV1S-2]
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        _remove_liquidity(); // F: [ACV1S-2]
+        (tokensToEnable, tokensToDisable) = _remove_liquidity(); // F: [ACV1S-2]
     }
 
     /// @inheritdoc CurveV1AdapterBase
     /// @dev Unlike other adapters, approves the LP token to the target
     function remove_liquidity_one_coin(uint256, int128 i, uint256)
         public
-        override (CurveV1AdapterBase, ICurveV1Adapter)
+        override(CurveV1AdapterBase, ICurveV1Adapter)
         creditFacadeOnly
         withLPTokenApproval // F: [ACV1S-4]
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        _remove_liquidity_one_coin(i); // F: [ACV1S-4]
+        (tokensToEnable, tokensToDisable) = _remove_liquidity_one_coin(i); // F: [ACV1S-4]
     }
 
     /// @inheritdoc CurveV1AdapterBase
     /// @dev Unlike other adapters, approves the LP token to the target
     function remove_all_liquidity_one_coin(int128 i, uint256 rateMinRAY)
         public
-        override (CurveV1AdapterBase, ICurveV1Adapter)
+        override(CurveV1AdapterBase, ICurveV1Adapter)
         creditFacadeOnly
         withLPTokenApproval // F: [ACV1S-5]
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        _remove_all_liquidity_one_coin(i, rateMinRAY); // F: [ACV1S-5]
+        (tokensToEnable, tokensToDisable) = _remove_all_liquidity_one_coin(i, rateMinRAY); // F: [ACV1S-5]
     }
 
     /// @inheritdoc CurveV1Adapter2Assets
@@ -76,7 +79,8 @@ contract CurveV1AdapterStETH is CurveV1Adapter2Assets {
         override
         creditFacadeOnly
         withLPTokenApproval // F: [ACV1S-6]
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        _remove_liquidity_imbalance(amounts[0] > 1, amounts[1] > 1, false, false); // F: [ACV1S-6]
+        (tokensToEnable, tokensToDisable) = _remove_liquidity_imbalance(amounts[0] > 1, amounts[1] > 1, false, false); // F: [ACV1S-6]
     }
 }

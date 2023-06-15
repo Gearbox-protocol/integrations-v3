@@ -19,15 +19,15 @@ interface IwstETHV1Adapter is IAdapter {
 
     /// @notice Wraps given amount of stETH into wstETH
     /// @param amount Amount of stETH to wrap
-    function wrap(uint256 amount) external;
+    function wrap(uint256 amount) external returns (uint256 tokensToEnable, uint256 tokensToDisable);
 
     /// @notice Wraps the entire balance of stETH into wstETH, disables stETH
-    function wrapAll() external;
+    function wrapAll() external returns (uint256 tokensToEnable, uint256 tokensToDisable);
 
     /// @notice Unwraps given amount of wstETH into stETH
     /// @param amount Amount of wstETH to unwrap
-    function unwrap(uint256 amount) external;
+    function unwrap(uint256 amount) external returns (uint256 tokensToEnable, uint256 tokensToDisable);
 
     /// @notice Unwraps the entire balance of wstETH to stETH, disables wstETH
-    function unwrapAll() external;
+    function unwrapAll() external returns (uint256 tokensToEnable, uint256 tokensToDisable);
 }

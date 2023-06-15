@@ -12,14 +12,20 @@ interface ICurveV1_4AssetsAdapter is ICurveV1Adapter {
     /// @notice Add liquidity to the pool
     /// @param amounts Amounts of tokens to add
     /// @dev `min_mint_amount` parameter is ignored because calldata is passed directly to the target contract
-    function add_liquidity(uint256[N_COINS] calldata amounts, uint256) external;
+    function add_liquidity(uint256[N_COINS] calldata amounts, uint256)
+        external
+        returns (uint256 tokensToEnable, uint256 tokensToDisable);
 
     /// @notice Remove liquidity from the pool
     /// @dev '_amount' and 'min_amounts' parameters are ignored because calldata is directly passed to the target contract
-    function remove_liquidity(uint256, uint256[N_COINS] calldata) external;
+    function remove_liquidity(uint256, uint256[N_COINS] calldata)
+        external
+        returns (uint256 tokensToEnable, uint256 tokensToDisable);
 
     /// @notice Withdraw exact amounts of tokens from the pool
     /// @param amounts Amounts of tokens to withdraw
     /// @dev `max_burn_amount` parameter is ignored because calldata is directly passed to the target contract
-    function remove_liquidity_imbalance(uint256[N_COINS] calldata amounts, uint256) external;
+    function remove_liquidity_imbalance(uint256[N_COINS] calldata amounts, uint256)
+        external
+        returns (uint256 tokensToEnable, uint256 tokensToDisable);
 }

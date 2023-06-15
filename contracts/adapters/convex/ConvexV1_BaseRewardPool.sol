@@ -92,24 +92,32 @@ contract ConvexV1BaseRewardPoolAdapter is AbstractAdapter, IConvexV1BaseRewardPo
     /// ----- ///
 
     /// @inheritdoc IConvexV1BaseRewardPoolAdapter
-    function stake(uint256) external override creditFacadeOnly {
-        _stake(msg.data, false); // F: [ACVX1_P-3]
+    function stake(uint256)
+        external
+        override
+        creditFacadeOnly
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+    {
+        (tokensToEnable, tokensToDisable) = _stake(msg.data, false); // F: [ACVX1_P-3]
     }
 
     /// @inheritdoc IConvexV1BaseRewardPoolAdapter
-    function stakeAll() external override creditFacadeOnly {
-        _stake(msg.data, true); // F: [ACVX1_P-4]
+    function stakeAll() external override creditFacadeOnly returns (uint256 tokensToEnable, uint256 tokensToDisable) {
+        (tokensToEnable, tokensToDisable) = _stake(msg.data, true); // F: [ACVX1_P-4]
     }
 
     /// @dev Internal implementation of `stake` and `stakeAll`
     ///      - Staking token is approved because reward pool needs permission to transfer it
     ///      - Staked token is enabled after the call
     ///      - Staking token is only disabled when staking the entire balance
-    function _stake(bytes memory callData, bool disableStakingToken) internal {
+    function _stake(bytes memory callData, bool disableStakingToken)
+        internal
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+    {
         _approveToken(stakingToken, type(uint256).max);
         _execute(callData);
         _approveToken(stakingToken, 1);
-        _changeEnabledTokens(stakedTokenMask, disableStakingToken ? stakingTokenMask : 0);
+        (tokensToEnable, tokensToDisable) = (stakedTokenMask, disableStakingToken ? stakingTokenMask : 0);
     }
 
     /// ----- ///
@@ -117,9 +125,9 @@ contract ConvexV1BaseRewardPoolAdapter is AbstractAdapter, IConvexV1BaseRewardPo
     /// ----- ///
 
     /// @inheritdoc IConvexV1BaseRewardPoolAdapter
-    function getReward() external override creditFacadeOnly {
+    function getReward() external override creditFacadeOnly returns (uint256 tokensToEnable, uint256 tokensToDisable) {
         _execute(msg.data); // F: [ACVX1_P-5]
-        _changeEnabledTokens(rewardTokensMask, 0); // F: [ACVX1_P-5]
+        (tokensToEnable, tokensToDisable) = (rewardTokensMask, 0); // F: [ACVX1_P-5]
     }
 
     /// -------- ///
@@ -127,24 +135,36 @@ contract ConvexV1BaseRewardPoolAdapter is AbstractAdapter, IConvexV1BaseRewardPo
     /// -------- ///
 
     /// @inheritdoc IConvexV1BaseRewardPoolAdapter
-    function withdraw(uint256, bool claim) external override creditFacadeOnly {
-        _withdraw(msg.data, claim, false); // F: [ACVX1_P-6]
+    function withdraw(uint256, bool claim)
+        external
+        override
+        creditFacadeOnly
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+    {
+        (tokensToEnable, tokensToDisable) = _withdraw(msg.data, claim, false); // F: [ACVX1_P-6]
     }
 
     /// @inheritdoc IConvexV1BaseRewardPoolAdapter
-    function withdrawAll(bool claim) external override creditFacadeOnly {
-        _withdraw(msg.data, claim, true); // F: [ACVX1_P-7]
+    function withdrawAll(bool claim)
+        external
+        override
+        creditFacadeOnly
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+    {
+        (tokensToEnable, tokensToDisable) = _withdraw(msg.data, claim, true); // F: [ACVX1_P-7]
     }
 
     /// @dev Internal implementation of `withdraw` and `withdrawAll`
     ///      - Staking token is enabled after the call
     ///      - Staked token is only disabled when withdrawing the entire balance
     ///      - Rewards tokens are enabled if `claim` is true
-    function _withdraw(bytes memory callData, bool claim, bool disableStakedToken) internal {
+    function _withdraw(bytes memory callData, bool claim, bool disableStakedToken)
+        internal
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+    {
         _execute(callData);
-        _changeEnabledTokens(
-            stakingTokenMask | (claim ? rewardTokensMask : 0), disableStakedToken ? stakedTokenMask : 0
-        );
+        (tokensToEnable, tokensToDisable) =
+            (stakingTokenMask | (claim ? rewardTokensMask : 0), disableStakedToken ? stakedTokenMask : 0);
     }
 
     /// ------ ///
@@ -152,23 +172,35 @@ contract ConvexV1BaseRewardPoolAdapter is AbstractAdapter, IConvexV1BaseRewardPo
     /// ------ ///
 
     /// @inheritdoc IConvexV1BaseRewardPoolAdapter
-    function withdrawAndUnwrap(uint256, bool claim) external override creditFacadeOnly {
-        _withdrawAndUnwrap(msg.data, claim, false); // F: [ACVX1_P-8]
+    function withdrawAndUnwrap(uint256, bool claim)
+        external
+        override
+        creditFacadeOnly
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+    {
+        (tokensToEnable, tokensToDisable) = _withdrawAndUnwrap(msg.data, claim, false); // F: [ACVX1_P-8]
     }
 
     /// @inheritdoc IConvexV1BaseRewardPoolAdapter
-    function withdrawAllAndUnwrap(bool claim) external override creditFacadeOnly {
-        _withdrawAndUnwrap(msg.data, claim, true); // F: [ACVX1_P-9]
+    function withdrawAllAndUnwrap(bool claim)
+        external
+        override
+        creditFacadeOnly
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+    {
+        (tokensToEnable, tokensToDisable) = _withdrawAndUnwrap(msg.data, claim, true); // F: [ACVX1_P-9]
     }
 
     /// @dev Internal implementation of `withdrawAndUnwrap` and `withdrawAllAndUnwrap`
     ///      - Curve LP token is enabled after the call
     ///      - Staked token is only disabled when withdrawing the entire balance
     ///      - Rewards tokens are enabled if `claim` is true
-    function _withdrawAndUnwrap(bytes memory callData, bool claim, bool disableStakedToken) internal {
+    function _withdrawAndUnwrap(bytes memory callData, bool claim, bool disableStakedToken)
+        internal
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+    {
         _execute(callData);
-        _changeEnabledTokens(
-            curveLPTokenMask | (claim ? rewardTokensMask : 0), disableStakedToken ? stakedTokenMask : 0
-        );
+        (tokensToEnable, tokensToDisable) =
+            (curveLPTokenMask | (claim ? rewardTokensMask : 0), disableStakedToken ? stakedTokenMask : 0);
     }
 }
