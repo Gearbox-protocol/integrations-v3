@@ -535,8 +535,8 @@ contract CreditConfigLive {
         cm = creditManagerHumanOpts[numOpts];
         ++numOpts;
         cm.underlying = Tokens.OHM;
-        cm.minBorrowedAmount = 15000000000000000000000;
-        cm.maxBorrowedAmount = 100000000000000000000000;
+        cm.minBorrowedAmount = 15000000000000;
+        cm.maxBorrowedAmount = 100000000000000;
         cm.degenNFT = address(0);
         cm.blacklistHelper = address(0);
         cm.expirable = false;
@@ -550,6 +550,7 @@ contract CreditConfigLive {
         cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.GUSD, liquidationThreshold: 8500}));
         cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.LUSD, liquidationThreshold: 8500}));
         cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.FRAX, liquidationThreshold: 8500}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.MIM, liquidationThreshold: 8000}));
         cm.collateralTokens.push(CollateralTokenHuman({token: Tokens._3Crv, liquidationThreshold: 8500}));
         cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.cvx3Crv, liquidationThreshold: 8500}));
         cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.stkcvx3Crv, liquidationThreshold: 8500}));
@@ -573,11 +574,15 @@ contract CreditConfigLive {
         cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.OHMFRAXBP, liquidationThreshold: 8500}));
         cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.cvxOHMFRAXBP, liquidationThreshold: 8500}));
         cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.stkcvxOHMFRAXBP, liquidationThreshold: 8500}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.MIM_3LP3CRV, liquidationThreshold: 8500}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.cvxMIM_3LP3CRV, liquidationThreshold: 8500}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.stkcvxMIM_3LP3CRV, liquidationThreshold: 8500}));
         cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.CVX, liquidationThreshold: 2500}));
         cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.FXS, liquidationThreshold: 2500}));
         cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.LQTY, liquidationThreshold: 1}));
         cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.CRV, liquidationThreshold: 2500}));
         cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.SNX, liquidationThreshold: 2500}));
+        cm.collateralTokens.push(CollateralTokenHuman({token: Tokens.SPELL, liquidationThreshold: 2500}));
         cm.contracts.push(Contracts.UNISWAP_V3_ROUTER);
         cm.contracts.push(Contracts.UNISWAP_V2_ROUTER);
         cm.contracts.push(Contracts.SUSHISWAP_ROUTER);
@@ -589,6 +594,7 @@ contract CreditConfigLive {
         cm.contracts.push(Contracts.CURVE_GUSD_POOL);
         cm.contracts.push(Contracts.CURVE_SUSD_DEPOSIT);
         cm.contracts.push(Contracts.CURVE_OHMFRAXBP_POOL);
+        cm.contracts.push(Contracts.CURVE_MIM_POOL);
         cm.contracts.push(Contracts.CONVEX_FRAX3CRV_POOL);
         cm.contracts.push(Contracts.CONVEX_LUSD3CRV_POOL);
         cm.contracts.push(Contracts.CONVEX_GUSD_POOL);
@@ -596,6 +602,7 @@ contract CreditConfigLive {
         cm.contracts.push(Contracts.CONVEX_3CRV_POOL);
         cm.contracts.push(Contracts.CONVEX_FRAX_USDC_POOL);
         cm.contracts.push(Contracts.CONVEX_OHMFRAXBP_POOL);
+        cm.contracts.push(Contracts.CONVEX_MIM3CRV_POOL);
         cm.contracts.push(Contracts.CONVEX_BOOSTER);
         cm.contracts.push(Contracts.BALANCER_VAULT);
         cm.balancerPools.push(
