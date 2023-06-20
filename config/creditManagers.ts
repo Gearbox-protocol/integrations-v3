@@ -385,8 +385,8 @@ export const mainnetCreditManagers: Array<CMConfig> = [
   },
   {
     symbol: "OHM",
-    minAmount: WAD.mul(15000),
-    maxAmount: WAD.mul(100000),
+    minAmount: BigNumber.from(10).pow(9).mul(15000),
+    maxAmount: BigNumber.from(10).pow(9).mul(100000),
     collateralTokens: [
       // Liquidation threshold will be multiplied x100 to be used as CreditFilter.sol contract parameter
 
@@ -400,6 +400,7 @@ export const mainnetCreditManagers: Array<CMConfig> = [
       { symbol: "GUSD", liquidationThreshold: 85 }, // Token address is token from priceFeed map above
       { symbol: "LUSD", liquidationThreshold: 85 }, // Token address is token from priceFeed map above
       { symbol: "FRAX", liquidationThreshold: 85 },
+      { symbol: "MIM", liquidationThreshold: 80 },
 
       { symbol: "3Crv", liquidationThreshold: 85 }, // Token address is token from priceFeed map above
       { symbol: "cvx3Crv", liquidationThreshold: 85 }, // Token address is token from priceFeed map above
@@ -429,11 +430,16 @@ export const mainnetCreditManagers: Array<CMConfig> = [
       { symbol: "cvxOHMFRAXBP", liquidationThreshold: 85 }, // Token address is token from priceFeed map above
       { symbol: "stkcvxOHMFRAXBP", liquidationThreshold: 85 }, // Token address is token from priceFeed map above
 
+      { symbol: "MIM_3LP3CRV", liquidationThreshold: 85 }, // Token address is token from priceFeed map above
+      { symbol: "cvxMIM_3LP3CRV", liquidationThreshold: 85 }, // Token address is token from priceFeed map above
+      { symbol: "stkcvxMIM_3LP3CRV", liquidationThreshold: 85 }, // Token address is token from priceFeed map above
+
       { symbol: "CVX", liquidationThreshold: 25 }, // Token address is token from priceFeed map above
       { symbol: "FXS", liquidationThreshold: 25 }, // Token address is token from priceFeed map above
       { symbol: "LQTY", liquidationThreshold: 0 },
       { symbol: "CRV", liquidationThreshold: 25 }, // Token address is token from priceFeed map above
       { symbol: "SNX", liquidationThreshold: 25 }, // Token address is token from priceFeed map above
+      { symbol: "SPELL", liquidationThreshold: 25 },
     ],
     adapters: [
       /// SWAPPERS
@@ -450,6 +456,7 @@ export const mainnetCreditManagers: Array<CMConfig> = [
       "CURVE_GUSD_POOL",
       "CURVE_SUSD_DEPOSIT",
       "CURVE_OHMFRAXBP_POOL",
+      "CURVE_MIM_POOL",
 
       // CONVEX
       "CONVEX_FRAX3CRV_POOL",
@@ -459,6 +466,7 @@ export const mainnetCreditManagers: Array<CMConfig> = [
       "CONVEX_3CRV_POOL",
       "CONVEX_FRAX_USDC_POOL",
       "CONVEX_OHMFRAXBP_POOL",
+      "CONVEX_MIM3CRV_POOL",
       "CONVEX_BOOSTER",
 
       // BALANCER
