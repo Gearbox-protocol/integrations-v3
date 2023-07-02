@@ -20,7 +20,7 @@ struct BalanceBackup {
 
 address constant COMPARE_WITH = DUMB_ADDRESS;
 
-contract BalanceComparator is DSTest {
+contract BalanceComparator is Test {
     error StageNotAllowed(string);
 
     TokensTestSuite public tokenTestSuite;

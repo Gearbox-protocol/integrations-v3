@@ -6,13 +6,15 @@ pragma solidity ^0.8.17;
 import {TokensTestSuite} from "../suites/TokensTestSuite.sol";
 import {Tokens} from "./Tokens.sol";
 
-import {CreditManagerOpts, CollateralToken} from "@gearbox-protocol/core-v3/contracts/credit/CreditConfigurator.sol";
+import {CreditManagerOpts, CollateralToken} from "@gearbox-protocol/core-v3/contracts/credit/CreditConfiguratorV3.sol";
 
-import {PriceFeedConfig} from "@gearbox-protocol/core-v2/contracts/oracles/PriceOracle.sol";
+import {PriceFeedConfig} from "@gearbox-protocol/core-v2/contracts/oracles/PriceOracleV2.sol";
 import {ICreditConfig} from "@gearbox-protocol/core-v3/contracts/test/interfaces/ICreditConfig.sol";
 import {ITokenTestSuite} from "@gearbox-protocol/core-v3/contracts/test/interfaces/ITokenTestSuite.sol";
 import {TokensData} from "./TokensData.sol";
 import {ChainlinkPriceFeedData} from "./PriceFeedDataLive.sol";
+
+import {Test} from "forge-std/Test.sol";
 
 import "../lib/constants.sol";
 
@@ -21,9 +23,9 @@ struct CollateralTokensItem {
     uint16 liquidationThreshold;
 }
 
-/// @title CreditManagerTestSuite
-/// @notice Deploys contract for unit testing of CreditManager.sol
-contract CreditConfig is DSTest, ICreditConfig {
+/// @title CreditManagerV3TestSuite
+/// @notice Deploys contract for unit testing of CreditManagerV3.sol
+contract CreditConfig is Test, ICreditConfig {
     uint128 public minBorrowedAmount;
     uint128 public maxBorrowedAmount;
 

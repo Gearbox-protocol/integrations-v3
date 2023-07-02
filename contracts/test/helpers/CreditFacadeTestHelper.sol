@@ -5,16 +5,15 @@ pragma solidity ^0.8.17;
 
 import {AggregatorV3Interface} from "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
 import {TokensTestSuite} from "../suites/TokensTestSuite.sol";
-import {CreditFacadeTestEngine} from "@gearbox-protocol/core-v3/contracts/test/helpers/CreditFacadeTestEngine.sol";
 
-import {PriceFeedMock} from "@gearbox-protocol/core-v2/contracts/test/mocks/oracles/PriceFeedMock.sol";
+import {PriceFeedMock} from "@gearbox-protocol/core-v3/contracts/test/mocks/oracles/PriceFeedMock.sol";
 import {Tokens} from "../config/Tokens.sol";
 
 import "../lib/constants.sol";
 
-/// @title CreditManagerTestSuite
-/// @notice Deploys contract for unit testing of CreditManager.sol
-contract CreditFacadeTestHelper is CreditFacadeTestEngine {
+/// @title CreditManagerV3TestSuite
+/// @notice Deploys contract for unit testing of CreditManagerV3.sol
+contract CreditFacadeTestHelper is CreditFacadeV3TestEngine {
     function expectTokenIsEnabled(Tokens t, bool expectedState) internal {
         expectTokenIsEnabled(t, expectedState, "");
     }
@@ -25,11 +24,11 @@ contract CreditFacadeTestHelper is CreditFacadeTestEngine {
 
     function addCollateral(Tokens t, uint256 amount) internal {
         tokenTestSuite().mint(t, USER, amount);
-        tokenTestSuite().approve(t, USER, address(creditManager));
+        tokenTestSuite().approve(t, USER, address(CreditManagerV3));
 
-        evm.startPrank(USER);
+        vm.startPrank(USER);
         creditFacade.addCollateral(USER, tokenTestSuite().addressOf(t), amount);
-        evm.stopPrank();
+        vm.stopPrank();
     }
 
     function tokenTestSuite() private view returns (TokensTestSuite) {
@@ -39,8 +38,8 @@ contract CreditFacadeTestHelper is CreditFacadeTestEngine {
     function addMockPriceFeed(address token, uint256 price) public {
         AggregatorV3Interface priceFeed = new PriceFeedMock(int256(price), 8);
 
-        evm.startPrank(CONFIGURATOR);
+        vm.startPrank(CONFIGURATOR);
         cft.priceOracle().addPriceFeed(token, address(priceFeed));
-        evm.stopPrank();
+        vm.stopPrank();
     }
 }

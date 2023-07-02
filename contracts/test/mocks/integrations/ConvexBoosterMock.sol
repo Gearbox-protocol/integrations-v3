@@ -10,8 +10,6 @@ contract BoosterMock {
     using Address for address;
     using SafeMath for uint256;
 
-    CheatCodes evm = CheatCodes(HEVM_ADDRESS);
-
     address public crv;
     address public constant registry = address(0x0000000022D53366457F9d5E68Ec105046FC4383);
     uint256 public constant distributionAddressId = 4;
@@ -184,7 +182,7 @@ contract BoosterMock {
         require(msg.sender == rewardContract, "!auth");
 
         //mint reward tokens
-        evm.prank(ERC20Mock(minter).minter());
+        vm.prank(ERC20Mock(minter).minter());
         ITokenMinter(minter).mint(_address, _amount);
 
         return true;

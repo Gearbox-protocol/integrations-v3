@@ -3,7 +3,6 @@
 // (c) Gearbox Holdings, 2022
 pragma solidity ^0.8.10;
 
-import {ILPPriceFeedExceptions} from "@gearbox-protocol/core-v3/contracts/interfaces/ILPPriceFeed.sol";
 import {YearnPriceFeed, RANGE_WIDTH} from "../../oracles/yearn/YearnPriceFeed.sol";
 import {PERCENTAGE_FACTOR} from "@gearbox-protocol/core-v2/contracts/libraries/PercentageMath.sol";
 
@@ -14,24 +13,21 @@ import "../lib/constants.sol";
 
 // MOCKS
 import {YearnV2Mock} from "../mocks/integrations/YearnV2Mock.sol";
-import {PriceFeedMock} from "@gearbox-protocol/core-v2/contracts/test/mocks/oracles/PriceFeedMock.sol";
-import {AddressProviderACLMock} from "@gearbox-protocol/core-v3/contracts/test/mocks/core/AddressProviderACLMock.sol";
+import {PriceFeedMock} from "@gearbox-protocol/core-v3/contracts/test/mocks/oracles/PriceFeedMock.sol";
+import {AddressProviderV3ACLMock} from
+    "@gearbox-protocol/core-v3/contracts/test/mocks/core/AddressProviderV3ACLMock.sol";
 
 // SUITES
 import {TokensTestSuite, Tokens} from "../suites/TokensTestSuite.sol";
 
 // EXCEPTIONS
-import {
-    ZeroAddressException, NotImplementedException
-} from "@gearbox-protocol/core-v3/contracts/interfaces/IErrors.sol";
-import {IPriceOracleV2Exceptions} from "@gearbox-protocol/core-v2/contracts/interfaces/IPriceOracle.sol";
+
+import {IPriceOracleV2Exceptions} from "@gearbox-protocol/core-v2/contracts/interfaces/IPriceOracleV2.sol";
 
 /// @title YearnFeedTest
 /// @notice Designed for unit test purposes only
-contract YearnFeedTest is DSTest, ILPPriceFeedExceptions, IPriceOracleV2Exceptions {
-    CheatCodes evm = CheatCodes(HEVM_ADDRESS);
-
-    AddressProviderACLMock public addressProvider;
+contract YearnFeedTest is Test, ILPPriceFeedExceptions, IPriceOracleV2Exceptions {
+    AddressProviderV3ACLMock public addressProvider;
     YearnV2Mock public yearnMock;
 
     PriceFeedMock public underlyingPf;
@@ -41,7 +37,7 @@ contract YearnFeedTest is DSTest, ILPPriceFeedExceptions, IPriceOracleV2Exceptio
     TokensTestSuite tokenTestSuite;
 
     function setUp() public {
-        addressProvider = new AddressProviderACLMock();
+        addressProvider = new AddressProviderV3ACLMock();
 
         underlyingPf = new PriceFeedMock(1100, 8);
 
@@ -52,7 +48,7 @@ contract YearnFeedTest is DSTest, ILPPriceFeedExceptions, IPriceOracleV2Exceptio
 
         yearnMock = new YearnV2Mock(tokenTestSuite.addressOf(Tokens.DAI));
 
-        evm.prank(CONFIGURATOR);
+        vm.prank(CONFIGURATOR);
         yearnMock.setPricePerShare(WAD);
 
         pf = new YearnPriceFeed(
@@ -61,10 +57,10 @@ contract YearnFeedTest is DSTest, ILPPriceFeedExceptions, IPriceOracleV2Exceptio
             address(underlyingPf)
         );
 
-        evm.label(address(underlyingPf), "DAI_PRICEFEED");
-        evm.label(address(yearnMock), "YEARN_MOCK");
+        vm.label(address(underlyingPf), "DAI_PRICEFEED");
+        vm.label(address(yearnMock), "YEARN_MOCK");
 
-        evm.label(address(pf), "YEARN_PRICE_FEED");
+        vm.label(address(pf), "YEARN_PRICE_FEED");
     }
 
     ///
@@ -102,11 +98,11 @@ contract YearnFeedTest is DSTest, ILPPriceFeedExceptions, IPriceOracleV2Exceptio
 
     /// @dev [OYPF-2]: constructor reverts for zero addresses
     function test_OYPF_02_constructor_reverts_for_zero_addresses() public {
-        evm.expectRevert(ZeroAddressException.selector);
+        vm.expectRevert(ZeroAddressException.selector);
 
         new YearnPriceFeed(address(addressProvider), address(0), address(0));
 
-        evm.expectRevert(ZeroAddressException.selector);
+        vm.expectRevert(ZeroAddressException.selector);
         new YearnPriceFeed(
             address(addressProvider),
             address(yearnMock),
@@ -118,9 +114,9 @@ contract YearnFeedTest is DSTest, ILPPriceFeedExceptions, IPriceOracleV2Exceptio
     function test_OYPF_04_latestRoundData_works_correctly(uint8 add) public {
         uint256 pricePerShare = pf.lowerBound() + add;
 
-        evm.assume(pricePerShare < pf.upperBound());
+        vm.assume(pricePerShare < pf.upperBound());
 
-        evm.prank(CONFIGURATOR);
+        vm.prank(CONFIGURATOR);
         yearnMock.setPricePerShare(pricePerShare);
         (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound) =
             pf.latestRoundData();
@@ -139,13 +135,13 @@ contract YearnFeedTest is DSTest, ILPPriceFeedExceptions, IPriceOracleV2Exceptio
         uint256 lowerBound = pf.lowerBound();
         uint256 upperBound = pf.upperBound();
 
-        evm.prank(CONFIGURATOR);
+        vm.prank(CONFIGURATOR);
         yearnMock.setPricePerShare(lowerBound - 1);
 
-        evm.expectRevert(ValueOutOfRangeException.selector);
+        vm.expectRevert(ValueOutOfRangeException.selector);
         pf.latestRoundData();
 
-        evm.prank(CONFIGURATOR);
+        vm.prank(CONFIGURATOR);
         yearnMock.setPricePerShare(upperBound + 1);
         (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound) =
             pf.latestRoundData();
@@ -156,21 +152,21 @@ contract YearnFeedTest is DSTest, ILPPriceFeedExceptions, IPriceOracleV2Exceptio
         assertEq(updatedAt, 1112, "Incorrect updatedAt #1");
         assertEq(answeredInRound, 11, "Incorrect answeredInRound #1");
 
-        evm.prank(CONFIGURATOR);
+        vm.prank(CONFIGURATOR);
         yearnMock.setPricePerShare(lowerBound);
         underlyingPf.setPrice(0);
 
-        evm.expectRevert(ZeroPriceException.selector);
+        vm.expectRevert(ZeroPriceException.selector);
         pf.latestRoundData();
 
         underlyingPf.setPrice(100);
         underlyingPf.setParams(80, block.timestamp, block.timestamp, 78);
 
-        evm.expectRevert(ChainPriceStaleException.selector);
+        vm.expectRevert(ChainPriceStaleException.selector);
         pf.latestRoundData();
 
         underlyingPf.setParams(80, block.timestamp, 0, 80);
-        evm.expectRevert(ChainPriceStaleException.selector);
+        vm.expectRevert(ChainPriceStaleException.selector);
         pf.latestRoundData();
     }
 
@@ -178,10 +174,10 @@ contract YearnFeedTest is DSTest, ILPPriceFeedExceptions, IPriceOracleV2Exceptio
     function test_OYPF_06_setLimiter_reverts_on_pricePerShare_outside_bounds() public {
         yearnMock.setPricePerShare((15000 * WAD) / 10000);
 
-        evm.expectRevert(IncorrectLimitsException.selector);
+        vm.expectRevert(IncorrectLimitsException.selector);
         pf.setLimiter(WAD);
 
-        evm.expectRevert(IncorrectLimitsException.selector);
+        vm.expectRevert(IncorrectLimitsException.selector);
         pf.setLimiter((16000 * WAD) / 10000);
     }
 }

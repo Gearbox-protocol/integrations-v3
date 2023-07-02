@@ -13,14 +13,15 @@ import {IWETH} from "@gearbox-protocol/core-v2/contracts/interfaces/external/IWE
 
 // MOCKS
 import {Tokens} from "../config/Tokens.sol";
-import {ERC20Mock} from "@gearbox-protocol/core-v2/contracts/test/mocks/token/ERC20Mock.sol";
+import {ERC20Mock} from "@gearbox-protocol/core-v3/contracts/test/mocks/token/ERC20Mock.sol";
 import {cERC20Mock} from "../mocks/token/cERC20Mock.sol";
 
-import "@gearbox-protocol/core-v3/contracts/test/lib/test.sol";
 import {TokensData, TestToken} from "../config/TokensData.sol";
 import {TokensDataLive} from "../config/TokensDataLive.sol";
 import {TokensTestSuiteHelper} from "@gearbox-protocol/core-v3/contracts/test/suites/TokensTestSuiteHelper.sol";
 import {IstETH} from "../../integrations/lido/IstETH.sol";
+
+import {Test} from "forge-std/Test.sol";
 
 import "../lib/constants.sol";
 
@@ -33,7 +34,7 @@ struct TokenData {
 
 address constant LDO_DONOR = 0x3e40D73EB977Dc6a537aF587D48316feE66E9C8c;
 
-contract TokensTestSuite is DSTest, TokensTestSuiteHelper {
+contract TokensTestSuite is Test, TokensTestSuiteHelper {
     using SafeERC20 for IERC20;
 
     mapping(Tokens => address) public addressOf;
@@ -54,7 +55,7 @@ contract TokensTestSuite is DSTest, TokensTestSuiteHelper {
         if (block.chainid == 1337) {
             uint8 networkId;
 
-            try evm.envInt("ETH_FORK_NETWORK_ID") returns (int256 val) {
+            try vm.envInt("ETH_FORK_NETWORK_ID") returns (int256 val) {
                 networkId = uint8(uint256(val));
             } catch {
                 networkId = 1;
@@ -81,7 +82,7 @@ contract TokensTestSuite is DSTest, TokensTestSuiteHelper {
 
                 _flushAccounts(td[i].addr);
 
-                evm.label(td[i].addr, td[i].symbol);
+                vm.label(td[i].addr, td[i].symbol);
             }
         }
 
@@ -115,7 +116,7 @@ contract TokensTestSuite is DSTest, TokensTestSuiteHelper {
         uint256 balance = IERC20(token).balanceOf(account);
 
         if (balance > 0) {
-            evm.prank(account);
+            vm.prank(account);
             IERC20(token).transfer(address(type(uint160).max), balance);
         }
     }
@@ -138,7 +139,7 @@ contract TokensTestSuite is DSTest, TokensTestSuiteHelper {
     //     address targetContract,
     //     uint256 amount
     // ) public {
-    //     evm.prank(holder);
+    //     vm.prank(holder);
     //     IERC20(addressOf[t]).approve(targetContract, amount);
     // }
 
@@ -176,11 +177,11 @@ contract TokensTestSuite is DSTest, TokensTestSuiteHelper {
     function _mint(address token, address to, uint256 amount, bool adjust) internal {
         if (mockTokens) {
             if (token == addressOf[Tokens.WETH]) {
-                evm.deal(address(this), amount);
+                vm.deal(address(this), amount);
                 IWETH(wethToken).deposit{value: amount}();
                 IERC20(token).transfer(to, amount);
             } else if (token == addressOf[Tokens.STETH]) {
-                evm.deal(address(this), amount);
+                vm.deal(address(this), amount);
                 LidoMock(payable(token)).submit{value: amount}(address(this));
                 IERC20(token).transfer(to, amount);
             } else if (tokenTypes[tokenIndexes[token]] == TokenType.C_TOKEN) {
@@ -191,22 +192,22 @@ contract TokensTestSuite is DSTest, TokensTestSuiteHelper {
                 IERC20(token).transfer(to, amount);
             } else {
                 // dealToken(token, to, amount, adjust);
-                evm.prank(ERC20Mock(token).minter());
+                vm.prank(ERC20Mock(token).minter());
                 ERC20Mock(token).mint(address(this), amount);
                 IERC20(token).transfer(to, amount);
             }
         } else {
             if (token == addressOf[Tokens.LDO]) {
-                evm.prank(LDO_DONOR);
+                vm.prank(LDO_DONOR);
                 IERC20(token).transfer(to, amount);
             } else if (token == addressOf[Tokens.STETH]) {
                 address stETH = addressOf[Tokens.STETH];
-                evm.deal(to, amount);
+                vm.deal(to, amount);
 
-                evm.prank(to);
+                vm.prank(to);
                 IstETH(payable(stETH)).submit{value: amount}(to);
             } else {
-                dealToken(token, to, amount, adjust);
+                // dealToken(token, to, amount, adjust);
             }
         }
     }
@@ -216,10 +217,10 @@ contract TokensTestSuite is DSTest, TokensTestSuiteHelper {
     }
 
     function approve(Tokens t, address holder, address targetContract, uint256 amount) public {
-        evm.startPrank(holder);
+        vm.startPrank(holder);
         IERC20(addressOf[t]).safeApprove(targetContract, 0);
         IERC20(addressOf[t]).safeApprove(targetContract, amount);
-        evm.stopPrank();
+        vm.stopPrank();
     }
 
     function approveMany(Tokens[] memory tokensToApprove, address holder, address target) public {

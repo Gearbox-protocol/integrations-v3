@@ -4,17 +4,16 @@
 pragma solidity ^0.8.10;
 
 import {LiveEnvTestSuite} from "./LiveEnvTestSuite.sol";
-import {CheatCodes, HEVM_ADDRESS} from "@gearbox-protocol/core-v3/contracts/test/lib/cheatCodes.sol";
+
 import {Tokens} from "../config/Tokens.sol";
 
 import {SupportedContracts, Contracts} from "../config/SupportedContracts.sol";
 import {IUniswapV2Router02} from "../../integrations/uniswap/IUniswapV2Router02.sol";
-import {MultiCall} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacade.sol";
+import {MultiCall} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacadeV3.sol";
 import {TokenType} from "../../integrations/TokenType.sol";
 import {TokensTestSuite} from "../suites/TokensTestSuite.sol";
 
 contract LiveEnvHelper {
-    CheatCodes evm = CheatCodes(HEVM_ADDRESS);
     LiveEnvTestSuite lts;
 
     address public MAINNET_CONFIGURATOR;
@@ -40,13 +39,13 @@ contract LiveEnvHelper {
     }
 
     function swapEthToTokens(address onBehalfOf, Tokens t, uint256 amount) internal {
-        evm.startPrank(onBehalfOf);
+        vm.startPrank(onBehalfOf);
 
         getUniV2().swapExactETHForTokens{value: amount}(
             0, arrayOf(tokenTestSuite.addressOf(Tokens.WETH), tokenTestSuite.addressOf(t)), onBehalfOf, block.timestamp
         );
 
-        evm.stopPrank();
+        vm.stopPrank();
     }
 
     // [TODO]: add new lib for arrayOf

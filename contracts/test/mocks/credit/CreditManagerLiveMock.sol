@@ -3,10 +3,10 @@
 // (c) Gearbox Holdings, 2023
 pragma solidity ^0.8.17;
 
-import {CreditManager} from "@gearbox-protocol/core-v3/contracts/credit/CreditManager.sol";
+import {CreditManagerV3} from "@gearbox-protocol/core-v3/contracts/credit/CreditManagerV3.sol";
 
-contract CreditManagerLiveMock is CreditManager {
-    constructor(address _pool) CreditManager(_pool) {}
+contract CreditManagerLiveMock is CreditManagerV3 {
+    constructor(address _pool) CreditManagerV3(_pool) {}
 
     function _fullCollateralCheck(address creditAccount, uint256[] memory collateralHints, uint16 minHealthFactor)
         internal

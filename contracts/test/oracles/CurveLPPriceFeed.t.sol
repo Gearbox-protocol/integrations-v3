@@ -3,7 +3,6 @@
 // (c) Gearbox Holdings, 2022
 pragma solidity ^0.8.10;
 
-import {ILPPriceFeedExceptions} from "@gearbox-protocol/core-v3/contracts/interfaces/ILPPriceFeed.sol";
 import {CurveLP2PriceFeed} from "../../oracles/curve/CurveLP2PriceFeed.sol";
 import {CurveLP3PriceFeed} from "../../oracles/curve/CurveLP3PriceFeed.sol";
 import {CurveLP4PriceFeed} from "../../oracles/curve/CurveLP4PriceFeed.sol";
@@ -15,23 +14,19 @@ import "../lib/constants.sol";
 
 // MOCKS
 import {CurveV1Mock} from "../mocks/integrations/CurveV1Mock.sol";
-import {PriceFeedMock} from "@gearbox-protocol/core-v2/contracts/test/mocks/oracles/PriceFeedMock.sol";
-import {AddressProviderACLMock} from "@gearbox-protocol/core-v3/contracts/test/mocks/core/AddressProviderACLMock.sol";
+import {PriceFeedMock} from "@gearbox-protocol/core-v3/contracts/test/mocks/oracles/PriceFeedMock.sol";
+import {AddressProviderV3ACLMock} from
+    "@gearbox-protocol/core-v3/contracts/test/mocks/core/AddressProviderV3ACLMock.sol";
 
 // SUITES
 import {TokensTestSuite, Tokens} from "../suites/TokensTestSuite.sol";
 
 // EXCEPTIONS
-import {
-    ZeroAddressException, NotImplementedException
-} from "@gearbox-protocol/core-v3/contracts/interfaces/IErrors.sol";
 
 /// @title CurveLPPriceFeedTest
 /// @notice Designed for unit test purposes only
-contract CurveLPPriceFeedTest is DSTest, ILPPriceFeedExceptions {
-    CheatCodes evm = CheatCodes(HEVM_ADDRESS);
-
-    AddressProviderACLMock public addressProvider;
+contract CurveLPPriceFeedTest is Test, ILPPriceFeedExceptions {
+    AddressProviderV3ACLMock public addressProvider;
     CurveV1Mock public curveV1Mock;
 
     PriceFeedMock public pfm1;
@@ -46,7 +41,7 @@ contract CurveLPPriceFeedTest is DSTest, ILPPriceFeedExceptions {
     TokensTestSuite tokenTestSuite;
 
     function setUp() public {
-        addressProvider = new AddressProviderACLMock();
+        addressProvider = new AddressProviderV3ACLMock();
 
         pfm1 = new PriceFeedMock(1100, 8);
         pfm2 = new PriceFeedMock(2200, 8);
@@ -146,7 +141,7 @@ contract CurveLPPriceFeedTest is DSTest, ILPPriceFeedExceptions {
 
     /// @dev [OCLP-2]: constructor reverts for zero addresses
     function test_OCLP_02_constructor_reverts_for_zero_addresses() public {
-        evm.expectRevert(ZeroAddressException.selector);
+        vm.expectRevert(ZeroAddressException.selector);
 
         new CurveLP2PriceFeed(
             address(addressProvider),
@@ -156,7 +151,7 @@ contract CurveLPPriceFeedTest is DSTest, ILPPriceFeedExceptions {
             "LP2"
         );
 
-        evm.expectRevert(ZeroAddressException.selector);
+        vm.expectRevert(ZeroAddressException.selector);
         new CurveLP2PriceFeed(
             address(addressProvider),
             address(curveV1Mock),
@@ -165,7 +160,7 @@ contract CurveLPPriceFeedTest is DSTest, ILPPriceFeedExceptions {
             "LP2"
         );
 
-        evm.expectRevert(ZeroAddressException.selector);
+        vm.expectRevert(ZeroAddressException.selector);
         new CurveLP2PriceFeed(
             address(addressProvider),
             address(curveV1Mock),
@@ -176,7 +171,7 @@ contract CurveLPPriceFeedTest is DSTest, ILPPriceFeedExceptions {
 
         // LP3
 
-        evm.expectRevert(ZeroAddressException.selector);
+        vm.expectRevert(ZeroAddressException.selector);
         c3feed = new CurveLP3PriceFeed(
             address(addressProvider),
             address(0),
@@ -186,7 +181,7 @@ contract CurveLPPriceFeedTest is DSTest, ILPPriceFeedExceptions {
             "LP3"
         );
 
-        evm.expectRevert(ZeroAddressException.selector);
+        vm.expectRevert(ZeroAddressException.selector);
         c3feed = new CurveLP3PriceFeed(
             address(addressProvider),
             address(curveV1Mock),
@@ -196,7 +191,7 @@ contract CurveLPPriceFeedTest is DSTest, ILPPriceFeedExceptions {
             "LP3"
         );
 
-        evm.expectRevert(ZeroAddressException.selector);
+        vm.expectRevert(ZeroAddressException.selector);
         c3feed = new CurveLP3PriceFeed(
             address(addressProvider),
             address(curveV1Mock),
@@ -206,7 +201,7 @@ contract CurveLPPriceFeedTest is DSTest, ILPPriceFeedExceptions {
             "LP3"
         );
 
-        evm.expectRevert(ZeroAddressException.selector);
+        vm.expectRevert(ZeroAddressException.selector);
         c3feed = new CurveLP3PriceFeed(
             address(addressProvider),
             address(curveV1Mock),
@@ -217,7 +212,7 @@ contract CurveLPPriceFeedTest is DSTest, ILPPriceFeedExceptions {
         );
 
         // LP4
-        evm.expectRevert(ZeroAddressException.selector);
+        vm.expectRevert(ZeroAddressException.selector);
         c4feed = new CurveLP4PriceFeed(
             address(addressProvider),
             address(0),
@@ -228,7 +223,7 @@ contract CurveLPPriceFeedTest is DSTest, ILPPriceFeedExceptions {
             "LP4"
         );
 
-        evm.expectRevert(ZeroAddressException.selector);
+        vm.expectRevert(ZeroAddressException.selector);
         c4feed = new CurveLP4PriceFeed(
             address(addressProvider),
             address(curveV1Mock),
@@ -239,7 +234,7 @@ contract CurveLPPriceFeedTest is DSTest, ILPPriceFeedExceptions {
             "LP4"
         );
 
-        evm.expectRevert(ZeroAddressException.selector);
+        vm.expectRevert(ZeroAddressException.selector);
         c4feed = new CurveLP4PriceFeed(
             address(addressProvider),
             address(curveV1Mock),
@@ -250,7 +245,7 @@ contract CurveLPPriceFeedTest is DSTest, ILPPriceFeedExceptions {
             "LP4"
         );
 
-        evm.expectRevert(ZeroAddressException.selector);
+        vm.expectRevert(ZeroAddressException.selector);
         c4feed = new CurveLP4PriceFeed(
             address(addressProvider),
             address(curveV1Mock),
@@ -261,7 +256,7 @@ contract CurveLPPriceFeedTest is DSTest, ILPPriceFeedExceptions {
             "LP4"
         );
 
-        evm.expectRevert(ZeroAddressException.selector);
+        vm.expectRevert(ZeroAddressException.selector);
         c4feed = new CurveLP4PriceFeed(
             address(addressProvider),
             address(curveV1Mock),
@@ -275,13 +270,13 @@ contract CurveLPPriceFeedTest is DSTest, ILPPriceFeedExceptions {
 
     /// @dev [OCLP-3]: constructor reverts at getRoundData call
     function test_OCLP_03_constructor_reverts_at_getRoundData_call() public {
-        evm.expectRevert(NotImplementedException.selector);
+        vm.expectRevert(NotImplementedException.selector);
         c2feed.getRoundData(1);
 
-        evm.expectRevert(NotImplementedException.selector);
+        vm.expectRevert(NotImplementedException.selector);
         c3feed.getRoundData(1);
 
-        evm.expectRevert(NotImplementedException.selector);
+        vm.expectRevert(NotImplementedException.selector);
         c4feed.getRoundData(1);
     }
 
@@ -395,13 +390,13 @@ contract CurveLPPriceFeedTest is DSTest, ILPPriceFeedExceptions {
     function test_OCLP_07_latestRoundData_reverts_for_out_of_bounds_prices() public {
         curveV1Mock.set_virtual_price((9000 * WAD) / 10000);
 
-        evm.expectRevert(ValueOutOfRangeException.selector);
+        vm.expectRevert(ValueOutOfRangeException.selector);
         c2feed.latestRoundData();
 
-        evm.expectRevert(ValueOutOfRangeException.selector);
+        vm.expectRevert(ValueOutOfRangeException.selector);
         c3feed.latestRoundData();
 
-        evm.expectRevert(ValueOutOfRangeException.selector);
+        vm.expectRevert(ValueOutOfRangeException.selector);
         c4feed.latestRoundData();
 
         curveV1Mock.set_virtual_price((15000 * WAD) / 10000);
@@ -436,10 +431,10 @@ contract CurveLPPriceFeedTest is DSTest, ILPPriceFeedExceptions {
     function test_OCLP_08_setLimiter_reverts_on_virtual_price_outside_bounds() public {
         curveV1Mock.set_virtual_price((15000 * WAD) / 10000);
 
-        evm.expectRevert(IncorrectLimitsException.selector);
+        vm.expectRevert(IncorrectLimitsException.selector);
         c2feed.setLimiter(WAD);
 
-        evm.expectRevert(IncorrectLimitsException.selector);
+        vm.expectRevert(IncorrectLimitsException.selector);
         c2feed.setLimiter((16000 * WAD) / 10000);
     }
 }

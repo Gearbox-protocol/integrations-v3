@@ -8,8 +8,8 @@ import {Tokens} from "../config/Tokens.sol";
 
 import {BalanceEngine} from "@gearbox-protocol/core-v3/contracts/test/helpers/BalanceEngine.sol";
 
-/// @title CreditManagerTestSuite
-/// @notice Deploys contract for unit testing of CreditManager.sol
+/// @title CreditManagerV3TestSuite
+/// @notice Deploys contract for unit testing of CreditManagerV3.sol
 contract BalanceHelper is BalanceEngine {
     // Suites
     TokensTestSuite internal tokenTestSuite;

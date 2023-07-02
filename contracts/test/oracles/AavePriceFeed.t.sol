@@ -3,15 +3,13 @@
 // (c) Gearbox Holdings, 2023
 pragma solidity ^0.8.17;
 
-import {Test} from "forge-std/Test.sol";
-
 import {RAY, WAD} from "@gearbox-protocol/core-v2/contracts/libraries/Constants.sol";
 import {PERCENTAGE_FACTOR} from "@gearbox-protocol/core-v2/contracts/libraries/PercentageMath.sol";
-import {AddressProviderACLMock} from "@gearbox-protocol/core-v3/contracts/test/mocks/core/AddressProviderACLMock.sol";
-import {PriceFeedMock} from "@gearbox-protocol/core-v2/contracts/test/mocks/oracles/PriceFeedMock.sol";
+import {AddressProviderV3ACLMock} from
+    "@gearbox-protocol/core-v3/contracts/test/mocks/core/AddressProviderV3ACLMock.sol";
+import {PriceFeedMock} from "@gearbox-protocol/core-v3/contracts/test/mocks/oracles/PriceFeedMock.sol";
 
-import {ILPPriceFeedExceptions} from "@gearbox-protocol/core-v3/contracts/interfaces/ILPPriceFeed.sol";
-import {ZeroAddressException} from "@gearbox-protocol/core-v3/contracts/interfaces/IErrors.sol";
+import "@gearbox-protocol/core-v3/contracts/interfaces/IExceptions.sol";
 
 import {WrappedAToken} from "../../adapters/aave/WrappedAToken.sol";
 
@@ -25,7 +23,7 @@ import {TokensTestSuite, Tokens} from "../suites/TokensTestSuite.sol";
 /// @notice [OAPF]: Unit tests for Aave V2 wrapped aToken price feed
 contract AavePriceFeedTest is Test {
     TokensTestSuite tokensTestSuite;
-    AddressProviderACLMock addressProvider;
+    AddressProviderV3ACLMock addressProvider;
 
     address dai;
     ATokenMock aDai;
@@ -40,7 +38,7 @@ contract AavePriceFeedTest is Test {
     function setUp() public {
         tokensTestSuite = new TokensTestSuite();
 
-        addressProvider = new AddressProviderACLMock();
+        addressProvider = new AddressProviderV3ACLMock();
 
         dai = tokensTestSuite.addressOf(Tokens.DAI);
         lendingPool = new LendingPoolMock();

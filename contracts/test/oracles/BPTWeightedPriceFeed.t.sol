@@ -3,7 +3,6 @@
 // (c) Gearbox Holdings, 2022
 pragma solidity ^0.8.10;
 
-import {ILPPriceFeedExceptions} from "@gearbox-protocol/core-v3/contracts/interfaces/ILPPriceFeed.sol";
 import {
     IBalancerV2Vault,
     PoolSpecialization,
@@ -24,25 +23,21 @@ import "../lib/constants.sol";
 // MOCKS
 
 import {BalancerVaultMock} from "../mocks/integrations/BalancerVaultMock.sol";
-import {PriceFeedMock} from "@gearbox-protocol/core-v2/contracts/test/mocks/oracles/PriceFeedMock.sol";
-import {AddressProviderACLMock} from "@gearbox-protocol/core-v3/contracts/test/mocks/core/AddressProviderACLMock.sol";
+import {PriceFeedMock} from "@gearbox-protocol/core-v3/contracts/test/mocks/oracles/PriceFeedMock.sol";
+import {AddressProviderV3ACLMock} from
+    "@gearbox-protocol/core-v3/contracts/test/mocks/core/AddressProviderV3ACLMock.sol";
 
 // SUITES
 import {TokensTestSuite, Tokens} from "../suites/TokensTestSuite.sol";
 
 // EXCEPTIONS
-import {
-    ZeroAddressException, NotImplementedException
-} from "@gearbox-protocol/core-v3/contracts/interfaces/IErrors.sol";
 
 /// @title BPTWeightedPriceFeedTest
 /// @notice Designed for unit test purposes only
-contract BPTWeightedPriceFeedTest is DSTest, ILPPriceFeedExceptions {
-    CheatCodes evm = CheatCodes(HEVM_ADDRESS);
-
+contract BPTWeightedPriceFeedTest is Test, ILPPriceFeedExceptions {
     bytes32 public constant POOL_ID = bytes32(uint256(1));
 
-    AddressProviderACLMock public addressProvider;
+    AddressProviderV3ACLMock public addressProvider;
 
     BalancerVaultMock public balancerMock;
     address public bptMock;
@@ -61,7 +56,7 @@ contract BPTWeightedPriceFeedTest is DSTest, ILPPriceFeedExceptions {
     TokensTestSuite tokenTestSuite;
 
     function setUp() public {
-        addressProvider = new AddressProviderACLMock();
+        addressProvider = new AddressProviderV3ACLMock();
 
         pfm1 = new PriceFeedMock(100000000000, 8);
         pfm2 = new PriceFeedMock(100000000, 8);
@@ -192,7 +187,7 @@ contract BPTWeightedPriceFeedTest is DSTest, ILPPriceFeedExceptions {
         priceFeeds[2] = address(pfm3);
         priceFeeds[3] = address(pfm4);
 
-        evm.expectRevert(ZeroAddressException.selector);
+        vm.expectRevert(ZeroAddressException.selector);
         new BPTWeightedPriceFeed(
             address(addressProvider),
             address(0),
@@ -200,7 +195,7 @@ contract BPTWeightedPriceFeedTest is DSTest, ILPPriceFeedExceptions {
             priceFeeds
         );
 
-        evm.expectRevert(ZeroAddressException.selector);
+        vm.expectRevert(ZeroAddressException.selector);
         new BPTWeightedPriceFeed(
             address(addressProvider),
             address(balancerMock),
@@ -210,7 +205,7 @@ contract BPTWeightedPriceFeedTest is DSTest, ILPPriceFeedExceptions {
 
         priceFeeds[0] = address(0);
 
-        evm.expectRevert(ZeroAddressException.selector);
+        vm.expectRevert(ZeroAddressException.selector);
         new BPTWeightedPriceFeed(
             address(addressProvider),
             address(balancerMock),
@@ -318,7 +313,7 @@ contract BPTWeightedPriceFeedTest is DSTest, ILPPriceFeedExceptions {
 
         balancerMock.setAssetBalances(POOL_ID, balances);
 
-        evm.expectRevert(ValueOutOfRangeException.selector);
+        vm.expectRevert(ValueOutOfRangeException.selector);
         bptPriceFeed.latestRoundData();
 
         balances[0] = balances[0] * 4;
@@ -336,10 +331,10 @@ contract BPTWeightedPriceFeedTest is DSTest, ILPPriceFeedExceptions {
     function test_OBWLP_06_setLimiter_reverts_if_current_value_out_of_new_bounds() public {
         uint256 ios = bptPriceFeed.getInvariantOverSupply();
 
-        evm.expectRevert(IncorrectLimitsException.selector);
+        vm.expectRevert(IncorrectLimitsException.selector);
         bptPriceFeed.setLimiter(ios * 2);
 
-        evm.expectRevert(IncorrectLimitsException.selector);
+        vm.expectRevert(IncorrectLimitsException.selector);
         bptPriceFeed.setLimiter(ios / 2);
     }
 }

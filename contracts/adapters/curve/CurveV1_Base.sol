@@ -88,13 +88,13 @@ contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
     uint256 public immutable override underlying3Mask;
 
     /// @notice Constructor
-    /// @param _creditManager Credit manager address
+    /// @param _CreditManagerV3 Credit manager address
     /// @param _curvePool Target Curve pool address
     /// @param _lp_token Pool LP token address
     /// @param _metapoolBase Base pool address (for metapools only) or zero address
     /// @param _nCoins Number of coins in the pool
-    constructor(address _creditManager, address _curvePool, address _lp_token, address _metapoolBase, uint256 _nCoins)
-        AbstractAdapter(_creditManager, _curvePool)
+    constructor(address _CreditManagerV3, address _curvePool, address _lp_token, address _metapoolBase, uint256 _nCoins)
+        AbstractAdapter(_CreditManagerV3, _curvePool)
     {
         if (_lp_token == address(0)) revert ZeroAddressException(); // F: [ACV1-1]
 

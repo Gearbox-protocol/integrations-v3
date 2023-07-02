@@ -6,32 +6,24 @@ pragma solidity ^0.8.10;
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IWETH} from "@gearbox-protocol/core-v2/contracts/interfaces/external/IWETH.sol";
 
-import {CreditFacade} from "@gearbox-protocol/core-v3/contracts/credit/CreditFacade.sol";
-import {CreditManager} from "@gearbox-protocol/core-v3/contracts/credit/CreditManager.sol";
+import {CreditFacadeV3} from "@gearbox-protocol/core-v3/contracts/credit/CreditFacadeV3.sol";
+import {CreditManagerV3} from "@gearbox-protocol/core-v3/contracts/credit/CreditManagerV3.sol";
 
 import {CreditAccount} from "@gearbox-protocol/core-v2/contracts/credit/CreditAccount.sol";
 import {AccountFactory} from "@gearbox-protocol/core-v2/contracts/core/AccountFactory.sol";
 
-import {ICreditFacade, ICreditFacadeExtended} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacade.sol";
+import {ICreditFacadeV3} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacadeV3.sol";
 import {
-    ICreditManagerV2,
-    ICreditManagerV2Events,
+    ICreditManagerV3,
+    ICreditManagerV3Events,
     ClosureAction
-} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditManagerV2.sol";
-import {
-    ICreditFacadeEvents,
-    ICreditFacadeExceptions
-} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacade.sol";
-import {IDegenNFT, IDegenNFTExceptions} from "@gearbox-protocol/core-v2/contracts/interfaces/IDegenNFT.sol";
+} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditManagerV3.sol";
+import {ICreditFacadeV3Events} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacadeV3.sol";
+import {IDegenNFTV2} from "@gearbox-protocol/core-v2/contracts/interfaces/IDegenNFTV2.sol";
 
 // DATA
 import {MultiCall, MultiCallOps} from "@gearbox-protocol/core-v2/contracts/libraries/MultiCall.sol";
 import {Balance} from "@gearbox-protocol/core-v2/contracts/libraries/Balances.sol";
-
-import {
-    CreditFacadeMulticaller,
-    CreditFacadeCalls
-} from "@gearbox-protocol/core-v3/contracts/multicall/CreditFacadeCalls.sol";
 
 // CONSTANTS
 
@@ -45,35 +37,34 @@ import {BalanceHelper} from "../helpers/BalanceHelper.sol";
 import {CreditFacadeTestHelper} from "../helpers/CreditFacadeTestHelper.sol";
 
 // EXCEPTIONS
-import {ZeroAddressException} from "@gearbox-protocol/core-v3/contracts/interfaces/IErrors.sol";
-import {ICreditManagerV2Exceptions} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditManagerV2.sol";
+import "@gearbox-protocol/core-v3/contracts/interfaces/IExceptions.sol";
+import "@gearbox-protocol/core-v3/contracts/interfaces/IExceptions.sol";
 
 // MOCKS
-import {AdapterMock} from "@gearbox-protocol/core-v3/contracts/test/mocks/adapters/AdapterMock.sol";
-import {TargetContractMock} from "@gearbox-protocol/core-v2/contracts/test/mocks/adapters/TargetContractMock.sol";
+import {AdapterMock} from "@gearbox-protocol/core-v3/contracts/test/mocks/core/AdapterMock.sol";
+import {TargetContractMock} from "@gearbox-protocol/core-v3/contracts/test/mocks/core/TargetContractMock.sol";
 
 import {UniswapV2Mock} from "../mocks/integrations/UniswapV2Mock.sol";
 import {UniswapV2Adapter} from "../../adapters/uniswap/UniswapV2.sol";
 
 // SUITES
 import {TokensTestSuite, Tokens} from "../suites/TokensTestSuite.sol";
-import {CreditFacadeTestSuite} from "@gearbox-protocol/core-v3/contracts/test/suites/CreditFacadeTestSuite.sol";
+
 import {CreditConfig} from "../config/CreditConfig.sol";
 
 uint256 constant WETH_TEST_AMOUNT = 5 * WAD;
 uint16 constant REFERRAL_CODE = 23;
 
-/// @title CreditFacadeTest
+/// @title CreditFacadeV3Test
 /// @notice Designed for unit test purposes only
-contract CreditFacadeTest is
-    DSTest,
+contract CreditFacadeV3Test is
+    Test,
     BalanceHelper,
     CreditFacadeTestHelper,
-    ICreditManagerV2Events,
-    ICreditFacadeEvents,
-    ICreditFacadeExceptions
+    ICreditManagerV3Events,
+    ICreditFacadeV3Events
 {
-    using CreditFacadeCalls for CreditFacadeMulticaller;
+    using CreditFacadeV3Calls for CreditFacadeV3Multicaller;
 
     AccountFactory accountFactory;
 
@@ -89,23 +80,23 @@ contract CreditFacadeTest is
             Tokens.DAI
         );
 
-        cft = new CreditFacadeTestSuite(creditConfig);
+        cft = new CreditFacadeV3TestSuite(creditConfig);
 
         underlying = tokenTestSuite.addressOf(Tokens.DAI);
-        creditManager = cft.creditManager();
+        CreditManagerV3 = cft.CreditManagerV3();
         creditFacade = cft.creditFacade();
-        creditConfigurator = cft.creditConfigurator();
+        CreditConfiguratorV3 = cft.CreditConfiguratorV3();
 
         accountFactory = cft.af();
 
         targetMock = new TargetContractMock();
         adapterMock = new AdapterMock(
-            address(creditManager),
+            address(CreditManagerV3),
             address(targetMock)
         );
 
-        evm.label(address(adapterMock), "AdapterMock");
-        evm.label(address(targetMock), "TargetContractMock");
+        vm.label(address(adapterMock), "AdapterMock");
+        vm.label(address(targetMock), "TargetContractMock");
     }
 
     ///
@@ -121,17 +112,17 @@ contract CreditFacadeTest is
     function _prepareForWETHTest(address tester) internal {
         address weth = tokenTestSuite.addressOf(Tokens.WETH);
 
-        evm.startPrank(tester);
+        vm.startPrank(tester);
         if (tester.balance > 0) {
             IWETH(weth).deposit{value: tester.balance}();
         }
 
         IERC20(weth).transfer(address(this), tokenTestSuite.balanceOf(Tokens.WETH, tester));
 
-        evm.stopPrank();
+        vm.stopPrank();
         expectBalance(Tokens.WETH, tester, 0);
 
-        evm.deal(tester, WETH_TEST_AMOUNT);
+        vm.deal(tester, WETH_TEST_AMOUNT);
     }
 
     function _checkForWETHTest() internal {
@@ -145,8 +136,8 @@ contract CreditFacadeTest is
     }
 
     function _prepareMockCall() internal returns (bytes memory callData) {
-        evm.prank(CONFIGURATOR);
-        creditConfigurator.allowContract(address(targetMock), address(adapterMock));
+        vm.prank(CONFIGURATOR);
+        CreditConfiguratorV3.allowContract(address(targetMock), address(adapterMock));
 
         callData = abi.encodeWithSignature("hello(string)", "world");
     }
@@ -176,14 +167,14 @@ contract CreditFacadeTest is
             connectors[1] = tokenTestSuite.addressOf(Tokens.USDT);
 
             adapter = new UniswapV2Adapter(
-                address(creditManager),
+                address(CreditManagerV3),
                 address(uniswapMock),
                 connectors
             );
         }
 
-        evm.prank(CONFIGURATOR);
-        creditConfigurator.allowContract(address(uniswapMock), address(adapter));
+        vm.prank(CONFIGURATOR);
+        CreditConfiguratorV3.allowContract(address(uniswapMock), address(adapter));
 
         uint256 accountAmount = DAI_ACCOUNT_AMOUNT;
 
@@ -193,7 +184,7 @@ contract CreditFacadeTest is
             MultiCall({
                 target: address(creditFacade),
                 callData: abi.encodeWithSelector(
-                    ICreditFacadeExtended.addCollateral.selector,
+                    ICreditFacadeV3Extended.addCollateral.selector,
                     USER,
                     tokenTestSuite.addressOf(Tokens.DAI),
                     DAI_ACCOUNT_AMOUNT
@@ -210,18 +201,18 @@ contract CreditFacadeTest is
             })
         );
 
-        tokenTestSuite.approve(Tokens.DAI, USER, address(creditManager));
+        tokenTestSuite.approve(Tokens.DAI, USER, address(CreditManagerV3));
 
-        evm.prank(USER);
+        vm.prank(USER);
         creditFacade.openCreditAccountMulticall(accountAmount, USER, calls, 0);
 
-        address creditAccount = creditManager.getCreditAccountOrRevert(USER);
+        address creditAccount = CreditManagerV3.getCreditAccountOrRevert(USER);
 
         uint256 balance = IERC20(underlying).balanceOf(creditAccount);
 
         assertEq(balance, 1, "Incorrect underlying balance");
 
-        evm.label(creditAccount, "creditAccount");
+        vm.label(creditAccount, "creditAccount");
         {
             (
                 uint16 _feeInterest,
@@ -229,11 +220,11 @@ contract CreditFacadeTest is
                 uint16 _liquidationDiscount,
                 uint16 _feeLiquidationExpired,
                 uint16 _liquidationPremiumExpired
-            ) = creditManager.fees();
+            ) = CreditManagerV3.fees();
 
             // set LT to 1
-            evm.prank(CONFIGURATOR);
-            creditConfigurator.setFees(
+            vm.prank(CONFIGURATOR);
+            CreditConfiguratorV3.setFees(
                 _feeInterest,
                 _liquidationDiscount - 1,
                 PERCENTAGE_FACTOR - _liquidationDiscount,
@@ -241,8 +232,8 @@ contract CreditFacadeTest is
                 _liquidationPremiumExpired
             );
 
-            evm.prank(CONFIGURATOR);
-            creditConfigurator.setFees(
+            vm.prank(CONFIGURATOR);
+            CreditConfiguratorV3.setFees(
                 _feeInterest,
                 _feeLiquidation,
                 PERCENTAGE_FACTOR - _liquidationDiscount,
@@ -266,18 +257,18 @@ contract CreditFacadeTest is
             })
         );
 
-        evm.prank(CONFIGURATOR);
-        CreditManager(address(creditManager)).pause();
+        vm.prank(CONFIGURATOR);
+        CreditManagerV3(address(CreditManagerV3)).pause();
 
-        evm.roll(block.number + 1);
+        vm.roll(block.number + 1);
 
         /// Check that it reverts when paused
-        evm.prank(LIQUIDATOR);
-        evm.expectRevert("Pausable: paused");
+        vm.prank(LIQUIDATOR);
+        vm.expectRevert("Pausable: paused");
         creditFacade.liquidateCreditAccount(USER, LIQUIDATOR, 0, false, calls);
 
-        evm.prank(CONFIGURATOR);
-        creditConfigurator.addEmergencyLiquidator(LIQUIDATOR);
+        vm.prank(CONFIGURATOR);
+        CreditConfiguratorV3.addEmergencyLiquidator(LIQUIDATOR);
 
         // We need extra balamce for Liquidator to cover Uniswap fees
         // totalAmount in WETH = 2 * DAI_ACCOUNT_AMOUNT / DAI_WETH_RAY * (1 - fee)
@@ -288,9 +279,9 @@ contract CreditFacadeTest is
             (DAI_ACCOUNT_AMOUNT * 2 * (1000 - uniswapMock.FEE_MULTIPLIER())) / 1000
         );
 
-        tokenTestSuite.approve(underlying, LIQUIDATOR, address(creditManager));
+        tokenTestSuite.approve(underlying, LIQUIDATOR, address(CreditManagerV3));
 
-        evm.prank(LIQUIDATOR);
+        vm.prank(LIQUIDATOR);
         creditFacade.liquidateCreditAccount(USER, LIQUIDATOR, 0, false, calls);
 
         assertTrue(!creditFacade.hasOpenedCreditAccount(USER), "USER still has credit account");

@@ -2,7 +2,7 @@
 pragma solidity ^0.8.10;
 pragma abicoder v1;
 
-interface ICurveGauge {
+interface ICurveGaugeV3 {
     function deposit(uint256) external;
 
     function balanceOf(address) external view returns (uint256);
@@ -88,7 +88,7 @@ interface IStaker {
 
     function vote(uint256, address, bool) external;
 
-    function voteGaugeWeight(address, uint256) external;
+    function voteGaugeV3Weight(address, uint256) external;
 
     function balanceOfPool(address) external view returns (uint256);
 
@@ -161,7 +161,7 @@ interface IDeposit {
 
     function rewardArbitrator() external returns (address);
 
-    function setGaugeRedirect(uint256 _pid) external returns (bool);
+    function setGaugeV3Redirect(uint256 _pid) external returns (bool);
 
     function owner() external returns (address);
 }

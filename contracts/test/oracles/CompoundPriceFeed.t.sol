@@ -7,11 +7,11 @@ import {Test} from "forge-std/Test.sol";
 
 import {WAD} from "@gearbox-protocol/core-v2/contracts/libraries/Constants.sol";
 import {PERCENTAGE_FACTOR} from "@gearbox-protocol/core-v2/contracts/libraries/PercentageMath.sol";
-import {AddressProviderACLMock} from "@gearbox-protocol/core-v3/contracts/test/mocks/core/AddressProviderACLMock.sol";
-import {PriceFeedMock} from "@gearbox-protocol/core-v2/contracts/test/mocks/oracles/PriceFeedMock.sol";
+import {AddressProviderV3ACLMock} from
+    "@gearbox-protocol/core-v3/contracts/test/mocks/core/AddressProviderV3ACLMock.sol";
+import {PriceFeedMock} from "@gearbox-protocol/core-v3/contracts/test/mocks/oracles/PriceFeedMock.sol";
 
-import {ILPPriceFeedExceptions} from "@gearbox-protocol/core-v3/contracts/interfaces/ILPPriceFeed.sol";
-import {ZeroAddressException} from "@gearbox-protocol/core-v3/contracts/interfaces/IErrors.sol";
+import "@gearbox-protocol/core-v3/contracts/interfaces/IExceptions.sol";
 
 import {CompoundPriceFeed, RANGE_WIDTH} from "../../oracles/compound/CompoundPriceFeed.sol";
 
@@ -22,7 +22,7 @@ import {TokensTestSuite, Tokens} from "../suites/TokensTestSuite.sol";
 /// @notice [OCPF]: Unit tests for Compound V2 cToken price feed
 contract CompoundPriceFeedTest is Test {
     TokensTestSuite tokensTestSuite;
-    AddressProviderACLMock addressProvider;
+    AddressProviderV3ACLMock addressProvider;
 
     address dai;
     CErc20Mock cdai;
@@ -35,7 +35,7 @@ contract CompoundPriceFeedTest is Test {
     function setUp() public {
         tokensTestSuite = new TokensTestSuite();
 
-        addressProvider = new AddressProviderACLMock();
+        addressProvider = new AddressProviderV3ACLMock();
 
         dai = tokensTestSuite.addressOf(Tokens.DAI);
         // set yearly interest equal to the range width

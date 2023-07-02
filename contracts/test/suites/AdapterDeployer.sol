@@ -9,12 +9,7 @@ import {Contracts} from "../config/SupportedContracts.sol";
 import {AdapterData} from "../config/AdapterData.sol";
 import {SupportedContracts} from "../config/SupportedContracts.sol";
 
-import {Adapter} from "@gearbox-protocol/core-v3/contracts/factories/CreditManagerFactoryBase.sol";
-
-import {AdapterType} from "@gearbox-protocol/core-v3/contracts/interfaces/adapters/IAdapter.sol";
-
-import "@gearbox-protocol/core-v3/contracts/test/lib/test.sol";
-import {CheatCodes, HEVM_ADDRESS} from "@gearbox-protocol/core-v3/contracts/test/lib/cheatCodes.sol";
+import {AdapterType} from "@gearbox-protocol/core-v3/contracts/interfaces/IAdapter.sol";
 
 // SIMPLE ADAPTERS
 import {UniswapV2Adapter} from "../../adapters/uniswap/UniswapV2.sol";
@@ -23,8 +18,6 @@ import {YearnV2Adapter} from "../../adapters/yearn/YearnV2.sol";
 import {ConvexV1BoosterAdapter} from "../../adapters/convex/ConvexV1_Booster.sol";
 import {LidoV1Adapter} from "../../adapters/lido/LidoV1.sol";
 import {WstETHV1Adapter} from "../../adapters/lido/WstETHV1.sol";
-
-import {UniversalAdapter} from "@gearbox-protocol/core-v3/contracts/adapters/UniversalAdapter.sol";
 
 import {CurveV1Adapter2Assets} from "../../adapters/curve/CurveV1_2.sol";
 import {CurveV1Adapter3Assets} from "../../adapters/curve/CurveV1_3.sol";
@@ -39,8 +32,7 @@ import {TokensTestSuite} from "./TokensTestSuite.sol";
 
 // CURVE ADAPTERS
 
-contract AdapterDeployer is AdapterData, DSTest {
-    CheatCodes evm = CheatCodes(HEVM_ADDRESS);
+contract AdapterDeployer is AdapterData, Test {
     Adapter[] public adapters;
     TokensTestSuite tokenTestSuite;
     SupportedContracts supportedContracts;
@@ -50,7 +42,7 @@ contract AdapterDeployer is AdapterData, DSTest {
     address uniswapPathChecker;
 
     constructor(
-        address creditManager,
+        address CreditManagerV3,
         Contracts[] memory adaptersList,
         TokensTestSuite _tokenTestSuite,
         SupportedContracts _supportedContracts,
@@ -62,10 +54,10 @@ contract AdapterDeployer is AdapterData, DSTest {
 
         unchecked {
             for (uint256 i; i < len; ++i) {
-                Adapter memory newAdapter = deployAdapter(creditManager, adaptersList[i]);
+                Adapter memory newAdapter = deployAdapter(CreditManagerV3, adaptersList[i]);
 
                 adapters.push(newAdapter);
-                evm.label(
+                vm.label(
                     newAdapter.adapter,
                     string(abi.encodePacked(cmLabel, "_ADAPTER_", supportedContracts.nameOf(adaptersList[i])))
                 );
@@ -86,7 +78,7 @@ contract AdapterDeployer is AdapterData, DSTest {
         return adapters;
     }
 
-    function deployAdapter(address creditManager, Contracts cnt) internal returns (Adapter memory result) {
+    function deployAdapter(address CreditManagerV3, Contracts cnt) internal returns (Adapter memory result) {
         uint256 len = simpleAdapters.length;
         unchecked {
             for (uint256 i; i < len; ++i) {
@@ -97,7 +89,7 @@ contract AdapterDeployer is AdapterData, DSTest {
                     if (at == AdapterType.UNISWAP_V2_ROUTER) {
                         result.adapter = address(
                             new UniswapV2Adapter(
-                                creditManager,
+                                CreditManagerV3,
                                 result.targetContract,
                                 _getInitConnectors()
                             )
@@ -105,7 +97,7 @@ contract AdapterDeployer is AdapterData, DSTest {
                     } else if (at == AdapterType.UNISWAP_V3_ROUTER) {
                         result.adapter = address(
                             new UniswapV3Adapter(
-                                creditManager,
+                                CreditManagerV3,
                                 result.targetContract,
                                 _getInitConnectors()
                             )
@@ -114,31 +106,31 @@ contract AdapterDeployer is AdapterData, DSTest {
                     if (at == AdapterType.YEARN_V2) {
                         result.adapter = address(
                             new YearnV2Adapter(
-                                creditManager,
+                                CreditManagerV3,
                                 result.targetContract
                             )
                         );
                     } else if (at == AdapterType.CONVEX_V1_BOOSTER) {
                         result.adapter = address(
                             new ConvexV1BoosterAdapter(
-                                creditManager,
+                                CreditManagerV3,
                                 result.targetContract
                             )
                         );
                     } else if (at == AdapterType.LIDO_V1) {
                         result.adapter = address(
                             new LidoV1Adapter(
-                                creditManager,
+                                CreditManagerV3,
                                 result.targetContract
                             )
                         );
                         result.targetContract = LidoV1Adapter(result.adapter).targetContract();
                     } else if (at == AdapterType.UNIVERSAL) {
-                        result.adapter = address(new UniversalAdapter(creditManager));
+                        result.adapter = address(new UniversalAdapter(CreditManagerV3));
                     } else if (at == AdapterType.LIDO_WSTETH_V1) {
                         result.adapter = address(
                             new WstETHV1Adapter(
-                                creditManager,
+                                CreditManagerV3,
                                 tokenTestSuite.addressOf(Tokens.wstETH)
                             )
                         );
@@ -157,7 +149,7 @@ contract AdapterDeployer is AdapterData, DSTest {
                     if (at == AdapterType.CURVE_V1_2ASSETS) {
                         result.adapter = address(
                             new CurveV1Adapter2Assets(
-                                creditManager,
+                                CreditManagerV3,
                                 result.targetContract,
                                 tokenTestSuite.addressOf(
                                     curveAdapters[i].lpToken
@@ -170,7 +162,7 @@ contract AdapterDeployer is AdapterData, DSTest {
                     } else if (at == AdapterType.CURVE_V1_3ASSETS) {
                         result.adapter = address(
                             new CurveV1Adapter3Assets(
-                                creditManager,
+                                CreditManagerV3,
                                 result.targetContract,
                                 tokenTestSuite.addressOf(
                                     curveAdapters[i].lpToken
@@ -181,7 +173,7 @@ contract AdapterDeployer is AdapterData, DSTest {
                     } else if (at == AdapterType.CURVE_V1_4ASSETS) {
                         result.adapter = address(
                             new CurveV1Adapter4Assets(
-                                creditManager,
+                                CreditManagerV3,
                                 result.targetContract,
                                 tokenTestSuite.addressOf(
                                     curveAdapters[i].lpToken
@@ -198,7 +190,7 @@ contract AdapterDeployer is AdapterData, DSTest {
                 result.targetContract = supportedContracts.addressOf(cnt);
                 result.adapter = address(
                     new CurveV1AdapterStETH(
-                        creditManager,
+                        CreditManagerV3,
                         supportedContracts.addressOf(
                             curveStEthAdapter.curveETHGateway
                         ),
@@ -214,7 +206,7 @@ contract AdapterDeployer is AdapterData, DSTest {
                     result.targetContract = supportedContracts.addressOf(cnt);
                     result.adapter = address(
                         new CurveV1AdapterDeposit(
-                            creditManager,
+                            CreditManagerV3,
                             result.targetContract,
                             tokenTestSuite.addressOf(curveWrappers[i].lpToken),
                             curveWrappers[i].nCoins
@@ -230,7 +222,7 @@ contract AdapterDeployer is AdapterData, DSTest {
                     result.targetContract = supportedContracts.addressOf(cnt);
                     result.adapter = address(
                         new ConvexV1BaseRewardPoolAdapter(
-                            creditManager,
+                            CreditManagerV3,
                             result.targetContract,
                             tokenTestSuite.addressOf(
                                 convexBasePoolAdapters[i].stakedToken

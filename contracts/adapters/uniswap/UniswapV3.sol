@@ -42,10 +42,10 @@ contract UniswapV3Adapter is AbstractAdapter, UniswapConnectorChecker, IUniswapV
     uint16 public constant override _gearboxAdapterVersion = 3;
 
     /// @notice Constructor
-    /// @param _creditManager Credit manager address
+    /// @param _CreditManagerV3 Credit manager address
     /// @param _router Uniswap V3 Router address
-    constructor(address _creditManager, address _router, address[] memory _connectorTokensInit)
-        AbstractAdapter(_creditManager, _router)
+    constructor(address _CreditManagerV3, address _router, address[] memory _connectorTokensInit)
+        AbstractAdapter(_CreditManagerV3, _router)
         UniswapConnectorChecker(_connectorTokensInit)
     {}
 

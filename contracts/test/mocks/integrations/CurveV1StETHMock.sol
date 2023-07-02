@@ -9,12 +9,11 @@ import {WAD, RAY} from "@gearbox-protocol/core-v2/contracts/libraries/Constants.
 import {N_COINS, ICurvePoolStETH} from "../../../integrations/curve/ICurvePoolStETH.sol";
 import {ICRVToken} from "../../../integrations/curve/ICRVToken.sol";
 
-import {ERC20Mock} from "@gearbox-protocol/core-v2/contracts/test/mocks/token/ERC20Mock.sol";
-
-// EXCEPTIONS
-import {NotImplementedException} from "@gearbox-protocol/core-v3/contracts/interfaces/IErrors.sol";
+import {ERC20Mock} from "@gearbox-protocol/core-v3/contracts/test/mocks/token/ERC20Mock.sol";
 
 contract CurveV1StETHMock is ICurvePoolStETH {
+    error NotImplementedException();
+
     using SafeERC20 for IERC20;
 
     address public override lp_token;

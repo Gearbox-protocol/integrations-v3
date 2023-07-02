@@ -11,7 +11,7 @@ import {ICurvePool} from "../../../integrations/curve/ICurvePool.sol";
 import {N_COINS, ICurvePool2Assets} from "../../../integrations/curve/ICurvePool_2.sol";
 import {ICRVToken} from "../../../integrations/curve/ICRVToken.sol";
 
-import {ERC20Mock} from "@gearbox-protocol/core-v2/contracts/test/mocks/token/ERC20Mock.sol";
+import {ERC20Mock} from "@gearbox-protocol/core-v3/contracts/test/mocks/token/ERC20Mock.sol";
 
 // EXCEPTIONS
 

@@ -29,11 +29,11 @@ contract CurveV1AdapterStETH is CurveV1Adapter2Assets {
     }
 
     /// @notice Constructor
-    /// @param _creditManager Credit manager address
+    /// @param _CreditManagerV3 Credit manager address
     /// @param _curveStETHPoolGateway steCRV pool gateway address
     /// @param _lp_token steCRV LP token address
-    constructor(address _creditManager, address _curveStETHPoolGateway, address _lp_token)
-        CurveV1Adapter2Assets(_creditManager, _curveStETHPoolGateway, _lp_token, address(0))
+    constructor(address _CreditManagerV3, address _curveStETHPoolGateway, address _lp_token)
+        CurveV1Adapter2Assets(_CreditManagerV3, _curveStETHPoolGateway, _lp_token, address(0))
     {}
 
     /// @inheritdoc CurveV1Adapter2Assets

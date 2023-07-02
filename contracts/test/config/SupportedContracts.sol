@@ -3,7 +3,7 @@
 // (c) Gearbox Holdings, 2022
 pragma solidity ^0.8.10;
 
-import {CheatCodes, HEVM_ADDRESS} from "@gearbox-protocol/core-v2/contracts/test/lib/cheatCodes.sol";
+import {Test} from "forge-std/Test.sol";
 
 interface ISupportedContracts {
     function addressOf(Contracts c) external view returns (address);
@@ -54,9 +54,7 @@ struct ContractData {
     string name;
 }
 
-contract SupportedContracts is ISupportedContracts {
-    CheatCodes evm = CheatCodes(HEVM_ADDRESS);
-
+contract SupportedContracts is Test, ISupportedContracts {
     mapping(Contracts => address) public override addressOf;
     mapping(Contracts => string) public override nameOf;
     mapping(address => Contracts) public override contractIndex;
@@ -363,7 +361,7 @@ contract SupportedContracts is ISupportedContracts {
                 nameOf[cd[i].id] = cd[i].name;
                 contractIndex[cd[i].addr] = cd[i].id;
 
-                evm.label(cd[i].addr, cd[i].name);
+                vm.label(cd[i].addr, cd[i].name);
             }
         }
     }

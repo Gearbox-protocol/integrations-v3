@@ -26,9 +26,9 @@ contract CompoundV2_CErc20Adapter is CompoundV2_CTokenAdapter {
     uint16 public constant override _gearboxAdapterVersion = 1;
 
     /// @notice Constructor
-    /// @param _creditManager Credit manager address
+    /// @param _CreditManagerV3 Credit manager address
     /// @param _cToken CErc20 token address
-    constructor(address _creditManager, address _cToken) CompoundV2_CTokenAdapter(_creditManager, _cToken) {
+    constructor(address _CreditManagerV3, address _cToken) CompoundV2_CTokenAdapter(_CreditManagerV3, _cToken) {
         underlying = ICErc20(targetContract).underlying(); // F: [ACV2CERC-2]
 
         cTokenMask = _getMaskOrRevert(targetContract); // F: [ACV2CERC-1, ACV2CERC-2]

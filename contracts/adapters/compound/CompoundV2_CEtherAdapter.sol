@@ -30,9 +30,11 @@ contract CompoundV2_CEtherAdapter is CompoundV2_CTokenAdapter {
     uint16 public constant override _gearboxAdapterVersion = 1;
 
     /// @notice Constructor
-    /// @param _creditManager Credit manager address
+    /// @param _CreditManagerV3 Credit manager address
     /// @param _cethGateway CEther gateway contract address
-    constructor(address _creditManager, address _cethGateway) CompoundV2_CTokenAdapter(_creditManager, _cethGateway) {
+    constructor(address _CreditManagerV3, address _cethGateway)
+        CompoundV2_CTokenAdapter(_CreditManagerV3, _cethGateway)
+    {
         cToken = address(CEtherGateway(payable(targetContract)).ceth()); // F: [ACV2CETH-1]
         underlying = address(CEtherGateway(payable(targetContract)).weth()); // F: [ACV2CETH-1]
 

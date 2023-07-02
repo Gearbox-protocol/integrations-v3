@@ -10,7 +10,7 @@ import {WAD, RAY} from "@gearbox-protocol/core-v2/contracts/libraries/Constants.
 import {ICurvePool} from "../../../integrations/curve/ICurvePool.sol";
 import {ICRVToken} from "../../../integrations/curve/ICRVToken.sol";
 
-import {ERC20Mock} from "@gearbox-protocol/core-v2/contracts/test/mocks/token/ERC20Mock.sol";
+import {ERC20Mock} from "@gearbox-protocol/core-v3/contracts/test/mocks/token/ERC20Mock.sol";
 import {cERC20Mock} from "../token/cERC20Mock.sol";
 
 // EXCEPTIONS

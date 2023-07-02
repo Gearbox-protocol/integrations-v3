@@ -6,12 +6,12 @@ pragma solidity ^0.8.10;
 import {Tokens} from "../config/Tokens.sol";
 
 import {PriceFeedDataLive} from "../config/PriceFeedDataLive.sol";
-import {PriceFeedConfig} from "@gearbox-protocol/core-v2/contracts/oracles/PriceOracle.sol";
-import {ZeroPriceFeed} from "@gearbox-protocol/core-v3/contracts/oracles/ZeroPriceFeed.sol";
+import {PriceFeedConfig} from "@gearbox-protocol/core-v2/contracts/oracles/PriceOracleV2.sol";
+import {ZeroPriceFeed} from "@gearbox-protocol/core-v2/contracts/oracles/ZeroPriceFeed.sol";
 import {YearnPriceFeed} from "../../oracles/yearn/YearnPriceFeed.sol";
 import {WstETHPriceFeed} from "../../oracles/lido/WstETHPriceFeed.sol";
-import {CompositePriceFeed} from "@gearbox-protocol/core-v3/contracts/oracles/CompositePriceFeed.sol";
-import {BoundedPriceFeed} from "@gearbox-protocol/core-v3/contracts/oracles/BoundedPriceFeed.sol";
+import {CompositePriceFeed} from "@gearbox-protocol/core-v2/contracts/oracles/CompositePriceFeed.sol";
+import {BoundedPriceFeed} from "@gearbox-protocol/core-v2/contracts/oracles/BoundedPriceFeed.sol";
 import {CurveV1StETHPoolGateway} from "../../adapters/curve/CurveV1_stETHGateway.sol";
 
 import {ISupportedContracts, Contracts} from "../config/SupportedContracts.sol";
@@ -23,14 +23,11 @@ import {CurveLP4PriceFeed} from "../../oracles/curve/CurveLP4PriceFeed.sol";
 import {IYVault} from "../../integrations/yearn/IYVault.sol";
 import {IwstETH} from "../../integrations/lido/IwstETH.sol";
 
-import {CheatCodes, HEVM_ADDRESS} from "@gearbox-protocol/core-v3/contracts/test/lib/cheatCodes.sol";
-
 import {TokensTestSuite} from "./TokensTestSuite.sol";
 
 address constant CURVE_REGISTRY = 0x90E00ACe148ca3b23Ac1bC8C240C2a7Dd9c2d7f5;
 
 contract LivePriceFeedDeployer is PriceFeedDataLive {
-    CheatCodes evm = CheatCodes(HEVM_ADDRESS);
     mapping(address => address) public priceFeeds;
     PriceFeedConfig[] priceFeedConfig;
 
@@ -49,7 +46,7 @@ contract LivePriceFeedDeployer is PriceFeedDataLive {
                 setPriceFeed(tokenTestSuite.addressOf(t), pf);
 
                 string memory description = string(abi.encodePacked("PRICEFEED_", tokenTestSuite.symbols(t)));
-                evm.label(pf, description);
+                vm.label(pf, description);
             }
         }
 
@@ -71,7 +68,7 @@ contract LivePriceFeedDeployer is PriceFeedDataLive {
                 setPriceFeed(token, pf);
 
                 string memory description = string(abi.encodePacked("PRICEFEED_", tokenTestSuite.symbols(t)));
-                evm.label(pf, description);
+                vm.label(pf, description);
             }
         }
 
@@ -93,7 +90,7 @@ contract LivePriceFeedDeployer is PriceFeedDataLive {
                 setPriceFeed(token, pf);
 
                 string memory description = string(abi.encodePacked("PRICEFEED_", tokenTestSuite.symbols(t)));
-                evm.label(pf, description);
+                vm.label(pf, description);
             }
         }
 
@@ -105,7 +102,7 @@ contract LivePriceFeedDeployer is PriceFeedDataLive {
                 for (uint256 i; i < len; ++i) {
                     setPriceFeed(tokenTestSuite.addressOf(zeroPriceFeeds[i].token), zeroPF);
 
-                    evm.label(zeroPF, "ZERO PRICEFEED");
+                    vm.label(zeroPF, "ZERO PRICEFEED");
                 }
             }
         }
@@ -198,7 +195,7 @@ contract LivePriceFeedDeployer is PriceFeedDataLive {
                 }
 
                 setPriceFeed(tokenTestSuite.addressOf(lpToken), pf);
-                evm.label(pf, description);
+                vm.label(pf, description);
             }
         }
 
@@ -232,7 +229,7 @@ contract LivePriceFeedDeployer is PriceFeedDataLive {
                 setPriceFeed(yVault, pf);
 
                 string memory description = string(abi.encodePacked("PRICEFEED_", tokenTestSuite.symbols(t)));
-                evm.label(pf, description);
+                vm.label(pf, description);
             }
         }
 
@@ -247,7 +244,7 @@ contract LivePriceFeedDeployer is PriceFeedDataLive {
             setPriceFeed(wsteth, pf);
 
             string memory description = string(abi.encodePacked("PRICEFEED_", tokenTestSuite.symbols(t)));
-            evm.label(pf, description);
+            vm.label(pf, description);
         }
     }
 

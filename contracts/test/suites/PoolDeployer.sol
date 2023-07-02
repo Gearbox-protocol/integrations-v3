@@ -3,31 +3,25 @@
 // (c) Gearbox Holdings, 2022
 pragma solidity ^0.8.10;
 
-import {GearStaking} from "@gearbox-protocol/core-v3/contracts/support/GearStaking.sol";
-import {LinearInterestRateModel} from "@gearbox-protocol/core-v3/contracts/pool/LinearInterestRateModel.sol";
-import {Pool4626} from "@gearbox-protocol/core-v3/contracts/pool/Pool4626.sol";
-import {PoolQuotaKeeper} from "@gearbox-protocol/core-v3/contracts/pool/PoolQuotaKeeper.sol";
-import {Gauge} from "@gearbox-protocol/core-v3/contracts/pool/Gauge.sol";
+import {GearStakingV3} from "@gearbox-protocol/core-v3/contracts/governance/GearStakingV3.sol";
+import {LinearInterestRateModelV3} from "@gearbox-protocol/core-v3/contracts/pool/LinearInterestRateModelV3.sol";
+import {PoolV3} from "@gearbox-protocol/core-v3/contracts/pool/PoolV3.sol";
+import {PoolQuotaKeeperV3} from "@gearbox-protocol/core-v3/contracts/pool/PoolQuotaKeeperV3.sol";
+import {GaugeV3} from "@gearbox-protocol/core-v3/contracts/governance/GaugeV3.sol";
 import {ContractsRegister} from "@gearbox-protocol/core-v2/contracts/core/ContractsRegister.sol";
 import {AddressProvider} from "@gearbox-protocol/core-v2/contracts/core/AddressProvider.sol";
-
-import {Pool4626Opts} from "@gearbox-protocol/core-v3/contracts/interfaces/IPool4626.sol";
-import {GaugeOpts} from "@gearbox-protocol/core-v3/contracts/interfaces/IGauge.sol";
 
 import {Tokens} from "../config/Tokens.sol";
 import {PoolConfigLive, PoolParams, QuotedTokenParams} from "../config/PoolConfigLive.sol";
 
-import {CheatCodes, HEVM_ADDRESS} from "@gearbox-protocol/core-v3/contracts/test/lib/cheatCodes.sol";
-
 import {TokensTestSuite} from "./TokensTestSuite.sol";
 
 contract LivePoolDeployer is PoolConfigLive {
-    CheatCodes evm = CheatCodes(HEVM_ADDRESS);
-    GearStaking public gearStaking;
-    Pool4626[] internal _pools;
+    GearStakingV3 public gearStaking;
+    PoolV3[] internal _pools;
 
     constructor(address addressProvider, TokensTestSuite tokenTestSuite, address ROOT_ADDRESS) PoolConfigLive() {
-        gearStaking = new GearStaking(
+        gearStaking = new GearStakingV3(
             addressProvider,
             block.timestamp
         );
@@ -35,7 +29,7 @@ contract LivePoolDeployer is PoolConfigLive {
         for (uint256 i = 0; i < underlyings.length; ++i) {
             PoolParams storage pp = poolParams[underlyings[i]];
 
-            LinearInterestRateModel irm = new LinearInterestRateModel(
+            LinearInterestRateModelV3 irm = new LinearInterestRateModelV3(
                 pp.U_optimal,
                 pp.U_reserve,
                 pp.R_base,
@@ -45,7 +39,7 @@ contract LivePoolDeployer is PoolConfigLive {
                 true
             );
 
-            Pool4626Opts memory poolOpts = Pool4626Opts({
+            PoolV3Opts memory poolOpts = PoolV3Opts({
                 addressProvider: addressProvider,
                 underlyingToken: tokenTestSuite.addressOf(underlyings[i]),
                 interestRateModel: address(irm),
@@ -53,42 +47,42 @@ contract LivePoolDeployer is PoolConfigLive {
                 supportsQuotas: pp.supportsQuotas
             });
 
-            Pool4626 pool = new Pool4626(poolOpts);
+            PoolV3 pool = new PoolV3(poolOpts);
 
             _pools.push(pool);
 
             ContractsRegister cr = ContractsRegister(AddressProvider(addressProvider).getContractsRegister());
 
-            evm.prank(ROOT_ADDRESS);
+            vm.prank(ROOT_ADDRESS);
             cr.addPool(address(pool));
 
-            PoolQuotaKeeper pqk = new PoolQuotaKeeper(
+            PoolQuotaKeeperV3 pqk = new PoolQuotaKeeperV3(
                 address(pool)
             );
 
-            evm.prank(ROOT_ADDRESS);
+            vm.prank(ROOT_ADDRESS);
             pool.connectPoolQuotaManager(address(pqk));
 
-            GaugeOpts memory gaugeOpts = GaugeOpts({pool: address(pool), gearStaking: address(gearStaking)});
+            GaugeV3Opts memory gaugeOpts = GaugeV3Opts({pool: address(pool), gearStaking: address(gearStaking)});
 
-            Gauge gauge = new Gauge(gaugeOpts);
+            GaugeV3 gauge = new GaugeV3(gaugeOpts);
 
-            evm.prank(ROOT_ADDRESS);
-            pqk.setGauge(address(gauge));
+            vm.prank(ROOT_ADDRESS);
+            pqk.setGaugeV3(address(gauge));
 
             for (uint256 j = 0; j < pp.quotedTokens.length; ++j) {
                 QuotedTokenParams memory qToken = pp.quotedTokens[j];
 
-                evm.startPrank(ROOT_ADDRESS);
+                vm.startPrank(ROOT_ADDRESS);
                 gauge.addQuotaToken(tokenTestSuite.addressOf(qToken.token), qToken.minRiskRate, qToken.maxRate);
 
                 pqk.setTokenLimit(tokenTestSuite.addressOf(qToken.token), qToken.limit);
-                evm.stopPrank();
+                vm.stopPrank();
             }
         }
     }
 
-    function pools() external view returns (Pool4626[] memory) {
+    function pools() external view returns (PoolV3[] memory) {
         return _pools;
     }
 }

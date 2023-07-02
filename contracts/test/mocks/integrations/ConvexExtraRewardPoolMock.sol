@@ -7,8 +7,7 @@ import "../../../integrations/convex/Interfaces.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import {ERC20Mock} from "@gearbox-protocol/core-v2/contracts/test/mocks/token/ERC20Mock.sol";
-import {CheatCodes, HEVM_ADDRESS} from "@gearbox-protocol/core-v3/contracts/test/lib/cheatCodes.sol";
+import {ERC20Mock} from "@gearbox-protocol/core-v3/contracts/test/mocks/token/ERC20Mock.sol";
 
 contract VirtualBalanceWrapper {
     using SafeMath for uint256;
@@ -29,8 +28,6 @@ contract ExtraRewardPoolMock is VirtualBalanceWrapper {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
     using SafeERC20 for ERC20Mock;
-
-    CheatCodes evm = CheatCodes(HEVM_ADDRESS);
 
     ERC20Mock public rewardToken;
     uint256 public constant duration = 7 days;
@@ -117,7 +114,7 @@ contract ExtraRewardPoolMock is VirtualBalanceWrapper {
     ///
 
     function addRewardAmount(uint256 amount) public {
-        evm.prank(rewardToken.minter());
+        vm.prank(rewardToken.minter());
         rewardToken.mint(address(this), amount);
 
         if (totalSupply() != 0) {

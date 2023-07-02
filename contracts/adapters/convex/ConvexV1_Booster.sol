@@ -120,7 +120,7 @@ contract ConvexV1BoosterAdapter is AbstractAdapter, IConvexV1BoosterAdapter {
         configuratorOnly // F: [ACVX1_B-1]
     {
         ICreditManagerV3 cm = ICreditManagerV3(creditManager);
-        ICreditConfiguratorV3 cc = ICreditConfiguratorV3(cm.creditConfigurator());
+        ICreditConfiguratorV3 cc = ICreditConfiguratorV3(cm.creditConfiguratorV3());
 
         address[] memory allowedContracts = cc.allowedAdapters();
         uint256 len = allowedContracts.length;

@@ -15,7 +15,7 @@ struct CollateralTokenHuman {
 }
 
 /// @dev A struct representing the initial Credit Manager configuration parameters
-struct CreditManagerHumanOpts {
+struct CreditManagerV3HumanOpts {
     Tokens underlying;
     /// @dev The minimal debt principal amount
     uint128 minBorrowedAmount;
@@ -23,11 +23,11 @@ struct CreditManagerHumanOpts {
     uint128 maxBorrowedAmount;
     /// @dev The initial list of collateral tokens to allow
     CollateralTokenHuman[] collateralTokens;
-    /// @dev Address of DegenNFT, address(0) if whitelisted mode is not used
+    /// @dev Address of DegenNFTV2, address(0) if whitelisted mode is not used
     address degenNFT;
     /// @dev Address of BlacklistHelper, address(0) if the underlying is not blacklistable
     address blacklistHelper;
-    /// @dev Whether the Credit Manager is connected to an expirable pool (and the CreditFacade is expirable)
+    /// @dev Whether the Credit Manager is connected to an expirable pool (and the CreditFacadeV3 is expirable)
     bool expirable;
     /// @dev Whether to skip normal initialization - used for new Credit Configurators that are deployed for existing CMs
     bool skipInit;
@@ -36,13 +36,13 @@ struct CreditManagerHumanOpts {
 }
 
 contract CreditConfigLive {
-    mapping(uint256 => CreditManagerHumanOpts) creditManagerHumanOpts;
+    mapping(uint256 => CreditManagerV3HumanOpts) CreditManagerV3HumanOpts;
     uint256 numOpts;
 
     constructor() {
-        CreditManagerHumanOpts storage cm;
+        CreditManagerV3HumanOpts storage cm;
 
-        cm = creditManagerHumanOpts[numOpts];
+        cm = CreditManagerV3HumanOpts[numOpts];
         ++numOpts;
         cm.underlying = Tokens.DAI;
         cm.minBorrowedAmount = 150000000000000000000000;
@@ -122,7 +122,7 @@ contract CreditConfigLive {
         cm.contracts.push(Contracts.CONVEX_STECRV_POOL);
         cm.contracts.push(Contracts.CONVEX_BOOSTER);
         cm.contracts.push(Contracts.UNIVERSAL_ADAPTER);
-        cm = creditManagerHumanOpts[numOpts];
+        cm = CreditManagerV3HumanOpts[numOpts];
         ++numOpts;
         cm.underlying = Tokens.USDC;
         cm.minBorrowedAmount = 150000000000;
@@ -202,7 +202,7 @@ contract CreditConfigLive {
         cm.contracts.push(Contracts.CONVEX_STECRV_POOL);
         cm.contracts.push(Contracts.CONVEX_BOOSTER);
         cm.contracts.push(Contracts.UNIVERSAL_ADAPTER);
-        cm = creditManagerHumanOpts[numOpts];
+        cm = CreditManagerV3HumanOpts[numOpts];
         ++numOpts;
         cm.underlying = Tokens.WETH;
         cm.minBorrowedAmount = 100000000000000000000;
@@ -282,7 +282,7 @@ contract CreditConfigLive {
         cm.contracts.push(Contracts.CONVEX_STECRV_POOL);
         cm.contracts.push(Contracts.CONVEX_BOOSTER);
         cm.contracts.push(Contracts.UNIVERSAL_ADAPTER);
-        cm = creditManagerHumanOpts[numOpts];
+        cm = CreditManagerV3HumanOpts[numOpts];
         ++numOpts;
         cm.underlying = Tokens.wstETH;
         cm.minBorrowedAmount = 100000000000000000000;
@@ -364,7 +364,7 @@ contract CreditConfigLive {
         cm.contracts.push(Contracts.CONVEX_BOOSTER);
         cm.contracts.push(Contracts.UNIVERSAL_ADAPTER);
         cm.contracts.push(Contracts.LIDO_WSTETH);
-        cm = creditManagerHumanOpts[numOpts];
+        cm = CreditManagerV3HumanOpts[numOpts];
         ++numOpts;
         cm.underlying = Tokens.WBTC;
         cm.minBorrowedAmount = 750000000;

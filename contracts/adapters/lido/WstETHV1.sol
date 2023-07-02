@@ -27,9 +27,9 @@ contract WstETHV1Adapter is AbstractAdapter, IwstETHV1Adapter {
     uint16 public constant override _gearboxAdapterVersion = 2;
 
     /// @notice Constructor
-    /// @param _creditManager Credit manager address
+    /// @param _CreditManagerV3 Credit manager address
     /// @param _wstETH wstETH token address
-    constructor(address _creditManager, address _wstETH) AbstractAdapter(_creditManager, _wstETH) {
+    constructor(address _CreditManagerV3, address _wstETH) AbstractAdapter(_CreditManagerV3, _wstETH) {
         stETH = IwstETH(_wstETH).stETH(); // F: [AWSTV1-1]
         wstETHTokenMask = _getMaskOrRevert(_wstETH); // F: [AWSTV1-1, AWSTV1-2]
         stETHTokenMask = _getMaskOrRevert(stETH); // F: [AWSTV1-1, AWSTV1-2]
