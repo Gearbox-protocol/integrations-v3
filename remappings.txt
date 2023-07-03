@@ -4,3 +4,4 @@ forge-std/=lib/forge-std/src/
 @1inch/=node_modules/@1inch/
 @chainlink/=node_modules/@chainlink/
 @gearbox-protocol=node_modules/@gearbox-protocol/
+@redstone-finance=node_modules/@redstone-finance/
