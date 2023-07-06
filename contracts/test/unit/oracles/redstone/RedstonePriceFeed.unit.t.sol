@@ -136,8 +136,6 @@ contract RedstonePriceFeedTest is
 
         assertEq(pf.lastPrice(), 100000000, "Last price was not set correctly");
 
-        assertEq(pf.blockLastUpdate(), block.number, "Last update block was not set correctly");
-
         assertEq(pf.lastPayloadTimestamp(), block.timestamp - 1, "Last payload timestamp was not set correctly");
 
         (, int256 answer,,,) = pf.latestRoundData();
@@ -159,8 +157,8 @@ contract RedstonePriceFeedTest is
         pf.updatePrice(data);
     }
 
-    /// @dev U: [OR-4]: updatePrice reverts if updating in a new block with an old payload
-    function test_U_OR_04_updatePrice_fails_if_updating_with_an_old_payload() public {
+    /// @dev U: [OR-4]: updatePrice does nothing if updating in a new block with an old payload
+    function test_U_OR_04_updatePrice_skips_execution_if_updating_with_an_old_payload() public {
         uint256 expectedPayloadTimestamp = block.timestamp - 1;
 
         bytes memory payload =
@@ -172,29 +170,6 @@ contract RedstonePriceFeedTest is
 
         vm.roll(block.number + 1);
 
-        expectedPayloadTimestamp = block.timestamp - 2;
-
-        payload =
-            _generateRedstonePayload(bytes32("USDC"), 100000000, uint48((block.timestamp - 2) * 1000), 10, false, false);
-
-        data = abi.encode(expectedPayloadTimestamp, payload);
-
-        vm.expectRevert(RedstonePayloadTimestampIncorrect.selector);
-
-        pf.updatePrice(data);
-    }
-
-    /// @dev U: [OR-5]: updatePrice does nothing if updating in the same block with an old payload
-    function test_U_OR_05_updatePrice_skips_execution_on_old_payload_in_same_block() public {
-        uint256 expectedPayloadTimestamp = block.timestamp - 1;
-
-        bytes memory payload =
-            _generateRedstonePayload(bytes32("USDC"), 100000000, uint48((block.timestamp - 1) * 1000), 10, false, false);
-
-        bytes memory data = abi.encode(expectedPayloadTimestamp, payload);
-
-        pf.updatePrice(data);
-
         expectedPayloadTimestamp = block.timestamp - 1;
 
         payload =
@@ -205,6 +180,8 @@ contract RedstonePriceFeedTest is
         pf.updatePrice(data);
 
         assertEq(pf.lastPrice(), 100000000, "Price was wrongly updated");
+
+        assertEq(pf.lastPayloadTimestamp(), block.timestamp - 1);
     }
 
     /// @dev U: [OR-6]: updatePrice performs an update for newer payload in the same block
@@ -227,11 +204,9 @@ contract RedstonePriceFeedTest is
 
         pf.updatePrice(data);
 
-        assertEq(pf.lastPrice(), 200000000, "Price was wrongly updated");
+        assertEq(pf.lastPrice(), 200000000, "Price wasn't correctly updated");
 
-        assertEq(pf.blockLastUpdate(), block.number, "Incorrect block of last update");
-
-        assertEq(pf.lastPayloadTimestamp(), block.timestamp + 1);
+        assertEq(pf.lastPayloadTimestamp(), block.timestamp + 1, "Incorrect last payload timestamp");
     }
 
     /// @dev U: [OR-7]: updatePrice reverts on at least 1 wrong signer
@@ -257,8 +232,6 @@ contract RedstonePriceFeedTest is
         bytes memory payload =
             _generateRedstonePayload(bytes32("USDC"), 100000000, uint48((block.timestamp - 1) * 1000), 9, false, false);
 
-        address wrongSigner = vm.addr(uint256(keccak256("WRONG")));
-
         bytes memory data = abi.encode(expectedPayloadTimestamp, payload);
 
         vm.expectRevert(abi.encodeWithSelector(InsufficientNumberOfUniqueSigners.selector, 9, 10));
@@ -277,7 +250,7 @@ contract RedstonePriceFeedTest is
 
         pf.updatePrice(data);
 
-        vm.roll(block.number + 1);
+        vm.warp(block.timestamp - 1 + pf.DEFAULT_PRICE_EXPIRATION_TIME() + 1);
 
         vm.expectRevert(RedstonePriceStaleException.selector);
 

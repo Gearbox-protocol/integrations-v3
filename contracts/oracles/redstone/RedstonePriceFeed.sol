@@ -57,6 +57,10 @@ contract RedstonePriceFeed is
     /// @notice Max period that the payload can be forward in time relative to the block
     uint256 public constant DEFAULT_MAX_DATA_TIMESTAMP_AHEAD_SECONDS = 1 minutes;
 
+    /// @notice Max time that the price feed will return the last update's price for
+    ///         If more time elapse since last update, the price feed will revert
+    uint256 public constant DEFAULT_PRICE_EXPIRATION_TIME = 4 minutes;
+
     /// @notice Price feed description
     string public override description;
 
@@ -102,9 +106,6 @@ contract RedstonePriceFeed is
 
     /// @notice The last stored price value
     uint128 public lastPrice;
-
-    /// @notice The last block at which the price was updated
-    uint40 public blockLastUpdate;
 
     /// @notice The timestamp of the last update's payload
     uint40 public lastPayloadTimestamp;
@@ -182,10 +183,6 @@ contract RedstonePriceFeed is
     /// @param expectedPayloadTimestamp Timestamp expected to be in all of the incoming payload's
     ///                                 packages
     function _validateExpectedPayloadTimestamp(uint256 expectedPayloadTimestamp) internal view {
-        if (expectedPayloadTimestamp < lastPayloadTimestamp) {
-            revert RedstonePayloadTimestampIncorrect();
-        }
-
         if ((block.timestamp < expectedPayloadTimestamp)) {
             if ((expectedPayloadTimestamp - block.timestamp) > DEFAULT_MAX_DATA_TIMESTAMP_AHEAD_SECONDS) {
                 revert RedstonePayloadTimestampIncorrect();
@@ -209,10 +206,10 @@ contract RedstonePriceFeed is
     function updatePrice(bytes calldata data) external {
         (uint256 expectedPayloadTimestamp, bytes memory payload) = abi.decode(data, (uint256, bytes));
 
-        // Normally, we want to minimize price update execution if the price was already updated in the same block.
-        // However, in order to prevent attacks where the previous payload is pushed every block in order to prevent price updates,
-        // we also need to allow pushing newer payloads even if the price was already updated this block
-        if (blockLastUpdate == block.number && expectedPayloadTimestamp <= lastPayloadTimestamp) return;
+        // We want to minimize price update execution, in case, e.g., when several users submit
+        // the same price update in a short span of time. So only updates with a larger payload timestamp
+        // are fully validated and applied
+        if (expectedPayloadTimestamp <= lastPayloadTimestamp) return;
 
         // We validate and set the payload timestamp here. Data packages' timestamps being equal
         // to the expected timestamp is checked in `validateTimestamp()`, which is called
@@ -240,8 +237,6 @@ contract RedstonePriceFeed is
 
         if (priceValue == 0) revert ZeroPriceException();
 
-        blockLastUpdate = block.number.toUint40();
-
         if (priceValue != lastPrice) {
             lastPrice = priceValue.toUint128();
             emit PriceUpdated(priceValue);
@@ -251,7 +246,9 @@ contract RedstonePriceFeed is
     /// @notice Returns the USD price of the token (as the second returned value)
     /// @dev Since Redstone oracles do not adhere to Chainlink's interface, extra metadata is returned as 0
     function latestRoundData() external view override returns (uint80, int256, uint256, uint256, uint80) {
-        if (blockLastUpdate != block.number) revert RedstonePriceStaleException();
+        if (lastPayloadTimestamp + DEFAULT_PRICE_EXPIRATION_TIME < block.timestamp) {
+            revert RedstonePriceStaleException();
+        }
 
         int256 answer = int256(uint256(lastPrice));
 
