@@ -11,6 +11,8 @@ import {NotImplementedException} from "@gearbox-protocol/core-v2/contracts/inter
 import {IUpdatablePriceFeed} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacadeV3Multicall.sol";
 import {AggregatorV3Interface} from "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
 
+import "forge-std/console.sol";
+
 interface IRedstonePriceFeedExceptions {
     /// @dev Thrown no non-zero signers are passed
     ///      or the signer set is smaller than required threshold
@@ -22,6 +24,21 @@ interface IRedstonePriceFeedExceptions {
     /// @dev Thrown when attempting to access a price value
     ///      that wasn't submitted in the current block
     error RedstonePriceStaleException();
+
+    /// @dev Thrown when attempting to push an update
+    ///      with the payload that is older than the last
+    ///      update payload, or too far from the current block
+    ///      timestamp
+    error RedstonePayloadTimestampIncorrect();
+
+    /// @dev Thrown when data package timestamp is not equal to expected
+    ///      payload timestamp
+    error DataPackageTimestampIncorrect();
+}
+
+interface IRedstonePriceFeedEvents {
+    /// @dev Emitted when a successful price update is pushed
+    event PriceUpdated(uint256 price);
 }
 
 contract RedstonePriceFeed is
@@ -29,9 +46,16 @@ contract RedstonePriceFeed is
     IUpdatablePriceFeed,
     IPriceFeedType,
     AggregatorV3Interface,
-    IRedstonePriceFeedExceptions
+    IRedstonePriceFeedExceptions,
+    IRedstonePriceFeedEvents
 {
     using SafeCast for uint256;
+
+    /// @notice Max period that the payload can be backward in time relative to the block
+    uint256 public constant DEFAULT_MAX_DATA_TIMESTAMP_DELAY_SECONDS = 3 minutes;
+
+    /// @notice Max period that the payload can be forward in time relative to the block
+    uint256 public constant DEFAULT_MAX_DATA_TIMESTAMP_AHEAD_SECONDS = 1 minutes;
 
     /// @notice Price feed description
     string public override description;
@@ -82,8 +106,11 @@ contract RedstonePriceFeed is
     /// @notice The last block at which the price was updated
     uint40 public blockLastUpdate;
 
+    /// @notice The timestamp of the last update's payload
+    uint40 public lastPayloadTimestamp;
+
     /// @dev Contract version
-    uint256 public constant override version = 1;
+    uint256 public constant override version = 3_00;
 
     /// @dev Whether to skip price sanity checks.
     /// @notice Always set to true for Redstone oracle,
@@ -94,7 +121,7 @@ contract RedstonePriceFeed is
     PriceFeedType public constant override priceFeedType = PriceFeedType.REDSTONE_ORACLE;
 
     constructor(string memory tokenSymbol, bytes32 _dataFeedId, address[10] memory _signers, uint8 _signersThreshold) {
-        if (_signersThreshold > 8) revert InvalidSignerSetException();
+        if (_signersThreshold > 10) revert InvalidSignerSetException();
         for (uint256 i = 0; i < _signersThreshold; ++i) {
             if (_signers[i] == address(0)) revert InvalidSignerSetException();
         }
@@ -138,6 +165,36 @@ contract RedstonePriceFeed is
         revert SignerNotAuthorised(signerAddress);
     }
 
+    /// @notice Validates that a timestamp in a data package is valid
+    /// @dev Sanity checks on the timestamp are performed earlier in the update,
+    ///      when the lastPayloadTimestamp is being set
+    /// @param receivedTimestampMilliseconds Timestamp in the data package, in milliseconds
+    function validateTimestamp(uint256 receivedTimestampMilliseconds) public view override {
+        uint256 receivedTimestampSeconds = receivedTimestampMilliseconds / 1000;
+
+        if (receivedTimestampSeconds != lastPayloadTimestamp) {
+            revert DataPackageTimestampIncorrect();
+        }
+    }
+
+    /// @dev Validates that the expected payload timestamp is not older than the last payload's,
+    ///      and not too far from the current block's
+    /// @param expectedPayloadTimestamp Timestamp expected to be in all of the incoming payload's
+    ///                                 packages
+    function _validateExpectedPayloadTimestamp(uint256 expectedPayloadTimestamp) internal view {
+        if (expectedPayloadTimestamp < lastPayloadTimestamp) {
+            revert RedstonePayloadTimestampIncorrect();
+        }
+
+        if ((block.timestamp < expectedPayloadTimestamp)) {
+            if ((expectedPayloadTimestamp - block.timestamp) > DEFAULT_MAX_DATA_TIMESTAMP_AHEAD_SECONDS) {
+                revert RedstonePayloadTimestampIncorrect();
+            }
+        } else if ((block.timestamp - expectedPayloadTimestamp) > DEFAULT_MAX_DATA_TIMESTAMP_DELAY_SECONDS) {
+            revert RedstonePayloadTimestampIncorrect();
+        }
+    }
+
     /// @notice Returns a validated price value extracted from Redstone payload
     /// @dev A valid Redstone payload has to be attached to the function's normal calldata,
     ///      otherwise this would revert
@@ -146,13 +203,26 @@ contract RedstonePriceFeed is
     }
 
     /// @notice Saves validated price retrieved from the passed Redstone payload
-    /// @param data A Redstone payload with price update
+    /// @param data A data blob with with 2 parts:
+    ///             - A timestamp expected to be in all Redstone data packages
+    ///             - Redstone payload with price update
     function updatePrice(bytes calldata data) external {
-        if (blockLastUpdate == block.number) return;
+        (uint256 expectedPayloadTimestamp, bytes memory payload) = abi.decode(data, (uint256, bytes));
+
+        // Normally, we want to minimize price update execution if the price was already updated in the same block.
+        // However, in order to prevent attacks where the previous payload is pushed every block in order to prevent price updates,
+        // we also need to allow pushing newer payloads even if the price was already updated this block
+        if (blockLastUpdate == block.number && expectedPayloadTimestamp <= lastPayloadTimestamp) return;
+
+        // We validate and set the payload timestamp here. Data packages' timestamps being equal
+        // to the expected timestamp is checked in `validateTimestamp()`, which is called
+        // from inside `getOracleNumericValueFromTxMsg`
+        _validateExpectedPayloadTimestamp(expectedPayloadTimestamp);
+        lastPayloadTimestamp = uint40(expectedPayloadTimestamp);
 
         // Prepare call to RedStone base function
         bytes memory encodedFunction = abi.encodeCall(this.getValidatedValue, ());
-        bytes memory encodedFunctionWithRedstonePayload = abi.encodePacked(encodedFunction, data);
+        bytes memory encodedFunctionWithRedstonePayload = abi.encodePacked(encodedFunction, payload);
 
         // Securely getting oracle value
         (bool success, bytes memory result) = address(this).staticcall(encodedFunctionWithRedstonePayload);
@@ -170,8 +240,12 @@ contract RedstonePriceFeed is
 
         if (priceValue == 0) revert ZeroPriceException();
 
-        lastPrice = priceValue.toUint128();
         blockLastUpdate = block.number.toUint40();
+
+        if (priceValue != lastPrice) {
+            lastPrice = priceValue.toUint128();
+            emit PriceUpdated(priceValue);
+        }
     }
 
     /// @notice Returns the USD price of the token (as the second returned value)
