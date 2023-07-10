@@ -7,7 +7,11 @@ import {ICreditManagerV2Exceptions} from "@gearbox-protocol/core-v2/contracts/in
 
 import {IUniswapV2Router02} from "../../../integrations/uniswap/IUniswapV2Router02.sol";
 import {UniswapV2Adapter} from "../../../adapters/uniswap/UniswapV2.sol";
-import {IUniswapV2Adapter, IUniswapV2AdapterExceptions} from "../../../interfaces/uniswap/IUniswapV2Adapter.sol";
+import {
+    IUniswapV2Adapter,
+    IUniswapV2AdapterExceptions,
+    UniswapPairStatus
+} from "../../../interfaces/uniswap/IUniswapV2Adapter.sol";
 import {UniswapV2Mock} from "../../mocks/integrations/UniswapV2Mock.sol";
 
 import {Tokens} from "../../suites/TokensTestSuite.sol";
@@ -42,16 +46,21 @@ contract UniswapV2AdapterTest is AdapterTestHelper, IUniswapV2AdapterExceptions 
 
         tokenTestSuite.mint(Tokens.WETH, address(uniswapMock), (2 * DAI_ACCOUNT_AMOUNT) / DAI_WETH_RATE);
 
-        address[] memory connectors = new address[](2);
-
-        connectors[0] = tokenTestSuite.addressOf(Tokens.USDC);
-        connectors[1] = tokenTestSuite.addressOf(Tokens.USDT);
-
         adapter = new UniswapV2Adapter(
             address(creditManager),
-            address(uniswapMock),
-            connectors
+            address(uniswapMock)
         );
+
+        UniswapPairStatus[] memory pairs = new UniswapPairStatus[](1);
+
+        pairs[0] = UniswapPairStatus({
+            token0: creditManager.underlying(),
+            token1: tokenTestSuite.addressOf(Tokens.WETH),
+            allowed: true
+        });
+
+        evm.prank(CONFIGURATOR);
+        UniswapV2Adapter(address(adapter)).setPairBatchAllowanceStatus(pairs);
 
         evm.prank(CONFIGURATOR);
         creditConfigurator.allowContract(address(uniswapMock), address(adapter));
@@ -284,17 +293,28 @@ contract UniswapV2AdapterTest is AdapterTestHelper, IUniswapV2AdapterExceptions 
             abi.encodeCall(adapter.swapExactTokensForTokens, (DAI_EXCHANGE_AMOUNT, 0, path, address(0), deadline))
         );
 
-        path = new address[](4);
-        path[0] = creditManager.underlying();
-        path[1] = tokenTestSuite.addressOf(Tokens.LINK);
-        path[2] = tokenTestSuite.addressOf(Tokens.USDT);
-        path[3] = tokenTestSuite.addressOf(Tokens.WETH);
+        UniswapPairStatus[] memory pairs = new UniswapPairStatus[](3);
 
-        evm.expectRevert(InvalidPathException.selector);
-        executeOneLineMulticall(
-            address(adapter),
-            abi.encodeCall(adapter.swapExactTokensForTokens, (DAI_EXCHANGE_AMOUNT, 0, path, address(0), deadline))
-        );
+        pairs[0] = UniswapPairStatus({
+            token0: creditManager.underlying(),
+            token1: tokenTestSuite.addressOf(Tokens.USDC),
+            allowed: true
+        });
+
+        pairs[1] = UniswapPairStatus({
+            token0: tokenTestSuite.addressOf(Tokens.USDC),
+            token1: tokenTestSuite.addressOf(Tokens.USDT),
+            allowed: true
+        });
+
+        pairs[2] = UniswapPairStatus({
+            token0: tokenTestSuite.addressOf(Tokens.USDT),
+            token1: tokenTestSuite.addressOf(Tokens.WETH),
+            allowed: true
+        });
+
+        evm.prank(CONFIGURATOR);
+        UniswapV2Adapter(address(adapter)).setPairBatchAllowanceStatus(pairs);
 
         path = new address[](4);
         path[0] = creditManager.underlying();
