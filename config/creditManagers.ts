@@ -4,8 +4,69 @@
 import { UNISWAP_V3_QUOTER, WAD } from "@gearbox-protocol/sdk";
 import { BigNumber } from "ethers";
 
-import { CMConfig } from "../core/pool";
+import {
+  CMConfig,
+  UniswapV2PairConfig,
+  UniswapV3PoolConfig,
+} from "../core/pool";
 import { adapters } from "./adapters";
+
+const standardUniV2Config: Array<UniswapV2PairConfig> = [
+  { token0: "WETH", token1: "USDT" },
+  { token0: "USDC", token1: "WETH" },
+  { token0: "USDC", token1: "USDT" },
+  { token0: "DAI", token1: "USDC" },
+  { token0: "DAI", token1: "WETH" },
+  { token0: "FXS", token1: "FRAX" },
+  { token0: "WBTC", token1: "WETH" },
+];
+
+const standardUniV3Config: Array<UniswapV3PoolConfig> = [
+  { token0: "SNX", token1: "WETH", fee: 3000 },
+  { token0: "WBTC", token1: "WETH", fee: 500 },
+  { token0: "DAI", token1: "WETH", fee: 500 },
+  { token0: "WBTC", token1: "WETH", fee: 3000 },
+  { token0: "DAI", token1: "WETH", fee: 3000 },
+  { token0: "USDC", token1: "WETH", fee: 500 },
+  { token0: "LDO", token1: "WETH", fee: 3000 },
+  { token0: "USDC", token1: "WETH", fee: 10000 },
+  { token0: "LDO", token1: "WETH", fee: 10000 },
+  { token0: "LQTY", token1: "WETH", fee: 3000 },
+  { token0: "FXS", token1: "WETH", fee: 10000 },
+  { token0: "USDC", token1: "WETH", fee: 3000 },
+  { token0: "DAI", token1: "WETH", fee: 10000 },
+  { token0: "WETH", token1: "USDT", fee: 3000 },
+  { token0: "FRAX", token1: "USDT", fee: 500 },
+  { token0: "WETH", token1: "USDT", fee: 500 },
+  { token0: "USDC", token1: "USDT", fee: 500 },
+  { token0: "WBTC", token1: "USDT", fee: 3000 },
+  { token0: "WETH", token1: "USDT", fee: 10000 },
+  { token0: "DAI", token1: "USDT", fee: 100 },
+  { token0: "USDC", token1: "USDT", fee: 10000 },
+  { token0: "USDC", token1: "USDT", fee: 3000 },
+  { token0: "FXS", token1: "USDT", fee: 3000 },
+  { token0: "USDC", token1: "USDT", fee: 100 },
+  { token0: "LUSD", token1: "USDC", fee: 500 },
+  { token0: "FRAX", token1: "USDC", fee: 100 },
+  { token0: "LUSD", token1: "USDC", fee: 3000 },
+  { token0: "FRAX", token1: "USDC", fee: 500 },
+  { token0: "DAI", token1: "USDC", fee: 500 },
+  { token0: "WBTC", token1: "USDC", fee: 3000 },
+  { token0: "LDO", token1: "USDC", fee: 10000 },
+  { token0: "WBTC", token1: "USDC", fee: 10000 },
+  { token0: "WBTC", token1: "USDC", fee: 500 },
+  { token0: "DAI", token1: "USDC", fee: 100 },
+  { token0: "WBTC", token1: "LQTY", fee: 10000 },
+  { token0: "sUSD", token1: "FRAX", fee: 500 },
+  { token0: "DAI", token1: "FRAX", fee: 500 },
+  { token0: "FXS", token1: "FRAX", fee: 10000 },
+  { token0: "WBTC", token1: "DAI", fee: 3000 },
+  { token0: "FXS", token1: "CVX", fee: 3000 },
+  { token0: "CVX", token1: "CRV", fee: 10000 },
+  { token0: "WETH", token1: "CRV", fee: 3000 },
+  { token0: "WETH", token1: "CRV", fee: 10000 },
+  { token0: "WETH", token1: "CVX", fee: 10000 },
+];
 
 export const mainnetCreditManagers: Array<CMConfig> = [
   {
@@ -68,6 +129,8 @@ export const mainnetCreditManagers: Array<CMConfig> = [
       { symbol: "LDO", liquidationThreshold: 0 },
       { symbol: "SNX", liquidationThreshold: 25 }, // Token address is token from priceFeed map above
     ],
+    uniV2Pairs: standardUniV2Config,
+    uniV3Pools: standardUniV3Config,
     adapters,
   },
   {
@@ -129,6 +192,8 @@ export const mainnetCreditManagers: Array<CMConfig> = [
       { symbol: "LDO", liquidationThreshold: 0 },
       { symbol: "SNX", liquidationThreshold: 25 }, // Token address is token from priceFeed map above
     ],
+    uniV2Pairs: standardUniV2Config,
+    uniV3Pools: standardUniV3Config,
     adapters,
   },
 
@@ -192,6 +257,8 @@ export const mainnetCreditManagers: Array<CMConfig> = [
       { symbol: "LDO", liquidationThreshold: 0 },
       { symbol: "SNX", liquidationThreshold: 25 }, // Token address is token from priceFeed map above
     ],
+    uniV2Pairs: standardUniV2Config,
+    uniV3Pools: standardUniV3Config,
     adapters,
   },
 
@@ -256,6 +323,8 @@ export const mainnetCreditManagers: Array<CMConfig> = [
       { symbol: "LDO", liquidationThreshold: 0 },
       { symbol: "SNX", liquidationThreshold: 25 }, // Token address is token from priceFeed map above
     ],
+    uniV2Pairs: standardUniV2Config,
+    uniV3Pools: standardUniV3Config,
     adapters: [...adapters, "LIDO_WSTETH"],
   },
 
@@ -319,6 +388,8 @@ export const mainnetCreditManagers: Array<CMConfig> = [
       { symbol: "LDO", liquidationThreshold: 0 },
       { symbol: "SNX", liquidationThreshold: 25 }, // Token address is token from priceFeed map above
     ],
+    uniV2Pairs: standardUniV2Config,
+    uniV3Pools: standardUniV3Config,
     adapters,
   },
   {
@@ -381,6 +452,8 @@ export const mainnetCreditManagers: Array<CMConfig> = [
       { symbol: "LDO", liquidationThreshold: 0 },
       { symbol: "SNX", liquidationThreshold: 25 }, // Token address is token from priceFeed map above
     ],
+    uniV2Pairs: standardUniV2Config,
+    uniV3Pools: standardUniV3Config,
     adapters,
   },
   {
@@ -441,6 +514,8 @@ export const mainnetCreditManagers: Array<CMConfig> = [
       { symbol: "SNX", liquidationThreshold: 25 }, // Token address is token from priceFeed map above
       { symbol: "SPELL", liquidationThreshold: 25 },
     ],
+    uniV2Pairs: standardUniV2Config,
+    uniV3Pools: standardUniV3Config,
     adapters: [
       /// SWAPPERS
       "UNISWAP_V3_ROUTER",
@@ -519,11 +594,6 @@ export const mainnetCreditManagers: Array<CMConfig> = [
       { symbol: "LDO", liquidationThreshold: 25 },
     ],
     adapters: [
-      /// SWAPPERS
-      "UNISWAP_V3_ROUTER",
-      "UNISWAP_V2_ROUTER",
-      "SUSHISWAP_ROUTER",
-
       // CURVE
       "CURVE_3CRYPTO_POOL",
       "CURVE_CRVETH_POOL",

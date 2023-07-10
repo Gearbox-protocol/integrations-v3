@@ -20,6 +20,17 @@ struct BalancerPool {
     PoolStatus status;
 }
 
+struct UniswapV2Pair {
+    Tokens token0;
+    Tokens token1;
+}
+
+struct UniswapV3Pool {
+    Tokens token0;
+    Tokens token1;
+    uint24 fee;
+}
+
 /// @dev A struct representing the initial Credit Manager configuration parameters
 struct CreditManagerHumanOpts {
     Tokens underlying;
@@ -41,6 +52,10 @@ struct CreditManagerHumanOpts {
     Contracts[] contracts;
     /// @dev List of balancer pools to add to the balancer vault adapter
     BalancerPool[] balancerPools;
+    /// @dev List of UniswapV2 pairs to add to the UniswapV2 adapter
+    UniswapV2Pair[] uniswapV2Pairs;
+    /// @dev List of UniswapV3 pools to add to the UniswapV3 adapter
+    UniswapV3Pool[] uniswapV3Pools;
 }
 
 contract CreditConfigLive {

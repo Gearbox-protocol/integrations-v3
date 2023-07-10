@@ -25,6 +25,10 @@ import {Balance} from "@gearbox-protocol/core-v2/contracts/libraries/Balances.so
 import {IAdapter, AdapterType} from "@gearbox-protocol/core-v2/contracts/interfaces/adapters/IAdapter.sol";
 import {IConvexV1BoosterAdapter} from "../../interfaces/convex/IConvexV1BoosterAdapter.sol";
 import {BalancerV2VaultAdapter} from "../../adapters/balancer/BalancerV2VaultAdapter.sol";
+import {UniswapV2Adapter} from "../../adapters/uniswap/UniswapV2.sol";
+import {UniswapV3Adapter} from "../../adapters/uniswap/UniswapV3.sol";
+import {UniswapPairStatus} from "../../interfaces/uniswap/IUniswapV2Adapter.sol";
+import {UniswapV3PoolStatus} from "../../interfaces/uniswap/IUniswapV3Adapter.sol";
 import {BlacklistHelper} from "@gearbox-protocol/core-v2/contracts/support/BlacklistHelper.sol";
 import {PoolService} from "@gearbox-protocol/core-v2/contracts/pool/PoolService.sol";
 
@@ -38,7 +42,13 @@ import {DegenNFT} from "@gearbox-protocol/core-v2/contracts/tokens/DegenNFT.sol"
 
 import "../lib/constants.sol";
 
-import {CreditConfigLive, CreditManagerHumanOpts, BalancerPool} from "../config/CreditConfigLive.sol";
+import {
+    CreditConfigLive,
+    CreditManagerHumanOpts,
+    BalancerPool,
+    UniswapV2Pair,
+    UniswapV3Pool
+} from "../config/CreditConfigLive.sol";
 import {AdapterDeployer} from "./AdapterDeployer.sol";
 import {Contracts, SupportedContracts} from "../config/SupportedContracts.sol";
 
@@ -314,6 +324,8 @@ contract LiveEnvTestSuite is CreditConfigLive {
                             }
                             evm.stopPrank();
 
+                            _configureUniswapV2Pairs(address(cmf.creditManager()), i);
+                            _configureUniswapV3Pools(address(cmf.creditManager()), i);
                             _configureConvexPhantomTokens(address(cmf.creditManager()));
                             _configureBalancerPools(address(cmf.creditManager()), i);
                         }
@@ -371,6 +383,8 @@ contract LiveEnvTestSuite is CreditConfigLive {
                             creditFacadeMocks[underlyingT] = cmf.creditFacade();
                             creditConfiguratorMocks[underlyingT] = cmf.creditConfigurator();
 
+                            _configureUniswapV2Pairs(address(cmf.creditManager()), i);
+                            _configureUniswapV3Pools(address(cmf.creditManager()), i);
                             _configureConvexPhantomTokens(address(cmf.creditManager()));
                             _configureBalancerPools(address(cmf.creditManager()), i);
                         }
@@ -457,6 +471,49 @@ contract LiveEnvTestSuite is CreditConfigLive {
             evm.prank(ROOT_ADDRESS);
             BalancerV2VaultAdapter(balancerAdapter).setPoolIDStatus(bPools[i].poolId, bPools[i].status);
         }
+    }
+
+    function _configureUniswapV2Pairs(address creditManager, uint256 configIdx) internal {
+        UniswapV2Pair[] memory uniV2Pairs = creditManagerHumanOpts[configIdx].uniswapV2Pairs;
+
+        if (uniV2Pairs.length == 0) return;
+
+        UniswapPairStatus[] memory pairs = new UniswapPairStatus[](uniV2Pairs.length);
+
+        for (uint256 i = 0; i < uniV2Pairs.length; ++i) {
+            pairs[i] = UniswapPairStatus({
+                token0: tokenTestSuite.addressOf(uniV2Pairs[i].token0),
+                token1: tokenTestSuite.addressOf(uniV2Pairs[i].token1),
+                allowed: true
+            });
+        }
+
+        address uniV2Adapter = getAdapter(creditManager, Contracts.UNISWAP_V2_ROUTER);
+
+        evm.prank(ROOT_ADDRESS);
+        UniswapV2Adapter(uniV2Adapter).setPairBatchAllowanceStatus(pairs);
+    }
+
+    function _configureUniswapV3Pools(address creditManager, uint256 configIdx) internal {
+        UniswapV3Pool[] memory uniV3Pools = creditManagerHumanOpts[configIdx].uniswapV3Pools;
+
+        if (uniV3Pools.length == 0) return;
+
+        UniswapV3PoolStatus[] memory pools = new UniswapV3PoolStatus[](uniV3Pools.length);
+
+        for (uint256 i = 0; i < uniV3Pools.length; ++i) {
+            pools[i] = UniswapV3PoolStatus({
+                token0: tokenTestSuite.addressOf(uniV3Pools[i].token0),
+                token1: tokenTestSuite.addressOf(uniV3Pools[i].token1),
+                fee: uniV3Pools[i].fee,
+                allowed: true
+            });
+        }
+
+        address uniV3Adapter = getAdapter(creditManager, Contracts.UNISWAP_V3_ROUTER);
+
+        evm.prank(ROOT_ADDRESS);
+        UniswapV3Adapter(uniV3Adapter).setPoolBatchAllowanceStatus(pools);
     }
 
     function _setPools(ContractsRegister cr) internal {

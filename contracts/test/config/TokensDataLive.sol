@@ -208,57 +208,57 @@ contract TokensDataLive {
                 tokenType: TokenType.CURVE_LP_TOKEN
             });
             td[32] = TokenData({
+                id: Tokens.OHMFRAXBP,
+                addr: 0x5271045F7B73c17825A7A7aee6917eE46b0B7520,
+                symbol: "OHMFRAXBP",
+                tokenType: TokenType.CURVE_LP_TOKEN
+            });
+            td[33] = TokenData({
                 id: Tokens.crvCRVETH,
                 addr: 0xEd4064f376cB8d68F770FB1Ff088a3d0F3FF5c4d,
                 symbol: "crvCRVETH",
                 tokenType: TokenType.CURVE_LP_TOKEN
             });
-            td[33] = TokenData({
+            td[34] = TokenData({
                 id: Tokens.crvCVXETH,
                 addr: 0x3A283D9c08E8b55966afb64C515f5143cf907611,
                 symbol: "crvCVXETH",
                 tokenType: TokenType.CURVE_LP_TOKEN
             });
-            td[34] = TokenData({
+            td[35] = TokenData({
                 id: Tokens.crvUSDTWBTCWETH,
                 addr: 0xf5f5B97624542D72A9E06f04804Bf81baA15e2B4,
                 symbol: "crvUSDTWBTCWETH",
                 tokenType: TokenType.CURVE_LP_TOKEN
             });
-            td[35] = TokenData({
+            td[36] = TokenData({
                 id: Tokens.LDOETH,
                 addr: 0xb79565c01b7Ae53618d9B847b9443aAf4f9011e7,
                 symbol: "LDOETH",
                 tokenType: TokenType.CURVE_LP_TOKEN
             });
-            td[36] = TokenData({
+            td[37] = TokenData({
                 id: Tokens.FRAX3CRV,
                 addr: 0xd632f22692FaC7611d2AA1C0D552930D43CAEd3B,
                 symbol: "FRAX3CRV",
                 tokenType: TokenType.CURVE_LP_TOKEN
             });
-            td[37] = TokenData({
+            td[38] = TokenData({
                 id: Tokens.LUSD3CRV,
                 addr: 0xEd279fDD11cA84bEef15AF5D39BB4d4bEE23F0cA,
                 symbol: "LUSD3CRV",
                 tokenType: TokenType.CURVE_LP_TOKEN
             });
-            td[38] = TokenData({
+            td[39] = TokenData({
                 id: Tokens.gusd3CRV,
                 addr: 0xD2967f45c4f384DEEa880F807Be904762a3DeA07,
                 symbol: "gusd3CRV",
                 tokenType: TokenType.CURVE_LP_TOKEN
             });
-            td[39] = TokenData({
+            td[40] = TokenData({
                 id: Tokens.MIM_3LP3CRV,
                 addr: 0x5a6A4D54456819380173272A5E8E9B9904BdF41B,
                 symbol: "MIM_3LP3CRV",
-                tokenType: TokenType.CURVE_LP_TOKEN
-            });
-            td[40] = TokenData({
-                id: Tokens.OHMFRAXBP,
-                addr: 0x5271045F7B73c17825A7A7aee6917eE46b0B7520,
-                symbol: "OHMFRAXBP",
                 tokenType: TokenType.CURVE_LP_TOKEN
             });
             td[41] = TokenData({
@@ -335,7 +335,7 @@ contract TokensDataLive {
             });
             td[53] = TokenData({
                 id: Tokens.cvxLDOETH,
-                addr: 0x4eBE557ae39F87D2a014719777FD4cF4d01Dc8Ee,
+                addr: 0xD533a949740bb3306d119CC777fa900bA034cd52,
                 symbol: "cvxLDOETH",
                 tokenType: TokenType.CONVEX_LP_TOKEN
             });
@@ -693,53 +693,53 @@ contract TokensDataLive {
                 tokenType: TokenType.CURVE_LP_TOKEN
             });
             td[32] = TokenData({
+                id: Tokens.OHMFRAXBP,
+                addr: address(0),
+                symbol: "OHMFRAXBP",
+                tokenType: TokenType.CURVE_LP_TOKEN
+            });
+            td[33] = TokenData({
                 id: Tokens.crvCRVETH,
                 addr: address(0),
                 symbol: "crvCRVETH",
                 tokenType: TokenType.CURVE_LP_TOKEN
             });
-            td[33] = TokenData({
+            td[34] = TokenData({
                 id: Tokens.crvCVXETH,
                 addr: address(0),
                 symbol: "crvCVXETH",
                 tokenType: TokenType.CURVE_LP_TOKEN
             });
-            td[34] = TokenData({
+            td[35] = TokenData({
                 id: Tokens.crvUSDTWBTCWETH,
                 addr: address(0),
                 symbol: "crvUSDTWBTCWETH",
                 tokenType: TokenType.CURVE_LP_TOKEN
             });
-            td[35] =
+            td[36] =
                 TokenData({id: Tokens.LDOETH, addr: address(0), symbol: "LDOETH", tokenType: TokenType.CURVE_LP_TOKEN});
-            td[36] = TokenData({
+            td[37] = TokenData({
                 id: Tokens.FRAX3CRV,
                 addr: 0x12Ad3125C67eC5325Cc94AFdA8B26cd12BCe1E9b,
                 symbol: "FRAX3CRV",
                 tokenType: TokenType.CURVE_LP_TOKEN
             });
-            td[37] = TokenData({
+            td[38] = TokenData({
                 id: Tokens.LUSD3CRV,
                 addr: 0x348B1846b87cA12D23A9A4E73B1CfAc2Aad49cf4,
                 symbol: "LUSD3CRV",
                 tokenType: TokenType.CURVE_LP_TOKEN
             });
-            td[38] = TokenData({
+            td[39] = TokenData({
                 id: Tokens.gusd3CRV,
                 addr: 0xbD919fcC47ae2b5Cc2fe646971aCcB1e88843DC5,
                 symbol: "gusd3CRV",
                 tokenType: TokenType.CURVE_LP_TOKEN
             });
-            td[39] = TokenData({
+            td[40] = TokenData({
                 id: Tokens.MIM_3LP3CRV,
                 addr: address(0),
                 symbol: "MIM_3LP3CRV",
-                tokenType: TokenType.CURVE_LP_TOKEN
-            });
-            td[40] = TokenData({
-                id: Tokens.OHMFRAXBP,
-                addr: address(0),
-                symbol: "OHMFRAXBP",
                 tokenType: TokenType.CURVE_LP_TOKEN
             });
             td[41] = TokenData({
