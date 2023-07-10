@@ -8,6 +8,7 @@ import {TokensTestSuite} from "./TokensTestSuite.sol";
 import {LivePriceFeedDeployer} from "./LivePriceFeedDeployer.sol";
 import {IDataCompressor} from "@gearbox-protocol/core-v2/contracts/interfaces/IDataCompressor.sol";
 import {CreditManagerData} from "@gearbox-protocol/core-v2/contracts/libraries/Types.sol";
+import {AddressList} from "@gearbox-protocol/core-v2/contracts/libraries/AddressList.sol";
 
 import {AddressProvider} from "@gearbox-protocol/core-v2/contracts/core/AddressProvider.sol";
 
@@ -47,6 +48,8 @@ address constant ADDRESS_PROVIDER_GOERLI = 0x95f4cea53121b8A2Cb783C6BFB0915cEc44
 /// @title LiveEnvTestSuite
 /// @notice Test suite for mainnet test
 contract LiveEnvTestSuite is CreditConfigLive {
+    using AddressList for address[];
+
     CheatCodes evm = CheatCodes(HEVM_ADDRESS);
 
     address public ROOT_ADDRESS;
@@ -129,8 +132,10 @@ contract LiveEnvTestSuite is CreditConfigLive {
 
                         IPoolService pool = IPoolService(CreditManager(cmList[i].addr).pool());
 
-                        pools[underlyingT] = PoolService(address(pool));
-                        supportedUnderlyings.push(underlyingT);
+                        if (address(pools[underlyingT]) == address(0)) {
+                            pools[underlyingT] = PoolService(address(pool));
+                            supportedUnderlyings.push(underlyingT);
+                        }
 
                         uint256 expectedLiquidityUSD =
                             priceOracle.convertToUSD(pool.expectedLiquidity(), tokenTestSuite.addressOf(underlyingT));
@@ -230,7 +235,7 @@ contract LiveEnvTestSuite is CreditConfigLive {
                             address underlying = tokenTestSuite.addressOf(underlyingT);
 
                             (CreditManagerOpts memory cmOpts, Contracts[] memory adaptersList) =
-                                getCreditManagerConfig(i);
+                                getCreditManagerConfig(i, false);
 
                             if (
                                 (underlyingT == Tokens.USDC || underlyingT == Tokens.USDT)
@@ -262,7 +267,8 @@ contract LiveEnvTestSuite is CreditConfigLive {
                                         _creditManagers[underlyingT].length + 1,
                                         "_"
                                     )
-                                )
+                                ),
+                                false
                             );
                             cmf.addAdapters(ad.getAdapters());
 
@@ -314,11 +320,11 @@ contract LiveEnvTestSuite is CreditConfigLive {
 
                         // MOCK CREDIT MANAGERS
                         // Mock credit managers skip health checks
-                        if (address(creditManagerMocks[underlyingT]) != address(0)) {
+                        if (underlyingT == Tokens.DAI || underlyingT == Tokens.wstETH) {
                             address underlying = tokenTestSuite.addressOf(underlyingT);
 
                             (CreditManagerOpts memory cmOpts, Contracts[] memory adaptersList) =
-                                getCreditManagerConfig(i);
+                                getCreditManagerConfig(i, true);
 
                             CreditManagerMockFactory cmf = new CreditManagerMockFactory(
                                     address(pools[underlyingT]),
@@ -339,7 +345,8 @@ contract LiveEnvTestSuite is CreditConfigLive {
                                         underlyingSymbol,
                                         "_"
                                     )
-                                )
+                                ),
+                                true
                             );
                             cmf.addAdapters(ad.getAdapters());
 
@@ -465,32 +472,84 @@ contract LiveEnvTestSuite is CreditConfigLive {
             pools[underlyingT] = PoolService(poolsList[i]);
             supportedUnderlyings.push(underlyingT);
             evm.label(poolsList[i], string(abi.encodePacked("POOL_", underlyingSymbol)));
+
+            {
+                IPoolService pool = pools[underlyingT];
+
+                uint256 expectedLiquidityUSD =
+                    priceOracle.convertToUSD(pool.expectedLiquidity(), tokenTestSuite.addressOf(underlyingT));
+                uint256 oneMillionUSD = 1_000_000 * 10 ** 8;
+                if (expectedLiquidityUSD < oneMillionUSD) {
+                    uint256 amountUSD = oneMillionUSD - expectedLiquidityUSD;
+                    uint256 amount = priceOracle.convertFromUSD(amountUSD, tokenTestSuite.addressOf(underlyingT));
+                    tokenTestSuite.mint(underlyingT, FRIEND, amount);
+                    tokenTestSuite.approve(underlyingT, FRIEND, address(pool));
+
+                    evm.prank(FRIEND);
+                    pool.addLiquidity(amount, FRIEND, 0);
+                }
+            }
         }
     }
 
-    function getCreditManagerConfig(uint256 idx)
+    function getCreditManagerConfig(uint256 idx, bool isMock)
         internal
         view
         returns (CreditManagerOpts memory cmOpts, Contracts[] memory adaptersList)
     {
         CreditManagerHumanOpts memory humanCfg = creditManagerHumanOpts[idx];
 
-        uint256 len = humanCfg.collateralTokens.length;
+        if (isMock) {
+            address[] memory allTokens = new address[](uint256(uint8(type(Tokens).max)));
 
-        cmOpts.collateralTokens = new CollateralToken[](len);
-        unchecked {
-            for (uint256 i; i < len; ++i) {
-                cmOpts.collateralTokens[i] = CollateralToken({
-                    token: tokenTestSuite.addressOf(humanCfg.collateralTokens[i].token),
-                    liquidationThreshold: humanCfg.collateralTokens[i].liquidationThreshold
-                });
+            uint256 j;
+
+            for (uint256 i = 0; i < allTokens.length; ++i) {
+                address token = tokenTestSuite.addressOf(Tokens(uint8(i)));
+
+                try priceOracle.priceFeeds(token) returns (address pf) {}
+                catch {
+                    continue;
+                }
+
+                if (token == address(0) || humanCfg.underlying == Tokens(uint8(i))) continue;
+
+                allTokens[j] = token;
+                ++j;
+            }
+
+            allTokens = allTokens.trim();
+
+            cmOpts.collateralTokens = new CollateralToken[](allTokens.length);
+            for (uint256 i; i < allTokens.length; ++i) {
+                cmOpts.collateralTokens[i] = CollateralToken({token: allTokens[i], liquidationThreshold: 9000});
+            }
+        } else {
+            uint256 len = humanCfg.collateralTokens.length;
+
+            cmOpts.collateralTokens = new CollateralToken[](len);
+            unchecked {
+                for (uint256 i; i < len; ++i) {
+                    cmOpts.collateralTokens[i] = CollateralToken({
+                        token: tokenTestSuite.addressOf(humanCfg.collateralTokens[i].token),
+                        liquidationThreshold: humanCfg.collateralTokens[i].liquidationThreshold
+                    });
+                }
             }
         }
+
         cmOpts.minBorrowedAmount = humanCfg.minBorrowedAmount;
         cmOpts.maxBorrowedAmount = humanCfg.maxBorrowedAmount;
         cmOpts.degenNFT = humanCfg.degenNFT;
         cmOpts.expirable = humanCfg.expirable;
-        adaptersList = humanCfg.contracts;
+        if (isMock) {
+            adaptersList = new Contracts[](uint256(uint8(type(Contracts).max)));
+            for (uint256 i; i < adaptersList.length; ++i) {
+                adaptersList[i] = Contracts(uint8(i));
+            }
+        } else {
+            adaptersList = humanCfg.contracts;
+        }
     }
 
     function getAdapter(Tokens underlying, Contracts target) public view returns (address) {

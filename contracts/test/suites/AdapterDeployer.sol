@@ -55,7 +55,8 @@ contract AdapterDeployer is AdapterData, DSTest {
         Contracts[] memory adaptersList,
         TokensTestSuite _tokenTestSuite,
         SupportedContracts _supportedContracts,
-        string memory cmLabel
+        string memory cmLabel,
+        bool skipUnknown
     ) AdapterData() {
         tokenTestSuite = _tokenTestSuite;
         supportedContracts = _supportedContracts;
@@ -63,7 +64,9 @@ contract AdapterDeployer is AdapterData, DSTest {
 
         unchecked {
             for (uint256 i; i < len; ++i) {
-                Adapter memory newAdapter = deployAdapter(creditManager, adaptersList[i]);
+                Adapter memory newAdapter = deployAdapter(creditManager, adaptersList[i], skipUnknown);
+
+                if (newAdapter.adapter == address(0)) continue;
 
                 adapters.push(newAdapter);
                 evm.label(
@@ -78,7 +81,10 @@ contract AdapterDeployer is AdapterData, DSTest {
         return adapters;
     }
 
-    function deployAdapter(address creditManager, Contracts cnt) internal returns (Adapter memory result) {
+    function deployAdapter(address creditManager, Contracts cnt, bool skipUnknown)
+        internal
+        returns (Adapter memory result)
+    {
         uint256 len = simpleAdapters.length;
         unchecked {
             for (uint256 i; i < len; ++i) {
@@ -238,7 +244,7 @@ contract AdapterDeployer is AdapterData, DSTest {
                 }
             }
 
-            revert AdapterNotFoundException(cnt);
+            if (!skipUnknown) revert AdapterNotFoundException(cnt);
         }
     }
 }
