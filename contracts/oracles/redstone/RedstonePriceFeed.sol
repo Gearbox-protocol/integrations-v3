@@ -11,8 +11,6 @@ import {NotImplementedException} from "@gearbox-protocol/core-v2/contracts/inter
 import {IUpdatablePriceFeed} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacadeV3Multicall.sol";
 import {AggregatorV3Interface} from "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
 
-import "forge-std/console.sol";
-
 interface IRedstonePriceFeedExceptions {
     /// @dev Thrown no non-zero signers are passed
     ///      or the signer set is smaller than required threshold
@@ -192,13 +190,6 @@ contract RedstonePriceFeed is
         }
     }
 
-    /// @notice Returns a validated price value extracted from Redstone payload
-    /// @dev A valid Redstone payload has to be attached to the function's normal calldata,
-    ///      otherwise this would revert
-    function getValidatedValue() public view returns (uint256) {
-        return getOracleNumericValueFromTxMsg(dataFeedId);
-    }
-
     /// @notice Saves validated price retrieved from the passed Redstone payload
     /// @param data A data blob with with 2 parts:
     ///             - A timestamp expected to be in all Redstone data packages
@@ -217,23 +208,7 @@ contract RedstonePriceFeed is
         _validateExpectedPayloadTimestamp(expectedPayloadTimestamp);
         lastPayloadTimestamp = uint40(expectedPayloadTimestamp);
 
-        // Prepare call to RedStone base function
-        bytes memory encodedFunction = abi.encodeCall(this.getValidatedValue, ());
-        bytes memory encodedFunctionWithRedstonePayload = abi.encodePacked(encodedFunction, payload);
-
-        // Securely getting oracle value
-        (bool success, bytes memory result) = address(this).staticcall(encodedFunctionWithRedstonePayload);
-
-        // Parsing response
-        uint256 priceValue;
-        if (!success) {
-            assembly {
-                revert(add(32, result), mload(result))
-            }
-        }
-        assembly {
-            priceValue := mload(add(result, 32))
-        }
+        uint256 priceValue = getOracleNumericValueFromTxMsg(dataFeedId);
 
         if (priceValue == 0) revert ZeroPriceException();
 

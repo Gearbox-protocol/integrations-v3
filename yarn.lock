@@ -1062,6 +1062,11 @@
   resolved "https://registry.yarnpkg.com/@gearbox-protocol/integration-types/-/integration-types-1.2.0.tgz#865cde63923c5e0e61575b9b808b3f4ec266ebb4"
   integrity sha512-YSVn5u4G/e7ZSJRe4AD7IZ3C76tdk5bnvChrgNZIsxvEC7LQ3mWHFVn8shADU8PIPLcftnCxVLp2WkVdR6jiNA==
 
+"@gearbox-protocol/integration-types@^1.3.0":
+  version "1.3.0"
+  resolved "https://registry.yarnpkg.com/@gearbox-protocol/integration-types/-/integration-types-1.3.0.tgz#ea44ef84ea268e21d7e8359ec4744fb6e74eb060"
+  integrity sha512-8762t2S71SsQShLtlsQMALUUB1zwDGpsTLjtDm/aPBPpSCWYKBqjoLXSKVJXsm+MfQsYxt+eUG1OPpBvpQtsiw==
+
 "@gearbox-protocol/prettier-config@^1.5.0":
   version "1.5.0"
   resolved "https://registry.yarnpkg.com/@gearbox-protocol/prettier-config/-/prettier-config-1.5.0.tgz#4df8e9fd2305fee6ab8c1417a02e31343836932a"

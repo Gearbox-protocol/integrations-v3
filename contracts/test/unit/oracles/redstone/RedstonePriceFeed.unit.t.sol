@@ -77,9 +77,18 @@ contract RedstonePriceFeedTest is
 
         payload = abi.encodePacked(payload, uint16(numDataPackages));
 
+        uint256 payloadSize = payload.length;
+
         // GENERATING UNSIGNED MESSAGE
 
         bytes memory message = bytes("Hello Redstone");
+
+        uint256 bytesToPad = 32 - (payloadSize + message.length + 3 + 9) % 32;
+        bytesToPad = bytesToPad % 32;
+
+        for (uint256 i = 0; i < bytesToPad; ++i) {
+            message = abi.encodePacked(message, uint8(1));
+        }
 
         payload = abi.encodePacked(payload, message, uint24(message.length), REDSTONE_MARKER);
     }

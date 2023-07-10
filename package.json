@@ -39,6 +39,7 @@
   "dependencies": {
     "@gearbox-protocol/core-v2": "^1.19.0-base.3",
     "@gearbox-protocol/core-v3": "^1.23.0",
+    "@gearbox-protocol/integration-types": "^1.3.0",
     "@gearbox-protocol/sdk": "^1.20.7",
     "@redstone-finance/evm-connector": "^0.2.1",
     "axios": "^1.1.3"
