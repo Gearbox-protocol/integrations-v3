@@ -13,5 +13,6 @@ enum TokenType {
     CONVEX_STAKED_TOKEN,
     DIESEL_LP_TOKEN,
     GEAR_TOKEN,
-    C_TOKEN
+    C_TOKEN,
+    BALANCER_LP_TOKEN
 }

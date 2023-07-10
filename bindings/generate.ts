@@ -13,6 +13,8 @@ import {
   tokenDataByNetwork,
   TokenType,
 } from "@gearbox-protocol/sdk";
+import { BalancerLpTokenData } from "@gearbox-protocol/sdk/lib/tokens/balancer";
+import { support } from "@gearbox-protocol/sdk/lib/types/contracts";
 import * as fs from "fs";
 
 import { mainnetCreditManagers } from "../config/liveTests";
@@ -43,7 +45,9 @@ tokenAddresses += tokens
   .map(
     (t, num) =>
       `td[${num}] = TokenData({ id: Tokens.${safeEnum(t)}, addr: ${
-        tokenDataByNetwork.Mainnet[t]
+        tokenDataByNetwork.Mainnet[t] !== "deploy me"
+          ? tokenDataByNetwork.Mainnet[t]
+          : "address(0)"
       }, symbol: "${t}", tokenType: TokenType.${
         TokenType[supportedTokens[t].type]
       } });`,
@@ -57,7 +61,9 @@ tokenAddressesGoerli += tokens
   .map(
     (t, num) =>
       `td[${num}] = TokenData({ id: Tokens.${safeEnum(t)}, addr: ${
-        tokenDataByNetwork.Goerli[t]
+        tokenDataByNetwork.Goerli[t] !== "deploy me"
+          ? tokenDataByNetwork.Goerli[t]
+          : "address(0)"
       }, symbol: "${t}", tokenType: TokenType.${
         TokenType[supportedTokens[t].type]
       } });`,
@@ -80,7 +86,9 @@ const chainlinkPriceFeeds = Object.entries(priceFeedsByNetwork)
   .map(([token, oracleData]) => {
     if (oracleData.priceFeedUSD?.type === OracleType.CHAINLINK_ORACLE) {
       const address: string | undefined =
-        oracleData.priceFeedUSD!.address.Mainnet;
+        oracleData.priceFeedUSD!.address.Mainnet !== "deploy me"
+          ? oracleData.priceFeedUSD!.address.Mainnet
+          : "";
 
       return address
         ? `chainlinkPriceFeeds.push(ChainlinkPriceFeedData({
@@ -103,7 +111,9 @@ const chainlinkPriceFeedsGoerli = Object.entries(priceFeedsByNetwork)
   .map(([token, oracleData]) => {
     if (oracleData.priceFeedUSD?.type === OracleType.CHAINLINK_ORACLE) {
       const address: string | undefined =
-        oracleData.priceFeedUSD!.address.Goerli;
+        oracleData.priceFeedUSD!.address.Goerli !== "deploy me"
+          ? oracleData.priceFeedUSD!.address.Goerli
+          : "";
 
       return address
         ? `chainlinkPriceFeeds.push(ChainlinkPriceFeedData({
@@ -134,15 +144,25 @@ const zeroPriceFeeds = Object.entries(priceFeedsByNetwork)
 const curvePriceFeeds = Object.entries(priceFeedsByNetwork)
   .filter(
     ([, oracleData]) =>
-      oracleData.priceFeedUSD?.type === OracleType.CURVE_LP_TOKEN_ORACLE,
+      oracleData.priceFeedUSD?.type === OracleType.CURVE_LP_TOKEN_ORACLE ||
+      oracleData.priceFeedUSD?.type === OracleType.CURVE_CRYPTO_ORACLE,
   )
   .map(([token, oracleData]) => {
-    if (oracleData.priceFeedUSD?.type === OracleType.CURVE_LP_TOKEN_ORACLE) {
+    if (
+      oracleData.priceFeedUSD?.type === OracleType.CURVE_LP_TOKEN_ORACLE ||
+      oracleData.priceFeedUSD?.type === OracleType.CURVE_CRYPTO_ORACLE
+    ) {
       const assets = oracleData.priceFeedUSD.assets
         .map(a => `Tokens.${safeEnum(a)}`)
         .join(", ");
 
+      const curveType =
+        oracleData.priceFeedUSD?.type === OracleType.CURVE_LP_TOKEN_ORACLE
+          ? "STABLE"
+          : "CRYPTO";
+
       return `curvePriceFeeds.push(CurvePriceFeedData({
+          poolType: CurvePoolType.${curveType},
           lpToken: Tokens.${safeEnum(token as SupportedToken)},
           assets: assets(${assets}),
           pool: Contracts.${
@@ -258,9 +278,13 @@ const compositePriceFeeds = Object.entries(priceFeedsByNetwork)
   .map(([token, oracleData]) => {
     if (oracleData.priceFeedUSD?.type === OracleType.COMPOSITE_ORACLE) {
       const targetToBaseFeed: string | undefined =
-        oracleData.priceFeedUSD!.targetToBasePriceFeed.Mainnet;
+        oracleData.priceFeedUSD!.targetToBasePriceFeed.Mainnet !== "deploy me"
+          ? oracleData.priceFeedUSD!.targetToBasePriceFeed.Mainnet
+          : "address(0)";
       const baseToUSDFeed: string | undefined =
-        oracleData.priceFeedUSD!.baseToUsdPriceFeed.Mainnet;
+        oracleData.priceFeedUSD!.baseToUsdPriceFeed.Mainnet !== "deploy me"
+          ? oracleData.priceFeedUSD!.baseToUsdPriceFeed.Mainnet
+          : "address(0)";
 
       return targetToBaseFeed && baseToUSDFeed
         ? `compositePriceFeeds.push(CompositePriceFeedData({
@@ -284,9 +308,13 @@ const compositePriceFeedsGoerli = Object.entries(priceFeedsByNetwork)
   .map(([token, oracleData]) => {
     if (oracleData.priceFeedUSD?.type === OracleType.COMPOSITE_ORACLE) {
       const targetToBaseFeed: string | undefined =
-        oracleData.priceFeedUSD!.targetToBasePriceFeed.Goerli;
+        oracleData.priceFeedUSD!.targetToBasePriceFeed.Goerli !== "deploy me"
+          ? oracleData.priceFeedUSD!.targetToBasePriceFeed.Goerli
+          : "address(0)";
       const baseToUSDFeed: string | undefined =
-        oracleData.priceFeedUSD!.baseToUsdPriceFeed.Goerli;
+        oracleData.priceFeedUSD!.baseToUsdPriceFeed.Goerli !== "deploy me"
+          ? oracleData.priceFeedUSD!.baseToUsdPriceFeed.Goerli
+          : "address(0)";
 
       return targetToBaseFeed && baseToUSDFeed
         ? `compositePriceFeeds.push(CompositePriceFeedData({
@@ -366,7 +394,11 @@ let contractAddresses = `cd = new  ContractData[](${contracts.length});`;
 contractAddresses += contracts
   .map(
     (t, num) =>
-      `cd[${num}] = ContractData({ id: Contracts.${t}, addr:  ${contractsByNetwork.Mainnet[t]}, name: "${t}" });`,
+      `cd[${num}] = ContractData({ id: Contracts.${t}, addr:  ${
+        contractsByNetwork.Mainnet[t] !== "deploy me"
+          ? contractsByNetwork.Mainnet[t]
+          : "address(0)"
+      }, name: "${t}" });`,
   )
   .join("\n");
 
@@ -374,7 +406,11 @@ let contractAddressesGoerli = `cd = new  ContractData[](${contracts.length});`;
 contractAddressesGoerli += contracts
   .map(
     (t, num) =>
-      `cd[${num}] = ContractData({ id: Contracts.${t}, addr:  ${contractsByNetwork.Goerli[t]}, name: "${t}" });`,
+      `cd[${num}] = ContractData({ id: Contracts.${t}, addr:  ${
+        contractsByNetwork.Goerli[t] !== "deploy me"
+          ? contractsByNetwork.Goerli[t]
+          : "address(0)"
+      }, name: "${t}" });`,
   )
   .join("\n");
 
@@ -390,7 +426,9 @@ fs.writeFileSync("./contracts/test/config/SupportedContracts.sol", file);
 let config = "";
 
 for (let c of mainnetCreditManagers) {
-  config += `cm = creditManagerHumanOpts[Tokens.${safeEnum(c.symbol)}];`;
+  config += `cm = creditManagerHumanOpts[numOpts];`;
+  config += `++numOpts;`;
+  config += `cm.underlying = Tokens.${safeEnum(c.symbol)};`;
   config += `cm.minBorrowedAmount = ${c.minAmount.toString()};`;
   config += `cm.maxBorrowedAmount = ${c.maxAmount.toString()};`;
   config += `cm.degenNFT = address(0);`;
@@ -414,6 +452,19 @@ for (let c of mainnetCreditManagers) {
   config += c.adapters
     .map(contract => `cm.contracts.push(Contracts.${contract});`)
     .join("\n");
+
+  if (c.balancerPools) {
+    config += c.balancerPools
+      .map(
+        poolConfig => `cm.balancerPools.push(BalancerPool({
+      poolId: ${
+        (supportedTokens[poolConfig.pool] as BalancerLpTokenData).poolId
+      },
+      status: PoolStatus.${poolConfig.status}
+    }));`,
+      )
+      .join("\n");
+  }
 }
 file = fs.readFileSync("./bindings/CreditConfigLive.sol").toString();
 
@@ -430,7 +481,7 @@ let adapters = Object.entries(contractParams)
       contractParam.type === AdapterInterface.YEARN_V2 ||
       contractParam.type === AdapterInterface.CONVEX_V1_BOOSTER ||
       contractParam.type === AdapterInterface.LIDO_V1 ||
-      contractParam.type === AdapterInterface.UNIVERSAL ||
+      contractParam.type === AdapterInterface.BALANCER_VAULT ||
       contractParam.type === AdapterInterface.LIDO_WSTETH_V1,
   )
   .map(
@@ -454,10 +505,13 @@ adapters += Object.entries(contractParams)
       contractParam.type === AdapterInterface.CURVE_V1_4ASSETS
     ) {
       if (contractParam.lpToken === "GEAR") return "";
-      const basePool: SupportedContract | "NO_CONTRACT" =
-        contractParam.tokens.includes("3Crv")
-          ? "CURVE_3CRV_POOL"
-          : "NO_CONTRACT";
+      let basePool: SupportedContract | "NO_CONTRACT" = "NO_CONTRACT";
+      for (let coin of contractParam.tokens) {
+        const coinParams = supportedTokens[coin];
+        if (coinParams.type === TokenType.CURVE_LP_TOKEN) {
+          basePool = coinParams.pool;
+        }
+      }
       return `curveAdapters.push(CurveAdapter({targetContract:  Contracts.${contract},
   adapterType: AdapterType.${
     AdapterInterface[contractParam.type]

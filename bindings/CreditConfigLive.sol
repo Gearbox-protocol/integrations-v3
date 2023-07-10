@@ -5,6 +5,7 @@ pragma solidity ^0.8.10;
 
 import {Tokens} from "./Tokens.sol";
 import {Contracts} from "./SupportedContracts.sol";
+import {PoolStatus} from "./ImportedDataTypes.sol";
 
 /// @dev A struct containing parameters for a recognized collateral token in the system
 struct CollateralTokenHuman {
@@ -14,8 +15,14 @@ struct CollateralTokenHuman {
     uint16 liquidationThreshold;
 }
 
+struct BalancerPool {
+    bytes32 poolId;
+    PoolStatus status;
+}
+
 /// @dev A struct representing the initial Credit Manager configuration parameters
 struct CreditManagerHumanOpts {
+    Tokens underlying;
     /// @dev The minimal debt principal amount
     uint128 minBorrowedAmount;
     /// @dev The maximal debt principal amount
@@ -32,10 +39,13 @@ struct CreditManagerHumanOpts {
     bool skipInit;
     /// @dev Contracts which should become adapters
     Contracts[] contracts;
+    /// @dev List of balancer pools to add to the balancer vault adapter
+    BalancerPool[] balancerPools;
 }
 
 contract CreditConfigLive {
-    mapping(Tokens => CreditManagerHumanOpts) creditManagerHumanOpts;
+    mapping(uint256 => CreditManagerHumanOpts) creditManagerHumanOpts;
+    uint256 numOpts;
 
     constructor() {
         CreditManagerHumanOpts storage cm;

@@ -75,15 +75,17 @@ contract TokensTestSuite is DSTest, TokensTestSuiteHelper {
 
         unchecked {
             for (uint256 i; i < len; ++i) {
-                addressOf[td[i].id] = td[i].addr;
-                tokenIndexes[td[i].addr] = td[i].id;
-                symbols[td[i].id] = td[i].symbol;
-                tokenTypes[td[i].id] = td[i].tokenType;
-                symbolToAsset[td[i].symbol] = td[i].id;
+                if (td[i].addr != address(0)) {
+                    addressOf[td[i].id] = td[i].addr;
+                    tokenIndexes[td[i].addr] = td[i].id;
+                    symbols[td[i].id] = td[i].symbol;
+                    tokenTypes[td[i].id] = td[i].tokenType;
+                    symbolToAsset[td[i].symbol] = td[i].id;
 
-                _flushAccounts(td[i].addr);
+                    _flushAccounts(td[i].addr);
 
-                evm.label(td[i].addr, td[i].symbol);
+                    evm.label(td[i].addr, td[i].symbol);
+                }
             }
         }
 

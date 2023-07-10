@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2022. Gearbox
  */
-import { WAD } from "@gearbox-protocol/sdk";
+import { UNISWAP_V3_QUOTER, WAD } from "@gearbox-protocol/sdk";
 import { BigNumber } from "ethers";
 
 import { CMConfig } from "../core/pool";
@@ -382,5 +382,160 @@ export const mainnetCreditManagers: Array<CMConfig> = [
       { symbol: "SNX", liquidationThreshold: 25 }, // Token address is token from priceFeed map above
     ],
     adapters,
+  },
+  {
+    symbol: "OHM",
+    minAmount: BigNumber.from(10).pow(9).mul(15000),
+    maxAmount: BigNumber.from(10).pow(9).mul(100000),
+    collateralTokens: [
+      // Liquidation threshold will be multiplied x100 to be used as CreditFilter.sol contract parameter
+
+      { symbol: "WETH", liquidationThreshold: 75 }, // Token address is token from priceFeed map above
+      { symbol: "WBTC", liquidationThreshold: 75 }, // Token address is token from priceFeed map above
+
+      { symbol: "USDC", liquidationThreshold: 85 }, // Token address is token from priceFeed map above
+      { symbol: "USDT", liquidationThreshold: 85 }, // Token address is token from priceFeed map above
+      { symbol: "sUSD", liquidationThreshold: 85 }, // Token address is token from priceFeed map above
+      { symbol: "DAI", liquidationThreshold: 85 }, // Token address is token from priceFeed map above
+      { symbol: "GUSD", liquidationThreshold: 85 }, // Token address is token from priceFeed map above
+      { symbol: "LUSD", liquidationThreshold: 85 }, // Token address is token from priceFeed map above
+      { symbol: "FRAX", liquidationThreshold: 85 },
+      { symbol: "MIM", liquidationThreshold: 80 },
+
+      { symbol: "3Crv", liquidationThreshold: 85 }, // Token address is token from priceFeed map above
+      { symbol: "cvx3Crv", liquidationThreshold: 85 }, // Token address is token from priceFeed map above
+      { symbol: "stkcvx3Crv", liquidationThreshold: 85 },
+
+      { symbol: "FRAX3CRV", liquidationThreshold: 85 }, // Token address is token from priceFeed map above
+      { symbol: "cvxFRAX3CRV", liquidationThreshold: 85 }, // Token address is token from priceFeed map above
+      { symbol: "stkcvxFRAX3CRV", liquidationThreshold: 85 },
+
+      { symbol: "LUSD3CRV", liquidationThreshold: 85 }, // Token address is token from priceFeed map above
+      { symbol: "cvxLUSD3CRV", liquidationThreshold: 85 }, // Token address is token from priceFeed map above
+      { symbol: "stkcvxLUSD3CRV", liquidationThreshold: 85 },
+
+      { symbol: "crvPlain3andSUSD", liquidationThreshold: 85 }, // Token address is token from priceFeed map above
+      { symbol: "cvxcrvPlain3andSUSD", liquidationThreshold: 85 }, // Token address is token from priceFeed map above
+      { symbol: "stkcvxcrvPlain3andSUSD", liquidationThreshold: 85 },
+
+      { symbol: "gusd3CRV", liquidationThreshold: 85 }, // Token address is token from priceFeed map above
+      { symbol: "cvxgusd3CRV", liquidationThreshold: 85 }, // Token address is token from priceFeed map above
+      { symbol: "stkcvxgusd3CRV", liquidationThreshold: 85 }, // Token address is token from priceFeed map above
+
+      { symbol: "crvFRAX", liquidationThreshold: 85 }, // Token address is token from priceFeed map above
+      { symbol: "cvxcrvFRAX", liquidationThreshold: 85 }, // Token address is token from priceFeed map above
+      { symbol: "stkcvxcrvFRAX", liquidationThreshold: 85 }, // Token address is token from priceFeed map above
+
+      { symbol: "OHMFRAXBP", liquidationThreshold: 85 }, // Token address is token from priceFeed map above
+      { symbol: "cvxOHMFRAXBP", liquidationThreshold: 85 }, // Token address is token from priceFeed map above
+      { symbol: "stkcvxOHMFRAXBP", liquidationThreshold: 85 }, // Token address is token from priceFeed map above
+
+      { symbol: "MIM_3LP3CRV", liquidationThreshold: 85 }, // Token address is token from priceFeed map above
+      { symbol: "cvxMIM_3LP3CRV", liquidationThreshold: 85 }, // Token address is token from priceFeed map above
+      { symbol: "stkcvxMIM_3LP3CRV", liquidationThreshold: 85 }, // Token address is token from priceFeed map above
+
+      { symbol: "CVX", liquidationThreshold: 25 }, // Token address is token from priceFeed map above
+      { symbol: "FXS", liquidationThreshold: 25 }, // Token address is token from priceFeed map above
+      { symbol: "LQTY", liquidationThreshold: 0 },
+      { symbol: "CRV", liquidationThreshold: 25 }, // Token address is token from priceFeed map above
+      { symbol: "SNX", liquidationThreshold: 25 }, // Token address is token from priceFeed map above
+      { symbol: "SPELL", liquidationThreshold: 25 },
+    ],
+    adapters: [
+      /// SWAPPERS
+      "UNISWAP_V3_ROUTER",
+      "UNISWAP_V2_ROUTER",
+      "SUSHISWAP_ROUTER",
+
+      // CURVE
+      "CURVE_3CRV_POOL",
+      "CURVE_FRAX_USDC_POOL",
+      "CURVE_FRAX_POOL",
+      "CURVE_SUSD_POOL",
+      "CURVE_LUSD_POOL",
+      "CURVE_GUSD_POOL",
+      "CURVE_SUSD_DEPOSIT",
+      "CURVE_OHMFRAXBP_POOL",
+      "CURVE_MIM_POOL",
+
+      // CONVEX
+      "CONVEX_FRAX3CRV_POOL",
+      "CONVEX_LUSD3CRV_POOL",
+      "CONVEX_GUSD_POOL",
+      "CONVEX_SUSD_POOL",
+      "CONVEX_3CRV_POOL",
+      "CONVEX_FRAX_USDC_POOL",
+      "CONVEX_OHMFRAXBP_POOL",
+      "CONVEX_MIM3CRV_POOL",
+      "CONVEX_BOOSTER",
+
+      // BALANCER
+      "BALANCER_VAULT",
+    ],
+    balancerPools: [
+      {
+        pool: "50OHM_50DAI",
+        status: "SWAP_ONLY",
+      },
+      {
+        pool: "50OHM_50WETH",
+        status: "SWAP_ONLY",
+      },
+      {
+        pool: "OHM_wstETH",
+        status: "SWAP_ONLY",
+      },
+    ],
+  },
+
+  {
+    symbol: "WETH",
+
+    minAmount: WAD.mul(100), // 0.3 WETH
+    maxAmount: WAD.mul(600), // 100WETH ~ 400K
+    collateralTokens: [
+      // Liquidation threshold will be multiplied x100 to be used as CreditFilter.sol contract parameter
+      { symbol: "WBTC", liquidationThreshold: 85 }, // Token address is token from priceFeed map above
+      { symbol: "USDT", liquidationThreshold: 85 }, // Token address is token from priceFeed map above
+
+      { symbol: "crvUSDTWBTCWETH", liquidationThreshold: 88 }, // Token address is token from priceFeed map above
+      { symbol: "cvxcrvUSDTWBTCWETH", liquidationThreshold: 88 }, // Token address is token from priceFeed map above
+      { symbol: "stkcvxcrvUSDTWBTCWETH", liquidationThreshold: 88 }, // Token address is token from priceFeed map above
+
+      { symbol: "crvCRVETH", liquidationThreshold: 82 }, // Token address is token from priceFeed map above
+      { symbol: "cvxcrvCRVETH", liquidationThreshold: 82 }, // Token address is token from priceFeed map above
+      { symbol: "stkcvxcrvCRVETH", liquidationThreshold: 82 }, // Token address is token from priceFeed map above
+
+      { symbol: "crvCVXETH", liquidationThreshold: 82 }, // Token address is token from priceFeed map above
+      { symbol: "cvxcrvCVXETH", liquidationThreshold: 82 }, // Token address is token from priceFeed map above
+      { symbol: "stkcvxcrvCVXETH", liquidationThreshold: 82 }, // Token address is token from priceFeed map above
+
+      { symbol: "LDOETH", liquidationThreshold: 82 }, // Token address is token from priceFeed map above
+      { symbol: "cvxLDOETH", liquidationThreshold: 82 }, // Token address is token from priceFeed map above
+      { symbol: "stkcvxLDOETH", liquidationThreshold: 82 }, // Token address is token from priceFeed map above
+
+      { symbol: "CVX", liquidationThreshold: 25 }, // Token address is token from priceFeed map above
+      { symbol: "CRV", liquidationThreshold: 25 }, // Token address is token from priceFeed map above
+      { symbol: "LDO", liquidationThreshold: 25 },
+    ],
+    adapters: [
+      /// SWAPPERS
+      "UNISWAP_V3_ROUTER",
+      "UNISWAP_V2_ROUTER",
+      "SUSHISWAP_ROUTER",
+
+      // CURVE
+      "CURVE_3CRYPTO_POOL",
+      "CURVE_CRVETH_POOL",
+      "CURVE_CVXETH_POOL",
+      "CURVE_LDOETH_POOL",
+
+      // CONVEX
+      "CONVEX_3CRYPTO_POOL",
+      "CONVEX_CRVETH_POOL",
+      "CONVEX_CVXETH_POOL",
+      "CONVEX_LDOETH_POOL",
+      "CONVEX_BOOSTER",
+    ],
   },
 ];

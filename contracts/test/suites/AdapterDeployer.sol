@@ -23,6 +23,7 @@ import {YearnV2Adapter} from "../../adapters/yearn/YearnV2.sol";
 import {ConvexV1BoosterAdapter} from "../../adapters/convex/ConvexV1_Booster.sol";
 import {LidoV1Adapter} from "../../adapters/lido/LidoV1.sol";
 import {WstETHV1Adapter} from "../../adapters/lido/WstETHV1.sol";
+import {BalancerV2VaultAdapter} from "../../adapters/balancer/BalancerV2VaultAdapter.sol";
 
 import {UniversalAdapter} from "@gearbox-protocol/core-v2/contracts/adapters/UniversalAdapter.sol";
 
@@ -129,6 +130,13 @@ contract AdapterDeployer is AdapterData, DSTest {
                             new WstETHV1Adapter(
                                 creditManager,
                                 tokenTestSuite.addressOf(Tokens.wstETH)
+                            )
+                        );
+                    } else if (at == AdapterType.BALANCER_VAULT) {
+                        result.adapter = address(
+                            new BalancerV2VaultAdapter(
+                                creditManager,
+                                result.targetContract
                             )
                         );
                     }
