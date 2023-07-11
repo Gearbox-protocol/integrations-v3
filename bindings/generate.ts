@@ -488,6 +488,17 @@ for (let c of mainnetCreditManagers) {
       )
       .join("\n");
   }
+
+  if (c.sushiswapPairs) {
+    config += c.sushiswapPairs
+      .map(
+        pairConfig => `cm.sushiswapPairs.push(UniswapV2Pair({
+      token0: Tokens.${pairConfig.token0},
+      token1: Tokens.${pairConfig.token1}
+    }));`,
+      )
+      .join("\n");
+  }
 }
 file = fs.readFileSync("./bindings/CreditConfigLive.sol").toString();
 

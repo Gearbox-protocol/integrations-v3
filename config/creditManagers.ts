@@ -66,6 +66,20 @@ const standardUniV3Config: Array<UniswapV3PoolConfig> = [
   { token0: "WETH", token1: "CRV", fee: 3000 },
   { token0: "WETH", token1: "CRV", fee: 10000 },
   { token0: "WETH", token1: "CVX", fee: 10000 },
+  { token0: "SNX", token1: "USDC", fee: 10000 },
+  { token0: "OHM", token1: "USDC", fee: 3000 },
+];
+
+const standardSushiswapConfig: Array<UniswapV2PairConfig> = [
+  { token0: "WBTC", token1: "WETH" },
+  { token0: "WETH", token1: "USDT" },
+  { token0: "USDC", token1: "WETH" },
+  { token0: "DAI", token1: "WETH" },
+  { token0: "WETH", token1: "FXS" },
+  { token0: "LDO", token1: "WETH" },
+  { token0: "CVX", token1: "WETH" },
+  { token0: "CRV", token1: "WETH" },
+  { token0: "SNX", token1: "WETH" },
 ];
 
 export const mainnetCreditManagers: Array<CMConfig> = [
@@ -131,6 +145,7 @@ export const mainnetCreditManagers: Array<CMConfig> = [
     ],
     uniV2Pairs: standardUniV2Config,
     uniV3Pools: standardUniV3Config,
+    sushiswapPairs: standardSushiswapConfig,
     adapters,
   },
   {
@@ -194,6 +209,7 @@ export const mainnetCreditManagers: Array<CMConfig> = [
     ],
     uniV2Pairs: standardUniV2Config,
     uniV3Pools: standardUniV3Config,
+    sushiswapPairs: standardSushiswapConfig,
     adapters,
   },
 
@@ -259,6 +275,7 @@ export const mainnetCreditManagers: Array<CMConfig> = [
     ],
     uniV2Pairs: standardUniV2Config,
     uniV3Pools: standardUniV3Config,
+    sushiswapPairs: standardSushiswapConfig,
     adapters,
   },
 
@@ -325,6 +342,7 @@ export const mainnetCreditManagers: Array<CMConfig> = [
     ],
     uniV2Pairs: standardUniV2Config,
     uniV3Pools: standardUniV3Config,
+    sushiswapPairs: standardSushiswapConfig,
     adapters: [...adapters, "LIDO_WSTETH"],
   },
 
@@ -390,6 +408,7 @@ export const mainnetCreditManagers: Array<CMConfig> = [
     ],
     uniV2Pairs: standardUniV2Config,
     uniV3Pools: standardUniV3Config,
+    sushiswapPairs: standardSushiswapConfig,
     adapters,
   },
   {
@@ -454,6 +473,7 @@ export const mainnetCreditManagers: Array<CMConfig> = [
     ],
     uniV2Pairs: standardUniV2Config,
     uniV3Pools: standardUniV3Config,
+    sushiswapPairs: standardSushiswapConfig,
     adapters,
   },
   {
@@ -516,6 +536,10 @@ export const mainnetCreditManagers: Array<CMConfig> = [
     ],
     uniV2Pairs: standardUniV2Config,
     uniV3Pools: standardUniV3Config,
+    sushiswapPairs: [
+      ...standardSushiswapConfig,
+      { token0: "WETH", token1: "SPELL" },
+    ],
     adapters: [
       /// SWAPPERS
       "UNISWAP_V3_ROUTER",

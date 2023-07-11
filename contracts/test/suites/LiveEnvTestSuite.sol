@@ -494,6 +494,27 @@ contract LiveEnvTestSuite is CreditConfigLive {
         UniswapV2Adapter(uniV2Adapter).setPairBatchAllowanceStatus(pairs);
     }
 
+    function _configureSushiswapPairs(address creditManager, uint256 configIdx) internal {
+        UniswapV2Pair[] memory sushiPairs = creditManagerHumanOpts[configIdx].sushiswapPairs;
+
+        if (sushiPairs.length == 0) return;
+
+        UniswapPairStatus[] memory pairs = new UniswapPairStatus[](sushiPairs.length);
+
+        for (uint256 i = 0; i < sushiPairs.length; ++i) {
+            pairs[i] = UniswapPairStatus({
+                token0: tokenTestSuite.addressOf(sushiPairs[i].token0),
+                token1: tokenTestSuite.addressOf(sushiPairs[i].token1),
+                allowed: true
+            });
+        }
+
+        address sushiAdapter = getAdapter(creditManager, Contracts.SUSHISWAP_ROUTER);
+
+        evm.prank(ROOT_ADDRESS);
+        UniswapV2Adapter(sushiAdapter).setPairBatchAllowanceStatus(pairs);
+    }
+
     function _configureUniswapV3Pools(address creditManager, uint256 configIdx) internal {
         UniswapV3Pool[] memory uniV3Pools = creditManagerHumanOpts[configIdx].uniswapV3Pools;
 

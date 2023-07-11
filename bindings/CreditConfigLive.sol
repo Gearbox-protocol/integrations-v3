@@ -56,6 +56,8 @@ struct CreditManagerHumanOpts {
     UniswapV2Pair[] uniswapV2Pairs;
     /// @dev List of UniswapV3 pools to add to the UniswapV3 adapter
     UniswapV3Pool[] uniswapV3Pools;
+    /// @dev List of pairs to add to the Sushiswap adapter
+    UniswapV2Pair[] sushiswapPairs;
 }
 
 contract CreditConfigLive {

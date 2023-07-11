@@ -56,6 +56,8 @@ struct CreditManagerHumanOpts {
     UniswapV2Pair[] uniswapV2Pairs;
     /// @dev List of UniswapV3 pools to add to the UniswapV3 adapter
     UniswapV3Pool[] uniswapV3Pools;
+    /// @dev List of pairs to add to the Sushiswap adapter
+    UniswapV2Pair[] sushiswapPairs;
 }
 
 contract CreditConfigLive {
@@ -196,6 +198,17 @@ contract CreditConfigLive {
         cm.uniswapV3Pools.push(UniswapV3Pool({token0: Tokens.WETH, token1: Tokens.CRV, fee: 3000}));
         cm.uniswapV3Pools.push(UniswapV3Pool({token0: Tokens.WETH, token1: Tokens.CRV, fee: 10000}));
         cm.uniswapV3Pools.push(UniswapV3Pool({token0: Tokens.WETH, token1: Tokens.CVX, fee: 10000}));
+        cm.uniswapV3Pools.push(UniswapV3Pool({token0: Tokens.SNX, token1: Tokens.USDC, fee: 10000}));
+        cm.uniswapV3Pools.push(UniswapV3Pool({token0: Tokens.OHM, token1: Tokens.USDC, fee: 3000}));
+        cm.sushiswapPairs.push(UniswapV2Pair({token0: Tokens.WBTC, token1: Tokens.WETH}));
+        cm.sushiswapPairs.push(UniswapV2Pair({token0: Tokens.WETH, token1: Tokens.USDT}));
+        cm.sushiswapPairs.push(UniswapV2Pair({token0: Tokens.USDC, token1: Tokens.WETH}));
+        cm.sushiswapPairs.push(UniswapV2Pair({token0: Tokens.DAI, token1: Tokens.WETH}));
+        cm.sushiswapPairs.push(UniswapV2Pair({token0: Tokens.WETH, token1: Tokens.FXS}));
+        cm.sushiswapPairs.push(UniswapV2Pair({token0: Tokens.LDO, token1: Tokens.WETH}));
+        cm.sushiswapPairs.push(UniswapV2Pair({token0: Tokens.CVX, token1: Tokens.WETH}));
+        cm.sushiswapPairs.push(UniswapV2Pair({token0: Tokens.CRV, token1: Tokens.WETH}));
+        cm.sushiswapPairs.push(UniswapV2Pair({token0: Tokens.SNX, token1: Tokens.WETH}));
         cm = creditManagerHumanOpts[numOpts];
         ++numOpts;
         cm.underlying = Tokens.USDC;
@@ -327,6 +340,17 @@ contract CreditConfigLive {
         cm.uniswapV3Pools.push(UniswapV3Pool({token0: Tokens.WETH, token1: Tokens.CRV, fee: 3000}));
         cm.uniswapV3Pools.push(UniswapV3Pool({token0: Tokens.WETH, token1: Tokens.CRV, fee: 10000}));
         cm.uniswapV3Pools.push(UniswapV3Pool({token0: Tokens.WETH, token1: Tokens.CVX, fee: 10000}));
+        cm.uniswapV3Pools.push(UniswapV3Pool({token0: Tokens.SNX, token1: Tokens.USDC, fee: 10000}));
+        cm.uniswapV3Pools.push(UniswapV3Pool({token0: Tokens.OHM, token1: Tokens.USDC, fee: 3000}));
+        cm.sushiswapPairs.push(UniswapV2Pair({token0: Tokens.WBTC, token1: Tokens.WETH}));
+        cm.sushiswapPairs.push(UniswapV2Pair({token0: Tokens.WETH, token1: Tokens.USDT}));
+        cm.sushiswapPairs.push(UniswapV2Pair({token0: Tokens.USDC, token1: Tokens.WETH}));
+        cm.sushiswapPairs.push(UniswapV2Pair({token0: Tokens.DAI, token1: Tokens.WETH}));
+        cm.sushiswapPairs.push(UniswapV2Pair({token0: Tokens.WETH, token1: Tokens.FXS}));
+        cm.sushiswapPairs.push(UniswapV2Pair({token0: Tokens.LDO, token1: Tokens.WETH}));
+        cm.sushiswapPairs.push(UniswapV2Pair({token0: Tokens.CVX, token1: Tokens.WETH}));
+        cm.sushiswapPairs.push(UniswapV2Pair({token0: Tokens.CRV, token1: Tokens.WETH}));
+        cm.sushiswapPairs.push(UniswapV2Pair({token0: Tokens.SNX, token1: Tokens.WETH}));
         cm = creditManagerHumanOpts[numOpts];
         ++numOpts;
         cm.underlying = Tokens.WETH;
@@ -458,6 +482,17 @@ contract CreditConfigLive {
         cm.uniswapV3Pools.push(UniswapV3Pool({token0: Tokens.WETH, token1: Tokens.CRV, fee: 3000}));
         cm.uniswapV3Pools.push(UniswapV3Pool({token0: Tokens.WETH, token1: Tokens.CRV, fee: 10000}));
         cm.uniswapV3Pools.push(UniswapV3Pool({token0: Tokens.WETH, token1: Tokens.CVX, fee: 10000}));
+        cm.uniswapV3Pools.push(UniswapV3Pool({token0: Tokens.SNX, token1: Tokens.USDC, fee: 10000}));
+        cm.uniswapV3Pools.push(UniswapV3Pool({token0: Tokens.OHM, token1: Tokens.USDC, fee: 3000}));
+        cm.sushiswapPairs.push(UniswapV2Pair({token0: Tokens.WBTC, token1: Tokens.WETH}));
+        cm.sushiswapPairs.push(UniswapV2Pair({token0: Tokens.WETH, token1: Tokens.USDT}));
+        cm.sushiswapPairs.push(UniswapV2Pair({token0: Tokens.USDC, token1: Tokens.WETH}));
+        cm.sushiswapPairs.push(UniswapV2Pair({token0: Tokens.DAI, token1: Tokens.WETH}));
+        cm.sushiswapPairs.push(UniswapV2Pair({token0: Tokens.WETH, token1: Tokens.FXS}));
+        cm.sushiswapPairs.push(UniswapV2Pair({token0: Tokens.LDO, token1: Tokens.WETH}));
+        cm.sushiswapPairs.push(UniswapV2Pair({token0: Tokens.CVX, token1: Tokens.WETH}));
+        cm.sushiswapPairs.push(UniswapV2Pair({token0: Tokens.CRV, token1: Tokens.WETH}));
+        cm.sushiswapPairs.push(UniswapV2Pair({token0: Tokens.SNX, token1: Tokens.WETH}));
         cm = creditManagerHumanOpts[numOpts];
         ++numOpts;
         cm.underlying = Tokens.wstETH;
@@ -591,6 +626,17 @@ contract CreditConfigLive {
         cm.uniswapV3Pools.push(UniswapV3Pool({token0: Tokens.WETH, token1: Tokens.CRV, fee: 3000}));
         cm.uniswapV3Pools.push(UniswapV3Pool({token0: Tokens.WETH, token1: Tokens.CRV, fee: 10000}));
         cm.uniswapV3Pools.push(UniswapV3Pool({token0: Tokens.WETH, token1: Tokens.CVX, fee: 10000}));
+        cm.uniswapV3Pools.push(UniswapV3Pool({token0: Tokens.SNX, token1: Tokens.USDC, fee: 10000}));
+        cm.uniswapV3Pools.push(UniswapV3Pool({token0: Tokens.OHM, token1: Tokens.USDC, fee: 3000}));
+        cm.sushiswapPairs.push(UniswapV2Pair({token0: Tokens.WBTC, token1: Tokens.WETH}));
+        cm.sushiswapPairs.push(UniswapV2Pair({token0: Tokens.WETH, token1: Tokens.USDT}));
+        cm.sushiswapPairs.push(UniswapV2Pair({token0: Tokens.USDC, token1: Tokens.WETH}));
+        cm.sushiswapPairs.push(UniswapV2Pair({token0: Tokens.DAI, token1: Tokens.WETH}));
+        cm.sushiswapPairs.push(UniswapV2Pair({token0: Tokens.WETH, token1: Tokens.FXS}));
+        cm.sushiswapPairs.push(UniswapV2Pair({token0: Tokens.LDO, token1: Tokens.WETH}));
+        cm.sushiswapPairs.push(UniswapV2Pair({token0: Tokens.CVX, token1: Tokens.WETH}));
+        cm.sushiswapPairs.push(UniswapV2Pair({token0: Tokens.CRV, token1: Tokens.WETH}));
+        cm.sushiswapPairs.push(UniswapV2Pair({token0: Tokens.SNX, token1: Tokens.WETH}));
         cm = creditManagerHumanOpts[numOpts];
         ++numOpts;
         cm.underlying = Tokens.WBTC;
@@ -722,6 +768,17 @@ contract CreditConfigLive {
         cm.uniswapV3Pools.push(UniswapV3Pool({token0: Tokens.WETH, token1: Tokens.CRV, fee: 3000}));
         cm.uniswapV3Pools.push(UniswapV3Pool({token0: Tokens.WETH, token1: Tokens.CRV, fee: 10000}));
         cm.uniswapV3Pools.push(UniswapV3Pool({token0: Tokens.WETH, token1: Tokens.CVX, fee: 10000}));
+        cm.uniswapV3Pools.push(UniswapV3Pool({token0: Tokens.SNX, token1: Tokens.USDC, fee: 10000}));
+        cm.uniswapV3Pools.push(UniswapV3Pool({token0: Tokens.OHM, token1: Tokens.USDC, fee: 3000}));
+        cm.sushiswapPairs.push(UniswapV2Pair({token0: Tokens.WBTC, token1: Tokens.WETH}));
+        cm.sushiswapPairs.push(UniswapV2Pair({token0: Tokens.WETH, token1: Tokens.USDT}));
+        cm.sushiswapPairs.push(UniswapV2Pair({token0: Tokens.USDC, token1: Tokens.WETH}));
+        cm.sushiswapPairs.push(UniswapV2Pair({token0: Tokens.DAI, token1: Tokens.WETH}));
+        cm.sushiswapPairs.push(UniswapV2Pair({token0: Tokens.WETH, token1: Tokens.FXS}));
+        cm.sushiswapPairs.push(UniswapV2Pair({token0: Tokens.LDO, token1: Tokens.WETH}));
+        cm.sushiswapPairs.push(UniswapV2Pair({token0: Tokens.CVX, token1: Tokens.WETH}));
+        cm.sushiswapPairs.push(UniswapV2Pair({token0: Tokens.CRV, token1: Tokens.WETH}));
+        cm.sushiswapPairs.push(UniswapV2Pair({token0: Tokens.SNX, token1: Tokens.WETH}));
         cm = creditManagerHumanOpts[numOpts];
         ++numOpts;
         cm.underlying = Tokens.FRAX;
@@ -853,6 +910,17 @@ contract CreditConfigLive {
         cm.uniswapV3Pools.push(UniswapV3Pool({token0: Tokens.WETH, token1: Tokens.CRV, fee: 3000}));
         cm.uniswapV3Pools.push(UniswapV3Pool({token0: Tokens.WETH, token1: Tokens.CRV, fee: 10000}));
         cm.uniswapV3Pools.push(UniswapV3Pool({token0: Tokens.WETH, token1: Tokens.CVX, fee: 10000}));
+        cm.uniswapV3Pools.push(UniswapV3Pool({token0: Tokens.SNX, token1: Tokens.USDC, fee: 10000}));
+        cm.uniswapV3Pools.push(UniswapV3Pool({token0: Tokens.OHM, token1: Tokens.USDC, fee: 3000}));
+        cm.sushiswapPairs.push(UniswapV2Pair({token0: Tokens.WBTC, token1: Tokens.WETH}));
+        cm.sushiswapPairs.push(UniswapV2Pair({token0: Tokens.WETH, token1: Tokens.USDT}));
+        cm.sushiswapPairs.push(UniswapV2Pair({token0: Tokens.USDC, token1: Tokens.WETH}));
+        cm.sushiswapPairs.push(UniswapV2Pair({token0: Tokens.DAI, token1: Tokens.WETH}));
+        cm.sushiswapPairs.push(UniswapV2Pair({token0: Tokens.WETH, token1: Tokens.FXS}));
+        cm.sushiswapPairs.push(UniswapV2Pair({token0: Tokens.LDO, token1: Tokens.WETH}));
+        cm.sushiswapPairs.push(UniswapV2Pair({token0: Tokens.CVX, token1: Tokens.WETH}));
+        cm.sushiswapPairs.push(UniswapV2Pair({token0: Tokens.CRV, token1: Tokens.WETH}));
+        cm.sushiswapPairs.push(UniswapV2Pair({token0: Tokens.SNX, token1: Tokens.WETH}));
         cm = creditManagerHumanOpts[numOpts];
         ++numOpts;
         cm.underlying = Tokens.OHM;
@@ -995,6 +1063,18 @@ contract CreditConfigLive {
         cm.uniswapV3Pools.push(UniswapV3Pool({token0: Tokens.WETH, token1: Tokens.CRV, fee: 3000}));
         cm.uniswapV3Pools.push(UniswapV3Pool({token0: Tokens.WETH, token1: Tokens.CRV, fee: 10000}));
         cm.uniswapV3Pools.push(UniswapV3Pool({token0: Tokens.WETH, token1: Tokens.CVX, fee: 10000}));
+        cm.uniswapV3Pools.push(UniswapV3Pool({token0: Tokens.SNX, token1: Tokens.USDC, fee: 10000}));
+        cm.uniswapV3Pools.push(UniswapV3Pool({token0: Tokens.OHM, token1: Tokens.USDC, fee: 3000}));
+        cm.sushiswapPairs.push(UniswapV2Pair({token0: Tokens.WBTC, token1: Tokens.WETH}));
+        cm.sushiswapPairs.push(UniswapV2Pair({token0: Tokens.WETH, token1: Tokens.USDT}));
+        cm.sushiswapPairs.push(UniswapV2Pair({token0: Tokens.USDC, token1: Tokens.WETH}));
+        cm.sushiswapPairs.push(UniswapV2Pair({token0: Tokens.DAI, token1: Tokens.WETH}));
+        cm.sushiswapPairs.push(UniswapV2Pair({token0: Tokens.WETH, token1: Tokens.FXS}));
+        cm.sushiswapPairs.push(UniswapV2Pair({token0: Tokens.LDO, token1: Tokens.WETH}));
+        cm.sushiswapPairs.push(UniswapV2Pair({token0: Tokens.CVX, token1: Tokens.WETH}));
+        cm.sushiswapPairs.push(UniswapV2Pair({token0: Tokens.CRV, token1: Tokens.WETH}));
+        cm.sushiswapPairs.push(UniswapV2Pair({token0: Tokens.SNX, token1: Tokens.WETH}));
+        cm.sushiswapPairs.push(UniswapV2Pair({token0: Tokens.WETH, token1: Tokens.SPELL}));
         cm = creditManagerHumanOpts[numOpts];
         ++numOpts;
         cm.underlying = Tokens.WETH;
