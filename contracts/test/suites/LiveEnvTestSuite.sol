@@ -326,6 +326,7 @@ contract LiveEnvTestSuite is CreditConfigLive {
 
                             _configureUniswapV2Pairs(address(cmf.creditManager()), i);
                             _configureUniswapV3Pools(address(cmf.creditManager()), i);
+                            _configureSushiswapPairs(address(cmf.creditManager()), i);
                             _configureConvexPhantomTokens(address(cmf.creditManager()));
                             _configureBalancerPools(address(cmf.creditManager()), i);
                         }
@@ -385,6 +386,7 @@ contract LiveEnvTestSuite is CreditConfigLive {
 
                             _configureUniswapV2Pairs(address(cmf.creditManager()), i);
                             _configureUniswapV3Pools(address(cmf.creditManager()), i);
+                            _configureSushiswapPairs(address(cmf.creditManager()), i);
                             _configureConvexPhantomTokens(address(cmf.creditManager()));
                             _configureBalancerPools(address(cmf.creditManager()), i);
                         }

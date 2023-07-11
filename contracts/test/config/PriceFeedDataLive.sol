@@ -417,6 +417,14 @@ contract PriceFeedDataLive {
         );
         curvePriceFeeds.push(
             CurvePriceFeedData({
+                poolType: CurvePoolType.STABLE,
+                lpToken: Tokens.MIM_3LP3CRV,
+                assets: assets(Tokens.MIM, Tokens.DAI, Tokens.USDC, Tokens.USDT),
+                pool: Contracts.CURVE_MIM_POOL
+            })
+        );
+        curvePriceFeeds.push(
+            CurvePriceFeedData({
                 poolType: CurvePoolType.CRYPTO,
                 lpToken: Tokens.OHMFRAXBP,
                 assets: assets(Tokens.OHM, Tokens.crvFRAX),
@@ -453,14 +461,6 @@ contract PriceFeedDataLive {
                 lpToken: Tokens.LDOETH,
                 assets: assets(Tokens.LDO, Tokens.WETH),
                 pool: Contracts.CURVE_LDOETH_POOL
-            })
-        );
-        curvePriceFeeds.push(
-            CurvePriceFeedData({
-                poolType: CurvePoolType.CRYPTO,
-                lpToken: Tokens.MIM_3LP3CRV,
-                assets: assets(Tokens.MIM, Tokens._3Crv),
-                pool: Contracts.CURVE_MIM_POOL
             })
         );
         yearnPriceFeeds.push(SingeTokenPriceFeedData({token: Tokens.yvDAI}));
