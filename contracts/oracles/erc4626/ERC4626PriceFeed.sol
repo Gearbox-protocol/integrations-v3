@@ -29,7 +29,7 @@ contract ERC4626PriceFeed is LPPriceFeed {
     uint256 public immutable underlyingUnit;
 
     PriceFeedType public constant override priceFeedType = PriceFeedType.ERC4626_VAULT_ORACLE;
-    uint256 public constant override version = 3_00;
+    uint256 public constant override version = 1;
 
     /// @dev Whether to skip price sanity checks.
     /// @notice Always set to true for LP price feeds,
@@ -50,10 +50,10 @@ contract ERC4626PriceFeed is LPPriceFeed {
         vault = IERC4626(_vault);
         priceFeed = AggregatorV3Interface(_priceFeed);
 
-        vaultShareUnit = 10 ** IERC4626(_vault).decimals();
-        underlyingUnit = 10 ** IERC20Metadata(IERC4626(_vault).asset()).decimals();
+        vaultShareUnit = 10 ** vault.decimals();
+        underlyingUnit = 10 ** IERC20Metadata(vault.asset()).decimals();
 
-        uint256 assetsPerShare = IERC4626(_vault).convertToAssets(vaultShareUnit);
+        uint256 assetsPerShare = vault.convertToAssets(vaultShareUnit);
         _setLimiter(assetsPerShare);
     }
 
@@ -69,7 +69,7 @@ contract ERC4626PriceFeed is LPPriceFeed {
         // Sanity check for chainlink pricefeed
         _checkAnswer(roundId, answer, updatedAt, answeredInRound);
 
-        uint256 assetsPerShare = IERC4626(vault).convertToAssets(vaultShareUnit);
+        uint256 assetsPerShare = vault.convertToAssets(vaultShareUnit);
 
         assetsPerShare = _checkAndUpperBoundValue(assetsPerShare);
 
@@ -77,7 +77,7 @@ contract ERC4626PriceFeed is LPPriceFeed {
     }
 
     function _checkCurrentValueInBounds(uint256 _lowerBound, uint256 _uBound) internal view override returns (bool) {
-        uint256 assetsPerShare = IERC4626(vault).convertToAssets(vaultShareUnit);
+        uint256 assetsPerShare = vault.convertToAssets(vaultShareUnit);
         if (assetsPerShare < _lowerBound || assetsPerShare > _uBound) {
             return false;
         }

@@ -4,6 +4,12 @@
 pragma solidity ^0.8.17;
 
 interface IERC4626Adapter {
+    function asset() external view returns (address);
+
+    function assetMask() external view returns (uint256);
+
+    function sharesMask() external view returns (uint256);
+
     function deposit(uint256 assets, address) external returns (uint256 tokensToEnable, uint256 tokensToDisable);
 
     function depositAll() external returns (uint256 tokensToEnable, uint256 tokensToDisable);

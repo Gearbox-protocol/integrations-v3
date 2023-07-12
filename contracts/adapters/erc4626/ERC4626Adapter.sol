@@ -15,16 +15,16 @@ import {IERC4626Adapter} from "../../interfaces/erc4626/IERC4626Adapter.sol";
 /// @notice Implements logic allowing CAs to interact with any standard-compliant ERC4626 vault
 contract ERC4626Adapter is AbstractAdapter, IERC4626Adapter {
     AdapterType public constant override _gearboxAdapterType = AdapterType.ERC4626_VAULT;
-    uint16 public constant override _gearboxAdapterVersion = 3_00;
+    uint16 public constant override _gearboxAdapterVersion = 1;
 
     /// @notice Address of the underlying asset of the vault
-    address public immutable asset;
+    address public immutable override asset;
 
     /// @notice Mask of the underlying asset of the vault
-    uint256 public immutable assetMask;
+    uint256 public immutable override assetMask;
 
     /// @notice Mask of the ERC4626 vault shares
-    uint256 public immutable sharesMask;
+    uint256 public immutable override sharesMask;
 
     /// @notice Constructor
     /// @param _creditManager Credit manager address
