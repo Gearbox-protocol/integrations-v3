@@ -5,7 +5,13 @@ pragma solidity ^0.8.17;
 
 import {IAdapter} from "../IAdapter.sol";
 import {ISwapRouter} from "../../integrations/uniswap/IUniswapV3.sol";
-import {IUniswapConnectorChecker} from "./IUniswapConnectorChecker.sol";
+
+struct UniswapV3PoolStatus {
+    address token0;
+    address token1;
+    uint24 fee;
+    bool allowed;
+}
 
 interface IUniswapV3AdapterExceptions {
     /// @notice Thrown when sanity checks on a swap path fail
@@ -14,7 +20,7 @@ interface IUniswapV3AdapterExceptions {
 
 /// @title Uniswap V3 Router adapter interface
 /// @notice Implements logic allowing CAs to perform swaps via Uniswap V3
-interface IUniswapV3Adapter is IAdapter, IUniswapConnectorChecker, IUniswapV3AdapterExceptions {
+interface IUniswapV3Adapter is IAdapter, IUniswapV3AdapterExceptions {
     /// @notice Swaps given amount of input token for output token through a single pool
     /// @param params Swap params, see `ISwapRouter.ExactInputSingleParams` for details
     /// @dev `params.recipient` is ignored since it can only be the credit account
@@ -71,4 +77,7 @@ interface IUniswapV3Adapter is IAdapter, IUniswapConnectorChecker, IUniswapV3Ada
     /// @dev `params.recipient` is ignored since it can only be the credit account
     /// @dev `params.path` must have at most 3 hops through registered connector tokens
     function exactOutput(ISwapRouter.ExactOutputParams calldata params) external;
+
+    /// @notice Returns whether the (token0, token1, fee) pool is allowed to be traded through the adapter
+    function isPoolAllowed(address token0, address token1, uint24 fee) external view returns (bool);
 }

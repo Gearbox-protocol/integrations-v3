@@ -77,15 +77,6 @@ contract AdapterDeployer is AdapterData, DSTest {
         }
     }
 
-    function _getInitConnectors() internal view returns (address[] memory connectors) {
-        connectors = new address[](4);
-
-        connectors[0] = tokenTestSuite.addressOf(Tokens.DAI);
-        connectors[1] = tokenTestSuite.addressOf(Tokens.USDC);
-        connectors[2] = tokenTestSuite.addressOf(Tokens.WETH);
-        connectors[3] = tokenTestSuite.addressOf(Tokens.FRAX);
-    }
-
     function getAdapters() external view returns (Adapter[] memory) {
         return adapters;
     }
@@ -105,16 +96,14 @@ contract AdapterDeployer is AdapterData, DSTest {
                         result.adapter = address(
                             new UniswapV2Adapter(
                                 creditManager,
-                                result.targetContract,
-                                _getInitConnectors()
+                                result.targetContract
                             )
                         );
                     } else if (at == AdapterType.UNISWAP_V3_ROUTER) {
                         result.adapter = address(
                             new UniswapV3Adapter(
                                 creditManager,
-                                result.targetContract,
-                                _getInitConnectors()
+                                result.targetContract
                             )
                         );
                     }

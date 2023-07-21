@@ -9,7 +9,11 @@ import {BytesLib} from "../../../integrations/uniswap/BytesLib.sol";
 
 import {ISwapRouter} from "../../../integrations/uniswap/IUniswapV3.sol";
 import {UniswapV3Adapter} from "../../../adapters/uniswap/UniswapV3.sol";
-import {IUniswapV3Adapter, IUniswapV3AdapterExceptions} from "../../../interfaces/uniswap/IUniswapV3Adapter.sol";
+import {
+    IUniswapV3Adapter,
+    IUniswapV3AdapterExceptions,
+    UniswapV3PoolStatus
+} from "../../../interfaces/uniswap/IUniswapV3Adapter.sol";
 import {UniswapV3Mock} from "../../mocks/integrations/UniswapV3Mock.sol";
 
 import {Tokens} from "../../suites/TokensTestSuite.sol";
@@ -50,16 +54,22 @@ contract UniswapV3AdapterTest is DSTest, AdapterTestHelper, IUniswapV3AdapterExc
 
         tokenTestSuite.mint(Tokens.WETH, address(uniswapMock), (2 * DAI_ACCOUNT_AMOUNT) / DAI_WETH_RATE);
 
-        address[] memory connectors = new address[](2);
-
-        connectors[0] = tokenTestSuite.addressOf(Tokens.USDC);
-        connectors[1] = tokenTestSuite.addressOf(Tokens.USDT);
-
         adapter = new UniswapV3Adapter(
             address(creditManager),
-            address(uniswapMock),
-            connectors
+            address(uniswapMock)
         );
+
+        UniswapV3PoolStatus[] memory pools = new UniswapV3PoolStatus[](1);
+
+        pools[0] = UniswapV3PoolStatus({
+            token0: tokenTestSuite.addressOf(Tokens.DAI),
+            token1: tokenTestSuite.addressOf(Tokens.WETH),
+            fee: 3000,
+            allowed: true
+        });
+
+        evm.prank(CONFIGURATOR);
+        UniswapV3Adapter(address(adapter)).setPoolBatchAllowanceStatus(pools);
 
         evm.prank(CONFIGURATOR);
         creditConfigurator.allowContract(address(uniswapMock), address(adapter));
@@ -467,6 +477,32 @@ contract UniswapV3AdapterTest is DSTest, AdapterTestHelper, IUniswapV3AdapterExc
 
     /// @dev [AUV3-9]: Path validity checks are correct
     function test_AUV3_09_path_validity_checks_are_correct() public {
+        UniswapV3PoolStatus[] memory pools = new UniswapV3PoolStatus[](3);
+
+        pools[0] = UniswapV3PoolStatus({
+            token0: creditManager.underlying(),
+            token1: tokenTestSuite.addressOf(Tokens.USDC),
+            fee: 3000,
+            allowed: true
+        });
+
+        pools[1] = UniswapV3PoolStatus({
+            token0: tokenTestSuite.addressOf(Tokens.USDC),
+            token1: tokenTestSuite.addressOf(Tokens.USDT),
+            fee: 3000,
+            allowed: true
+        });
+
+        pools[2] = UniswapV3PoolStatus({
+            token0: tokenTestSuite.addressOf(Tokens.WETH),
+            token1: tokenTestSuite.addressOf(Tokens.USDC),
+            fee: 3000,
+            allowed: true
+        });
+
+        evm.prank(CONFIGURATOR);
+        UniswapV3Adapter(address(adapter)).setPoolBatchAllowanceStatus(pools);
+
         _openTestCreditAccount();
 
         ISwapRouter.ExactInputParams memory exactInputParams = _getExactInputParams();

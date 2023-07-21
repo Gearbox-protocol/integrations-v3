@@ -54,6 +54,7 @@ import {TargetContractMock} from "@gearbox-protocol/core-v2/contracts/test/mocks
 
 import {UniswapV2Mock} from "../mocks/integrations/UniswapV2Mock.sol";
 import {UniswapV2Adapter} from "../../adapters/uniswap/UniswapV2.sol";
+import {UniswapPairStatus} from "../../interfaces/uniswap/IUniswapV2Adapter.sol";
 
 // SUITES
 import {TokensTestSuite, Tokens} from "../suites/TokensTestSuite.sol";
@@ -175,16 +176,21 @@ contract CreditFacadeTest is
         UniswapV2Adapter adapter;
 
         {
-            address[] memory connectors = new address[](2);
-
-            connectors[0] = tokenTestSuite.addressOf(Tokens.USDC);
-            connectors[1] = tokenTestSuite.addressOf(Tokens.USDT);
-
             adapter = new UniswapV2Adapter(
                 address(creditManager),
-                address(uniswapMock),
-                connectors
+                address(uniswapMock)
             );
+
+            UniswapPairStatus[] memory pairs = new UniswapPairStatus[](1);
+
+            pairs[0] = UniswapPairStatus({
+                token0: tokenTestSuite.addressOf(Tokens.DAI),
+                token1: tokenTestSuite.addressOf(Tokens.WETH),
+                allowed: true
+            });
+
+            evm.prank(CONFIGURATOR);
+            UniswapV2Adapter(address(adapter)).setPairBatchAllowanceStatus(pairs);
         }
 
         evm.prank(CONFIGURATOR);

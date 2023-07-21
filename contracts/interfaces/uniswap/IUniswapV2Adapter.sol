@@ -4,7 +4,12 @@
 pragma solidity ^0.8.17;
 
 import {IAdapter} from "../IAdapter.sol";
-import {IUniswapConnectorChecker} from "./IUniswapConnectorChecker.sol";
+
+struct UniswapPairStatus {
+    address token0;
+    address token1;
+    bool allowed;
+}
 
 interface IUniswapV2AdapterExceptions {
     /// @notice Thrown when sanity checks on a swap path fail
@@ -13,7 +18,7 @@ interface IUniswapV2AdapterExceptions {
 
 /// @title Uniswap V2 Router adapter interface
 /// @notice Implements logic allowing CAs to perform swaps via Uniswap V2 and its forks
-interface IUniswapV2Adapter is IAdapter, IUniswapConnectorChecker, IUniswapV2AdapterExceptions {
+interface IUniswapV2Adapter is IAdapter, IUniswapV2AdapterExceptions {
     /// @notice Swap input token for given amount of output token
     /// @param amountOut Amount of output token to receive
     /// @param amountInMax Maximum amount of input token to spend
@@ -50,4 +55,7 @@ interface IUniswapV2Adapter is IAdapter, IUniswapConnectorChecker, IUniswapV2Ada
     ///        through registered connector tokens
     /// @param deadline Maximum timestamp until which the transaction is valid
     function swapAllTokensForTokens(uint256 rateMinRAY, address[] calldata path, uint256 deadline) external;
+
+    /// @notice Returns whether the (token0, token1) is allowed to be traded through the adapter
+    function isPairAllowed(address token0, address token1) external view returns (bool);
 }

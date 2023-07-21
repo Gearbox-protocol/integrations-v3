@@ -465,6 +465,40 @@ for (let c of mainnetCreditManagers) {
       )
       .join("\n");
   }
+
+  if (c.uniV2Pairs) {
+    config += c.uniV2Pairs
+      .map(
+        pairConfig => `cm.uniswapV2Pairs.push(UniswapV2Pair({
+      token0: Tokens.${pairConfig.token0},
+      token1: Tokens.${pairConfig.token1}
+    }));`,
+      )
+      .join("\n");
+  }
+
+  if (c.uniV3Pools) {
+    config += c.uniV3Pools
+      .map(
+        poolConfig => `cm.uniswapV3Pools.push(UniswapV3Pool({
+      token0: Tokens.${poolConfig.token0},
+      token1: Tokens.${poolConfig.token1},
+      fee: ${poolConfig.fee}
+    }));`,
+      )
+      .join("\n");
+  }
+
+  if (c.sushiswapPairs) {
+    config += c.sushiswapPairs
+      .map(
+        pairConfig => `cm.sushiswapPairs.push(UniswapV2Pair({
+      token0: Tokens.${pairConfig.token0},
+      token1: Tokens.${pairConfig.token1}
+    }));`,
+      )
+      .join("\n");
+  }
 }
 file = fs.readFileSync("./bindings/CreditConfigLive.sol").toString();
 
