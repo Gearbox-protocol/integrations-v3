@@ -113,7 +113,7 @@ contract LiveEnvTestSuite is CreditConfigLive {
                 bool mintedNFT = false;
 
                 for (uint256 i = 0; i < cmList.length; ++i) {
-                    if (cmList[i].version == 2) {
+                    if (cmList[i].version == 2 || cmList[i].version == 2_10) {
                         Tokens underlyingT = tokenTestSuite.tokenIndexes(cmList[i].underlying);
 
                         _creditManagers[underlyingT].push(CreditManager(cmList[i].addr));
