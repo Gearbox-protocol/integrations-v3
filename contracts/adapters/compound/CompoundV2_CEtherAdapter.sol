@@ -7,7 +7,7 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import {AdapterType} from "../../interfaces/IAdapter.sol";
 
-import {CEtherGateway} from "./CEtherGateway.sol";
+import {CEtherGateway} from "../../gateways/compound/CEtherGateway.sol";
 import {CompoundV2_CTokenAdapter} from "./CompoundV2_CTokenAdapter.sol";
 import {ICEther} from "../../integrations/compound/ICEther.sol";
 import {ICompoundV2_CTokenAdapter} from "../../interfaces/compound/ICompoundV2_CTokenAdapter.sol";

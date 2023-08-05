@@ -8,7 +8,7 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {CurveV1Adapter2Assets} from "../../../../adapters/curve/CurveV1_2.sol";
 import {CurveV1Adapter3Assets} from "../../../../adapters/curve/CurveV1_3.sol";
 import {CurveV1Adapter4Assets} from "../../../../adapters/curve/CurveV1_4.sol";
-import {CurveV1StETHPoolGateway} from "../../../../adapters/curve/CurveV1_stETHGateway.sol";
+import {CurveV1StETHPoolGateway} from "../../../../gateways/curve/CurveV1_stETHGateway.sol";
 import {CurveV1AdapterStETH} from "../../../../adapters/curve/CurveV1_stETH.sol";
 import {ICurveV1Adapter, ICurveV1AdapterExceptions} from "../../../../interfaces/curve/ICurveV1Adapter.sol";
 import {ICurvePoolStETH} from "../../../../integrations/curve/ICurvePoolStETH.sol";
@@ -23,12 +23,11 @@ import {CurveV1Mock_2Assets} from "../../../mocks/integrations/CurveV1Mock_2Asse
 import {CurveV1Mock_3Assets} from "../../../mocks/integrations/CurveV1Mock_3Assets.sol";
 import {CurveV1Mock_4Assets} from "../../../mocks/integrations/CurveV1Mock_4Assets.sol";
 
-import {Tokens} from "../../../config/Tokens.sol";
+import {Tokens} from "@gearbox-protocol/sdk/contracts/Tokens.sol";
 
-import {CurveLP2PriceFeed} from "../../../../oracles/curve/CurveLP2PriceFeed.sol";
-import {CurveLP3PriceFeed} from "../../../../oracles/curve/CurveLP3PriceFeed.sol";
-import {CurveLP4PriceFeed} from "../../../../oracles/curve/CurveLP4PriceFeed.sol";
-import {CurveCryptoLPPriceFeed} from "../../../../oracles/curve/CurveCryptoLPPriceFeed.sol";
+import {PriceFeedParams} from "@gearbox-protocol/oracles-v3/contracts/oracles/AbstractPriceFeed.sol";
+import {CurveStableLPPriceFeed} from "@gearbox-protocol/oracles-v3/contracts/oracles/curve/CurveStableLPPriceFeed.sol";
+import {CurveCryptoLPPriceFeed} from "@gearbox-protocol/oracles-v3/contracts/oracles/curve/CurveCryptoLPPriceFeed.sol";
 
 // TEST
 import "../../../lib/constants.sol";
@@ -71,39 +70,42 @@ contract CurveV1AdapterHelper is Test, AdapterTestHelper, ICurveV1AdapterExcepti
             _curveV1MockAddr = address(new CurveV1Mock_2Assets(curvePoolTokens, curvePoolUnderlyings));
 
             _priceFeed = address(
-                new CurveLP2PriceFeed(
-                address(cft.addressProvider()),
+                new CurveStableLPPriceFeed(
+                address(addressProvider),
                 _curveV1MockAddr,
-                cft.priceOracle().priceFeeds(curvePoolTokens[0]),
-                cft.priceOracle().priceFeeds(curvePoolTokens[1]),
-                "CurveLP2PriceFeed"
+                [ PriceFeedParams({ priceFeed: priceOracle.priceFeeds(curvePoolTokens[0]), stalenessPeriod: 2 hours}),
+                 PriceFeedParams({ priceFeed: priceOracle.priceFeeds(curvePoolTokens[1]), stalenessPeriod: 2 hours}),
+                  PriceFeedParams({ priceFeed: address(0), stalenessPeriod: 0}),
+                  PriceFeedParams({ priceFeed: address(0), stalenessPeriod: 0})]
+
                 )
             );
         } else if (nCoins == 3) {
             _curveV1MockAddr = address(new CurveV1Mock_3Assets(curvePoolTokens, curvePoolUnderlyings));
 
             _priceFeed = address(
-                new CurveLP3PriceFeed(
-                    address(cft.addressProvider()),
-                    _curveV1MockAddr,
-                    cft.priceOracle().priceFeeds(curvePoolTokens[0]),
-                    cft.priceOracle().priceFeeds(curvePoolTokens[1]),
-                    cft.priceOracle().priceFeeds(curvePoolTokens[2]),
-                    "CurveLP3PriceFeed"
-                    )
+                new CurveStableLPPriceFeed(
+                address(addressProvider),
+                _curveV1MockAddr,
+                [ PriceFeedParams({ priceFeed: priceOracle.priceFeeds(curvePoolTokens[0]), stalenessPeriod: 2 hours}),
+                 PriceFeedParams({ priceFeed: priceOracle.priceFeeds(curvePoolTokens[1]), stalenessPeriod: 2 hours}),
+                PriceFeedParams({ priceFeed: priceOracle.priceFeeds(curvePoolTokens[2]), stalenessPeriod: 2 hours}),
+                  PriceFeedParams({ priceFeed: address(0), stalenessPeriod: 0})]
+
+                )
             );
         } else if (nCoins == 4) {
             _curveV1MockAddr = address(new CurveV1Mock_4Assets(curvePoolTokens, curvePoolUnderlyings));
 
             _priceFeed = address(
-                new CurveLP4PriceFeed(
-                    address(cft.addressProvider()),
-                    _curveV1MockAddr,
-                    cft.priceOracle().priceFeeds(curvePoolTokens[0]),
-                    cft.priceOracle().priceFeeds(curvePoolTokens[1]),
-                    cft.priceOracle().priceFeeds(curvePoolTokens[2]),
-                    cft.priceOracle().priceFeeds(curvePoolTokens[3]),
-                    "CurveLP4PriceFeed"
+                new CurveStableLPPriceFeed(
+                address(addressProvider),
+                _curveV1MockAddr,
+                [ PriceFeedParams({ priceFeed: priceOracle.priceFeeds(curvePoolTokens[0]), stalenessPeriod: 2 hours}),
+                 PriceFeedParams({ priceFeed: priceOracle.priceFeeds(curvePoolTokens[1]), stalenessPeriod: 2 hours}),
+                PriceFeedParams({ priceFeed: priceOracle.priceFeeds(curvePoolTokens[2]), stalenessPeriod: 2 hours}),
+                PriceFeedParams({ priceFeed: priceOracle.priceFeeds(curvePoolTokens[3]), stalenessPeriod: 2 hours})]
+
                 )
             );
         } else {
@@ -114,15 +116,15 @@ contract CurveV1AdapterHelper is Test, AdapterTestHelper, ICurveV1AdapterExcepti
 
         vm.startPrank(CONFIGURATOR);
 
-        cft.priceOracle().addPriceFeed(lpToken, _priceFeed);
-        CreditConfiguratorV3.addCollateralToken(lpToken, 9300);
+        priceOracle.setPriceFeed(lpToken, _priceFeed, 0);
+        creditConfigurator.addCollateralToken(lpToken, 9300);
 
         vm.stopPrank();
 
         if (nCoins == 2) {
             _adapterAddr = address(
                 new CurveV1Adapter2Assets(
-                    address(CreditManagerV3),
+                    address(creditManager),
                     _curveV1MockAddr,
                     lpToken,
                     address(0)
@@ -131,7 +133,7 @@ contract CurveV1AdapterHelper is Test, AdapterTestHelper, ICurveV1AdapterExcepti
         } else if (nCoins == 3) {
             _adapterAddr = address(
                 new CurveV1Adapter3Assets(
-                    address(CreditManagerV3),
+                    address(creditManager),
                     _curveV1MockAddr,
                     lpToken,
                     address(0)
@@ -140,7 +142,7 @@ contract CurveV1AdapterHelper is Test, AdapterTestHelper, ICurveV1AdapterExcepti
         } else if (nCoins == 4) {
             _adapterAddr = address(
                 new CurveV1Adapter4Assets(
-                    address(CreditManagerV3),
+                    address(creditManager),
                     _curveV1MockAddr,
                     lpToken,
                     address(0)
@@ -151,7 +153,7 @@ contract CurveV1AdapterHelper is Test, AdapterTestHelper, ICurveV1AdapterExcepti
         }
 
         vm.prank(CONFIGURATOR);
-        CreditConfiguratorV3.allowContract(_curveV1MockAddr, _adapterAddr);
+        creditConfigurator.allowAdapter(_adapterAddr);
 
         tokenTestSuite.mint(Tokens.cDAI, USER, DAI_ACCOUNT_AMOUNT);
         tokenTestSuite.mint(Tokens.DAI, USER, DAI_ACCOUNT_AMOUNT);
@@ -182,7 +184,7 @@ contract CurveV1AdapterHelper is Test, AdapterTestHelper, ICurveV1AdapterExcepti
         address steth = tokenTestSuite.addressOf(Tokens.STETH);
         address weth = tokenTestSuite.addressOf(Tokens.WETH);
 
-        // CreditManagerV3.addToken(tokenTestSuite.addressOf(Tokens.STETH));
+        // creditManager.addToken(tokenTestSuite.addressOf(Tokens.STETH));
 
         tokenTestSuite.topUpWETH{value: 1e24}();
 
@@ -197,34 +199,34 @@ contract CurveV1AdapterHelper is Test, AdapterTestHelper, ICurveV1AdapterExcepti
         _curveV1stETHPoolGateway = address(new CurveV1StETHPoolGateway(weth, steth, _curveV1stETHMockAddr));
 
         address _priceFeed = address(
-            new CurveLP2PriceFeed(
-                address(cft.addressProvider()),
+            new CurveStableLPPriceFeed(
+                address(addressProvider),
                 _curveV1stETHMockAddr,
-                cft.priceOracle().priceFeeds(
-                    tokenTestSuite.addressOf(Tokens.WETH)
-                ),
-                cft.priceOracle().priceFeeds(
-                    tokenTestSuite.addressOf(Tokens.STETH)
-                ),
-                "CurveLPETHPriceFeed"
+
+                  [ PriceFeedParams({ priceFeed: priceOracle.priceFeeds(tokenTestSuite.addressOf(Tokens.WETH)), stalenessPeriod: 2 hours}),
+                 PriceFeedParams({ priceFeed: priceOracle.priceFeeds(tokenTestSuite.addressOf(Tokens.STETH)), stalenessPeriod: 2 hours}),
+                  PriceFeedParams({ priceFeed: address(0), stalenessPeriod: 0}),
+                  PriceFeedParams({ priceFeed: address(0), stalenessPeriod: 0})]
+             
+
             )
         );
 
         vm.startPrank(CONFIGURATOR);
-        // CreditConfiguratorV3.addCollateralToken(steth, 8300);
+        // creditConfigurator.addCollateralToken(steth, 8300);
 
-        cft.priceOracle().addPriceFeed(lpToken, _priceFeed);
-        CreditConfiguratorV3.addCollateralToken(lpToken, 8800);
+        priceOracle.setPriceFeed(lpToken, _priceFeed, 0);
+        creditConfigurator.addCollateralToken(lpToken, 8800);
 
         _adapterStETHAddr = address(
             new CurveV1AdapterStETH(
-                address(CreditManagerV3),
+                address(creditManager),
                 _curveV1stETHPoolGateway,
                 lpToken
             )
         );
 
-        CreditConfiguratorV3.allowContract(_curveV1stETHPoolGateway, _adapterStETHAddr);
+        creditConfigurator.allowAdapter(_adapterStETHAddr);
 
         vm.stopPrank();
 
@@ -246,13 +248,15 @@ contract CurveV1AdapterHelper is Test, AdapterTestHelper, ICurveV1AdapterExcepti
         _basePoolAddr = address(new CurveV1Mock_3Assets(curvePoolTokens, curvePoolUnderlyings));
 
         address _priceFeed = address(
-            new CurveLP3PriceFeed(
-                address(cft.addressProvider()),
+            new CurveStableLPPriceFeed(
+                address(addressProvider),
                 _basePoolAddr,
-                cft.priceOracle().priceFeeds(curvePoolTokens[0]),
-                cft.priceOracle().priceFeeds(curvePoolTokens[1]),
-                cft.priceOracle().priceFeeds(curvePoolTokens[2]),
-                "CurveLP3PriceFeed"
+                [PriceFeedParams({ priceFeed:  priceOracle.priceFeeds(curvePoolTokens[0]),
+                stalenessPeriod: 2 hours}),
+                 PriceFeedParams({ priceFeed: priceOracle.priceFeeds(curvePoolTokens[1]), stalenessPeriod: 2 hours}),
+                 PriceFeedParams({ priceFeed: priceOracle.priceFeeds(curvePoolTokens[2]), stalenessPeriod: 2 hours}),
+                 PriceFeedParams({ priceFeed: address(0), stalenessPeriod: 0})]
+
             )
         );
 
@@ -260,8 +264,8 @@ contract CurveV1AdapterHelper is Test, AdapterTestHelper, ICurveV1AdapterExcepti
 
         vm.startPrank(CONFIGURATOR);
 
-        cft.priceOracle().addPriceFeed(baseLpToken, _priceFeed);
-        CreditConfiguratorV3.addCollateralToken(baseLpToken, 9300);
+        priceOracle.setPriceFeed(baseLpToken, _priceFeed, 0);
+        creditConfigurator.addCollateralToken(baseLpToken, 9300);
 
         vm.stopPrank();
 
@@ -279,14 +283,14 @@ contract CurveV1AdapterHelper is Test, AdapterTestHelper, ICurveV1AdapterExcepti
         curvePoolTokens = getPoolTokens(4);
 
         _priceFeed = address(
-            new CurveLP4PriceFeed(
-                address(cft.addressProvider()),
+            new CurveStableLPPriceFeed(
+                address(addressProvider),
                 _curveV1MockAddr,
-                cft.priceOracle().priceFeeds(curvePoolTokens[0]),
-                cft.priceOracle().priceFeeds(curvePoolTokens[1]),
-                cft.priceOracle().priceFeeds(curvePoolTokens[2]),
-                cft.priceOracle().priceFeeds(curvePoolTokens[3]),
-                "CurveLP3PriceFeed"
+               [PriceFeedParams({ priceFeed: priceOracle.priceFeeds(curvePoolTokens[0]), stalenessPeriod: 2 hours }),
+                PriceFeedParams({ priceFeed:priceOracle.priceFeeds(curvePoolTokens[1]),stalenessPeriod: 2 hours }),
+                PriceFeedParams({ priceFeed:priceOracle.priceFeeds(curvePoolTokens[2]),stalenessPeriod: 2 hours }),
+                PriceFeedParams({ priceFeed:priceOracle.priceFeeds(curvePoolTokens[3]),stalenessPeriod: 2 hours })]
+
             )
         );
 
@@ -294,14 +298,14 @@ contract CurveV1AdapterHelper is Test, AdapterTestHelper, ICurveV1AdapterExcepti
 
         vm.startPrank(CONFIGURATOR);
 
-        cft.priceOracle().addPriceFeed(lpToken, _priceFeed);
-        CreditConfiguratorV3.addCollateralToken(lpToken, 9300);
+        priceOracle.setPriceFeed(lpToken, _priceFeed, 0);
+        creditConfigurator.addCollateralToken(lpToken, 9300);
 
         vm.stopPrank();
 
         _adapterAddr = address(
             new CurveV1Adapter2Assets(
-                address(CreditManagerV3),
+                address(creditManager),
                 _curveV1MockAddr,
                 lpToken,
                 _basePoolAddr
@@ -309,7 +313,7 @@ contract CurveV1AdapterHelper is Test, AdapterTestHelper, ICurveV1AdapterExcepti
         );
 
         vm.prank(CONFIGURATOR);
-        CreditConfiguratorV3.allowContract(_curveV1MockAddr, _adapterAddr);
+        creditConfigurator.allowAdapter(_adapterAddr);
 
         tokenTestSuite.mint(Tokens.cLINK, _curveV1MockAddr, LINK_ACCOUNT_AMOUNT);
         CurveV1Mock(_basePoolAddr).mintLP(_curveV1MockAddr, DAI_ACCOUNT_AMOUNT);
@@ -331,13 +335,14 @@ contract CurveV1AdapterHelper is Test, AdapterTestHelper, ICurveV1AdapterExcepti
         _basePoolAddr = address(new CurveV1Mock_3Assets(curvePoolTokens, curvePoolUnderlyings));
 
         address _basePriceFeed = address(
-            new CurveLP3PriceFeed(
-                address(cft.addressProvider()),
+            new CurveStableLPPriceFeed(
+                address(addressProvider),
                 _basePoolAddr,
-                cft.priceOracle().priceFeeds(curvePoolTokens[0]),
-                cft.priceOracle().priceFeeds(curvePoolTokens[1]),
-                cft.priceOracle().priceFeeds(curvePoolTokens[2]),
-                "CurveLP3PriceFeed"
+                [PriceFeedParams({ priceFeed: priceOracle.priceFeeds(curvePoolTokens[0]), stalenessPeriod: 2 hours}),
+                 PriceFeedParams({ priceFeed: priceOracle.priceFeeds(curvePoolTokens[1]),stalenessPeriod: 2 hours}),
+                PriceFeedParams({priceFeed:  priceOracle.priceFeeds(curvePoolTokens[2]),stalenessPeriod: 2 hours}),
+                PriceFeedParams({priceFeed: address(0),stalenessPeriod:0})]
+
             )
         );
 
@@ -345,8 +350,8 @@ contract CurveV1AdapterHelper is Test, AdapterTestHelper, ICurveV1AdapterExcepti
 
         vm.startPrank(CONFIGURATOR);
 
-        cft.priceOracle().addPriceFeed(baseLpToken, _basePriceFeed);
-        CreditConfiguratorV3.addCollateralToken(baseLpToken, 9300);
+        priceOracle.setPriceFeed(baseLpToken, _basePriceFeed, 0);
+        creditConfigurator.addCollateralToken(baseLpToken, 9300);
 
         vm.stopPrank();
 
@@ -367,12 +372,12 @@ contract CurveV1AdapterHelper is Test, AdapterTestHelper, ICurveV1AdapterExcepti
 
         address _priceFeed = address(
             new CurveCryptoLPPriceFeed(
-                address(cft.addressProvider()),
+                address(addressProvider),
                 _curveV1MockAddr,
-                cft.priceOracle().priceFeeds(curvePoolTokens[3]),
-                _basePriceFeed,
-                address(0),
-                "CurveCryptoPriceFeed"
+                [PriceFeedParams({priceFeed: priceOracle.priceFeeds(curvePoolTokens[3]), stalenessPeriod:  2 hours}),
+               PriceFeedParams({priceFeed: _basePriceFeed,stalenessPeriod: 0}),
+               PriceFeedParams({priceFeed: address(0), stalenessPeriod: 0})]
+
             )
         );
 
@@ -380,14 +385,14 @@ contract CurveV1AdapterHelper is Test, AdapterTestHelper, ICurveV1AdapterExcepti
 
         vm.startPrank(CONFIGURATOR);
 
-        cft.priceOracle().addPriceFeed(lpToken, _priceFeed);
-        CreditConfiguratorV3.addCollateralToken(lpToken, 9300);
+        priceOracle.setPriceFeed(lpToken, _priceFeed, 0);
+        creditConfigurator.addCollateralToken(lpToken, 9300);
 
         vm.stopPrank();
 
         _adapterAddr = address(
             new CurveV1Adapter2Assets(
-                address(CreditManagerV3),
+                address(creditManager),
                 _curveV1MockAddr,
                 lpToken,
                 _basePoolAddr
@@ -395,7 +400,7 @@ contract CurveV1AdapterHelper is Test, AdapterTestHelper, ICurveV1AdapterExcepti
         );
 
         vm.prank(CONFIGURATOR);
-        CreditConfiguratorV3.allowContract(_curveV1MockAddr, _adapterAddr);
+        creditConfigurator.allowAdapter(_adapterAddr);
 
         tokenTestSuite.mint(Tokens.cLINK, _curveV1MockAddr, LINK_ACCOUNT_AMOUNT);
         CurveV1Mock(_basePoolAddr).mintLP(_curveV1MockAddr, DAI_ACCOUNT_AMOUNT * 100);
@@ -415,12 +420,12 @@ contract CurveV1AdapterHelper is Test, AdapterTestHelper, ICurveV1AdapterExcepti
 
         for (uint256 i = 0; i < nCoins; i++) {
             poolTokens[i] = tokenTestSuite.addressOf(poolTkns[i]);
-            if (CreditManagerV3.tokenMasksMap(poolTokens[i]) == 0) {
+            if (creditManager.getTokenMaskOrRevert(poolTokens[i]) == 0) {
                 vm.startPrank(CONFIGURATOR);
-                cft.priceOracle().addPriceFeed(
-                    poolTokens[i], cft.priceOracle().priceFeeds(tokenTestSuite.addressOf(poolTkns[i]))
+                priceOracle.setPriceFeed(
+                    poolTokens[i], priceOracle.priceFeeds(tokenTestSuite.addressOf(poolTkns[i])), 0
                 );
-                CreditConfiguratorV3.addCollateralToken(poolTokens[i], 9300);
+                creditConfigurator.addCollateralToken(poolTokens[i], 9300);
                 vm.stopPrank();
             }
         }
@@ -433,13 +438,14 @@ contract CurveV1AdapterHelper is Test, AdapterTestHelper, ICurveV1AdapterExcepti
 
         for (uint256 i = 0; i < nCoins; i++) {
             underlyingPoolTokens[i] = tokenTestSuite.addressOf(underlyingPoolTkns[i]);
-            if (CreditManagerV3.tokenMasksMap(underlyingPoolTokens[i]) == 0) {
+            if (creditManager.getTokenMaskOrRevert(underlyingPoolTokens[i]) == 0) {
                 vm.startPrank(CONFIGURATOR);
-                cft.priceOracle().addPriceFeed(
+                priceOracle.setPriceFeed(
                     underlyingPoolTokens[i],
-                    cft.priceOracle().priceFeeds(tokenTestSuite.addressOf(underlyingPoolTkns[i]))
+                    priceOracle.priceFeeds(tokenTestSuite.addressOf(underlyingPoolTkns[i])),
+                    2 hours
                 );
-                CreditConfiguratorV3.addCollateralToken(underlyingPoolTokens[i], 9300);
+                creditConfigurator.addCollateralToken(underlyingPoolTokens[i], 9300);
                 vm.stopPrank();
             }
         }
@@ -475,9 +481,9 @@ contract CurveV1AdapterHelper is Test, AdapterTestHelper, ICurveV1AdapterExcepti
         crv.set_minter(address(curveV1Mock));
 
         vm.startPrank(USER);
-        IERC20(address(crv)).approve(address(CreditManagerV3), type(uint256).max);
+        IERC20(address(crv)).approve(address(creditManager), type(uint256).max);
 
-        creditFacade.addCollateral(USER, address(crv), amount);
+        // creditFacade.addCollateral(USER, address(crv), amount);
 
         vm.stopPrank();
     }
@@ -489,21 +495,24 @@ contract CurveV1AdapterHelper is Test, AdapterTestHelper, ICurveV1AdapterExcepti
     //
     // ADD LIQUIDITY
     //
-    function expectAddLiquidityCalls(address borrower, bytes memory callData, uint256 nCoins) internal {
+    function expectAddLiquidityCalls(address creditAccount, address borrower, bytes memory callData, uint256 nCoins)
+        internal
+    {
         address[] memory curvePoolTokens = getPoolTokens(nCoins);
 
-        _expectAddLiquidityCalls(borrower, callData, _curveV1MockAddr, curvePoolTokens);
+        _expectAddLiquidityCalls(creditAccount, borrower, callData, _curveV1MockAddr, curvePoolTokens);
     }
 
-    function expectStETHAddLiquidityCalls(address borrower, bytes memory callData) internal {
+    function expectStETHAddLiquidityCalls(address creditAccount, address borrower, bytes memory callData) internal {
         address[] memory curvePoolTokens = new address[](2);
         curvePoolTokens[0] = tokenTestSuite.addressOf(Tokens.WETH);
         curvePoolTokens[1] = tokenTestSuite.addressOf(Tokens.STETH);
 
-        _expectAddLiquidityCalls(borrower, callData, _curveV1stETHPoolGateway, curvePoolTokens);
+        _expectAddLiquidityCalls(creditAccount, borrower, callData, _curveV1stETHPoolGateway, curvePoolTokens);
     }
 
     function _expectAddLiquidityCalls(
+        address creditAccount,
         address borrower,
         bytes memory callData,
         address pool,
@@ -512,52 +521,53 @@ contract CurveV1AdapterHelper is Test, AdapterTestHelper, ICurveV1AdapterExcepti
         uint256 nCoins = curvePoolTokens.length;
 
         vm.expectEmit(true, false, false, false);
-        emit MultiCallStarted(borrower);
+        emit StartMultiCall(creditAccount, borrower);
 
         for (uint256 i = 0; i < nCoins; i++) {
             vm.expectCall(
-                address(CreditManagerV3),
-                abi.encodeCall(ICreditManagerV3.approveCreditAccount, (pool, curvePoolTokens[i], type(uint256).max))
+                address(creditManager),
+                abi.encodeCall(ICreditManagerV3.approveCreditAccount, (curvePoolTokens[i], type(uint256).max))
             );
         }
 
-        uint256 lpTokenMask = CreditManagerV3.tokenMasksMap(lpToken);
-        vm.expectCall(address(CreditManagerV3), abi.encodeCall(ICreditManagerV3.changeEnabledTokens, (lpTokenMask, 0)));
+        uint256 lpTokenMask = creditManager.getTokenMaskOrRevert(lpToken);
 
-        vm.expectCall(address(CreditManagerV3), abi.encodeCall(ICreditManagerV3.executeOrder, (pool, callData)));
+        vm.expectCall(address(creditManager), abi.encodeCall(ICreditManagerV3.execute, (callData)));
 
         vm.expectEmit(true, false, false, false);
-        emit ExecuteOrder(pool);
+        emit Execute(creditAccount, pool);
 
         for (uint256 i = 0; i < nCoins; i++) {
             vm.expectCall(
-                address(CreditManagerV3),
-                abi.encodeCall(ICreditManagerV3.approveCreditAccount, (pool, curvePoolTokens[i], 1))
+                address(creditManager), abi.encodeCall(ICreditManagerV3.approveCreditAccount, (curvePoolTokens[i], 1))
             );
         }
 
         vm.expectEmit(false, false, false, false);
-        emit MultiCallFinished();
+        emit FinishMultiCall();
     }
 
     //
     // REMOVE LIQUIDITY
     //
-    function expectRemoveLiquidityCalls(address borrower, bytes memory callData, uint256 nCoins) internal {
+    function expectRemoveLiquidityCalls(address creditAccount, address borrower, bytes memory callData, uint256 nCoins)
+        internal
+    {
         address[] memory curvePoolTokens = getPoolTokens(nCoins);
 
-        _expectRemoveLiquidityCalls(borrower, callData, _curveV1MockAddr, curvePoolTokens);
+        _expectRemoveLiquidityCalls(creditAccount, borrower, callData, _curveV1MockAddr, curvePoolTokens);
     }
 
-    function expectStETHRemoveLiquidityCalls(address borrower, bytes memory callData) internal {
+    function expectStETHRemoveLiquidityCalls(address creditAccount, address borrower, bytes memory callData) internal {
         address[] memory curvePoolTokens = new address[](2);
         curvePoolTokens[0] = tokenTestSuite.addressOf(Tokens.WETH);
         curvePoolTokens[1] = tokenTestSuite.addressOf(Tokens.STETH);
 
-        _expectRemoveLiquidityCalls(borrower, callData, _curveV1stETHPoolGateway, curvePoolTokens);
+        _expectRemoveLiquidityCalls(creditAccount, borrower, callData, _curveV1stETHPoolGateway, curvePoolTokens);
     }
 
     function _expectRemoveLiquidityCalls(
+        address creditAccount,
         address borrower,
         bytes memory callData,
         address pool,
@@ -566,27 +576,27 @@ contract CurveV1AdapterHelper is Test, AdapterTestHelper, ICurveV1AdapterExcepti
         uint256 nCoins = curvePoolTokens.length;
 
         vm.expectEmit(true, false, false, false);
-        emit MultiCallStarted(borrower);
+        emit StartMultiCall(creditAccount, borrower);
 
         uint256 tokensMask;
         for (uint256 i = 0; i < nCoins; i++) {
-            tokensMask |= CreditManagerV3.tokenMasksMap(curvePoolTokens[i]);
+            tokensMask |= creditManager.getTokenMaskOrRevert(curvePoolTokens[i]);
         }
-        vm.expectCall(address(CreditManagerV3), abi.encodeCall(ICreditManagerV3.changeEnabledTokens, (tokensMask, 0)));
 
-        vm.expectCall(address(CreditManagerV3), abi.encodeCall(ICreditManagerV3.executeOrder, (pool, callData)));
+        vm.expectCall(address(creditManager), abi.encodeCall(ICreditManagerV3.execute, (callData)));
 
         vm.expectEmit(true, false, false, false);
-        emit ExecuteOrder(pool);
+        emit Execute(creditAccount, pool);
 
         vm.expectEmit(false, false, false, false);
-        emit MultiCallFinished();
+        emit FinishMultiCall();
     }
 
     //
     // REMOVE LIQUIDITY IMBALANCE
     //
     function expectRemoveLiquidityImbalanceCalls(
+        address creditAccount,
         address borrower,
         bytes memory callData,
         uint256 nCoins,
@@ -594,10 +604,13 @@ contract CurveV1AdapterHelper is Test, AdapterTestHelper, ICurveV1AdapterExcepti
     ) internal {
         address[] memory curvePoolTokens = getPoolTokens(nCoins);
 
-        _expectRemoveLiquidityImbalanceCalls(borrower, callData, amounts, _curveV1MockAddr, curvePoolTokens);
+        _expectRemoveLiquidityImbalanceCalls(
+            creditAccount, borrower, callData, amounts, _curveV1MockAddr, curvePoolTokens
+        );
     }
 
     function expectStETHRemoveLiquidityImbalanceCalls(
+        address creditAccount,
         address borrower,
         bytes memory callData,
         uint256[2] memory amounts
@@ -607,11 +620,12 @@ contract CurveV1AdapterHelper is Test, AdapterTestHelper, ICurveV1AdapterExcepti
         curvePoolTokens[1] = tokenTestSuite.addressOf(Tokens.STETH);
 
         _expectRemoveLiquidityImbalanceCalls(
-            borrower, callData, _castToDynamic(amounts), _curveV1stETHPoolGateway, curvePoolTokens
+            creditAccount, borrower, callData, _castToDynamic(amounts), _curveV1stETHPoolGateway, curvePoolTokens
         );
     }
 
     function _expectRemoveLiquidityImbalanceCalls(
+        address creditAccount,
         address borrower,
         bytes memory callData,
         uint256[] memory amounts,
@@ -621,52 +635,54 @@ contract CurveV1AdapterHelper is Test, AdapterTestHelper, ICurveV1AdapterExcepti
         uint256 nCoins = curvePoolTokens.length;
 
         vm.expectEmit(true, false, false, false);
-        emit MultiCallStarted(borrower);
+        emit StartMultiCall(creditAccount, borrower);
 
         uint256 tokensMask;
         for (uint256 i = 0; i < nCoins; i++) {
             if (amounts[i] > 0) {
-                tokensMask |= CreditManagerV3.tokenMasksMap(curvePoolTokens[i]);
+                tokensMask |= creditManager.getTokenMaskOrRevert(curvePoolTokens[i]);
             }
         }
-        vm.expectCall(address(CreditManagerV3), abi.encodeCall(ICreditManagerV3.changeEnabledTokens, (tokensMask, 0)));
 
-        vm.expectCall(address(CreditManagerV3), abi.encodeCall(ICreditManagerV3.executeOrder, (pool, callData)));
+        vm.expectCall(address(creditManager), abi.encodeCall(ICreditManagerV3.execute, (callData)));
 
         vm.expectEmit(true, false, false, false);
-        emit ExecuteOrder(pool);
+        emit Execute(creditAccount, pool);
 
         vm.expectEmit(false, false, false, false);
-        emit MultiCallFinished();
+        emit FinishMultiCall();
     }
 
     function expectRemoveLiquidityImbalanceCalls(
+        address creditAccount,
         address borrower,
         bytes memory callData,
         uint256 nCoins,
         uint256[2] memory amounts
     ) internal {
         uint256[] memory amts = _castToDynamic(amounts);
-        expectRemoveLiquidityImbalanceCalls(borrower, callData, nCoins, amts);
+        expectRemoveLiquidityImbalanceCalls(creditAccount, borrower, callData, nCoins, amts);
     }
 
     function expectRemoveLiquidityImbalanceCalls(
+        address creditAccount,
         address borrower,
         bytes memory callData,
         uint256 nCoins,
         uint256[3] memory amounts
     ) internal {
         uint256[] memory amts = _castToDynamic(amounts);
-        expectRemoveLiquidityImbalanceCalls(borrower, callData, nCoins, amts);
+        expectRemoveLiquidityImbalanceCalls(creditAccount, borrower, callData, nCoins, amts);
     }
 
     function expectRemoveLiquidityImbalanceCalls(
+        address creditAccount,
         address borrower,
         bytes memory callData,
         uint256 nCoins,
         uint256[4] memory amounts
     ) internal {
         uint256[] memory amts = _castToDynamic(amounts);
-        expectRemoveLiquidityImbalanceCalls(borrower, callData, nCoins, amts);
+        expectRemoveLiquidityImbalanceCalls(creditAccount, borrower, callData, nCoins, amts);
     }
 }

@@ -11,7 +11,7 @@ import {ICurvePool} from "../../../../integrations/curve/ICurvePool.sol";
 import {ICurvePool2Assets} from "../../../../integrations/curve/ICurvePool_2.sol";
 import {CurveV1Mock} from "../../../mocks/integrations/CurveV1Mock.sol";
 
-import {Tokens} from "../../../suites/TokensTestSuite.sol";
+import {Tokens} from "@gearbox-protocol/sdk/contracts/Tokens.sol";
 
 // TEST
 import "../../../lib/constants.sol";
@@ -77,9 +77,9 @@ contract CurveV1StEthAdapterTest is Test, CurveV1AdapterHelper {
 
         bytes memory callData = abi.encodeCall(ICurvePool2Assets.add_liquidity, (amounts, CURVE_LP_OPERATION_AMOUNT));
 
-        expectStETHAddLiquidityCalls(USER, callData);
+        expectStETHAddLiquidityCalls(creditAccount, USER, callData);
 
-        executeOneLineMulticall(address(adapter), callData);
+        executeOneLineMulticall(creditAccount, address(adapter), callData);
 
         expectBalance(Tokens.WETH, creditAccount, initialWethBalance - WETH_ADD_LIQUIDITY_AMOUNT);
 
@@ -94,7 +94,7 @@ contract CurveV1StEthAdapterTest is Test, CurveV1AdapterHelper {
 
         expectBalance(Tokens.STETH, address(curveV1Mock), stethBalanceBefore + STETH_ADD_LIQUIDITY_AMOUNT);
 
-        expectTokenIsEnabled(lp_token, true);
+        expectTokenIsEnabled(creditAccount, lp_token, true);
 
         expectAllowance(Tokens.WETH, creditAccount, _curveV1stETHPoolGateway, 1);
 
@@ -121,7 +121,7 @@ contract CurveV1StEthAdapterTest is Test, CurveV1AdapterHelper {
         expectBalance(lp_token, _curveV1stETHPoolGateway, 0, "setGateway lp_token != 0");
 
         executeOneLineMulticall(
-            address(adapter), abi.encodeCall(adapter.add_liquidity, (amounts, CURVE_LP_OPERATION_AMOUNT))
+            creditAccount, address(adapter), abi.encodeCall(adapter.add_liquidity, (amounts, CURVE_LP_OPERATION_AMOUNT))
         );
 
         // Initial Gateway LP balance should be equal 1
@@ -134,9 +134,9 @@ contract CurveV1StEthAdapterTest is Test, CurveV1AdapterHelper {
             (CURVE_LP_OPERATION_AMOUNT / 2, [WETH_REMOVE_LIQUIDITY_AMOUNT, STETH_REMOVE_LIQUIDITY_AMOUNT])
         );
 
-        expectStETHRemoveLiquidityCalls(USER, callData);
+        expectStETHRemoveLiquidityCalls(creditAccount, USER, callData);
 
-        executeOneLineMulticall(address(adapter), callData);
+        executeOneLineMulticall(creditAccount, address(adapter), callData);
 
         // balance -1 cause gateway takes it for gas efficience
         expectBalance(
@@ -166,8 +166,8 @@ contract CurveV1StEthAdapterTest is Test, CurveV1AdapterHelper {
 
         expectAllowance(lp_token, creditAccount, _curveV1stETHPoolGateway, 1);
 
-        expectTokenIsEnabled(Tokens.WETH, true);
-        expectTokenIsEnabled(Tokens.STETH, true);
+        expectTokenIsEnabled(creditAccount, Tokens.WETH, true);
+        expectTokenIsEnabled(creditAccount, Tokens.STETH, true);
     }
 
     /// @dev [ACV1S-3]: exchange works correctly
@@ -190,7 +190,7 @@ contract CurveV1StEthAdapterTest is Test, CurveV1AdapterHelper {
 
         expectMulticallStackCalls(address(adapter), _curveV1stETHPoolGateway, USER, callData, tokenIn, tokenOut, true);
 
-        executeOneLineMulticall(address(adapter), callData);
+        executeOneLineMulticall(creditAccount, address(adapter), callData);
 
         expectBalance(Tokens.WETH, creditAccount, initialWethBalance - WETH_EXCHANGE_AMOUNT);
 
@@ -201,7 +201,7 @@ contract CurveV1StEthAdapterTest is Test, CurveV1AdapterHelper {
 
         expectAllowance(Tokens.WETH, creditAccount, _curveV1stETHPoolGateway, 1);
 
-        expectTokenIsEnabled(Tokens.STETH, true);
+        expectTokenIsEnabled(creditAccount, Tokens.STETH, true);
     }
 
     /// @dev [ACV1S-4]: remove_liquidity_one_coin works correctly
@@ -225,7 +225,7 @@ contract CurveV1StEthAdapterTest is Test, CurveV1AdapterHelper {
 
         expectMulticallStackCalls(address(adapter), _curveV1stETHPoolGateway, USER, callData, tokenIn, tokenOut, true);
 
-        executeOneLineMulticall(address(adapter), callData);
+        executeOneLineMulticall(creditAccount, address(adapter), callData);
 
         expectBalance(tokenIn, creditAccount, CURVE_LP_ACCOUNT_AMOUNT - CURVE_LP_OPERATION_AMOUNT);
 
@@ -235,7 +235,7 @@ contract CurveV1StEthAdapterTest is Test, CurveV1AdapterHelper {
 
         expectAllowance(tokenIn, creditAccount, _curveV1stETHPoolGateway, 1);
 
-        expectTokenIsEnabled(Tokens.WETH, true);
+        expectTokenIsEnabled(creditAccount, Tokens.WETH, true);
     }
 
     /// @dev [ACV1S-5]: remove_all_liquidity_one_coin works correctly
@@ -266,7 +266,9 @@ contract CurveV1StEthAdapterTest is Test, CurveV1AdapterHelper {
         );
 
         executeOneLineMulticall(
-            address(adapter), abi.encodeWithSignature("remove_all_liquidity_one_coin(int128,uint256)", 0, rateRAY)
+            creditAccount,
+            address(adapter),
+            abi.encodeWithSignature("remove_all_liquidity_one_coin(int128,uint256)", 0, rateRAY)
         );
 
         expectBalance(tokenIn, creditAccount, 1);
@@ -277,7 +279,7 @@ contract CurveV1StEthAdapterTest is Test, CurveV1AdapterHelper {
 
         expectAllowance(tokenIn, creditAccount, _curveV1stETHPoolGateway, 1);
 
-        expectTokenIsEnabled(Tokens.WETH, true);
+        expectTokenIsEnabled(creditAccount, Tokens.WETH, true);
     }
 
     /// @dev [ACV1S-6]: remove_liquidity_imbalance works correctly
@@ -299,9 +301,9 @@ contract CurveV1StEthAdapterTest is Test, CurveV1AdapterHelper {
         bytes memory callData =
             abi.encodeCall(ICurvePool2Assets.remove_liquidity_imbalance, (expectedAmounts, CURVE_LP_OPERATION_AMOUNT));
 
-        expectStETHRemoveLiquidityImbalanceCalls(USER, callData, expectedAmounts);
+        expectStETHRemoveLiquidityImbalanceCalls(creditAccount, USER, callData, expectedAmounts);
 
-        executeOneLineMulticall(address(adapter), callData);
+        executeOneLineMulticall(creditAccount, address(adapter), callData);
 
         expectBalance(curveV1Mock.token(), creditAccount, CURVE_LP_ACCOUNT_AMOUNT - CURVE_LP_OPERATION_AMOUNT);
 
@@ -311,7 +313,7 @@ contract CurveV1StEthAdapterTest is Test, CurveV1AdapterHelper {
 
         expectAllowance(tokenIn, creditAccount, _curveV1stETHPoolGateway, 1);
 
-        expectTokenIsEnabled(Tokens.WETH, true);
-        expectTokenIsEnabled(Tokens.STETH, false);
+        expectTokenIsEnabled(creditAccount, Tokens.WETH, true);
+        expectTokenIsEnabled(creditAccount, Tokens.STETH, false);
     }
 }

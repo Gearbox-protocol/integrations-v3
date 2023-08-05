@@ -18,8 +18,8 @@ contract CompoundV2_CEtherAdapter_Test is CompoundTestHelper {
         _setupCompoundSuite();
 
         vm.startPrank(CONFIGURATOR);
-        adapter = new CompoundV2_CEtherAdapter(address(CreditManagerV3), address(gateway));
-        CreditConfiguratorV3.allowContract(address(gateway), address(adapter));
+        adapter = new CompoundV2_CEtherAdapter(address(creditManager), address(gateway));
+        creditConfigurator.allowAdapter(address(adapter));
         vm.label(address(adapter), "cETH_ADAPTER");
         vm.stopPrank();
     }
@@ -28,7 +28,7 @@ contract CompoundV2_CEtherAdapter_Test is CompoundTestHelper {
     function test_ACV2CETH_01_constructor_sets_correct_values() public {
         assertEq(adapter.underlying(), weth, "Incorrect WETH address");
         assertEq(adapter.cToken(), ceth, "Incorrect cETH address");
-        assertEq(adapter.tokenMask(), CreditManagerV3.tokenMasksMap(weth), "Incorrect WETH mask");
-        assertEq(adapter.cTokenMask(), CreditManagerV3.tokenMasksMap(ceth), "Incorrect cETH mask");
+        assertEq(adapter.tokenMask(), creditManager.getTokenMaskOrRevert(weth), "Incorrect WETH mask");
+        assertEq(adapter.cTokenMask(), creditManager.getTokenMaskOrRevert(ceth), "Incorrect cETH mask");
     }
 }

@@ -5,11 +5,13 @@ pragma solidity ^0.8.10;
 
 import "../../../integrations/convex/Interfaces.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {ERC20Mock} from "@gearbox-protocol/core-v3/contracts/test/mocks/token/ERC20Mock.sol";
+import {Test} from "forge-std/Test.sol";
 
-contract BaseRewardPoolMock {
+contract BaseRewardPoolMock is Test {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
     using SafeERC20 for ERC20Mock;
@@ -90,7 +92,7 @@ contract BaseRewardPoolMock {
     }
 
     function lastTimeRewardApplicable() public view returns (uint256) {
-        return MathUtil.min(block.timestamp, periodFinish);
+        return Math.min(block.timestamp, periodFinish);
     }
 
     function stake(uint256 _amount) public updateReward(msg.sender) returns (bool) {

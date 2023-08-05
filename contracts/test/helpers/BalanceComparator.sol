@@ -3,14 +3,14 @@
 // (c) Gearbox Holdings, 2022
 pragma solidity ^0.8.10;
 
-import {Tokens} from "../suites/TokensTestSuite.sol";
+import {Tokens} from "@gearbox-protocol/sdk/contracts/Tokens.sol";
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 // TEST
 
 import "../lib/constants.sol";
-import {TokensTestSuite} from "../suites/TokensTestSuite.sol";
+import {TokensTestSuite} from "@gearbox-protocol/core-v3/contracts/test/suites/TokensTestSuite.sol";
 
 struct BalanceBackup {
     string stage;

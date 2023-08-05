@@ -3,22 +3,21 @@
 // (c) Gearbox Holdings, 2022
 pragma solidity ^0.8.10;
 
-import {LiveEnvTestSuite} from "./LiveEnvTestSuite.sol";
+import {Tokens} from "@gearbox-protocol/sdk/contracts/Tokens.sol";
+import {SupportedContracts, Contracts} from "@gearbox-protocol/sdk/contracts/SupportedContracts.sol";
+// import {IUniswapV2Router02} from "../../integrations/uniswap/IUniswapV2Router02.sol";
+// import {MultiCall} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacadeV3.sol";
 
-import {Tokens} from "../config/Tokens.sol";
+// // import {TokenType} from "../../integrations/TokenType.sol";
+// import {TokensTestSuite} from "@gearbox-protocol/core-v3/contracts/test/suites/TokensTestSuite.sol";
+import {IntegrationTestHelper} from "@gearbox-protocol/core-v3/contracts/test/helpers/IntegrationTestHelper.sol";
 
-import {SupportedContracts, Contracts} from "../config/SupportedContracts.sol";
-import {IUniswapV2Router02} from "../../integrations/uniswap/IUniswapV2Router02.sol";
-import {MultiCall} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacadeV3.sol";
-import {TokenType} from "../../integrations/TokenType.sol";
-import {TokensTestSuite} from "../suites/TokensTestSuite.sol";
+contract LiveEnvHelper is IntegrationTestHelper {
+    //     LiveEnvTestSuite lts;
 
-contract LiveEnvHelper {
-    LiveEnvTestSuite lts;
+    //     address public MAINNET_CONFIGURATOR;
+    // mapping(Tokens => CreditManagerV3[]) internal _creditManagers;
 
-    address public MAINNET_CONFIGURATOR;
-
-    TokensTestSuite public tokenTestSuite;
     SupportedContracts public supportedContracts;
 
     modifier liveOnly() {
@@ -28,78 +27,66 @@ contract LiveEnvHelper {
     }
 
     function _setUp() public virtual liveOnly {
-        lts = new LiveEnvTestSuite();
-        MAINNET_CONFIGURATOR = lts.ROOT_ADDRESS();
-        tokenTestSuite = lts.tokenTestSuite();
-        supportedContracts = lts.supportedContracts();
+        // lts = new LiveEnvTestSuite();
+        // MAINNET_CONFIGURATOR = lts.ROOT_ADDRESS();
+        // tokenTestSuite = lts.tokenTestSuite();
+        // supportedContracts = lts.supportedContracts();
+
+        // TODO: CHANGE
+        uint256 chainId = 1;
+        supportedContracts = new SupportedContracts(chainId);
     }
 
-    function getUniV2() internal view returns (IUniswapV2Router02) {
-        return IUniswapV2Router02(supportedContracts.addressOf(Contracts.UNISWAP_V2_ROUTER));
-    }
+    //     function getUniV2() internal view returns (IUniswapV2Router02) {
+    //         return IUniswapV2Router02(supportedContracts.addressOf(Contracts.UNISWAP_V2_ROUTER));
+    //     }
 
-    function swapEthToTokens(address onBehalfOf, Tokens t, uint256 amount) internal {
-        vm.startPrank(onBehalfOf);
+    //     function swapEthToTokens(address onBehalfOf, Tokens t, uint256 amount) internal {
+    //         vm.startPrank(onBehalfOf);
 
-        getUniV2().swapExactETHForTokens{value: amount}(
-            0, arrayOf(tokenTestSuite.addressOf(Tokens.WETH), tokenTestSuite.addressOf(t)), onBehalfOf, block.timestamp
-        );
+    //         getUniV2().swapExactETHForTokens{value: amount}(
+    //             0, arrayOf(tokenTestSuite.addressOf(Tokens.WETH), tokenTestSuite.addressOf(t)), onBehalfOf, block.timestamp
+    //         );
 
-        vm.stopPrank();
-    }
+    //         vm.stopPrank();
+    //     }
 
-    // [TODO]: add new lib for arrayOf
-    function arrayOf(address addr0, address addr1) internal pure returns (address[] memory result) {
-        result = new address[](2);
-        result[0] = addr0;
-        result[1] = addr1;
-    }
+    //     // [TODO]: add new lib for arrayOf
+    //     function arrayOf(address addr0, address addr1) internal pure returns (address[] memory result) {
+    //         result = new address[](2);
+    //         result[0] = addr0;
+    //         result[1] = addr1;
+    //     }
 
-    function multicallBuilder() internal pure returns (MultiCall[] memory calls) {}
+    //     function getTokensOfType(TokenType tokenType) internal view returns (Tokens[] memory tokens) {
+    //         uint256 tokenCount = tokenTestSuite.tokenCount();
 
-    function multicallBuilder(MultiCall memory call1) internal pure returns (MultiCall[] memory calls) {
-        calls = new MultiCall[](1);
-        calls[0] = call1;
-    }
+    //         uint256[] memory temp = new uint256[](tokenCount);
+    //         uint256 found;
 
-    function multicallBuilder(MultiCall memory call1, MultiCall memory call2)
-        internal
-        pure
-        returns (MultiCall[] memory calls)
-    {
-        calls = new MultiCall[](2);
-        calls[0] = call1;
-        calls[1] = call2;
-    }
+    //         for (uint256 i = 0; i < tokenCount; ++i) {
+    //             if (tokenTestSuite.tokenTypes(Tokens(i)) == tokenType) {
+    //                 temp[found] = i;
+    //                 ++found;
+    //             }
+    //         }
 
-    function multicallBuilder(MultiCall memory call1, MultiCall memory call2, MultiCall memory call3)
-        internal
-        pure
-        returns (MultiCall[] memory calls)
-    {
-        calls = new MultiCall[](3);
-        calls[0] = call1;
-        calls[1] = call2;
-        calls[2] = call3;
-    }
+    //         tokens = new Tokens[](found);
 
-    function getTokensOfType(TokenType tokenType) internal view returns (Tokens[] memory tokens) {
-        uint256 tokenCount = tokenTestSuite.tokenCount();
+    //         for (uint256 i = 0; i < found; ++i) {
+    //             tokens[i] = Tokens(temp[i]);
+    //         }
+    //     }
 
-        uint256[] memory temp = new uint256[](tokenCount);
-        uint256 found;
+    // function getAdapter(address creditManager, Contracts target) public view returns (address) {
+    //     return creditManager(creditManager).contractToAdapter(supportedContracts.addressOf(target));
+    // }
 
-        for (uint256 i = 0; i < tokenCount; ++i) {
-            if (tokenTestSuite.tokenTypes(Tokens(i)) == tokenType) {
-                temp[found] = i;
-                ++found;
-            }
-        }
+    // function getAdapter(Tokens underlying, Contracts target) public view returns (address) {
+    //     return _creditManagers[underlying][0].contractToAdapter(supportedContracts.addressOf(target));
+    // }
 
-        tokens = new Tokens[](found);
-
-        for (uint256 i = 0; i < found; ++i) {
-            tokens[i] = Tokens(temp[i]);
-        }
-    }
+    // function getAdapter(Tokens underlying, Contracts target, uint256 cmIdx) public view returns (address) {
+    //     return _creditManagers[underlying][cmIdx].contractToAdapter(supportedContracts.addressOf(target));
+    // }
 }

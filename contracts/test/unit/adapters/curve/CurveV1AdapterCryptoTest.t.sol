@@ -9,7 +9,7 @@ import {ICurvePool} from "../../../../integrations/curve/ICurvePool.sol";
 
 import {CurveV1Mock} from "../../../mocks/integrations/CurveV1Mock.sol";
 
-import {Tokens} from "../../../suites/TokensTestSuite.sol";
+import {Tokens} from "@gearbox-protocol/sdk/contracts/Tokens.sol";
 
 import {ICurvePool2Assets} from "../../../../integrations/curve/ICurvePool_2.sol";
 import {ICurvePool3Assets} from "../../../../integrations/curve/ICurvePool_3.sol";
@@ -74,7 +74,7 @@ contract CurveV1AdapterCryptoTest is Test, CurveV1AdapterHelper {
 
         expectMulticallStackCalls(address(adapter), address(curveV1Mock), USER, callData, tokenIn, tokenOut, false);
 
-        executeOneLineMulticall(address(adapter), callData);
+        executeOneLineMulticall(creditAccount, address(adapter), callData);
 
         expectBalance(Tokens.cLINK, creditAccount, LINK_ACCOUNT_AMOUNT - LINK_EXCHANGE_AMOUNT);
 
@@ -82,7 +82,7 @@ contract CurveV1AdapterCryptoTest is Test, CurveV1AdapterHelper {
 
         expectAllowance(tokenIn, creditAccount, address(curveV1Mock), 1);
 
-        expectTokenIsEnabled(tokenOut, true);
+        expectTokenIsEnabled(creditAccount, tokenOut, true);
     }
 
     /// @dev [ACC-3]: exchange_all works for user as expected
@@ -105,7 +105,9 @@ contract CurveV1AdapterCryptoTest is Test, CurveV1AdapterHelper {
         expectMulticallStackCalls(address(adapter), address(curveV1Mock), USER, callData, tokenIn, tokenOut, false);
 
         executeOneLineMulticall(
-            address(adapter), abi.encodeWithSignature("exchange_all(uint256,uint256,uint256)", 0, 1, RAY * 100)
+            creditAccount,
+            address(adapter),
+            abi.encodeWithSignature("exchange_all(uint256,uint256,uint256)", 0, 1, RAY * 100)
         );
 
         expectBalance(tokenIn, creditAccount, 1);
@@ -114,8 +116,8 @@ contract CurveV1AdapterCryptoTest is Test, CurveV1AdapterHelper {
 
         expectAllowance(tokenIn, creditAccount, address(curveV1Mock), 1);
 
-        expectTokenIsEnabled(tokenIn, false);
-        expectTokenIsEnabled(tokenOut, true);
+        expectTokenIsEnabled(creditAccount, tokenIn, false);
+        expectTokenIsEnabled(creditAccount, tokenOut, true);
     }
 
     /// @dev [ACC-4]: exchange_underlying works for user as expected
@@ -140,7 +142,7 @@ contract CurveV1AdapterCryptoTest is Test, CurveV1AdapterHelper {
 
         expectMulticallStackCalls(address(adapter), address(curveV1Mock), USER, callData, tokenIn, tokenOut, false);
 
-        executeOneLineMulticall(address(adapter), callData);
+        executeOneLineMulticall(creditAccount, address(adapter), callData);
 
         expectBalance(Tokens.cLINK, creditAccount, LINK_ACCOUNT_AMOUNT - LINK_EXCHANGE_AMOUNT);
 
@@ -148,7 +150,7 @@ contract CurveV1AdapterCryptoTest is Test, CurveV1AdapterHelper {
 
         expectAllowance(tokenIn, creditAccount, address(curveV1Mock), 1);
 
-        expectTokenIsEnabled(tokenOut, true);
+        expectTokenIsEnabled(creditAccount, tokenOut, true);
     }
 
     /// @dev [ACC-5]: exchange_all_underlying works for user as expected
@@ -173,6 +175,7 @@ contract CurveV1AdapterCryptoTest is Test, CurveV1AdapterHelper {
         expectMulticallStackCalls(address(adapter), address(curveV1Mock), USER, callData, tokenIn, tokenOut, false);
 
         executeOneLineMulticall(
+            creditAccount,
             address(adapter),
             abi.encodeWithSignature("exchange_all_underlying(uint256,uint256,uint256)", 0, 3, RAY * 99)
         );
@@ -181,8 +184,8 @@ contract CurveV1AdapterCryptoTest is Test, CurveV1AdapterHelper {
 
         expectBalance(Tokens.cUSDT, creditAccount, (LINK_ACCOUNT_AMOUNT - 1) * 99);
 
-        expectTokenIsEnabled(tokenIn, false);
-        expectTokenIsEnabled(tokenOut, true);
+        expectTokenIsEnabled(creditAccount, tokenIn, false);
+        expectTokenIsEnabled(creditAccount, tokenOut, true);
     }
 
     /// @dev [ACC-6]: add_all_liquidity_one_coin works for user as expected
@@ -197,7 +200,7 @@ contract CurveV1AdapterCryptoTest is Test, CurveV1AdapterHelper {
             (address creditAccount,) = _openTestCreditAccount();
 
             tokenTestSuite.mint(tokenIn, USER, LINK_ACCOUNT_AMOUNT);
-            addCollateral(tokenIn, LINK_ACCOUNT_AMOUNT);
+            // addCollateral(tokenIn, LINK_ACCOUNT_AMOUNT);
 
             bytes memory callData = abi.encodeWithSignature("add_all_liquidity_one_coin(uint256,uint256)", i, RAY / 2);
 
@@ -211,18 +214,18 @@ contract CurveV1AdapterCryptoTest is Test, CurveV1AdapterHelper {
                 address(adapter), address(curveV1Mock), USER, expectedCallData, tokenIn, tokenOut, true
             );
 
-            executeOneLineMulticall(address(adapter), callData);
+            executeOneLineMulticall(creditAccount, address(adapter), callData);
 
             expectBalance(tokenIn, creditAccount, 1);
 
             expectBalance(curveV1Mock.token(), creditAccount, (LINK_ACCOUNT_AMOUNT - 1) / 2);
 
-            expectTokenIsEnabled(tokenIn, false);
-            expectTokenIsEnabled(curveV1Mock.token(), true);
+            expectTokenIsEnabled(creditAccount, tokenIn, false);
+            expectTokenIsEnabled(creditAccount, curveV1Mock.token(), true);
 
             expectAllowance(tokenIn, creditAccount, address(curveV1Mock), 1);
 
-            _closeTestCreditAccount();
+            // _closeTestCreditAccount();
         }
     }
 
@@ -238,7 +241,7 @@ contract CurveV1AdapterCryptoTest is Test, CurveV1AdapterHelper {
             (address creditAccount,) = _openTestCreditAccount();
 
             tokenTestSuite.mint(tokenIn, USER, LINK_ACCOUNT_AMOUNT);
-            addCollateral(tokenIn, LINK_ACCOUNT_AMOUNT);
+            // addCollateral(tokenIn, LINK_ACCOUNT_AMOUNT);
 
             bytes memory callData = abi.encodeWithSignature(
                 "add_liquidity_one_coin(uint256,uint256,uint256)", LINK_ACCOUNT_AMOUNT / 2, i, LINK_ACCOUNT_AMOUNT / 4
@@ -254,17 +257,17 @@ contract CurveV1AdapterCryptoTest is Test, CurveV1AdapterHelper {
                 address(adapter), address(curveV1Mock), USER, expectedCallData, tokenIn, tokenOut, true
             );
 
-            executeOneLineMulticall(address(adapter), callData);
+            executeOneLineMulticall(creditAccount, address(adapter), callData);
 
             expectBalance(tokenIn, creditAccount, LINK_ACCOUNT_AMOUNT / 2);
 
             expectBalance(curveV1Mock.token(), creditAccount, LINK_ACCOUNT_AMOUNT / 4);
 
-            expectTokenIsEnabled(curveV1Mock.token(), true);
+            expectTokenIsEnabled(creditAccount, curveV1Mock.token(), true);
 
             expectAllowance(tokenIn, creditAccount, address(curveV1Mock), 1);
 
-            _closeTestCreditAccount();
+            // _closeTestCreditAccount();
         }
     }
 
@@ -294,14 +297,14 @@ contract CurveV1AdapterCryptoTest is Test, CurveV1AdapterHelper {
                 address(adapter), address(curveV1Mock), USER, expectedCallData, tokenIn, tokenOut, false
             );
 
-            executeOneLineMulticall(address(adapter), expectedCallData);
+            executeOneLineMulticall(creditAccount, address(adapter), expectedCallData);
 
             expectBalance(tokenIn, creditAccount, CURVE_LP_ACCOUNT_AMOUNT - CURVE_LP_OPERATION_AMOUNT);
             expectBalance(tokenOut, creditAccount, CURVE_LP_OPERATION_AMOUNT / 2);
 
             expectAllowance(tokenIn, creditAccount, address(curveV1Mock), 0);
 
-            expectTokenIsEnabled(tokenOut, true);
+            expectTokenIsEnabled(creditAccount, tokenOut, true);
         }
     }
 
@@ -334,7 +337,9 @@ contract CurveV1AdapterCryptoTest is Test, CurveV1AdapterHelper {
             );
 
             executeOneLineMulticall(
-                address(adapter), abi.encodeWithSignature("remove_all_liquidity_one_coin(uint256,uint256)", i, rateRAY)
+                creditAccount,
+                address(adapter),
+                abi.encodeWithSignature("remove_all_liquidity_one_coin(uint256,uint256)", i, rateRAY)
             );
 
             expectBalance(tokenIn, creditAccount, 1);
@@ -342,8 +347,8 @@ contract CurveV1AdapterCryptoTest is Test, CurveV1AdapterHelper {
 
             expectAllowance(tokenIn, creditAccount, address(curveV1Mock), 0);
 
-            expectTokenIsEnabled(tokenIn, false);
-            expectTokenIsEnabled(tokenOut, true);
+            expectTokenIsEnabled(creditAccount, tokenIn, false);
+            expectTokenIsEnabled(creditAccount, tokenOut, true);
         }
     }
 

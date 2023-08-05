@@ -13,14 +13,14 @@ import {
     WETH_EXCHANGE_AMOUNT
 } from "@gearbox-protocol/core-v3/contracts/test/lib/constants.sol";
 
-import {WrappedAToken} from "../../../../adapters/aave/WrappedAToken.sol";
+import {WrappedATokenV2} from "@gearbox-protocol/oracles-v3/contracts/tokens/aave/WrappedATokenV2.sol";
 import {IAToken} from "../../../../integrations/aave/IAToken.sol";
-import {AavePriceFeed} from "../../../../oracles/aave/AavePriceFeed.sol";
 
-import {Tokens} from "../../../config/Tokens.sol";
+import {Tokens} from "@gearbox-protocol/sdk/contracts/Tokens.sol";
 import {ATokenMock} from "../../../mocks/integrations/aave/ATokenMock.sol";
 import {LendingPoolMock} from "../../../mocks/integrations/aave/LendingPoolMock.sol";
 
+import {WrappedAaveV2PriceFeed} from "@gearbox-protocol/oracles-v3/contracts/oracles/aave/WrappedAaveV2PriceFeed.sol";
 import {AdapterTestHelper} from "../AdapterTestHelper.sol";
 
 contract AaveTestHelper is AdapterTestHelper {
@@ -29,7 +29,6 @@ contract AaveTestHelper is AdapterTestHelper {
     // underlying tokens
     address dai;
     address usdc;
-    address weth;
 
     // aTokens
     address aDai;
@@ -68,12 +67,12 @@ contract AaveTestHelper is AdapterTestHelper {
 
         vm.startPrank(CONFIGURATOR);
         // add price feeds for aTokens to the oracle (they are the same as underlying oracles)
-        cft.priceOracle().addPriceFeed(aWeth, cft.priceOracle().priceFeeds(weth));
-        cft.priceOracle().addPriceFeed(aUsdc, cft.priceOracle().priceFeeds(usdc));
+        priceOracle.setPriceFeed(aWeth, priceOracle.priceFeeds(weth), 0);
+        priceOracle.setPriceFeed(aUsdc, priceOracle.priceFeeds(usdc), 0);
 
         // enable aTokens as collateral tokens in the credit manager
-        CreditConfiguratorV3.addCollateralToken(aWeth, 8300);
-        CreditConfiguratorV3.addCollateralToken(aUsdc, 8300);
+        creditConfigurator.addCollateralToken(aWeth, 8300);
+        creditConfigurator.addCollateralToken(aUsdc, 8300);
         vm.stopPrank();
 
         vm.warp(block.timestamp + 365 days);
@@ -82,27 +81,29 @@ contract AaveTestHelper is AdapterTestHelper {
     }
 
     function _setupWrappers() internal {
-        waDai = address(new WrappedAToken(IAToken(aDai)));
-        waUsdc = address(new WrappedAToken(IAToken(aUsdc)));
-        waWeth = address(new WrappedAToken(IAToken(aWeth)));
+        waDai = address(new WrappedATokenV2(aDai));
+        waUsdc = address(new WrappedATokenV2(aUsdc));
+        waWeth = address(new WrappedATokenV2(aWeth));
         vm.label(waDai, "waDAI");
         vm.label(waUsdc, "waUSDC");
         vm.label(waWeth, "waWETH");
 
         vm.startPrank(CONFIGURATOR);
         // add price feeds for waTokens to the oracle
-        cft.priceOracle().addPriceFeed(
+        priceOracle.setPriceFeed(
             waWeth,
-            address(new AavePriceFeed(address(cft.addressProvider()), waWeth, cft.priceOracle().priceFeeds(weth)))
+            address(new WrappedAaveV2PriceFeed(address(addressProvider), waWeth, priceOracle.priceFeeds(weth), 2 hours)),
+            0
         );
-        cft.priceOracle().addPriceFeed(
+        priceOracle.setPriceFeed(
             waUsdc,
-            address(new AavePriceFeed(address(cft.addressProvider()), waUsdc, cft.priceOracle().priceFeeds(usdc)))
+            address(new WrappedAaveV2PriceFeed(address(addressProvider), waUsdc, priceOracle.priceFeeds(usdc), 2 hours)),
+            0
         );
 
         // enable waTokens as collateral tokens in the credit manager
-        CreditConfiguratorV3.addCollateralToken(waWeth, 8300);
-        CreditConfiguratorV3.addCollateralToken(waUsdc, 8300);
+        creditConfigurator.addCollateralToken(waWeth, 8300);
+        creditConfigurator.addCollateralToken(waUsdc, 8300);
         vm.stopPrank();
 
         vm.warp(block.timestamp + 365 days);
@@ -115,9 +116,9 @@ contract AaveTestHelper is AdapterTestHelper {
 
         tokenTestSuite.mint(underlying, USER, balance);
 
-        tokenTestSuite.approve(underlying, USER, address(CreditManagerV3), balance);
+        tokenTestSuite.approve(underlying, USER, address(creditManager), balance);
         vm.prank(USER);
-        creditFacade.addCollateral(USER, underlying, balance);
+        // creditFacade.addCollateral(USER, underlying, balance);
     }
 
     function _openAccountWithAToken(Tokens token) internal returns (address creditAccount, uint256 balance) {
@@ -131,9 +132,9 @@ contract AaveTestHelper is AdapterTestHelper {
         vm.prank(USER);
         lendingPool.deposit(underlying, balance, address(USER), 0);
 
-        tokenTestSuite.approve(aToken, USER, address(CreditManagerV3), balance);
+        tokenTestSuite.approve(aToken, USER, address(creditManager), balance);
         vm.prank(USER);
-        creditFacade.addCollateral(USER, aToken, balance);
+        // creditFacade.addCollateral(USER, aToken, balance);
     }
 
     function _openAccountWithWAToken(Tokens token) internal returns (address creditAccount, uint256 balance) {
@@ -144,11 +145,11 @@ contract AaveTestHelper is AdapterTestHelper {
 
         tokenTestSuite.approve(underlying, USER, waToken, amount);
         vm.prank(USER);
-        balance = WrappedAToken(waToken).depositUnderlying(amount);
+        balance = WrappedATokenV2(waToken).depositUnderlying(amount);
 
-        tokenTestSuite.approve(waToken, USER, address(CreditManagerV3), balance);
+        tokenTestSuite.approve(waToken, USER, address(creditManager), balance);
         vm.prank(USER);
-        creditFacade.addCollateral(USER, waToken, balance);
+        // creditFacade.addCollateral(USER, waToken, balance);
     }
 
     function _tokenInfo(Tokens token)

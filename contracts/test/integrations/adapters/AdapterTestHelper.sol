@@ -13,20 +13,15 @@ import {ICreditFacadeV3Events} from "@gearbox-protocol/core-v3/contracts/interfa
 import "../../lib/constants.sol";
 
 // SUITES
-import {TokensTestSuite} from "../../suites/TokensTestSuite.sol";
-import {Tokens} from "../../config/Tokens.sol";
+import {TokensTestSuite} from "@gearbox-protocol/core-v3/contracts/test/suites/TokensTestSuite.sol";
+import {Tokens} from "@gearbox-protocol/sdk/contracts/Tokens.sol";
 
-import {BalanceHelper} from "../../helpers/BalanceHelper.sol";
-import {CreditFacadeTestHelper} from "../../helpers/CreditFacadeTestHelper.sol";
+// import {BalanceHelper} from "../../helpers/BalanceHelper.sol";
+// import {CreditFacadeTestHelper} from "../../helpers/CreditFacadeTestHelper.sol";
+import {IntegrationTestHelper} from "@gearbox-protocol/core-v3/contracts/test/helpers/IntegrationTestHelper.sol";
 import {CreditConfig} from "../../config/CreditConfig.sol";
 
-contract AdapterTestHelper is
-    Test,
-    ICreditManagerV3Events,
-    ICreditFacadeV3Events,
-    BalanceHelper,
-    CreditFacadeTestHelper
-{
+contract AdapterTestHelper is Test, ICreditManagerV3Events, ICreditFacadeV3Events, IntegrationTestHelper {
     function _setUp() internal {
         _setUp(Tokens.DAI);
     }
@@ -37,15 +32,15 @@ contract AdapterTestHelper is
         tokenTestSuite = new TokensTestSuite();
         tokenTestSuite.topUpWETH{value: 100 * WAD}();
 
-        CreditConfig creditConfig = new CreditConfig(tokenTestSuite, t);
+        // CreditConfig creditConfig = new CreditConfig(tokenTestSuite, t);
 
-        cft = new CreditFacadeV3TestSuite(creditConfig);
+        // cft = new CreditFacadeV3TestSuite(creditConfig);
 
-        underlying = cft.underlying();
+        // underlying = cft.underlying();
 
-        CreditManagerV3 = cft.CreditManagerV3();
-        creditFacade = cft.creditFacade();
-        CreditConfiguratorV3 = cft.CreditConfiguratorV3();
+        // CreditManagerV3 = cft.CreditManagerV3();
+        // creditFacade = cft.creditFacade();
+        // CreditConfiguratorV3 = cft.CreditConfiguratorV3();
     }
 
     function _getUniswapDeadline() internal view returns (uint256) {
@@ -53,39 +48,33 @@ contract AdapterTestHelper is
     }
 
     function expectMulticallStackCalls(
-        address, // adapter,
-        address targetContract,
+        address creditAccount,
         address borrower,
+        address targetContract,
         bytes memory callData,
         address tokenIn,
-        address, // tokenOut,
         bool allowTokenIn
     ) internal {
-        vm.expectEmit(true, false, false, false);
-        emit MultiCallStarted(borrower);
+        vm.expectEmit(true, true, false, false);
+        emit StartMultiCall(creditAccount, borrower);
 
         if (allowTokenIn) {
             vm.expectCall(
-                address(CreditManagerV3),
-                abi.encodeCall(ICreditManagerV3.approveCreditAccount, (targetContract, tokenIn, type(uint256).max))
+                address(creditManager),
+                abi.encodeCall(ICreditManagerV3.approveCreditAccount, (tokenIn, type(uint256).max))
             );
         }
 
-        vm.expectCall(
-            address(CreditManagerV3), abi.encodeCall(ICreditManagerV3.executeOrder, (targetContract, callData))
-        );
+        vm.expectCall(address(creditManager), abi.encodeCall(ICreditManagerV3.execute, (callData)));
 
         vm.expectEmit(true, false, false, false);
-        emit ExecuteOrder(targetContract);
+        emit Execute(creditAccount, targetContract);
 
         if (allowTokenIn) {
-            vm.expectCall(
-                address(CreditManagerV3),
-                abi.encodeCall(ICreditManagerV3.approveCreditAccount, (targetContract, tokenIn, 1))
-            );
+            vm.expectCall(address(creditManager), abi.encodeCall(ICreditManagerV3.approveCreditAccount, (tokenIn, 1)));
         }
 
         vm.expectEmit(false, false, false, false);
-        emit MultiCallFinished();
+        emit FinishMultiCall();
     }
 }

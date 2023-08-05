@@ -4,12 +4,10 @@
 pragma solidity ^0.8.17;
 
 import {USER, CONFIGURATOR} from "@gearbox-protocol/core-v3/contracts/test/lib/constants.sol";
-
 import {AaveV2_LendingPoolAdapter} from "../../../../adapters/aave/AaveV2_LendingPoolAdapter.sol";
-
-import {Tokens} from "../../../config/Tokens.sol";
-
+import {Tokens} from "@gearbox-protocol/sdk/contracts/Tokens.sol";
 import {AaveTestHelper} from "./AaveTestHelper.sol";
+import "@gearbox-protocol/core-v3/contracts/interfaces/IExceptions.sol";
 
 /// @title Aave V2 lending pool adapter tests
 /// @notice [AAV2LP]: Unit tests for Aave V2 lending pool adapter
@@ -21,8 +19,8 @@ contract AaveV2_LendingPoolAdapter_Test is AaveTestHelper {
 
         // create a lending pool adapter and add it to the credit manager
         vm.startPrank(CONFIGURATOR);
-        adapter = new AaveV2_LendingPoolAdapter(address(CreditManagerV3), address(lendingPool));
-        CreditConfiguratorV3.allowContract(address(lendingPool), address(adapter));
+        adapter = new AaveV2_LendingPoolAdapter(address(creditManager), address(lendingPool));
+        creditConfigurator.allowAdapter(address(adapter));
         vm.label(address(adapter), "LENDING_POOL_ADAPTER");
         vm.stopPrank();
     }
@@ -30,19 +28,19 @@ contract AaveV2_LendingPoolAdapter_Test is AaveTestHelper {
     /// @notice [AAV2LP-1]: All action functions revert if called not from the multicall
     function test_AAV2LP_01_action_functions_revert_if_called_not_from_multicall() public {
         vm.prank(USER);
-        vm.expectRevert(IAdapterExceptions.CreditFacadeV3OnlyException.selector);
+        vm.expectRevert(CallerNotCreditFacadeException.selector);
         adapter.deposit(dai, 1, address(0), 0);
 
         vm.prank(USER);
-        vm.expectRevert(IAdapterExceptions.CreditFacadeV3OnlyException.selector);
+        vm.expectRevert(CallerNotCreditFacadeException.selector);
         adapter.depositAll(dai);
 
         vm.prank(USER);
-        vm.expectRevert(IAdapterExceptions.CreditFacadeV3OnlyException.selector);
+        vm.expectRevert(CallerNotCreditFacadeException.selector);
         adapter.withdraw(dai, 1, address(0));
 
         vm.prank(USER);
-        vm.expectRevert(IAdapterExceptions.CreditFacadeV3OnlyException.selector);
+        vm.expectRevert(CallerNotCreditFacadeException.selector);
         adapter.withdrawAll(dai);
     }
 
@@ -53,17 +51,21 @@ contract AaveV2_LendingPoolAdapter_Test is AaveTestHelper {
         vm.prank(creditAccount);
         lendingPool.deposit(dai, balance / 2, creditAccount, 0);
 
-        vm.expectRevert(IAdapterExceptions.TokenNotAllowedException.selector);
-        executeOneLineMulticall(address(adapter), abi.encodeCall(adapter.deposit, (dai, balance / 2, address(0), 0)));
+        vm.expectRevert(TokenNotAllowedException.selector);
+        executeOneLineMulticall(
+            creditAccount, address(adapter), abi.encodeCall(adapter.deposit, (dai, balance / 2, address(0), 0))
+        );
 
-        vm.expectRevert(IAdapterExceptions.TokenNotAllowedException.selector);
-        executeOneLineMulticall(address(adapter), abi.encodeCall(adapter.depositAll, (dai)));
+        vm.expectRevert(TokenNotAllowedException.selector);
+        executeOneLineMulticall(creditAccount, address(adapter), abi.encodeCall(adapter.depositAll, (dai)));
 
-        vm.expectRevert(IAdapterExceptions.TokenNotAllowedException.selector);
-        executeOneLineMulticall(address(adapter), abi.encodeCall(adapter.withdraw, (dai, balance / 2, address(0))));
+        vm.expectRevert(TokenNotAllowedException.selector);
+        executeOneLineMulticall(
+            creditAccount, address(adapter), abi.encodeCall(adapter.withdraw, (dai, balance / 2, address(0)))
+        );
 
-        vm.expectRevert(IAdapterExceptions.TokenNotAllowedException.selector);
-        executeOneLineMulticall(address(adapter), abi.encodeCall(adapter.withdrawAll, (dai)));
+        vm.expectRevert(TokenNotAllowedException.selector);
+        executeOneLineMulticall(creditAccount, address(adapter), abi.encodeCall(adapter.withdrawAll, (dai)));
     }
 
     /// @notice [AAV2LP-3]: `deposit` works correctly
@@ -91,7 +93,7 @@ contract AaveV2_LendingPoolAdapter_Test is AaveTestHelper {
             );
 
             bytes memory callData = abi.encodeCall(adapter.deposit, (token, depositAmount, address(0), 0));
-            executeOneLineMulticall(address(adapter), callData);
+            executeOneLineMulticall(creditAccount, address(adapter), callData);
 
             expectBalance(token, creditAccount, initialBalance - depositAmount);
             // expectBalance(aToken, creditAccount, depositAmount);
@@ -100,8 +102,8 @@ contract AaveV2_LendingPoolAdapter_Test is AaveTestHelper {
 
             expectAllowance(token, creditAccount, address(lendingPool), 1);
 
-            expectTokenIsEnabled(token, true);
-            expectTokenIsEnabled(aToken, true);
+            expectTokenIsEnabled(creditAccount, token, true);
+            expectTokenIsEnabled(creditAccount, aToken, true);
 
             vm.revertTo(snapshot);
         }
@@ -130,7 +132,7 @@ contract AaveV2_LendingPoolAdapter_Test is AaveTestHelper {
             );
 
             bytes memory callData = abi.encodeCall(adapter.depositAll, (token));
-            executeOneLineMulticall(address(adapter), callData);
+            executeOneLineMulticall(creditAccount, address(adapter), callData);
 
             expectBalance(token, creditAccount, 1);
             // expectBalance(aToken, creditAccount, initialBalance - 1);
@@ -139,8 +141,8 @@ contract AaveV2_LendingPoolAdapter_Test is AaveTestHelper {
 
             expectAllowance(token, creditAccount, address(lendingPool), 1);
 
-            expectTokenIsEnabled(token, false);
-            expectTokenIsEnabled(aToken, true);
+            expectTokenIsEnabled(creditAccount, token, false);
+            expectTokenIsEnabled(creditAccount, aToken, true);
 
             vm.revertTo(snapshot);
         }
@@ -168,7 +170,7 @@ contract AaveV2_LendingPoolAdapter_Test is AaveTestHelper {
             );
 
             bytes memory callData = abi.encodeCall(adapter.withdraw, (token, withdrawAmount, creditAccount));
-            executeOneLineMulticall(address(adapter), callData);
+            executeOneLineMulticall(creditAccount, address(adapter), callData);
 
             expectBalance(token, creditAccount, withdrawAmount);
             // expectBalance(aToken, creditAccount, initialBalance - withdrawAmount);
@@ -177,8 +179,8 @@ contract AaveV2_LendingPoolAdapter_Test is AaveTestHelper {
 
             expectAllowance(aToken, creditAccount, address(lendingPool), 0);
 
-            expectTokenIsEnabled(token, true);
-            expectTokenIsEnabled(aToken, true);
+            expectTokenIsEnabled(creditAccount, token, true);
+            expectTokenIsEnabled(creditAccount, aToken, true);
 
             vm.revertTo(snapshot);
         }
@@ -206,14 +208,14 @@ contract AaveV2_LendingPoolAdapter_Test is AaveTestHelper {
             );
 
             bytes memory callData = abi.encodeCall(adapter.withdraw, (token, type(uint256).max, creditAccount));
-            executeOneLineMulticall(address(adapter), callData);
+            executeOneLineMulticall(creditAccount, address(adapter), callData);
 
             expectBalance(token, creditAccount, initialBalance - 1);
             // expectBalance(aToken, creditAccount, 1);
             expectBalanceLe(aToken, creditAccount, 2, "");
 
-            expectTokenIsEnabled(token, true);
-            expectTokenIsEnabled(aToken, false);
+            expectTokenIsEnabled(creditAccount, token, true);
+            expectTokenIsEnabled(creditAccount, aToken, false);
 
             vm.revertTo(snapshot);
         }
@@ -241,14 +243,14 @@ contract AaveV2_LendingPoolAdapter_Test is AaveTestHelper {
             );
 
             bytes memory callData = abi.encodeCall(adapter.withdrawAll, (token));
-            executeOneLineMulticall(address(adapter), callData);
+            executeOneLineMulticall(creditAccount, address(adapter), callData);
 
             expectBalance(token, creditAccount, initialBalance - 1);
             // expectBalance(aToken, creditAccount, 1);
             expectBalanceLe(aToken, creditAccount, 2, "");
 
-            expectTokenIsEnabled(token, true);
-            expectTokenIsEnabled(aToken, false);
+            expectTokenIsEnabled(creditAccount, token, true);
+            expectTokenIsEnabled(creditAccount, aToken, false);
 
             vm.revertTo(snapshot);
         }

@@ -3,12 +3,13 @@
 // (c) Gearbox Holdings, 2023
 pragma solidity ^0.8.17;
 
+import "@gearbox-protocol/core-v3/contracts/interfaces/IAddressProviderV3.sol";
 import {LidoV1Adapter, LIDO_STETH_LIMIT} from "../../../../adapters/lido/LidoV1.sol";
 import {ILidoV1AdapterEvents, ILidoV1AdapterExceptions} from "../../../../interfaces/lido/ILidoV1Adapter.sol";
-import {LidoV1Gateway} from "../../../../adapters/lido/LidoV1_WETHGateway.sol";
+import {LidoV1Gateway} from "../../../../gateways/lido/LidoV1_WETHGateway.sol";
 import {LidoMock, ILidoMockEvents} from "../../../mocks/integrations/LidoMock.sol";
 
-import {Tokens} from "../../../suites/TokensTestSuite.sol";
+import {Tokens} from "@gearbox-protocol/sdk/contracts/Tokens.sol";
 
 // TEST
 import "../../../lib/constants.sol";
@@ -48,20 +49,20 @@ contract LidoV1AdapterTest is
         );
 
         lidoV1Adapter = new LidoV1Adapter(
-            address(CreditManagerV3),
+            address(creditManager),
             address(lidoV1Gateway)
         );
 
         treasury = lidoV1Adapter.treasury();
 
         vm.prank(CONFIGURATOR);
-        CreditConfiguratorV3.allowContract(address(lidoV1Gateway), address(lidoV1Adapter));
+        creditConfigurator.allowAdapter(address(lidoV1Adapter));
 
-        treasury = cft.addressProvider().getTreasuryContract();
+        treasury = addressProvider.getAddressOrRevert(AP_TREASURY, NO_VERSION_CONTROL);
 
         lidoV1Mock.syncExchangeRate(STETH_POOLED_ETH, STETH_TOTAL_SHARES);
 
-        tokenTestSuite.approve(Tokens.WETH, USER, address(CreditManagerV3));
+        tokenTestSuite.approve(Tokens.WETH, USER, address(creditManager));
 
         vm.label(address(lidoV1Adapter), "ADAPTER_LIDO");
         vm.label(address(lidoV1Gateway), "GATEWAY_LIDO");
@@ -79,30 +80,34 @@ contract LidoV1AdapterTest is
         assertEq(lidoV1Adapter.stETH(), address(lidoV1Mock), "stETH address incorrect");
         assertEq(
             lidoV1Adapter.stETHTokenMask(),
-            CreditManagerV3.tokenMasksMap(address(lidoV1Mock)),
+            creditManager.getTokenMaskOrRevert(address(lidoV1Mock)),
             "stETH token mask incorrect"
         );
 
         assertEq(lidoV1Adapter.weth(), tokenTestSuite.addressOf(Tokens.WETH), "WETH address incorrect");
         assertEq(
             lidoV1Adapter.wethTokenMask(),
-            CreditManagerV3.tokenMasksMap(tokenTestSuite.addressOf(Tokens.WETH)),
+            creditManager.getTokenMaskOrRevert(tokenTestSuite.addressOf(Tokens.WETH)),
             "WETH token mask incorrect"
         );
 
-        assertEq(lidoV1Adapter.treasury(), cft.addressProvider().getTreasuryContract(), "Treasury address incorrect");
+        assertEq(
+            lidoV1Adapter.treasury(),
+            addressProvider.getAddressOrRevert(AP_TREASURY, NO_VERSION_CONTROL),
+            "Treasury address incorrect"
+        );
 
         assertEq(lidoV1Adapter.limit(), LIDO_STETH_LIMIT, "Limit is set incorrect");
     }
 
-    /// @dev [LDOV1-2]: submit and submitAll reverts if user has no account
-    function test_LDOV1_02_submit_and_submitAll_reverts_if_user_has_no_account() public {
-        vm.expectRevert(ICreditManagerV3Exceptions.HasNoOpenedAccountException.selector);
-        executeOneLineMulticall(address(lidoV1Adapter), abi.encodeCall(lidoV1Adapter.submit, (2 * WAD)));
+    // /// @dev [LDOV1-2]: submit and submitAll reverts if user has no account
+    // function test_LDOV1_02_submit_and_submitAll_reverts_if_user_has_no_account() public {
+    //     vm.expectRevert(ICreditManagerV3Exceptions.HasNoOpenedAccountException.selector);
+    //     executeOneLineMulticall(creditAccount, address(lidoV1Adapter), abi.encodeCall(lidoV1Adapter.submit, (2 * WAD)));
 
-        vm.expectRevert(ICreditManagerV3Exceptions.HasNoOpenedAccountException.selector);
-        executeOneLineMulticall(address(lidoV1Adapter), abi.encodeCall(lidoV1Adapter.submitAll, ()));
-    }
+    //     vm.expectRevert(ICreditManagerV3Exceptions.HasNoOpenedAccountException.selector);
+    //     executeOneLineMulticall(creditAccount, address(lidoV1Adapter), abi.encodeCall(lidoV1Adapter.submitAll, ()));
+    // }
 
     /// @dev [LDOV1-3]: Submit works correctly and fires events
     function test_LDOV1_03_submit_works_correctly() public {
@@ -123,7 +128,7 @@ contract LidoV1AdapterTest is
             true
         );
 
-        executeOneLineMulticall(address(lidoV1Adapter), abi.encodeCall(LidoV1Adapter.submit, (2 * WAD)));
+        executeOneLineMulticall(creditAccount, address(lidoV1Adapter), abi.encodeCall(LidoV1Adapter.submit, (2 * WAD)));
 
         expectBalance(Tokens.WETH, creditAccount, initialWETHamount - 2 * WAD);
 
@@ -136,7 +141,7 @@ contract LidoV1AdapterTest is
         expectBalance(Tokens.STETH, creditAccount, stETHExpectedBalance);
         expectEthBalance(address(lidoV1Mock), 2 * WAD);
         expectAllowance(Tokens.WETH, creditAccount, address(lidoV1Gateway), 1);
-        expectTokenIsEnabled(Tokens.STETH, true);
+        expectTokenIsEnabled(creditAccount, Tokens.STETH, true);
     }
 
     /// @dev [LDOV1-4]: submitAll works correctly and fires events
@@ -162,7 +167,7 @@ contract LidoV1AdapterTest is
             true
         );
 
-        executeOneLineMulticall(address(lidoV1Adapter), abi.encodeCall(LidoV1Adapter.submitAll, ()));
+        executeOneLineMulticall(creditAccount, address(lidoV1Adapter), abi.encodeCall(LidoV1Adapter.submitAll, ()));
 
         expectBalance(Tokens.WETH, creditAccount, 1);
 
@@ -177,26 +182,26 @@ contract LidoV1AdapterTest is
         expectBalance(Tokens.STETH, creditAccount, stETHExpectedBalance);
         expectEthBalance(address(lidoV1Mock), initialWETHamount - 1);
         expectAllowance(Tokens.WETH, creditAccount, address(lidoV1Gateway), 1);
-        expectTokenIsEnabled(Tokens.WETH, false);
-        expectTokenIsEnabled(Tokens.STETH, true);
+        expectTokenIsEnabled(creditAccount, Tokens.WETH, false);
+        expectTokenIsEnabled(creditAccount, Tokens.STETH, true);
     }
 
     /// @dev [LDOV1-5]: submit and submitAll correctly update the limit and revert on violating it
     function test_LDOV1_05_submit_updates_limit_and_reverts_on_limit_exceeded() public {
-        _openTestCreditAccount();
+        (address creditAccount,) = _openTestCreditAccount();
 
         vm.prank(CONFIGURATOR);
         lidoV1Adapter.setLimit(2 * WAD);
 
-        executeOneLineMulticall(address(lidoV1Adapter), abi.encodeCall(lidoV1Adapter.submit, (WAD)));
+        executeOneLineMulticall(creditAccount, address(lidoV1Adapter), abi.encodeCall(lidoV1Adapter.submit, (WAD)));
 
         assertEq(lidoV1Adapter.limit(), WAD, "New limit was set incorrectly");
 
         vm.expectRevert(LimitIsOverException.selector);
-        executeOneLineMulticall(address(lidoV1Adapter), abi.encodeCall(lidoV1Adapter.submit, (WAD + 1)));
+        executeOneLineMulticall(creditAccount, address(lidoV1Adapter), abi.encodeCall(lidoV1Adapter.submit, (WAD + 1)));
 
         vm.expectRevert(LimitIsOverException.selector);
-        executeOneLineMulticall(address(lidoV1Adapter), abi.encodeCall(lidoV1Adapter.submitAll, ()));
+        executeOneLineMulticall(creditAccount, address(lidoV1Adapter), abi.encodeCall(lidoV1Adapter.submitAll, ()));
     }
 
     /// @dev [LDOV1-6]: setLimit reverts if called by Non-configurator

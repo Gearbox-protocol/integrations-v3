@@ -10,7 +10,7 @@ import {ICurvePool} from "../../../../integrations/curve/ICurvePool.sol";
 import {CurveV1MetapoolMock} from "../../../mocks/integrations/CurveV1MetapoolMock.sol";
 import {MultiCall} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacadeV3.sol";
 
-import {Tokens} from "../../../config/Tokens.sol";
+import {Tokens} from "@gearbox-protocol/sdk/contracts/Tokens.sol";
 
 // TEST
 import "../../../lib/constants.sol";
@@ -71,12 +71,12 @@ contract CurveV1AdapterBaseMetaPoolTest is Test, CurveV1AdapterHelper {
 
         expectMulticallStackCalls(address(adapter), address(curveV1Mock), USER, callData, tokenIn, tokenOut, true);
 
-        executeOneLineMulticall(address(adapter), callData);
+        executeOneLineMulticall(creditAccount, address(adapter), callData);
 
         expectBalance(Tokens.cLINK, creditAccount, LINK_ACCOUNT_AMOUNT - LINK_EXCHANGE_AMOUNT);
 
         expectBalance(Tokens.cUSDT, creditAccount, (LINK_EXCHANGE_AMOUNT * 99) / 100);
-        expectTokenIsEnabled(tokenOut, true);
+        expectTokenIsEnabled(creditAccount, tokenOut, true);
     }
 
     /// @dev [ACV1-M-3]: exchange_all_underlying works correctly
@@ -99,6 +99,7 @@ contract CurveV1AdapterBaseMetaPoolTest is Test, CurveV1AdapterHelper {
         expectMulticallStackCalls(address(adapter), address(curveV1Mock), USER, callData, tokenIn, tokenOut, true);
 
         executeOneLineMulticall(
+            creditAccount,
             address(adapter),
             abi.encodeWithSignature("exchange_all_underlying(int128,int128,uint256)", 0, 3, (RAY * 99) / 100)
         );
@@ -107,7 +108,7 @@ contract CurveV1AdapterBaseMetaPoolTest is Test, CurveV1AdapterHelper {
 
         expectBalance(Tokens.cUSDT, creditAccount, ((LINK_ACCOUNT_AMOUNT - 1) * 99) / 100);
 
-        expectTokenIsEnabled(tokenIn, false);
-        expectTokenIsEnabled(tokenOut, true);
+        expectTokenIsEnabled(creditAccount, tokenIn, false);
+        expectTokenIsEnabled(creditAccount, tokenOut, true);
     }
 }

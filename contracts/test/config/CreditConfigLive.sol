@@ -3,8 +3,8 @@
 // (c) Gearbox Holdings, 2022
 pragma solidity ^0.8.10;
 
-import {Tokens} from "./Tokens.sol";
-import {Contracts} from "./SupportedContracts.sol";
+import {Tokens} from "@gearbox-protocol/sdk/contracts/Tokens.sol";
+import {Contracts} from "@gearbox-protocol/sdk/contracts/SupportedContracts.sol";
 
 /// @dev A struct containing parameters for a recognized collateral token in the system
 struct CollateralTokenHuman {
@@ -36,13 +36,13 @@ struct CreditManagerV3HumanOpts {
 }
 
 contract CreditConfigLive {
-    mapping(uint256 => CreditManagerV3HumanOpts) CreditManagerV3HumanOpts;
+    mapping(uint256 => CreditManagerV3HumanOpts) creditManagerV3HumanOpts;
     uint256 numOpts;
 
     constructor() {
         CreditManagerV3HumanOpts storage cm;
 
-        cm = CreditManagerV3HumanOpts[numOpts];
+        cm = creditManagerV3HumanOpts[numOpts];
         ++numOpts;
         cm.underlying = Tokens.DAI;
         cm.minBorrowedAmount = 150000000000000000000000;
@@ -122,7 +122,8 @@ contract CreditConfigLive {
         cm.contracts.push(Contracts.CONVEX_STECRV_POOL);
         cm.contracts.push(Contracts.CONVEX_BOOSTER);
         cm.contracts.push(Contracts.UNIVERSAL_ADAPTER);
-        cm = CreditManagerV3HumanOpts[numOpts];
+
+        cm = creditManagerV3HumanOpts[numOpts];
         ++numOpts;
         cm.underlying = Tokens.USDC;
         cm.minBorrowedAmount = 150000000000;
@@ -202,7 +203,8 @@ contract CreditConfigLive {
         cm.contracts.push(Contracts.CONVEX_STECRV_POOL);
         cm.contracts.push(Contracts.CONVEX_BOOSTER);
         cm.contracts.push(Contracts.UNIVERSAL_ADAPTER);
-        cm = CreditManagerV3HumanOpts[numOpts];
+
+        cm = creditManagerV3HumanOpts[numOpts];
         ++numOpts;
         cm.underlying = Tokens.WETH;
         cm.minBorrowedAmount = 100000000000000000000;
@@ -282,7 +284,8 @@ contract CreditConfigLive {
         cm.contracts.push(Contracts.CONVEX_STECRV_POOL);
         cm.contracts.push(Contracts.CONVEX_BOOSTER);
         cm.contracts.push(Contracts.UNIVERSAL_ADAPTER);
-        cm = CreditManagerV3HumanOpts[numOpts];
+
+        cm = creditManagerV3HumanOpts[numOpts];
         ++numOpts;
         cm.underlying = Tokens.wstETH;
         cm.minBorrowedAmount = 100000000000000000000;
@@ -364,7 +367,8 @@ contract CreditConfigLive {
         cm.contracts.push(Contracts.CONVEX_BOOSTER);
         cm.contracts.push(Contracts.UNIVERSAL_ADAPTER);
         cm.contracts.push(Contracts.LIDO_WSTETH);
-        cm = CreditManagerV3HumanOpts[numOpts];
+
+        cm = creditManagerV3HumanOpts[numOpts];
         ++numOpts;
         cm.underlying = Tokens.WBTC;
         cm.minBorrowedAmount = 750000000;

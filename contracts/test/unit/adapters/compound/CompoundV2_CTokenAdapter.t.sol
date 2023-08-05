@@ -12,7 +12,8 @@ import {CompoundV2_CEtherAdapter} from "../../../../adapters/compound/CompoundV2
 import {CompoundV2_CTokenAdapter} from "../../../../adapters/compound/CompoundV2_CTokenAdapter.sol";
 import {ICompoundV2_Exceptions} from "../../../../interfaces/compound/ICompoundV2_CTokenAdapter.sol";
 
-import {Tokens} from "../../../config/Tokens.sol";
+import {Tokens} from "@gearbox-protocol/sdk/contracts/Tokens.sol";
+
 import {
     CErc20Mock,
     MINT_ERROR,
@@ -21,6 +22,8 @@ import {
 } from "../../../mocks/integrations/compound/CErc20Mock.sol";
 
 import {CompoundTestHelper} from "./CompoundTestHelper.sol";
+
+import "@gearbox-protocol/core-v3/contracts/interfaces/IExceptions.sol";
 
 /// @title Compound V2 CToken adapter test
 /// @notice [ACV2CT]: Unit tests for Compound V2 CToken adapter
@@ -32,12 +35,12 @@ contract CompoundV2_CTokenAdapter_Test is CompoundTestHelper {
         _setupCompoundSuite();
 
         vm.startPrank(CONFIGURATOR);
-        cethAdapter = new CompoundV2_CEtherAdapter(address(CreditManagerV3), address(gateway));
-        CreditConfiguratorV3.allowContract(address(gateway), address(cethAdapter));
+        cethAdapter = new CompoundV2_CEtherAdapter(address(creditManager), address(gateway));
+        creditConfigurator.allowAdapter(address(cethAdapter));
         vm.label(address(cethAdapter), "cETH_ADAPTER");
 
-        cusdcAdapter = new CompoundV2_CErc20Adapter(address(CreditManagerV3), cusdc);
-        CreditConfiguratorV3.allowContract(cusdc, address(cusdcAdapter));
+        cusdcAdapter = new CompoundV2_CErc20Adapter(address(creditManager), cusdc);
+        creditConfigurator.allowAdapter(address(cusdcAdapter));
         vm.label(address(cusdcAdapter), "cUSDC_ADAPTER");
         vm.stopPrank();
     }
@@ -51,19 +54,19 @@ contract CompoundV2_CTokenAdapter_Test is CompoundTestHelper {
             CompoundV2_CTokenAdapter adapter =
                 isUsdc == 1 ? CompoundV2_CTokenAdapter(cusdcAdapter) : CompoundV2_CTokenAdapter(cethAdapter);
 
-            vm.expectRevert(IAdapterExceptions.CreditFacadeV3OnlyException.selector);
+            vm.expectRevert(CallerNotCreditFacadeException.selector);
             adapter.mint(1);
 
-            vm.expectRevert(IAdapterExceptions.CreditFacadeV3OnlyException.selector);
+            vm.expectRevert(CallerNotCreditFacadeException.selector);
             adapter.mintAll();
 
-            vm.expectRevert(IAdapterExceptions.CreditFacadeV3OnlyException.selector);
+            vm.expectRevert(CallerNotCreditFacadeException.selector);
             adapter.redeem(1);
 
-            vm.expectRevert(IAdapterExceptions.CreditFacadeV3OnlyException.selector);
+            vm.expectRevert(CallerNotCreditFacadeException.selector);
             adapter.redeemAll();
 
-            vm.expectRevert(IAdapterExceptions.CreditFacadeV3OnlyException.selector);
+            vm.expectRevert(CallerNotCreditFacadeException.selector);
             adapter.redeemUnderlying(1);
         }
         vm.stopPrank();
@@ -92,15 +95,15 @@ contract CompoundV2_CTokenAdapter_Test is CompoundTestHelper {
 
             bytes memory callData = abi.encodeCall(adapter.mint, (amountIn));
             expectMulticallStackCalls(address(adapter), targetContract, USER, callData, underlying, cToken, true);
-            executeOneLineMulticall(address(adapter), callData);
+            executeOneLineMulticall(creditAccount, address(adapter), callData);
 
             expectBalance(underlying, creditAccount, initialBalance - amountIn);
             expectBalance(cToken, creditAccount, amountOutExpected);
 
             expectAllowance(underlying, creditAccount, targetContract, 1);
 
-            expectTokenIsEnabled(underlying, true);
-            expectTokenIsEnabled(cusdc, true);
+            expectTokenIsEnabled(creditAccount, underlying, true);
+            expectTokenIsEnabled(creditAccount, cusdc, true);
 
             vm.revertTo(snapshot);
         }
@@ -109,12 +112,12 @@ contract CompoundV2_CTokenAdapter_Test is CompoundTestHelper {
     /// @notice [ACV2CT-3] `mint` reverts on non-zero Compound error code
     /// @dev This is only relevant for CErc20 adapter because for CEther gateway reverts even sooner
     function test_ACV2CT_03_mint_reverts_on_non_zero_compound_error_code() public {
-        _openAccountWithToken(Tokens.USDC);
+        (address creditAccount,,,) = _openAccountWithToken(Tokens.USDC);
 
         CErc20Mock(cusdc).setFailing(true);
 
         vm.expectRevert(abi.encodeWithSelector(ICompoundV2_Exceptions.CTokenError.selector, MINT_ERROR));
-        executeOneLineMulticall(address(cusdcAdapter), abi.encodeCall(cusdcAdapter.mint, (1)));
+        executeOneLineMulticall(creditAccount, address(cusdcAdapter), abi.encodeCall(cusdcAdapter.mint, (1)));
     }
 
     /// @notice [ACV2CT-4] `mintAll` works correctly
@@ -144,15 +147,15 @@ contract CompoundV2_CTokenAdapter_Test is CompoundTestHelper {
             );
 
             bytes memory callData = abi.encodeCall(adapter.mintAll, ());
-            executeOneLineMulticall(address(adapter), callData);
+            executeOneLineMulticall(creditAccount, address(adapter), callData);
 
             expectBalance(underlying, creditAccount, initialBalance - amountInExpected);
             expectBalance(cToken, creditAccount, amountOutExpected);
 
             expectAllowance(underlying, creditAccount, targetContract, 1);
 
-            expectTokenIsEnabled(underlying, false);
-            expectTokenIsEnabled(cusdc, true);
+            expectTokenIsEnabled(creditAccount, underlying, false);
+            expectTokenIsEnabled(creditAccount, cusdc, true);
 
             vm.revertTo(snapshot);
         }
@@ -161,12 +164,12 @@ contract CompoundV2_CTokenAdapter_Test is CompoundTestHelper {
     /// @notice [ACV2CT-5] `mintAll` reverts on non-zero Compound error code
     /// @dev This is only relevant for CErc20 adapter because for CEther gateway reverts even sooner
     function test_ACV2CT_05_mintAll_reverts_on_non_zero_compound_error_code() public {
-        _openAccountWithToken(Tokens.USDC);
+        (address creditAccount,,,) = _openAccountWithToken(Tokens.USDC);
 
         CErc20Mock(cusdc).setFailing(true);
 
         vm.expectRevert(abi.encodeWithSelector(ICompoundV2_Exceptions.CTokenError.selector, MINT_ERROR));
-        executeOneLineMulticall(address(cusdcAdapter), abi.encodeCall(cusdcAdapter.mintAll, ()));
+        executeOneLineMulticall(creditAccount, address(cusdcAdapter), abi.encodeCall(cusdcAdapter.mintAll, ()));
     }
 
     /// @notice [ACV2CT-6] `redeem` works correctly
@@ -191,13 +194,13 @@ contract CompoundV2_CTokenAdapter_Test is CompoundTestHelper {
             bytes memory callData = abi.encodeCall(adapter.redeem, (amountIn));
             bool cethOnly = isUsdc == 0;
             expectMulticallStackCalls(address(adapter), targetContract, USER, callData, cToken, underlying, cethOnly);
-            executeOneLineMulticall(address(adapter), callData);
+            executeOneLineMulticall(creditAccount, address(adapter), callData);
 
             expectBalance(underlying, creditAccount, amountOutExpected);
             expectBalance(cToken, creditAccount, initialBalance - amountIn);
 
-            expectTokenIsEnabled(underlying, true);
-            expectTokenIsEnabled(cToken, true);
+            expectTokenIsEnabled(creditAccount, underlying, true);
+            expectTokenIsEnabled(creditAccount, cToken, true);
 
             vm.revertTo(snapshot);
         }
@@ -206,12 +209,12 @@ contract CompoundV2_CTokenAdapter_Test is CompoundTestHelper {
     /// @notice [ACV2CT-7] `redeem` reverts on non-zero Compound error code
     /// @dev This is only relevant for CErc20 adapter because for CEther gateway reverts even sooner
     function test_ACV2CT_07_redeem_reverts_on_non_zero_compound_error_code() public {
-        _openAccountWithCToken(Tokens.USDC);
+        (address creditAccount,,,) = _openAccountWithCToken(Tokens.USDC);
 
         CErc20Mock(cusdc).setFailing(true);
 
         vm.expectRevert(abi.encodeWithSelector(ICompoundV2_Exceptions.CTokenError.selector, REDEEM_ERROR));
-        executeOneLineMulticall(address(cusdcAdapter), abi.encodeCall(cusdcAdapter.redeem, (1)));
+        executeOneLineMulticall(creditAccount, address(cusdcAdapter), abi.encodeCall(cusdcAdapter.redeem, (1)));
     }
 
     /// @notice [ACV2CT-8] `redeemAll` works correctly
@@ -240,13 +243,13 @@ contract CompoundV2_CTokenAdapter_Test is CompoundTestHelper {
             );
 
             bytes memory callData = abi.encodeCall(adapter.redeemAll, ());
-            executeOneLineMulticall(address(adapter), callData);
+            executeOneLineMulticall(creditAccount, address(adapter), callData);
 
             expectBalance(underlying, creditAccount, amountOutExpected);
             expectBalance(cToken, creditAccount, initialBalance - amountInExpected);
 
-            expectTokenIsEnabled(underlying, true);
-            expectTokenIsEnabled(cToken, false);
+            expectTokenIsEnabled(creditAccount, underlying, true);
+            expectTokenIsEnabled(creditAccount, cToken, false);
 
             vm.revertTo(snapshot);
         }
@@ -255,12 +258,12 @@ contract CompoundV2_CTokenAdapter_Test is CompoundTestHelper {
     /// @notice [ACV2CT-9] `redeemAll` reverts on non-zero Compound error code
     /// @dev This is only relevant for CErc20 adapter because for CEther gateway reverts even sooner
     function test_ACV2CT_09_redeemAll_reverts_on_non_zero_compound_error_code() public {
-        _openAccountWithCToken(Tokens.USDC);
+        (address creditAccount,,,) = _openAccountWithCToken(Tokens.USDC);
 
         CErc20Mock(cusdc).setFailing(true);
 
         vm.expectRevert(abi.encodeWithSelector(ICompoundV2_Exceptions.CTokenError.selector, REDEEM_ERROR));
-        executeOneLineMulticall(address(cusdcAdapter), abi.encodeCall(cusdcAdapter.redeemAll, ()));
+        executeOneLineMulticall(creditAccount, address(cusdcAdapter), abi.encodeCall(cusdcAdapter.redeemAll, ()));
     }
 
     /// @notice [ACV2CT-10] `redeemUnderlying` works correctly
@@ -285,13 +288,13 @@ contract CompoundV2_CTokenAdapter_Test is CompoundTestHelper {
             bytes memory callData = abi.encodeCall(adapter.redeemUnderlying, (amountOut));
             bool cethOnly = isUsdc == 0;
             expectMulticallStackCalls(address(adapter), targetContract, USER, callData, cToken, underlying, cethOnly);
-            executeOneLineMulticall(address(adapter), callData);
+            executeOneLineMulticall(creditAccount, address(adapter), callData);
 
             expectBalance(underlying, creditAccount, amountOut);
             expectBalance(cToken, creditAccount, initialBalance - amountInExpected);
 
-            expectTokenIsEnabled(underlying, true);
-            expectTokenIsEnabled(cToken, true);
+            expectTokenIsEnabled(creditAccount, underlying, true);
+            expectTokenIsEnabled(creditAccount, cToken, true);
 
             vm.revertTo(snapshot);
         }
@@ -300,11 +303,13 @@ contract CompoundV2_CTokenAdapter_Test is CompoundTestHelper {
     /// @notice [ACV2CT-11] `redeemUnderlying` reverts on non-zero Compound error code
     /// @dev This is only relevant for CErc20 adapter because for CEther gateway reverts even sooner
     function test_ACV2CT_11_redeemUnderlying_reverts_on_non_zero_compound_error_code() public {
-        _openAccountWithCToken(Tokens.USDC);
+        (address creditAccount,,,) = _openAccountWithCToken(Tokens.USDC);
 
         CErc20Mock(cusdc).setFailing(true);
 
         vm.expectRevert(abi.encodeWithSelector(ICompoundV2_Exceptions.CTokenError.selector, REDEEM_UNDERLYING_ERROR));
-        executeOneLineMulticall(address(cusdcAdapter), abi.encodeCall(cusdcAdapter.redeemUnderlying, (1)));
+        executeOneLineMulticall(
+            creditAccount, address(cusdcAdapter), abi.encodeCall(cusdcAdapter.redeemUnderlying, (1))
+        );
     }
 }

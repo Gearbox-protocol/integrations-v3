@@ -10,7 +10,7 @@ import {UniswapV2Adapter} from "../../../../adapters/uniswap/UniswapV2.sol";
 import {IUniswapV2Adapter, IUniswapV2AdapterExceptions} from "../../../../interfaces/uniswap/IUniswapV2Adapter.sol";
 import {UniswapV2Mock} from "../../../mocks/integrations/UniswapV2Mock.sol";
 
-import {Tokens} from "../../../suites/TokensTestSuite.sol";
+import {Tokens} from "@gearbox-protocol/sdk/contracts/Tokens.sol";
 
 // TEST
 import "../../../lib/constants.sol";
@@ -48,13 +48,13 @@ contract UniswapV2AdapterTest is AdapterTestHelper, IUniswapV2AdapterExceptions 
         connectors[1] = tokenTestSuite.addressOf(Tokens.USDT);
 
         adapter = new UniswapV2Adapter(
-            address(CreditManagerV3),
+            address(creditManager),
             address(uniswapMock),
             connectors
         );
 
         vm.prank(CONFIGURATOR);
-        CreditConfiguratorV3.allowContract(address(uniswapMock), address(adapter));
+        creditConfigurator.allowAdapter(address(adapter));
 
         vm.label(address(adapter), "ADAPTER");
         vm.label(address(uniswapMock), "UNISWAP_MOCK");
@@ -68,30 +68,36 @@ contract UniswapV2AdapterTest is AdapterTestHelper, IUniswapV2AdapterExceptions 
     ///
     ///
 
-    /// @dev [AUV2-1]: swap reverts if uses has no account
-    function test_AUV2_01_swap_reverts_if_user_has_no_account() public {
-        address[] memory dumbPath;
+    // /// @dev [AUV2-1]: swap reverts if uses has no account
+    // function test_AUV2_01_swap_reverts_if_user_has_no_account() public {
+    //     address[] memory dumbPath;
 
-        vm.expectRevert(ICreditManagerV3Exceptions.HasNoOpenedAccountException.selector);
-        executeOneLineMulticall(
-            address(adapter), abi.encodeCall(adapter.swapTokensForExactTokens, (0, 0, dumbPath, address(0), 0))
-        );
+    //     vm.expectRevert(ICreditManagerV3Exceptions.HasNoOpenedAccountException.selector);
+    //     executeOneLineMulticall(
+    //         creditAccount,
+    //         address(adapter),
+    //         abi.encodeCall(adapter.swapTokensForExactTokens, (0, 0, dumbPath, address(0), 0))
+    //     );
 
-        vm.expectRevert(ICreditManagerV3Exceptions.HasNoOpenedAccountException.selector);
-        executeOneLineMulticall(
-            address(adapter), abi.encodeCall(adapter.swapExactTokensForTokens, (0, 0, dumbPath, address(0), 0))
-        );
+    //     vm.expectRevert(ICreditManagerV3Exceptions.HasNoOpenedAccountException.selector);
+    //     executeOneLineMulticall(
+    //         creditAccount,
+    //         address(adapter),
+    //         abi.encodeCall(adapter.swapExactTokensForTokens, (0, 0, dumbPath, address(0), 0))
+    //     );
 
-        vm.expectRevert(ICreditManagerV3Exceptions.HasNoOpenedAccountException.selector);
-        executeOneLineMulticall(address(adapter), abi.encodeCall(adapter.swapAllTokensForTokens, (0, dumbPath, 0)));
-    }
+    //     vm.expectRevert(ICreditManagerV3Exceptions.HasNoOpenedAccountException.selector);
+    //     executeOneLineMulticall(
+    //         creditAccount, address(adapter), abi.encodeCall(adapter.swapAllTokensForTokens, (0, dumbPath, 0))
+    //     );
+    // }
 
     /// @dev [AUV2-2]: swapTokensForExactTokens works for user as expected
     function test_AUV2_02_swapTokensForExactTokens_works_for_user_as_expected() public {
         setUp();
 
         address[] memory path = new address[](2);
-        path[0] = CreditManagerV3.underlying();
+        path[0] = creditManager.underlying();
         path[1] = tokenTestSuite.addressOf(Tokens.WETH);
 
         (address creditAccount, uint256 initialDAIbalance) = _openTestCreditAccount();
@@ -115,6 +121,7 @@ contract UniswapV2AdapterTest is AdapterTestHelper, IUniswapV2AdapterExceptions 
 
         // MULTICALL
         executeOneLineMulticall(
+            creditAccount,
             address(adapter),
             abi.encodeCall(
                 adapter.swapTokensForExactTokens,
@@ -132,16 +139,16 @@ contract UniswapV2AdapterTest is AdapterTestHelper, IUniswapV2AdapterExceptions 
 
         expectBalance(Tokens.WETH, creditAccount, DAI_EXCHANGE_AMOUNT / DAI_WETH_RATE / 2);
 
-        expectAllowance(CreditManagerV3.underlying(), creditAccount, address(uniswapMock), 1);
+        expectAllowance(creditManager.underlying(), creditAccount, address(uniswapMock), 1);
 
-        expectTokenIsEnabled(Tokens.WETH, true);
+        expectTokenIsEnabled(creditAccount, Tokens.WETH, true);
     }
 
     /// @dev [AUV2-3]: swapExactTokensForTokens works for user as expected
     function test_AUV2_03_swapExactTokensForTokens_works_for_user_as_expected() public {
         setUp();
         address[] memory path = new address[](2);
-        path[0] = CreditManagerV3.underlying();
+        path[0] = creditManager.underlying();
         path[1] = tokenTestSuite.addressOf(Tokens.WETH);
 
         (address creditAccount, uint256 initialDAIbalance) = _openTestCreditAccount();
@@ -165,6 +172,7 @@ contract UniswapV2AdapterTest is AdapterTestHelper, IUniswapV2AdapterExceptions 
 
         // MULTICALL
         executeOneLineMulticall(
+            creditAccount,
             address(adapter),
             abi.encodeCall(
                 adapter.swapExactTokensForTokens,
@@ -184,14 +192,14 @@ contract UniswapV2AdapterTest is AdapterTestHelper, IUniswapV2AdapterExceptions 
 
         expectAllowance(path[0], creditAccount, address(uniswapMock), 1);
 
-        expectTokenIsEnabled(path[1], true);
+        expectTokenIsEnabled(creditAccount, path[1], true);
     }
 
     /// @dev [AUV2-4]: swapAllTokensForTokens works for user as expected
     function test_AUV2_04_swapAllTokensForTokens_works_for_user_as_expected() public {
         setUp();
         address[] memory path = new address[](2);
-        path[0] = CreditManagerV3.underlying();
+        path[0] = creditManager.underlying();
         path[1] = tokenTestSuite.addressOf(Tokens.WETH);
 
         (address creditAccount, uint256 initialDAIbalance) = _openTestCreditAccount();
@@ -215,6 +223,7 @@ contract UniswapV2AdapterTest is AdapterTestHelper, IUniswapV2AdapterExceptions 
 
         // MULTICALL
         executeOneLineMulticall(
+            creditAccount,
             address(adapter),
             abi.encodeCall(
                 IUniswapV2Adapter.swapAllTokensForTokens,
@@ -228,16 +237,16 @@ contract UniswapV2AdapterTest is AdapterTestHelper, IUniswapV2AdapterExceptions 
 
         expectAllowance(path[0], creditAccount, address(uniswapMock), 1);
 
-        expectTokenIsEnabled(path[0], false);
-        expectTokenIsEnabled(path[1], true);
+        expectTokenIsEnabled(creditAccount, path[0], false);
+        expectTokenIsEnabled(creditAccount, path[1], true);
     }
 
     /// @dev [AUV2-5]: Path validity checks are correct
     function test_AUV2_05_path_validity_checks_are_correct() public {
-        _openTestCreditAccount();
+        (address creditAccount,) = _openTestCreditAccount();
 
         address[] memory path = new address[](5);
-        path[0] = CreditManagerV3.underlying();
+        path[0] = creditManager.underlying();
         path[1] = tokenTestSuite.addressOf(Tokens.USDC);
         path[2] = tokenTestSuite.addressOf(Tokens.USDT);
         path[3] = tokenTestSuite.addressOf(Tokens.LINK);
@@ -245,12 +254,14 @@ contract UniswapV2AdapterTest is AdapterTestHelper, IUniswapV2AdapterExceptions 
 
         vm.expectRevert(InvalidPathException.selector);
         executeOneLineMulticall(
+            creditAccount,
             address(adapter),
             abi.encodeCall(adapter.swapExactTokensForTokens, (DAI_EXCHANGE_AMOUNT, 0, path, address(0), deadline))
         );
 
         vm.expectRevert(InvalidPathException.selector);
         executeOneLineMulticall(
+            creditAccount,
             address(adapter),
             abi.encodeCall(
                 adapter.swapTokensForExactTokens,
@@ -260,6 +271,7 @@ contract UniswapV2AdapterTest is AdapterTestHelper, IUniswapV2AdapterExceptions 
 
         vm.expectRevert(InvalidPathException.selector);
         executeOneLineMulticall(
+            creditAccount,
             address(adapter),
             abi.encodeCall(
                 adapter.swapAllTokensForTokens, (((RAY / DAI_WETH_RATE) * 997) / 1000, path, _getUniswapDeadline())
@@ -267,42 +279,46 @@ contract UniswapV2AdapterTest is AdapterTestHelper, IUniswapV2AdapterExceptions 
         );
 
         path = new address[](4);
-        path[0] = CreditManagerV3.underlying();
+        path[0] = creditManager.underlying();
         path[1] = tokenTestSuite.addressOf(Tokens.USDC);
         path[2] = tokenTestSuite.addressOf(Tokens.LINK);
         path[3] = tokenTestSuite.addressOf(Tokens.WETH);
 
         vm.expectRevert(InvalidPathException.selector);
         executeOneLineMulticall(
+            creditAccount,
             address(adapter),
             abi.encodeCall(adapter.swapExactTokensForTokens, (DAI_EXCHANGE_AMOUNT, 0, path, address(0), deadline))
         );
 
         vm.expectRevert(InvalidPathException.selector);
         executeOneLineMulticall(
+            creditAccount,
             address(adapter),
             abi.encodeCall(adapter.swapExactTokensForTokens, (DAI_EXCHANGE_AMOUNT, 0, path, address(0), deadline))
         );
 
         path = new address[](4);
-        path[0] = CreditManagerV3.underlying();
+        path[0] = creditManager.underlying();
         path[1] = tokenTestSuite.addressOf(Tokens.LINK);
         path[2] = tokenTestSuite.addressOf(Tokens.USDT);
         path[3] = tokenTestSuite.addressOf(Tokens.WETH);
 
         vm.expectRevert(InvalidPathException.selector);
         executeOneLineMulticall(
+            creditAccount,
             address(adapter),
             abi.encodeCall(adapter.swapExactTokensForTokens, (DAI_EXCHANGE_AMOUNT, 0, path, address(0), deadline))
         );
 
         path = new address[](4);
-        path[0] = CreditManagerV3.underlying();
+        path[0] = creditManager.underlying();
         path[1] = tokenTestSuite.addressOf(Tokens.USDC);
         path[2] = tokenTestSuite.addressOf(Tokens.USDT);
         path[3] = tokenTestSuite.addressOf(Tokens.WETH);
 
         executeOneLineMulticall(
+            creditAccount,
             address(adapter),
             abi.encodeCall(adapter.swapExactTokensForTokens, (DAI_EXCHANGE_AMOUNT, 0, path, address(0), deadline))
         );

@@ -8,10 +8,10 @@ import {USER, CONFIGURATOR} from "@gearbox-protocol/core-v3/contracts/test/lib/c
 
 import {AaveV2_WrappedATokenAdapter} from "../../../../adapters/aave/AaveV2_WrappedATokenAdapter.sol";
 import {IWrappedAToken} from "../../../../interfaces/aave/IWrappedAToken.sol";
-
-import {Tokens} from "../../../config/Tokens.sol";
-
+import {Tokens} from "@gearbox-protocol/sdk/contracts/Tokens.sol";
 import {AaveTestHelper} from "./AaveTestHelper.sol";
+
+import "@gearbox-protocol/core-v3/contracts/interfaces/IExceptions.sol";
 
 /// @title Aave V2 wrapped aToken adapter tests
 /// @notice [AAV2W]: Unit tests for Aave V2 wrapper aToken adapter
@@ -22,25 +22,25 @@ contract AaveV2_WrappedATokenAdapter_Test is AaveTestHelper {
         _setupAaveSuite(true);
 
         vm.startPrank(CONFIGURATOR);
-        adapter = new AaveV2_WrappedATokenAdapter(address(CreditManagerV3), waUsdc);
-        CreditConfiguratorV3.allowContract(address(waUsdc), address(adapter));
+        adapter = new AaveV2_WrappedATokenAdapter(address(creditManager), waUsdc);
+        creditConfigurator.allowAdapter(address(adapter));
         vm.label(address(adapter), "waUSDC_ADAPTER");
         vm.stopPrank();
     }
 
     /// @notice [AAV2W-1]: Constructor reverts on not registered tokens
     function test_AAV2W_01_constructor_reverts_on_not_registered_tokens() public {
-        vm.expectRevert(IAdapterExceptions.TokenNotAllowedException.selector);
-        new AaveV2_WrappedATokenAdapter(address(CreditManagerV3), waDai);
+        vm.expectRevert(TokenNotAllowedException.selector);
+        new AaveV2_WrappedATokenAdapter(address(creditManager), waDai);
     }
 
     /// @notice [AAV2W-2]: Constructor sets correct values
     function test_AAV2W_02_constructor_sets_correct_values() public {
         assertEq(adapter.aToken(), aUsdc, "Incorrect aUSDC address");
         assertEq(adapter.underlying(), usdc, "Incorrect USDC address");
-        assertEq(adapter.waTokenMask(), CreditManagerV3.tokenMasksMap(waUsdc), "Incorrect waUSDC mask");
-        assertEq(adapter.aTokenMask(), CreditManagerV3.tokenMasksMap(aUsdc), "Incorrect aUSDC mask");
-        assertEq(adapter.tokenMask(), CreditManagerV3.tokenMasksMap(usdc), "Incorrect USDC mask");
+        assertEq(adapter.waTokenMask(), creditManager.getTokenMaskOrRevert(waUsdc), "Incorrect waUSDC mask");
+        assertEq(adapter.aTokenMask(), creditManager.getTokenMaskOrRevert(aUsdc), "Incorrect aUSDC mask");
+        assertEq(adapter.tokenMask(), creditManager.getTokenMaskOrRevert(usdc), "Incorrect USDC mask");
     }
 
     /// @notice [AAV2W-3]: All action functions revert if called not from the multicall
@@ -48,28 +48,28 @@ contract AaveV2_WrappedATokenAdapter_Test is AaveTestHelper {
         _openTestCreditAccount();
 
         vm.startPrank(USER);
-        vm.expectRevert(IAdapterExceptions.CreditFacadeV3OnlyException.selector);
+        vm.expectRevert(CallerNotCreditFacadeException.selector);
         adapter.deposit(1);
 
-        vm.expectRevert(IAdapterExceptions.CreditFacadeV3OnlyException.selector);
+        vm.expectRevert(CallerNotCreditFacadeException.selector);
         adapter.depositAll();
 
-        vm.expectRevert(IAdapterExceptions.CreditFacadeV3OnlyException.selector);
+        vm.expectRevert(CallerNotCreditFacadeException.selector);
         adapter.depositUnderlying(1);
 
-        vm.expectRevert(IAdapterExceptions.CreditFacadeV3OnlyException.selector);
+        vm.expectRevert(CallerNotCreditFacadeException.selector);
         adapter.depositAllUnderlying();
 
-        vm.expectRevert(IAdapterExceptions.CreditFacadeV3OnlyException.selector);
+        vm.expectRevert(CallerNotCreditFacadeException.selector);
         adapter.withdraw(1);
 
-        vm.expectRevert(IAdapterExceptions.CreditFacadeV3OnlyException.selector);
+        vm.expectRevert(CallerNotCreditFacadeException.selector);
         adapter.withdrawAll();
 
-        vm.expectRevert(IAdapterExceptions.CreditFacadeV3OnlyException.selector);
+        vm.expectRevert(CallerNotCreditFacadeException.selector);
         adapter.withdrawUnderlying(1);
 
-        vm.expectRevert(IAdapterExceptions.CreditFacadeV3OnlyException.selector);
+        vm.expectRevert(CallerNotCreditFacadeException.selector);
         adapter.withdrawAllUnderlying();
         vm.stopPrank();
     }
@@ -94,15 +94,15 @@ contract AaveV2_WrappedATokenAdapter_Test is AaveTestHelper {
                 ? abi.encodeCall(IWrappedAToken.depositUnderlying, (depositAmount))
                 : abi.encodeCall(IWrappedAToken.deposit, (depositAmount));
             expectMulticallStackCalls(address(adapter), waUsdc, USER, callData, tokenIn, waUsdc, true);
-            executeOneLineMulticall(address(adapter), callData);
+            executeOneLineMulticall(creditAccount, address(adapter), callData);
 
             expectBalance(tokenIn, creditAccount, initialBalance - depositAmount);
             expectBalance(waUsdc, creditAccount, depositAmount * WAD / IWrappedAToken(waUsdc).exchangeRate());
 
             expectAllowance(tokenIn, creditAccount, waUsdc, 1);
 
-            expectTokenIsEnabled(tokenIn, true);
-            expectTokenIsEnabled(waUsdc, true);
+            expectTokenIsEnabled(creditAccount, tokenIn, true);
+            expectTokenIsEnabled(creditAccount, waUsdc, true);
 
             vm.revertTo(snapshot);
         }
@@ -132,15 +132,15 @@ contract AaveV2_WrappedATokenAdapter_Test is AaveTestHelper {
             bytes memory callData = fromUnderlying == 1
                 ? abi.encodeCall(adapter.depositAllUnderlying, ())
                 : abi.encodeCall(adapter.depositAll, ());
-            executeOneLineMulticall(address(adapter), callData);
+            executeOneLineMulticall(creditAccount, address(adapter), callData);
 
             expectBalance(tokenIn, creditAccount, 1);
             expectBalance(waUsdc, creditAccount, (initialBalance - 1) * WAD / IWrappedAToken(waUsdc).exchangeRate());
 
             expectAllowance(tokenIn, creditAccount, waUsdc, 1);
 
-            expectTokenIsEnabled(tokenIn, false);
-            expectTokenIsEnabled(waUsdc, true);
+            expectTokenIsEnabled(creditAccount, tokenIn, false);
+            expectTokenIsEnabled(creditAccount, waUsdc, true);
 
             vm.revertTo(snapshot);
         }
@@ -163,13 +163,13 @@ contract AaveV2_WrappedATokenAdapter_Test is AaveTestHelper {
                 ? abi.encodeCall(IWrappedAToken.withdrawUnderlying, (withdrawAmount))
                 : abi.encodeCall(IWrappedAToken.withdraw, (withdrawAmount));
             expectMulticallStackCalls(address(adapter), waUsdc, USER, callData, waUsdc, tokenOut, false);
-            executeOneLineMulticall(address(adapter), callData);
+            executeOneLineMulticall(creditAccount, address(adapter), callData);
 
             expectBalance(waUsdc, creditAccount, initialBalance - withdrawAmount);
             expectBalance(tokenOut, creditAccount, withdrawAmount * IWrappedAToken(waUsdc).exchangeRate() / WAD);
 
-            expectTokenIsEnabled(waUsdc, true);
-            expectTokenIsEnabled(tokenOut, true);
+            expectTokenIsEnabled(creditAccount, waUsdc, true);
+            expectTokenIsEnabled(creditAccount, tokenOut, true);
 
             vm.revertTo(snapshot);
         }
@@ -195,13 +195,13 @@ contract AaveV2_WrappedATokenAdapter_Test is AaveTestHelper {
             bytes memory callData = toUnderlying == 1
                 ? abi.encodeCall(adapter.withdrawAllUnderlying, ())
                 : abi.encodeCall(adapter.withdrawAll, ());
-            executeOneLineMulticall(address(adapter), callData);
+            executeOneLineMulticall(creditAccount, address(adapter), callData);
 
             expectBalance(waUsdc, creditAccount, 1);
             expectBalance(tokenOut, creditAccount, (initialBalance - 1) * IWrappedAToken(waUsdc).exchangeRate() / WAD);
 
-            expectTokenIsEnabled(waUsdc, false);
-            expectTokenIsEnabled(tokenOut, true);
+            expectTokenIsEnabled(creditAccount, waUsdc, false);
+            expectTokenIsEnabled(creditAccount, tokenOut, true);
 
             vm.revertTo(snapshot);
         }

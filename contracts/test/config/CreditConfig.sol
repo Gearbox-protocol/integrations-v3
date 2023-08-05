@@ -3,16 +3,16 @@
 // (c) Gearbox Holdings, 2023
 pragma solidity ^0.8.17;
 
-import {TokensTestSuite} from "../suites/TokensTestSuite.sol";
-import {Tokens} from "./Tokens.sol";
+import {TokensTestSuite} from "@gearbox-protocol/core-v3/contracts/test/suites/TokensTestSuite.sol";
+import {Tokens} from "@gearbox-protocol/sdk/contracts/Tokens.sol";
 
 import {CreditManagerOpts, CollateralToken} from "@gearbox-protocol/core-v3/contracts/credit/CreditConfiguratorV3.sol";
 
-import {PriceFeedConfig} from "@gearbox-protocol/core-v2/contracts/oracles/PriceOracleV2.sol";
-import {ICreditConfig} from "@gearbox-protocol/core-v3/contracts/test/interfaces/ICreditConfig.sol";
+// import {PriceFeedConfig} from "@gearbox-protocol/core-v3/contracts/oracles/PriceOracleV3.sol";
+import {ICreditConfig, PriceFeedConfig} from "@gearbox-protocol/core-v3/contracts/test/interfaces/ICreditConfig.sol";
 import {ITokenTestSuite} from "@gearbox-protocol/core-v3/contracts/test/interfaces/ITokenTestSuite.sol";
-import {TokensData} from "./TokensData.sol";
-import {ChainlinkPriceFeedData} from "./PriceFeedDataLive.sol";
+import {TokensDataLive} from "@gearbox-protocol/sdk/contracts/TokensData.sol";
+import {ChainlinkPriceFeedData} from "@gearbox-protocol/sdk/contracts/PriceFeedDataLive.sol";
 
 import {Test} from "forge-std/Test.sol";
 
@@ -26,8 +26,8 @@ struct CollateralTokensItem {
 /// @title CreditManagerV3TestSuite
 /// @notice Deploys contract for unit testing of CreditManagerV3.sol
 contract CreditConfig is Test, ICreditConfig {
-    uint128 public minBorrowedAmount;
-    uint128 public maxBorrowedAmount;
+    uint128 public minDebt;
+    uint128 public maxDebt;
 
     TokensTestSuite public _tokenTestSuite;
     mapping(Tokens => uint16) public lt;
@@ -41,8 +41,8 @@ contract CreditConfig is Test, ICreditConfig {
     constructor(TokensTestSuite tokenTestSuite_, Tokens _underlying) {
         uint256 accountAmount = _underlying == Tokens.DAI ? DAI_ACCOUNT_AMOUNT : WETH_ACCOUNT_AMOUNT;
 
-        minBorrowedAmount = uint128(WAD);
-        maxBorrowedAmount = uint128(10 * accountAmount);
+        minDebt = uint128(WAD);
+        maxDebt = uint128(10 * accountAmount);
 
         _tokenTestSuite = tokenTestSuite_;
 
@@ -50,28 +50,43 @@ contract CreditConfig is Test, ICreditConfig {
         underlyingSymbol = _underlying;
         underlying = tokenTestSuite_.addressOf(_underlying);
 
-        TokensData td = new TokensData();
-        ChainlinkPriceFeedData[] memory chainlinkPriceFeedData = td.getChainlinkPriceFeedData();
+        TokensDataLive td = new TokensDataLive();
+        // ChainlinkPriceFeedData[] memory chainlinkPriceFeedData = td.getChainlinkPriceFeedData();
 
-        uint256 len = chainlinkPriceFeedData.length;
+        // uint256 len = chainlinkPriceFeedData.length;
 
-        for (uint256 i; i < len; ++i) {
-            priceFeedConfig.push(
-                PriceFeedConfig({
-                    token: _tokenTestSuite.addressOf(chainlinkPriceFeedData[i].token),
-                    priceFeed: chainlinkPriceFeedData[i].priceFeed
-                })
-            );
-        }
+        // for (uint256 i; i < len; ++i) {
+        //     priceFeedConfig.push(
+        //         PriceFeedConfig({
+        //             token: _tokenTestSuite.addressOf(chainlinkPriceFeedData[i].token),
+        //             priceFeed: chainlinkPriceFeedData[i].priceFeed
+        //         })
+        //     );
+        // }
     }
+
+    // /// @dev A struct representing the initial Credit Manager configuration parameters
+    // struct CreditManagerOpts {
+    //     /// @dev The minimal debt principal amount
+    //     uint128 minDebt;
+    //     /// @dev The maximal debt principal amount
+    //     uint128 maxDebt;
+    //     /// @dev The initial list of collateral tokens to allow
+    //     CollateralToken[] collateralTokens;
+    //     /// @dev Address of IDegenNFTV2, address(0) if whitelisted mode is not used
+    //     address degenNFT;
+    //     /// @dev Address of BlacklistHelper, address(0) if the underlying is not blacklistable
+    //     address withdrawalManager;
+    //     /// @dev Whether the Credit Manager is connected to an expirable pool (and the CreditFacadeV3 is expirable)
+    //     bool expirable;
+    // }
 
     function getCreditOpts() external override returns (CreditManagerOpts memory) {
         return CreditManagerOpts({
-            minBorrowedAmount: minBorrowedAmount,
-            maxBorrowedAmount: maxBorrowedAmount,
+            minDebt: minDebt,
+            maxDebt: maxDebt,
             collateralTokens: getCollateralTokens(),
             degenNFT: address(0),
-            blacklistHelper: address(0),
             expirable: false
         });
     }

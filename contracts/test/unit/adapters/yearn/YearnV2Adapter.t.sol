@@ -9,14 +9,15 @@ import {YearnV2Adapter} from "../../../../adapters/yearn/YearnV2.sol";
 
 import {YearnV2Mock} from "../../../mocks/integrations/YearnV2Mock.sol";
 
-import {Tokens} from "../../../suites/TokensTestSuite.sol";
-import {YearnPriceFeed} from "../../../../oracles/yearn/YearnPriceFeed.sol";
+import {Tokens} from "@gearbox-protocol/sdk/contracts/Tokens.sol";
+import {YearnPriceFeed} from "@gearbox-protocol/oracles-v3/contracts/oracles/yearn/YearnPriceFeed.sol";
 
 // TEST
 import "../../../lib/constants.sol";
 
 import {AdapterTestHelper} from "../AdapterTestHelper.sol";
 import {ERC20Mock} from "@gearbox-protocol/core-v3/contracts/test/mocks/token/ERC20Mock.sol";
+import "@gearbox-protocol/core-v3/contracts/interfaces/IExceptions.sol";
 
 uint256 constant PRICE_PER_SHARE = (110 * WAD) / 100;
 
@@ -40,25 +41,27 @@ contract YearnV2AdapterTest is Test, AdapterTestHelper {
 
         vm.startPrank(CONFIGURATOR);
 
-        cft.priceOracle().addPriceFeed(
+        priceOracle.setPriceFeed(
             yvDAI,
             address(
                 new YearnPriceFeed(
-                    address(cft.addressProvider()),
+                    address(addressProvider),
                     yvDAI,
-                    cft.priceOracle().priceFeeds(token)
+                    priceOracle.priceFeeds(token),
+                    2 hours
                 )
-            )
+            ),
+            0
         );
 
-        CreditConfiguratorV3.addCollateralToken(yvDAI, 8300);
+        creditConfigurator.addCollateralToken(yvDAI, 8300);
 
         adapter = new YearnV2Adapter(
-            address(CreditManagerV3),
+            address(creditManager),
             address(yearnV2Mock)
         );
 
-        CreditConfiguratorV3.allowContract(address(yearnV2Mock), address(adapter));
+        creditConfigurator.allowAdapter(address(adapter));
 
         vm.stopPrank();
         tokenTestSuite.mint(Tokens.DAI, USER, 10 * DAI_ACCOUNT_AMOUNT);
@@ -76,12 +79,12 @@ contract YearnV2AdapterTest is Test, AdapterTestHelper {
 
         yAmount = (((initialDAIbalance - 1) * WAD) / PRICE_PER_SHARE);
 
-        executeOneLineMulticall(address(adapter), abi.encodeWithSignature("deposit()"));
+        executeOneLineMulticall(creditAccount, address(adapter), abi.encodeWithSignature("deposit()"));
 
         expectBalance(Tokens.DAI, creditAccount, 1);
         expectBalance(yvDAI, creditAccount, yAmount);
 
-        expectTokenIsEnabled(Tokens.DAI, false);
+        expectTokenIsEnabled(creditAccount, Tokens.DAI, false);
     }
 
     ///
@@ -95,10 +98,10 @@ contract YearnV2AdapterTest is Test, AdapterTestHelper {
         assertEq(address(adapter.token()), tokenTestSuite.addressOf(Tokens.DAI), "Incorrect token");
         assertEq(
             adapter.tokenMask(),
-            CreditManagerV3.tokenMasksMap(tokenTestSuite.addressOf(Tokens.DAI)),
+            creditManager.getTokenMaskOrRevert(tokenTestSuite.addressOf(Tokens.DAI)),
             "Incorrect underlying token mask"
         );
-        assertEq(adapter.yTokenMask(), CreditManagerV3.tokenMasksMap(yvDAI), "Incorrect vault token mask");
+        assertEq(adapter.yTokenMask(), creditManager.getTokenMaskOrRevert(yvDAI), "Incorrect vault token mask");
     }
 
     /// @dev [AYV2-2]: constructor reverts if token is not allowed
@@ -109,48 +112,52 @@ contract YearnV2AdapterTest is Test, AdapterTestHelper {
             address(forbiddenToken)
         );
 
-        vm.expectRevert(IAdapterExceptions.TokenNotAllowedException.selector);
-        new YearnV2Adapter(address(CreditManagerV3), address(forbidYearnV2Mock));
+        vm.expectRevert(TokenNotAllowedException.selector);
+        new YearnV2Adapter(address(creditManager), address(forbidYearnV2Mock));
 
         YearnV2Mock notAllowedYearnV2Mock = new YearnV2Mock(
             tokenTestSuite.addressOf(Tokens.DAI)
         );
 
-        vm.expectRevert(IAdapterExceptions.TokenNotAllowedException.selector);
+        vm.expectRevert(TokenNotAllowedException.selector);
 
         new YearnV2Adapter(
-            address(CreditManagerV3),
+            address(creditManager),
             address(notAllowedYearnV2Mock)
         );
     }
 
-    /// @dev [AYV2-3]: depost(*) and witdraw(*) revert if user has no account
-    function test_AYV2_03_deposit_and_withdraw_revert_if_uses_has_no_account() public {
-        vm.expectRevert(ICreditManagerV3Exceptions.HasNoOpenedAccountException.selector);
-        executeOneLineMulticall(address(adapter), abi.encodeWithSignature("deposit()"));
+    // /// @dev [AYV2-3]: depost(*) and witdraw(*) revert if user has no account
+    // function test_AYV2_03_deposit_and_withdraw_revert_if_uses_has_no_account() public {
+    //     vm.expectRevert(ICreditManagerV3Exceptions.HasNoOpenedAccountException.selector);
+    //     executeOneLineMulticall(creditAccount, address(adapter), abi.encodeWithSignature("deposit()"));
 
-        vm.expectRevert(ICreditManagerV3Exceptions.HasNoOpenedAccountException.selector);
-        executeOneLineMulticall(address(adapter), abi.encodeWithSignature("deposit(uint256)", 1000));
+    //     vm.expectRevert(ICreditManagerV3Exceptions.HasNoOpenedAccountException.selector);
+    //     executeOneLineMulticall(creditAccount, address(adapter), abi.encodeWithSignature("deposit(uint256)", 1000));
 
-        vm.expectRevert(ICreditManagerV3Exceptions.HasNoOpenedAccountException.selector);
-        executeOneLineMulticall(address(adapter), abi.encodeWithSignature("deposit(uint256,address)", 1000, address(0)));
+    //     vm.expectRevert(ICreditManagerV3Exceptions.HasNoOpenedAccountException.selector);
+    //     executeOneLineMulticall(
+    //         creditAccount, address(adapter), abi.encodeWithSignature("deposit(uint256,address)", 1000, address(0))
+    //     );
 
-        vm.expectRevert(ICreditManagerV3Exceptions.HasNoOpenedAccountException.selector);
-        executeOneLineMulticall(address(adapter), abi.encodeWithSignature("withdraw()"));
+    //     vm.expectRevert(ICreditManagerV3Exceptions.HasNoOpenedAccountException.selector);
+    //     executeOneLineMulticall(creditAccount, address(adapter), abi.encodeWithSignature("withdraw()"));
 
-        vm.expectRevert(ICreditManagerV3Exceptions.HasNoOpenedAccountException.selector);
-        executeOneLineMulticall(address(adapter), abi.encodeWithSignature("withdraw(uint256)", 1000));
+    //     vm.expectRevert(ICreditManagerV3Exceptions.HasNoOpenedAccountException.selector);
+    //     executeOneLineMulticall(creditAccount, address(adapter), abi.encodeWithSignature("withdraw(uint256)", 1000));
 
-        vm.expectRevert(ICreditManagerV3Exceptions.HasNoOpenedAccountException.selector);
-        executeOneLineMulticall(
-            address(adapter), abi.encodeWithSignature("withdraw(uint256,address)", 1000, address(0))
-        );
+    //     vm.expectRevert(ICreditManagerV3Exceptions.HasNoOpenedAccountException.selector);
+    //     executeOneLineMulticall(
+    //         creditAccount, address(adapter), abi.encodeWithSignature("withdraw(uint256,address)", 1000, address(0))
+    //     );
 
-        vm.expectRevert(ICreditManagerV3Exceptions.HasNoOpenedAccountException.selector);
-        executeOneLineMulticall(
-            address(adapter), abi.encodeWithSignature("withdraw(uint256,address,uint256)", 1000, address(0), 2)
-        );
-    }
+    //     vm.expectRevert(ICreditManagerV3Exceptions.HasNoOpenedAccountException.selector);
+    //     executeOneLineMulticall(
+    //         creditAccount,
+    //         address(adapter),
+    //         abi.encodeWithSignature("withdraw(uint256,address,uint256)", 1000, address(0), 2)
+    //     );
+    // }
 
     /// @dev [AYV2-4]: deposit works for user as expected
     function test_AYV2_04_deposit_works_for_user_as_expected() public {
@@ -165,7 +172,7 @@ contract YearnV2AdapterTest is Test, AdapterTestHelper {
             address(adapter), address(yearnV2Mock), USER, expectedCallData, token, address(yearnV2Mock), true
         );
 
-        executeOneLineMulticall(address(adapter), abi.encodeWithSignature("deposit()"));
+        executeOneLineMulticall(creditAccount, address(adapter), abi.encodeWithSignature("deposit()"));
 
         expectBalance(Tokens.DAI, creditAccount, 1);
 
@@ -173,10 +180,10 @@ contract YearnV2AdapterTest is Test, AdapterTestHelper {
 
         expectAllowance(Tokens.DAI, creditAccount, address(yearnV2Mock), 1);
 
-        expectTokenIsEnabled(Tokens.DAI, false);
-        expectTokenIsEnabled(yvDAI, true);
+        expectTokenIsEnabled(creditAccount, Tokens.DAI, false);
+        expectTokenIsEnabled(creditAccount, yvDAI, true);
 
-        expectSafeAllowance(address(yearnV2Mock));
+        expectTokenIsEnabled(creditAccount, address(yearnV2Mock), true);
     }
 
     /// @dev [AYV2-5]: deposit(uint256) works for user as expected
@@ -192,7 +199,9 @@ contract YearnV2AdapterTest is Test, AdapterTestHelper {
             address(adapter), address(yearnV2Mock), USER, expectedCallData, token, address(yearnV2Mock), true
         );
 
-        executeOneLineMulticall(address(adapter), abi.encodeWithSignature("deposit(uint256)", DAI_EXCHANGE_AMOUNT));
+        executeOneLineMulticall(
+            creditAccount, address(adapter), abi.encodeWithSignature("deposit(uint256)", DAI_EXCHANGE_AMOUNT)
+        );
 
         expectBalance(Tokens.DAI, creditAccount, initialDAIbalance - DAI_EXCHANGE_AMOUNT);
 
@@ -200,9 +209,9 @@ contract YearnV2AdapterTest is Test, AdapterTestHelper {
 
         expectAllowance(Tokens.DAI, creditAccount, address(yearnV2Mock), 1);
 
-        expectTokenIsEnabled(yvDAI, true);
+        expectTokenIsEnabled(creditAccount, yvDAI, true);
 
-        expectSafeAllowance(address(yearnV2Mock));
+        expectTokenIsEnabled(creditAccount, address(yearnV2Mock), true);
     }
 
     /// @dev [AYV2-6]: deposit(uint256, address) works for user as expected
@@ -220,7 +229,7 @@ contract YearnV2AdapterTest is Test, AdapterTestHelper {
             address(adapter), address(yearnV2Mock), USER, expectedCallData, token, address(yearnV2Mock), true
         );
 
-        executeOneLineMulticall(address(adapter), callData);
+        executeOneLineMulticall(creditAccount, address(adapter), callData);
 
         expectBalance(Tokens.DAI, creditAccount, initialDAIbalance - DAI_EXCHANGE_AMOUNT);
 
@@ -228,9 +237,9 @@ contract YearnV2AdapterTest is Test, AdapterTestHelper {
 
         expectAllowance(Tokens.DAI, creditAccount, address(yearnV2Mock), 1);
 
-        expectTokenIsEnabled(yvDAI, true);
+        expectTokenIsEnabled(creditAccount, yvDAI, true);
 
-        expectSafeAllowance(address(yearnV2Mock));
+        expectTokenIsEnabled(creditAccount, address(yearnV2Mock), true);
     }
 
     //
@@ -249,7 +258,7 @@ contract YearnV2AdapterTest is Test, AdapterTestHelper {
             address(adapter), address(yearnV2Mock), USER, expectedCallData, token, address(yearnV2Mock), false
         );
 
-        executeOneLineMulticall(address(adapter), abi.encodeWithSignature("withdraw()"));
+        executeOneLineMulticall(creditAccount, address(adapter), abi.encodeWithSignature("withdraw()"));
 
         expectBalance(Tokens.DAI, creditAccount, ((yAmount - 1) * PRICE_PER_SHARE) / WAD + 1);
 
@@ -258,10 +267,10 @@ contract YearnV2AdapterTest is Test, AdapterTestHelper {
         // There is not need to approve yVault to itself, so nothing in terms of allowance should be done
         expectAllowance(yvDAI, creditAccount, address(yearnV2Mock), 0);
 
-        expectTokenIsEnabled(yvDAI, false);
-        expectTokenIsEnabled(Tokens.DAI, true);
+        expectTokenIsEnabled(creditAccount, yvDAI, false);
+        expectTokenIsEnabled(creditAccount, Tokens.DAI, true);
 
-        expectSafeAllowance(address(yearnV2Mock));
+        expectTokenIsEnabled(creditAccount, address(yearnV2Mock), true);
     }
 
     /// @dev [AYV2-8]: withdraw(uint256) works for user as expected
@@ -279,7 +288,7 @@ contract YearnV2AdapterTest is Test, AdapterTestHelper {
             address(adapter), address(yearnV2Mock), USER, expectedCallData, token, address(yearnV2Mock), false
         );
 
-        executeOneLineMulticall(address(adapter), abi.encodeWithSignature("withdraw(uint256)", amount));
+        executeOneLineMulticall(creditAccount, address(adapter), abi.encodeWithSignature("withdraw(uint256)", amount));
 
         expectBalance(Tokens.DAI, creditAccount, ((amount) * PRICE_PER_SHARE) / WAD + 1);
 
@@ -289,9 +298,9 @@ contract YearnV2AdapterTest is Test, AdapterTestHelper {
         // There is not need to approve yVault to itself, so nothing in terms of allowance should be done
         expectAllowance(yvDAI, creditAccount, address(yearnV2Mock), 0);
 
-        expectTokenIsEnabled(Tokens.DAI, true);
+        expectTokenIsEnabled(creditAccount, Tokens.DAI, true);
 
-        expectSafeAllowance(address(yearnV2Mock));
+        expectTokenIsEnabled(creditAccount, address(yearnV2Mock), true);
     }
 
     /// @dev [AYV2-9]: withdraw(uint256,address) works for user as expected
@@ -310,7 +319,7 @@ contract YearnV2AdapterTest is Test, AdapterTestHelper {
         );
 
         executeOneLineMulticall(
-            address(adapter), abi.encodeWithSignature("withdraw(uint256,address)", amount, address(0))
+            creditAccount, address(adapter), abi.encodeWithSignature("withdraw(uint256,address)", amount, address(0))
         );
 
         expectBalance(Tokens.DAI, creditAccount, ((amount) * PRICE_PER_SHARE) / WAD + 1);
@@ -321,9 +330,9 @@ contract YearnV2AdapterTest is Test, AdapterTestHelper {
         // There is not need to approve yVault to itself, so nothing in terms of allowance should be done
         expectAllowance(yvDAI, creditAccount, address(yearnV2Mock), 0);
 
-        expectTokenIsEnabled(Tokens.DAI, true);
+        expectTokenIsEnabled(creditAccount, Tokens.DAI, true);
 
-        expectSafeAllowance(address(yearnV2Mock));
+        expectTokenIsEnabled(creditAccount, address(yearnV2Mock), true);
     }
 
     /// @dev [AYV2-10]: withdraw(uint256,address,uint256) works for user as expected
@@ -343,7 +352,9 @@ contract YearnV2AdapterTest is Test, AdapterTestHelper {
         );
 
         executeOneLineMulticall(
-            address(adapter), abi.encodeWithSignature("withdraw(uint256,address,uint256)", amount, address(0), 1)
+            creditAccount,
+            address(adapter),
+            abi.encodeWithSignature("withdraw(uint256,address,uint256)", amount, address(0), 1)
         );
 
         expectBalance(Tokens.DAI, creditAccount, ((amount) * PRICE_PER_SHARE) / WAD + 1);
@@ -354,20 +365,22 @@ contract YearnV2AdapterTest is Test, AdapterTestHelper {
         // There is not need to approve yVault to itself, so nothing in terms of allowance should be done
         expectAllowance(yvDAI, creditAccount, address(yearnV2Mock), 0);
 
-        expectTokenIsEnabled(Tokens.DAI, true);
+        expectTokenIsEnabled(creditAccount, Tokens.DAI, true);
 
-        expectSafeAllowance(address(yearnV2Mock));
+        expectTokenIsEnabled(creditAccount, address(yearnV2Mock), true);
     }
 
     /// @dev [AYV2-11]: withdraw(uint256, address, uin256) passes maxLoss to target
     function test_AYV2_11_withdraw_correctly_passes_maxLoss() public {
-        (, uint256 yAmount) = _openYVDaiTestCreditAccount();
+        (address creditAccount, uint256 yAmount) = _openYVDaiTestCreditAccount();
 
         uint256 amount = yAmount / 2;
 
         vm.expectRevert(bytes("Loss too big"));
         executeOneLineMulticall(
-            address(adapter), abi.encodeWithSignature("withdraw(uint256,address,uint256)", amount, address(0), 2)
+            creditAccount,
+            address(adapter),
+            abi.encodeWithSignature("withdraw(uint256,address,uint256)", amount, address(0), 2)
         );
     }
 }

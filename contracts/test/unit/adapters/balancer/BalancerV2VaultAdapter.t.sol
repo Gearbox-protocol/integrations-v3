@@ -3,6 +3,7 @@
 // (c) Gearbox Holdings, 2023
 pragma solidity ^0.8.17;
 
+import {PriceFeedParams} from "@gearbox-protocol/oracles-v3/contracts/oracles/AbstractPriceFeed.sol";
 import {ICreditManagerV3} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditManagerV3.sol";
 
 import {
@@ -25,12 +26,12 @@ import {
 } from "../../../../interfaces/balancer/IBalancerV2VaultAdapter.sol";
 import {IAsset} from "../../../../integrations/balancer/IAsset.sol";
 import {BalancerV2VaultAdapter} from "../../../../adapters/balancer/BalancerV2VaultAdapter.sol";
-import {BPTStablePriceFeed} from "../../../../oracles/balancer/BPTStablePriceFeed.sol";
-import {BPTWeightedPriceFeed} from "../../../../oracles/balancer/BPTWeightedPriceFeed.sol";
+import {BPTStablePriceFeed} from "@gearbox-protocol/oracles-v3/contracts/oracles/balancer/BPTStablePriceFeed.sol";
+import {BPTWeightedPriceFeed} from "@gearbox-protocol/oracles-v3/contracts/oracles/balancer/BPTWeightedPriceFeed.sol";
 import {IBalancerV2VaultAdapter} from "../../../../interfaces/balancer/IBalancerV2VaultAdapter.sol";
 import {BalancerVaultMock} from "../../../mocks/integrations/BalancerVaultMock.sol";
 
-import {Tokens} from "../../../suites/TokensTestSuite.sol";
+import {Tokens} from "@gearbox-protocol/sdk/contracts/Tokens.sol";
 
 // TEST
 import "../../../lib/constants.sol";
@@ -102,24 +103,23 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper, IBalancerV2VaultAdapte
 
         (address bpt,) = balancerMock.getPool(POOL_ID_1);
 
-        address[] memory priceFeeds = new address[](3);
-        priceFeeds[0] = cft.priceOracle().priceFeeds(assets[0]);
-        priceFeeds[1] = cft.priceOracle().priceFeeds(assets[1]);
-        priceFeeds[2] = cft.priceOracle().priceFeeds(assets[2]);
+        PriceFeedParams[5] memory priceFeeds;
+        priceFeeds[0] = PriceFeedParams({priceFeed: priceOracle.priceFeeds(assets[0]), stalenessPeriod: 2 hours});
+        priceFeeds[1] = PriceFeedParams({priceFeed: priceOracle.priceFeeds(assets[1]), stalenessPeriod: 2 hours});
+        priceFeeds[2] = PriceFeedParams({priceFeed: priceOracle.priceFeeds(assets[2]), stalenessPeriod: 2 hours});
 
         address bptPf = address(
             new BPTStablePriceFeed(
-                address(cft.addressProvider()),
+                address(addressProvider),
                 bpt,
-                3,
                 priceFeeds
             )
         );
 
         vm.startPrank(CONFIGURATOR);
 
-        cft.priceOracle().addPriceFeed(bpt, bptPf);
-        CreditConfiguratorV3.addCollateralToken(bpt, 9000);
+        priceOracle.setPriceFeed(bpt, bptPf, 0);
+        creditConfigurator.addCollateralToken(bpt, 9000);
 
         vm.stopPrank();
 
@@ -162,33 +162,34 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper, IBalancerV2VaultAdapte
 
         (bpt,) = balancerMock.getPool(POOL_ID_2);
 
-        priceFeeds = new address[](2);
-        priceFeeds[0] = cft.priceOracle().priceFeeds(assets[0]);
-        priceFeeds[1] = cft.priceOracle().priceFeeds(assets[1]);
+        PriceFeedParams[] memory priceFeeds2 = new PriceFeedParams[](2);
+
+        priceFeeds2[0] = PriceFeedParams({priceFeed: priceOracle.priceFeeds(assets[0]), stalenessPeriod: 2 hours});
+        priceFeeds2[1] = PriceFeedParams({priceFeed: priceOracle.priceFeeds(assets[1]), stalenessPeriod: 2 hours});
 
         bptPf = address(
             new BPTWeightedPriceFeed(
-                address(cft.addressProvider()),
+                address(addressProvider),
                 address(balancerMock),
                 bpt,
-                priceFeeds
+                priceFeeds2
             )
         );
 
         vm.startPrank(CONFIGURATOR);
 
-        cft.priceOracle().addPriceFeed(bpt, bptPf);
-        CreditConfiguratorV3.addCollateralToken(bpt, 9000);
+        priceOracle.setPriceFeed(bpt, bptPf, 0);
+        creditConfigurator.addCollateralToken(bpt, 9000);
 
         vm.stopPrank();
 
         adapter = new BalancerV2VaultAdapter(
-            address(CreditManagerV3),
+            address(creditManager),
             address(balancerMock)
         );
 
         vm.prank(CONFIGURATOR);
-        CreditConfiguratorV3.allowContract(address(balancerMock), address(adapter));
+        creditConfigurator.allowAdapter(address(adapter));
 
         vm.label(address(adapter), "ADAPTER");
         vm.label(address(balancerMock), "BALANCER_MOCK");
@@ -213,125 +214,99 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper, IBalancerV2VaultAdapte
     function expectBatchSwapStackCalls(
         address targetContract,
         address borrower,
-        address, // creditAccount,
+        address creditAccount,
         bytes memory callData,
         IAsset[] memory assets,
         int256[] memory limits
     ) internal {
         vm.expectEmit(true, false, false, false);
-        emit MultiCallStarted(borrower);
+        emit StartMultiCall(creditAccount, borrower);
 
         for (uint256 i = 0; i < assets.length; ++i) {
             if (limits[i] > 1) {
                 vm.expectCall(
-                    address(CreditManagerV3),
-                    abi.encodeCall(
-                        ICreditManagerV3.approveCreditAccount, (targetContract, address(assets[i]), type(uint256).max)
-                    )
+                    address(creditManager),
+                    abi.encodeCall(ICreditManagerV3.approveCreditAccount, (address(assets[i]), type(uint256).max))
                 );
             }
         }
 
-        vm.expectCall(
-            address(CreditManagerV3), abi.encodeCall(ICreditManagerV3.executeOrder, (targetContract, callData))
-        );
+        vm.expectCall(address(creditManager), abi.encodeCall(ICreditManagerV3.execute, (callData)));
 
         vm.expectEmit(true, false, false, false);
-        emit ExecuteOrder(targetContract);
+        emit Execute(creditAccount, targetContract);
 
         for (uint256 i = 0; i < assets.length; ++i) {
             if (limits[i] > 1) {
                 vm.expectCall(
-                    address(CreditManagerV3),
-                    abi.encodeCall(ICreditManagerV3.approveCreditAccount, (targetContract, address(assets[i]), 1))
-                );
-            }
-        }
-
-        for (uint256 i = 0; i < assets.length; ++i) {
-            if (limits[i] < -1) {
-                vm.expectCall(
-                    address(CreditManagerV3), abi.encodeCall(ICreditManagerV3.checkAndEnableToken, (address(assets[i])))
+                    address(creditManager),
+                    abi.encodeCall(ICreditManagerV3.approveCreditAccount, (address(assets[i]), 1))
                 );
             }
         }
 
         vm.expectEmit(false, false, false, false);
-        emit MultiCallFinished();
+        emit FinishMultiCall();
     }
 
     function expectJoinPoolStackCalls(
         address targetContract,
         address borrower,
-        address, // creditAccount,
+        address creditAccount,
         bytes32 poolId,
         bytes memory callData,
         IAsset[] memory assets,
         uint256[] memory maxAmountsIn
     ) internal {
         vm.expectEmit(true, false, false, false);
-        emit MultiCallStarted(borrower);
+        emit StartMultiCall(creditAccount, borrower);
 
         for (uint256 i = 0; i < assets.length; ++i) {
             if (maxAmountsIn[i] > 1) {
                 vm.expectCall(
-                    address(CreditManagerV3),
-                    abi.encodeCall(
-                        ICreditManagerV3.approveCreditAccount, (targetContract, address(assets[i]), type(uint256).max)
-                    )
+                    address(creditManager),
+                    abi.encodeCall(ICreditManagerV3.approveCreditAccount, (address(assets[i]), type(uint256).max))
                 );
             }
         }
 
         (address pool,) = balancerMock.getPool(poolId);
 
-        vm.expectCall(address(CreditManagerV3), abi.encodeCall(ICreditManagerV3.checkAndEnableToken, (pool)));
-
-        vm.expectCall(
-            address(CreditManagerV3), abi.encodeCall(ICreditManagerV3.executeOrder, (targetContract, callData))
-        );
+        vm.expectCall(address(creditManager), abi.encodeCall(ICreditManagerV3.execute, (callData)));
 
         vm.expectEmit(true, false, false, false);
-        emit ExecuteOrder(targetContract);
+        emit Execute(creditAccount, targetContract);
 
         for (uint256 i = 0; i < assets.length; ++i) {
             if (maxAmountsIn[i] > 1) {
                 vm.expectCall(
-                    address(CreditManagerV3),
-                    abi.encodeCall(ICreditManagerV3.approveCreditAccount, (targetContract, address(assets[i]), 1))
+                    address(creditManager),
+                    abi.encodeCall(ICreditManagerV3.approveCreditAccount, (address(assets[i]), 1))
                 );
             }
         }
 
         vm.expectEmit(false, false, false, false);
-        emit MultiCallFinished();
+        emit FinishMultiCall();
     }
 
     function expectExitPoolStackCalls(
         address targetContract,
         address borrower,
-        address, // creditAccount,
+        address creditAccount,
         bytes memory callData,
         IAsset[] memory assets
     ) internal {
         vm.expectEmit(true, false, false, false);
-        emit MultiCallStarted(borrower);
+        emit StartMultiCall(creditAccount, borrower);
 
-        vm.expectCall(
-            address(CreditManagerV3), abi.encodeCall(ICreditManagerV3.executeOrder, (targetContract, callData))
-        );
+        vm.expectCall(address(creditManager), abi.encodeCall(ICreditManagerV3.execute, (callData)));
 
         vm.expectEmit(true, false, false, false);
-        emit ExecuteOrder(targetContract);
-
-        for (uint256 i = 0; i < assets.length; ++i) {
-            vm.expectCall(
-                address(CreditManagerV3), abi.encodeCall(ICreditManagerV3.checkAndEnableToken, (address(assets[i])))
-            );
-        }
+        emit Execute(creditAccount, targetContract);
 
         vm.expectEmit(false, false, false, false);
-        emit MultiCallFinished();
+        emit FinishMultiCall();
     }
 
     ///
@@ -387,7 +362,7 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper, IBalancerV2VaultAdapte
             true
         );
 
-        executeOneLineMulticall(address(adapter), passedCallData);
+        executeOneLineMulticall(creditAccount, address(adapter), passedCallData);
 
         expectBalance(Tokens.DAI, creditAccount, initialDAIBalance - DAI_EXCHANGE_AMOUNT);
 
@@ -395,7 +370,7 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper, IBalancerV2VaultAdapte
 
         expectAllowance(Tokens.DAI, creditAccount, address(balancerMock), 1);
 
-        expectTokenIsEnabled(Tokens.WETH, true);
+        expectTokenIsEnabled(creditAccount, Tokens.WETH, true);
     }
 
     /// @dev [ABV2-2]: swapAll works as expected
@@ -445,7 +420,7 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper, IBalancerV2VaultAdapte
             true
         );
 
-        executeOneLineMulticall(address(adapter), passedCallData);
+        executeOneLineMulticall(creditAccount, address(adapter), passedCallData);
 
         expectBalance(Tokens.DAI, creditAccount, 1);
 
@@ -453,8 +428,8 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper, IBalancerV2VaultAdapte
 
         expectAllowance(Tokens.DAI, creditAccount, address(balancerMock), 1);
 
-        expectTokenIsEnabled(Tokens.DAI, false);
-        expectTokenIsEnabled(Tokens.WETH, true);
+        expectTokenIsEnabled(creditAccount, Tokens.DAI, false);
+        expectTokenIsEnabled(creditAccount, Tokens.WETH, true);
     }
 
     /// @dev [ABV2-3]: batchSwap works as expected
@@ -570,6 +545,7 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper, IBalancerV2VaultAdapte
             expectBatchSwapStackCalls(address(balancerMock), USER, creditAccount, expectedCallData, assets, limits);
 
             executeOneLineMulticall(
+                creditAccount,
                 address(adapter),
                 abi.encodeWithSelector(
                     IBalancerV2Vault.batchSwap.selector,
@@ -591,7 +567,7 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper, IBalancerV2VaultAdapte
 
                 expectAllowance(Tokens.WETH, creditAccount, address(balancerMock), 0);
 
-                expectTokenIsEnabled(Tokens.WETH, true);
+                expectTokenIsEnabled(creditAccount, Tokens.WETH, true);
             } else if (st == 1) {
                 expectBalance(Tokens.DAI, creditAccount, initialDAIBalance - 2 * DAI_EXCHANGE_AMOUNT);
 
@@ -605,8 +581,8 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper, IBalancerV2VaultAdapte
 
                 expectAllowance(Tokens.USDC, creditAccount, address(balancerMock), 0);
 
-                expectTokenIsEnabled(Tokens.WETH, true);
-                expectTokenIsEnabled(Tokens.USDC, true);
+                expectTokenIsEnabled(creditAccount, Tokens.WETH, true);
+                expectTokenIsEnabled(creditAccount, Tokens.USDC, true);
             } else if (st == 2) {
                 expectBalance(Tokens.WETH, creditAccount, WETH_ACCOUNT_AMOUNT - WETH_EXCHANGE_AMOUNT);
                 expectBalance(Tokens.DAI, creditAccount, initialDAIBalance);
@@ -621,7 +597,7 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper, IBalancerV2VaultAdapte
 
                 expectAllowance(Tokens.USDC, creditAccount, address(balancerMock), 0);
 
-                expectTokenIsEnabled(Tokens.USDC, true);
+                expectTokenIsEnabled(creditAccount, Tokens.USDC, true);
             }
         }
     }
@@ -672,7 +648,7 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper, IBalancerV2VaultAdapte
             address(balancerMock), USER, creditAccount, POOL_ID_1, expectedCallData, assets, maxAmountsIn
         );
 
-        executeOneLineMulticall(address(adapter), passedCallData);
+        executeOneLineMulticall(creditAccount, address(adapter), passedCallData);
 
         expectBalance(Tokens.DAI, creditAccount, initialDAIBalance - DAI_EXCHANGE_AMOUNT);
         expectBalance(Tokens.USDT, creditAccount, DAI_ACCOUNT_AMOUNT - DAI_EXCHANGE_AMOUNT);
@@ -685,7 +661,7 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper, IBalancerV2VaultAdapte
 
         expectAllowance(Tokens.USDT, creditAccount, address(balancerMock), 1);
 
-        expectTokenIsEnabled(pool, true);
+        expectTokenIsEnabled(creditAccount, pool, true);
     }
 
     /// @dev [ABV2-5]: joinPoolSingleAsset works as expected
@@ -742,7 +718,7 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper, IBalancerV2VaultAdapte
             true
         );
 
-        executeOneLineMulticall(address(adapter), passedCallData);
+        executeOneLineMulticall(creditAccount, address(adapter), passedCallData);
 
         expectBalance(Tokens.DAI, creditAccount, initialDAIBalance - DAI_EXCHANGE_AMOUNT);
 
@@ -750,7 +726,7 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper, IBalancerV2VaultAdapte
 
         expectAllowance(Tokens.DAI, creditAccount, address(balancerMock), 1);
 
-        expectTokenIsEnabled(pool, true);
+        expectTokenIsEnabled(creditAccount, pool, true);
     }
 
     /// @dev [ABV2-6]: joinPoolSingleAssetAll works as expected
@@ -806,7 +782,7 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper, IBalancerV2VaultAdapte
             true
         );
 
-        executeOneLineMulticall(address(adapter), passedCallData);
+        executeOneLineMulticall(creditAccount, address(adapter), passedCallData);
 
         expectBalance(Tokens.DAI, creditAccount, 1);
 
@@ -814,7 +790,7 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper, IBalancerV2VaultAdapte
 
         expectAllowance(Tokens.DAI, creditAccount, address(balancerMock), 1);
 
-        expectTokenIsEnabled(pool, true);
+        expectTokenIsEnabled(creditAccount, pool, true);
     }
 
     /// @dev [ABV2-7]: exitPool works as expected
@@ -861,7 +837,7 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper, IBalancerV2VaultAdapte
 
         expectExitPoolStackCalls(address(balancerMock), USER, creditAccount, expectedCallData, assets);
 
-        executeOneLineMulticall(address(adapter), passedCallData);
+        executeOneLineMulticall(creditAccount, address(adapter), passedCallData);
 
         expectBalance(Tokens.DAI, creditAccount, initialDAIBalance + 10000 * WAD);
         expectBalance(Tokens.USDT, creditAccount, 10000 * WAD);
@@ -871,9 +847,9 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper, IBalancerV2VaultAdapte
 
         expectBalance(pool, creditAccount, 20000 * WAD);
 
-        expectTokenIsEnabled(Tokens.DAI, true);
-        expectTokenIsEnabled(Tokens.USDC, true);
-        expectTokenIsEnabled(Tokens.USDT, true);
+        expectTokenIsEnabled(creditAccount, Tokens.DAI, true);
+        expectTokenIsEnabled(creditAccount, Tokens.USDC, true);
+        expectTokenIsEnabled(creditAccount, Tokens.USDT, true);
     }
 
     /// @dev [ABV2-8]: exitPoolSingleAsset works as expected
@@ -929,13 +905,13 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper, IBalancerV2VaultAdapte
             false
         );
 
-        executeOneLineMulticall(address(adapter), passedCallData);
+        executeOneLineMulticall(creditAccount, address(adapter), passedCallData);
 
         expectBalance(Tokens.USDT, creditAccount, DAI_EXCHANGE_AMOUNT);
 
         expectBalance(pool, creditAccount, DAI_ACCOUNT_AMOUNT - DAI_EXCHANGE_AMOUNT);
 
-        expectTokenIsEnabled(Tokens.USDT, true);
+        expectTokenIsEnabled(creditAccount, Tokens.USDT, true);
     }
 
     /// @dev [ABV2-9]: exitPoolSingleAssetAll works as expected
@@ -990,13 +966,13 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper, IBalancerV2VaultAdapte
             false
         );
 
-        executeOneLineMulticall(address(adapter), passedCallData);
+        executeOneLineMulticall(creditAccount, address(adapter), passedCallData);
 
         expectBalance(Tokens.USDT, creditAccount, DAI_ACCOUNT_AMOUNT - 1);
 
         expectBalance(pool, creditAccount, 1);
 
-        expectTokenIsEnabled(Tokens.USDT, true);
+        expectTokenIsEnabled(creditAccount, Tokens.USDT, true);
     }
 
     /// @dev [ABV2-10]: swap and joinPool functions revert when the pool doesn't have appropriate status
@@ -1034,7 +1010,7 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper, IBalancerV2VaultAdapte
             );
 
             vm.expectRevert(PoolIDNotSupportedException.selector);
-            executeOneLineMulticall(address(adapter), passedCallData);
+            executeOneLineMulticall(creditAccount, address(adapter), passedCallData);
         }
 
         {
@@ -1050,7 +1026,7 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper, IBalancerV2VaultAdapte
             );
 
             vm.expectRevert(PoolIDNotSupportedException.selector);
-            executeOneLineMulticall(address(adapter), passedCallData);
+            executeOneLineMulticall(creditAccount, address(adapter), passedCallData);
         }
 
         {
@@ -1087,6 +1063,7 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper, IBalancerV2VaultAdapte
 
             vm.expectRevert(PoolIDNotSupportedException.selector);
             executeOneLineMulticall(
+                creditAccount,
                 address(adapter),
                 abi.encodeWithSelector(
                     IBalancerV2Vault.batchSwap.selector,
@@ -1131,7 +1108,7 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper, IBalancerV2VaultAdapte
                 abi.encodeWithSelector(IBalancerV2Vault.joinPool.selector, POOL_ID_1, USER, USER, request);
 
             vm.expectRevert(PoolIDNotSupportedException.selector);
-            executeOneLineMulticall(address(adapter), passedCallData);
+            executeOneLineMulticall(creditAccount, address(adapter), passedCallData);
         }
 
         {
@@ -1144,7 +1121,7 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper, IBalancerV2VaultAdapte
             );
 
             vm.expectRevert(PoolIDNotSupportedException.selector);
-            executeOneLineMulticall(address(adapter), passedCallData);
+            executeOneLineMulticall(creditAccount, address(adapter), passedCallData);
         }
 
         {
@@ -1156,7 +1133,7 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper, IBalancerV2VaultAdapte
             );
 
             vm.expectRevert(PoolIDNotSupportedException.selector);
-            executeOneLineMulticall(address(adapter), passedCallData);
+            executeOneLineMulticall(creditAccount, address(adapter), passedCallData);
         }
     }
 }

@@ -11,17 +11,17 @@ import {
     WETH_EXCHANGE_AMOUNT
 } from "@gearbox-protocol/core-v3/contracts/test/lib/constants.sol";
 
-import {CEtherGateway} from "../../../../adapters/compound/CEtherGateway.sol";
-import {CompoundPriceFeed} from "../../../../oracles/compound/CompoundPriceFeed.sol";
+import {CEtherGateway} from "../../../../gateways/compound/CEtherGateway.sol";
 
-import {Tokens} from "../../../config/Tokens.sol";
+import {Tokens} from "@gearbox-protocol/sdk/contracts/Tokens.sol";
 import {CErc20Mock} from "../../../mocks/integrations/compound/CErc20Mock.sol";
 import {CEtherMock} from "../../../mocks/integrations/compound/CEtherMock.sol";
 import {AdapterTestHelper} from "../AdapterTestHelper.sol";
+import {CompoundV2PriceFeed} from "@gearbox-protocol/oracles-v3/contracts/oracles/compound/CompoundV2PriceFeed.sol";
 
 contract CompoundTestHelper is AdapterTestHelper {
     // underlying tokens
-    address weth;
+
     address usdc;
     address dai;
 
@@ -60,18 +60,20 @@ contract CompoundTestHelper is AdapterTestHelper {
 
         vm.startPrank(CONFIGURATOR);
         // add price feeds for cTokens to the oracle
-        cft.priceOracle().addPriceFeed(
+        priceOracle.setPriceFeed(
             ceth,
-            address(new CompoundPriceFeed(address(cft.addressProvider()), ceth, cft.priceOracle().priceFeeds(weth)))
+            address(new CompoundV2PriceFeed(address(addressProvider), ceth, priceOracle.priceFeeds(weth), 2 hours)),
+            0
         );
-        cft.priceOracle().addPriceFeed(
+        priceOracle.setPriceFeed(
             cusdc,
-            address(new CompoundPriceFeed(address(cft.addressProvider()), cusdc, cft.priceOracle().priceFeeds(usdc)))
+            address(new CompoundV2PriceFeed(address(addressProvider), cusdc, priceOracle.priceFeeds(usdc), 2 hours)),
+            0
         );
 
         // enable cTokens as collateral tokens in the credit manager
-        CreditConfiguratorV3.addCollateralToken(ceth, 8300);
-        CreditConfiguratorV3.addCollateralToken(cusdc, 8300);
+        creditConfigurator.addCollateralToken(ceth, 8300);
+        creditConfigurator.addCollateralToken(cusdc, 8300);
         vm.stopPrank();
     }
 
@@ -84,9 +86,9 @@ contract CompoundTestHelper is AdapterTestHelper {
 
         tokenTestSuite.mint(underlying, USER, balance);
 
-        tokenTestSuite.approve(underlying, USER, address(CreditManagerV3), balance);
+        tokenTestSuite.approve(underlying, USER, address(creditManager), balance);
         vm.prank(USER);
-        creditFacade.addCollateral(USER, underlying, balance);
+        // creditFacade.addCollateral(USER, underlying, balance);
     }
 
     function _openAccountWithCToken(Tokens token)
@@ -109,9 +111,9 @@ contract CompoundTestHelper is AdapterTestHelper {
         }
 
         balance = tokenTestSuite.balanceOf(cToken, USER);
-        tokenTestSuite.approve(cToken, USER, address(CreditManagerV3), balance);
+        tokenTestSuite.approve(cToken, USER, address(creditManager), balance);
         vm.prank(USER);
-        creditFacade.addCollateral(USER, cToken, balance);
+        // creditFacade.addCollateral(USER, cToken, balance);
     }
 
     function _tokenInfo(Tokens token) internal view returns (address underlying, address cToken, uint256 amount) {

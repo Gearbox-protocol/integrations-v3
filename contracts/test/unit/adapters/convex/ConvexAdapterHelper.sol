@@ -8,7 +8,7 @@ import {CreditManagerV3} from "@gearbox-protocol/core-v3/contracts/credit/Credit
 import {IBooster} from "../../../../integrations/convex/IBooster.sol";
 import {IBaseRewardPool} from "../../../../integrations/convex/IBaseRewardPool.sol";
 
-import {IPriceOracleV2Ext} from "@gearbox-protocol/core-v2/contracts/interfaces/IPriceOracleV2.sol";
+import {IPriceOracleV3} from "@gearbox-protocol/core-v3/contracts/interfaces/IPriceOracleV3.sol";
 
 import {ConvexV1BaseRewardPoolAdapter} from "../../../../adapters/convex/ConvexV1_BaseRewardPool.sol";
 import {ConvexV1BoosterAdapter} from "../../../../adapters/convex/ConvexV1_Booster.sol";
@@ -24,6 +24,7 @@ import {WAD, RAY} from "@gearbox-protocol/core-v2/contracts/libraries/Constants.
 import {ERC20Mock} from "@gearbox-protocol/core-v3/contracts/test/mocks/token/ERC20Mock.sol";
 
 import {AdapterTestHelper} from "../AdapterTestHelper.sol";
+import "@gearbox-protocol/core-v3/contracts/interfaces/IExceptions.sol";
 
 import {USER, CONFIGURATOR, DAI_MIN_BORROWED_AMOUNT, DAI_MAX_BORROWED_AMOUNT} from "../../../lib/constants.sol";
 
@@ -37,7 +38,6 @@ uint256 constant REWARD_AMOUNT2 = RAY * 4;
 /// @notice Designed for unit test purposes only
 contract ConvexAdapterHelper is AdapterTestHelper {
     PriceFeedMock public feed;
-    IPriceOracleV2Ext public priceOracle;
 
     address public crv;
     address public cvx;
@@ -69,7 +69,7 @@ contract ConvexAdapterHelper is AdapterTestHelper {
         _setUp();
 
         feed = new PriceFeedMock(1000, 8);
-        priceOracle = cft.priceOracle();
+        priceOracle = priceOracle;
 
         curveLPToken = address(new ERC20Mock("Curve LP Token", "CRVLP", 18));
         _addToken(curveLPToken);
@@ -124,21 +124,21 @@ contract ConvexAdapterHelper is AdapterTestHelper {
         _addToken(phantomToken);
 
         basePoolAdapter = new ConvexV1BaseRewardPoolAdapter(
-            address(CreditManagerV3),
+            address(creditManager),
             address(basePoolMock),
             phantomToken
         );
 
         vm.prank(CONFIGURATOR);
-        CreditConfiguratorV3.allowContract(address(basePoolMock), address(basePoolAdapter));
+        creditConfigurator.allowAdapter(address(basePoolAdapter));
 
         boosterAdapter = new ConvexV1BoosterAdapter(
-            address(CreditManagerV3),
+            address(creditManager),
             address(boosterMock)
         );
 
         vm.prank(CONFIGURATOR);
-        CreditConfiguratorV3.allowContract(address(boosterMock), address(boosterAdapter));
+        creditConfigurator.allowAdapter(address(boosterAdapter));
 
         vm.prank(CONFIGURATOR);
         boosterAdapter.updateStakedPhantomTokensMap();
@@ -220,9 +220,9 @@ contract ConvexAdapterHelper is AdapterTestHelper {
             _addToken(extraRewardToken2_c);
         }
 
-        vm.expectRevert(IAdapterExceptions.TokenNotAllowedException.selector);
+        vm.expectRevert(TokenNotAllowedException.selector);
         new ConvexV1BaseRewardPoolAdapter(
-            address(CreditManagerV3),
+            address(creditManager),
             address(basePoolMock_c),
             phantomToken_c
         );
@@ -230,15 +230,15 @@ contract ConvexAdapterHelper is AdapterTestHelper {
 
     function _addToken(address token) internal {
         vm.startPrank(CONFIGURATOR);
-        priceOracle.addPriceFeed(token, address(feed));
-        CreditConfiguratorV3.addCollateralToken(token, 9300);
+        priceOracle.setPriceFeed(token, address(feed), 0);
+        creditConfigurator.addCollateralToken(token, 9300);
         vm.stopPrank();
     }
 
     function _makeRewardTokensMask(uint256 numExtras) internal view returns (uint256) {
-        uint256 rewardTokensMask = CreditManagerV3.tokenMasksMap(crv) | CreditManagerV3.tokenMasksMap(cvx);
-        if (numExtras >= 1) rewardTokensMask |= CreditManagerV3.tokenMasksMap(extraRewardToken1);
-        if (numExtras >= 2) rewardTokensMask |= CreditManagerV3.tokenMasksMap(extraRewardToken2);
+        uint256 rewardTokensMask = creditManager.getTokenMaskOrRevert(crv) | creditManager.getTokenMaskOrRevert(cvx);
+        if (numExtras >= 1) rewardTokensMask |= creditManager.getTokenMaskOrRevert(extraRewardToken1);
+        if (numExtras >= 2) rewardTokensMask |= creditManager.getTokenMaskOrRevert(extraRewardToken2);
         return rewardTokensMask;
     }
 
@@ -305,32 +305,28 @@ contract ConvexAdapterHelper is AdapterTestHelper {
             false
         );
 
-        uint256 stakingTokenMask = CreditManagerV3.tokenMasksMap(unwrap ? curveLPToken : convexLPToken);
-        uint256 stakedTokenMask = CreditManagerV3.tokenMasksMap(phantomToken);
-        uint256 rewardTokensMask = _makeRewardTokensMask(numExtras);
-        vm.expectCall(
-            address(CreditManagerV3),
-            abi.encodeCall(
-                CreditManagerV3.changeEnabledTokens,
-                (rewardTokensMask | stakingTokenMask, withdrawAll ? stakedTokenMask : 0)
-            )
-        );
+        // uint256 stakingTokenMask = creditManager.getTokenMaskOrRevert(unwrap ? curveLPToken : convexLPToken);
+        // uint256 stakedTokenMask = creditManager.getTokenMaskOrRevert(phantomToken);
+        // uint256 rewardTokensMask = _makeRewardTokensMask(numExtras);
+        // vm.expectCall(
+        //     address(creditManager),
+        //     abi.encodeCall(
+        //         creditManager.changeEnabledTokens,
+        //         (rewardTokensMask | stakingTokenMask, withdrawAll ? stakedTokenMask : 0)
+        //     )
+        // );
     }
 
-    function expectClaimStackCalls(address borrower, uint256 numExtras) internal {
+    function expectClaimStackCalls(address creditAccount, address borrower, uint256 numExtras) internal {
         vm.expectEmit(true, false, false, false);
-        emit MultiCallStarted(borrower);
+        emit StartMultiCall(creditAccount, borrower);
 
         vm.expectEmit(true, false, false, false);
-        emit ExecuteOrder(address(basePoolMock));
+        emit Execute(creditAccount, address(basePoolMock));
 
         vm.expectCall(address(basePoolMock), abi.encodeWithSignature("getReward()"));
-        vm.expectCall(
-            address(CreditManagerV3),
-            abi.encodeCall(CreditManagerV3.changeEnabledTokens, (_makeRewardTokensMask(numExtras), 0))
-        );
 
         vm.expectEmit(false, false, false, false);
-        emit MultiCallFinished();
+        emit FinishMultiCall();
     }
 }

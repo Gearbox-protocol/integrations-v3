@@ -12,6 +12,8 @@ import {USER, CONFIGURATOR} from "../../../lib/constants.sol";
 
 import {CallerNotConfiguratorException} from "@gearbox-protocol/core-v3/contracts/interfaces/IExceptions.sol";
 
+import {Test} from "forge-std/Test.sol";
+
 contract ConvexV1BoosterAdapterTest is Test, ConvexAdapterHelper {
     address creditAccount;
 
@@ -49,7 +51,9 @@ contract ConvexV1BoosterAdapterTest is Test, ConvexAdapterHelper {
             expectDepositStackCalls(USER, CURVE_LP_AMOUNT / 2, staking, false);
 
             executeOneLineMulticall(
-                address(boosterAdapter), abi.encodeCall(boosterAdapter.deposit, (0, CURVE_LP_AMOUNT / 2, staking))
+                creditAccount,
+                address(boosterAdapter),
+                abi.encodeCall(boosterAdapter.deposit, (0, CURVE_LP_AMOUNT / 2, staking))
             );
 
             expectBalance(curveLPToken, creditAccount, CURVE_LP_AMOUNT - CURVE_LP_AMOUNT / 2);
@@ -57,10 +61,10 @@ contract ConvexV1BoosterAdapterTest is Test, ConvexAdapterHelper {
             expectBalance(staking ? phantomToken : convexLPToken, creditAccount, CURVE_LP_AMOUNT / 2);
             expectAllowance(curveLPToken, creditAccount, address(boosterMock), 1);
 
-            expectTokenIsEnabled(convexLPToken, !staking);
-            expectTokenIsEnabled(phantomToken, staking);
+            expectTokenIsEnabled(creditAccount, convexLPToken, !staking);
+            expectTokenIsEnabled(creditAccount, phantomToken, staking);
 
-            expectSafeAllowance(address(boosterMock));
+            expectTokenIsEnabled(creditAccount, address(boosterMock), true);
         }
     }
 
@@ -77,7 +81,9 @@ contract ConvexV1BoosterAdapterTest is Test, ConvexAdapterHelper {
 
             expectDepositStackCalls(USER, CURVE_LP_AMOUNT, staking, true);
 
-            executeOneLineMulticall(address(boosterAdapter), abi.encodeCall(boosterAdapter.depositAll, (0, staking)));
+            executeOneLineMulticall(
+                creditAccount, address(boosterAdapter), abi.encodeCall(boosterAdapter.depositAll, (0, staking))
+            );
 
             expectBalance(curveLPToken, creditAccount, 0);
 
@@ -85,11 +91,11 @@ contract ConvexV1BoosterAdapterTest is Test, ConvexAdapterHelper {
 
             expectAllowance(curveLPToken, creditAccount, address(boosterMock), 1);
 
-            expectTokenIsEnabled(curveLPToken, false);
-            expectTokenIsEnabled(convexLPToken, !staking);
-            expectTokenIsEnabled(phantomToken, staking);
+            expectTokenIsEnabled(creditAccount, curveLPToken, false);
+            expectTokenIsEnabled(creditAccount, convexLPToken, !staking);
+            expectTokenIsEnabled(creditAccount, phantomToken, staking);
 
-            expectSafeAllowance(address(boosterMock));
+            expectTokenIsEnabled(creditAccount, address(boosterMock), true);
         }
     }
 
@@ -100,7 +106,7 @@ contract ConvexV1BoosterAdapterTest is Test, ConvexAdapterHelper {
         ERC20Mock(curveLPToken).mint(creditAccount, CURVE_LP_AMOUNT);
 
         executeOneLineMulticall(
-            address(boosterAdapter), abi.encodeCall(boosterAdapter.deposit, (0, CURVE_LP_AMOUNT, false))
+            creditAccount, address(boosterAdapter), abi.encodeCall(boosterAdapter.deposit, (0, CURVE_LP_AMOUNT, false))
         );
 
         expectAllowance(convexLPToken, creditAccount, address(boosterMock), 0);
@@ -108,7 +114,7 @@ contract ConvexV1BoosterAdapterTest is Test, ConvexAdapterHelper {
         expectWithdrawStackCalls(USER, CURVE_LP_AMOUNT / 2, false);
 
         executeOneLineMulticall(
-            address(boosterAdapter), abi.encodeCall(boosterAdapter.withdraw, (0, CURVE_LP_AMOUNT / 2))
+            creditAccount, address(boosterAdapter), abi.encodeCall(boosterAdapter.withdraw, (0, CURVE_LP_AMOUNT / 2))
         );
 
         expectBalance(curveLPToken, creditAccount, CURVE_LP_AMOUNT / 2);
@@ -117,9 +123,9 @@ contract ConvexV1BoosterAdapterTest is Test, ConvexAdapterHelper {
 
         expectAllowance(convexLPToken, creditAccount, address(boosterMock), 0);
 
-        expectTokenIsEnabled(curveLPToken, true);
+        expectTokenIsEnabled(creditAccount, curveLPToken, true);
 
-        expectSafeAllowance(address(boosterMock));
+        expectTokenIsEnabled(creditAccount, address(boosterMock), true);
     }
 
     /// @dev [ACVX1_B-5]: withdrawAll function works correctly and emits events
@@ -129,13 +135,13 @@ contract ConvexV1BoosterAdapterTest is Test, ConvexAdapterHelper {
         ERC20Mock(curveLPToken).mint(creditAccount, CURVE_LP_AMOUNT);
 
         executeOneLineMulticall(
-            address(boosterAdapter), abi.encodeCall(boosterAdapter.deposit, (0, CURVE_LP_AMOUNT, false))
+            creditAccount, address(boosterAdapter), abi.encodeCall(boosterAdapter.deposit, (0, CURVE_LP_AMOUNT, false))
         );
         expectAllowance(convexLPToken, creditAccount, address(boosterMock), 0);
 
         expectWithdrawStackCalls(USER, CURVE_LP_AMOUNT, true);
 
-        executeOneLineMulticall(address(boosterAdapter), abi.encodeCall(boosterAdapter.withdrawAll, (0)));
+        executeOneLineMulticall(creditAccount, address(boosterAdapter), abi.encodeCall(boosterAdapter.withdrawAll, (0)));
 
         expectBalance(curveLPToken, creditAccount, CURVE_LP_AMOUNT);
 
@@ -143,10 +149,10 @@ contract ConvexV1BoosterAdapterTest is Test, ConvexAdapterHelper {
 
         expectAllowance(convexLPToken, creditAccount, address(boosterMock), 0);
 
-        expectTokenIsEnabled(convexLPToken, false);
+        expectTokenIsEnabled(creditAccount, convexLPToken, false);
 
-        expectTokenIsEnabled(curveLPToken, true);
+        expectTokenIsEnabled(creditAccount, curveLPToken, true);
 
-        expectSafeAllowance(address(boosterMock));
+        expectTokenIsEnabled(creditAccount, address(boosterMock), true);
     }
 }

@@ -43,6 +43,16 @@
   dependencies:
     "@eth-optimism/contracts" "^0.5.21"
 
+"@chainlink/contracts@^0.6.1":
+  version "0.6.1"
+  resolved "https://registry.yarnpkg.com/@chainlink/contracts/-/contracts-0.6.1.tgz#8842b57e755793cbdbcbc45277fb5d179c993e19"
+  integrity sha512-EuwijGexttw0UjfrW+HygwhQIrGAbqpf1ue28R55HhWMHBzphEH0PhWm8DQmFfj5OZNy8Io66N4L0nStkZ3QKQ==
+  dependencies:
+    "@eth-optimism/contracts" "^0.5.21"
+    "@openzeppelin/contracts" "~4.3.3"
+    "@openzeppelin/contracts-upgradeable" "^4.7.3"
+    "@openzeppelin/contracts-v0.7" "npm:@openzeppelin/contracts@v3.4.2"
+
 "@chainsafe/as-sha256@^0.4.1":
   version "0.4.1"
   resolved "https://registry.yarnpkg.com/@chainsafe/as-sha256/-/as-sha256-0.4.1.tgz#cfc0737e25f8c206767bdb6703e7943e5d44513e"
@@ -1016,21 +1026,30 @@
     "@ethersproject/properties" "^5.7.0"
     "@ethersproject/strings" "^5.7.0"
 
-"@gearbox-protocol/core-v2@^1.19.0-base.3":
-  version "1.19.0-base.3"
-  resolved "https://registry.yarnpkg.com/@gearbox-protocol/core-v2/-/core-v2-1.19.0-base.3.tgz#df94ad2978d20630d39b46f653f0ced88ba8c805"
-  integrity sha512-AQLyerVwgD0FiiL4ynENm79KY315obN2U2HawZTZ34Z+oZjzKrPSjJnIOQhBXAydsN2zk7++KLyWH/CG3k3ctg==
+"@gearbox-protocol/core-v2@^1.19.0-base.7":
+  version "1.19.0-base.7"
+  resolved "https://registry.yarnpkg.com/@gearbox-protocol/core-v2/-/core-v2-1.19.0-base.7.tgz#547cbf15f4ebc4dc13941998890ba041b6e108f0"
+  integrity sha512-UcwkIUwWKTz7ocC+UXSNYXc9zrOhSwhDgGKGb0cQRqP8yYHiwwudFt7nzPAHI1elS8YyuzcXarqaSLH5nZU2XA==
   dependencies:
     "@typechain/ethers-v5" "^10.2.1"
 
-"@gearbox-protocol/core-v3@^1.23.0":
-  version "1.23.0"
-  resolved "https://registry.yarnpkg.com/@gearbox-protocol/core-v3/-/core-v3-1.23.0.tgz#a09a0fc83910a9bced1c88d4e214c41039245fe8"
-  integrity sha512-nP70vigiY/p+NAOgo675CwmyJLH7A2vS5INnMxoiO/DlXVwQWh4IN4uWEDYBTrI2OX/B6kYMZrJVaLgGPP902w==
+"@gearbox-protocol/core-v3@^1.30.0":
+  version "1.30.0"
+  resolved "https://registry.yarnpkg.com/@gearbox-protocol/core-v3/-/core-v3-1.30.0.tgz#90eeea58ca9f13ac2bff4d3f583838c70a058a02"
+  integrity sha512-NjVEi0HMLjSgBsm4quNH+wqcEV1ZYINeYwoexr7MNT5m24MY+fEolK4rvO/oDD5L7O5RcfDYHSyd13ERb3rhdw==
   dependencies:
     "@1inch/solidity-utils" "^2.2.27"
-    "@gearbox-protocol/core-v2" "^1.19.0-base.3"
-    "@gearbox-protocol/integration-types" "^1.2.0"
+    "@gearbox-protocol/core-v2" "^1.19.0-base.7"
+    "@gearbox-protocol/sdk" "^2.1.7"
+
+"@gearbox-protocol/core-v3@^1.30.3":
+  version "1.30.3"
+  resolved "https://registry.yarnpkg.com/@gearbox-protocol/core-v3/-/core-v3-1.30.3.tgz#bece5993bcf904f1839cc52dc45b4af6ef298fa5"
+  integrity sha512-Glk5rt5Ou7NhHePDrakHUWezSS3riO8FN3/rjUGcwV9RhTi+UWx+o2ERjsLfG6QZhxzi4xC81RTjCgYUDVSm/g==
+  dependencies:
+    "@1inch/solidity-utils" "^2.2.27"
+    "@gearbox-protocol/core-v2" "^1.19.0-base.7"
+    "@gearbox-protocol/sdk" "^2.1.7"
 
 "@gearbox-protocol/eslint-config@^1.6.1":
   version "1.6.1"
@@ -1047,22 +1066,39 @@
     eslint-plugin-simple-import-sort "^7.0.0"
     eslint-plugin-unused-imports "^2.0.0"
 
-"@gearbox-protocol/integration-types@^1.2.0":
-  version "1.2.0"
-  resolved "https://registry.yarnpkg.com/@gearbox-protocol/integration-types/-/integration-types-1.2.0.tgz#865cde63923c5e0e61575b9b808b3f4ec266ebb4"
-  integrity sha512-YSVn5u4G/e7ZSJRe4AD7IZ3C76tdk5bnvChrgNZIsxvEC7LQ3mWHFVn8shADU8PIPLcftnCxVLp2WkVdR6jiNA==
+"@gearbox-protocol/oracles-v3@^1.4.2":
+  version "1.4.2"
+  resolved "https://registry.yarnpkg.com/@gearbox-protocol/oracles-v3/-/oracles-v3-1.4.2.tgz#e81611995ed50e8ec62e146202736007ae4b7a0c"
+  integrity sha512-vaiw3Hj9kZeaZTYle0NWUVWMl0ACM2XX8VIL3h7Svm5YYdUFgFuqJOtj971ur6YFZoLvLY/I78Sx4iVvBzoedg==
+  dependencies:
+    "@gearbox-protocol/core-v2" "^1.19.0-base.7"
+    "@gearbox-protocol/core-v3" "^1.30.0"
+    "@gearbox-protocol/sdk" "^2.1.10"
+    "@redstone-finance/evm-connector" "^0.2.2"
 
 "@gearbox-protocol/prettier-config@^1.5.0":
   version "1.5.0"
   resolved "https://registry.yarnpkg.com/@gearbox-protocol/prettier-config/-/prettier-config-1.5.0.tgz#4df8e9fd2305fee6ab8c1417a02e31343836932a"
   integrity sha512-FUoprSsBdZyBjgxXCKL6mTkbeUJytaLzPJqIOoQpDmBRTX0seCc2o5I9PI9tySoRIlNnd/XXnKCXq1xHDEGbxw==
 
-"@gearbox-protocol/sdk@^1.20.7":
-  version "1.20.8"
-  resolved "https://registry.yarnpkg.com/@gearbox-protocol/sdk/-/sdk-1.20.8.tgz#84e5e9b34145056afb574dd428cad6810327b76d"
-  integrity sha512-l2C7YnkG9JLska27RxvUlJI5s7VmEKqWBqzQXV8ALW+D+xaSZQr/sHiP90sIYgrRY7Vzx1LDILAWLjf0cGuoNg==
+"@gearbox-protocol/sdk@^2.1.10", "@gearbox-protocol/sdk@^2.1.7":
+  version "2.1.10"
+  resolved "https://registry.yarnpkg.com/@gearbox-protocol/sdk/-/sdk-2.1.10.tgz#50b0a8d592d5eeb7d55422189366aa7465824c59"
+  integrity sha512-5UejfCHEx3H49UoEDEwD0GXZxYPh/Rn700zRoonox8eLp5+unS8L5jskOM6jFiheTP152nF6Pn1IxDoXTTo+3g==
   dependencies:
     "@types/deep-eql" "^4.0.0"
+    axios "^1.2.6"
+    decimal.js-light "^2.5.1"
+    deep-eql "^4.1.0"
+    moment "^2.29.4"
+
+"@gearbox-protocol/sdk@^2.1.12":
+  version "2.1.12"
+  resolved "https://registry.yarnpkg.com/@gearbox-protocol/sdk/-/sdk-2.1.12.tgz#ba11895fb21ca6cd6e50e95f79ad6130974014ca"
+  integrity sha512-DPIuUdpSPzohLnnZPOcSETo6We3cZL1IG6fIm09ddXdetkASkICiqSs5Zi6yyBVe1RWIpxNTllgYz87Ifwimuw==
+  dependencies:
+    "@types/deep-eql" "^4.0.0"
+    axios "^1.2.6"
     decimal.js-light "^2.5.1"
     deep-eql "^4.1.0"
     moment "^2.29.4"
@@ -1414,10 +1450,30 @@
   resolved "https://registry.yarnpkg.com/@nomiclabs/hardhat-waffle/-/hardhat-waffle-2.0.5.tgz#97c217f1db795395c04404291937edb528f3f218"
   integrity sha512-U1RH9OQ1mWYQfb+moX5aTgGjpVVlOcpiFI47wwnaGG4kLhcTy90cNiapoqZenxcRAITVbr0/+QSduINL5EsUIQ==
 
+"@openzeppelin/contracts-upgradeable@^4.7.3":
+  version "4.9.3"
+  resolved "https://registry.yarnpkg.com/@openzeppelin/contracts-upgradeable/-/contracts-upgradeable-4.9.3.tgz#ff17a80fb945f5102571f8efecb5ce5915cc4811"
+  integrity sha512-jjaHAVRMrE4UuZNfDwjlLGDxTHWIOwTJS2ldnc278a0gevfXfPr8hxKEVBGFBE96kl2G3VHDZhUimw/+G3TG2A==
+
+"@openzeppelin/contracts-v0.7@npm:@openzeppelin/contracts@v3.4.2":
+  version "3.4.2"
+  resolved "https://registry.yarnpkg.com/@openzeppelin/contracts/-/contracts-3.4.2.tgz#d81f786fda2871d1eb8a8c5a73e455753ba53527"
+  integrity sha512-z0zMCjyhhp4y7XKAcDAi3Vgms4T2PstwBdahiO0+9NaGICQKjynK3wduSRplTgk4LXmoO1yfDGO5RbjKYxtuxA==
+
 "@openzeppelin/contracts@4.8.2", "@openzeppelin/contracts@^4.4.2":
   version "4.8.2"
   resolved "https://registry.yarnpkg.com/@openzeppelin/contracts/-/contracts-4.8.2.tgz#d815ade0027b50beb9bcca67143c6bcc3e3923d6"
   integrity sha512-kEUOgPQszC0fSYWpbh2kT94ltOJwj1qfT2DWo+zVttmGmf97JZ99LspePNaeeaLhCImaHVeBbjaQFZQn7+Zc5g==
+
+"@openzeppelin/contracts@^4.7.3":
+  version "4.9.3"
+  resolved "https://registry.yarnpkg.com/@openzeppelin/contracts/-/contracts-4.9.3.tgz#00d7a8cf35a475b160b3f0293a6403c511099364"
+  integrity sha512-He3LieZ1pP2TNt5JbkPA4PNT9WC3gOTOlDcFGJW4Le4QKqwmiNJCRt44APfxMxvq7OugU/cqYuPcSBzOw38DAg==
+
+"@openzeppelin/contracts@~4.3.3":
+  version "4.3.3"
+  resolved "https://registry.yarnpkg.com/@openzeppelin/contracts/-/contracts-4.3.3.tgz#ff6ee919fc2a1abaf72b22814bfb72ed129ec137"
+  integrity sha512-tDBopO1c98Yk7Cv/PZlHqrvtVjlgK5R4J6jxLwoO7qxK4xqOiZG+zSkIvGFpPZ0ikc3QOED3plgdqjgNTnBc7g==
 
 "@pkgr/utils@^2.3.1":
   version "2.3.1"
@@ -1430,6 +1486,18 @@
     picocolors "^1.0.0"
     tiny-glob "^0.2.9"
     tslib "^2.4.0"
+
+"@redstone-finance/evm-connector@^0.2.2", "@redstone-finance/evm-connector@^0.2.3":
+  version "0.2.3"
+  resolved "https://registry.yarnpkg.com/@redstone-finance/evm-connector/-/evm-connector-0.2.3.tgz#82bd4f9d3d9b77b4eb29f53bfb5f839a46cbb1a6"
+  integrity sha512-BihRZykOtIPRB5VnoyBpqdXBwU+eBFTHDgpaBsnDQ739deyJGTSdoCMSx5tFT+zegVicVB+kIXEiS5bN/zCylg==
+  dependencies:
+    "@chainlink/contracts" "^0.6.1"
+    "@openzeppelin/contracts" "^4.7.3"
+    axios "^1.1.3"
+    ethers "^5.6.8"
+    redstone-protocol "^1.0.5"
+    redstone-sdk "^1.3.0"
 
 "@scure/base@~1.1.0":
   version "1.1.1"
@@ -2282,10 +2350,27 @@ aws4@^1.8.0:
   resolved "https://registry.yarnpkg.com/aws4/-/aws4-1.12.0.tgz#ce1c9d143389679e253b314241ea9aa5cec980d3"
   integrity sha512-NmWvPnx0F1SfrQbYwOi7OeaNGokp9XhzNioJ/CSBs8Qa4vxug81mhJEAVZwxXuBmYB5KDRfMq/F3RR0BIU7sWg==
 
+axios@^0.27.2:
+  version "0.27.2"
+  resolved "https://registry.yarnpkg.com/axios/-/axios-0.27.2.tgz#207658cc8621606e586c85db4b41a750e756d972"
+  integrity sha512-t+yRIyySRTp/wua5xEr+z1q60QmLq8ABsS5O9Me1AsE5dfKqgnCFzwiCZZ/cGNd1lq4/7akDWMxdhVlucjmnOQ==
+  dependencies:
+    follow-redirects "^1.14.9"
+    form-data "^4.0.0"
+
 axios@^1.1.3:
   version "1.3.4"
   resolved "https://registry.yarnpkg.com/axios/-/axios-1.3.4.tgz#f5760cefd9cfb51fd2481acf88c05f67c4523024"
   integrity sha512-toYm+Bsyl6VC5wSkfkbbNB6ROv7KY93PEBBL6xyDczaIHasAiv4wPqQ/c4RjoQzipxRD2W5g21cOqQulZ7rHwQ==
+  dependencies:
+    follow-redirects "^1.15.0"
+    form-data "^4.0.0"
+    proxy-from-env "^1.1.0"
+
+axios@^1.2.6:
+  version "1.4.0"
+  resolved "https://registry.yarnpkg.com/axios/-/axios-1.4.0.tgz#38a7bf1224cd308de271146038b551d725f0be1f"
+  integrity sha512-S4XCWMEmzvo64T9GfvQDOXgYRDJ/wsSZc7Jvdgx5u1sd0JwsuPLqb3SYmusag+edF6ziyMensPVqLTSc1PiSEA==
   dependencies:
     follow-redirects "^1.15.0"
     form-data "^4.0.0"
@@ -3998,7 +4083,7 @@ ethers@5.4.4:
     "@ethersproject/web" "5.4.0"
     "@ethersproject/wordlists" "5.4.0"
 
-ethers@5.7.2, ethers@^5.3.1:
+ethers@5.7.2, ethers@^5.3.1, ethers@^5.6.8:
   version "5.7.2"
   resolved "https://registry.yarnpkg.com/ethers/-/ethers-5.7.2.tgz#3a7deeabbb8c030d4126b24f84e525466145872e"
   integrity sha512-wswUsmWo1aOK8rR7DIKiWSw9DbLWe6x98Jrn8wcTflTVvaXhAMaB5zGAXy0GYQEQp9iO1iSHWVyARQm11zUtyg==
@@ -4294,7 +4379,7 @@ flatted@^3.1.0:
   resolved "https://registry.yarnpkg.com/flatted/-/flatted-3.2.7.tgz#609f39207cb614b89d0765b477cb2d437fbf9787"
   integrity sha512-5nqDSxl8nn5BSNxyR3n4I6eDmbolI6WT+QqR547RwxQapgjQBmtktdP+HTBb/a/zLsbzERTONyUB5pefh5TtjQ==
 
-follow-redirects@^1.12.1, follow-redirects@^1.15.0:
+follow-redirects@^1.12.1, follow-redirects@^1.14.9, follow-redirects@^1.15.0:
   version "1.15.2"
   resolved "https://registry.yarnpkg.com/follow-redirects/-/follow-redirects-1.15.2.tgz#b460864144ba63f2681096f274c4e57026da2c13"
   integrity sha512-VQLG33o04KaQ8uYi2tVNbdrWp1QWxNNea+nmIB4EVM28v0hmP17z7aG1+wAkNzVq4KeXTq3221ye5qTJP91JwA==
@@ -7035,6 +7120,27 @@ redent@^3.0.0:
   dependencies:
     indent-string "^4.0.0"
     strip-indent "^3.0.0"
+
+redstone-oracles-smartweave-contracts@*:
+  version "1.0.5"
+  resolved "https://registry.yarnpkg.com/redstone-oracles-smartweave-contracts/-/redstone-oracles-smartweave-contracts-1.0.5.tgz#afe087281c3dae581289726ee9d0101309e93ec9"
+  integrity sha512-Uf7hENYAJ+w8yJS1dm4uRXI7/GUiA3ncvFFIo1i9x+vP4FpQ9RlxZFf3Xg2LMnGmz/j1ITBRsM3FAQdSRkTuxA==
+
+redstone-protocol@*, redstone-protocol@^1.0.5:
+  version "1.0.5"
+  resolved "https://registry.yarnpkg.com/redstone-protocol/-/redstone-protocol-1.0.5.tgz#c8555e9a9e3ee49d11b6586bf7090e59404e3395"
+  integrity sha512-62qHSb9jF5875a/gc8MbDcHH1n4dZsBXxlIxpk3vx/MeykAMB6nLd1174Qukvupkr69cneeRQiVqqALkQpmRlg==
+  dependencies:
+    ethers "^5.6.8"
+
+redstone-sdk@^1.3.0:
+  version "1.3.0"
+  resolved "https://registry.yarnpkg.com/redstone-sdk/-/redstone-sdk-1.3.0.tgz#4e46ad0e770e3e5e8b64d94145d8cf5e0041520a"
+  integrity sha512-e/kn5xZPL58/0i/ZEnrBylBnfnVztnlvGeeWaU47zYbAjpSc8P3mbj69h3P1OH84Ob9u3LOfB33vBlgRxYKQng==
+  dependencies:
+    axios "^0.27.2"
+    redstone-oracles-smartweave-contracts "*"
+    redstone-protocol "*"
 
 reduce-flatten@^2.0.0:
   version "2.0.0"
