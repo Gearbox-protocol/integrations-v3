@@ -5,10 +5,8 @@ pragma solidity ^0.8.17;
 
 import {CurveV1AdapterBase} from "../../../../adapters/curve/CurveV1_Base.sol";
 import {ICurveV1Adapter} from "../../../../interfaces/curve/ICurveV1Adapter.sol";
-import {ICurvePool} from "../../../../integrations/curve/ICurvePool.sol";
 
 import {CurveV1MetapoolMock} from "../../../mocks/integrations/CurveV1MetapoolMock.sol";
-import {MultiCall} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacadeV3.sol";
 
 import {Tokens} from "@gearbox-protocol/sdk/contracts/Tokens.sol";
 

@@ -12,7 +12,6 @@ import "../../../lib/constants.sol";
 import {CurveV1AdapterHelper, DAI_TO_LP, USDC_TO_LP, USDT_TO_LP} from "./CurveV1AdapterHelper.sol";
 
 // EXCEPTIONS
-import "@gearbox-protocol/core-v3/contracts/interfaces/IExceptions.sol";
 
 import "@gearbox-protocol/core-v3/contracts/interfaces/IExceptions.sol";
 

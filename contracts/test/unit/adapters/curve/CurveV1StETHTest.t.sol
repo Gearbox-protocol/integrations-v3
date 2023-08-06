@@ -7,7 +7,6 @@ import {N_COINS} from "../../../../integrations/curve/ICurvePoolStETH.sol";
 
 import {CurveV1AdapterStETH} from "../../../../adapters/curve/CurveV1_stETH.sol";
 
-import {ICurvePool} from "../../../../integrations/curve/ICurvePool.sol";
 import {ICurvePool2Assets} from "../../../../integrations/curve/ICurvePool_2.sol";
 import {CurveV1Mock} from "../../../mocks/integrations/CurveV1Mock.sol";
 

@@ -4,9 +4,7 @@
 pragma solidity ^0.8.17;
 
 import {N_COINS, CurveV1Adapter4Assets} from "../../../../adapters/curve/CurveV1_4.sol";
-import {CurveV1AdapterBase} from "../../../../adapters/curve/CurveV1_Base.sol";
 
-import {ICurvePool4Assets} from "../../../../integrations/curve/ICurvePool_4.sol";
 import {CurveV1Mock_4Assets} from "../../../mocks/integrations/CurveV1Mock_4Assets.sol";
 
 import {Tokens} from "@gearbox-protocol/sdk/contracts/Tokens.sol";
@@ -17,7 +15,6 @@ import "../../../lib/constants.sol";
 import {CurveV1AdapterHelper, DAI_TO_LP, USDC_TO_LP, USDT_TO_LP, LINK_TO_LP} from "./CurveV1AdapterHelper.sol";
 
 // EXCEPTIONS
-import "@gearbox-protocol/core-v3/contracts/interfaces/IExceptions.sol";
 
 import "@gearbox-protocol/core-v3/contracts/interfaces/IExceptions.sol";
 

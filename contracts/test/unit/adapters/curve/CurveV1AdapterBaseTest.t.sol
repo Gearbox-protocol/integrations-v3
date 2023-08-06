@@ -5,7 +5,6 @@ pragma solidity ^0.8.17;
 
 import {CurveV1AdapterBase} from "../../../../adapters/curve/CurveV1_Base.sol";
 import {ICurveV1Adapter} from "../../../../interfaces/curve/ICurveV1Adapter.sol";
-import {ICurvePool} from "../../../../integrations/curve/ICurvePool.sol";
 
 import {CurveV1Mock} from "../../../mocks/integrations/CurveV1Mock.sol";
 

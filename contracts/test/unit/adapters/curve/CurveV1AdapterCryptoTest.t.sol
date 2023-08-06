@@ -5,15 +5,12 @@ pragma solidity ^0.8.17;
 
 import {CurveV1AdapterBase} from "../../../../adapters/curve/CurveV1_Base.sol";
 import {ICurveV1Adapter} from "../../../../interfaces/curve/ICurveV1Adapter.sol";
-import {ICurvePool} from "../../../../integrations/curve/ICurvePool.sol";
 
 import {CurveV1Mock} from "../../../mocks/integrations/CurveV1Mock.sol";
 
 import {Tokens} from "@gearbox-protocol/sdk/contracts/Tokens.sol";
 
 import {ICurvePool2Assets} from "../../../../integrations/curve/ICurvePool_2.sol";
-import {ICurvePool3Assets} from "../../../../integrations/curve/ICurvePool_3.sol";
-import {ICurvePool4Assets} from "../../../../integrations/curve/ICurvePool_4.sol";
 
 // TEST
 import "../../../lib/constants.sol";
@@ -21,8 +18,6 @@ import "../../../lib/constants.sol";
 import {CurveV1AdapterHelper} from "./CurveV1AdapterHelper.sol";
 
 // EXCEPTIONS
-
-import "@gearbox-protocol/core-v3/contracts/interfaces/IExceptions.sol";
 
 /// @title CurveV1AdapterCryptoTest
 /// @notice Designed for unit test purposes only

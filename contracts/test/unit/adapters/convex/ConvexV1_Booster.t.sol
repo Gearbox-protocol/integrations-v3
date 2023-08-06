@@ -3,9 +3,6 @@
 // (c) Gearbox Holdings, 2023
 pragma solidity ^0.8.17;
 
-import {IBooster} from "../../../../integrations/convex/IBooster.sol";
-
-import {ConvexAdapterHelper, CURVE_LP_AMOUNT, DAI_ACCOUNT_AMOUNT} from "./ConvexAdapterHelper.sol";
 import {ERC20Mock} from "@gearbox-protocol/core-v3/contracts/test/mocks/token/ERC20Mock.sol";
 
 import {USER, CONFIGURATOR} from "../../../lib/constants.sol";

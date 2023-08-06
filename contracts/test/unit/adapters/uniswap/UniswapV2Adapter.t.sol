@@ -3,8 +3,6 @@
 // (c) Gearbox Holdings, 2023
 pragma solidity ^0.8.17;
 
-import "@gearbox-protocol/core-v3/contracts/interfaces/IExceptions.sol";
-
 import {IUniswapV2Router02} from "../../../../integrations/uniswap/IUniswapV2Router02.sol";
 import {UniswapV2Adapter} from "../../../../adapters/uniswap/UniswapV2.sol";
 import {IUniswapV2Adapter, IUniswapV2AdapterExceptions} from "../../../../interfaces/uniswap/IUniswapV2Adapter.sol";

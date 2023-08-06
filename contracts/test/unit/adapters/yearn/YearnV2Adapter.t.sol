@@ -3,8 +3,6 @@
 // (c) Gearbox Holdings, 2023
 pragma solidity ^0.8.17;
 
-import {ICreditManagerV3} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditManagerV3.sol";
-
 import {YearnV2Adapter} from "../../../../adapters/yearn/YearnV2.sol";
 
 import {YearnV2Mock} from "../../../mocks/integrations/YearnV2Mock.sol";

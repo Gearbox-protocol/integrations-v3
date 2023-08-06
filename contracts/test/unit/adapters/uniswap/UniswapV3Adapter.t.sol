@@ -3,8 +3,6 @@
 // (c) Gearbox Holdings, 2023
 pragma solidity ^0.8.17;
 
-import "@gearbox-protocol/core-v3/contracts/interfaces/IExceptions.sol";
-
 import {BytesLib} from "../../../../integrations/uniswap/BytesLib.sol";
 
 import {ISwapRouter} from "../../../../integrations/uniswap/IUniswapV3.sol";
