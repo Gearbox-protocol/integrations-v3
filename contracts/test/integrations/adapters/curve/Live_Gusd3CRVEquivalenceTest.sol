@@ -18,10 +18,10 @@ pragma solidity ^0.8.17;
 
 // // SUITES
 
-import {LiveEnvHelper} from "../../../suites/LiveEnvHelper.sol";
+import {LiveTestHelper} from "../../../suites/LiveTestHelper.sol";
 // import {BalanceComparator, BalanceBackup} from "../../../helpers/BalanceComparator.sol";
 
-contract Live_CurveGusdEquivalenceTest is LiveEnvHelper {
+contract Live_CurveGusdEquivalenceTest is LiveTestHelper {
 // using CreditFacadeV3Calls for CreditFacadeV3Multicaller;
 // using CurveV1Calls for CurveV1Multicaller;
 
@@ -29,7 +29,7 @@ contract Live_CurveGusdEquivalenceTest is LiveEnvHelper {
 
 // string[] _stages;
 
-// function setUp() public liveOnly {
+// function setUp() public liveTest {
 //     _setUp();
 
 //     // STAGES
@@ -217,7 +217,7 @@ contract Live_CurveGusdEquivalenceTest is LiveEnvHelper {
 // }
 
 // /// @dev [L-CRVET-4]: gusd3CRV adapter and normal account works identically
-// function test_live_CRVET_04_gusd3CRV_adapter_and_normal_account_works_identically() public liveOnly {
+// function test_live_CRVET_04_gusd3CRV_adapter_and_normal_account_works_identically() public liveTest {
 //     Tokens[6] memory tokensToTrack =
 //         [Tokens.GUSD, Tokens._3Crv, Tokens.DAI, Tokens.USDC, Tokens.USDT, Tokens.gusd3CRV];
 

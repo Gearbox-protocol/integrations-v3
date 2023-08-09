@@ -18,16 +18,16 @@ pragma solidity ^0.8.17;
 
 // // SUITES
 
-import {LiveEnvHelper} from "../../../suites/LiveEnvHelper.sol";
+import {LiveTestHelper} from "../../../suites/LiveTestHelper.sol";
 // import {BalanceComparator, BalanceBackup} from "../../../helpers/BalanceComparator.sol";
 
-contract Live_FraxUsdcEquivalenceTest is LiveEnvHelper {
+contract Live_FraxUsdcEquivalenceTest is LiveTestHelper {
 // using CreditFacadeV3Calls for CreditFacadeV3Multicaller;
 // using CurveV1Calls for CurveV1Multicaller;
 
 // BalanceComparator comparator;
 
-// function setUp() public liveOnly {
+// function setUp() public liveTest {
 //     _setUp();
 
 //     // TOKENS TO TRACK ["crvFRAX", "FRAX", "USDC"]
@@ -204,7 +204,7 @@ contract Live_FraxUsdcEquivalenceTest is LiveEnvHelper {
 // }
 
 // /// @dev [L-CRVET-5]: FraxUsdc adapter and normal account works identically
-// function test_live_CRVET_05_FraxUsdc_adapter_and_normal_account_works_identically() public liveOnly {
+// function test_live_CRVET_05_FraxUsdc_adapter_and_normal_account_works_identically() public liveTest {
 //     ICreditFacadeV3 creditFacade = lts.creditFacades(Tokens.FRAX);
 
 //     (uint256 minAmount,) = creditFacade.limits();

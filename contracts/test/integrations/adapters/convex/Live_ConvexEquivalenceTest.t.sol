@@ -23,10 +23,10 @@ pragma solidity ^0.8.17;
 
 // // SUITES
 
-import {LiveEnvHelper} from "../../../suites/LiveEnvHelper.sol";
+import {LiveTestHelper} from "../../../suites/LiveTestHelper.sol";
 // import {BalanceComparator, BalanceBackup} from "../../../helpers/BalanceComparator.sol";
 
-contract Live_ConvexEquivalenceTest is LiveEnvHelper {
+contract Live_ConvexEquivalenceTest is LiveTestHelper {
 // using AddressList for address[];
 
 // string[14] stages = [
@@ -56,7 +56,7 @@ contract Live_ConvexEquivalenceTest is LiveEnvHelper {
 
 // string[] _stages;
 
-// function setUp() public liveOnly {
+// function setUp() public liveTest {
 //     _setUp();
 
 //     /// @notice Sets comparator for this equivalence test
@@ -288,7 +288,7 @@ contract Live_ConvexEquivalenceTest is LiveEnvHelper {
 // }
 
 // /// @dev [L-CVXET-1]: convex adapters and original contracts work identically
-// function test_live_CVXET_01_Convex_adapters_and_original_contracts_are_equivalent() public liveOnly {
+// function test_live_CVXET_01_Convex_adapters_and_original_contracts_are_equivalent() public liveTest {
 //     for (uint256 i = 0; i < convexPools.length; ++i) {
 //         uint256 snapshot0 = vm.snapshot();
 //         uint256 snapshot1 = vm.snapshot();

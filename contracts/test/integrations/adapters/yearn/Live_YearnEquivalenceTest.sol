@@ -20,10 +20,10 @@ pragma solidity ^0.8.17;
 
 // // SUITES
 
-import {LiveEnvHelper} from "../../../suites/LiveEnvHelper.sol";
+import {LiveTestHelper} from "../../../suites/LiveTestHelper.sol";
 // import {BalanceComparator, BalanceBackup} from "../../../helpers/BalanceComparator.sol";
 
-contract Live_YearnEquivalenceTest is LiveEnvHelper {
+contract Live_YearnEquivalenceTest is LiveTestHelper {
 // using CreditFacadeV3Calls for CreditFacadeV3Multicaller;
 // using YearnV2_Calls for YearnV2_Multicaller;
 // using AddressList for address[];
@@ -49,7 +49,7 @@ contract Live_YearnEquivalenceTest is LiveEnvHelper {
 
 // string[] _stages;
 
-// function setUp() public liveOnly {
+// function setUp() public liveTest {
 //     _setUp();
 
 //     /// @notice Sets comparator for this equivalence test
@@ -187,7 +187,7 @@ contract Live_YearnEquivalenceTest is LiveEnvHelper {
 // }
 
 // /// @dev [L-YET-1]: yearn adapters and original contracts work identically
-// function test_live_YET_01_Yearn_adapters_and_original_contracts_are_equivalent() public liveOnly {
+// function test_live_YET_01_Yearn_adapters_and_original_contracts_are_equivalent() public liveTest {
 //     for (uint256 i = 0; i < yearnVaults.length; ++i) {
 //         uint256 snapshot0 = vm.snapshot();
 //         uint256 snapshot1 = vm.snapshot();

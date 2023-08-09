@@ -5,14 +5,16 @@ pragma solidity ^0.8.10;
 
 import {Tokens} from "@gearbox-protocol/sdk/contracts/Tokens.sol";
 import {SupportedContracts, Contracts} from "@gearbox-protocol/sdk/contracts/SupportedContracts.sol";
+import {ICreditConfig} from "@gearbox-protocol/core-v3/contracts/test/interfaces/ICreditConfig.sol";
 // import {IUniswapV2Router02} from "../../integrations/uniswap/IUniswapV2Router02.sol";
 // import {MultiCall} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacadeV3.sol";
 
 // // import {TokenType} from "../../integrations/TokenType.sol";
 // import {TokensTestSuite} from "@gearbox-protocol/core-v3/contracts/test/suites/TokensTestSuite.sol";
+// import {PriceFeedDeployer} from "gearbox-protocol/oracles-v3/contracts/test/suites/PriceFeedDeployer.sol";
 import {IntegrationTestHelper} from "@gearbox-protocol/core-v3/contracts/test/helpers/IntegrationTestHelper.sol";
 
-contract LiveEnvHelper is IntegrationTestHelper {
+contract LiveTestHelper is IntegrationTestHelper {
     //     LiveEnvTestSuite lts;
 
     //     address public MAINNET_CONFIGURATOR;
@@ -20,21 +22,46 @@ contract LiveEnvHelper is IntegrationTestHelper {
 
     SupportedContracts public supportedContracts;
 
-    modifier liveOnly() {
-        if (block.chainid == 1337) {
+    modifier liveTest() {
+        if (chainId != 1337 && chainId != 31337) {
             _;
         }
     }
 
-    function _setUp() public virtual liveOnly {
+    modifier liveCreditTest(ICreditConfig creditConfig) {
+        if (chainId != 1337 && chainId != 31337) {
+            _setupCore();
+            supportedContracts = new SupportedContracts(chainId);
+
+            // PriceFeedDeployer priceFeedDeployer =
+            //     new PriceFeedDeployer(chainId, address(addressProvider), tokenTestSuite, supportedContracts);
+
+            // priceFeedDeployer.addPriceFeeds(address(priceOracle));
+
+            _deployCreditAndPool(creditConfig);
+
+            //  address creditManager,
+            // Contracts[] memory adaptersList,
+            // TokensTestSuite _tokenTestSuite,
+            // SupportedContracts _supportedContracts,
+            // string memory cmLabel
+
+            // AdapterDeployer adapterDeployer =
+            //     new AdapterDeployer(address(creditManager), creditConfig.contracts, tokenTestSuite, supportedContracts );
+
+            // adapterDeployer.connectAdapters();
+
+            _;
+        }
+    }
+
+    function _setUp() public virtual liveTest {
         // lts = new LiveEnvTestSuite();
         // MAINNET_CONFIGURATOR = lts.ROOT_ADDRESS();
         // tokenTestSuite = lts.tokenTestSuite();
         // supportedContracts = lts.supportedContracts();
 
         // TODO: CHANGE
-        uint256 chainId = 1;
-        supportedContracts = new SupportedContracts(chainId);
     }
 
     //     function getUniV2() internal view returns (IUniswapV2Router02) {

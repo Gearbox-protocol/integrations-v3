@@ -16,16 +16,16 @@ pragma solidity ^0.8.10;
 
 // // SUITES
 
-// import {LiveEnvHelper} from "../suites/LiveEnvHelper.sol";
+// import {LiveTestHelper} from "../suites/LiveTestHelper.sol";
 // import {IwstETH} from "../../integrations/lido/IwstETH.sol";
 
-// contract LiveV3DeployTest is Test, LiveEnvHelper {
-//     function setUp() public liveOnly {
+// contract LiveV3DeployTest is Test, LiveTestHelper {
+//     function setUp() public liveTest {
 //         _setUp();
 //     }
 
 //     /// @dev [V3D-1]: Protocol is deployed as expected
-//     function test_live_V3D_01_protocol_is_deployed_as_expected() public liveOnly {
+//     function test_live_V3D_01_protocol_is_deployed_as_expected() public liveTest {
 //         CreditFacadeV3 cf = lts.creditFacades(Tokens.USDC);
 
 //         assertTrue(cf.isBlacklistableUnderlying(), "USDC Credit Facade not set to blacklistable");

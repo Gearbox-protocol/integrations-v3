@@ -18,16 +18,16 @@ pragma solidity ^0.8.17;
 
 // // SUITES
 
-import {LiveEnvHelper} from "../../../suites/LiveEnvHelper.sol";
+import {LiveTestHelper} from "../../../suites/LiveTestHelper.sol";
 // import {BalanceComparator, BalanceBackup} from "../../../helpers/BalanceComparator.sol";
 
-contract Live_3CRVEquivalenceTest is LiveEnvHelper {
+contract Live_3CRVEquivalenceTest is LiveTestHelper {
 // using CreditFacadeV3Calls for CreditFacadeV3Multicaller;
 // using CurveV1Calls for CurveV1Multicaller;
 
 // BalanceComparator comparator;
 
-// function setUp() public liveOnly {
+// function setUp() public liveTest {
 //     _setUp();
 
 //     // TOKENS TO TRACK ["3Crv", "DAI", "USDC", "USDT"]
@@ -204,7 +204,7 @@ contract Live_3CRVEquivalenceTest is LiveEnvHelper {
 // }
 
 // /// @dev [L-CRVET-1]: 3CRV adapter and normal account works identically
-// function test_live_CRVET_01_3CRV_adapter_and_normal_account_works_identically() public liveOnly {
+// function test_live_CRVET_01_3CRV_adapter_and_normal_account_works_identically() public liveTest {
 //     ICreditFacadeV3 creditFacade = lts.creditFacades(Tokens.DAI);
 
 //     (uint256 minAmount,) = creditFacade.limits();

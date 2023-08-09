@@ -19,10 +19,10 @@ pragma solidity ^0.8.17;
 
 // // SUITES
 
-import {LiveEnvHelper} from "../../../suites/LiveEnvHelper.sol";
+import {LiveTestHelper} from "../../../suites/LiveTestHelper.sol";
 // import {BalanceComparator, BalanceBackup} from "../../../helpers/BalanceComparator.sol";
 
-contract Live_MetapoolTest is LiveEnvHelper {
+contract Live_MetapoolTest is LiveTestHelper {
 // using CreditFacadeV3Calls for CreditFacadeV3Multicaller;
 // using CurveV1Calls for CurveV1Multicaller;
 
@@ -30,7 +30,7 @@ contract Live_MetapoolTest is LiveEnvHelper {
 
 // string[] _stages;
 
-// function setUp() public liveOnly {
+// function setUp() public liveTest {
 //     _setUp();
 
 //     // STAGES
@@ -214,7 +214,7 @@ contract Live_MetapoolTest is LiveEnvHelper {
 // }
 
 // /// @dev [L-CRVET-2]: FRAX3CRV adapter and normal account works identically
-// function test_live_CRVET_02_FRAX3CRV_adapter_and_normal_account_works_identically() public liveOnly {
+// function test_live_CRVET_02_FRAX3CRV_adapter_and_normal_account_works_identically() public liveTest {
 //     Tokens[6] memory tokensToTrack =
 //         [Tokens.FRAX, Tokens._3Crv, Tokens.DAI, Tokens.USDC, Tokens.USDT, Tokens.FRAX3CRV];
 
@@ -252,7 +252,7 @@ contract Live_MetapoolTest is LiveEnvHelper {
 // }
 
 // /// @dev [L-CRVET-3]: LUSD3CRV adapter and normal account works identically
-// function test_live_CRVET_03_LUSD3CRV_adapter_and_normal_account_works_identically() public liveOnly {
+// function test_live_CRVET_03_LUSD3CRV_adapter_and_normal_account_works_identically() public liveTest {
 //     Tokens[6] memory tokensToTrack =
 //         [Tokens.LUSD, Tokens._3Crv, Tokens.DAI, Tokens.USDC, Tokens.USDT, Tokens.LUSD3CRV];
 

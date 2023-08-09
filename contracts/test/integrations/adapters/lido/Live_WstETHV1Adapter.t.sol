@@ -14,16 +14,16 @@ pragma solidity ^0.8.10;
 
 // // SUITES
 
-import {LiveEnvHelper} from "../../../suites/LiveEnvHelper.sol";
+import {LiveTestHelper} from "../../../suites/LiveTestHelper.sol";
 // import {IwstETH} from "../../../../integrations/lido/IwstETH.sol";
 
-contract LiveWstETHV1AdapterTest is LiveEnvHelper {
-// function setUp() public liveOnly {
+contract LiveWstETHV1AdapterTest is LiveTestHelper {
+// function setUp() public liveTest {
 //     _setUp();
 // }
 
 // /// @dev [WSTETHA-1]: Credit account for wsteth CM can be opened
-// function test_live_WSTETHA_01_credit_account_can_be_opened() public liveOnly {
+// function test_live_WSTETHA_01_credit_account_can_be_opened() public liveTest {
 //     CreditFacadeV3 cf = lts.creditFacades(Tokens.wstETH);
 //     CreditManagerV3 cm = lts.CreditManagerV3s(Tokens.wstETH);
 

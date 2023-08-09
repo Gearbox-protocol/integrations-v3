@@ -3,6 +3,14 @@
 // (c) Gearbox Holdings, 2023
 pragma solidity ^0.8.17;
 
+import {
+    ConvexAdapterHelper,
+    CURVE_LP_AMOUNT,
+    DAI_ACCOUNT_AMOUNT,
+    REWARD_AMOUNT,
+    REWARD_AMOUNT1,
+    REWARD_AMOUNT2
+} from "./ConvexAdapterHelper.sol";
 import {ERC20Mock} from "@gearbox-protocol/core-v3/contracts/test/mocks/token/ERC20Mock.sol";
 
 import {USER, CONFIGURATOR} from "../../../lib/constants.sol";
