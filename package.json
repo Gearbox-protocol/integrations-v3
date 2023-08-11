@@ -11,10 +11,12 @@
     "url": "https://github.com/Gearbox-protocol/integrations-v3"
   },
   "files": [
-    "contracts"
+    "contracts",
+    "types"
   ],
   "license": "BUSL-1.1",
   "scripts": {
+    "types": "typechain --target ethers-v5 --discriminate-types --out-dir types \"./forge-out/**/!(*.t|test).sol/!(*.abi).json\"",
     "build": "yarn clean && yarn compile",
     "charge": "npx hardhat run scripts/charge.ts --network localhost",
     "clean": "npx hardhat clean",
