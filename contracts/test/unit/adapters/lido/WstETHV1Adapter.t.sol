@@ -45,7 +45,7 @@ contract WstETHV1AdapterTest is Test, AdapterTestHelper {
                     address(addressProvider),
                     address(wstETHMock),
                     priceOracle.priceFeeds(stETH),
-                    2 hours
+                    48 hours
                 )
             ),
             0

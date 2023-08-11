@@ -19,7 +19,7 @@ import {Tokens} from "@gearbox-protocol/sdk/contracts/Tokens.sol";
 // import {BalanceHelper} from "../../helpers/BalanceHelper.sol";
 // import {CreditFacadeTestHelper} from "../../helpers/CreditFacadeTestHelper.sol";
 import {IntegrationTestHelper} from "@gearbox-protocol/core-v3/contracts/test/helpers/IntegrationTestHelper.sol";
-import {CreditConfig} from "../../config/CreditConfig.sol";
+// import {CreditConfig} from "../../config/CreditConfig.sol";
 
 contract AdapterTestHelper is Test, ICreditManagerV3Events, ICreditFacadeV3Events, IntegrationTestHelper {
     function _setUp() internal {

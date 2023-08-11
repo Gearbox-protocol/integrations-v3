@@ -104,9 +104,9 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper, IBalancerV2VaultAdapte
         (address bpt,) = balancerMock.getPool(POOL_ID_1);
 
         PriceFeedParams[5] memory priceFeeds;
-        priceFeeds[0] = PriceFeedParams({priceFeed: priceOracle.priceFeeds(assets[0]), stalenessPeriod: 2 hours});
-        priceFeeds[1] = PriceFeedParams({priceFeed: priceOracle.priceFeeds(assets[1]), stalenessPeriod: 2 hours});
-        priceFeeds[2] = PriceFeedParams({priceFeed: priceOracle.priceFeeds(assets[2]), stalenessPeriod: 2 hours});
+        priceFeeds[0] = PriceFeedParams({priceFeed: priceOracle.priceFeeds(assets[0]), stalenessPeriod: 48 hours});
+        priceFeeds[1] = PriceFeedParams({priceFeed: priceOracle.priceFeeds(assets[1]), stalenessPeriod: 48 hours});
+        priceFeeds[2] = PriceFeedParams({priceFeed: priceOracle.priceFeeds(assets[2]), stalenessPeriod: 48 hours});
 
         address bptPf = address(
             new BPTStablePriceFeed(
@@ -164,8 +164,8 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper, IBalancerV2VaultAdapte
 
         PriceFeedParams[] memory priceFeeds2 = new PriceFeedParams[](2);
 
-        priceFeeds2[0] = PriceFeedParams({priceFeed: priceOracle.priceFeeds(assets[0]), stalenessPeriod: 2 hours});
-        priceFeeds2[1] = PriceFeedParams({priceFeed: priceOracle.priceFeeds(assets[1]), stalenessPeriod: 2 hours});
+        priceFeeds2[0] = PriceFeedParams({priceFeed: priceOracle.priceFeeds(assets[0]), stalenessPeriod: 48 hours});
+        priceFeeds2[1] = PriceFeedParams({priceFeed: priceOracle.priceFeeds(assets[1]), stalenessPeriod: 48 hours});
 
         bptPf = address(
             new BPTWeightedPriceFeed(

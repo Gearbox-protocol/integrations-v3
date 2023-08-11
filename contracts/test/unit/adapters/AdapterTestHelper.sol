@@ -18,7 +18,6 @@ import {Tokens} from "@gearbox-protocol/sdk/contracts/Tokens.sol";
 
 import {BalanceHelper} from "../../helpers/BalanceHelper.sol";
 import {CreditFacadeTestHelper} from "../../helpers/CreditFacadeTestHelper.sol";
-import {CreditConfig} from "../../config/CreditConfig.sol";
 
 contract AdapterTestHelper is
     Test,
@@ -37,7 +36,7 @@ contract AdapterTestHelper is
         tokenTestSuite = new TokensTestSuite();
         tokenTestSuite.topUpWETH{value: 100 * WAD}();
 
-        CreditConfig creditConfig = new CreditConfig(tokenTestSuite, t);
+        // CreditConfig creditConfig = new CreditConfig(tokenTestSuite, t);
 
         // cft = new CreditFacadeV3TestSuite(creditConfig);
 

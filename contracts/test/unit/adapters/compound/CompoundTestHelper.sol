@@ -62,12 +62,12 @@ contract CompoundTestHelper is AdapterTestHelper {
         // add price feeds for cTokens to the oracle
         priceOracle.setPriceFeed(
             ceth,
-            address(new CompoundV2PriceFeed(address(addressProvider), ceth, priceOracle.priceFeeds(weth), 2 hours)),
+            address(new CompoundV2PriceFeed(address(addressProvider), ceth, priceOracle.priceFeeds(weth), 48 hours)),
             0
         );
         priceOracle.setPriceFeed(
             cusdc,
-            address(new CompoundV2PriceFeed(address(addressProvider), cusdc, priceOracle.priceFeeds(usdc), 2 hours)),
+            address(new CompoundV2PriceFeed(address(addressProvider), cusdc, priceOracle.priceFeeds(usdc), 48 hours)),
             0
         );
 

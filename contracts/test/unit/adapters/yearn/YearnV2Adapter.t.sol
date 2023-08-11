@@ -46,7 +46,7 @@ contract YearnV2AdapterTest is Test, AdapterTestHelper {
                     address(addressProvider),
                     yvDAI,
                     priceOracle.priceFeeds(token),
-                    2 hours
+                    48 hours
                 )
             ),
             0

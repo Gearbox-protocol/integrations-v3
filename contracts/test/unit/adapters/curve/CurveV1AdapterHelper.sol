@@ -73,8 +73,9 @@ contract CurveV1AdapterHelper is Test, AdapterTestHelper, ICurveV1AdapterExcepti
                 new CurveStableLPPriceFeed(
                 address(addressProvider),
                 _curveV1MockAddr,
-                [ PriceFeedParams({ priceFeed: priceOracle.priceFeeds(curvePoolTokens[0]), stalenessPeriod: 2 hours}),
-                 PriceFeedParams({ priceFeed: priceOracle.priceFeeds(curvePoolTokens[1]), stalenessPeriod: 2 hours}),
+                  _curveV1MockAddr,
+                [ PriceFeedParams({ priceFeed: priceOracle.priceFeeds(curvePoolTokens[0]), stalenessPeriod: 48 hours}),
+                 PriceFeedParams({ priceFeed: priceOracle.priceFeeds(curvePoolTokens[1]), stalenessPeriod: 48 hours}),
                   PriceFeedParams({ priceFeed: address(0), stalenessPeriod: 0}),
                   PriceFeedParams({ priceFeed: address(0), stalenessPeriod: 0})]
 
@@ -87,9 +88,10 @@ contract CurveV1AdapterHelper is Test, AdapterTestHelper, ICurveV1AdapterExcepti
                 new CurveStableLPPriceFeed(
                 address(addressProvider),
                 _curveV1MockAddr,
-                [ PriceFeedParams({ priceFeed: priceOracle.priceFeeds(curvePoolTokens[0]), stalenessPeriod: 2 hours}),
-                 PriceFeedParams({ priceFeed: priceOracle.priceFeeds(curvePoolTokens[1]), stalenessPeriod: 2 hours}),
-                PriceFeedParams({ priceFeed: priceOracle.priceFeeds(curvePoolTokens[2]), stalenessPeriod: 2 hours}),
+                  _curveV1MockAddr,
+                [ PriceFeedParams({ priceFeed: priceOracle.priceFeeds(curvePoolTokens[0]), stalenessPeriod: 48 hours}),
+                 PriceFeedParams({ priceFeed: priceOracle.priceFeeds(curvePoolTokens[1]), stalenessPeriod: 48 hours}),
+                PriceFeedParams({ priceFeed: priceOracle.priceFeeds(curvePoolTokens[2]), stalenessPeriod: 48 hours}),
                   PriceFeedParams({ priceFeed: address(0), stalenessPeriod: 0})]
 
                 )
@@ -101,10 +103,11 @@ contract CurveV1AdapterHelper is Test, AdapterTestHelper, ICurveV1AdapterExcepti
                 new CurveStableLPPriceFeed(
                 address(addressProvider),
                 _curveV1MockAddr,
-                [ PriceFeedParams({ priceFeed: priceOracle.priceFeeds(curvePoolTokens[0]), stalenessPeriod: 2 hours}),
-                 PriceFeedParams({ priceFeed: priceOracle.priceFeeds(curvePoolTokens[1]), stalenessPeriod: 2 hours}),
-                PriceFeedParams({ priceFeed: priceOracle.priceFeeds(curvePoolTokens[2]), stalenessPeriod: 2 hours}),
-                PriceFeedParams({ priceFeed: priceOracle.priceFeeds(curvePoolTokens[3]), stalenessPeriod: 2 hours})]
+                       _curveV1MockAddr,
+                [ PriceFeedParams({ priceFeed: priceOracle.priceFeeds(curvePoolTokens[0]), stalenessPeriod: 48 hours}),
+                 PriceFeedParams({ priceFeed: priceOracle.priceFeeds(curvePoolTokens[1]), stalenessPeriod: 48 hours}),
+                PriceFeedParams({ priceFeed: priceOracle.priceFeeds(curvePoolTokens[2]), stalenessPeriod: 48 hours}),
+                PriceFeedParams({ priceFeed: priceOracle.priceFeeds(curvePoolTokens[3]), stalenessPeriod: 48 hours})]
 
                 )
             );
@@ -202,9 +205,10 @@ contract CurveV1AdapterHelper is Test, AdapterTestHelper, ICurveV1AdapterExcepti
             new CurveStableLPPriceFeed(
                 address(addressProvider),
                 _curveV1stETHMockAddr,
+                  _curveV1stETHMockAddr,
 
-                  [ PriceFeedParams({ priceFeed: priceOracle.priceFeeds(tokenTestSuite.addressOf(Tokens.WETH)), stalenessPeriod: 2 hours}),
-                 PriceFeedParams({ priceFeed: priceOracle.priceFeeds(tokenTestSuite.addressOf(Tokens.STETH)), stalenessPeriod: 2 hours}),
+                  [ PriceFeedParams({ priceFeed: priceOracle.priceFeeds(tokenTestSuite.addressOf(Tokens.WETH)), stalenessPeriod: 48 hours}),
+                 PriceFeedParams({ priceFeed: priceOracle.priceFeeds(tokenTestSuite.addressOf(Tokens.STETH)), stalenessPeriod: 48 hours}),
                   PriceFeedParams({ priceFeed: address(0), stalenessPeriod: 0}),
                   PriceFeedParams({ priceFeed: address(0), stalenessPeriod: 0})]
              
@@ -251,10 +255,11 @@ contract CurveV1AdapterHelper is Test, AdapterTestHelper, ICurveV1AdapterExcepti
             new CurveStableLPPriceFeed(
                 address(addressProvider),
                 _basePoolAddr,
+                _basePoolAddr,
                 [PriceFeedParams({ priceFeed:  priceOracle.priceFeeds(curvePoolTokens[0]),
-                stalenessPeriod: 2 hours}),
-                 PriceFeedParams({ priceFeed: priceOracle.priceFeeds(curvePoolTokens[1]), stalenessPeriod: 2 hours}),
-                 PriceFeedParams({ priceFeed: priceOracle.priceFeeds(curvePoolTokens[2]), stalenessPeriod: 2 hours}),
+                stalenessPeriod: 48 hours}),
+                 PriceFeedParams({ priceFeed: priceOracle.priceFeeds(curvePoolTokens[1]), stalenessPeriod: 48 hours}),
+                 PriceFeedParams({ priceFeed: priceOracle.priceFeeds(curvePoolTokens[2]), stalenessPeriod: 48 hours}),
                  PriceFeedParams({ priceFeed: address(0), stalenessPeriod: 0})]
 
             )
@@ -286,10 +291,11 @@ contract CurveV1AdapterHelper is Test, AdapterTestHelper, ICurveV1AdapterExcepti
             new CurveStableLPPriceFeed(
                 address(addressProvider),
                 _curveV1MockAddr,
-               [PriceFeedParams({ priceFeed: priceOracle.priceFeeds(curvePoolTokens[0]), stalenessPeriod: 2 hours }),
-                PriceFeedParams({ priceFeed:priceOracle.priceFeeds(curvePoolTokens[1]),stalenessPeriod: 2 hours }),
-                PriceFeedParams({ priceFeed:priceOracle.priceFeeds(curvePoolTokens[2]),stalenessPeriod: 2 hours }),
-                PriceFeedParams({ priceFeed:priceOracle.priceFeeds(curvePoolTokens[3]),stalenessPeriod: 2 hours })]
+                  _curveV1MockAddr,
+               [PriceFeedParams({ priceFeed: priceOracle.priceFeeds(curvePoolTokens[0]), stalenessPeriod: 48 hours }),
+                PriceFeedParams({ priceFeed:priceOracle.priceFeeds(curvePoolTokens[1]),stalenessPeriod: 48 hours }),
+                PriceFeedParams({ priceFeed:priceOracle.priceFeeds(curvePoolTokens[2]),stalenessPeriod: 48 hours }),
+                PriceFeedParams({ priceFeed:priceOracle.priceFeeds(curvePoolTokens[3]),stalenessPeriod: 48 hours })]
 
             )
         );
@@ -338,9 +344,10 @@ contract CurveV1AdapterHelper is Test, AdapterTestHelper, ICurveV1AdapterExcepti
             new CurveStableLPPriceFeed(
                 address(addressProvider),
                 _basePoolAddr,
-                [PriceFeedParams({ priceFeed: priceOracle.priceFeeds(curvePoolTokens[0]), stalenessPeriod: 2 hours}),
-                 PriceFeedParams({ priceFeed: priceOracle.priceFeeds(curvePoolTokens[1]),stalenessPeriod: 2 hours}),
-                PriceFeedParams({priceFeed:  priceOracle.priceFeeds(curvePoolTokens[2]),stalenessPeriod: 2 hours}),
+                 _basePoolAddr,
+                [PriceFeedParams({ priceFeed: priceOracle.priceFeeds(curvePoolTokens[0]), stalenessPeriod: 48 hours}),
+                 PriceFeedParams({ priceFeed: priceOracle.priceFeeds(curvePoolTokens[1]),stalenessPeriod: 48 hours}),
+                PriceFeedParams({priceFeed:  priceOracle.priceFeeds(curvePoolTokens[2]),stalenessPeriod: 48 hours}),
                 PriceFeedParams({priceFeed: address(0),stalenessPeriod:0})]
 
             )
@@ -374,7 +381,8 @@ contract CurveV1AdapterHelper is Test, AdapterTestHelper, ICurveV1AdapterExcepti
             new CurveCryptoLPPriceFeed(
                 address(addressProvider),
                 _curveV1MockAddr,
-                [PriceFeedParams({priceFeed: priceOracle.priceFeeds(curvePoolTokens[3]), stalenessPeriod:  2 hours}),
+                     _curveV1MockAddr,
+                [PriceFeedParams({priceFeed: priceOracle.priceFeeds(curvePoolTokens[3]), stalenessPeriod:  48 hours}),
                PriceFeedParams({priceFeed: _basePriceFeed,stalenessPeriod: 0}),
                PriceFeedParams({priceFeed: address(0), stalenessPeriod: 0})]
 
@@ -443,7 +451,7 @@ contract CurveV1AdapterHelper is Test, AdapterTestHelper, ICurveV1AdapterExcepti
                 priceOracle.setPriceFeed(
                     underlyingPoolTokens[i],
                     priceOracle.priceFeeds(tokenTestSuite.addressOf(underlyingPoolTkns[i])),
-                    2 hours
+                    48 hours
                 );
                 creditConfigurator.addCollateralToken(underlyingPoolTokens[i], 9300);
                 vm.stopPrank();

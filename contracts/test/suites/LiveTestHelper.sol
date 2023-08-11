@@ -5,20 +5,29 @@ pragma solidity ^0.8.10;
 
 import {Tokens} from "@gearbox-protocol/sdk/contracts/Tokens.sol";
 import {SupportedContracts, Contracts} from "@gearbox-protocol/sdk/contracts/SupportedContracts.sol";
-import {ICreditConfig} from "@gearbox-protocol/core-v3/contracts/test/interfaces/ICreditConfig.sol";
+import {IPoolV3DeployConfig} from "@gearbox-protocol/core-v3/contracts/test/interfaces/ICreditConfig.sol";
 // import {IUniswapV2Router02} from "../../integrations/uniswap/IUniswapV2Router02.sol";
 // import {MultiCall} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacadeV3.sol";
 
 // // import {TokenType} from "../../integrations/TokenType.sol";
 // import {TokensTestSuite} from "@gearbox-protocol/core-v3/contracts/test/suites/TokensTestSuite.sol";
-// import {PriceFeedDeployer} from "gearbox-protocol/oracles-v3/contracts/test/suites/PriceFeedDeployer.sol";
+import {PriceFeedDeployer} from "@gearbox-protocol/oracles-v3/contracts/test/suites/PriceFeedDeployer.sol";
 import {IntegrationTestHelper} from "@gearbox-protocol/core-v3/contracts/test/helpers/IntegrationTestHelper.sol";
+import {AdapterDeployer} from "./AdapterDeployer.sol";
+
+import {PoolV3DeployConfig_dUSDC} from "../config/USDC_config.sol";
+
+import "forge-std/console.sol";
 
 contract LiveTestHelper is IntegrationTestHelper {
     //     LiveEnvTestSuite lts;
 
     //     address public MAINNET_CONFIGURATOR;
     // mapping(Tokens => CreditManagerV3[]) internal _creditManagers;
+
+    constructor() {
+        addDeployConfig(new PoolV3DeployConfig_dUSDC());
+    }
 
     SupportedContracts public supportedContracts;
 
@@ -28,28 +37,27 @@ contract LiveTestHelper is IntegrationTestHelper {
         }
     }
 
-    modifier liveCreditTest(ICreditConfig creditConfig) {
+    modifier liveCreditTest(string memory configSymbol) {
         if (chainId != 1337 && chainId != 31337) {
             _setupCore();
             supportedContracts = new SupportedContracts(chainId);
 
-            // PriceFeedDeployer priceFeedDeployer =
-            //     new PriceFeedDeployer(chainId, address(addressProvider), tokenTestSuite, supportedContracts);
+            PriceFeedDeployer priceFeedDeployer =
+                new PriceFeedDeployer(chainId, address(addressProvider), tokenTestSuite, supportedContracts);
 
-            // priceFeedDeployer.addPriceFeeds(address(priceOracle));
+            priceFeedDeployer.addPriceFeeds(address(priceOracle));
 
-            _deployCreditAndPool(creditConfig);
+            IPoolV3DeployConfig config = getDeployConfig(configSymbol);
 
-            //  address creditManager,
-            // Contracts[] memory adaptersList,
-            // TokensTestSuite _tokenTestSuite,
-            // SupportedContracts _supportedContracts,
-            // string memory cmLabel
+            _deployCreditAndPool(config);
 
-            // AdapterDeployer adapterDeployer =
-            //     new AdapterDeployer(address(creditManager), creditConfig.contracts, tokenTestSuite, supportedContracts );
+            // uint256 len = config.creditManagers().length;
+            // for (uint256 i = 0; i < len; i++) {
+            //     AdapterDeployer adapterDeployer =
+            //     new AdapterDeployer(address(creditManagers[i]), config.creditManagers()[i].contracts, tokenTestSuite, supportedContracts );
 
-            // adapterDeployer.connectAdapters();
+            //     adapterDeployer.connectAdapters();
+            // }
 
             _;
         }

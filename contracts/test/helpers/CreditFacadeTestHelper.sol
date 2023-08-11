@@ -27,7 +27,7 @@ contract CreditFacadeTestHelper is IntegrationTestHelper {
         AggregatorV3Interface priceFeed = new PriceFeedMock(int256(price), 8);
 
         vm.startPrank(CONFIGURATOR);
-        priceOracle.setPriceFeed(token, address(priceFeed), 2 hours);
+        priceOracle.setPriceFeed(token, address(priceFeed), 48 hours);
         vm.stopPrank();
     }
 }

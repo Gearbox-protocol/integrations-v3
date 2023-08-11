@@ -92,12 +92,16 @@ contract AaveTestHelper is AdapterTestHelper {
         // add price feeds for waTokens to the oracle
         priceOracle.setPriceFeed(
             waWeth,
-            address(new WrappedAaveV2PriceFeed(address(addressProvider), waWeth, priceOracle.priceFeeds(weth), 2 hours)),
+            address(
+                new WrappedAaveV2PriceFeed(address(addressProvider), waWeth, priceOracle.priceFeeds(weth), 48 hours)
+            ),
             0
         );
         priceOracle.setPriceFeed(
             waUsdc,
-            address(new WrappedAaveV2PriceFeed(address(addressProvider), waUsdc, priceOracle.priceFeeds(usdc), 2 hours)),
+            address(
+                new WrappedAaveV2PriceFeed(address(addressProvider), waUsdc, priceOracle.priceFeeds(usdc), 48 hours)
+            ),
             0
         );
 
