@@ -16,25 +16,26 @@ import {
     CollateralTokenHuman
 } from "@gearbox-protocol/core-v3/contracts/test/interfaces/ICreditConfig.sol";
 
-contract PoolV3DeployConfig_dUSDC is IPoolV3DeployConfig {
-    string public constant symbol = "dUSDC";
+contract CONFIG_MAINNET_DUSDC_V3 is IPoolV3DeployConfig {
+    string public constant id = "mainnet-dusdc-v3";
+    string public constant symbol = "dUSDCV3";
     string public constant name = "Diesel USDC V3 pool";
     uint256 public constant chainId = 1;
 
     Tokens public constant underlying = Tokens.USDC;
-    bool public constant supportsQuotas = true;
+    bool public constant supportsQuotas = false;
 
-    uint256 public constant getAccountAmount = 1_000_000 * 1e6;
+    uint256 public constant getAccountAmount = 1000000000000;
 
     PoolV3DeployParams _poolParams = PoolV3DeployParams({withdrawalFee: 0, expectedLiquidityLimit: 0});
 
     LinearIRMV3DeployParams _irm = LinearIRMV3DeployParams({
-        U_1: 80_00,
-        U_2: 90_00,
+        U_1: 8000,
+        U_2: 9000,
         R_base: 0,
-        R_slope1: 5,
-        R_slope2: 20,
-        R_slope3: 100_00,
+        R_slope1: 100,
+        R_slope2: 1000,
+        R_slope3: 10000,
         _isBorrowingMoreU2Forbidden: true
     });
 
@@ -44,29 +45,29 @@ contract PoolV3DeployConfig_dUSDC is IPoolV3DeployConfig {
     CreditManagerV3DeployParams[] _creditManagers;
 
     constructor() {
-        _gaugeRates.push(GaugeRate({token: Tokens.LINK, minRate: 10, maxRate: 20}));
-        _quotaLimits.push(PoolQuotaLimit({token: Tokens.LINK, quotaIncreaseFee: 10_00, limit: 500_000}));
+        _gaugeRates.push(GaugeRate({token: Tokens.CVX, minRate: 10, maxRate: 300}));
+        _gaugeRates.push(GaugeRate({token: Tokens.FXS, minRate: 10, maxRate: 300}));
+        _gaugeRates.push(GaugeRate({token: Tokens.LQTY, minRate: 10, maxRate: 300}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.CVX, quotaIncreaseFee: 0, limit: 5000000000000}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.FXS, quotaIncreaseFee: 0, limit: 5000000000000}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.LQTY, quotaIncreaseFee: 0, limit: 5000000000000}));
 
         /// CREDIT_MANAGER_0
         CreditManagerV3DeployParams storage cp = _creditManagers.push();
 
-        cp.minDebt = 1_000_000 * 1e6;
-        cp.maxDebt = 10_000_000 * 1e6;
+        cp.minDebt = 100000000000;
+        cp.maxDebt = 1000000000000;
         cp.whitelisted = false;
         cp.expirable = false;
         cp.skipInit = false;
-        cp.poolLimit = 5_000_000 * 1e6;
+        cp.poolLimit = 0;
 
         CollateralTokenHuman[] storage cts = cp.collateralTokens;
-        cts.push(CollateralTokenHuman({token: Tokens.USDC, lt: 90_00}));
-        cts.push(CollateralTokenHuman({token: Tokens.LINK, lt: 80_00}));
-        cts.push(CollateralTokenHuman({token: Tokens.WETH, lt: 70_00}));
+        cts.push(CollateralTokenHuman({token: Tokens.CVX, lt: 2500}));
 
+        cts.push(CollateralTokenHuman({token: Tokens.FXS, lt: 2000}));
         Contracts[] storage cs = cp.contracts;
-        cs.push(Contracts.SUSHISWAP_ROUTER);
-        cs.push(Contracts.CURVE_3CRV_POOL);
-
-        /// CREDIT_MANAGER_1
+        cs.push(Contracts.UNISWAP_V3_ROUTER);
     }
 
     // GETTERS

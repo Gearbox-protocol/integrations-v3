@@ -15,18 +15,13 @@ import {PriceFeedDeployer} from "@gearbox-protocol/oracles-v3/contracts/test/sui
 import {IntegrationTestHelper} from "@gearbox-protocol/core-v3/contracts/test/helpers/IntegrationTestHelper.sol";
 import {AdapterDeployer} from "./AdapterDeployer.sol";
 
-import {PoolV3DeployConfig_dUSDC} from "../config/USDC_config.sol";
+import {CONFIG_MAINNET_DUSDC_V3} from "../config/USDC_config.sol";
 
 import "forge-std/console.sol";
 
 contract LiveTestHelper is IntegrationTestHelper {
-    //     LiveEnvTestSuite lts;
-
-    //     address public MAINNET_CONFIGURATOR;
-    // mapping(Tokens => CreditManagerV3[]) internal _creditManagers;
-
     constructor() {
-        addDeployConfig(new PoolV3DeployConfig_dUSDC());
+        addDeployConfig(new CONFIG_MAINNET_DUSDC_V3());
     }
 
     SupportedContracts public supportedContracts;
@@ -37,7 +32,7 @@ contract LiveTestHelper is IntegrationTestHelper {
         }
     }
 
-    modifier liveCreditTest(string memory configSymbol) {
+    modifier liveCreditTest(string memory id) {
         if (chainId != 1337 && chainId != 31337) {
             _setupCore();
             supportedContracts = new SupportedContracts(chainId);
@@ -47,17 +42,17 @@ contract LiveTestHelper is IntegrationTestHelper {
 
             priceFeedDeployer.addPriceFeeds(address(priceOracle));
 
-            IPoolV3DeployConfig config = getDeployConfig(configSymbol);
+            IPoolV3DeployConfig config = getDeployConfig(id);
 
             _deployCreditAndPool(config);
 
-            // uint256 len = config.creditManagers().length;
-            // for (uint256 i = 0; i < len; i++) {
-            //     AdapterDeployer adapterDeployer =
-            //     new AdapterDeployer(address(creditManagers[i]), config.creditManagers()[i].contracts, tokenTestSuite, supportedContracts );
+            uint256 len = config.creditManagers().length;
+            for (uint256 i = 0; i < len; i++) {
+                AdapterDeployer adapterDeployer =
+                new AdapterDeployer(address(creditManagers[i]), config.creditManagers()[i].contracts, tokenTestSuite, supportedContracts );
 
-            //     adapterDeployer.connectAdapters();
-            // }
+                adapterDeployer.connectAdapters();
+            }
 
             _;
         }

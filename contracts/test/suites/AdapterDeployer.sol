@@ -33,7 +33,8 @@ import {ConvexV1BaseRewardPoolAdapter} from "../../adapters/convex/ConvexV1_Base
 
 import {TokensTestSuite} from "@gearbox-protocol/core-v3/contracts/test/suites/TokensTestSuite.sol";
 import {Test} from "forge-std/Test.sol";
-// CURVE ADAPTERS
+
+import "@gearbox-protocol/core-v3/contracts/test/lib/constants.sol";
 
 contract AdapterDeployer is AdapterData, Test {
     ICreditManagerV3 public creditManager;
@@ -273,6 +274,7 @@ contract AdapterDeployer is AdapterData, Test {
         uint256 len = adapters.length;
         unchecked {
             for (uint256 i; i < len; ++i) {
+                vm.prank(CONFIGURATOR);
                 creditConfigurator.allowAdapter(adapters[i]);
             }
         }

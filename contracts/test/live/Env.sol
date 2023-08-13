@@ -7,5 +7,5 @@ import {LiveTestHelper} from "../suites/LiveTestHelper.sol";
 // import {BalanceComparator, BalanceBackup} from "../../../helpers/BalanceComparator.sol";
 
 contract Live_LidoEquivalenceTest is LiveTestHelper {
-    function test_tt() public liveCreditTest("dUSDC") {}
+    function test_tt() public liveCreditTest("mainnet-dusdc-v3") {}
 }
