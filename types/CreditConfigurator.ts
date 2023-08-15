@@ -90,6 +90,7 @@ export interface CreditConfiguratorInterface extends utils.Interface {
     "setMaxCumulativeLoss(uint128)": FunctionFragment;
     "setMaxEnabledTokens(uint8)": FunctionFragment;
     "setTotalDebtLimit(uint128)": FunctionFragment;
+    "setTotalDebtParams(uint128,uint128)": FunctionFragment;
     "underlying()": FunctionFragment;
     "unpause()": FunctionFragment;
     "upgradeCreditConfigurator(address)": FunctionFragment;
@@ -126,6 +127,7 @@ export interface CreditConfiguratorInterface extends utils.Interface {
       | "setMaxCumulativeLoss"
       | "setMaxEnabledTokens"
       | "setTotalDebtLimit"
+      | "setTotalDebtParams"
       | "underlying"
       | "unpause"
       | "upgradeCreditConfigurator"
@@ -236,6 +238,10 @@ export interface CreditConfiguratorInterface extends utils.Interface {
     values: [PromiseOrValue<BigNumberish>]
   ): string;
   encodeFunctionData(
+    functionFragment: "setTotalDebtParams",
+    values: [PromiseOrValue<BigNumberish>, PromiseOrValue<BigNumberish>]
+  ): string;
+  encodeFunctionData(
     functionFragment: "underlying",
     values?: undefined
   ): string;
@@ -338,6 +344,10 @@ export interface CreditConfiguratorInterface extends utils.Interface {
   ): Result;
   decodeFunctionResult(
     functionFragment: "setTotalDebtLimit",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "setTotalDebtParams",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "underlying", data: BytesLike): Result;
@@ -830,6 +840,12 @@ export interface CreditConfigurator extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
+    setTotalDebtParams(
+      newCurrentTotalDebt: PromiseOrValue<BigNumberish>,
+      newLimit: PromiseOrValue<BigNumberish>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<ContractTransaction>;
+
     underlying(overrides?: CallOverrides): Promise<[string]>;
 
     unpause(
@@ -972,6 +988,12 @@ export interface CreditConfigurator extends BaseContract {
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
+  setTotalDebtParams(
+    newCurrentTotalDebt: PromiseOrValue<BigNumberish>,
+    newLimit: PromiseOrValue<BigNumberish>,
+    overrides?: Overrides & { from?: PromiseOrValue<string> }
+  ): Promise<ContractTransaction>;
+
   underlying(overrides?: CallOverrides): Promise<string>;
 
   unpause(
@@ -1106,6 +1128,12 @@ export interface CreditConfigurator extends BaseContract {
     ): Promise<void>;
 
     setTotalDebtLimit(
+      newLimit: PromiseOrValue<BigNumberish>,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    setTotalDebtParams(
+      newCurrentTotalDebt: PromiseOrValue<BigNumberish>,
       newLimit: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
     ): Promise<void>;
@@ -1408,6 +1436,12 @@ export interface CreditConfigurator extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
+    setTotalDebtParams(
+      newCurrentTotalDebt: PromiseOrValue<BigNumberish>,
+      newLimit: PromiseOrValue<BigNumberish>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<BigNumber>;
+
     underlying(overrides?: CallOverrides): Promise<BigNumber>;
 
     unpause(
@@ -1547,6 +1581,12 @@ export interface CreditConfigurator extends BaseContract {
     ): Promise<PopulatedTransaction>;
 
     setTotalDebtLimit(
+      newLimit: PromiseOrValue<BigNumberish>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<PopulatedTransaction>;
+
+    setTotalDebtParams(
+      newCurrentTotalDebt: PromiseOrValue<BigNumberish>,
       newLimit: PromiseOrValue<BigNumberish>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;

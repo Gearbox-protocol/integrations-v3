@@ -5,6 +5,7 @@ export type { ICrvDeposit } from "./ICrvDeposit";
 export type { ICurveGauge } from "./ICurveGauge";
 export type { ICurveVoteEscrow } from "./ICurveVoteEscrow";
 export type { IDeposit } from "./IDeposit";
+export type { IExtraRewardWrapper } from "./IExtraRewardWrapper";
 export type { IFeeDistro } from "./IFeeDistro";
 export type { IMinter } from "./IMinter";
 export type { IPools } from "./IPools";

@@ -183,8 +183,7 @@ export interface IUniswapV3AdapterInterface extends utils.Interface {
     "exactInputSingle((address,address,uint24,address,uint256,uint256,uint256,uint160))": FunctionFragment;
     "exactOutput((bytes,address,uint256,uint256,uint256))": FunctionFragment;
     "exactOutputSingle((address,address,uint24,address,uint256,uint256,uint256,uint160))": FunctionFragment;
-    "getConnectors()": FunctionFragment;
-    "isConnector(address)": FunctionFragment;
+    "isPoolAllowed(address,address,uint24)": FunctionFragment;
     "targetContract()": FunctionFragment;
   };
 
@@ -201,8 +200,7 @@ export interface IUniswapV3AdapterInterface extends utils.Interface {
       | "exactInputSingle"
       | "exactOutput"
       | "exactOutputSingle"
-      | "getConnectors"
-      | "isConnector"
+      | "isPoolAllowed"
       | "targetContract"
   ): FunctionFragment;
 
@@ -248,12 +246,12 @@ export interface IUniswapV3AdapterInterface extends utils.Interface {
     values: [ISwapRouter.ExactOutputSingleParamsStruct]
   ): string;
   encodeFunctionData(
-    functionFragment: "getConnectors",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "isConnector",
-    values: [PromiseOrValue<string>]
+    functionFragment: "isPoolAllowed",
+    values: [
+      PromiseOrValue<string>,
+      PromiseOrValue<string>,
+      PromiseOrValue<BigNumberish>
+    ]
   ): string;
   encodeFunctionData(
     functionFragment: "targetContract",
@@ -299,11 +297,7 @@ export interface IUniswapV3AdapterInterface extends utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "getConnectors",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "isConnector",
+    functionFragment: "isPoolAllowed",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -383,12 +377,10 @@ export interface IUniswapV3Adapter extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
-    getConnectors(
-      overrides?: CallOverrides
-    ): Promise<[string[]] & { connectors: string[] }>;
-
-    isConnector(
-      token: PromiseOrValue<string>,
+    isPoolAllowed(
+      token0: PromiseOrValue<string>,
+      token1: PromiseOrValue<string>,
+      fee: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
     ): Promise<[boolean]>;
 
@@ -435,10 +427,10 @@ export interface IUniswapV3Adapter extends BaseContract {
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
-  getConnectors(overrides?: CallOverrides): Promise<string[]>;
-
-  isConnector(
-    token: PromiseOrValue<string>,
+  isPoolAllowed(
+    token0: PromiseOrValue<string>,
+    token1: PromiseOrValue<string>,
+    fee: PromiseOrValue<BigNumberish>,
     overrides?: CallOverrides
   ): Promise<boolean>;
 
@@ -485,10 +477,10 @@ export interface IUniswapV3Adapter extends BaseContract {
       overrides?: CallOverrides
     ): Promise<void>;
 
-    getConnectors(overrides?: CallOverrides): Promise<string[]>;
-
-    isConnector(
-      token: PromiseOrValue<string>,
+    isPoolAllowed(
+      token0: PromiseOrValue<string>,
+      token1: PromiseOrValue<string>,
+      fee: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
     ): Promise<boolean>;
 
@@ -538,10 +530,10 @@ export interface IUniswapV3Adapter extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
-    getConnectors(overrides?: CallOverrides): Promise<BigNumber>;
-
-    isConnector(
-      token: PromiseOrValue<string>,
+    isPoolAllowed(
+      token0: PromiseOrValue<string>,
+      token1: PromiseOrValue<string>,
+      fee: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
@@ -593,10 +585,10 @@ export interface IUniswapV3Adapter extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 
-    getConnectors(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    isConnector(
-      token: PromiseOrValue<string>,
+    isPoolAllowed(
+      token0: PromiseOrValue<string>,
+      token1: PromiseOrValue<string>,
+      fee: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 

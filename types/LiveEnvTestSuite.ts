@@ -34,19 +34,34 @@ export type BalanceStructOutput = [string, BigNumber] & {
 export interface LiveEnvTestSuiteInterface extends utils.Interface {
   functions: {
     "ROOT_ADDRESS()": FunctionFragment;
+    "_creditConfigurators(uint8,uint256)": FunctionFragment;
+    "_creditFacades(uint8,uint256)": FunctionFragment;
+    "_creditManagers(uint8,uint256)": FunctionFragment;
     "acl()": FunctionFragment;
+    "activeCM()": FunctionFragment;
     "addressProvider()": FunctionFragment;
+    "blacklistHelper()": FunctionFragment;
     "creditConfiguratorMocks(uint8)": FunctionFragment;
     "creditConfigurators(uint8)": FunctionFragment;
+    "creditConfigurators(uint8,uint256)": FunctionFragment;
     "creditFacadeMocks(uint8)": FunctionFragment;
+    "creditFacades(uint8,uint256)": FunctionFragment;
     "creditFacades(uint8)": FunctionFragment;
     "creditManagerMocks(uint8)": FunctionFragment;
+    "creditManagers(uint8,uint256)": FunctionFragment;
     "creditManagers(uint8)": FunctionFragment;
     "degenNFT()": FunctionFragment;
+    "getActiveCM()": FunctionFragment;
+    "getAdapter(uint8,uint8,uint256)": FunctionFragment;
+    "getAdapter(address,uint8)": FunctionFragment;
     "getAdapter(uint8,uint8)": FunctionFragment;
+    "getAdapters(uint8,uint256)": FunctionFragment;
     "getAdapters(uint8)": FunctionFragment;
+    "getAdapters(address)": FunctionFragment;
     "getBalances()": FunctionFragment;
     "getMockAdapter(uint8,uint8)": FunctionFragment;
+    "getSupportedUnderlyings()": FunctionFragment;
+    "pools(uint8)": FunctionFragment;
     "priceOracle()": FunctionFragment;
     "supportedContracts()": FunctionFragment;
     "tokenTestSuite()": FunctionFragment;
@@ -55,19 +70,34 @@ export interface LiveEnvTestSuiteInterface extends utils.Interface {
   getFunction(
     nameOrSignatureOrTopic:
       | "ROOT_ADDRESS"
+      | "_creditConfigurators"
+      | "_creditFacades"
+      | "_creditManagers"
       | "acl"
+      | "activeCM"
       | "addressProvider"
+      | "blacklistHelper"
       | "creditConfiguratorMocks"
-      | "creditConfigurators"
+      | "creditConfigurators(uint8)"
+      | "creditConfigurators(uint8,uint256)"
       | "creditFacadeMocks"
-      | "creditFacades"
+      | "creditFacades(uint8,uint256)"
+      | "creditFacades(uint8)"
       | "creditManagerMocks"
-      | "creditManagers"
+      | "creditManagers(uint8,uint256)"
+      | "creditManagers(uint8)"
       | "degenNFT"
-      | "getAdapter"
-      | "getAdapters"
+      | "getActiveCM"
+      | "getAdapter(uint8,uint8,uint256)"
+      | "getAdapter(address,uint8)"
+      | "getAdapter(uint8,uint8)"
+      | "getAdapters(uint8,uint256)"
+      | "getAdapters(uint8)"
+      | "getAdapters(address)"
       | "getBalances"
       | "getMockAdapter"
+      | "getSupportedUnderlyings"
+      | "pools"
       | "priceOracle"
       | "supportedContracts"
       | "tokenTestSuite"
@@ -77,9 +107,26 @@ export interface LiveEnvTestSuiteInterface extends utils.Interface {
     functionFragment: "ROOT_ADDRESS",
     values?: undefined
   ): string;
+  encodeFunctionData(
+    functionFragment: "_creditConfigurators",
+    values: [PromiseOrValue<BigNumberish>, PromiseOrValue<BigNumberish>]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "_creditFacades",
+    values: [PromiseOrValue<BigNumberish>, PromiseOrValue<BigNumberish>]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "_creditManagers",
+    values: [PromiseOrValue<BigNumberish>, PromiseOrValue<BigNumberish>]
+  ): string;
   encodeFunctionData(functionFragment: "acl", values?: undefined): string;
+  encodeFunctionData(functionFragment: "activeCM", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "addressProvider",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "blacklistHelper",
     values?: undefined
   ): string;
   encodeFunctionData(
@@ -87,15 +134,23 @@ export interface LiveEnvTestSuiteInterface extends utils.Interface {
     values: [PromiseOrValue<BigNumberish>]
   ): string;
   encodeFunctionData(
-    functionFragment: "creditConfigurators",
+    functionFragment: "creditConfigurators(uint8)",
     values: [PromiseOrValue<BigNumberish>]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "creditConfigurators(uint8,uint256)",
+    values: [PromiseOrValue<BigNumberish>, PromiseOrValue<BigNumberish>]
   ): string;
   encodeFunctionData(
     functionFragment: "creditFacadeMocks",
     values: [PromiseOrValue<BigNumberish>]
   ): string;
   encodeFunctionData(
-    functionFragment: "creditFacades",
+    functionFragment: "creditFacades(uint8,uint256)",
+    values: [PromiseOrValue<BigNumberish>, PromiseOrValue<BigNumberish>]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "creditFacades(uint8)",
     values: [PromiseOrValue<BigNumberish>]
   ): string;
   encodeFunctionData(
@@ -103,17 +158,45 @@ export interface LiveEnvTestSuiteInterface extends utils.Interface {
     values: [PromiseOrValue<BigNumberish>]
   ): string;
   encodeFunctionData(
-    functionFragment: "creditManagers",
+    functionFragment: "creditManagers(uint8,uint256)",
+    values: [PromiseOrValue<BigNumberish>, PromiseOrValue<BigNumberish>]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "creditManagers(uint8)",
     values: [PromiseOrValue<BigNumberish>]
   ): string;
   encodeFunctionData(functionFragment: "degenNFT", values?: undefined): string;
   encodeFunctionData(
-    functionFragment: "getAdapter",
+    functionFragment: "getActiveCM",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "getAdapter(uint8,uint8,uint256)",
+    values: [
+      PromiseOrValue<BigNumberish>,
+      PromiseOrValue<BigNumberish>,
+      PromiseOrValue<BigNumberish>
+    ]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "getAdapter(address,uint8)",
+    values: [PromiseOrValue<string>, PromiseOrValue<BigNumberish>]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "getAdapter(uint8,uint8)",
     values: [PromiseOrValue<BigNumberish>, PromiseOrValue<BigNumberish>]
   ): string;
   encodeFunctionData(
-    functionFragment: "getAdapters",
+    functionFragment: "getAdapters(uint8,uint256)",
+    values: [PromiseOrValue<BigNumberish>, PromiseOrValue<BigNumberish>]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "getAdapters(uint8)",
     values: [PromiseOrValue<BigNumberish>]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "getAdapters(address)",
+    values: [PromiseOrValue<string>]
   ): string;
   encodeFunctionData(
     functionFragment: "getBalances",
@@ -122,6 +205,14 @@ export interface LiveEnvTestSuiteInterface extends utils.Interface {
   encodeFunctionData(
     functionFragment: "getMockAdapter",
     values: [PromiseOrValue<BigNumberish>, PromiseOrValue<BigNumberish>]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "getSupportedUnderlyings",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "pools",
+    values: [PromiseOrValue<BigNumberish>]
   ): string;
   encodeFunctionData(
     functionFragment: "priceOracle",
@@ -140,9 +231,26 @@ export interface LiveEnvTestSuiteInterface extends utils.Interface {
     functionFragment: "ROOT_ADDRESS",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(
+    functionFragment: "_creditConfigurators",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "_creditFacades",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "_creditManagers",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "acl", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "activeCM", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "addressProvider",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "blacklistHelper",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -150,7 +258,11 @@ export interface LiveEnvTestSuiteInterface extends utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "creditConfigurators",
+    functionFragment: "creditConfigurators(uint8)",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "creditConfigurators(uint8,uint256)",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -158,7 +270,11 @@ export interface LiveEnvTestSuiteInterface extends utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "creditFacades",
+    functionFragment: "creditFacades(uint8,uint256)",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "creditFacades(uint8)",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -166,13 +282,40 @@ export interface LiveEnvTestSuiteInterface extends utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "creditManagers",
+    functionFragment: "creditManagers(uint8,uint256)",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "creditManagers(uint8)",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "degenNFT", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "getAdapter", data: BytesLike): Result;
   decodeFunctionResult(
-    functionFragment: "getAdapters",
+    functionFragment: "getActiveCM",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "getAdapter(uint8,uint8,uint256)",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "getAdapter(address,uint8)",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "getAdapter(uint8,uint8)",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "getAdapters(uint8,uint256)",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "getAdapters(uint8)",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "getAdapters(address)",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -183,6 +326,11 @@ export interface LiveEnvTestSuiteInterface extends utils.Interface {
     functionFragment: "getMockAdapter",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(
+    functionFragment: "getSupportedUnderlyings",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(functionFragment: "pools", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "priceOracle",
     data: BytesLike
@@ -230,17 +378,45 @@ export interface LiveEnvTestSuite extends BaseContract {
   functions: {
     ROOT_ADDRESS(overrides?: CallOverrides): Promise<[string]>;
 
+    _creditConfigurators(
+      arg0: PromiseOrValue<BigNumberish>,
+      arg1: PromiseOrValue<BigNumberish>,
+      overrides?: CallOverrides
+    ): Promise<[string]>;
+
+    _creditFacades(
+      arg0: PromiseOrValue<BigNumberish>,
+      arg1: PromiseOrValue<BigNumberish>,
+      overrides?: CallOverrides
+    ): Promise<[string]>;
+
+    _creditManagers(
+      arg0: PromiseOrValue<BigNumberish>,
+      arg1: PromiseOrValue<BigNumberish>,
+      overrides?: CallOverrides
+    ): Promise<[string]>;
+
     acl(overrides?: CallOverrides): Promise<[string]>;
 
+    activeCM(overrides?: CallOverrides): Promise<[string]>;
+
     addressProvider(overrides?: CallOverrides): Promise<[string]>;
+
+    blacklistHelper(overrides?: CallOverrides): Promise<[string]>;
 
     creditConfiguratorMocks(
       arg0: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
     ): Promise<[string]>;
 
-    creditConfigurators(
-      arg0: PromiseOrValue<BigNumberish>,
+    "creditConfigurators(uint8)"(
+      t: PromiseOrValue<BigNumberish>,
+      overrides?: CallOverrides
+    ): Promise<[string]>;
+
+    "creditConfigurators(uint8,uint256)"(
+      t: PromiseOrValue<BigNumberish>,
+      idx: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
     ): Promise<[string]>;
 
@@ -249,8 +425,14 @@ export interface LiveEnvTestSuite extends BaseContract {
       overrides?: CallOverrides
     ): Promise<[string]>;
 
-    creditFacades(
-      arg0: PromiseOrValue<BigNumberish>,
+    "creditFacades(uint8,uint256)"(
+      t: PromiseOrValue<BigNumberish>,
+      idx: PromiseOrValue<BigNumberish>,
+      overrides?: CallOverrides
+    ): Promise<[string]>;
+
+    "creditFacades(uint8)"(
+      t: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
     ): Promise<[string]>;
 
@@ -259,21 +441,62 @@ export interface LiveEnvTestSuite extends BaseContract {
       overrides?: CallOverrides
     ): Promise<[string]>;
 
-    creditManagers(
-      arg0: PromiseOrValue<BigNumberish>,
+    "creditManagers(uint8,uint256)"(
+      t: PromiseOrValue<BigNumberish>,
+      idx: PromiseOrValue<BigNumberish>,
+      overrides?: CallOverrides
+    ): Promise<[string]>;
+
+    "creditManagers(uint8)"(
+      t: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
     ): Promise<[string]>;
 
     degenNFT(overrides?: CallOverrides): Promise<[string]>;
 
-    getAdapter(
+    getActiveCM(
+      overrides?: CallOverrides
+    ): Promise<
+      [string, string, string, BigNumber] & {
+        cm: string;
+        cf: string;
+        cc: string;
+        accountAmount: BigNumber;
+      }
+    >;
+
+    "getAdapter(uint8,uint8,uint256)"(
+      underlying: PromiseOrValue<BigNumberish>,
+      target: PromiseOrValue<BigNumberish>,
+      cmIdx: PromiseOrValue<BigNumberish>,
+      overrides?: CallOverrides
+    ): Promise<[string]>;
+
+    "getAdapter(address,uint8)"(
+      creditManager: PromiseOrValue<string>,
+      target: PromiseOrValue<BigNumberish>,
+      overrides?: CallOverrides
+    ): Promise<[string]>;
+
+    "getAdapter(uint8,uint8)"(
       underlying: PromiseOrValue<BigNumberish>,
       target: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
     ): Promise<[string]>;
 
-    getAdapters(
+    "getAdapters(uint8,uint256)"(
       underlying: PromiseOrValue<BigNumberish>,
+      cmIdx: PromiseOrValue<BigNumberish>,
+      overrides?: CallOverrides
+    ): Promise<[string[]] & { adapters: string[] }>;
+
+    "getAdapters(uint8)"(
+      underlying: PromiseOrValue<BigNumberish>,
+      overrides?: CallOverrides
+    ): Promise<[string[]] & { adapters: string[] }>;
+
+    "getAdapters(address)"(
+      creditManager: PromiseOrValue<string>,
       overrides?: CallOverrides
     ): Promise<[string[]] & { adapters: string[] }>;
 
@@ -287,6 +510,13 @@ export interface LiveEnvTestSuite extends BaseContract {
       overrides?: CallOverrides
     ): Promise<[string]>;
 
+    getSupportedUnderlyings(overrides?: CallOverrides): Promise<[number[]]>;
+
+    pools(
+      arg0: PromiseOrValue<BigNumberish>,
+      overrides?: CallOverrides
+    ): Promise<[string]>;
+
     priceOracle(overrides?: CallOverrides): Promise<[string]>;
 
     supportedContracts(overrides?: CallOverrides): Promise<[string]>;
@@ -296,17 +526,45 @@ export interface LiveEnvTestSuite extends BaseContract {
 
   ROOT_ADDRESS(overrides?: CallOverrides): Promise<string>;
 
+  _creditConfigurators(
+    arg0: PromiseOrValue<BigNumberish>,
+    arg1: PromiseOrValue<BigNumberish>,
+    overrides?: CallOverrides
+  ): Promise<string>;
+
+  _creditFacades(
+    arg0: PromiseOrValue<BigNumberish>,
+    arg1: PromiseOrValue<BigNumberish>,
+    overrides?: CallOverrides
+  ): Promise<string>;
+
+  _creditManagers(
+    arg0: PromiseOrValue<BigNumberish>,
+    arg1: PromiseOrValue<BigNumberish>,
+    overrides?: CallOverrides
+  ): Promise<string>;
+
   acl(overrides?: CallOverrides): Promise<string>;
 
+  activeCM(overrides?: CallOverrides): Promise<string>;
+
   addressProvider(overrides?: CallOverrides): Promise<string>;
+
+  blacklistHelper(overrides?: CallOverrides): Promise<string>;
 
   creditConfiguratorMocks(
     arg0: PromiseOrValue<BigNumberish>,
     overrides?: CallOverrides
   ): Promise<string>;
 
-  creditConfigurators(
-    arg0: PromiseOrValue<BigNumberish>,
+  "creditConfigurators(uint8)"(
+    t: PromiseOrValue<BigNumberish>,
+    overrides?: CallOverrides
+  ): Promise<string>;
+
+  "creditConfigurators(uint8,uint256)"(
+    t: PromiseOrValue<BigNumberish>,
+    idx: PromiseOrValue<BigNumberish>,
     overrides?: CallOverrides
   ): Promise<string>;
 
@@ -315,8 +573,14 @@ export interface LiveEnvTestSuite extends BaseContract {
     overrides?: CallOverrides
   ): Promise<string>;
 
-  creditFacades(
-    arg0: PromiseOrValue<BigNumberish>,
+  "creditFacades(uint8,uint256)"(
+    t: PromiseOrValue<BigNumberish>,
+    idx: PromiseOrValue<BigNumberish>,
+    overrides?: CallOverrides
+  ): Promise<string>;
+
+  "creditFacades(uint8)"(
+    t: PromiseOrValue<BigNumberish>,
     overrides?: CallOverrides
   ): Promise<string>;
 
@@ -325,21 +589,62 @@ export interface LiveEnvTestSuite extends BaseContract {
     overrides?: CallOverrides
   ): Promise<string>;
 
-  creditManagers(
-    arg0: PromiseOrValue<BigNumberish>,
+  "creditManagers(uint8,uint256)"(
+    t: PromiseOrValue<BigNumberish>,
+    idx: PromiseOrValue<BigNumberish>,
+    overrides?: CallOverrides
+  ): Promise<string>;
+
+  "creditManagers(uint8)"(
+    t: PromiseOrValue<BigNumberish>,
     overrides?: CallOverrides
   ): Promise<string>;
 
   degenNFT(overrides?: CallOverrides): Promise<string>;
 
-  getAdapter(
+  getActiveCM(
+    overrides?: CallOverrides
+  ): Promise<
+    [string, string, string, BigNumber] & {
+      cm: string;
+      cf: string;
+      cc: string;
+      accountAmount: BigNumber;
+    }
+  >;
+
+  "getAdapter(uint8,uint8,uint256)"(
+    underlying: PromiseOrValue<BigNumberish>,
+    target: PromiseOrValue<BigNumberish>,
+    cmIdx: PromiseOrValue<BigNumberish>,
+    overrides?: CallOverrides
+  ): Promise<string>;
+
+  "getAdapter(address,uint8)"(
+    creditManager: PromiseOrValue<string>,
+    target: PromiseOrValue<BigNumberish>,
+    overrides?: CallOverrides
+  ): Promise<string>;
+
+  "getAdapter(uint8,uint8)"(
     underlying: PromiseOrValue<BigNumberish>,
     target: PromiseOrValue<BigNumberish>,
     overrides?: CallOverrides
   ): Promise<string>;
 
-  getAdapters(
+  "getAdapters(uint8,uint256)"(
     underlying: PromiseOrValue<BigNumberish>,
+    cmIdx: PromiseOrValue<BigNumberish>,
+    overrides?: CallOverrides
+  ): Promise<string[]>;
+
+  "getAdapters(uint8)"(
+    underlying: PromiseOrValue<BigNumberish>,
+    overrides?: CallOverrides
+  ): Promise<string[]>;
+
+  "getAdapters(address)"(
+    creditManager: PromiseOrValue<string>,
     overrides?: CallOverrides
   ): Promise<string[]>;
 
@@ -348,6 +653,13 @@ export interface LiveEnvTestSuite extends BaseContract {
   getMockAdapter(
     underlying: PromiseOrValue<BigNumberish>,
     target: PromiseOrValue<BigNumberish>,
+    overrides?: CallOverrides
+  ): Promise<string>;
+
+  getSupportedUnderlyings(overrides?: CallOverrides): Promise<number[]>;
+
+  pools(
+    arg0: PromiseOrValue<BigNumberish>,
     overrides?: CallOverrides
   ): Promise<string>;
 
@@ -360,17 +672,45 @@ export interface LiveEnvTestSuite extends BaseContract {
   callStatic: {
     ROOT_ADDRESS(overrides?: CallOverrides): Promise<string>;
 
+    _creditConfigurators(
+      arg0: PromiseOrValue<BigNumberish>,
+      arg1: PromiseOrValue<BigNumberish>,
+      overrides?: CallOverrides
+    ): Promise<string>;
+
+    _creditFacades(
+      arg0: PromiseOrValue<BigNumberish>,
+      arg1: PromiseOrValue<BigNumberish>,
+      overrides?: CallOverrides
+    ): Promise<string>;
+
+    _creditManagers(
+      arg0: PromiseOrValue<BigNumberish>,
+      arg1: PromiseOrValue<BigNumberish>,
+      overrides?: CallOverrides
+    ): Promise<string>;
+
     acl(overrides?: CallOverrides): Promise<string>;
 
+    activeCM(overrides?: CallOverrides): Promise<string>;
+
     addressProvider(overrides?: CallOverrides): Promise<string>;
+
+    blacklistHelper(overrides?: CallOverrides): Promise<string>;
 
     creditConfiguratorMocks(
       arg0: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
     ): Promise<string>;
 
-    creditConfigurators(
-      arg0: PromiseOrValue<BigNumberish>,
+    "creditConfigurators(uint8)"(
+      t: PromiseOrValue<BigNumberish>,
+      overrides?: CallOverrides
+    ): Promise<string>;
+
+    "creditConfigurators(uint8,uint256)"(
+      t: PromiseOrValue<BigNumberish>,
+      idx: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
     ): Promise<string>;
 
@@ -379,8 +719,14 @@ export interface LiveEnvTestSuite extends BaseContract {
       overrides?: CallOverrides
     ): Promise<string>;
 
-    creditFacades(
-      arg0: PromiseOrValue<BigNumberish>,
+    "creditFacades(uint8,uint256)"(
+      t: PromiseOrValue<BigNumberish>,
+      idx: PromiseOrValue<BigNumberish>,
+      overrides?: CallOverrides
+    ): Promise<string>;
+
+    "creditFacades(uint8)"(
+      t: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
     ): Promise<string>;
 
@@ -389,21 +735,62 @@ export interface LiveEnvTestSuite extends BaseContract {
       overrides?: CallOverrides
     ): Promise<string>;
 
-    creditManagers(
-      arg0: PromiseOrValue<BigNumberish>,
+    "creditManagers(uint8,uint256)"(
+      t: PromiseOrValue<BigNumberish>,
+      idx: PromiseOrValue<BigNumberish>,
+      overrides?: CallOverrides
+    ): Promise<string>;
+
+    "creditManagers(uint8)"(
+      t: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
     ): Promise<string>;
 
     degenNFT(overrides?: CallOverrides): Promise<string>;
 
-    getAdapter(
+    getActiveCM(
+      overrides?: CallOverrides
+    ): Promise<
+      [string, string, string, BigNumber] & {
+        cm: string;
+        cf: string;
+        cc: string;
+        accountAmount: BigNumber;
+      }
+    >;
+
+    "getAdapter(uint8,uint8,uint256)"(
+      underlying: PromiseOrValue<BigNumberish>,
+      target: PromiseOrValue<BigNumberish>,
+      cmIdx: PromiseOrValue<BigNumberish>,
+      overrides?: CallOverrides
+    ): Promise<string>;
+
+    "getAdapter(address,uint8)"(
+      creditManager: PromiseOrValue<string>,
+      target: PromiseOrValue<BigNumberish>,
+      overrides?: CallOverrides
+    ): Promise<string>;
+
+    "getAdapter(uint8,uint8)"(
       underlying: PromiseOrValue<BigNumberish>,
       target: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
     ): Promise<string>;
 
-    getAdapters(
+    "getAdapters(uint8,uint256)"(
       underlying: PromiseOrValue<BigNumberish>,
+      cmIdx: PromiseOrValue<BigNumberish>,
+      overrides?: CallOverrides
+    ): Promise<string[]>;
+
+    "getAdapters(uint8)"(
+      underlying: PromiseOrValue<BigNumberish>,
+      overrides?: CallOverrides
+    ): Promise<string[]>;
+
+    "getAdapters(address)"(
+      creditManager: PromiseOrValue<string>,
       overrides?: CallOverrides
     ): Promise<string[]>;
 
@@ -412,6 +799,13 @@ export interface LiveEnvTestSuite extends BaseContract {
     getMockAdapter(
       underlying: PromiseOrValue<BigNumberish>,
       target: PromiseOrValue<BigNumberish>,
+      overrides?: CallOverrides
+    ): Promise<string>;
+
+    getSupportedUnderlyings(overrides?: CallOverrides): Promise<number[]>;
+
+    pools(
+      arg0: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
     ): Promise<string>;
 
@@ -427,17 +821,45 @@ export interface LiveEnvTestSuite extends BaseContract {
   estimateGas: {
     ROOT_ADDRESS(overrides?: CallOverrides): Promise<BigNumber>;
 
+    _creditConfigurators(
+      arg0: PromiseOrValue<BigNumberish>,
+      arg1: PromiseOrValue<BigNumberish>,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    _creditFacades(
+      arg0: PromiseOrValue<BigNumberish>,
+      arg1: PromiseOrValue<BigNumberish>,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    _creditManagers(
+      arg0: PromiseOrValue<BigNumberish>,
+      arg1: PromiseOrValue<BigNumberish>,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
     acl(overrides?: CallOverrides): Promise<BigNumber>;
 
+    activeCM(overrides?: CallOverrides): Promise<BigNumber>;
+
     addressProvider(overrides?: CallOverrides): Promise<BigNumber>;
+
+    blacklistHelper(overrides?: CallOverrides): Promise<BigNumber>;
 
     creditConfiguratorMocks(
       arg0: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
-    creditConfigurators(
-      arg0: PromiseOrValue<BigNumberish>,
+    "creditConfigurators(uint8)"(
+      t: PromiseOrValue<BigNumberish>,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    "creditConfigurators(uint8,uint256)"(
+      t: PromiseOrValue<BigNumberish>,
+      idx: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
@@ -446,8 +868,14 @@ export interface LiveEnvTestSuite extends BaseContract {
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
-    creditFacades(
-      arg0: PromiseOrValue<BigNumberish>,
+    "creditFacades(uint8,uint256)"(
+      t: PromiseOrValue<BigNumberish>,
+      idx: PromiseOrValue<BigNumberish>,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    "creditFacades(uint8)"(
+      t: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
@@ -456,21 +884,53 @@ export interface LiveEnvTestSuite extends BaseContract {
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
-    creditManagers(
-      arg0: PromiseOrValue<BigNumberish>,
+    "creditManagers(uint8,uint256)"(
+      t: PromiseOrValue<BigNumberish>,
+      idx: PromiseOrValue<BigNumberish>,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    "creditManagers(uint8)"(
+      t: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
     degenNFT(overrides?: CallOverrides): Promise<BigNumber>;
 
-    getAdapter(
+    getActiveCM(overrides?: CallOverrides): Promise<BigNumber>;
+
+    "getAdapter(uint8,uint8,uint256)"(
+      underlying: PromiseOrValue<BigNumberish>,
+      target: PromiseOrValue<BigNumberish>,
+      cmIdx: PromiseOrValue<BigNumberish>,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    "getAdapter(address,uint8)"(
+      creditManager: PromiseOrValue<string>,
+      target: PromiseOrValue<BigNumberish>,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    "getAdapter(uint8,uint8)"(
       underlying: PromiseOrValue<BigNumberish>,
       target: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
-    getAdapters(
+    "getAdapters(uint8,uint256)"(
       underlying: PromiseOrValue<BigNumberish>,
+      cmIdx: PromiseOrValue<BigNumberish>,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    "getAdapters(uint8)"(
+      underlying: PromiseOrValue<BigNumberish>,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    "getAdapters(address)"(
+      creditManager: PromiseOrValue<string>,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
@@ -479,6 +939,13 @@ export interface LiveEnvTestSuite extends BaseContract {
     getMockAdapter(
       underlying: PromiseOrValue<BigNumberish>,
       target: PromiseOrValue<BigNumberish>,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    getSupportedUnderlyings(overrides?: CallOverrides): Promise<BigNumber>;
+
+    pools(
+      arg0: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
@@ -492,17 +959,45 @@ export interface LiveEnvTestSuite extends BaseContract {
   populateTransaction: {
     ROOT_ADDRESS(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
+    _creditConfigurators(
+      arg0: PromiseOrValue<BigNumberish>,
+      arg1: PromiseOrValue<BigNumberish>,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    _creditFacades(
+      arg0: PromiseOrValue<BigNumberish>,
+      arg1: PromiseOrValue<BigNumberish>,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    _creditManagers(
+      arg0: PromiseOrValue<BigNumberish>,
+      arg1: PromiseOrValue<BigNumberish>,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
     acl(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
+    activeCM(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
     addressProvider(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    blacklistHelper(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     creditConfiguratorMocks(
       arg0: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    creditConfigurators(
-      arg0: PromiseOrValue<BigNumberish>,
+    "creditConfigurators(uint8)"(
+      t: PromiseOrValue<BigNumberish>,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    "creditConfigurators(uint8,uint256)"(
+      t: PromiseOrValue<BigNumberish>,
+      idx: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
@@ -511,8 +1006,14 @@ export interface LiveEnvTestSuite extends BaseContract {
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    creditFacades(
-      arg0: PromiseOrValue<BigNumberish>,
+    "creditFacades(uint8,uint256)"(
+      t: PromiseOrValue<BigNumberish>,
+      idx: PromiseOrValue<BigNumberish>,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    "creditFacades(uint8)"(
+      t: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
@@ -521,21 +1022,53 @@ export interface LiveEnvTestSuite extends BaseContract {
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    creditManagers(
-      arg0: PromiseOrValue<BigNumberish>,
+    "creditManagers(uint8,uint256)"(
+      t: PromiseOrValue<BigNumberish>,
+      idx: PromiseOrValue<BigNumberish>,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    "creditManagers(uint8)"(
+      t: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
     degenNFT(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
-    getAdapter(
+    getActiveCM(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    "getAdapter(uint8,uint8,uint256)"(
+      underlying: PromiseOrValue<BigNumberish>,
+      target: PromiseOrValue<BigNumberish>,
+      cmIdx: PromiseOrValue<BigNumberish>,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    "getAdapter(address,uint8)"(
+      creditManager: PromiseOrValue<string>,
+      target: PromiseOrValue<BigNumberish>,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    "getAdapter(uint8,uint8)"(
       underlying: PromiseOrValue<BigNumberish>,
       target: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    getAdapters(
+    "getAdapters(uint8,uint256)"(
       underlying: PromiseOrValue<BigNumberish>,
+      cmIdx: PromiseOrValue<BigNumberish>,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    "getAdapters(uint8)"(
+      underlying: PromiseOrValue<BigNumberish>,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    "getAdapters(address)"(
+      creditManager: PromiseOrValue<string>,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
@@ -544,6 +1077,15 @@ export interface LiveEnvTestSuite extends BaseContract {
     getMockAdapter(
       underlying: PromiseOrValue<BigNumberish>,
       target: PromiseOrValue<BigNumberish>,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    getSupportedUnderlyings(
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    pools(
+      arg0: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 

@@ -23,26 +23,27 @@ import type {
   PromiseOrValue,
 } from "../common";
 
+export type UniswapPairStatusStruct = {
+  token0: PromiseOrValue<string>;
+  token1: PromiseOrValue<string>;
+  allowed: PromiseOrValue<boolean>;
+};
+
+export type UniswapPairStatusStructOutput = [string, string, boolean] & {
+  token0: string;
+  token1: string;
+  allowed: boolean;
+};
+
 export interface UniswapV2AdapterInterface extends utils.Interface {
   functions: {
     "_acl()": FunctionFragment;
     "_gearboxAdapterType()": FunctionFragment;
     "_gearboxAdapterVersion()": FunctionFragment;
     "addressProvider()": FunctionFragment;
-    "connectorToken0()": FunctionFragment;
-    "connectorToken1()": FunctionFragment;
-    "connectorToken2()": FunctionFragment;
-    "connectorToken3()": FunctionFragment;
-    "connectorToken4()": FunctionFragment;
-    "connectorToken5()": FunctionFragment;
-    "connectorToken6()": FunctionFragment;
-    "connectorToken7()": FunctionFragment;
-    "connectorToken8()": FunctionFragment;
-    "connectorToken9()": FunctionFragment;
     "creditManager()": FunctionFragment;
-    "getConnectors()": FunctionFragment;
-    "isConnector(address)": FunctionFragment;
-    "numConnectors()": FunctionFragment;
+    "isPairAllowed(address,address)": FunctionFragment;
+    "setPairBatchAllowanceStatus((address,address,bool)[])": FunctionFragment;
     "swapAllTokensForTokens(uint256,address[],uint256)": FunctionFragment;
     "swapExactTokensForTokens(uint256,uint256,address[],address,uint256)": FunctionFragment;
     "swapTokensForExactTokens(uint256,uint256,address[],address,uint256)": FunctionFragment;
@@ -55,20 +56,9 @@ export interface UniswapV2AdapterInterface extends utils.Interface {
       | "_gearboxAdapterType"
       | "_gearboxAdapterVersion"
       | "addressProvider"
-      | "connectorToken0"
-      | "connectorToken1"
-      | "connectorToken2"
-      | "connectorToken3"
-      | "connectorToken4"
-      | "connectorToken5"
-      | "connectorToken6"
-      | "connectorToken7"
-      | "connectorToken8"
-      | "connectorToken9"
       | "creditManager"
-      | "getConnectors"
-      | "isConnector"
-      | "numConnectors"
+      | "isPairAllowed"
+      | "setPairBatchAllowanceStatus"
       | "swapAllTokensForTokens"
       | "swapExactTokensForTokens"
       | "swapTokensForExactTokens"
@@ -89,60 +79,16 @@ export interface UniswapV2AdapterInterface extends utils.Interface {
     values?: undefined
   ): string;
   encodeFunctionData(
-    functionFragment: "connectorToken0",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "connectorToken1",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "connectorToken2",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "connectorToken3",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "connectorToken4",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "connectorToken5",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "connectorToken6",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "connectorToken7",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "connectorToken8",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "connectorToken9",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
     functionFragment: "creditManager",
     values?: undefined
   ): string;
   encodeFunctionData(
-    functionFragment: "getConnectors",
-    values?: undefined
+    functionFragment: "isPairAllowed",
+    values: [PromiseOrValue<string>, PromiseOrValue<string>]
   ): string;
   encodeFunctionData(
-    functionFragment: "isConnector",
-    values: [PromiseOrValue<string>]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "numConnectors",
-    values?: undefined
+    functionFragment: "setPairBatchAllowanceStatus",
+    values: [UniswapPairStatusStruct[]]
   ): string;
   encodeFunctionData(
     functionFragment: "swapAllTokensForTokens",
@@ -191,59 +137,15 @@ export interface UniswapV2AdapterInterface extends utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "connectorToken0",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "connectorToken1",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "connectorToken2",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "connectorToken3",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "connectorToken4",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "connectorToken5",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "connectorToken6",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "connectorToken7",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "connectorToken8",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "connectorToken9",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
     functionFragment: "creditManager",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "getConnectors",
+    functionFragment: "isPairAllowed",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "isConnector",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "numConnectors",
+    functionFragment: "setPairBatchAllowanceStatus",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -303,38 +205,18 @@ export interface UniswapV2Adapter extends BaseContract {
 
     addressProvider(overrides?: CallOverrides): Promise<[string]>;
 
-    connectorToken0(overrides?: CallOverrides): Promise<[string]>;
-
-    connectorToken1(overrides?: CallOverrides): Promise<[string]>;
-
-    connectorToken2(overrides?: CallOverrides): Promise<[string]>;
-
-    connectorToken3(overrides?: CallOverrides): Promise<[string]>;
-
-    connectorToken4(overrides?: CallOverrides): Promise<[string]>;
-
-    connectorToken5(overrides?: CallOverrides): Promise<[string]>;
-
-    connectorToken6(overrides?: CallOverrides): Promise<[string]>;
-
-    connectorToken7(overrides?: CallOverrides): Promise<[string]>;
-
-    connectorToken8(overrides?: CallOverrides): Promise<[string]>;
-
-    connectorToken9(overrides?: CallOverrides): Promise<[string]>;
-
     creditManager(overrides?: CallOverrides): Promise<[string]>;
 
-    getConnectors(
-      overrides?: CallOverrides
-    ): Promise<[string[]] & { connectors: string[] }>;
-
-    isConnector(
-      token: PromiseOrValue<string>,
+    isPairAllowed(
+      token0: PromiseOrValue<string>,
+      token1: PromiseOrValue<string>,
       overrides?: CallOverrides
     ): Promise<[boolean]>;
 
-    numConnectors(overrides?: CallOverrides): Promise<[BigNumber]>;
+    setPairBatchAllowanceStatus(
+      pairs: UniswapPairStatusStruct[],
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<ContractTransaction>;
 
     swapAllTokensForTokens(
       rateMinRAY: PromiseOrValue<BigNumberish>,
@@ -372,36 +254,18 @@ export interface UniswapV2Adapter extends BaseContract {
 
   addressProvider(overrides?: CallOverrides): Promise<string>;
 
-  connectorToken0(overrides?: CallOverrides): Promise<string>;
-
-  connectorToken1(overrides?: CallOverrides): Promise<string>;
-
-  connectorToken2(overrides?: CallOverrides): Promise<string>;
-
-  connectorToken3(overrides?: CallOverrides): Promise<string>;
-
-  connectorToken4(overrides?: CallOverrides): Promise<string>;
-
-  connectorToken5(overrides?: CallOverrides): Promise<string>;
-
-  connectorToken6(overrides?: CallOverrides): Promise<string>;
-
-  connectorToken7(overrides?: CallOverrides): Promise<string>;
-
-  connectorToken8(overrides?: CallOverrides): Promise<string>;
-
-  connectorToken9(overrides?: CallOverrides): Promise<string>;
-
   creditManager(overrides?: CallOverrides): Promise<string>;
 
-  getConnectors(overrides?: CallOverrides): Promise<string[]>;
-
-  isConnector(
-    token: PromiseOrValue<string>,
+  isPairAllowed(
+    token0: PromiseOrValue<string>,
+    token1: PromiseOrValue<string>,
     overrides?: CallOverrides
   ): Promise<boolean>;
 
-  numConnectors(overrides?: CallOverrides): Promise<BigNumber>;
+  setPairBatchAllowanceStatus(
+    pairs: UniswapPairStatusStruct[],
+    overrides?: Overrides & { from?: PromiseOrValue<string> }
+  ): Promise<ContractTransaction>;
 
   swapAllTokensForTokens(
     rateMinRAY: PromiseOrValue<BigNumberish>,
@@ -439,36 +303,18 @@ export interface UniswapV2Adapter extends BaseContract {
 
     addressProvider(overrides?: CallOverrides): Promise<string>;
 
-    connectorToken0(overrides?: CallOverrides): Promise<string>;
-
-    connectorToken1(overrides?: CallOverrides): Promise<string>;
-
-    connectorToken2(overrides?: CallOverrides): Promise<string>;
-
-    connectorToken3(overrides?: CallOverrides): Promise<string>;
-
-    connectorToken4(overrides?: CallOverrides): Promise<string>;
-
-    connectorToken5(overrides?: CallOverrides): Promise<string>;
-
-    connectorToken6(overrides?: CallOverrides): Promise<string>;
-
-    connectorToken7(overrides?: CallOverrides): Promise<string>;
-
-    connectorToken8(overrides?: CallOverrides): Promise<string>;
-
-    connectorToken9(overrides?: CallOverrides): Promise<string>;
-
     creditManager(overrides?: CallOverrides): Promise<string>;
 
-    getConnectors(overrides?: CallOverrides): Promise<string[]>;
-
-    isConnector(
-      token: PromiseOrValue<string>,
+    isPairAllowed(
+      token0: PromiseOrValue<string>,
+      token1: PromiseOrValue<string>,
       overrides?: CallOverrides
     ): Promise<boolean>;
 
-    numConnectors(overrides?: CallOverrides): Promise<BigNumber>;
+    setPairBatchAllowanceStatus(
+      pairs: UniswapPairStatusStruct[],
+      overrides?: CallOverrides
+    ): Promise<void>;
 
     swapAllTokensForTokens(
       rateMinRAY: PromiseOrValue<BigNumberish>,
@@ -509,36 +355,18 @@ export interface UniswapV2Adapter extends BaseContract {
 
     addressProvider(overrides?: CallOverrides): Promise<BigNumber>;
 
-    connectorToken0(overrides?: CallOverrides): Promise<BigNumber>;
-
-    connectorToken1(overrides?: CallOverrides): Promise<BigNumber>;
-
-    connectorToken2(overrides?: CallOverrides): Promise<BigNumber>;
-
-    connectorToken3(overrides?: CallOverrides): Promise<BigNumber>;
-
-    connectorToken4(overrides?: CallOverrides): Promise<BigNumber>;
-
-    connectorToken5(overrides?: CallOverrides): Promise<BigNumber>;
-
-    connectorToken6(overrides?: CallOverrides): Promise<BigNumber>;
-
-    connectorToken7(overrides?: CallOverrides): Promise<BigNumber>;
-
-    connectorToken8(overrides?: CallOverrides): Promise<BigNumber>;
-
-    connectorToken9(overrides?: CallOverrides): Promise<BigNumber>;
-
     creditManager(overrides?: CallOverrides): Promise<BigNumber>;
 
-    getConnectors(overrides?: CallOverrides): Promise<BigNumber>;
-
-    isConnector(
-      token: PromiseOrValue<string>,
+    isPairAllowed(
+      token0: PromiseOrValue<string>,
+      token1: PromiseOrValue<string>,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
-    numConnectors(overrides?: CallOverrides): Promise<BigNumber>;
+    setPairBatchAllowanceStatus(
+      pairs: UniswapPairStatusStruct[],
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<BigNumber>;
 
     swapAllTokensForTokens(
       rateMinRAY: PromiseOrValue<BigNumberish>,
@@ -581,36 +409,18 @@ export interface UniswapV2Adapter extends BaseContract {
 
     addressProvider(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
-    connectorToken0(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    connectorToken1(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    connectorToken2(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    connectorToken3(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    connectorToken4(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    connectorToken5(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    connectorToken6(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    connectorToken7(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    connectorToken8(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    connectorToken9(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
     creditManager(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
-    getConnectors(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    isConnector(
-      token: PromiseOrValue<string>,
+    isPairAllowed(
+      token0: PromiseOrValue<string>,
+      token1: PromiseOrValue<string>,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    numConnectors(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+    setPairBatchAllowanceStatus(
+      pairs: UniswapPairStatusStruct[],
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<PopulatedTransaction>;
 
     swapAllTokensForTokens(
       rateMinRAY: PromiseOrValue<BigNumberish>,

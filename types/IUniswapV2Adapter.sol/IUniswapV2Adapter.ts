@@ -30,8 +30,7 @@ export interface IUniswapV2AdapterInterface extends utils.Interface {
     "_gearboxAdapterVersion()": FunctionFragment;
     "addressProvider()": FunctionFragment;
     "creditManager()": FunctionFragment;
-    "getConnectors()": FunctionFragment;
-    "isConnector(address)": FunctionFragment;
+    "isPairAllowed(address,address)": FunctionFragment;
     "swapAllTokensForTokens(uint256,address[],uint256)": FunctionFragment;
     "swapExactTokensForTokens(uint256,uint256,address[],address,uint256)": FunctionFragment;
     "swapTokensForExactTokens(uint256,uint256,address[],address,uint256)": FunctionFragment;
@@ -45,8 +44,7 @@ export interface IUniswapV2AdapterInterface extends utils.Interface {
       | "_gearboxAdapterVersion"
       | "addressProvider"
       | "creditManager"
-      | "getConnectors"
-      | "isConnector"
+      | "isPairAllowed"
       | "swapAllTokensForTokens"
       | "swapExactTokensForTokens"
       | "swapTokensForExactTokens"
@@ -71,12 +69,8 @@ export interface IUniswapV2AdapterInterface extends utils.Interface {
     values?: undefined
   ): string;
   encodeFunctionData(
-    functionFragment: "getConnectors",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "isConnector",
-    values: [PromiseOrValue<string>]
+    functionFragment: "isPairAllowed",
+    values: [PromiseOrValue<string>, PromiseOrValue<string>]
   ): string;
   encodeFunctionData(
     functionFragment: "swapAllTokensForTokens",
@@ -129,11 +123,7 @@ export interface IUniswapV2AdapterInterface extends utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "getConnectors",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "isConnector",
+    functionFragment: "isPairAllowed",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -195,12 +185,9 @@ export interface IUniswapV2Adapter extends BaseContract {
 
     creditManager(overrides?: CallOverrides): Promise<[string]>;
 
-    getConnectors(
-      overrides?: CallOverrides
-    ): Promise<[string[]] & { connectors: string[] }>;
-
-    isConnector(
-      token: PromiseOrValue<string>,
+    isPairAllowed(
+      token0: PromiseOrValue<string>,
+      token1: PromiseOrValue<string>,
       overrides?: CallOverrides
     ): Promise<[boolean]>;
 
@@ -242,10 +229,9 @@ export interface IUniswapV2Adapter extends BaseContract {
 
   creditManager(overrides?: CallOverrides): Promise<string>;
 
-  getConnectors(overrides?: CallOverrides): Promise<string[]>;
-
-  isConnector(
-    token: PromiseOrValue<string>,
+  isPairAllowed(
+    token0: PromiseOrValue<string>,
+    token1: PromiseOrValue<string>,
     overrides?: CallOverrides
   ): Promise<boolean>;
 
@@ -287,10 +273,9 @@ export interface IUniswapV2Adapter extends BaseContract {
 
     creditManager(overrides?: CallOverrides): Promise<string>;
 
-    getConnectors(overrides?: CallOverrides): Promise<string[]>;
-
-    isConnector(
-      token: PromiseOrValue<string>,
+    isPairAllowed(
+      token0: PromiseOrValue<string>,
+      token1: PromiseOrValue<string>,
       overrides?: CallOverrides
     ): Promise<boolean>;
 
@@ -335,10 +320,9 @@ export interface IUniswapV2Adapter extends BaseContract {
 
     creditManager(overrides?: CallOverrides): Promise<BigNumber>;
 
-    getConnectors(overrides?: CallOverrides): Promise<BigNumber>;
-
-    isConnector(
-      token: PromiseOrValue<string>,
+    isPairAllowed(
+      token0: PromiseOrValue<string>,
+      token1: PromiseOrValue<string>,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
@@ -385,10 +369,9 @@ export interface IUniswapV2Adapter extends BaseContract {
 
     creditManager(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
-    getConnectors(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    isConnector(
-      token: PromiseOrValue<string>,
+    isPairAllowed(
+      token0: PromiseOrValue<string>,
+      token1: PromiseOrValue<string>,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
