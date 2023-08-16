@@ -2,6 +2,7 @@ import { PoolV3CoreConfigurator } from "@gearbox-protocol/sdk-gov/lib/state/pool
 import { PoolV3DeployConfig } from "@gearbox-protocol/sdk-gov/lib/state/poolV3DeployConfig";
 
 const POOL_DECIMALS = BigInt(1e6);
+const POOL_DIVIDER = BigInt(1);
 
 export const config: PoolV3DeployConfig = {
   id: "mainnet-usdc-mt-v3",
@@ -26,63 +27,63 @@ export const config: PoolV3DeployConfig = {
       minRate: 0,
       maxRate: 3000,
       quotaIncreaseFee: 0,
-      limit: BigInt(1e6) * POOL_DECIMALS, 
+      limit: BigInt(1e6) * POOL_DECIMALS / POOL_DIVIDER, 
     }, 
     UNI: {
       minRate: 0,
       maxRate: 3000,
       quotaIncreaseFee: 0,
-      limit: BigInt(1e6) * POOL_DECIMALS, 
+      limit: BigInt(1e6) * POOL_DECIMALS / POOL_DIVIDER, 
     }, 
     LINK: {
       minRate: 0,
       maxRate: 3000,
       quotaIncreaseFee: 0,
-      limit: BigInt(1e6) * POOL_DECIMALS, 
+      limit: BigInt(1e6) * POOL_DECIMALS / POOL_DIVIDER, 
     },
     LDO: {
       minRate: 0,
       maxRate: 3000,
       quotaIncreaseFee: 0,
-      limit: BigInt(5e5) * POOL_DECIMALS, 
+      limit: BigInt(5e5) * POOL_DECIMALS / POOL_DIVIDER, 
     },
     RPL: {
       minRate: 0,
       maxRate: 3000,
       quotaIncreaseFee: 0,
-      limit: BigInt(3e5) * POOL_DECIMALS, 
+      limit: BigInt(3e5) * POOL_DECIMALS / POOL_DIVIDER, 
     },
     CRV: {
       minRate: 0,
       maxRate: 3000,
       quotaIncreaseFee: 0,
-      limit: BigInt(25e4) * POOL_DECIMALS, 
+      limit: BigInt(25e4) * POOL_DECIMALS / POOL_DIVIDER, 
     },
     APE: {
       minRate: 0,
       maxRate: 3000,
       quotaIncreaseFee: 0,
-      limit: BigInt(3e5) * POOL_DECIMALS, 
+      limit: BigInt(3e5) * POOL_DECIMALS / POOL_DIVIDER, 
     },
     CVX: {
       minRate: 10,
       maxRate: 3000,
       quotaIncreaseFee: 0,
-      limit: BigInt(3e5) * POOL_DECIMALS,
+      limit: BigInt(3e5) * POOL_DECIMALS / POOL_DIVIDER,
     },
     FXS: {
       minRate: 0,
       maxRate: 3000,
       quotaIncreaseFee: 0,
-      limit: BigInt(3e5) * POOL_DECIMALS,
+      limit: BigInt(3e5) * POOL_DECIMALS / POOL_DIVIDER,
     },
   },
   creditManagers: [
     {
       degenNft: false,
       expirationDate: undefined,
-      minDebt: BigInt(1e4) * POOL_DECIMALS,
-      maxDebt: BigInt(1e6) * POOL_DECIMALS,
+      minDebt: BigInt(1e4) * POOL_DECIMALS / POOL_DIVIDER,
+      maxDebt: BigInt(1e6) * POOL_DECIMALS / POOL_DIVIDER,
       poolLimit: BigInt(0),
       collateralTokens: [
         {
