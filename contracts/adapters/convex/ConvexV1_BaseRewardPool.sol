@@ -39,11 +39,11 @@ contract ConvexV1BaseRewardPoolAdapter is AbstractAdapter, IConvexV1BaseRewardPo
     uint256 public immutable override rewardTokensMask;
 
     /// @notice Constructor
-    /// @param _creditManager Credit manager address
+    /// @param _CreditManagerV3 Credit manager address
     /// @param _baseRewardPool BaseRewardPool address
     /// @param _stakedPhantomToken Reward pool stake token address
-    constructor(address _creditManager, address _baseRewardPool, address _stakedPhantomToken)
-        AbstractAdapter(_creditManager, _baseRewardPool)
+    constructor(address _CreditManagerV3, address _baseRewardPool, address _stakedPhantomToken)
+        AbstractAdapter(_CreditManagerV3, _baseRewardPool)
     {
         stakingToken = address(IBaseRewardPool(_baseRewardPool).stakingToken()); // F: [ACVX1_P-1]
         stakingTokenMask = _getMaskOrRevert(stakingToken); // F: [ACVX1_P-1, ACVX1_P-2]

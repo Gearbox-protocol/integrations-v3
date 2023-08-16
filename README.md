@@ -72,7 +72,7 @@ Functions in adapters implement necessary logic to route a call to the counterpa
 
 ### Factories
 
-Contains `CreditManagerFactory.sol`, which is an extension of `CreditManagerFactoryBase.sol` (from `core-v2`) with some additional adapter-specific configuration.
+Contains `CreditManagerV3Factory.sol`, which is an extension of `CreditManagerV3FactoryBase.sol` (from `core-v2`) with some additional adapter-specific configuration.
 
 ### Integrations
 
@@ -103,13 +103,13 @@ Contains a price feed for Yearn vault shares. For more information on price feed
 Source contracts and their respective interfaces can be imported from an npm package `@gearbox-protocol/integrations-v2`, e.g.:
 
 ```=solidity
-import {ICreditFacade, MultiCall} from '@gearbox-protocol/core-v2/contracts/interfaces/ICreditFacade.sol';
+import {ICreditFacadeV3, MultiCall} from '@gearbox-protocol/core-v2/contracts/interfaces/ICreditFacadeV3.sol';
 import {YearnV2_Multicaller, YearnV2_Calls} from '@gearbox-protocol/integrations-v2/multicall/yearn/YearnV2_Calls.sol';
 
 contract MyContract {
   using YearnV2_Calls for YearnV2_Multicaller;
 
-  ICreditFacade creditFacade;
+  ICreditFacadeV3 creditFacade;
 
   function withdraw(address vaultAdapter) {
      MultiCall[] memory calls = new MultiCall[](1);
@@ -160,7 +160,6 @@ other software installed on your equipment. You are also solely responsible for 
 and backup of your data, and THE PROVIDER will not be liable for any damages you may suffer in connection with using,
 modifying, or distributing this software product.
 
-
 ### Important information for contributors
-As a contributor to the Gearbox Protocol GitHub repository, your pull requests indicate acceptance of our Gearbox Contribution Agreement. This agreement outlines that you assign the Intellectual Property Rights of your contributions to the Gearbox Foundation. This helps safeguard the Gearbox protocol and ensure the accumulation of its intellectual property. Contributions become part of the repository and may be used for various purposes, including commercial. As recognition for your expertise and work, you receive the opportunity to participate in the protocol's development and the potential to see your work integrated within it. The full Gearbox Contribution Agreement is accessible within the [repository](/ContributionAgreement) for comprehensive understanding. [Let's innovate together!]
 
+As a contributor to the Gearbox Protocol GitHub repository, your pull requests indicate acceptance of our Gearbox Contribution Agreement. This agreement outlines that you assign the Intellectual Property Rights of your contributions to the Gearbox Foundation. This helps safeguard the Gearbox protocol and ensure the accumulation of its intellectual property. Contributions become part of the repository and may be used for various purposes, including commercial. As recognition for your expertise and work, you receive the opportunity to participate in the protocol's development and the potential to see your work integrated within it. The full Gearbox Contribution Agreement is accessible within the [repository](/ContributionAgreement) for comprehensive understanding. [Let's innovate together!]

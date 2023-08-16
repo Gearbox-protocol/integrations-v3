@@ -33,9 +33,9 @@ contract AaveV2_WrappedATokenAdapter is AbstractAdapter, IAaveV2_WrappedATokenAd
     uint16 public constant override _gearboxAdapterVersion = 1;
 
     /// @notice Constructor
-    /// @param _creditManager Credit manager address
+    /// @param _CreditManagerV3 Credit manager address
     /// @param _waToken Wrapped aToken address
-    constructor(address _creditManager, address _waToken) AbstractAdapter(_creditManager, _waToken) {
+    constructor(address _CreditManagerV3, address _waToken) AbstractAdapter(_CreditManagerV3, _waToken) {
         waTokenMask = _getMaskOrRevert(targetContract); // F: [AAV2W-1, AAV2W-2]
 
         aToken = address(IWrappedAToken(targetContract).aToken()); // F: [AAV2W-2]

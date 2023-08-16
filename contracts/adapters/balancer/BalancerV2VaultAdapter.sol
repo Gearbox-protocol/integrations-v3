@@ -34,9 +34,9 @@ contract BalancerV2VaultAdapter is AbstractAdapter, IBalancerV2VaultAdapter {
     mapping(bytes32 => PoolStatus) public poolIdStatus;
 
     /// @notice Constructor
-    /// @param _creditManager Credit manager address
+    /// @param _CreditManagerV3 Credit manager address
     /// @param _vault Balancer vault address
-    constructor(address _creditManager, address _vault) AbstractAdapter(_creditManager, _vault) {}
+    constructor(address _CreditManagerV3, address _vault) AbstractAdapter(_CreditManagerV3, _vault) {}
 
     /// ----- ///
     /// SWAPS ///

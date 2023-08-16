@@ -17,7 +17,7 @@ import {AdapterType} from "../../interfaces/IAdapter.sol";
 
 import {IstETH} from "../../integrations/lido/IstETH.sol";
 import {ILidoV1Adapter} from "../../interfaces/lido/ILidoV1Adapter.sol";
-import {LidoV1Gateway} from "./LidoV1_WETHGateway.sol";
+import {LidoV1Gateway} from "../../gateways/lido/LidoV1_WETHGateway.sol";
 
 uint256 constant LIDO_STETH_LIMIT = 20000 ether;
 
@@ -46,9 +46,9 @@ contract LidoV1Adapter is AbstractAdapter, ILidoV1Adapter {
     uint16 public constant override _gearboxAdapterVersion = 2;
 
     /// @notice Constructor
-    /// @param _creditManager Credit manager address
+    /// @param _CreditManagerV3 Credit manager address
     /// @param _lidoGateway Lido gateway address
-    constructor(address _creditManager, address _lidoGateway) AbstractAdapter(_creditManager, _lidoGateway) {
+    constructor(address _CreditManagerV3, address _lidoGateway) AbstractAdapter(_CreditManagerV3, _lidoGateway) {
         stETH = address(LidoV1Gateway(payable(_lidoGateway)).stETH()); // F: [LDOV1-1]
         stETHTokenMask = _getMaskOrRevert(stETH); // F: [LDOV1-1]
 

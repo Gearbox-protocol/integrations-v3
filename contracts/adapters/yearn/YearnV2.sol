@@ -27,9 +27,9 @@ contract YearnV2Adapter is AbstractAdapter, IYearnV2Adapter {
     uint16 public constant override _gearboxAdapterVersion = 3;
 
     /// @notice Constructor
-    /// @param _creditManager Credit manager address
+    /// @param _CreditManagerV3 Credit manager address
     /// @param _vault Yearn vault address
-    constructor(address _creditManager, address _vault) AbstractAdapter(_creditManager, _vault) {
+    constructor(address _CreditManagerV3, address _vault) AbstractAdapter(_CreditManagerV3, _vault) {
         token = IYVault(targetContract).token(); // F: [AYV2-1]
         tokenMask = _getMaskOrRevert(token); // F: [AYV2-1, AYV2-2]
         yTokenMask = _getMaskOrRevert(_vault); // F: [AYV2-1, AYV2-2]

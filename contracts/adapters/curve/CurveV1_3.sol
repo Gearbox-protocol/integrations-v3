@@ -16,12 +16,12 @@ contract CurveV1Adapter3Assets is CurveV1AdapterBase, ICurveV1_3AssetsAdapter {
         AdapterType.CURVE_V1_3ASSETS;
 
     /// @notice Constructor
-    /// @param _creditManager Credit manager address
+    /// @param _CreditManagerV3 Credit manager address
     /// @param _curvePool Target Curve pool address
     /// @param _lp_token Pool LP token address
     /// @param _metapoolBase Base pool address (for metapools only) or zero address
-    constructor(address _creditManager, address _curvePool, address _lp_token, address _metapoolBase)
-        CurveV1AdapterBase(_creditManager, _curvePool, _lp_token, _metapoolBase, N_COINS)
+    constructor(address _CreditManagerV3, address _curvePool, address _lp_token, address _metapoolBase)
+        CurveV1AdapterBase(_CreditManagerV3, _curvePool, _lp_token, _metapoolBase, N_COINS)
     {}
 
     /// @inheritdoc ICurveV1_3AssetsAdapter

@@ -24,12 +24,12 @@ contract CurveV1AdapterDeposit is CurveV1AdapterBase {
     }
 
     /// @notice Constructor
-    /// @param _creditManager Credit manager address
+    /// @param _CreditManagerV3 Credit manager address
     /// @param _curveDeposit Target Curve DepositZap contract address
     /// @param _lp_token Pool LP token address
     /// @param _nCoins Number of coins in the pool
-    constructor(address _creditManager, address _curveDeposit, address _lp_token, uint256 _nCoins)
-        CurveV1AdapterBase(_creditManager, _curveDeposit, _lp_token, address(0), _nCoins)
+    constructor(address _CreditManagerV3, address _curveDeposit, address _lp_token, uint256 _nCoins)
+        CurveV1AdapterBase(_CreditManagerV3, _curveDeposit, _lp_token, address(0), _nCoins)
     {}
 
     /// @inheritdoc CurveV1AdapterBase
