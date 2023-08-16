@@ -32,11 +32,6 @@ const _abi = [
   },
   {
     inputs: [],
-    name: "TooManyConnectorsException",
-    type: "error",
-  },
-  {
-    inputs: [],
     name: "_acl",
     outputs: [
       {
@@ -101,27 +96,19 @@ const _abi = [
     type: "function",
   },
   {
-    inputs: [],
-    name: "getConnectors",
-    outputs: [
-      {
-        internalType: "address[]",
-        name: "connectors",
-        type: "address[]",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
     inputs: [
       {
         internalType: "address",
-        name: "token",
+        name: "token0",
+        type: "address",
+      },
+      {
+        internalType: "address",
+        name: "token1",
         type: "address",
       },
     ],
-    name: "isConnector",
+    name: "isPairAllowed",
     outputs: [
       {
         internalType: "bool",

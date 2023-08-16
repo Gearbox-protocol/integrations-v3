@@ -32,6 +32,7 @@ export interface TokensTestSuiteInterface extends utils.Interface {
   functions: {
     "IS_TEST()": FunctionFragment;
     "addressOf(uint8)": FunctionFragment;
+    "alignBalances(uint8[],address,address)": FunctionFragment;
     "allowance(uint8,address,address)": FunctionFragment;
     "approve(address,address,address,uint256)": FunctionFragment;
     "approve(uint8,address,address,uint256)": FunctionFragment;
@@ -49,12 +50,14 @@ export interface TokensTestSuiteInterface extends utils.Interface {
     "mintWithTotalSupply(uint8,address,uint256)": FunctionFragment;
     "mockTokens()": FunctionFragment;
     "prices(uint8)": FunctionFragment;
+    "symbolToAsset(string)": FunctionFragment;
     "symbols(uint8)": FunctionFragment;
     "tokenCount()": FunctionFragment;
     "tokenIndexes(address)": FunctionFragment;
     "tokenTypes(uint8)": FunctionFragment;
     "topUpWETH()": FunctionFragment;
     "topUpWETH(address,uint256)": FunctionFragment;
+    "transferFrom(uint8,address,address,uint256)": FunctionFragment;
     "wethToken()": FunctionFragment;
   };
 
@@ -62,6 +65,7 @@ export interface TokensTestSuiteInterface extends utils.Interface {
     nameOrSignatureOrTopic:
       | "IS_TEST"
       | "addressOf"
+      | "alignBalances"
       | "allowance"
       | "approve(address,address,address,uint256)"
       | "approve(uint8,address,address,uint256)"
@@ -79,12 +83,14 @@ export interface TokensTestSuiteInterface extends utils.Interface {
       | "mintWithTotalSupply(uint8,address,uint256)"
       | "mockTokens"
       | "prices"
+      | "symbolToAsset"
       | "symbols"
       | "tokenCount"
       | "tokenIndexes"
       | "tokenTypes"
       | "topUpWETH()"
       | "topUpWETH(address,uint256)"
+      | "transferFrom"
       | "wethToken"
   ): FunctionFragment;
 
@@ -92,6 +98,14 @@ export interface TokensTestSuiteInterface extends utils.Interface {
   encodeFunctionData(
     functionFragment: "addressOf",
     values: [PromiseOrValue<BigNumberish>]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "alignBalances",
+    values: [
+      PromiseOrValue<BigNumberish>[],
+      PromiseOrValue<string>,
+      PromiseOrValue<string>
+    ]
   ): string;
   encodeFunctionData(
     functionFragment: "allowance",
@@ -209,6 +223,10 @@ export interface TokensTestSuiteInterface extends utils.Interface {
     values: [PromiseOrValue<BigNumberish>]
   ): string;
   encodeFunctionData(
+    functionFragment: "symbolToAsset",
+    values: [PromiseOrValue<string>]
+  ): string;
+  encodeFunctionData(
     functionFragment: "symbols",
     values: [PromiseOrValue<BigNumberish>]
   ): string;
@@ -232,10 +250,23 @@ export interface TokensTestSuiteInterface extends utils.Interface {
     functionFragment: "topUpWETH(address,uint256)",
     values: [PromiseOrValue<string>, PromiseOrValue<BigNumberish>]
   ): string;
+  encodeFunctionData(
+    functionFragment: "transferFrom",
+    values: [
+      PromiseOrValue<BigNumberish>,
+      PromiseOrValue<string>,
+      PromiseOrValue<string>,
+      PromiseOrValue<BigNumberish>
+    ]
+  ): string;
   encodeFunctionData(functionFragment: "wethToken", values?: undefined): string;
 
   decodeFunctionResult(functionFragment: "IS_TEST", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "addressOf", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "alignBalances",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "allowance", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "approve(address,address,address,uint256)",
@@ -292,6 +323,10 @@ export interface TokensTestSuiteInterface extends utils.Interface {
   ): Result;
   decodeFunctionResult(functionFragment: "mockTokens", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "prices", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "symbolToAsset",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "symbols", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "tokenCount", data: BytesLike): Result;
   decodeFunctionResult(
@@ -305,6 +340,10 @@ export interface TokensTestSuiteInterface extends utils.Interface {
   ): Result;
   decodeFunctionResult(
     functionFragment: "topUpWETH(address,uint256)",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "transferFrom",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "wethToken", data: BytesLike): Result;
@@ -533,6 +572,13 @@ export interface TokensTestSuite extends BaseContract {
       overrides?: CallOverrides
     ): Promise<[string]>;
 
+    alignBalances(
+      tokensToAlign: PromiseOrValue<BigNumberish>[],
+      targetAccount: PromiseOrValue<string>,
+      alignedAccount: PromiseOrValue<string>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<ContractTransaction>;
+
     allowance(
       t: PromiseOrValue<BigNumberish>,
       holder: PromiseOrValue<string>,
@@ -642,6 +688,11 @@ export interface TokensTestSuite extends BaseContract {
       overrides?: CallOverrides
     ): Promise<[BigNumber]>;
 
+    symbolToAsset(
+      arg0: PromiseOrValue<string>,
+      overrides?: CallOverrides
+    ): Promise<[number]>;
+
     symbols(
       arg0: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
@@ -669,6 +720,14 @@ export interface TokensTestSuite extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
+    transferFrom(
+      t: PromiseOrValue<BigNumberish>,
+      from: PromiseOrValue<string>,
+      to: PromiseOrValue<string>,
+      amount: PromiseOrValue<BigNumberish>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<ContractTransaction>;
+
     wethToken(overrides?: CallOverrides): Promise<[string]>;
   };
 
@@ -678,6 +737,13 @@ export interface TokensTestSuite extends BaseContract {
     arg0: PromiseOrValue<BigNumberish>,
     overrides?: CallOverrides
   ): Promise<string>;
+
+  alignBalances(
+    tokensToAlign: PromiseOrValue<BigNumberish>[],
+    targetAccount: PromiseOrValue<string>,
+    alignedAccount: PromiseOrValue<string>,
+    overrides?: Overrides & { from?: PromiseOrValue<string> }
+  ): Promise<ContractTransaction>;
 
   allowance(
     t: PromiseOrValue<BigNumberish>,
@@ -788,6 +854,11 @@ export interface TokensTestSuite extends BaseContract {
     overrides?: CallOverrides
   ): Promise<BigNumber>;
 
+  symbolToAsset(
+    arg0: PromiseOrValue<string>,
+    overrides?: CallOverrides
+  ): Promise<number>;
+
   symbols(
     arg0: PromiseOrValue<BigNumberish>,
     overrides?: CallOverrides
@@ -815,6 +886,14 @@ export interface TokensTestSuite extends BaseContract {
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
+  transferFrom(
+    t: PromiseOrValue<BigNumberish>,
+    from: PromiseOrValue<string>,
+    to: PromiseOrValue<string>,
+    amount: PromiseOrValue<BigNumberish>,
+    overrides?: Overrides & { from?: PromiseOrValue<string> }
+  ): Promise<ContractTransaction>;
+
   wethToken(overrides?: CallOverrides): Promise<string>;
 
   callStatic: {
@@ -824,6 +903,13 @@ export interface TokensTestSuite extends BaseContract {
       arg0: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
     ): Promise<string>;
+
+    alignBalances(
+      tokensToAlign: PromiseOrValue<BigNumberish>[],
+      targetAccount: PromiseOrValue<string>,
+      alignedAccount: PromiseOrValue<string>,
+      overrides?: CallOverrides
+    ): Promise<void>;
 
     allowance(
       t: PromiseOrValue<BigNumberish>,
@@ -932,6 +1018,11 @@ export interface TokensTestSuite extends BaseContract {
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
+    symbolToAsset(
+      arg0: PromiseOrValue<string>,
+      overrides?: CallOverrides
+    ): Promise<number>;
+
     symbols(
       arg0: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
@@ -954,6 +1045,14 @@ export interface TokensTestSuite extends BaseContract {
     "topUpWETH(address,uint256)"(
       onBehalfOf: PromiseOrValue<string>,
       value: PromiseOrValue<BigNumberish>,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    transferFrom(
+      t: PromiseOrValue<BigNumberish>,
+      from: PromiseOrValue<string>,
+      to: PromiseOrValue<string>,
+      amount: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
     ): Promise<void>;
 
@@ -1050,6 +1149,13 @@ export interface TokensTestSuite extends BaseContract {
     addressOf(
       arg0: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    alignBalances(
+      tokensToAlign: PromiseOrValue<BigNumberish>[],
+      targetAccount: PromiseOrValue<string>,
+      alignedAccount: PromiseOrValue<string>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
     allowance(
@@ -1161,6 +1267,11 @@ export interface TokensTestSuite extends BaseContract {
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
+    symbolToAsset(
+      arg0: PromiseOrValue<string>,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
     symbols(
       arg0: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
@@ -1188,6 +1299,14 @@ export interface TokensTestSuite extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
+    transferFrom(
+      t: PromiseOrValue<BigNumberish>,
+      from: PromiseOrValue<string>,
+      to: PromiseOrValue<string>,
+      amount: PromiseOrValue<BigNumberish>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<BigNumber>;
+
     wethToken(overrides?: CallOverrides): Promise<BigNumber>;
   };
 
@@ -1197,6 +1316,13 @@ export interface TokensTestSuite extends BaseContract {
     addressOf(
       arg0: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    alignBalances(
+      tokensToAlign: PromiseOrValue<BigNumberish>[],
+      targetAccount: PromiseOrValue<string>,
+      alignedAccount: PromiseOrValue<string>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 
     allowance(
@@ -1308,6 +1434,11 @@ export interface TokensTestSuite extends BaseContract {
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
+    symbolToAsset(
+      arg0: PromiseOrValue<string>,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
     symbols(
       arg0: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
@@ -1332,6 +1463,14 @@ export interface TokensTestSuite extends BaseContract {
     "topUpWETH(address,uint256)"(
       onBehalfOf: PromiseOrValue<string>,
       value: PromiseOrValue<BigNumberish>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<PopulatedTransaction>;
+
+    transferFrom(
+      t: PromiseOrValue<BigNumberish>,
+      from: PromiseOrValue<string>,
+      to: PromiseOrValue<string>,
+      amount: PromiseOrValue<BigNumberish>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 

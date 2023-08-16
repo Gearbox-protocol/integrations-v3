@@ -23,6 +23,20 @@ import type {
   PromiseOrValue,
 } from "../common";
 
+export type UniswapV3PoolStatusStruct = {
+  token0: PromiseOrValue<string>;
+  token1: PromiseOrValue<string>;
+  fee: PromiseOrValue<BigNumberish>;
+  allowed: PromiseOrValue<boolean>;
+};
+
+export type UniswapV3PoolStatusStructOutput = [
+  string,
+  string,
+  number,
+  boolean
+] & { token0: string; token1: string; fee: number; allowed: boolean };
+
 export declare namespace IUniswapV3Adapter {
   export type ExactAllInputParamsStruct = {
     path: PromiseOrValue<BytesLike>;
@@ -176,16 +190,6 @@ export interface UniswapV3AdapterInterface extends utils.Interface {
     "_gearboxAdapterType()": FunctionFragment;
     "_gearboxAdapterVersion()": FunctionFragment;
     "addressProvider()": FunctionFragment;
-    "connectorToken0()": FunctionFragment;
-    "connectorToken1()": FunctionFragment;
-    "connectorToken2()": FunctionFragment;
-    "connectorToken3()": FunctionFragment;
-    "connectorToken4()": FunctionFragment;
-    "connectorToken5()": FunctionFragment;
-    "connectorToken6()": FunctionFragment;
-    "connectorToken7()": FunctionFragment;
-    "connectorToken8()": FunctionFragment;
-    "connectorToken9()": FunctionFragment;
     "creditManager()": FunctionFragment;
     "exactAllInput((bytes,uint256,uint256))": FunctionFragment;
     "exactAllInputSingle((address,address,uint24,uint256,uint256,uint160))": FunctionFragment;
@@ -193,9 +197,8 @@ export interface UniswapV3AdapterInterface extends utils.Interface {
     "exactInputSingle((address,address,uint24,address,uint256,uint256,uint256,uint160))": FunctionFragment;
     "exactOutput((bytes,address,uint256,uint256,uint256))": FunctionFragment;
     "exactOutputSingle((address,address,uint24,address,uint256,uint256,uint256,uint160))": FunctionFragment;
-    "getConnectors()": FunctionFragment;
-    "isConnector(address)": FunctionFragment;
-    "numConnectors()": FunctionFragment;
+    "isPoolAllowed(address,address,uint24)": FunctionFragment;
+    "setPoolBatchAllowanceStatus((address,address,uint24,bool)[])": FunctionFragment;
     "targetContract()": FunctionFragment;
   };
 
@@ -205,16 +208,6 @@ export interface UniswapV3AdapterInterface extends utils.Interface {
       | "_gearboxAdapterType"
       | "_gearboxAdapterVersion"
       | "addressProvider"
-      | "connectorToken0"
-      | "connectorToken1"
-      | "connectorToken2"
-      | "connectorToken3"
-      | "connectorToken4"
-      | "connectorToken5"
-      | "connectorToken6"
-      | "connectorToken7"
-      | "connectorToken8"
-      | "connectorToken9"
       | "creditManager"
       | "exactAllInput"
       | "exactAllInputSingle"
@@ -222,9 +215,8 @@ export interface UniswapV3AdapterInterface extends utils.Interface {
       | "exactInputSingle"
       | "exactOutput"
       | "exactOutputSingle"
-      | "getConnectors"
-      | "isConnector"
-      | "numConnectors"
+      | "isPoolAllowed"
+      | "setPoolBatchAllowanceStatus"
       | "targetContract"
   ): FunctionFragment;
 
@@ -239,46 +231,6 @@ export interface UniswapV3AdapterInterface extends utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "addressProvider",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "connectorToken0",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "connectorToken1",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "connectorToken2",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "connectorToken3",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "connectorToken4",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "connectorToken5",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "connectorToken6",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "connectorToken7",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "connectorToken8",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "connectorToken9",
     values?: undefined
   ): string;
   encodeFunctionData(
@@ -310,16 +262,16 @@ export interface UniswapV3AdapterInterface extends utils.Interface {
     values: [ISwapRouter.ExactOutputSingleParamsStruct]
   ): string;
   encodeFunctionData(
-    functionFragment: "getConnectors",
-    values?: undefined
+    functionFragment: "isPoolAllowed",
+    values: [
+      PromiseOrValue<string>,
+      PromiseOrValue<string>,
+      PromiseOrValue<BigNumberish>
+    ]
   ): string;
   encodeFunctionData(
-    functionFragment: "isConnector",
-    values: [PromiseOrValue<string>]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "numConnectors",
-    values?: undefined
+    functionFragment: "setPoolBatchAllowanceStatus",
+    values: [UniswapV3PoolStatusStruct[]]
   ): string;
   encodeFunctionData(
     functionFragment: "targetContract",
@@ -337,46 +289,6 @@ export interface UniswapV3AdapterInterface extends utils.Interface {
   ): Result;
   decodeFunctionResult(
     functionFragment: "addressProvider",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "connectorToken0",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "connectorToken1",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "connectorToken2",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "connectorToken3",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "connectorToken4",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "connectorToken5",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "connectorToken6",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "connectorToken7",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "connectorToken8",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "connectorToken9",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -405,15 +317,11 @@ export interface UniswapV3AdapterInterface extends utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "getConnectors",
+    functionFragment: "isPoolAllowed",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "isConnector",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "numConnectors",
+    functionFragment: "setPoolBatchAllowanceStatus",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -461,26 +369,6 @@ export interface UniswapV3Adapter extends BaseContract {
 
     addressProvider(overrides?: CallOverrides): Promise<[string]>;
 
-    connectorToken0(overrides?: CallOverrides): Promise<[string]>;
-
-    connectorToken1(overrides?: CallOverrides): Promise<[string]>;
-
-    connectorToken2(overrides?: CallOverrides): Promise<[string]>;
-
-    connectorToken3(overrides?: CallOverrides): Promise<[string]>;
-
-    connectorToken4(overrides?: CallOverrides): Promise<[string]>;
-
-    connectorToken5(overrides?: CallOverrides): Promise<[string]>;
-
-    connectorToken6(overrides?: CallOverrides): Promise<[string]>;
-
-    connectorToken7(overrides?: CallOverrides): Promise<[string]>;
-
-    connectorToken8(overrides?: CallOverrides): Promise<[string]>;
-
-    connectorToken9(overrides?: CallOverrides): Promise<[string]>;
-
     creditManager(overrides?: CallOverrides): Promise<[string]>;
 
     exactAllInput(
@@ -513,16 +401,17 @@ export interface UniswapV3Adapter extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
-    getConnectors(
-      overrides?: CallOverrides
-    ): Promise<[string[]] & { connectors: string[] }>;
-
-    isConnector(
-      token: PromiseOrValue<string>,
+    isPoolAllowed(
+      token0: PromiseOrValue<string>,
+      token1: PromiseOrValue<string>,
+      fee: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
     ): Promise<[boolean]>;
 
-    numConnectors(overrides?: CallOverrides): Promise<[BigNumber]>;
+    setPoolBatchAllowanceStatus(
+      pools: UniswapV3PoolStatusStruct[],
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<ContractTransaction>;
 
     targetContract(overrides?: CallOverrides): Promise<[string]>;
   };
@@ -534,26 +423,6 @@ export interface UniswapV3Adapter extends BaseContract {
   _gearboxAdapterVersion(overrides?: CallOverrides): Promise<number>;
 
   addressProvider(overrides?: CallOverrides): Promise<string>;
-
-  connectorToken0(overrides?: CallOverrides): Promise<string>;
-
-  connectorToken1(overrides?: CallOverrides): Promise<string>;
-
-  connectorToken2(overrides?: CallOverrides): Promise<string>;
-
-  connectorToken3(overrides?: CallOverrides): Promise<string>;
-
-  connectorToken4(overrides?: CallOverrides): Promise<string>;
-
-  connectorToken5(overrides?: CallOverrides): Promise<string>;
-
-  connectorToken6(overrides?: CallOverrides): Promise<string>;
-
-  connectorToken7(overrides?: CallOverrides): Promise<string>;
-
-  connectorToken8(overrides?: CallOverrides): Promise<string>;
-
-  connectorToken9(overrides?: CallOverrides): Promise<string>;
 
   creditManager(overrides?: CallOverrides): Promise<string>;
 
@@ -587,14 +456,17 @@ export interface UniswapV3Adapter extends BaseContract {
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
-  getConnectors(overrides?: CallOverrides): Promise<string[]>;
-
-  isConnector(
-    token: PromiseOrValue<string>,
+  isPoolAllowed(
+    token0: PromiseOrValue<string>,
+    token1: PromiseOrValue<string>,
+    fee: PromiseOrValue<BigNumberish>,
     overrides?: CallOverrides
   ): Promise<boolean>;
 
-  numConnectors(overrides?: CallOverrides): Promise<BigNumber>;
+  setPoolBatchAllowanceStatus(
+    pools: UniswapV3PoolStatusStruct[],
+    overrides?: Overrides & { from?: PromiseOrValue<string> }
+  ): Promise<ContractTransaction>;
 
   targetContract(overrides?: CallOverrides): Promise<string>;
 
@@ -606,26 +478,6 @@ export interface UniswapV3Adapter extends BaseContract {
     _gearboxAdapterVersion(overrides?: CallOverrides): Promise<number>;
 
     addressProvider(overrides?: CallOverrides): Promise<string>;
-
-    connectorToken0(overrides?: CallOverrides): Promise<string>;
-
-    connectorToken1(overrides?: CallOverrides): Promise<string>;
-
-    connectorToken2(overrides?: CallOverrides): Promise<string>;
-
-    connectorToken3(overrides?: CallOverrides): Promise<string>;
-
-    connectorToken4(overrides?: CallOverrides): Promise<string>;
-
-    connectorToken5(overrides?: CallOverrides): Promise<string>;
-
-    connectorToken6(overrides?: CallOverrides): Promise<string>;
-
-    connectorToken7(overrides?: CallOverrides): Promise<string>;
-
-    connectorToken8(overrides?: CallOverrides): Promise<string>;
-
-    connectorToken9(overrides?: CallOverrides): Promise<string>;
 
     creditManager(overrides?: CallOverrides): Promise<string>;
 
@@ -659,14 +511,17 @@ export interface UniswapV3Adapter extends BaseContract {
       overrides?: CallOverrides
     ): Promise<void>;
 
-    getConnectors(overrides?: CallOverrides): Promise<string[]>;
-
-    isConnector(
-      token: PromiseOrValue<string>,
+    isPoolAllowed(
+      token0: PromiseOrValue<string>,
+      token1: PromiseOrValue<string>,
+      fee: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
     ): Promise<boolean>;
 
-    numConnectors(overrides?: CallOverrides): Promise<BigNumber>;
+    setPoolBatchAllowanceStatus(
+      pools: UniswapV3PoolStatusStruct[],
+      overrides?: CallOverrides
+    ): Promise<void>;
 
     targetContract(overrides?: CallOverrides): Promise<string>;
   };
@@ -681,26 +536,6 @@ export interface UniswapV3Adapter extends BaseContract {
     _gearboxAdapterVersion(overrides?: CallOverrides): Promise<BigNumber>;
 
     addressProvider(overrides?: CallOverrides): Promise<BigNumber>;
-
-    connectorToken0(overrides?: CallOverrides): Promise<BigNumber>;
-
-    connectorToken1(overrides?: CallOverrides): Promise<BigNumber>;
-
-    connectorToken2(overrides?: CallOverrides): Promise<BigNumber>;
-
-    connectorToken3(overrides?: CallOverrides): Promise<BigNumber>;
-
-    connectorToken4(overrides?: CallOverrides): Promise<BigNumber>;
-
-    connectorToken5(overrides?: CallOverrides): Promise<BigNumber>;
-
-    connectorToken6(overrides?: CallOverrides): Promise<BigNumber>;
-
-    connectorToken7(overrides?: CallOverrides): Promise<BigNumber>;
-
-    connectorToken8(overrides?: CallOverrides): Promise<BigNumber>;
-
-    connectorToken9(overrides?: CallOverrides): Promise<BigNumber>;
 
     creditManager(overrides?: CallOverrides): Promise<BigNumber>;
 
@@ -734,14 +569,17 @@ export interface UniswapV3Adapter extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
-    getConnectors(overrides?: CallOverrides): Promise<BigNumber>;
-
-    isConnector(
-      token: PromiseOrValue<string>,
+    isPoolAllowed(
+      token0: PromiseOrValue<string>,
+      token1: PromiseOrValue<string>,
+      fee: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
-    numConnectors(overrides?: CallOverrides): Promise<BigNumber>;
+    setPoolBatchAllowanceStatus(
+      pools: UniswapV3PoolStatusStruct[],
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<BigNumber>;
 
     targetContract(overrides?: CallOverrides): Promise<BigNumber>;
   };
@@ -758,26 +596,6 @@ export interface UniswapV3Adapter extends BaseContract {
     ): Promise<PopulatedTransaction>;
 
     addressProvider(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    connectorToken0(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    connectorToken1(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    connectorToken2(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    connectorToken3(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    connectorToken4(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    connectorToken5(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    connectorToken6(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    connectorToken7(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    connectorToken8(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    connectorToken9(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     creditManager(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
@@ -811,14 +629,17 @@ export interface UniswapV3Adapter extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 
-    getConnectors(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    isConnector(
-      token: PromiseOrValue<string>,
+    isPoolAllowed(
+      token0: PromiseOrValue<string>,
+      token1: PromiseOrValue<string>,
+      fee: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    numConnectors(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+    setPoolBatchAllowanceStatus(
+      pools: UniswapV3PoolStatusStruct[],
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<PopulatedTransaction>;
 
     targetContract(overrides?: CallOverrides): Promise<PopulatedTransaction>;
   };
