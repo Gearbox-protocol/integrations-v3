@@ -168,14 +168,23 @@ contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
                     } catch {}
                 }
             } else {
-                try ICurvePool(targetContract).underlying_coins(i) returns (address tokenAddress) {
-                    currentCoin = tokenAddress;
-                } catch {
-                    try ICurvePool(targetContract).underlying_coins(i.toInt256().toInt128()) returns (
-                        address tokenAddress
-                    ) {
-                        currentCoin = tokenAddress;
-                    } catch {}
+                /// @dev Curve Crypto factory pools make a proxy call to implementation and send back received
+                ///      data raw, which means calls with unknown signatures can be successful
+                ///      while returning no data. This necessitates a low-level call.
+
+                bool success;
+                bytes memory returndata;
+
+                (success, returndata) = targetContract.call(abi.encodeWithSignature("underlying_coins(uint256)", i));
+
+                if (!success || returndata.length == 0) {
+                    (success, returndata) = targetContract.call(
+                        abi.encodeWithSignature("underlying_coins(int128)", i.toInt256().toInt128())
+                    );
+                }
+
+                if (success && returndata.length > 0) {
+                    currentCoin = abi.decode(returndata, (address));
                 }
             }
 
@@ -675,32 +684,47 @@ contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
     }
 
     /// @inheritdoc ICurveV1Adapter
-    function calc_add_one_coin(uint256 amount, int128 i) public view returns (uint256) {
+    function calc_add_one_coin(uint256 amount, uint256 i) public view returns (uint256) {
+        bool success;
+        bytes memory returndata;
+        bytes memory callData;
+        bytes memory callDataAlt;
+
         if (nCoins == 2) {
-            return i == 0
-                ? ICurvePool2Assets(targetContract).calc_token_amount([amount, 0], true)
-                : ICurvePool2Assets(targetContract).calc_token_amount([0, amount], true);
+            uint256[2] memory amounts;
+            amounts[i] = amount;
+
+            callData = abi.encodeWithSignature("calc_token_amount(uint256[2],bool)", amounts, true);
+            callDataAlt = abi.encodeWithSignature("calc_token_amount(uint256[2])", amounts);
         } else if (nCoins == 3) {
-            return i == 0
-                ? ICurvePool3Assets(targetContract).calc_token_amount([amount, 0, 0], true)
-                : i == 1
-                    ? ICurvePool3Assets(targetContract).calc_token_amount([0, amount, 0], true)
-                    : ICurvePool3Assets(targetContract).calc_token_amount([0, 0, amount], true);
+            uint256[3] memory amounts;
+            amounts[i] = amount;
+
+            callData = abi.encodeWithSignature("calc_token_amount(uint256[3],bool)", amounts, true);
+            callDataAlt = abi.encodeWithSignature("calc_token_amount(uint256[3])", amounts);
         } else if (nCoins == 4) {
-            return i == 0
-                ? ICurvePool4Assets(targetContract).calc_token_amount([amount, 0, 0, 0], true)
-                : i == 1
-                    ? ICurvePool4Assets(targetContract).calc_token_amount([0, amount, 0, 0], true)
-                    : i == 2
-                        ? ICurvePool4Assets(targetContract).calc_token_amount([0, 0, amount, 0], true)
-                        : ICurvePool4Assets(targetContract).calc_token_amount([0, 0, 0, amount], true);
+            uint256[4] memory amounts;
+            amounts[i] = amount;
+
+            callData = abi.encodeWithSignature("calc_token_amount(uint256[4],bool)", amounts, true);
+            callDataAlt = abi.encodeWithSignature("calc_token_amount(uint256[4])", amounts);
+        }
+
+        (success, returndata) = targetContract.staticcall(callData);
+
+        if (!success || returndata.length == 0) {
+            (success, returndata) = targetContract.staticcall(callDataAlt);
+        }
+
+        if (success && returndata.length > 0) {
+            return abi.decode(returndata, (uint256));
         } else {
-            revert("Incorrect nCoins");
+            revert("Failed to fetch token amount");
         }
     }
 
     /// @inheritdoc ICurveV1Adapter
-    function calc_add_one_coin(uint256 amount, uint256 i) external view returns (uint256) {
-        return calc_add_one_coin(amount, i.toInt256().toInt128());
+    function calc_add_one_coin(uint256 amount, int128 i) external view returns (uint256) {
+        return calc_add_one_coin(amount, uint256(uint128(i)));
     }
 }
