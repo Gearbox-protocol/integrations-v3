@@ -3,7 +3,6 @@
 // (c) Gearbox Holdings, 2023
 pragma solidity ^0.8.17;
 
-import {AggregatorV3Interface} from "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
 import {TokensTestSuite} from "@gearbox-protocol/core-v3/contracts/test/suites/TokensTestSuite.sol";
 
 import {PriceFeedMock} from "@gearbox-protocol/core-v3/contracts/test/mocks/oracles/PriceFeedMock.sol";
@@ -24,10 +23,10 @@ contract CreditFacadeTestHelper is IntegrationTestHelper {
     }
 
     function addMockPriceFeed(address token, uint256 price) public {
-        AggregatorV3Interface priceFeed = new PriceFeedMock(int256(price), 8);
+        address priceFeed = address(new PriceFeedMock(int256(price), 8));
 
         vm.startPrank(CONFIGURATOR);
-        priceOracle.setPriceFeed(token, address(priceFeed), 48 hours);
+        priceOracle.setPriceFeed(token, priceFeed, 48 hours);
         vm.stopPrank();
     }
 }

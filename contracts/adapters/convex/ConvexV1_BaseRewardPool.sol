@@ -8,7 +8,7 @@ import {AdapterType} from "../../interfaces/IAdapter.sol";
 
 import {IBooster} from "../../integrations/convex/IBooster.sol";
 import {IBaseRewardPool} from "../../integrations/convex/IBaseRewardPool.sol";
-import {IRewards} from "../../integrations/convex/Interfaces.sol";
+import {IRewards, IExtraRewardWrapper} from "../../integrations/convex/Interfaces.sol";
 import {IConvexV1BaseRewardPoolAdapter} from "../../interfaces/convex/IConvexV1BaseRewardPoolAdapter.sol";
 
 /// @title Convex V1 BaseRewardPool adapter interface
@@ -73,8 +73,16 @@ contract ConvexV1BaseRewardPoolAdapter is AbstractAdapter, IConvexV1BaseRewardPo
         if (extraRewardLength >= 1) {
             _extraReward1 = IRewards(IBaseRewardPool(_baseRewardPool).extraRewards(0)).rewardToken();
 
+            try IExtraRewardWrapper(_extraReward1).booster() returns (address booster) {
+                _extraReward1 = IExtraRewardWrapper(_extraReward1).token();
+            } catch {}
+
             if (extraRewardLength >= 2) {
                 _extraReward2 = IRewards(IBaseRewardPool(_baseRewardPool).extraRewards(1)).rewardToken();
+
+                try IExtraRewardWrapper(_extraReward2).booster() returns (address booster) {
+                    _extraReward2 = IExtraRewardWrapper(_extraReward2).token();
+                } catch {}
             }
         }
 
