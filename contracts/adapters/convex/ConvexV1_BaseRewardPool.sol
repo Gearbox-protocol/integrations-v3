@@ -80,7 +80,7 @@ contract ConvexV1BaseRewardPoolAdapter is AbstractAdapter, IConvexV1BaseRewardPo
             if (extraRewardLength >= 2) {
                 _extraReward2 = IRewards(IBaseRewardPool(_baseRewardPool).extraRewards(1)).rewardToken();
 
-                try IExtraRewardWrapper(_extraReward1).booster() returns (address booster) {
+                try IExtraRewardWrapper(_extraReward2).booster() returns (address booster) {
                     _extraReward2 = IExtraRewardWrapper(_extraReward2).token();
                 } catch {}
             }
