@@ -8,7 +8,7 @@ import {IBaseRewardPool} from "../../../../integrations/convex/IBaseRewardPool.s
 
 import {ConvexV1BaseRewardPoolAdapter} from "../../../../adapters/convex/ConvexV1_BaseRewardPool.sol";
 import {ConvexV1BoosterAdapter} from "../../../../adapters/convex/ConvexV1_Booster.sol";
-import {ConvexStakedPositionToken} from "../../../../adapters/convex/ConvexV1_StakedPositionToken.sol";
+import {ConvexStakedPositionToken} from "../../../../helpers/convex/ConvexV1_StakedPositionToken.sol";
 
 import {BoosterMock} from "../../../mocks/integrations/ConvexBoosterMock.sol";
 import {BaseRewardPoolMock} from "../../../mocks/integrations/ConvexBaseRewardPoolMock.sol";

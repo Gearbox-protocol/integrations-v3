@@ -6,7 +6,7 @@ pragma solidity ^0.8.17;
 import "@gearbox-protocol/core-v3/contracts/interfaces/IAddressProviderV3.sol";
 import {LidoV1Adapter, LIDO_STETH_LIMIT} from "../../../../adapters/lido/LidoV1.sol";
 import {ILidoV1AdapterEvents, ILidoV1AdapterExceptions} from "../../../../interfaces/lido/ILidoV1Adapter.sol";
-import {LidoV1Gateway} from "../../../../gateways/lido/LidoV1_WETHGateway.sol";
+import {LidoV1Gateway} from "../../../../helpers/lido/LidoV1_WETHGateway.sol";
 import {LidoMock, ILidoMockEvents} from "../../../mocks/integrations/LidoMock.sol";
 
 import {Tokens} from "@gearbox-protocol/sdk/contracts/Tokens.sol";
