@@ -35,4 +35,14 @@ contract WstETHZapper is WERC20ZapperBase {
     function _unwrap(uint256 assets) internal override returns (uint256 amount) {
         return IwstETH(wrappedToken).unwrap(assets);
     }
+
+    /// @dev Returns amount of wstETH one would receive for wrapping `amount` of stETH
+    function _previewWrap(uint256 amount) internal view override returns (uint256 wrappedAmount) {
+        return IwstETH(wrappedToken).getWstETHByStETH(amount);
+    }
+
+    /// @dev Returns amount of stETH one would receive for unwrapping `amount` of wstETH
+    function _previewUnwrap(uint256 amount) internal view override returns (uint256 unwrappedAmount) {
+        return IwstETH(wrappedToken).getStETHByWstETH(amount);
+    }
 }

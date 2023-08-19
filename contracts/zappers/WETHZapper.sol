@@ -50,6 +50,16 @@ contract WETHZapper is ZapperBase {
         return amount;
     }
 
+    /// @dev Returns amount of WETH one would receive for wrapping `amount` of ETH
+    function _previewWrap(uint256 amount) internal pure override returns (uint256 wrappedAmount) {
+        return amount;
+    }
+
+    /// @dev Returns amount of ETH one would receive for unwrapping `amount` of WETH
+    function _previewUnwrap(uint256 amount) internal pure override returns (uint256 unwrappedAmount) {
+        return amount;
+    }
+
     /// @dev Pool has infinite WETH allowance so this step can be skipped
     function _ensurePoolAllowance(uint256) internal override {}
 }

@@ -5,6 +5,8 @@ pragma solidity ^0.8.17;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
+import {WAD} from "@gearbox-protocol/core-v2/contracts/libraries/Constants.sol";
+
 import {IWrappedAToken} from "../interfaces/aave/IWrappedAToken.sol";
 import {WERC20ZapperBase} from "./WERC20ZapperBase.sol";
 
@@ -34,6 +36,16 @@ contract WATokenZapper is WERC20ZapperBase {
     /// @dev Unwraps waToken
     function _unwrap(uint256 assets) internal override returns (uint256 amount) {
         return IWrappedAToken(wrappedToken).withdraw(assets);
+    }
+
+    /// @dev Returns amount of waToken one would receive for wrapping `amount` of aToken
+    function _previewWrap(uint256 amount) internal view override returns (uint256 wrappedAmount) {
+        return amount * WAD / IWrappedAToken(wrappedToken).exchangeRate();
+    }
+
+    /// @dev Returns amount of aToken one would receive for unwrapping `amount` of waToken
+    function _previewUnwrap(uint256 amount) internal view override returns (uint256 unwrappedAmount) {
+        return amount * IWrappedAToken(wrappedToken).exchangeRate() / WAD;
     }
 
     /// @dev Pool has infinite waToken allowance so this step can be skipped

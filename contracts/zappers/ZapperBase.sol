@@ -24,6 +24,18 @@ abstract contract ZapperBase {
         IERC20(wrappedToken).approve(pool_, type(uint256).max);
     }
 
+    /// @notice Returns number of pool shares one would receive for depositing `amount` of unwrapped token
+    function previewDeposit(uint256 amount) external view returns (uint256 shares) {
+        uint256 assets = _previewWrap(amount);
+        return IPoolV3(pool).previewDeposit(assets);
+    }
+
+    /// @notice Returns amount of unwrapped token one would receive for redeeming `shares` of pool shares
+    function previewRedeem(uint256 shares) external view returns (uint256 amount) {
+        uint256 assets = IPoolV3(pool).previewRedeem(shares);
+        return _previewUnwrap(assets);
+    }
+
     /// @dev Implementation of deposit zap
     ///      - Receives `amount` of unwrapped token from `msg.sender` and wraps it
     ///      - Deposits wrapped token into the pool and mints pool shares to `receiver`
@@ -57,6 +69,14 @@ abstract contract ZapperBase {
 
     /// @dev Unwraps pool's underlying and sends it to `receiver`, must be overriden by derived zappers
     function _unwrapAndSend(uint256 amount, address receiver) internal virtual returns (uint256 unwrappedAmount);
+
+    /// @dev Returns amount of wrapped token one would receive for wrapping `amount` of unwrapped token,
+    ///      must be overriden by derived zappers
+    function _previewWrap(uint256 amount) internal view virtual returns (uint256 wrappedAmount);
+
+    /// @dev Returns amount of unwrapped token one would receive for unwrapping `amount` of wrapped token,
+    ///      must be overriden by derived zappers
+    function _previewUnwrap(uint256 amount) internal view virtual returns (uint256 unwrappedAmount);
 
     /// @dev Gives `pool` max allowance for the `wrappedToken` if it falls below `amount`
     function _ensurePoolAllowance(uint256 amount) internal virtual {
