@@ -11,22 +11,22 @@ import {AbstractAdapter} from "../AbstractAdapter.sol";
 import {AdapterType} from "../../interfaces/IAdapter.sol";
 
 import {IUniswapV2Router02} from "../../integrations/uniswap/IUniswapV2Router02.sol";
-import {IUniswapV2Adapter} from "../../interfaces/uniswap/IUniswapV2Adapter.sol";
-import {UniswapConnectorChecker} from "./UniswapConnectorChecker.sol";
+import {IUniswapV2Adapter, UniswapPairStatus} from "../../interfaces/uniswap/IUniswapV2Adapter.sol";
 
 /// @title Uniswap V2 Router adapter interface
 /// @notice Implements logic allowing CAs to perform swaps via Uniswap V2 and its forks
-contract UniswapV2Adapter is AbstractAdapter, UniswapConnectorChecker, IUniswapV2Adapter {
+contract UniswapV2Adapter is AbstractAdapter, IUniswapV2Adapter {
     AdapterType public constant override _gearboxAdapterType = AdapterType.UNISWAP_V2_ROUTER;
     uint16 public constant override _gearboxAdapterVersion = 3;
+
+    /// @notice Mapping from (token0, token1) to whether the pair can be traded through the adapter
+    /// @dev Tokens are sorted alphanumerically by address
+    mapping(address => mapping(address => bool)) internal allowedPair;
 
     /// @notice Constructor
     /// @param _CreditManagerV3 Credit manager address
     /// @param _router Uniswap V2 Router address
-    constructor(address _CreditManagerV3, address _router, address[] memory _connectorTokensInit)
-        AbstractAdapter(_CreditManagerV3, _router)
-        UniswapConnectorChecker(_connectorTokensInit)
-    {}
+    constructor(address _CreditManagerV3, address _router) AbstractAdapter(_CreditManagerV3, _router) {}
 
     /// @inheritdoc IUniswapV2Adapter
     function swapTokensForExactTokens(
@@ -113,9 +113,18 @@ contract UniswapV2Adapter is AbstractAdapter, UniswapConnectorChecker, IUniswapV
         ); // F: [AUV2-4]
     }
 
+    /// @dev Sort two token addresses alphanumerically
+    function _sortTokens(address token0, address token1) internal pure returns (address, address) {
+        if (uint160(token0) < uint160(token1)) {
+            return (token0, token1);
+        } else {
+            return (token1, token0);
+        }
+    }
+
     /// @dev Performs sanity check on a swap path, returns input and output tokens
     ///      - Path length must be no more than 4 (i.e., at most 3 hops)
-    ///      - Each intermediary token must be a registered connector tokens
+    ///       - Each swap must be through an allowed pair
     function _parseUniV2Path(address[] memory path)
         internal
         view
@@ -123,19 +132,41 @@ contract UniswapV2Adapter is AbstractAdapter, UniswapConnectorChecker, IUniswapV
     {
         uint256 len = path.length;
 
-        valid = true;
         tokenIn = path[0];
         tokenOut = path[len - 1];
 
-        if (len > 2) {
-            valid = isConnector(path[1]);
+        valid = isPairAllowed(path[0], path[1]);
+
+        if (valid && len > 2) {
+            valid = isPairAllowed(path[1], path[2]);
         }
 
         if (valid && len > 3) {
-            valid = isConnector(path[2]);
+            valid = isPairAllowed(path[2], path[3]);
         }
+
         if (len > 4) {
             valid = false;
+        }
+    }
+
+    /// @notice Returns whether the (token0, token1) is allowed to be traded through the adapter
+    function isPairAllowed(address token0, address token1) public view returns (bool) {
+        (token0, token1) = _sortTokens(token0, token1);
+        return allowedPair[token0][token1];
+    }
+
+    /// @notice Changes the whitelisted status for a batch of pairs
+    /// @param pairs Array of UniswaPairStatus objects:
+    ///              * token0 - First token in a pair
+    ///              * token1 - Second token in a pair
+    ///              * allowed - Status to set
+    function setPairBatchAllowanceStatus(UniswapPairStatus[] calldata pairs) external configuratorOnly {
+        uint256 len = pairs.length;
+
+        for (uint256 i = 0; i < len; ++i) {
+            (address token0, address token1) = _sortTokens(pairs[i].token0, pairs[i].token1);
+            allowedPair[token0][token1] = pairs[i].allowed;
         }
     }
 }

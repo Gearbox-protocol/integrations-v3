@@ -11,7 +11,7 @@ import {
     WETH_EXCHANGE_AMOUNT
 } from "@gearbox-protocol/core-v3/contracts/test/lib/constants.sol";
 
-import {CEtherGateway} from "../../../../gateways/compound/CEtherGateway.sol";
+import {CEtherGateway} from "../../../../helpers/compound/CompoundV2_CEtherGateway.sol";
 
 import {Tokens} from "@gearbox-protocol/sdk/contracts/Tokens.sol";
 import {CErc20Mock} from "../../../mocks/integrations/compound/CErc20Mock.sol";

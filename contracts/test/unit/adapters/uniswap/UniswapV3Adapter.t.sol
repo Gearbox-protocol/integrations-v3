@@ -48,16 +48,7 @@ contract UniswapV3AdapterTest is Test, AdapterTestHelper, IUniswapV3AdapterExcep
 
         tokenTestSuite.mint(Tokens.WETH, address(uniswapMock), (2 * DAI_ACCOUNT_AMOUNT) / DAI_WETH_RATE);
 
-        address[] memory connectors = new address[](2);
-
-        connectors[0] = tokenTestSuite.addressOf(Tokens.USDC);
-        connectors[1] = tokenTestSuite.addressOf(Tokens.USDT);
-
-        adapter = new UniswapV3Adapter(
-            address(creditManager),
-            address(uniswapMock),
-            connectors
-        );
+        adapter = new UniswapV3Adapter(address(creditManager), address(uniswapMock));
 
         vm.prank(CONFIGURATOR);
         creditConfigurator.allowAdapter(address(adapter));

@@ -8,7 +8,7 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {CurveV1Adapter2Assets} from "../../../../adapters/curve/CurveV1_2.sol";
 import {CurveV1Adapter3Assets} from "../../../../adapters/curve/CurveV1_3.sol";
 import {CurveV1Adapter4Assets} from "../../../../adapters/curve/CurveV1_4.sol";
-import {CurveV1StETHPoolGateway} from "../../../../gateways/curve/CurveV1_stETHGateway.sol";
+import {CurveV1StETHPoolGateway} from "../../../../helpers/curve/CurveV1_stETHGateway.sol";
 import {CurveV1AdapterStETH} from "../../../../adapters/curve/CurveV1_stETH.sol";
 import {ICurveV1Adapter, ICurveV1AdapterExceptions} from "../../../../interfaces/curve/ICurveV1Adapter.sol";
 import {ICurvePoolStETH} from "../../../../integrations/curve/ICurvePoolStETH.sol";
@@ -25,7 +25,7 @@ import {CurveV1Mock_4Assets} from "../../../mocks/integrations/CurveV1Mock_4Asse
 
 import {Tokens} from "@gearbox-protocol/sdk/contracts/Tokens.sol";
 
-import {PriceFeedParams} from "@gearbox-protocol/oracles-v3/contracts/oracles/AbstractPriceFeed.sol";
+import {PriceFeedParams} from "@gearbox-protocol/oracles-v3/contracts/oracles/PriceFeedParams.sol";
 import {CurveStableLPPriceFeed} from "@gearbox-protocol/oracles-v3/contracts/oracles/curve/CurveStableLPPriceFeed.sol";
 import {CurveCryptoLPPriceFeed} from "@gearbox-protocol/oracles-v3/contracts/oracles/curve/CurveCryptoLPPriceFeed.sol";
 

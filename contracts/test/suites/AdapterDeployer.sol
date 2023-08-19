@@ -73,32 +73,6 @@ contract AdapterDeployer is AdapterData, Test {
         }
     }
 
-    function _getInitConnectors() internal view returns (address[] memory connectors) {
-        Tokens[4] memory connectorsT = [Tokens.DAI, Tokens.USDC, Tokens.WETH, Tokens.FRAX];
-
-        uint256 len = connectorsT.length;
-        uint256 collateralConnectorsLen = 0;
-
-        unchecked {
-            for (uint256 i; i < len; ++i) {
-                if (_isCollateralToken(tokenTestSuite.addressOf(connectorsT[i]))) {
-                    ++collateralConnectorsLen;
-                }
-            }
-        }
-
-        connectors = new address[](collateralConnectorsLen);
-        uint256 j;
-        unchecked {
-            for (uint256 i; i < len; ++i) {
-                if (_isCollateralToken(tokenTestSuite.addressOf(connectorsT[i]))) {
-                    connectors[j] = tokenTestSuite.addressOf(connectorsT[i]);
-                    ++j;
-                }
-            }
-        }
-    }
-
     function _isCollateralToken(address token) internal view returns (bool) {
         try creditManager.getTokenMaskOrRevert(token) returns (uint256 mask) {
             return true;
@@ -121,21 +95,9 @@ contract AdapterDeployer is AdapterData, Test {
                     targetContract = supportedContracts.addressOf(cnt);
 
                     if (at == AdapterType.UNISWAP_V2_ROUTER) {
-                        adapter = address(
-                            new UniswapV2Adapter(
-                                    address(creditManager),
-                                    targetContract,
-                                    _getInitConnectors()
-                                )
-                        );
+                        adapter = address(new UniswapV2Adapter(address(creditManager), targetContract));
                     } else if (at == AdapterType.UNISWAP_V3_ROUTER) {
-                        adapter = address(
-                            new UniswapV3Adapter(
-                                    address(creditManager),
-                                    targetContract,
-                                    _getInitConnectors()
-                                )
-                        );
+                        adapter = address(new UniswapV3Adapter(address(creditManager), targetContract));
                     }
                     if (at == AdapterType.YEARN_V2) {
                         adapter = address(

@@ -17,7 +17,7 @@ import {AdapterType} from "../../interfaces/IAdapter.sol";
 
 import {IstETH} from "../../integrations/lido/IstETH.sol";
 import {ILidoV1Adapter} from "../../interfaces/lido/ILidoV1Adapter.sol";
-import {LidoV1Gateway} from "../../gateways/lido/LidoV1_WETHGateway.sol";
+import {LidoV1Gateway} from "../../helpers/lido/LidoV1_WETHGateway.sol";
 
 uint256 constant LIDO_STETH_LIMIT = 20000 ether;
 
