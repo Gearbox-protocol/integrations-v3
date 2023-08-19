@@ -39,9 +39,9 @@
   "dependencies": {
     "@gearbox-protocol/core-v2": "^1.19.0-base.7",
     "@gearbox-protocol/core-v3": "^1.32.3",
-    "@gearbox-protocol/oracles-v3": "^1.6.3",
-    "@gearbox-protocol/sdk": "^2.1.17",
-    "@gearbox-protocol/sdk-gov": "^1.3.1",
+    "@gearbox-protocol/oracles-v3": "^1.7.0",
+    "@gearbox-protocol/sdk": "^2.1.21",
+    "@gearbox-protocol/sdk-gov": "^1.4.1",
     "@redstone-finance/evm-connector": "^0.2.3",
     "axios": "^1.1.3"
   },

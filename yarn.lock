@@ -1031,10 +1031,10 @@
     "@ethersproject/properties" "^5.7.0"
     "@ethersproject/strings" "^5.7.0"
 
-"@gearbox-protocol/core-v2@^1.16.2", "@gearbox-protocol/core-v2@^1.20.2":
-  version "1.20.2"
-  resolved "https://registry.yarnpkg.com/@gearbox-protocol/core-v2/-/core-v2-1.20.2.tgz#3ae22d84e7e98cd60e152390c5e4cf8dee329dac"
-  integrity sha512-nbMCieO2psJs+FNDCTvGMiTpO04WOIIK5nad6p01pD+X/wVTbrC0JqT/4cf5IuYv5DDhnYUlaRLD9eOZB9rWGw==
+"@gearbox-protocol/core-v2@^1.16.2", "@gearbox-protocol/core-v2@^1.19.0-base.8", "@gearbox-protocol/core-v2@^1.21.0":
+  version "1.21.0"
+  resolved "https://registry.yarnpkg.com/@gearbox-protocol/core-v2/-/core-v2-1.21.0.tgz#5a899c4f96200a28e6516f8416cfd2d39ce20695"
+  integrity sha512-9pv8K2gdoGMByVkdbT9OWRnn2Xp5p+zanoOCghzTgcC245UZabEfmm3ZrWIo9rqMNZZY64W7RH1Pbt1TU7hqHw==
   dependencies:
     "@typechain/ethers-v5" "^10.2.1"
 
@@ -1045,15 +1045,6 @@
   dependencies:
     "@typechain/ethers-v5" "^10.2.1"
 
-"@gearbox-protocol/core-v3@^1.30.0":
-  version "1.30.0"
-  resolved "https://registry.yarnpkg.com/@gearbox-protocol/core-v3/-/core-v3-1.30.0.tgz#90eeea58ca9f13ac2bff4d3f583838c70a058a02"
-  integrity sha512-NjVEi0HMLjSgBsm4quNH+wqcEV1ZYINeYwoexr7MNT5m24MY+fEolK4rvO/oDD5L7O5RcfDYHSyd13ERb3rhdw==
-  dependencies:
-    "@1inch/solidity-utils" "^2.2.27"
-    "@gearbox-protocol/core-v2" "^1.19.0-base.7"
-    "@gearbox-protocol/sdk" "^2.1.7"
-
 "@gearbox-protocol/core-v3@^1.32.3":
   version "1.32.3"
   resolved "https://registry.yarnpkg.com/@gearbox-protocol/core-v3/-/core-v3-1.32.3.tgz#f3f002a2a9e5a9127a73ce160b2e6e52b70e5504"
@@ -1062,6 +1053,15 @@
     "@1inch/solidity-utils" "^2.2.27"
     "@gearbox-protocol/core-v2" "^1.19.0-base.7"
     "@gearbox-protocol/sdk" "^2.1.7"
+
+"@gearbox-protocol/core-v3@^1.33.0", "@gearbox-protocol/core-v3@^1.34.1":
+  version "1.36.0"
+  resolved "https://registry.yarnpkg.com/@gearbox-protocol/core-v3/-/core-v3-1.36.0.tgz#1223c7b91ecf680e663c65b7113f6d3b56604492"
+  integrity sha512-GSKV3xU/2ZfHgaOH0ZWWrVaS5/XyhY20XgXFUIs0eBiD/kwIwT0bKhdb1pyyhb8EkJD+UVncDy3BBBl450P91Q==
+  dependencies:
+    "@1inch/solidity-utils" "^2.2.27"
+    "@gearbox-protocol/core-v2" "^1.19.0-base.8"
+    "@gearbox-protocol/sdk" "^2.1.18"
 
 "@gearbox-protocol/eslint-config@^1.6.1":
   version "1.6.1"
@@ -1078,49 +1078,45 @@
     eslint-plugin-simple-import-sort "^7.0.0"
     eslint-plugin-unused-imports "^2.0.0"
 
-"@gearbox-protocol/integrations-v3@1.7.0-legacy.6":
-  version "1.7.0-legacy.6"
-  resolved "https://registry.yarnpkg.com/@gearbox-protocol/integrations-v3/-/integrations-v3-1.7.0-legacy.6.tgz#a8d21863c5c5d543d784b5f1f46514b87f45c37d"
-  integrity sha512-Ba6qUAeuMVoC8GTweNxCI0qJNwP/jh0mCbTuqGos/n11OL0SC+PBuvY8OWjylos9TfMX2p72wXTPbd/JEv0YRg==
+"@gearbox-protocol/integrations-v3@1.7.0-legacy.7":
+  version "1.7.0-legacy.7"
+  resolved "https://registry.yarnpkg.com/@gearbox-protocol/integrations-v3/-/integrations-v3-1.7.0-legacy.7.tgz#0613f767c97c18e36dd8bde550378131a809b9dd"
+  integrity sha512-N9NAqokgFN2IVRtKL4xKYnjz5LNeGMrObDN0aFjxdA5g4meWReBpgyTrkfyN7saiR/U3g91BxuJUSpnaTWoP6A==
   dependencies:
     "@gearbox-protocol/core-v2" "^1.16.2"
     "@gearbox-protocol/sdk" "1.22.1"
     axios "^1.1.3"
 
-"@gearbox-protocol/oracles-v3@^1.6.3":
-  version "1.6.3"
-  resolved "https://registry.yarnpkg.com/@gearbox-protocol/oracles-v3/-/oracles-v3-1.6.3.tgz#6796e7c17710af075f0d5ed66da8a8e93b78c96d"
-  integrity sha512-5+CG5+TyMadkd6jOyZBILr6dIeeamjOarRYs+lKlEVg08sxcpAeDgRSTK0OEIep0sD6UhrwjYdWeXsx0+fmd8g==
+"@gearbox-protocol/oracles-v3@^1.7.0":
+  version "1.7.0"
+  resolved "https://registry.yarnpkg.com/@gearbox-protocol/oracles-v3/-/oracles-v3-1.7.0.tgz#42078aa6685db0073b038c34bd7b69274d667fc1"
+  integrity sha512-bf85XlqbXMB4SJCjPUbfLuZl8RcddO5Rnb/L6ZqvmXNtFie0jLoJFMi51C46WHKDRznWw1cbKEd0ASk5lil6bw==
   dependencies:
-    "@gearbox-protocol/core-v2" "^1.19.0-base.7"
-    "@gearbox-protocol/core-v3" "^1.30.0"
+    "@gearbox-protocol/core-v2" "^1.19.0-base.8"
+    "@gearbox-protocol/core-v3" "^1.33.0"
     "@gearbox-protocol/sdk" "^2.1.16"
     "@redstone-finance/evm-connector" "^0.2.2"
-
-"@gearbox-protocol/integration-types@^1.4.0":
-  version "1.4.0"
-  resolved "https://registry.yarnpkg.com/@gearbox-protocol/integration-types/-/integration-types-1.4.0.tgz#82064ffc46465cb1e42a3a4703749bfdcad4d92f"
-  integrity sha512-OtdmeY2BTxMRxml1WOwhNHLMtDRNm+5m+PZmIqulVVaanv8hXiSJhO3zdPQjkHMHqeb9WPzL/lMwOwwQ5T0LEw==
 
 "@gearbox-protocol/prettier-config@^1.5.0":
   version "1.5.0"
   resolved "https://registry.yarnpkg.com/@gearbox-protocol/prettier-config/-/prettier-config-1.5.0.tgz#4df8e9fd2305fee6ab8c1417a02e31343836932a"
   integrity sha512-FUoprSsBdZyBjgxXCKL6mTkbeUJytaLzPJqIOoQpDmBRTX0seCc2o5I9PI9tySoRIlNnd/XXnKCXq1xHDEGbxw==
 
-"@gearbox-protocol/sdk-gov@^1.3.1":
-  version "1.3.1"
-  resolved "https://registry.yarnpkg.com/@gearbox-protocol/sdk-gov/-/sdk-gov-1.3.1.tgz#4da53098685e2da74eeb803eb52da8d06ffbf7e7"
-  integrity sha512-ebg0/audD/4TLP8jhVZdhCAgZY0wLQdHcgOo/17hMtSJ5NM14ATe03Cwuep+A0tgbcwuB8GMIXL21XsMCejfsA==
+"@gearbox-protocol/sdk-gov@^1.4.1":
+  version "1.4.1"
+  resolved "https://registry.yarnpkg.com/@gearbox-protocol/sdk-gov/-/sdk-gov-1.4.1.tgz#e02768172db2e864276f74fc0c1e922caf1d9d50"
+  integrity sha512-mGXSnzv6we/4Vexlq3hVgPMc71NsdzP5X1+UhteZUEV4h9ofHNRfw43s7lBqzrcKBYjx2sOLgVaj3xCLJDqAHg==
   dependencies:
-    "@gearbox-protocol/core-v2" "^1.20.2"
+    "@gearbox-protocol/core-v2" "^1.21.0"
+    "@gearbox-protocol/core-v3" "^1.34.1"
     "@gearbox-protocol/eslint-config" "^1.6.1"
-    "@gearbox-protocol/integrations-v3" "1.7.0-legacy.6"
+    "@gearbox-protocol/integrations-v3" "1.7.0-legacy.7"
     "@gearbox-protocol/prettier-config" "^1.5.0"
-    "@gearbox-protocol/sdk" "^2.1.17"
     axios "^1.4.0"
     barrelsby "^2.8.0"
     dotenv "^16.3.1"
     ethers v5
+    ts-toolbelt "^9.6.0"
     tslog "^4.8.2"
     web3 "^4.0.3"
 
@@ -1135,10 +1131,32 @@
     deep-eql "^4.1.0"
     moment "^2.29.4"
 
-"@gearbox-protocol/sdk@^2.1.16", "@gearbox-protocol/sdk@^2.1.17":
+"@gearbox-protocol/sdk@^2.1.16":
   version "2.1.17"
   resolved "https://registry.yarnpkg.com/@gearbox-protocol/sdk/-/sdk-2.1.17.tgz#e61cd2b7cd002f549ba80e970d4db1d7e49572dd"
   integrity sha512-h1VFud073RyQ1b/IWQSnv/GLDVH87agAhKfA+fh9s0iAQjy1rtlwDVUk3kW8O445CtM2Akp79ZiyNfBm7ezF3Q==
+  dependencies:
+    "@types/deep-eql" "^4.0.0"
+    axios "^1.2.6"
+    decimal.js-light "^2.5.1"
+    deep-eql "^4.1.0"
+    moment "^2.29.4"
+
+"@gearbox-protocol/sdk@^2.1.18":
+  version "2.1.20"
+  resolved "https://registry.yarnpkg.com/@gearbox-protocol/sdk/-/sdk-2.1.20.tgz#84eb30e833bdb26f06fa0ab60a0884b06db285f8"
+  integrity sha512-cogL+jNy2tyRErhUIHVXIsmPXNN08sA/Y6iaaNBXgFuPE5ijUzIQ5kixjsE/62825PluqvsGatUF4WjuxRgTeA==
+  dependencies:
+    "@types/deep-eql" "^4.0.0"
+    axios "^1.2.6"
+    decimal.js-light "^2.5.1"
+    deep-eql "^4.1.0"
+    moment "^2.29.4"
+
+"@gearbox-protocol/sdk@^2.1.21":
+  version "2.1.21"
+  resolved "https://registry.yarnpkg.com/@gearbox-protocol/sdk/-/sdk-2.1.21.tgz#5f75de0c716fcb9bee58aff70398e53ebb69a554"
+  integrity sha512-nT8JnyktVGNs843PZK0Tc7PcUyaxYhOEjVavu+1favhQ1h3NDYSJz8UfbrWqA/AvZXO4xd1Iy9NK+Pf7c9uTBg==
   dependencies:
     "@types/deep-eql" "^4.0.0"
     axios "^1.2.6"
@@ -6523,9 +6541,9 @@ node-fetch@2.6.7:
     whatwg-url "^5.0.0"
 
 node-fetch@^2.6.12:
-  version "2.6.12"
-  resolved "https://registry.yarnpkg.com/node-fetch/-/node-fetch-2.6.12.tgz#02eb8e22074018e3d5a83016649d04df0e348fba"
-  integrity sha512-C/fGU2E8ToujUivIO0H+tpQ6HWo4eEmchoPIoXtxCrVghxdKq+QOHqEZW7tuP3KlV3bC8FRMO5nMCC7Zm1VP6g==
+  version "2.6.13"
+  resolved "https://registry.yarnpkg.com/node-fetch/-/node-fetch-2.6.13.tgz#a20acbbec73c2e09f9007de5cda17104122e0010"
+  integrity sha512-StxNAxh15zr77QvvkmveSQ8uCQ4+v5FkvNTj0OESmiHu+VRi/gXArXtkWMElOsOUNLtUEvI4yS+rdtOHZTwlQA==
   dependencies:
     whatwg-url "^5.0.0"
 
@@ -8338,6 +8356,11 @@ ts-node@^10.8.1, ts-node@^10.9.1:
     v8-compile-cache-lib "^3.0.1"
     yn "3.1.1"
 
+ts-toolbelt@^9.6.0:
+  version "9.6.0"
+  resolved "https://registry.yarnpkg.com/ts-toolbelt/-/ts-toolbelt-9.6.0.tgz#50a25426cfed500d4a09bd1b3afb6f28879edfd5"
+  integrity sha512-nsZd8ZeNUzukXPlJmTBwUAuABDe/9qtVDelJeT/qW0ow3ZS3BsQJtNkan1802aM9Uf68/Y8ljw86Hu0h5IUW3w==
+
 tsconfig-paths@^3.14.1:
   version "3.14.2"
   resolved "https://registry.yarnpkg.com/tsconfig-paths/-/tsconfig-paths-3.14.2.tgz#6e32f1f79412decd261f92d633a9dc1cfa99f088"
@@ -9678,6 +9701,6 @@ yocto-queue@^0.1.0:
   integrity sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==
 
 zod@^3.21.4:
-  version "3.22.0"
-  resolved "https://registry.yarnpkg.com/zod/-/zod-3.22.0.tgz#2478211a9bf477eb2d7d2ce031b5f8ff0d596407"
-  integrity sha512-y5KZY/ssf5n7hCGDGGtcJO/EBJEm5Pa+QQvFBeyMOtnFYOSflalxIFFvdaYevPhePcmcKC4aTbFkCcXN7D0O8Q==
+  version "3.22.2"
+  resolved "https://registry.yarnpkg.com/zod/-/zod-3.22.2.tgz#3add8c682b7077c05ac6f979fea6998b573e157b"
+  integrity sha512-wvWkphh5WQsJbVk1tbx1l1Ly4yg+XecD+Mq280uBGt9wa5BKSWf4Mhp6GmrkPixhMxmabYY7RbzlwVP32pbGCg==

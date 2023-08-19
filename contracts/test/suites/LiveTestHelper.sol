@@ -34,7 +34,10 @@ contract LiveTestHelper is IntegrationTestHelper {
 
     modifier liveCreditTest(string memory id) {
         if (chainId != 1337 && chainId != 31337) {
+            console.log("chainId: ", chainId);
             _setupCore();
+            console.log("chainId: ", chainId);
+            console.log(tokenTestSuite.addressOf(Tokens.MKR));
             supportedContracts = new SupportedContracts(chainId);
 
             PriceFeedDeployer priceFeedDeployer =
