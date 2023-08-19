@@ -5,11 +5,11 @@ const POOL_DECIMALS = BigInt(1e6);
 const POOL_DIVIDER = BigInt(29000);
 
 export const config: PoolV3DeployConfig = {
-  id: "mainnet-usdc-mt-v3",
-  symbol: "dUSDCV3",
-  name: "Diesel USDC V3 pool",
+  id: "mainnet-wbtc-mt-v3",
+  symbol: "dWBTCV3",
+  name: "Diesel WBTC V3 pool",
   network: "Mainnet",
-  underlying: "USDC",
+  underlying: "WBTC",
   accountAmount: BigInt(1_000_000) * POOL_DECIMALS,
   withdrawalFee: 0,
   expectedLiquidityLimit: BigInt(0),
@@ -27,15 +27,15 @@ export const config: PoolV3DeployConfig = {
       minRate: 0,
       maxRate: 3000,
       quotaIncreaseFee: 0,
-      limit: BigInt(30e6) * POOL_DECIMALS / POOL_DIVIDER, 
-    }, 
+      limit: (BigInt(30e6) * POOL_DECIMALS) / POOL_DIVIDER,
+    },
   },
   creditManagers: [
     {
       degenNft: false,
       expirationDate: undefined,
-      minDebt: BigInt(1e4) * POOL_DECIMALS / POOL_DIVIDER,
-      maxDebt: BigInt(1e6) * POOL_DECIMALS / POOL_DIVIDER,
+      minDebt: (BigInt(1e4) * POOL_DECIMALS) / POOL_DIVIDER,
+      maxDebt: (BigInt(1e6) * POOL_DECIMALS) / POOL_DIVIDER,
       poolLimit: BigInt(0),
       collateralTokens: [
         {

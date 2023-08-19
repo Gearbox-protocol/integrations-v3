@@ -5,11 +5,11 @@ const POOL_DECIMALS = BigInt(1e18);
 const POOL_DIVIDER = BigInt(1800);
 
 export const config: PoolV3DeployConfig = {
-  id: "mainnet-usdc-mt-v3",
-  symbol: "dUSDCV3",
-  name: "Diesel USDC V3 pool",
+  id: "mainnet-weth-mt-v3",
+  symbol: "dWETHV3",
+  name: "Diesel WETH V3 pool",
   network: "Mainnet",
-  underlying: "USDC",
+  underlying: "WETH",
   accountAmount: BigInt(1_000_000) * POOL_DECIMALS,
   withdrawalFee: 0,
   expectedLiquidityLimit: BigInt(0),
@@ -23,25 +23,25 @@ export const config: PoolV3DeployConfig = {
     isBorrowingMoreU2Forbidden: true,
   },
   ratesAndLimits: {
-    stETH: {
+    STETH: {
       minRate: 0,
       maxRate: 200,
       quotaIncreaseFee: 0,
-      limit: BigInt(30e6) * POOL_DECIMALS / POOL_DIVIDER, 
-    }, 
+      limit: (BigInt(30e6) * POOL_DECIMALS) / POOL_DIVIDER,
+    },
     USDC: {
       minRate: 0,
       maxRate: 3000,
       quotaIncreaseFee: 0,
-      limit: BigInt(30e6) * POOL_DECIMALS / POOL_DIVIDER, 
-    }, 
+      limit: (BigInt(30e6) * POOL_DECIMALS) / POOL_DIVIDER,
+    },
   },
   creditManagers: [
     {
       degenNft: false,
       expirationDate: undefined,
-      minDebt: BigInt(1e4) * POOL_DECIMALS / POOL_DIVIDER,
-      maxDebt: BigInt(1e6) * POOL_DECIMALS / POOL_DIVIDER,
+      minDebt: (BigInt(1e4) * POOL_DECIMALS) / POOL_DIVIDER,
+      maxDebt: (BigInt(1e6) * POOL_DECIMALS) / POOL_DIVIDER,
       poolLimit: BigInt(0),
       collateralTokens: [
         {
