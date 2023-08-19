@@ -1031,7 +1031,7 @@
     "@ethersproject/properties" "^5.7.0"
     "@ethersproject/strings" "^5.7.0"
 
-"@gearbox-protocol/core-v2@^1.16.2", "@gearbox-protocol/core-v2@^1.19.0-base.8", "@gearbox-protocol/core-v2@^1.21.0":
+"@gearbox-protocol/core-v2@^1.16.2", "@gearbox-protocol/core-v2@^1.21.0":
   version "1.21.0"
   resolved "https://registry.yarnpkg.com/@gearbox-protocol/core-v2/-/core-v2-1.21.0.tgz#5a899c4f96200a28e6516f8416cfd2d39ce20695"
   integrity sha512-9pv8K2gdoGMByVkdbT9OWRnn2Xp5p+zanoOCghzTgcC245UZabEfmm3ZrWIo9rqMNZZY64W7RH1Pbt1TU7hqHw==
@@ -1045,27 +1045,7 @@
   dependencies:
     "@typechain/ethers-v5" "^10.2.1"
 
-
-"@gearbox-protocol/core-v3@^1.33.0":
-  version "1.34.0"
-  resolved "https://registry.yarnpkg.com/@gearbox-protocol/core-v3/-/core-v3-1.34.0.tgz#4f390eaa9bdddedcb26118260741b5e0246f1042"
-  integrity sha512-mtMvEiJWy3IGGh1Ysgxo6y9R5xHj8VWI9EoEbDXr0gV69QSe5DOijnExFNk595DaH7T1uaV91hBPVHUQVH325w==
-  dependencies:
-    "@1inch/solidity-utils" "^2.2.27"
-    "@gearbox-protocol/core-v2" "^1.19.0-base.8"
-    "@gearbox-protocol/sdk" "^2.1.18"
-
-"@gearbox-protocol/core-v3@^1.36.0":
-  version "1.36.0"
-  resolved "https://registry.yarnpkg.com/@gearbox-protocol/core-v3/-/core-v3-1.36.0.tgz#1223c7b91ecf680e663c65b7113f6d3b56604492"
-  integrity sha512-GSKV3xU/2ZfHgaOH0ZWWrVaS5/XyhY20XgXFUIs0eBiD/kwIwT0bKhdb1pyyhb8EkJD+UVncDy3BBBl450P91Q==
-
-  dependencies:
-    "@1inch/solidity-utils" "^2.2.27"
-    "@gearbox-protocol/core-v2" "^1.19.0-base.8"
-    "@gearbox-protocol/sdk" "^2.1.18"
-
-"@gearbox-protocol/core-v3@^1.33.0", "@gearbox-protocol/core-v3@^1.34.1":
+"@gearbox-protocol/core-v3@^1.33.0", "@gearbox-protocol/core-v3@^1.34.1", "@gearbox-protocol/core-v3@^1.36.0":
   version "1.36.0"
   resolved "https://registry.yarnpkg.com/@gearbox-protocol/core-v3/-/core-v3-1.36.0.tgz#1223c7b91ecf680e663c65b7113f6d3b56604492"
   integrity sha512-GSKV3xU/2ZfHgaOH0ZWWrVaS5/XyhY20XgXFUIs0eBiD/kwIwT0bKhdb1pyyhb8EkJD+UVncDy3BBBl450P91Q==
@@ -1153,12 +1133,21 @@
     deep-eql "^4.1.0"
     moment "^2.29.4"
 
-
-"@gearbox-protocol/sdk@^2.1.18", "@gearbox-protocol/sdk@^2.1.19":
+"@gearbox-protocol/sdk@^2.1.18":
   version "2.1.19"
   resolved "https://registry.yarnpkg.com/@gearbox-protocol/sdk/-/sdk-2.1.19.tgz#2cb831bd6c7afdc83e8b331f35e186b6f4512625"
   integrity sha512-awrsKlTsa9leXQpFkNSM5gBVXe2WgiKfObmOFhp0NiX9cfcrddhLalSbTAkA7YdU2yWUNatGz7buEQg3v76LCw==
+  dependencies:
+    "@types/deep-eql" "^4.0.0"
+    axios "^1.2.6"
+    decimal.js-light "^2.5.1"
+    deep-eql "^4.1.0"
+    moment "^2.29.4"
 
+"@gearbox-protocol/sdk@^2.1.21":
+  version "2.1.21"
+  resolved "https://registry.yarnpkg.com/@gearbox-protocol/sdk/-/sdk-2.1.21.tgz#5f75de0c716fcb9bee58aff70398e53ebb69a554"
+  integrity sha512-nT8JnyktVGNs843PZK0Tc7PcUyaxYhOEjVavu+1favhQ1h3NDYSJz8UfbrWqA/AvZXO4xd1Iy9NK+Pf7c9uTBg==
   dependencies:
     "@types/deep-eql" "^4.0.0"
     axios "^1.2.6"
