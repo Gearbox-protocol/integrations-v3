@@ -8,7 +8,7 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {RAY} from "@gearbox-protocol/core-v2/contracts/libraries/Constants.sol";
 
 import {AbstractAdapter} from "../AbstractAdapter.sol";
-import {AdapterType} from "../../interfaces/IAdapter.sol";
+import {AdapterType} from "@gearbox-protocol/sdk/contracts/AdapterType.sol";
 
 import {IAsset} from "../../integrations/balancer/IAsset.sol";
 import {
@@ -34,9 +34,9 @@ contract BalancerV2VaultAdapter is AbstractAdapter, IBalancerV2VaultAdapter {
     mapping(bytes32 => PoolStatus) public poolIdStatus;
 
     /// @notice Constructor
-    /// @param _CreditManagerV3 Credit manager address
+    /// @param _creditManager Credit manager address
     /// @param _vault Balancer vault address
-    constructor(address _CreditManagerV3, address _vault) AbstractAdapter(_CreditManagerV3, _vault) {}
+    constructor(address _creditManager, address _vault) AbstractAdapter(_creditManager, _vault) {}
 
     /// ----- ///
     /// SWAPS ///

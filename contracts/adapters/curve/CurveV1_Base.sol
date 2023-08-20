@@ -10,7 +10,7 @@ import {ZeroAddressException} from "@gearbox-protocol/core-v2/contracts/interfac
 import {RAY} from "@gearbox-protocol/core-v2/contracts/libraries/Constants.sol";
 
 import {AbstractAdapter} from "../AbstractAdapter.sol";
-import {AdapterType} from "../../interfaces/IAdapter.sol";
+import {AdapterType} from "@gearbox-protocol/sdk/contracts/AdapterType.sol";
 
 import {ICurvePool} from "../../integrations/curve/ICurvePool.sol";
 import {ICurvePool2Assets} from "../../integrations/curve/ICurvePool_2.sol";
@@ -88,13 +88,13 @@ contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
     uint256 public immutable override underlying3Mask;
 
     /// @notice Constructor
-    /// @param _CreditManagerV3 Credit manager address
+    /// @param _creditManager Credit manager address
     /// @param _curvePool Target Curve pool address
     /// @param _lp_token Pool LP token address
     /// @param _metapoolBase Base pool address (for metapools only) or zero address
     /// @param _nCoins Number of coins in the pool
-    constructor(address _CreditManagerV3, address _curvePool, address _lp_token, address _metapoolBase, uint256 _nCoins)
-        AbstractAdapter(_CreditManagerV3, _curvePool)
+    constructor(address _creditManager, address _curvePool, address _lp_token, address _metapoolBase, uint256 _nCoins)
+        AbstractAdapter(_creditManager, _curvePool)
     {
         if (_lp_token == address(0)) revert ZeroAddressException(); // F: [ACV1-1]
 

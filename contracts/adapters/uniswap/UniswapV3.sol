@@ -8,7 +8,7 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {RAY} from "@gearbox-protocol/core-v2/contracts/libraries/Constants.sol";
 
 import {AbstractAdapter} from "../AbstractAdapter.sol";
-import {AdapterType} from "../../interfaces/IAdapter.sol";
+import {AdapterType} from "@gearbox-protocol/sdk/contracts/AdapterType.sol";
 
 import {ISwapRouter} from "../../integrations/uniswap/IUniswapV3.sol";
 import {BytesLib} from "../../integrations/uniswap/BytesLib.sol";
@@ -45,9 +45,9 @@ contract UniswapV3Adapter is AbstractAdapter, IUniswapV3Adapter {
     mapping(address => mapping(address => mapping(uint24 => bool))) internal allowedPool;
 
     /// @notice Constructor
-    /// @param _CreditManagerV3 Credit manager address
+    /// @param _creditManager Credit manager address
     /// @param _router Uniswap V3 Router address
-    constructor(address _CreditManagerV3, address _router) AbstractAdapter(_CreditManagerV3, _router) {}
+    constructor(address _creditManager, address _router) AbstractAdapter(_creditManager, _router) {}
 
     /// @inheritdoc IUniswapV3Adapter
     function exactInputSingle(ISwapRouter.ExactInputSingleParams calldata params)

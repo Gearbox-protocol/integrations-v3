@@ -8,7 +8,7 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {RAY} from "@gearbox-protocol/core-v2/contracts/libraries/Constants.sol";
 
 import {AbstractAdapter} from "../AbstractAdapter.sol";
-import {AdapterType} from "../../interfaces/IAdapter.sol";
+import {AdapterType} from "@gearbox-protocol/sdk/contracts/AdapterType.sol";
 
 import {IUniswapV2Router02} from "../../integrations/uniswap/IUniswapV2Router02.sol";
 import {IUniswapV2Adapter, UniswapPairStatus} from "../../interfaces/uniswap/IUniswapV2Adapter.sol";
@@ -24,9 +24,9 @@ contract UniswapV2Adapter is AbstractAdapter, IUniswapV2Adapter {
     mapping(address => mapping(address => bool)) internal allowedPair;
 
     /// @notice Constructor
-    /// @param _CreditManagerV3 Credit manager address
+    /// @param _creditManager Credit manager address
     /// @param _router Uniswap V2 Router address
-    constructor(address _CreditManagerV3, address _router) AbstractAdapter(_CreditManagerV3, _router) {}
+    constructor(address _creditManager, address _router) AbstractAdapter(_creditManager, _router) {}
 
     /// @inheritdoc IUniswapV2Adapter
     function swapTokensForExactTokens(

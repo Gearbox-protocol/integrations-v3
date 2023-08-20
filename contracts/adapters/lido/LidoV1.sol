@@ -13,7 +13,7 @@ import {
 } from "@gearbox-protocol/core-v3/contracts/interfaces/IAddressProviderV3.sol";
 
 import {AbstractAdapter} from "../AbstractAdapter.sol";
-import {AdapterType} from "../../interfaces/IAdapter.sol";
+import {AdapterType} from "@gearbox-protocol/sdk/contracts/AdapterType.sol";
 
 import {IstETH} from "../../integrations/lido/IstETH.sol";
 import {ILidoV1Adapter} from "../../interfaces/lido/ILidoV1Adapter.sol";
@@ -46,9 +46,9 @@ contract LidoV1Adapter is AbstractAdapter, ILidoV1Adapter {
     uint16 public constant override _gearboxAdapterVersion = 2;
 
     /// @notice Constructor
-    /// @param _CreditManagerV3 Credit manager address
+    /// @param _creditManager Credit manager address
     /// @param _lidoGateway Lido gateway address
-    constructor(address _CreditManagerV3, address _lidoGateway) AbstractAdapter(_CreditManagerV3, _lidoGateway) {
+    constructor(address _creditManager, address _lidoGateway) AbstractAdapter(_creditManager, _lidoGateway) {
         stETH = address(LidoV1Gateway(payable(_lidoGateway)).stETH()); // F: [LDOV1-1]
         stETHTokenMask = _getMaskOrRevert(stETH); // F: [LDOV1-1]
 

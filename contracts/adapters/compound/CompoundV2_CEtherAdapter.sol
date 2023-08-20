@@ -5,7 +5,7 @@ pragma solidity ^0.8.17;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-import {AdapterType} from "../../interfaces/IAdapter.sol";
+import {AdapterType} from "@gearbox-protocol/sdk/contracts/AdapterType.sol";
 
 import {CEtherGateway} from "../../helpers/compound/CompoundV2_CEtherGateway.sol";
 import {CompoundV2_CTokenAdapter} from "./CompoundV2_CTokenAdapter.sol";
@@ -30,11 +30,9 @@ contract CompoundV2_CEtherAdapter is CompoundV2_CTokenAdapter {
     uint16 public constant override _gearboxAdapterVersion = 1;
 
     /// @notice Constructor
-    /// @param _CreditManagerV3 Credit manager address
+    /// @param _creditManager Credit manager address
     /// @param _cethGateway CEther gateway contract address
-    constructor(address _CreditManagerV3, address _cethGateway)
-        CompoundV2_CTokenAdapter(_CreditManagerV3, _cethGateway)
-    {
+    constructor(address _creditManager, address _cethGateway) CompoundV2_CTokenAdapter(_creditManager, _cethGateway) {
         cToken = address(CEtherGateway(payable(targetContract)).ceth()); // F: [ACV2CETH-1]
         underlying = address(CEtherGateway(payable(targetContract)).weth()); // F: [ACV2CETH-1]
 

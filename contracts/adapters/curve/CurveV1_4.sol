@@ -3,7 +3,8 @@
 // (c) Gearbox Holdings, 2023
 pragma solidity ^0.8.17;
 
-import {IAdapter, AdapterType} from "../../interfaces/IAdapter.sol";
+import {AdapterType} from "@gearbox-protocol/sdk/contracts/AdapterType.sol";
+import {IAdapter} from "@gearbox-protocol/core-v2/contracts/interfaces/IAdapter.sol";
 
 import {N_COINS} from "../../integrations/curve/ICurvePool_4.sol";
 import {ICurveV1_4AssetsAdapter} from "../../interfaces/curve/ICurveV1_4AssetsAdapter.sol";
@@ -16,12 +17,12 @@ contract CurveV1Adapter4Assets is CurveV1AdapterBase, ICurveV1_4AssetsAdapter {
         AdapterType.CURVE_V1_4ASSETS;
 
     /// @notice Constructor
-    /// @param _CreditManagerV3 Credit manager address
+    /// @param _creditManager Credit manager address
     /// @param _curvePool Target Curve pool address
     /// @param _lp_token Pool LP token address
     /// @param _metapoolBase Base pool address (for metapools only) or zero address
-    constructor(address _CreditManagerV3, address _curvePool, address _lp_token, address _metapoolBase)
-        CurveV1AdapterBase(_CreditManagerV3, _curvePool, _lp_token, _metapoolBase, N_COINS)
+    constructor(address _creditManager, address _curvePool, address _lp_token, address _metapoolBase)
+        CurveV1AdapterBase(_creditManager, _curvePool, _lp_token, _metapoolBase, N_COINS)
     {}
 
     /// @inheritdoc ICurveV1_4AssetsAdapter

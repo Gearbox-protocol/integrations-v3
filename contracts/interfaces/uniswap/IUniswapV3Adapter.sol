@@ -3,7 +3,8 @@
 // (c) Gearbox Holdings, 2023
 pragma solidity ^0.8.17;
 
-import {IAdapter} from "../IAdapter.sol";
+import {IAdapter} from "@gearbox-protocol/core-v2/contracts/interfaces/IAdapter.sol";
+
 import {ISwapRouter} from "../../integrations/uniswap/IUniswapV3.sol";
 
 struct UniswapV3PoolStatus {

@@ -13,9 +13,9 @@ import {ICompoundV2_CTokenAdapter} from "../../interfaces/compound/ICompoundV2_C
 /// @dev Abstract base contract for CErc20 and CEther adapters
 abstract contract CompoundV2_CTokenAdapter is AbstractAdapter, ICompoundV2_CTokenAdapter {
     /// @notice Constructor
-    /// @param _CreditManagerV3 Credit manager address
+    /// @param _creditManager Credit manager address
     /// @param _targetContract Target contract address, must implement `ICErc20Actions`
-    constructor(address _CreditManagerV3, address _targetContract) AbstractAdapter(_CreditManagerV3, _targetContract) {}
+    constructor(address _creditManager, address _targetContract) AbstractAdapter(_creditManager, _targetContract) {}
 
     /// @dev Reverts if CToken operation produced non-zero error code
     function _revertOnError(uint256 error) internal pure {

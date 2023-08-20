@@ -7,7 +7,7 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import {RAY} from "@gearbox-protocol/core-v2/contracts/libraries/Constants.sol";
 
-import {AdapterType} from "../../interfaces/IAdapter.sol";
+import {AdapterType} from "@gearbox-protocol/sdk/contracts/AdapterType.sol";
 
 import {N_COINS} from "../../integrations/curve/ICurvePool_2.sol";
 import {ICurveV1Adapter} from "../../interfaces/curve/ICurveV1Adapter.sol";
@@ -29,11 +29,11 @@ contract CurveV1AdapterStETH is CurveV1Adapter2Assets {
     }
 
     /// @notice Constructor
-    /// @param _CreditManagerV3 Credit manager address
+    /// @param _creditManager Credit manager address
     /// @param _curveStETHPoolGateway steCRV pool gateway address
     /// @param _lp_token steCRV LP token address
-    constructor(address _CreditManagerV3, address _curveStETHPoolGateway, address _lp_token)
-        CurveV1Adapter2Assets(_CreditManagerV3, _curveStETHPoolGateway, _lp_token, address(0))
+    constructor(address _creditManager, address _curveStETHPoolGateway, address _lp_token)
+        CurveV1Adapter2Assets(_creditManager, _curveStETHPoolGateway, _lp_token, address(0))
     {}
 
     /// @inheritdoc CurveV1Adapter2Assets

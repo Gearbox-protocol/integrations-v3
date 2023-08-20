@@ -6,10 +6,10 @@ pragma solidity ^0.8.17;
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import {AbstractAdapter} from "../AbstractAdapter.sol";
-import {AdapterType} from "../../interfaces/IAdapter.sol";
+import {AdapterType} from "@gearbox-protocol/sdk/contracts/AdapterType.sol";
 
-import {IWrappedAToken} from "../../interfaces/aave/IWrappedAToken.sol";
 import {IAaveV2_WrappedATokenAdapter} from "../../interfaces/aave/IAaveV2_WrappedATokenAdapter.sol";
+import {IWrappedATokenV2} from "@gearbox-protocol/oracles-v3/contracts/interfaces/aave/IWrappedATokenV2.sol";
 
 /// @title Aave V2 Wrapped aToken adapter
 /// @notice Implements logic allowing CAs to convert between waTokens, aTokens and underlying tokens
@@ -33,15 +33,15 @@ contract AaveV2_WrappedATokenAdapter is AbstractAdapter, IAaveV2_WrappedATokenAd
     uint16 public constant override _gearboxAdapterVersion = 1;
 
     /// @notice Constructor
-    /// @param _CreditManagerV3 Credit manager address
+    /// @param _creditManager Credit manager address
     /// @param _waToken Wrapped aToken address
-    constructor(address _CreditManagerV3, address _waToken) AbstractAdapter(_CreditManagerV3, _waToken) {
+    constructor(address _creditManager, address _waToken) AbstractAdapter(_creditManager, _waToken) {
         waTokenMask = _getMaskOrRevert(targetContract); // F: [AAV2W-1, AAV2W-2]
 
-        aToken = address(IWrappedAToken(targetContract).aToken()); // F: [AAV2W-2]
+        aToken = IWrappedATokenV2(targetContract).aToken(); // F: [AAV2W-2]
         aTokenMask = _getMaskOrRevert(aToken); // F: [AAV2W-2]
 
-        underlying = address(IWrappedAToken(targetContract).underlying()); // F: [AAV2W-2]
+        underlying = IWrappedATokenV2(targetContract).underlying(); // F: [AAV2W-2]
         tokenMask = _getMaskOrRevert(underlying); // F: [AAV2W-2]
     }
 
@@ -127,11 +127,11 @@ contract AaveV2_WrappedATokenAdapter is AbstractAdapter, IAaveV2_WrappedATokenAd
         (tokensToEnable, tokensToDisable) = (waTokenMask, fromUnderlying ? tokenMask : aTokenMask);
     }
 
-    /// @dev Returns data for `IWrappedAToken`'s `deposit` or `depositUnderlying` call
+    /// @dev Returns data for `IWrappedATokenV2`'s `deposit` or `depositUnderlying` call
     function _encodeDeposit(uint256 assets, bool fromUnderlying) internal pure returns (bytes memory callData) {
         callData = fromUnderlying
-            ? abi.encodeCall(IWrappedAToken.depositUnderlying, (assets))
-            : abi.encodeCall(IWrappedAToken.deposit, (assets));
+            ? abi.encodeCall(IWrappedATokenV2.depositUnderlying, (assets))
+            : abi.encodeCall(IWrappedATokenV2.deposit, (assets));
     }
 
     /// ----------- ///
@@ -208,10 +208,10 @@ contract AaveV2_WrappedATokenAdapter is AbstractAdapter, IAaveV2_WrappedATokenAd
         (tokensToEnable, tokensToDisable) = (toUnderlying ? tokenMask : aTokenMask, waTokenMask);
     }
 
-    /// @dev Returns data for `IWrappedAToken`'s `withdraw` or `withdrawUnderlying` call
+    /// @dev Returns data for `IWrappedATokenV2`'s `withdraw` or `withdrawUnderlying` call
     function _encodeWithdraw(uint256 shares, bool toUnderlying) internal pure returns (bytes memory callData) {
         callData = toUnderlying
-            ? abi.encodeCall(IWrappedAToken.withdrawUnderlying, (shares))
-            : abi.encodeCall(IWrappedAToken.withdraw, (shares));
+            ? abi.encodeCall(IWrappedATokenV2.withdrawUnderlying, (shares))
+            : abi.encodeCall(IWrappedATokenV2.withdraw, (shares));
     }
 }

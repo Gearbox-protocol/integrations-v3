@@ -6,7 +6,7 @@ pragma solidity ^0.8.17;
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import {AbstractAdapter} from "../AbstractAdapter.sol";
-import {AdapterType} from "../../interfaces/IAdapter.sol";
+import {AdapterType} from "@gearbox-protocol/sdk/contracts/AdapterType.sol";
 
 import {IYVault} from "../../integrations/yearn/IYVault.sol";
 import {IYearnV2Adapter} from "../../interfaces/yearn/IYearnV2Adapter.sol";
@@ -27,9 +27,9 @@ contract YearnV2Adapter is AbstractAdapter, IYearnV2Adapter {
     uint16 public constant override _gearboxAdapterVersion = 3;
 
     /// @notice Constructor
-    /// @param _CreditManagerV3 Credit manager address
+    /// @param _creditManager Credit manager address
     /// @param _vault Yearn vault address
-    constructor(address _CreditManagerV3, address _vault) AbstractAdapter(_CreditManagerV3, _vault) {
+    constructor(address _creditManager, address _vault) AbstractAdapter(_creditManager, _vault) {
         token = IYVault(targetContract).token(); // F: [AYV2-1]
         tokenMask = _getMaskOrRevert(token); // F: [AYV2-1, AYV2-2]
         yTokenMask = _getMaskOrRevert(_vault); // F: [AYV2-1, AYV2-2]

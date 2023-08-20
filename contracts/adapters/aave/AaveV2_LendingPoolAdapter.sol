@@ -6,7 +6,7 @@ pragma solidity ^0.8.17;
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import {AbstractAdapter} from "../AbstractAdapter.sol";
-import {AdapterType} from "../../interfaces/IAdapter.sol";
+import {AdapterType} from "@gearbox-protocol/sdk/contracts/AdapterType.sol";
 
 import {ILendingPool} from "../../integrations/aave/ILendingPool.sol";
 import {IAaveV2_LendingPoolAdapter} from "../../interfaces/aave/IAaveV2_LendingPoolAdapter.sol";
@@ -18,9 +18,9 @@ contract AaveV2_LendingPoolAdapter is AbstractAdapter, IAaveV2_LendingPoolAdapte
     uint16 public constant override _gearboxAdapterVersion = 1;
 
     /// @notice Constructor
-    /// @param _CreditManagerV3 Credit manager address
+    /// @param _creditManager Credit manager address
     /// @param _lendingPool Lending pool address
-    constructor(address _CreditManagerV3, address _lendingPool) AbstractAdapter(_CreditManagerV3, _lendingPool) {}
+    constructor(address _creditManager, address _lendingPool) AbstractAdapter(_creditManager, _lendingPool) {}
 
     /// @dev Returns aToken address for given underlying token
     function _aToken(address underlying) internal view returns (address) {
