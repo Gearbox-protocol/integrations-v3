@@ -6,11 +6,7 @@ pragma solidity ^0.8.10;
 import {Tokens} from "@gearbox-protocol/sdk/contracts/Tokens.sol";
 import {SupportedContracts, Contracts} from "@gearbox-protocol/sdk/contracts/SupportedContracts.sol";
 import {IPoolV3DeployConfig} from "@gearbox-protocol/core-v3/contracts/test/interfaces/ICreditConfig.sol";
-// import {IUniswapV2Router02} from "../../integrations/uniswap/IUniswapV2Router02.sol";
-// import {MultiCall} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacadeV3.sol";
 
-// // import {TokenType} from "../../integrations/TokenType.sol";
-// import {TokensTestSuite} from "@gearbox-protocol/core-v3/contracts/test/suites/TokensTestSuite.sol";
 import {PriceFeedDeployer} from "@gearbox-protocol/oracles-v3/contracts/test/suites/PriceFeedDeployer.sol";
 import {IntegrationTestHelper} from "@gearbox-protocol/core-v3/contracts/test/helpers/IntegrationTestHelper.sol";
 import {AdapterDeployer} from "./AdapterDeployer.sol";
@@ -41,28 +37,31 @@ contract LiveTestHelper is IntegrationTestHelper {
 
     modifier liveCreditTest(string memory id) {
         if (chainId != 1337 && chainId != 31337) {
-            _setupCore();
-            console.log(tokenTestSuite.addressOf(Tokens.MKR));
-            supportedContracts = new SupportedContracts(chainId);
-
-            PriceFeedDeployer priceFeedDeployer =
-                new PriceFeedDeployer(chainId, address(addressProvider), tokenTestSuite, supportedContracts);
-
-            priceFeedDeployer.addPriceFeeds(address(priceOracle));
-
-            IPoolV3DeployConfig config = getDeployConfig(id);
-
-            _deployCreditAndPool(config);
-
-            uint256 len = config.creditManagers().length;
-            for (uint256 i = 0; i < len; i++) {
-                AdapterDeployer adapterDeployer =
-                new AdapterDeployer(address(creditManagers[i]), config.creditManagers()[i].contracts, tokenTestSuite, supportedContracts );
-
-                adapterDeployer.connectAdapters();
-            }
-
+            _setupLiveCreditTest(id);
             _;
+        }
+    }
+
+    function _setupLiveCreditTest(string memory id) internal {
+        _setupCore();
+        console.log(tokenTestSuite.addressOf(Tokens.MKR));
+        supportedContracts = new SupportedContracts(chainId);
+
+        PriceFeedDeployer priceFeedDeployer =
+            new PriceFeedDeployer(chainId, address(addressProvider), tokenTestSuite, supportedContracts);
+
+        priceFeedDeployer.addPriceFeeds(address(priceOracle));
+
+        IPoolV3DeployConfig config = getDeployConfig(id);
+
+        _deployCreditAndPool(config);
+
+        uint256 len = config.creditManagers().length;
+        for (uint256 i = 0; i < len; i++) {
+            AdapterDeployer adapterDeployer =
+            new AdapterDeployer(address(creditManagers[i]), config.creditManagers()[i].contracts, tokenTestSuite, supportedContracts );
+
+            adapterDeployer.connectAdapters();
         }
     }
 
