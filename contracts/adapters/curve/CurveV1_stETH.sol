@@ -15,11 +15,9 @@ import {CurveV1AdapterBase} from "./CurveV1_Base.sol";
 import {CurveV1Adapter2Assets} from "./CurveV1_2.sol";
 
 /// @title Curve V1 stETH adapter
-/// @notice Same as CurveV1Adapter2Assets but uses stETH gateway and needs to approve LP token
+/// @notice Same as `CurveV1Adapter2Assets` but uses stETH gateway and needs to approve LP token
 contract CurveV1AdapterStETH is CurveV1Adapter2Assets {
-    function _gearboxAdapterType() external pure override returns (AdapterType) {
-        return AdapterType.CURVE_V1_STECRV_POOL;
-    }
+    AdapterType public constant override _gearboxAdapterType = AdapterType.CURVE_V1_STECRV_POOL;
 
     /// @notice Sets allowance for the pool LP token to max before the operation and to 1 after
     modifier withLPTokenApproval() {
@@ -50,19 +48,19 @@ contract CurveV1AdapterStETH is CurveV1Adapter2Assets {
 
     /// @inheritdoc CurveV1AdapterBase
     /// @dev Unlike other adapters, approves the LP token to the target
-    function remove_liquidity_one_coin(uint256, int128 i, uint256)
+    function remove_liquidity_one_coin(uint256 _token_amount, uint256 i, uint256 min_amount)
         public
         override(CurveV1AdapterBase, ICurveV1Adapter)
         creditFacadeOnly
         withLPTokenApproval // F: [ACV1S-4]
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        (tokensToEnable, tokensToDisable) = _remove_liquidity_one_coin(i); // F: [ACV1S-4]
+        (tokensToEnable, tokensToDisable) = _remove_liquidity_one_coin(_token_amount, i, min_amount); // F: [ACV1S-4]
     }
 
     /// @inheritdoc CurveV1AdapterBase
     /// @dev Unlike other adapters, approves the LP token to the target
-    function remove_all_liquidity_one_coin(int128 i, uint256 rateMinRAY)
+    function remove_all_liquidity_one_coin(uint256 i, uint256 rateMinRAY)
         public
         override(CurveV1AdapterBase, ICurveV1Adapter)
         creditFacadeOnly

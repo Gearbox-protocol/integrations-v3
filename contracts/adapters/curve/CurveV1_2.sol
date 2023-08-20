@@ -13,7 +13,7 @@ import {CurveV1AdapterBase} from "./CurveV1_Base.sol";
 /// @title Curve V1 2 assets adapter
 /// @notice Implements logic allowing to interact with Curve pools with 2 assets
 contract CurveV1Adapter2Assets is CurveV1AdapterBase, ICurveV1_2AssetsAdapter {
-    function _gearboxAdapterType() external pure virtual override(CurveV1AdapterBase, IAdapter) returns (AdapterType) {
+    function _gearboxAdapterType() external pure virtual override returns (AdapterType) {
         return AdapterType.CURVE_V1_2ASSETS;
     }
 
@@ -26,7 +26,9 @@ contract CurveV1Adapter2Assets is CurveV1AdapterBase, ICurveV1_2AssetsAdapter {
         CurveV1AdapterBase(_creditManager, _curvePool, _lp_token, _metapoolBase, N_COINS)
     {}
 
-    /// @inheritdoc ICurveV1_2AssetsAdapter
+    /// @notice Add liquidity to the pool
+    /// @param amounts Amounts of tokens to add
+    /// @dev `min_mint_amount` parameter is ignored because calldata is passed directly to the target contract
     function add_liquidity(uint256[N_COINS] calldata amounts, uint256)
         external
         creditFacadeOnly
@@ -35,7 +37,8 @@ contract CurveV1Adapter2Assets is CurveV1AdapterBase, ICurveV1_2AssetsAdapter {
         (tokensToEnable, tokensToDisable) = _add_liquidity(amounts[0] > 1, amounts[1] > 1, false, false); // F: [ACV1_2-4, ACV1S-1]
     }
 
-    /// @inheritdoc ICurveV1_2AssetsAdapter
+    /// @notice Remove liquidity from the pool
+    /// @dev '_amount' and 'min_amounts' parameters are ignored because calldata is directly passed to the target contract
     function remove_liquidity(uint256, uint256[N_COINS] calldata)
         external
         virtual
@@ -45,7 +48,9 @@ contract CurveV1Adapter2Assets is CurveV1AdapterBase, ICurveV1_2AssetsAdapter {
         (tokensToEnable, tokensToDisable) = _remove_liquidity(); // F: [ACV1_2-5]
     }
 
-    /// @inheritdoc ICurveV1_2AssetsAdapter
+    /// @notice Withdraw exact amounts of tokens from the pool
+    /// @param amounts Amounts of tokens to withdraw
+    /// @dev `max_burn_amount` parameter is ignored because calldata is directly passed to the target contract
     function remove_liquidity_imbalance(uint256[N_COINS] calldata amounts, uint256)
         external
         virtual

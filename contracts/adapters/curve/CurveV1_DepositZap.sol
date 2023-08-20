@@ -12,7 +12,7 @@ import {AdapterType} from "@gearbox-protocol/sdk/contracts/AdapterType.sol";
 import {CurveV1AdapterBase} from "./CurveV1_Base.sol";
 
 /// @title Curve V1 DepozitZap adapter
-/// @notice Implements logic for interacting with a Curve zap wrapper (to remove_liquidity_one_coin from older pools)
+/// @notice Implements logic for interacting with a Curve zap wrapper (to `remove_liquidity_one_coin` from older pools)
 contract CurveV1AdapterDeposit is CurveV1AdapterBase {
     AdapterType public constant override _gearboxAdapterType = AdapterType.CURVE_V1_WRAPPER;
 
@@ -34,7 +34,7 @@ contract CurveV1AdapterDeposit is CurveV1AdapterBase {
 
     /// @inheritdoc CurveV1AdapterBase
     /// @dev Unlike other adapters, approves the LP token to the target
-    function remove_liquidity_one_coin(uint256, int128 i, uint256)
+    function remove_liquidity_one_coin(uint256 _token_amount, uint256 i, uint256 min_amount)
         public
         virtual
         override
@@ -42,12 +42,12 @@ contract CurveV1AdapterDeposit is CurveV1AdapterBase {
         withLPTokenApproval
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        (tokensToEnable, tokensToDisable) = _remove_liquidity_one_coin(i);
+        (tokensToEnable, tokensToDisable) = _remove_liquidity_one_coin(_token_amount, i, min_amount);
     }
 
     /// @inheritdoc CurveV1AdapterBase
     /// @dev Unlike other adapters, approves the LP token to the target
-    function remove_all_liquidity_one_coin(int128 i, uint256 rateMinRAY)
+    function remove_all_liquidity_one_coin(uint256 i, uint256 rateMinRAY)
         public
         virtual
         override

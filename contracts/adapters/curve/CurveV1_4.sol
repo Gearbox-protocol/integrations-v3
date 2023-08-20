@@ -10,11 +10,12 @@ import {N_COINS} from "../../integrations/curve/ICurvePool_4.sol";
 import {ICurveV1_4AssetsAdapter} from "../../interfaces/curve/ICurveV1_4AssetsAdapter.sol";
 import {CurveV1AdapterBase} from "./CurveV1_Base.sol";
 
-/// @title Curve V1 4 assets adapter interface
+/// @title Curve V1 4 assets adapter
 /// @notice Implements logic allowing to interact with Curve pools with 4 assets
 contract CurveV1Adapter4Assets is CurveV1AdapterBase, ICurveV1_4AssetsAdapter {
-    AdapterType public constant override(CurveV1AdapterBase, IAdapter) _gearboxAdapterType =
-        AdapterType.CURVE_V1_4ASSETS;
+    function _gearboxAdapterType() external pure virtual override returns (AdapterType) {
+        return AdapterType.CURVE_V1_4ASSETS;
+    }
 
     /// @notice Constructor
     /// @param _creditManager Credit manager address
@@ -25,7 +26,9 @@ contract CurveV1Adapter4Assets is CurveV1AdapterBase, ICurveV1_4AssetsAdapter {
         CurveV1AdapterBase(_creditManager, _curvePool, _lp_token, _metapoolBase, N_COINS)
     {}
 
-    /// @inheritdoc ICurveV1_4AssetsAdapter
+    /// @notice Add liquidity to the pool
+    /// @param amounts Amounts of tokens to add
+    /// @dev `min_mint_amount` parameter is ignored because calldata is passed directly to the target contract
     function add_liquidity(uint256[N_COINS] calldata amounts, uint256)
         external
         creditFacadeOnly
@@ -35,7 +38,8 @@ contract CurveV1Adapter4Assets is CurveV1AdapterBase, ICurveV1_4AssetsAdapter {
             _add_liquidity(amounts[0] > 1, amounts[1] > 1, amounts[2] > 1, amounts[3] > 1); // F: [ACV1_4-4]
     }
 
-    /// @inheritdoc ICurveV1_4AssetsAdapter
+    /// @notice Remove liquidity from the pool
+    /// @dev '_amount' and 'min_amounts' parameters are ignored because calldata is directly passed to the target contract
     function remove_liquidity(uint256, uint256[N_COINS] calldata)
         external
         virtual
@@ -45,7 +49,9 @@ contract CurveV1Adapter4Assets is CurveV1AdapterBase, ICurveV1_4AssetsAdapter {
         (tokensToEnable, tokensToDisable) = _remove_liquidity(); // F: [ACV1_4-5]
     }
 
-    /// @inheritdoc ICurveV1_4AssetsAdapter
+    /// @notice Withdraw exact amounts of tokens from the pool
+    /// @param amounts Amounts of tokens to withdraw
+    /// @dev `max_burn_amount` parameter is ignored because calldata is directly passed to the target contract
     function remove_liquidity_imbalance(uint256[N_COINS] calldata amounts, uint256)
         external
         virtual
