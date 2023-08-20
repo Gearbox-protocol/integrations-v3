@@ -6,6 +6,7 @@ pragma solidity ^0.8.17;
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import {RAY} from "@gearbox-protocol/core-v2/contracts/libraries/Constants.sol";
+import {BitMask} from "@gearbox-protocol/core-v3/contracts/libraries/BitMask.sol";
 
 import {AbstractAdapter} from "../AbstractAdapter.sol";
 import {AdapterType} from "@gearbox-protocol/sdk/contracts/AdapterType.sol";
@@ -27,30 +28,44 @@ import {
 /// @title Balancer V2 Vault adapter
 /// @notice Implements logic allowing CAs to swap through and LP in Balancer vaults
 contract BalancerV2VaultAdapter is AbstractAdapter, IBalancerV2VaultAdapter {
+    using BitMask for uint256;
+
     AdapterType public constant override _gearboxAdapterType = AdapterType.BALANCER_VAULT;
     uint16 public constant override _gearboxAdapterVersion = 1;
 
-    /// @inheritdoc IBalancerV2VaultAdapter
-    mapping(bytes32 => PoolStatus) public poolIdStatus;
+    /// @notice Mapping from poolId to status of the pool: whether it is not supported, fully supported or swap-only
+    mapping(bytes32 => PoolStatus) public override poolStatus;
 
     /// @notice Constructor
     /// @param _creditManager Credit manager address
     /// @param _vault Balancer vault address
     constructor(address _creditManager, address _vault) AbstractAdapter(_creditManager, _vault) {}
 
-    /// ----- ///
-    /// SWAPS ///
-    /// ----- ///
+    // ----- //
+    // SWAPS //
+    // ----- //
 
-    /// @inheritdoc IBalancerV2VaultAdapter
+    /// @notice Swaps a token for another token within a single pool
+    /// @param singleSwap Struct containing swap parameters
+    ///        * `poolId` - ID of the pool to perform a swap in
+    ///        * `kind` - type of swap (GIVEN IN / GIVEN OUT)
+    ///        * `assetIn` - asset to send
+    ///        * `assetOut` - asset to receive
+    ///        * `amount` - amount of input asset to send (for GIVEN IN) or output asset to receive (for GIVEN OUT)
+    ///        * `userData` - generic blob used to pass extra data
+    /// @param limit The minimal amount of `assetOut` to receive or maximal amount of `assetIn` to spend (depending on `kind`)
+    /// @param deadline The latest timestamp at which the swap would be executed
+    /// @dev `fundManagement` param from the original interface is ignored, as the adapter does not use internal balances and
+    ///       only has one sender/recipient
+    /// @dev The function reverts if the poolId status is not ALLOWED or SWAP_ONLY
     function swap(SingleSwap memory singleSwap, FundManagement memory, uint256 limit, uint256 deadline)
         external
         override
         creditFacadeOnly
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        if (poolIdStatus[singleSwap.poolId] == PoolStatus.NOT_ALLOWED) {
-            revert PoolIDNotSupportedException();
+        if (poolStatus[singleSwap.poolId] == PoolStatus.NOT_ALLOWED) {
+            revert PoolNotSupportedException();
         }
 
         address creditAccount = _creditAccount();
@@ -69,15 +84,23 @@ contract BalancerV2VaultAdapter is AbstractAdapter, IBalancerV2VaultAdapter {
         ); // F: [ABV2-1]
     }
 
-    /// @inheritdoc IBalancerV2VaultAdapter
+    /// @notice Swaps the entire balance of a token for another token within a single pool, disables input token
+    /// @param singleSwapAll Struct containing swap parameters
+    ///        * `poolId` - ID of the pool to perform a swap in
+    ///        * `assetIn` - asset to send
+    ///        * `assetOut` - asset to receive
+    ///        * `userData` - additional generic blob used to pass extra data
+    /// @param limitRateRAY The minimal resulting exchange rate of assetOut to assetIn, scaled by 1e27
+    /// @param deadline The latest timestamp at which the swap would be executed
+    /// @dev The function reverts if the poolId status is not ALLOWED or SWAP_ONLY
     function swapAll(SingleSwapAll memory singleSwapAll, uint256 limitRateRAY, uint256 deadline)
         external
         override
         creditFacadeOnly
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        if (poolIdStatus[singleSwapAll.poolId] == PoolStatus.NOT_ALLOWED) {
-            revert PoolIDNotSupportedException();
+        if (poolStatus[singleSwapAll.poolId] == PoolStatus.NOT_ALLOWED) {
+            revert PoolNotSupportedException();
         }
 
         address creditAccount = _creditAccount();
@@ -118,7 +141,21 @@ contract BalancerV2VaultAdapter is AbstractAdapter, IBalancerV2VaultAdapter {
         ); // F: [ABV2-2]
     }
 
-    /// @inheritdoc IBalancerV2VaultAdapter
+    /// @notice Performs a multi-hop swap through several Balancer pools
+    /// @param kind Type of swap (GIVEN IN or GIVEN OUT)
+    /// @param swaps Array of structs containing data for each individual swap:
+    ///        * `poolId` - ID of the pool to perform a swap in
+    ///        * `assetInIndex` - Index of the input asset in the pool (in an alphanumerically sorted array of asset addresses)
+    ///        * `assetOutIndex` - Index of the output asset in the pool (in an alphanumerically sorted array of asset addresses)
+    ///        * `amount` - amount of asset to send / receive. 0 signals to either spend the entire amount received from the last step,
+    ///           or to receive the exact amount needed for the next step
+    ///        * `userData` - generic blob used to pass extra data
+    /// @param assets Array of all assets participating in the swap
+    /// @param limits Array of minimal received (negative) / maximal spent (positive) amounts, in the same order as the assets array
+    /// @param deadline The latest timestamp at which the swap would be executed
+    /// @dev `fundManagement` param from the original interface is ignored, as the adapter does not use internal balances and
+    ///       only has one sender/recipient
+    /// @dev The function reverts if any of the poolId statuses is not ALLOWED or SWAP_ONLY
     function batchSwap(
         SwapKind kind,
         BatchSwapStep[] memory swaps,
@@ -127,12 +164,11 @@ contract BalancerV2VaultAdapter is AbstractAdapter, IBalancerV2VaultAdapter {
         int256[] memory limits,
         uint256 deadline
     ) external override creditFacadeOnly returns (uint256 tokensToEnable, uint256 tokensToDisable) {
-        for (uint256 i = 0; i < swaps.length;) {
-            if (poolIdStatus[swaps[i].poolId] == PoolStatus.NOT_ALLOWED) {
-                revert PoolIDNotSupportedException();
-            }
-            unchecked {
-                ++i;
+        unchecked {
+            for (uint256 i; i < swaps.length; ++i) {
+                if (poolStatus[swaps[i].poolId] == PoolStatus.NOT_ALLOWED) {
+                    revert PoolNotSupportedException();
+                }
             }
         }
 
@@ -154,19 +190,29 @@ contract BalancerV2VaultAdapter is AbstractAdapter, IBalancerV2VaultAdapter {
         (tokensToEnable, tokensToDisable) = (_getTokensToEnable(assets, assetDeltas), 0);
     }
 
-    /// --------- ///
-    /// JOIN POOL ///
-    /// --------- ///
+    // --------- //
+    // JOIN POOL //
+    // --------- //
 
-    /// @inheritdoc IBalancerV2VaultAdapter
+    /// @notice Deposits liquidity into a Balancer pool in exchange for BPT
+    /// @param poolId ID of the pool to deposit into
+    /// @param request A struct containing data for executing a deposit:
+    ///        * `assets` - Array of assets in the pool
+    ///        * `maxAmountsIn` - Array of maximal amounts to be spent for each asset
+    ///        * `userData` - a blob encoding the type of deposit and additional parameters
+    ///          (see https://dev.balancer.fi/resources/joins-and-exits/pool-joins#userdata for more info)
+    ///        * `fromInternalBalance` - whether to use internal balances for assets
+    ///          (ignored as the adapter does not use internal balances)
+    /// @dev `sender` and `recipient` are ignored, since they are always set to the CA address
+    /// @dev The function reverts if poolId status is not ALLOWED
     function joinPool(bytes32 poolId, address, address, JoinPoolRequest memory request)
         external
         override
         creditFacadeOnly
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        if (poolIdStatus[poolId] != PoolStatus.ALLOWED) {
-            revert PoolIDNotSupportedException();
+        if (poolStatus[poolId] != PoolStatus.ALLOWED) {
+            revert PoolNotSupportedException();
         }
 
         address creditAccount = _creditAccount();
@@ -181,15 +227,20 @@ contract BalancerV2VaultAdapter is AbstractAdapter, IBalancerV2VaultAdapter {
         (tokensToEnable, tokensToDisable) = (_getMaskOrRevert(bpt), 0);
     }
 
-    /// @inheritdoc IBalancerV2VaultAdapter
+    /// @notice Deposits single asset as liquidity into a Balancer pool
+    /// @param poolId ID of the pool to deposit into
+    /// @param assetIn Asset to deposit
+    /// @param amountIn Amount of asset to deposit
+    /// @param minAmountOut The minimal amount of BPT to receive
+    /// @dev The function reverts if poolId status is not ALLOWED
     function joinPoolSingleAsset(bytes32 poolId, IAsset assetIn, uint256 amountIn, uint256 minAmountOut)
         external
         override
         creditFacadeOnly
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        if (poolIdStatus[poolId] != PoolStatus.ALLOWED) {
-            revert PoolIDNotSupportedException();
+        if (poolStatus[poolId] != PoolStatus.ALLOWED) {
+            revert PoolNotSupportedException();
         }
 
         address creditAccount = _creditAccount();
@@ -213,15 +264,19 @@ contract BalancerV2VaultAdapter is AbstractAdapter, IBalancerV2VaultAdapter {
         ); // F: [ABV2-5]
     }
 
-    /// @inheritdoc IBalancerV2VaultAdapter
+    /// @notice Deposits the entire balance of given asset as liquidity into a Balancer pool, disables said asset
+    /// @param poolId ID of the pool to deposit into
+    /// @param assetIn Asset to deposit
+    /// @param minRateRAY The minimal exchange rate of assetIn to BPT, scaled by 1e27
+    /// @dev The function reverts if poolId status is not ALLOWED
     function joinPoolSingleAssetAll(bytes32 poolId, IAsset assetIn, uint256 minRateRAY)
         external
         override
         creditFacadeOnly
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        if (poolIdStatus[poolId] != PoolStatus.ALLOWED) {
-            revert PoolIDNotSupportedException();
+        if (poolStatus[poolId] != PoolStatus.ALLOWED) {
+            revert PoolNotSupportedException();
         }
 
         address creditAccount = _creditAccount();
@@ -266,26 +321,33 @@ contract BalancerV2VaultAdapter is AbstractAdapter, IBalancerV2VaultAdapter {
         request.assets = new IAsset[](tokens.length);
         request.maxAmountsIn = new uint256[](tokens.length);
 
-        for (uint256 i = 0; i < len;) {
-            request.assets[i] = IAsset(address(tokens[i]));
+        unchecked {
+            for (uint256 i; i < len; ++i) {
+                request.assets[i] = IAsset(address(tokens[i]));
 
-            if (request.assets[i] == assetIn) {
-                request.maxAmountsIn[i] = amountIn;
-            }
-
-            unchecked {
-                ++i;
+                if (request.assets[i] == assetIn) {
+                    request.maxAmountsIn[i] = amountIn;
+                }
             }
         }
 
         request.userData = abi.encode(uint256(1), request.maxAmountsIn, minAmountOut);
     }
 
-    /// --------- ///
-    /// EXIT POOL ///
-    /// --------- ///
+    // --------- //
+    // EXIT POOL //
+    // --------- //
 
-    /// @inheritdoc IBalancerV2VaultAdapter
+    /// @notice Withdraws liquidity from a Balancer pool, burning BPT and receiving assets
+    /// @param poolId ID of the pool to withdraw from
+    /// @param request A struct containing data for executing a withdrawal:
+    ///        * `assets` - Array of all assets in the pool
+    ///        * `minAmountsOut` - The minimal amounts to receive for each asset
+    ///        * `userData` - a blob encoding the type of deposit and additional parameters
+    ///          (see https://dev.balancer.fi/resources/joins-and-exits/pool-exits#userdata for more info)
+    ///        * `toInternalBalance` - whether to use internal balances for assets
+    ///          (ignored as the adapter does not use internal balances)
+    /// @dev `sender` and `recipient` are ignored, since they are always set to the CA address
     function exitPool(bytes32 poolId, address, address payable, ExitPoolRequest memory request)
         external
         override
@@ -305,7 +367,11 @@ contract BalancerV2VaultAdapter is AbstractAdapter, IBalancerV2VaultAdapter {
             (_getTokensToEnable(request.assets, _getBalancesFilter(creditAccount, request.assets)), 0);
     }
 
-    /// @inheritdoc IBalancerV2VaultAdapter
+    /// @notice Withdraws liquidity from a Balancer pool, burning BPT and receiving a single asset
+    /// @param poolId ID of the pool to withdraw from
+    /// @param assetOut Asset to withdraw
+    /// @param amountIn Amount of BPT to burn
+    /// @param minAmountOut Minimal amount of asset to receive
     function exitPoolSingleAsset(bytes32 poolId, IAsset assetOut, uint256 amountIn, uint256 minAmountOut)
         external
         override
@@ -333,7 +399,10 @@ contract BalancerV2VaultAdapter is AbstractAdapter, IBalancerV2VaultAdapter {
         ); // F: [ABV2-8]
     }
 
-    /// @inheritdoc IBalancerV2VaultAdapter
+    /// @notice Withdraws liquidity from a Balancer pool, burning BPT and receiving a single asset, disables BPT
+    /// @param poolId ID of the pool to withdraw from
+    /// @param assetOut Asset to withdraw
+    /// @param minRateRAY Minimal exchange rate of BPT to assetOut, scaled by 1e27
     function exitPoolSingleAssetAll(bytes32 poolId, IAsset assetOut, uint256 minRateRAY)
         external
         override
@@ -383,35 +452,31 @@ contract BalancerV2VaultAdapter is AbstractAdapter, IBalancerV2VaultAdapter {
         request.minAmountsOut = new uint256[](tokens.length);
         uint256 tokenIndex = tokens.length;
 
-        for (uint256 i = 0; i < len;) {
-            request.assets[i] = IAsset(address(tokens[i]));
+        unchecked {
+            for (uint256 i; i < len; ++i) {
+                request.assets[i] = IAsset(address(tokens[i]));
 
-            if (request.assets[i] == assetOut) {
-                request.minAmountsOut[i] = minAmountOut;
-                tokenIndex = i;
-            }
-
-            unchecked {
-                ++i;
+                if (request.assets[i] == assetOut) {
+                    request.minAmountsOut[i] = minAmountOut;
+                    tokenIndex = i;
+                }
             }
         }
 
         request.userData = abi.encode(uint256(0), amountIn, tokenIndex);
     }
 
-    /// ------- ///
-    /// HELPERS ///
-    /// ------- ///
+    // ------- //
+    // HELPERS //
+    // ------- //
 
     /// @dev Internal function that changes approval for a batch of assets in the vault
     function _approveAssets(IAsset[] memory assets, int256[] memory filter, uint256 amount) internal {
         uint256 len = assets.length;
 
-        for (uint256 i = 0; i < len;) {
-            if (filter[i] > 1) _approveToken(address(assets[i]), amount);
-
-            unchecked {
-                ++i;
+        unchecked {
+            for (uint256 i; i < len; ++i) {
+                if (filter[i] > 1) _approveToken(address(assets[i]), amount);
             }
         }
     }
@@ -420,11 +485,9 @@ contract BalancerV2VaultAdapter is AbstractAdapter, IBalancerV2VaultAdapter {
     function _approveAssets(IAsset[] memory assets, uint256[] memory filter, uint256 amount) internal {
         uint256 len = assets.length;
 
-        for (uint256 i = 0; i < len;) {
-            if (filter[i] > 1) _approveToken(address(assets[i]), amount);
-
-            unchecked {
-                ++i;
+        unchecked {
+            for (uint256 i = 0; i < len; ++i) {
+                if (filter[i] > 1) _approveToken(address(assets[i]), amount);
             }
         }
     }
@@ -437,13 +500,9 @@ contract BalancerV2VaultAdapter is AbstractAdapter, IBalancerV2VaultAdapter {
     {
         uint256 len = assets.length;
 
-        for (uint256 i = 0; i < len;) {
-            if (filter[i] < -1) {
-                tokensToEnable |= _getMaskOrRevert(address(assets[i]));
-            }
-
-            unchecked {
-                ++i;
+        unchecked {
+            for (uint256 i; i < len; ++i) {
+                if (filter[i] < -1) tokensToEnable = tokensToEnable.enable(_getMaskOrRevert(address(assets[i])));
             }
         }
     }
@@ -460,7 +519,6 @@ contract BalancerV2VaultAdapter is AbstractAdapter, IBalancerV2VaultAdapter {
 
         for (uint256 i = 0; i < len;) {
             filter[i] = -int256(IERC20(address(assets[i])).balanceOf(creditAccount));
-
             unchecked {
                 ++i;
             }
@@ -477,12 +535,15 @@ contract BalancerV2VaultAdapter is AbstractAdapter, IBalancerV2VaultAdapter {
         });
     }
 
-    /// ------------- ///
-    /// CONFIGURATION ///
-    /// ------------- ///
+    // ------------- //
+    // CONFIGURATION //
+    // ------------- //
 
-    /// @inheritdoc IBalancerV2VaultAdapter
-    function setPoolIDStatus(bytes32 poolId, PoolStatus newStatus) external override configuratorOnly {
-        poolIdStatus[poolId] = newStatus;
+    /// @notice Sets the pool status
+    function setPoolStatus(bytes32 poolId, PoolStatus newStatus) external override configuratorOnly {
+        if (poolStatus[poolId] != newStatus) {
+            poolStatus[poolId] = newStatus;
+            emit SetPoolStatus(poolId, newStatus);
+        }
     }
 }

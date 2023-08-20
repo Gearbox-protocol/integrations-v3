@@ -195,8 +195,8 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper, IBalancerV2VaultAdapte
         vm.label(address(balancerMock), "BALANCER_MOCK");
 
         vm.startPrank(CONFIGURATOR);
-        BalancerV2VaultAdapter(address(adapter)).setPoolIDStatus(POOL_ID_1, PoolStatus.ALLOWED);
-        BalancerV2VaultAdapter(address(adapter)).setPoolIDStatus(POOL_ID_2, PoolStatus.ALLOWED);
+        BalancerV2VaultAdapter(address(adapter)).setPoolStatus(POOL_ID_1, PoolStatus.ALLOWED);
+        BalancerV2VaultAdapter(address(adapter)).setPoolStatus(POOL_ID_2, PoolStatus.ALLOWED);
         vm.stopPrank();
 
         deadline = _getUniswapDeadline();
@@ -980,8 +980,8 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper, IBalancerV2VaultAdapte
         (address creditAccount, uint256 initialDAIBalance) = _openTestCreditAccount();
 
         vm.startPrank(CONFIGURATOR);
-        BalancerV2VaultAdapter(address(adapter)).setPoolIDStatus(POOL_ID_1, PoolStatus.SWAP_ONLY);
-        BalancerV2VaultAdapter(address(adapter)).setPoolIDStatus(POOL_ID_2, PoolStatus.NOT_ALLOWED);
+        BalancerV2VaultAdapter(address(adapter)).setPoolStatus(POOL_ID_1, PoolStatus.SWAP_ONLY);
+        BalancerV2VaultAdapter(address(adapter)).setPoolStatus(POOL_ID_2, PoolStatus.NOT_ALLOWED);
         vm.stopPrank();
 
         {
@@ -1009,7 +1009,7 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper, IBalancerV2VaultAdapte
                 deadline
             );
 
-            vm.expectRevert(PoolIDNotSupportedException.selector);
+            vm.expectRevert(PoolNotSupportedException.selector);
             executeOneLineMulticall(creditAccount, address(adapter), passedCallData);
         }
 
@@ -1025,7 +1025,7 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper, IBalancerV2VaultAdapte
                 IBalancerV2VaultAdapter.swapAll.selector, singleSwapAllData, RAY / (DAI_WETH_RATE * 2), deadline
             );
 
-            vm.expectRevert(PoolIDNotSupportedException.selector);
+            vm.expectRevert(PoolNotSupportedException.selector);
             executeOneLineMulticall(creditAccount, address(adapter), passedCallData);
         }
 
@@ -1061,7 +1061,7 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper, IBalancerV2VaultAdapte
                 toInternalBalance: true
             });
 
-            vm.expectRevert(PoolIDNotSupportedException.selector);
+            vm.expectRevert(PoolNotSupportedException.selector);
             executeOneLineMulticall(
                 creditAccount,
                 address(adapter),
@@ -1107,7 +1107,7 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper, IBalancerV2VaultAdapte
             bytes memory passedCallData =
                 abi.encodeWithSelector(IBalancerV2Vault.joinPool.selector, POOL_ID_1, USER, USER, request);
 
-            vm.expectRevert(PoolIDNotSupportedException.selector);
+            vm.expectRevert(PoolNotSupportedException.selector);
             executeOneLineMulticall(creditAccount, address(adapter), passedCallData);
         }
 
@@ -1120,7 +1120,7 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper, IBalancerV2VaultAdapte
                 DAI_EXCHANGE_AMOUNT / 2
             );
 
-            vm.expectRevert(PoolIDNotSupportedException.selector);
+            vm.expectRevert(PoolNotSupportedException.selector);
             executeOneLineMulticall(creditAccount, address(adapter), passedCallData);
         }
 
@@ -1132,7 +1132,7 @@ contract BalancerV2VaultAdapterTest is AdapterTestHelper, IBalancerV2VaultAdapte
                 RAY / 2
             );
 
-            vm.expectRevert(PoolIDNotSupportedException.selector);
+            vm.expectRevert(PoolNotSupportedException.selector);
             executeOneLineMulticall(creditAccount, address(adapter), passedCallData);
         }
     }
