@@ -15,13 +15,20 @@ import {PriceFeedDeployer} from "@gearbox-protocol/oracles-v3/contracts/test/sui
 import {IntegrationTestHelper} from "@gearbox-protocol/core-v3/contracts/test/helpers/IntegrationTestHelper.sol";
 import {AdapterDeployer} from "./AdapterDeployer.sol";
 
-import {CONFIG_MAINNET_DUSDC_V3} from "../config/USDC_config.sol";
+import {CONFIG_MAINNET_USDC_MT_V3} from "../config/USDC_MT_config.sol";
+import {CONFIG_MAINNET_WBTC_MT_V3} from "../config/WBTC_MT_config.sol";
+import {CONFIG_MAINNET_WETH_MT_V3} from "../config/WETH_MT_config.sol";
+
+import {CONFIG_MAINNET_USDC_LEV_V3} from "../config/USDC_Lev_config.sol";
 
 import "forge-std/console.sol";
 
 contract LiveTestHelper is IntegrationTestHelper {
     constructor() {
-        addDeployConfig(new CONFIG_MAINNET_DUSDC_V3());
+        addDeployConfig(new CONFIG_MAINNET_USDC_MT_V3());
+        addDeployConfig(new CONFIG_MAINNET_WBTC_MT_V3());
+        addDeployConfig(new CONFIG_MAINNET_WETH_MT_V3());
+        addDeployConfig(new CONFIG_MAINNET_USDC_LEV_V3());
     }
 
     SupportedContracts public supportedContracts;
@@ -34,9 +41,7 @@ contract LiveTestHelper is IntegrationTestHelper {
 
     modifier liveCreditTest(string memory id) {
         if (chainId != 1337 && chainId != 31337) {
-            console.log("chainId: ", chainId);
             _setupCore();
-            console.log("chainId: ", chainId);
             console.log(tokenTestSuite.addressOf(Tokens.MKR));
             supportedContracts = new SupportedContracts(chainId);
 

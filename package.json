@@ -37,12 +37,11 @@
     "forge-install": "forge install --no-commit foundry-rs/forge-std"
   },
   "dependencies": {
-
     "@gearbox-protocol/core-v2": "^1.19.0-base.8",
     "@gearbox-protocol/core-v3": "^1.36.0",
     "@gearbox-protocol/oracles-v3": "^1.7.0",
-  "@gearbox-protocol/sdk": "^2.1.21",
-    "@gearbox-protocol/sdk-gov": "^1.4.1",
+    "@gearbox-protocol/sdk": "^2.1.24",
+    "@gearbox-protocol/sdk-gov": "^1.4.4",
     "@redstone-finance/evm-connector": "^0.2.3",
     "axios": "^1.1.3"
   },
