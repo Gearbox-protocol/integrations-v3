@@ -1,13 +1,17 @@
 // SPDX-License-Identifier: UNLICENSED
 // Gearbox Protocol. Generalized leverage for DeFi protocols
-// (c) Gearbox Holdings, 2023
+// (c) Gearbox Foundation, 2023.
 pragma solidity ^0.8.17;
 
 import {BytesLib} from "../../../../integrations/uniswap/BytesLib.sol";
 
 import {ISwapRouter} from "../../../../integrations/uniswap/IUniswapV3.sol";
 import {UniswapV3Adapter} from "../../../../adapters/uniswap/UniswapV3.sol";
-import {IUniswapV3Adapter, IUniswapV3AdapterExceptions} from "../../../../interfaces/uniswap/IUniswapV3Adapter.sol";
+import {
+    IUniswapV3Adapter,
+    IUniswapV3AdapterExceptions,
+    IUniswapV3AdapterTypes
+} from "../../../../interfaces/uniswap/IUniswapV3Adapter.sol";
 import {UniswapV3Mock} from "../../../mocks/integrations/UniswapV3Mock.sol";
 
 import {Tokens} from "@gearbox-protocol/sdk/contracts/Tokens.sol";
@@ -19,7 +23,7 @@ import {AdapterTestHelper} from "../AdapterTestHelper.sol";
 
 /// @title UniswapV3AdapterTest
 /// @notice Designed for unit test purposes only
-contract UniswapV3AdapterTest is Test, AdapterTestHelper, IUniswapV3AdapterExceptions {
+contract UniswapV3AdapterTest is Test, AdapterTestHelper, IUniswapV3AdapterTypes, IUniswapV3AdapterExceptions {
     using BytesLib for bytes;
 
     IUniswapV3Adapter public adapter;
@@ -96,7 +100,7 @@ contract UniswapV3AdapterTest is Test, AdapterTestHelper, IUniswapV3AdapterExcep
         view
         returns (IUniswapV3Adapter.ExactAllInputSingleParams memory params)
     {
-        params = IUniswapV3Adapter.ExactAllInputSingleParams({
+        params = ExactAllInputSingleParams({
             tokenIn: tokenTestSuite.addressOf(Tokens.DAI),
             tokenOut: tokenTestSuite.addressOf(Tokens.WETH),
             fee: 3000,
@@ -110,7 +114,7 @@ contract UniswapV3AdapterTest is Test, AdapterTestHelper, IUniswapV3AdapterExcep
         address tokenIn = tokenTestSuite.addressOf(Tokens.DAI);
         address tokenOut = tokenTestSuite.addressOf(Tokens.WETH);
 
-        params = IUniswapV3Adapter.ExactAllInputParams({
+        params = ExactAllInputParams({
             path: bytes(abi.encodePacked(tokenIn)).concat(bytes(abi.encodePacked(uint24(3000)))).concat(
                 bytes(abi.encodePacked(tokenOut))
                 ),

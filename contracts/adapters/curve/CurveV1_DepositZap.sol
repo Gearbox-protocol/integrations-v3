@@ -1,18 +1,18 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Gearbox Protocol. Generalized leverage for DeFi protocols
-// (c) Gearbox Holdings, 2023
+// (c) Gearbox Foundation, 2023.
 pragma solidity ^0.8.17;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import {RAY} from "@gearbox-protocol/core-v2/contracts/libraries/Constants.sol";
 
-import {AdapterType} from "../../interfaces/IAdapter.sol";
+import {AdapterType} from "@gearbox-protocol/sdk/contracts/AdapterType.sol";
 
 import {CurveV1AdapterBase} from "./CurveV1_Base.sol";
 
 /// @title Curve V1 DepozitZap adapter
-/// @notice Implements logic for interacting with a Curve zap wrapper (to remove_liquidity_one_coin from older pools)
+/// @notice Implements logic for interacting with a Curve zap wrapper (to `remove_liquidity_one_coin` from older pools)
 contract CurveV1AdapterDeposit is CurveV1AdapterBase {
     AdapterType public constant override _gearboxAdapterType = AdapterType.CURVE_V1_WRAPPER;
 
@@ -24,17 +24,17 @@ contract CurveV1AdapterDeposit is CurveV1AdapterBase {
     }
 
     /// @notice Constructor
-    /// @param _CreditManagerV3 Credit manager address
+    /// @param _creditManager Credit manager address
     /// @param _curveDeposit Target Curve DepositZap contract address
     /// @param _lp_token Pool LP token address
     /// @param _nCoins Number of coins in the pool
-    constructor(address _CreditManagerV3, address _curveDeposit, address _lp_token, uint256 _nCoins)
-        CurveV1AdapterBase(_CreditManagerV3, _curveDeposit, _lp_token, address(0), _nCoins)
+    constructor(address _creditManager, address _curveDeposit, address _lp_token, uint256 _nCoins)
+        CurveV1AdapterBase(_creditManager, _curveDeposit, _lp_token, address(0), _nCoins)
     {}
 
     /// @inheritdoc CurveV1AdapterBase
     /// @dev Unlike other adapters, approves the LP token to the target
-    function remove_liquidity_one_coin(uint256, int128 i, uint256)
+    function remove_liquidity_one_coin(uint256 _token_amount, uint256 i, uint256 min_amount)
         public
         virtual
         override
@@ -42,12 +42,12 @@ contract CurveV1AdapterDeposit is CurveV1AdapterBase {
         withLPTokenApproval
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        (tokensToEnable, tokensToDisable) = _remove_liquidity_one_coin(i);
+        (tokensToEnable, tokensToDisable) = _remove_liquidity_one_coin(_token_amount, i, min_amount);
     }
 
     /// @inheritdoc CurveV1AdapterBase
     /// @dev Unlike other adapters, approves the LP token to the target
-    function remove_all_liquidity_one_coin(int128 i, uint256 rateMinRAY)
+    function remove_all_liquidity_one_coin(uint256 i, uint256 rateMinRAY)
         public
         virtual
         override

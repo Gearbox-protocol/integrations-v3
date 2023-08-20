@@ -1,33 +1,20 @@
 // SPDX-License-Identifier: MIT
 // Gearbox Protocol. Generalized leverage for DeFi protocols
-// (c) Gearbox Holdings, 2023
+// (c) Gearbox Foundation, 2023.
 pragma solidity ^0.8.17;
 
-import {IAdapter} from "../IAdapter.sol";
+import {IAdapter} from "@gearbox-protocol/core-v2/contracts/interfaces/IAdapter.sol";
+
 import {ISwapRouter} from "../../integrations/uniswap/IUniswapV3.sol";
 
-struct UniswapV3PoolStatus {
+struct PoolStatus {
     address token0;
     address token1;
     uint24 fee;
     bool allowed;
 }
 
-interface IUniswapV3AdapterExceptions {
-    /// @notice Thrown when sanity checks on a swap path fail
-    error InvalidPathException();
-}
-
-/// @title Uniswap V3 Router adapter interface
-/// @notice Implements logic allowing CAs to perform swaps via Uniswap V3
-interface IUniswapV3Adapter is IAdapter, IUniswapV3AdapterExceptions {
-    /// @notice Swaps given amount of input token for output token through a single pool
-    /// @param params Swap params, see `ISwapRouter.ExactInputSingleParams` for details
-    /// @dev `params.recipient` is ignored since it can only be the credit account
-    function exactInputSingle(ISwapRouter.ExactInputSingleParams calldata params)
-        external
-        returns (uint256 tokensToEnable, uint256 tokensToDisable);
-
+interface IUniswapV3AdapterTypes {
     /// @notice Params for exact all input swap through a single pool
     /// @param tokenIn Input token
     /// @param tokenOut Output token
@@ -44,20 +31,6 @@ interface IUniswapV3Adapter is IAdapter, IUniswapV3AdapterExceptions {
         uint160 sqrtPriceLimitX96;
     }
 
-    /// @notice Swaps all balance of input token for output token through a single pool, disables input token
-    /// @param params Swap params, see `ExactAllInputSingleParams` for details
-    function exactAllInputSingle(ExactAllInputSingleParams calldata params)
-        external
-        returns (uint256 tokensToEnable, uint256 tokensToDisable);
-
-    /// @notice Swaps given amount of input token for output token through multiple pools
-    /// @param params Swap params, see `ISwapRouter.ExactInputParams` for details
-    /// @dev `params.recipient` is ignored since it can only be the credit account
-    /// @dev `params.path` must have at most 3 hops through registered connector tokens
-    function exactInput(ISwapRouter.ExactInputParams calldata params)
-        external
-        returns (uint256 tokensToEnable, uint256 tokensToDisable);
-
     /// @notice Params for exact all input swap through multiple pools
     /// @param path Bytes-encoded swap path, see Uniswap docs for details
     /// @param deadline Maximum timestamp until which the transaction is valid
@@ -67,29 +40,54 @@ interface IUniswapV3Adapter is IAdapter, IUniswapV3AdapterExceptions {
         uint256 deadline;
         uint256 rateMinRAY;
     }
+}
 
-    /// @notice Swaps all balance of input token for output token through multiple pools, disables input token
-    /// @param params Swap params, see `ExactAllInputParams` for details
-    /// @dev `params.path` must have at most 3 hops through registered connector tokens
+interface IUniswapV3AdapterEvents {
+    /// @notice Emitted when new status is set for a pool
+    event SetPoolStatus(address indexed token0, address indexed token1, uint24 indexed fee, bool allowed);
+}
+
+interface IUniswapV3AdapterExceptions {
+    /// @notice Thrown when sanity checks on a swap path fail
+    error InvalidPathException();
+}
+
+/// @title Uniswap V3 Router adapter interface
+interface IUniswapV3Adapter is
+    IAdapter,
+    IUniswapV3AdapterTypes,
+    IUniswapV3AdapterEvents,
+    IUniswapV3AdapterExceptions
+{
+    function exactInputSingle(ISwapRouter.ExactInputSingleParams calldata params)
+        external
+        returns (uint256 tokensToEnable, uint256 tokensToDisable);
+
+    function exactAllInputSingle(ExactAllInputSingleParams calldata params)
+        external
+        returns (uint256 tokensToEnable, uint256 tokensToDisable);
+
+    function exactInput(ISwapRouter.ExactInputParams calldata params)
+        external
+        returns (uint256 tokensToEnable, uint256 tokensToDisable);
+
     function exactAllInput(ExactAllInputParams calldata params)
         external
         returns (uint256 tokensToEnable, uint256 tokensToDisable);
 
-    /// @notice Swaps input token for given amount of output token through a single pool
-    /// @param params Swap params, see `ISwapRouter.ExactOutputSingleParams` for details
-    /// @dev `params.recipient` is ignored since it can only be the credit account
     function exactOutputSingle(ISwapRouter.ExactOutputSingleParams calldata params)
         external
         returns (uint256 tokensToEnable, uint256 tokensToDisable);
 
-    /// @notice Swaps input token for given amount of output token through multiple pools
-    /// @param params Swap params, see `ISwapRouter.ExactOutputParams` for details
-    /// @dev `params.recipient` is ignored since it can only be the credit account
-    /// @dev `params.path` must have at most 3 hops through registered connector tokens
     function exactOutput(ISwapRouter.ExactOutputParams calldata params)
         external
         returns (uint256 tokensToEnable, uint256 tokensToDisable);
 
-    /// @notice Returns whether the (token0, token1, fee) pool is allowed to be traded through the adapter
+    // ------------- //
+    // CONFIGURATION //
+    // ------------- //
+
     function isPoolAllowed(address token0, address token1, uint24 fee) external view returns (bool);
+
+    function setPoolStatusBatch(PoolStatus[] calldata pools) external;
 }

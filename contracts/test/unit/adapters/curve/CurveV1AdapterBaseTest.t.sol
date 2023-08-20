@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 // Gearbox Protocol. Generalized leverage for DeFi protocols
-// (c) Gearbox Holdings, 2023
+// (c) Gearbox Foundation, 2023.
 pragma solidity ^0.8.17;
+
+import {AdapterType} from "@gearbox-protocol/sdk/contracts/AdapterType.sol";
 
 import {CurveV1AdapterBase} from "../../../../adapters/curve/CurveV1_Base.sol";
 import {ICurveV1Adapter} from "../../../../interfaces/curve/ICurveV1Adapter.sol";
@@ -20,6 +22,14 @@ import "../../../lib/constants.sol";
 import {CurveV1AdapterHelper} from "./CurveV1AdapterHelper.sol";
 
 import "@gearbox-protocol/core-v3/contracts/interfaces/IExceptions.sol";
+
+contract CurveV1AdapterBaseHarness is CurveV1AdapterBase {
+    AdapterType public constant override _gearboxAdapterType = AdapterType.CURVE_V1_EXCHANGE_ONLY;
+
+    constructor(address _creditManager, address _curvePool, address _lp_token, address _metapoolBase, uint256 _nCoins)
+        CurveV1AdapterBase(_creditManager, _curvePool, _lp_token, _metapoolBase, _nCoins)
+    {}
+}
 
 /// @title CurveV1AdapterBaseTest
 /// @notice Designed for unit test purposes only
@@ -60,7 +70,7 @@ contract CurveV1AdapterBaseTest is Test, CurveV1AdapterHelper {
     /// @dev [ACV1-1]: constructor reverts for zero addresses and non allowed tokens
     function test_ACV1_01_constructor_reverts_for_zero_addresses_and_non_allowed_tokens() public {
         vm.expectRevert(abi.encodeWithSelector(ZeroAddressException.selector));
-        new CurveV1AdapterBase(
+        new CurveV1AdapterBaseHarness(
             address(creditManager),
             address(0),
             address(0),
@@ -69,7 +79,7 @@ contract CurveV1AdapterBaseTest is Test, CurveV1AdapterHelper {
         );
 
         vm.expectRevert(abi.encodeWithSelector(ZeroAddressException.selector));
-        new CurveV1AdapterBase(
+        new CurveV1AdapterBaseHarness(
             address(creditManager),
             address(curveV1Mock),
             address(0),
@@ -79,7 +89,7 @@ contract CurveV1AdapterBaseTest is Test, CurveV1AdapterHelper {
 
         vm.expectRevert(TokenNotAllowedException.selector);
 
-        new CurveV1AdapterBase(
+        new CurveV1AdapterBaseHarness(
             address(creditManager),
             address(curveV1Mock),
             DUMB_ADDRESS,
@@ -104,7 +114,7 @@ contract CurveV1AdapterBaseTest is Test, CurveV1AdapterHelper {
 
             mock = address(new CurveV1Mock(coins, underlying_coins));
             vm.expectRevert(ZeroAddressException.selector);
-            new CurveV1AdapterBase(
+            new CurveV1AdapterBaseHarness(
                 address(creditManager),
                 address(mock),
                 lpToken,
@@ -128,7 +138,7 @@ contract CurveV1AdapterBaseTest is Test, CurveV1AdapterHelper {
 
             mock = address(new CurveV1Mock(coins, underlying_coins));
             vm.expectRevert(TokenNotAllowedException.selector);
-            new CurveV1AdapterBase(
+            new CurveV1AdapterBaseHarness(
                 address(creditManager),
                 address(mock),
                 lpToken,
@@ -141,7 +151,7 @@ contract CurveV1AdapterBaseTest is Test, CurveV1AdapterHelper {
 
             mock = address(new CurveV1Mock(coins, underlying_coins));
             vm.expectRevert(TokenNotAllowedException.selector);
-            new CurveV1AdapterBase(
+            new CurveV1AdapterBaseHarness(
                 address(creditManager),
                 address(mock),
                 lpToken,

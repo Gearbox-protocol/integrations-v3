@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Gearbox Protocol. Generalized leverage for DeFi protocols
-// (c) Gearbox Holdings, 2023
+// (c) Gearbox Foundation, 2023.
 pragma solidity ^0.8.17;
 
 import {AbstractAdapter} from "../AbstractAdapter.sol";
@@ -13,32 +13,33 @@ import {ICompoundV2_CTokenAdapter} from "../../interfaces/compound/ICompoundV2_C
 /// @dev Abstract base contract for CErc20 and CEther adapters
 abstract contract CompoundV2_CTokenAdapter is AbstractAdapter, ICompoundV2_CTokenAdapter {
     /// @notice Constructor
-    /// @param _CreditManagerV3 Credit manager address
+    /// @param _creditManager Credit manager address
     /// @param _targetContract Target contract address, must implement `ICErc20Actions`
-    constructor(address _CreditManagerV3, address _targetContract) AbstractAdapter(_CreditManagerV3, _targetContract) {}
+    constructor(address _creditManager, address _targetContract) AbstractAdapter(_creditManager, _targetContract) {}
 
     /// @dev Reverts if CToken operation produced non-zero error code
     function _revertOnError(uint256 error) internal pure {
         if (error != 0) revert CTokenError(error);
     }
 
-    /// ------- ///
-    /// MINTING ///
-    /// ------- ///
+    // ------- //
+    // MINTING //
+    // ------- //
 
-    /// @inheritdoc ICompoundV2_CTokenAdapter
-    function mint(uint256 mintAmount)
+    /// @notice Deposit given amount of underlying tokens into Compound in exchange for cTokens
+    /// @param amount Amount of underlying tokens to deposit
+    function mint(uint256 amount)
         external
         override
         creditFacadeOnly // F: [ACV2CT-1]
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
         uint256 error;
-        (tokensToEnable, tokensToDisable, error) = _mint(mintAmount); // F: [ACV2CT-2, ACV2CT-3]
+        (tokensToEnable, tokensToDisable, error) = _mint(amount); // F: [ACV2CT-2, ACV2CT-3]
         _revertOnError(error);
     }
 
-    /// @inheritdoc ICompoundV2_CTokenAdapter
+    /// @notice Deposit all underlying tokens into Compound in exchange for cTokens, disables underlying
     function mintAll()
         external
         override
@@ -68,11 +69,12 @@ abstract contract CompoundV2_CTokenAdapter is AbstractAdapter, ICompoundV2_CToke
         callData = abi.encodeCall(ICErc20Actions.mint, (amount)); // F: [ACV2CT-2, ACV2CT-4]
     }
 
-    /// --------- ///
-    /// REDEEMING ///
-    /// --------- ///
+    // --------- //
+    // REDEEMING //
+    // --------- //
 
-    /// @inheritdoc ICompoundV2_CTokenAdapter
+    /// @notice Burn given amount of cTokens to withdraw underlying from Compound
+    /// @param amount Amount of cTokens to burn
     function redeem(uint256 amount)
         external
         override
@@ -84,7 +86,7 @@ abstract contract CompoundV2_CTokenAdapter is AbstractAdapter, ICompoundV2_CToke
         _revertOnError(error);
     }
 
-    /// @inheritdoc ICompoundV2_CTokenAdapter
+    /// @notice Withdraw all underlying tokens from Compound and burn cTokens, disables cToken
     function redeemAll()
         external
         override
@@ -114,11 +116,12 @@ abstract contract CompoundV2_CTokenAdapter is AbstractAdapter, ICompoundV2_CToke
         callData = abi.encodeCall(ICErc20Actions.redeem, (amount)); // F: [ACV2CT-6, ACV2CT-8]
     }
 
-    /// -------------------- ///
-    /// REDEEMING UNDERLYING ///
-    /// -------------------- ///
+    // -------------------- //
+    // REDEEMING UNDERLYING //
+    // -------------------- //
 
-    /// @inheritdoc ICompoundV2_CTokenAdapter
+    /// @notice Burn cTokens to withdraw given amount of underlying from Compound
+    /// @param amount Amount of underlying to withdraw
     function redeemUnderlying(uint256 amount)
         external
         override

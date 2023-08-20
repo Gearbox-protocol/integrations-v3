@@ -1,18 +1,18 @@
-// SPDX-License-Identifier: BUSL-1.1
+// SPDX-License-Identifier: GPL-2.0-or-later
 // Gearbox Protocol. Generalized leverage for DeFi protocols
-// (c) Gearbox Holdings, 2022
-pragma solidity ^0.8.10;
+// (c) Gearbox Foundation, 2023.
+pragma solidity ^0.8.17;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {PhantomERC20} from "@gearbox-protocol/core-v2/contracts/tokens/PhantomERC20.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
-/// @title ConvexStakedPositionToken
-/// @dev Represents the balance of the staking token position in Convex pools
+/// @title Convex staked position token
+/// @notice Phantom ERC-20 token that represents the balance of the staking position in Convex pools
 contract ConvexStakedPositionToken is PhantomERC20 {
     address public immutable pool;
 
-    /// @dev Constructor
+    /// @notice Constructor
     /// @param _pool The Convex pool where the balance is tracked
     /// @param _lptoken The Convex LP token that is staked in the pool
     constructor(address _pool, address _lptoken)
@@ -26,7 +26,7 @@ contract ConvexStakedPositionToken is PhantomERC20 {
         pool = _pool;
     }
 
-    /// @dev Returns the amount of Convex LP tokens staked in the pool
+    /// @notice Returns the amount of Convex LP tokens staked in the pool
     /// @param account The account for which the calculation is performed
     function balanceOf(address account) public view returns (uint256) {
         return IERC20(pool).balanceOf(account);

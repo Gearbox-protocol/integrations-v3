@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Gearbox Protocol. Generalized leverage for DeFi protocols
-// (c) Gearbox Holdings, 2023
+// (c) Gearbox Foundation, 2023.
 pragma solidity ^0.8.17;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import {RAY} from "@gearbox-protocol/core-v2/contracts/libraries/Constants.sol";
 
-import {AdapterType} from "../../interfaces/IAdapter.sol";
+import {AdapterType} from "@gearbox-protocol/sdk/contracts/AdapterType.sol";
 
 import {N_COINS} from "../../integrations/curve/ICurvePool_2.sol";
 import {ICurveV1Adapter} from "../../interfaces/curve/ICurveV1Adapter.sol";
@@ -15,11 +15,9 @@ import {CurveV1AdapterBase} from "./CurveV1_Base.sol";
 import {CurveV1Adapter2Assets} from "./CurveV1_2.sol";
 
 /// @title Curve V1 stETH adapter
-/// @notice Same as CurveV1Adapter2Assets but uses stETH gateway and needs to approve LP token
+/// @notice Same as `CurveV1Adapter2Assets` but uses stETH gateway and needs to approve LP token
 contract CurveV1AdapterStETH is CurveV1Adapter2Assets {
-    function _gearboxAdapterType() external pure override returns (AdapterType) {
-        return AdapterType.CURVE_V1_STECRV_POOL;
-    }
+    AdapterType public constant override _gearboxAdapterType = AdapterType.CURVE_V1_STECRV_POOL;
 
     /// @notice Sets allowance for the pool LP token to max before the operation and to 1 after
     modifier withLPTokenApproval() {
@@ -29,11 +27,11 @@ contract CurveV1AdapterStETH is CurveV1Adapter2Assets {
     }
 
     /// @notice Constructor
-    /// @param _CreditManagerV3 Credit manager address
+    /// @param _creditManager Credit manager address
     /// @param _curveStETHPoolGateway steCRV pool gateway address
     /// @param _lp_token steCRV LP token address
-    constructor(address _CreditManagerV3, address _curveStETHPoolGateway, address _lp_token)
-        CurveV1Adapter2Assets(_CreditManagerV3, _curveStETHPoolGateway, _lp_token, address(0))
+    constructor(address _creditManager, address _curveStETHPoolGateway, address _lp_token)
+        CurveV1Adapter2Assets(_creditManager, _curveStETHPoolGateway, _lp_token, address(0))
     {}
 
     /// @inheritdoc CurveV1Adapter2Assets
@@ -50,19 +48,19 @@ contract CurveV1AdapterStETH is CurveV1Adapter2Assets {
 
     /// @inheritdoc CurveV1AdapterBase
     /// @dev Unlike other adapters, approves the LP token to the target
-    function remove_liquidity_one_coin(uint256, int128 i, uint256)
+    function remove_liquidity_one_coin(uint256 _token_amount, uint256 i, uint256 min_amount)
         public
         override(CurveV1AdapterBase, ICurveV1Adapter)
         creditFacadeOnly
         withLPTokenApproval // F: [ACV1S-4]
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        (tokensToEnable, tokensToDisable) = _remove_liquidity_one_coin(i); // F: [ACV1S-4]
+        (tokensToEnable, tokensToDisable) = _remove_liquidity_one_coin(_token_amount, i, min_amount); // F: [ACV1S-4]
     }
 
     /// @inheritdoc CurveV1AdapterBase
     /// @dev Unlike other adapters, approves the LP token to the target
-    function remove_all_liquidity_one_coin(int128 i, uint256 rateMinRAY)
+    function remove_all_liquidity_one_coin(uint256 i, uint256 rateMinRAY)
         public
         override(CurveV1AdapterBase, ICurveV1Adapter)
         creditFacadeOnly

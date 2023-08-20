@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Gearbox Protocol. Generalized leverage for DeFi protocols
-// (c) Gearbox Holdings, 2023
+// (c) Gearbox Foundation, 2023.
 pragma solidity ^0.8.17;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-import {AdapterType} from "../../interfaces/IAdapter.sol";
+import {AdapterType} from "@gearbox-protocol/sdk/contracts/AdapterType.sol";
 
 import {CEtherGateway} from "../../helpers/compound/CompoundV2_CEtherGateway.sol";
 import {CompoundV2_CTokenAdapter} from "./CompoundV2_CTokenAdapter.sol";
@@ -14,37 +14,31 @@ import {ICompoundV2_CTokenAdapter} from "../../interfaces/compound/ICompoundV2_C
 
 /// @title Compound V2 CEther adapter
 contract CompoundV2_CEtherAdapter is CompoundV2_CTokenAdapter {
-    /// @inheritdoc ICompoundV2_CTokenAdapter
-    address public immutable override cToken;
-
-    /// @inheritdoc ICompoundV2_CTokenAdapter
-    address public immutable override underlying;
-
-    /// @inheritdoc ICompoundV2_CTokenAdapter
-    uint256 public immutable override tokenMask;
-
-    /// @inheritdoc ICompoundV2_CTokenAdapter
-    uint256 public immutable override cTokenMask;
-
     AdapterType public constant override _gearboxAdapterType = AdapterType.COMPOUND_V2_CETHER;
     uint16 public constant override _gearboxAdapterVersion = 1;
 
+    /// @notice cETH token address
+    address public immutable override cToken;
+
+    /// @notice WETH token address
+    address public immutable override underlying;
+
+    /// @notice Collateral token mask of WETH in the credit manager
+    uint256 public immutable override tokenMask;
+
+    /// @notice Collateral token mask of cETH in the credit manager
+    uint256 public immutable override cTokenMask;
+
     /// @notice Constructor
-    /// @param _CreditManagerV3 Credit manager address
+    /// @param _creditManager Credit manager address
     /// @param _cethGateway CEther gateway contract address
-    constructor(address _CreditManagerV3, address _cethGateway)
-        CompoundV2_CTokenAdapter(_CreditManagerV3, _cethGateway)
-    {
-        cToken = address(CEtherGateway(payable(targetContract)).ceth()); // F: [ACV2CETH-1]
-        underlying = address(CEtherGateway(payable(targetContract)).weth()); // F: [ACV2CETH-1]
+    constructor(address _creditManager, address _cethGateway) CompoundV2_CTokenAdapter(_creditManager, _cethGateway) {
+        cToken = CEtherGateway(payable(targetContract)).ceth(); // F: [ACV2CETH-1]
+        underlying = CEtherGateway(payable(targetContract)).weth(); // F: [ACV2CETH-1]
 
         cTokenMask = _getMaskOrRevert(cToken); // F: [ACV2CETH-1]
         tokenMask = _getMaskOrRevert(underlying); // F: [ACV2CETH-1]
     }
-
-    /// -------------------------------- ///
-    /// VIRTUAL FUNCTIONS IMPLEMENTATION ///
-    /// -------------------------------- ///
 
     /// @dev Internal implementation of `mint`
     ///      - WETH is approved before the call because Gateway needs permission to transfer it
@@ -67,12 +61,11 @@ contract CompoundV2_CEtherAdapter is CompoundV2_CTokenAdapter {
     ///      - WETH is disabled after the call because operation spends the entire balance
     function _mintAll() internal override returns (uint256 tokensToEnable, uint256 tokensToDisable, uint256 error) {
         address creditAccount = _creditAccount();
-        uint256 balance = IERC20(underlying).balanceOf(creditAccount);
-        if (balance <= 1) return (0, 0, 0);
 
-        uint256 amount;
+        uint256 amount = IERC20(underlying).balanceOf(creditAccount);
+        if (amount <= 1) return (0, 0, 0);
         unchecked {
-            amount = balance - 1;
+            --amount;
         }
 
         _approveToken(underlying, type(uint256).max);
@@ -102,12 +95,11 @@ contract CompoundV2_CEtherAdapter is CompoundV2_CTokenAdapter {
     ///      - cETH is disabled after the call because operation spends the entire balance
     function _redeemAll() internal override returns (uint256 tokensToEnable, uint256 tokensToDisable, uint256 error) {
         address creditAccount = _creditAccount();
-        uint256 balance = ICEther(cToken).balanceOf(creditAccount);
-        if (balance <= 1) return (0, 0, 0);
 
-        uint256 amount;
+        uint256 amount = ICEther(cToken).balanceOf(creditAccount);
+        if (amount <= 1) return (0, 0, 0);
         unchecked {
-            amount = balance - 1;
+            --amount;
         }
 
         _approveToken(cToken, type(uint256).max);

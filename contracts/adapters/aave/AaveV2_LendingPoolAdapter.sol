@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Gearbox Protocol. Generalized leverage for DeFi protocols
-// (c) Gearbox Holdings, 2023
+// (c) Gearbox Foundation, 2023.
 pragma solidity ^0.8.17;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import {AbstractAdapter} from "../AbstractAdapter.sol";
-import {AdapterType} from "../../interfaces/IAdapter.sol";
+import {AdapterType} from "@gearbox-protocol/sdk/contracts/AdapterType.sol";
 
 import {ILendingPool} from "../../integrations/aave/ILendingPool.sol";
 import {IAaveV2_LendingPoolAdapter} from "../../interfaces/aave/IAaveV2_LendingPoolAdapter.sol";
@@ -18,20 +18,24 @@ contract AaveV2_LendingPoolAdapter is AbstractAdapter, IAaveV2_LendingPoolAdapte
     uint16 public constant override _gearboxAdapterVersion = 1;
 
     /// @notice Constructor
-    /// @param _CreditManagerV3 Credit manager address
+    /// @param _creditManager Credit manager address
     /// @param _lendingPool Lending pool address
-    constructor(address _CreditManagerV3, address _lendingPool) AbstractAdapter(_CreditManagerV3, _lendingPool) {}
+    constructor(address _creditManager, address _lendingPool) AbstractAdapter(_creditManager, _lendingPool) {}
 
     /// @dev Returns aToken address for given underlying token
     function _aToken(address underlying) internal view returns (address) {
         return ILendingPool(targetContract).getReserveData(underlying).aTokenAddress;
     }
 
-    /// -------- ///
-    /// DEPOSITS ///
-    /// -------- ///
+    // -------- //
+    // DEPOSITS //
+    // -------- //
 
-    /// @inheritdoc IAaveV2_LendingPoolAdapter
+    /// @notice Deposit underlying tokens into Aave in exchange for aTokens
+    /// @param asset Address of underlying token to deposit
+    /// @param amount Amount of underlying tokens to deposit
+    /// @dev Last two parameters are ignored as `onBehalfOf` can only be credit account,
+    ///      and `referralCode` is set to zero
     function deposit(address asset, uint256 amount, address, uint16)
         external
         override
@@ -42,7 +46,8 @@ contract AaveV2_LendingPoolAdapter is AbstractAdapter, IAaveV2_LendingPoolAdapte
         (tokensToEnable, tokensToDisable) = _deposit(creditAccount, asset, amount, false); // F: [AAV2LP-3]
     }
 
-    /// @inheritdoc IAaveV2_LendingPoolAdapter
+    /// @notice Deposit all underlying tokens into Aave in exchange for aTokens, disables underlying
+    /// @param asset Address of underlying token to deposit
     function depositAll(address asset)
         external
         override
@@ -50,13 +55,13 @@ contract AaveV2_LendingPoolAdapter is AbstractAdapter, IAaveV2_LendingPoolAdapte
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
         address creditAccount = _creditAccount();
-        uint256 balance = IERC20(asset).balanceOf(creditAccount);
-        if (balance <= 1) return (0, 0);
 
-        uint256 amount;
+        uint256 amount = IERC20(asset).balanceOf(creditAccount);
+        if (amount <= 1) return (0, 0);
         unchecked {
-            amount = balance - 1;
+            --amount;
         }
+
         (tokensToEnable, tokensToDisable) = _deposit(creditAccount, asset, amount, true); // F: [AAV2LP-4]
     }
 
@@ -77,11 +82,15 @@ contract AaveV2_LendingPoolAdapter is AbstractAdapter, IAaveV2_LendingPoolAdapte
         ); // F: [AAV2LP-2]
     }
 
-    /// ----------- ///
-    /// WITHDRAWALS ///
-    /// ----------- ///
+    // ----------- //
+    // WITHDRAWALS //
+    // ----------- //
 
-    /// @inheritdoc IAaveV2_LendingPoolAdapter
+    /// @notice Withdraw underlying tokens from Aave and burn aTokens
+    /// @param asset Address of underlying token to deposit
+    /// @param amount Amount of underlying tokens to withdraw
+    ///        If `type(uint256).max`, will withdraw the full amount
+    /// @dev Last parameter is ignored because underlying recepient can only be credit account
     function withdraw(address asset, uint256 amount, address)
         external
         override
@@ -96,7 +105,8 @@ contract AaveV2_LendingPoolAdapter is AbstractAdapter, IAaveV2_LendingPoolAdapte
         }
     }
 
-    /// @inheritdoc IAaveV2_LendingPoolAdapter
+    /// @notice Withdraw all underlying tokens from Aave and burn aTokens, disables aToken
+    /// @param asset Address of underlying token to withdraw
     function withdrawAll(address asset)
         external
         override
@@ -130,12 +140,10 @@ contract AaveV2_LendingPoolAdapter is AbstractAdapter, IAaveV2_LendingPoolAdapte
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
         address aToken = _aToken(asset);
-        uint256 balance = IERC20(aToken).balanceOf(creditAccount);
-        if (balance <= 1) return (0, 0);
-
-        uint256 amount;
+        uint256 amount = IERC20(aToken).balanceOf(creditAccount);
+        if (amount <= 1) return (0, 0);
         unchecked {
-            amount = balance - 1;
+            --amount;
         }
 
         (tokensToEnable, tokensToDisable,) =

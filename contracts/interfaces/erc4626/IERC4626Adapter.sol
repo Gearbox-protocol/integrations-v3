@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: MIT
 // Gearbox Protocol. Generalized leverage for DeFi protocols
-// (c) Gearbox Holdings, 2023
+// (c) Gearbox Foundation, 2023.
 pragma solidity ^0.8.17;
 
-interface IERC4626Adapter {
+import {IAdapter} from "@gearbox-protocol/core-v2/contracts/interfaces/IAdapter.sol";
+
+interface IERC4626Adapter is IAdapter {
     function asset() external view returns (address);
 
     function assetMask() external view returns (uint256);

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 // Gearbox Protocol. Generalized leverage for DeFi protocols
-// (c) Gearbox Holdings, 2023
+// (c) Gearbox Foundation, 2023.
 pragma solidity ^0.8.17;
 
 import "@gearbox-protocol/core-v3/contracts/interfaces/IAddressProviderV3.sol";
@@ -213,7 +213,7 @@ contract LidoV1AdapterTest is
     /// @dev [LDOV1-7]: setLimit updates limit properly
     function test_LDOV1_07_submit_updates_limit_properly(uint256 amount) public {
         vm.expectEmit(false, false, false, true);
-        emit NewLimit(amount);
+        emit SetLimit(amount);
 
         vm.prank(CONFIGURATOR);
         lidoV1Adapter.setLimit(amount);

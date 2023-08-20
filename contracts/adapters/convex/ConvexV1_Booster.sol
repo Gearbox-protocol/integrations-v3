@@ -1,13 +1,14 @@
-// SPDX-License-Identifier: BUSL-1.1
+// SPDX-License-Identifier: GPL-2.0-or-later
 // Gearbox Protocol. Generalized leverage for DeFi protocols
-// (c) Gearbox Holdings, 2023
+// (c) Gearbox Foundation, 2023.
 pragma solidity ^0.8.17;
 
 import {ICreditManagerV3} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditManagerV3.sol";
 import {ICreditConfiguratorV3} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditConfiguratorV3.sol";
 
 import {AbstractAdapter} from "../AbstractAdapter.sol";
-import {IAdapter, AdapterType} from "../../interfaces/IAdapter.sol";
+import {AdapterType} from "@gearbox-protocol/sdk/contracts/AdapterType.sol";
+import {IAdapter} from "@gearbox-protocol/core-v2/contracts/interfaces/IAdapter.sol";
 
 import {IBooster} from "../../integrations/convex/IBooster.sol";
 import {IBaseRewardPool} from "../../integrations/convex/IBaseRewardPool.sol";
@@ -20,7 +21,7 @@ contract ConvexV1BoosterAdapter is AbstractAdapter, IConvexV1BoosterAdapter {
     AdapterType public constant override _gearboxAdapterType = AdapterType.CONVEX_V1_BOOSTER;
     uint16 public constant override _gearboxAdapterVersion = 2;
 
-    /// @inheritdoc IConvexV1BoosterAdapter
+    /// @notice Maps pool ID to phantom token representing staked position
     mapping(uint256 => address) public override pidToPhantomToken;
 
     /// @notice Constructor
@@ -28,11 +29,14 @@ contract ConvexV1BoosterAdapter is AbstractAdapter, IConvexV1BoosterAdapter {
     /// @param _booster Booster contract address
     constructor(address _creditManager, address _booster) AbstractAdapter(_creditManager, _booster) {}
 
-    /// ------- ///
-    /// DEPOSIT ///
-    /// ------- ///
+    // ------- //
+    // DEPOSIT //
+    // ------- //
 
-    /// @inheritdoc IConvexV1BoosterAdapter
+    /// @notice Deposits Curve LP tokens into Booster
+    /// @param _pid ID of the pool to deposit to
+    /// @param _stake Whether to stake Convex LP tokens in the rewards pool
+    /// @dev `_amount` parameter is ignored since calldata is passed directly to the target contract
     function deposit(uint256 _pid, uint256, bool _stake)
         external
         override
@@ -42,7 +46,9 @@ contract ConvexV1BoosterAdapter is AbstractAdapter, IConvexV1BoosterAdapter {
         (tokensToEnable, tokensToDisable) = _deposit(_pid, _stake, msg.data, false);
     }
 
-    /// @inheritdoc IConvexV1BoosterAdapter
+    /// @notice Deposits the entire balance of Curve LP tokens into Booster, disables Curve LP token
+    /// @param _pid ID of the pool to deposit to
+    /// @param _stake Whether to stake Convex LP tokens in the rewards pool
     function depositAll(uint256 _pid, bool _stake)
         external
         override
@@ -69,11 +75,13 @@ contract ConvexV1BoosterAdapter is AbstractAdapter, IConvexV1BoosterAdapter {
         (tokensToEnable, tokensToDisable,) = _executeSwapSafeApprove(tokenIn, tokenOut, callData, disableCurveLP);
     }
 
-    /// -------- ///
-    /// WITHDRAW ///
-    /// -------- ///
+    // -------- //
+    // WITHDRAW //
+    // -------- //
 
-    /// @inheritdoc IConvexV1BoosterAdapter
+    /// @notice Withdraws Curve LP tokens from Booster
+    /// @param _pid ID of the pool to withdraw from
+    /// @dev `_amount` parameter is ignored since calldata is passed directly to the target contract
     function withdraw(uint256 _pid, uint256)
         external
         override
@@ -83,7 +91,9 @@ contract ConvexV1BoosterAdapter is AbstractAdapter, IConvexV1BoosterAdapter {
         (tokensToEnable, tokensToDisable) = _withdraw(_pid, msg.data, false);
     }
 
-    /// @inheritdoc IConvexV1BoosterAdapter
+    /// @notice Withdraws all Curve LP tokens from Booster, disables Convex LP token
+    /// @param _pid ID of the pool to withdraw from
+    /// @dev `_amount` parameter is ignored since calldata is passed directly to the target contract
     function withdrawAll(uint256 _pid)
         external
         override
@@ -109,11 +119,11 @@ contract ConvexV1BoosterAdapter is AbstractAdapter, IConvexV1BoosterAdapter {
         (tokensToEnable, tokensToDisable,) = _executeSwapNoApprove(tokenIn, tokenOut, callData, disableConvexLP);
     }
 
-    /// ------ ///
-    /// CONFIG ///
-    /// ------ ///
+    // ------------- //
+    // CONFIGURATION //
+    // ------------- //
 
-    /// @inheritdoc IConvexV1BoosterAdapter
+    /// @notice Updates the mapping of pool IDs to phantom staked token addresses
     function updateStakedPhantomTokensMap()
         external
         override
