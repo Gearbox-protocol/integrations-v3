@@ -12,12 +12,15 @@ import {AdapterType} from "@gearbox-protocol/sdk/contracts/AdapterType.sol";
 
 import {ISwapRouter} from "../../integrations/uniswap/IUniswapV3.sol";
 import {BytesLib} from "../../integrations/uniswap/BytesLib.sol";
-import {IUniswapV3Adapter, UniswapV3PoolStatus} from "../../interfaces/uniswap/IUniswapV3Adapter.sol";
+import {IUniswapV3Adapter, PoolStatus} from "../../interfaces/uniswap/IUniswapV3Adapter.sol";
 
 /// @title Uniswap V3 Router adapter interface
 /// @notice Implements logic allowing CAs to perform swaps via Uniswap V3
 contract UniswapV3Adapter is AbstractAdapter, IUniswapV3Adapter {
     using BytesLib for bytes;
+
+    AdapterType public constant override _gearboxAdapterType = AdapterType.UNISWAP_V3_ROUTER;
+    uint16 public constant override _gearboxAdapterVersion = 3;
 
     /// @dev The length of the bytes encoded address
     uint256 private constant ADDR_SIZE = 20;
@@ -37,19 +40,17 @@ contract UniswapV3Adapter is AbstractAdapter, IUniswapV3Adapter {
     /// @dev The length of the path with 3 hops
     uint256 private constant PATH_4_LENGTH = 4 * ADDR_SIZE + 3 * FEE_SIZE;
 
-    AdapterType public constant override _gearboxAdapterType = AdapterType.UNISWAP_V3_ROUTER;
-    uint16 public constant override _gearboxAdapterVersion = 3;
-
-    /// @notice Mapping from (token0, token1, fee) to whether the corresponding pool can be traded through the adapter
-    /// @dev Tokens in each pair are sorted alphanumerically by address
-    mapping(address => mapping(address => mapping(uint24 => bool))) internal allowedPool;
+    /// @dev Mapping from (token0, token1, fee) to whether the pool can be traded through the adapter
+    mapping(address => mapping(address => mapping(uint24 => bool))) internal _poolStatus;
 
     /// @notice Constructor
     /// @param _creditManager Credit manager address
     /// @param _router Uniswap V3 Router address
     constructor(address _creditManager, address _router) AbstractAdapter(_creditManager, _router) {}
 
-    /// @inheritdoc IUniswapV3Adapter
+    /// @notice Swaps given amount of input token for output token through a single pool
+    /// @param params Swap params, see `ISwapRouter.ExactInputSingleParams` for details
+    /// @dev `params.recipient` is ignored since it can only be the credit account
     function exactInputSingle(ISwapRouter.ExactInputSingleParams calldata params)
         external
         override
@@ -67,7 +68,8 @@ contract UniswapV3Adapter is AbstractAdapter, IUniswapV3Adapter {
         ); // F: [AUV3-2]
     }
 
-    /// @inheritdoc IUniswapV3Adapter
+    /// @notice Swaps all balance of input token for output token through a single pool, disables input token
+    /// @param params Swap params, see `ExactAllInputSingleParams` for details
     function exactAllInputSingle(ExactAllInputSingleParams calldata params)
         external
         override
@@ -76,11 +78,11 @@ contract UniswapV3Adapter is AbstractAdapter, IUniswapV3Adapter {
     {
         address creditAccount = _creditAccount(); // F: [AUV3-1]
 
-        uint256 balanceInBefore = IERC20(params.tokenIn).balanceOf(creditAccount); // F: [AUV3-3]
-        if (balanceInBefore <= 1) return (0, 0);
+        uint256 balance = IERC20(params.tokenIn).balanceOf(creditAccount); // F: [AUV3-3]
+        if (balance <= 1) return (0, 0);
 
         unchecked {
-            balanceInBefore--;
+            balance--;
         }
 
         ISwapRouter.ExactInputSingleParams memory paramsUpdate = ISwapRouter.ExactInputSingleParams({
@@ -89,8 +91,8 @@ contract UniswapV3Adapter is AbstractAdapter, IUniswapV3Adapter {
             fee: params.fee,
             recipient: creditAccount,
             deadline: params.deadline,
-            amountIn: balanceInBefore,
-            amountOutMinimum: (balanceInBefore * params.rateMinRAY) / RAY,
+            amountIn: balance,
+            amountOutMinimum: (balance * params.rateMinRAY) / RAY,
             sqrtPriceLimitX96: params.sqrtPriceLimitX96
         }); // F: [AUV3-3]
 
@@ -100,7 +102,10 @@ contract UniswapV3Adapter is AbstractAdapter, IUniswapV3Adapter {
         ); // F: [AUV3-3]
     }
 
-    /// @inheritdoc IUniswapV3Adapter
+    /// @notice Swaps given amount of input token for output token through multiple pools
+    /// @param params Swap params, see `ISwapRouter.ExactInputParams` for details
+    /// @dev `params.recipient` is ignored since it can only be the credit account
+    /// @dev `params.path` must have at most 3 hops through registered connector tokens
     function exactInput(ISwapRouter.ExactInputParams calldata params)
         external
         override
@@ -109,10 +114,8 @@ contract UniswapV3Adapter is AbstractAdapter, IUniswapV3Adapter {
     {
         address creditAccount = _creditAccount(); // F: [AUV3-1]
 
-        (bool valid, address tokenIn, address tokenOut) = _parseUniV3Path(params.path);
-        if (!valid) {
-            revert InvalidPathException(); // F: [AUV3-9]
-        }
+        (bool valid, address tokenIn, address tokenOut) = _validatePath(params.path);
+        if (!valid) revert InvalidPathException(); // F: [AUV3-9]
 
         ISwapRouter.ExactInputParams memory paramsUpdate = params; // F: [AUV3-4]
         paramsUpdate.recipient = creditAccount; // F: [AUV3-4]
@@ -122,7 +125,9 @@ contract UniswapV3Adapter is AbstractAdapter, IUniswapV3Adapter {
             _executeSwapSafeApprove(tokenIn, tokenOut, abi.encodeCall(ISwapRouter.exactInput, (paramsUpdate)), false); // F: [AUV3-4]
     }
 
-    /// @inheritdoc IUniswapV3Adapter
+    /// @notice Swaps all balance of input token for output token through multiple pools, disables input token
+    /// @param params Swap params, see `ExactAllInputParams` for details
+    /// @dev `params.path` must have at most 3 hops through registered connector tokens
     function exactAllInput(ExactAllInputParams calldata params)
         external
         override
@@ -131,23 +136,21 @@ contract UniswapV3Adapter is AbstractAdapter, IUniswapV3Adapter {
     {
         address creditAccount = _creditAccount(); // F: [AUV3-1]
 
-        (bool valid, address tokenIn, address tokenOut) = _parseUniV3Path(params.path);
-        if (!valid) {
-            revert InvalidPathException(); // F: [AUV3-9]
-        }
+        (bool valid, address tokenIn, address tokenOut) = _validatePath(params.path);
+        if (!valid) revert InvalidPathException(); // F: [AUV3-9]
 
-        uint256 balanceInBefore = IERC20(tokenIn).balanceOf(creditAccount); // F: [AUV3-5]
-        if (balanceInBefore <= 1) return (0, 0);
+        uint256 balance = IERC20(tokenIn).balanceOf(creditAccount); // F: [AUV3-5]
+        if (balance <= 1) return (0, 0);
 
         unchecked {
-            balanceInBefore--;
+            balance--;
         }
         ISwapRouter.ExactInputParams memory paramsUpdate = ISwapRouter.ExactInputParams({
             path: params.path,
             recipient: creditAccount,
             deadline: params.deadline,
-            amountIn: balanceInBefore,
-            amountOutMinimum: (balanceInBefore * params.rateMinRAY) / RAY
+            amountIn: balance,
+            amountOutMinimum: (balance * params.rateMinRAY) / RAY
         }); // F: [AUV3-5]
 
         // calling `_executeSwap` because we need to check if output token is registered as collateral token in the CM
@@ -155,7 +158,9 @@ contract UniswapV3Adapter is AbstractAdapter, IUniswapV3Adapter {
             _executeSwapSafeApprove(tokenIn, tokenOut, abi.encodeCall(ISwapRouter.exactInput, (paramsUpdate)), true); // F: [AUV3-5]
     }
 
-    /// @inheritdoc IUniswapV3Adapter
+    /// @notice Swaps input token for given amount of output token through a single pool
+    /// @param params Swap params, see `ISwapRouter.ExactOutputSingleParams` for details
+    /// @dev `params.recipient` is ignored since it can only be the credit account
     function exactOutputSingle(ISwapRouter.ExactOutputSingleParams calldata params)
         external
         override
@@ -173,7 +178,10 @@ contract UniswapV3Adapter is AbstractAdapter, IUniswapV3Adapter {
         ); // F: [AUV3-6]
     }
 
-    /// @inheritdoc IUniswapV3Adapter
+    /// @notice Swaps input token for given amount of output token through multiple pools
+    /// @param params Swap params, see `ISwapRouter.ExactOutputParams` for details
+    /// @dev `params.recipient` is ignored since it can only be the credit account
+    /// @dev `params.path` must have at most 3 hops through registered connector tokens
     function exactOutput(ISwapRouter.ExactOutputParams calldata params)
         external
         override
@@ -182,10 +190,8 @@ contract UniswapV3Adapter is AbstractAdapter, IUniswapV3Adapter {
     {
         address creditAccount = _creditAccount(); // F: [AUV3-1]
 
-        (bool valid, address tokenOut, address tokenIn) = _parseUniV3Path(params.path);
-        if (!valid) {
-            revert InvalidPathException(); // F: [AUV3-9]
-        }
+        (bool valid, address tokenOut, address tokenIn) = _validatePath(params.path);
+        if (!valid) revert InvalidPathException(); // F: [AUV3-9]
 
         ISwapRouter.ExactOutputParams memory paramsUpdate = params; // F: [AUV3-7]
         paramsUpdate.recipient = creditAccount; // F: [AUV3-7]
@@ -195,78 +201,66 @@ contract UniswapV3Adapter is AbstractAdapter, IUniswapV3Adapter {
             _executeSwapSafeApprove(tokenIn, tokenOut, abi.encodeCall(ISwapRouter.exactOutput, (paramsUpdate)), false); // F: [AUV3-7]
     }
 
-    /// @dev Performs sanity checks on a swap path, returns input and output tokens
-    ///      - Path length must be no more than 4 (i.e., at most 3 hops)
-    ///      - Each swap must be through an allowed pool
-    function _parseUniV3Path(bytes memory path) internal view returns (bool valid, address tokenIn, address tokenOut) {
-        uint256 len = path.length;
+    // ------------- //
+    // CONFIGURATION //
+    // ------------- //
 
-        if (len == PATH_2_LENGTH) {
-            tokenIn = path.toAddress(0);
-            tokenOut = path.toAddress(NEXT_OFFSET);
-            uint24 fee = path.toUint24(ADDR_SIZE);
+    /// @notice Returns whether the (token0, token1, fee) pool is allowed to be traded through the adapter
+    function isPoolAllowed(address token0, address token1, uint24 fee) public view override returns (bool) {
+        (token0, token1) = _sortTokens(token0, token1);
+        return _poolStatus[token0][token1][fee];
+    }
 
-            valid = isPoolAllowed(tokenIn, tokenOut, fee);
-
-            return (valid, tokenIn, tokenOut);
-        }
-
-        if (len == PATH_3_LENGTH) {
-            tokenIn = path.toAddress(0);
-            address tokenMid = path.toAddress(NEXT_OFFSET);
-            tokenOut = path.toAddress(2 * NEXT_OFFSET);
-
-            uint24 fee0 = path.toUint24(ADDR_SIZE);
-            uint24 fee1 = path.toUint24(NEXT_OFFSET + ADDR_SIZE);
-
-            valid = isPoolAllowed(tokenIn, tokenMid, fee0) && isPoolAllowed(tokenMid, tokenOut, fee1);
-            return (valid, tokenIn, tokenOut);
-        }
-
-        if (len == PATH_4_LENGTH) {
-            tokenIn = path.toAddress(0);
-            address tokenMid0 = path.toAddress(NEXT_OFFSET);
-            address tokenMid1 = path.toAddress(2 * NEXT_OFFSET);
-            tokenOut = path.toAddress(3 * NEXT_OFFSET);
-
-            uint24 fee0 = path.toUint24(ADDR_SIZE);
-            uint24 fee1 = path.toUint24(NEXT_OFFSET + ADDR_SIZE);
-            uint24 fee2 = path.toUint24(2 * NEXT_OFFSET + ADDR_SIZE);
-
-            valid = isPoolAllowed(tokenIn, tokenMid0, fee0) && isPoolAllowed(tokenMid0, tokenMid1, fee1)
-                && isPoolAllowed(tokenMid1, tokenOut, fee2);
-
-            return (valid, tokenIn, tokenOut);
+    /// @notice Sets status for a batch of pools
+    /// @param pools Array of `PoolStatus` objects
+    function setPoolStatusBatch(PoolStatus[] calldata pools) external override configuratorOnly {
+        uint256 len = pools.length;
+        unchecked {
+            for (uint256 i; i < len; ++i) {
+                (address token0, address token1) = _sortTokens(pools[i].token0, pools[i].token1);
+                _poolStatus[token0][token1][pools[i].fee] = pools[i].allowed;
+                emit SetPoolStatus(token0, token1, pools[i].fee, pools[i].allowed);
+            }
         }
     }
 
-    /// @dev Sort two token addresses alphanumerically
+    // ------- //
+    // HELPERS //
+    // ------- //
+
+    /// @dev Performs sanity checks on a swap path, if path is valid also returns input and output tokens
+    ///      - Path length must be no more than 4 (i.e., at most 3 hops)
+    ///      - Each swap must be through an allowed pool
+    function _validatePath(bytes memory path) internal view returns (bool valid, address tokenIn, address tokenOut) {
+        uint256 len = path.length;
+        if (len != PATH_2_LENGTH && len != PATH_3_LENGTH && len != PATH_4_LENGTH) return (false, tokenIn, tokenOut);
+
+        tokenIn = path.toAddress(0);
+        uint24 fee = path.toUint24(ADDR_SIZE);
+        tokenOut = path.toAddress(NEXT_OFFSET);
+        valid = isPoolAllowed(tokenIn, tokenOut, fee);
+
+        if (valid && len > PATH_2_LENGTH) {
+            address tokenMid = tokenOut;
+            fee = path.toUint24(NEXT_OFFSET + ADDR_SIZE);
+            tokenOut = path.toAddress(2 * NEXT_OFFSET);
+            valid = isPoolAllowed(tokenMid, tokenOut, fee);
+
+            if (valid && len > PATH_3_LENGTH) {
+                tokenMid = tokenOut;
+                fee = path.toUint24(2 * NEXT_OFFSET + ADDR_SIZE);
+                tokenOut = path.toAddress(3 * NEXT_OFFSET);
+                valid = isPoolAllowed(tokenMid, tokenOut, fee);
+            }
+        }
+    }
+
+    /// @dev Sorts two token addresses
     function _sortTokens(address token0, address token1) internal pure returns (address, address) {
         if (uint160(token0) < uint160(token1)) {
             return (token0, token1);
         } else {
             return (token1, token0);
-        }
-    }
-
-    /// @notice Returns whether the (token0, token1, fee) pool is allowed to be traded through the adapter
-    function isPoolAllowed(address token0, address token1, uint24 fee) public view returns (bool) {
-        (token0, token1) = _sortTokens(token0, token1);
-        return allowedPool[token0][token1][fee];
-    }
-
-    /// @notice Changes the whitelisted status for a batch of pairs
-    /// @param pools Array of UniswaV3PoolStatus objects:
-    ///              * token0 - First token in a pool
-    ///              * token1 - Second token in a pool
-    ///              * fee - fee of the pool
-    ///              * allowed - Status to set
-    function setPoolBatchAllowanceStatus(UniswapV3PoolStatus[] calldata pools) external configuratorOnly {
-        uint256 len = pools.length;
-
-        for (uint256 i = 0; i < len; ++i) {
-            (address token0, address token1) = _sortTokens(pools[i].token0, pools[i].token1);
-            allowedPool[token0][token1][pools[i].fee] = pools[i].allowed;
         }
     }
 }
