@@ -14,17 +14,17 @@ import {IwstETHV1Adapter} from "../../interfaces/lido/IwstETHV1Adapter.sol";
 /// @title wstETH adapter
 /// @notice Implements logic for wrapping / unwrapping stETH
 contract WstETHV1Adapter is AbstractAdapter, IwstETHV1Adapter {
-    /// @inheritdoc IwstETHV1Adapter
-    address public immutable override stETH;
-
-    /// @inheritdoc IwstETHV1Adapter
-    uint256 public immutable override stETHTokenMask;
-
-    /// @inheritdoc IwstETHV1Adapter
-    uint256 public immutable override wstETHTokenMask;
-
     AdapterType public constant override _gearboxAdapterType = AdapterType.LIDO_WSTETH_V1;
     uint16 public constant override _gearboxAdapterVersion = 2;
+
+    /// @notice Address of the stETH token
+    address public immutable override stETH;
+
+    /// @notice Collateral token mask of stETH in the credit manager
+    uint256 public immutable override stETHTokenMask;
+
+    /// @notice Collateral token mask of wstETH in the credit manager
+    uint256 public immutable override wstETHTokenMask;
 
     /// @notice Constructor
     /// @param _creditManager Credit manager address
@@ -35,11 +35,12 @@ contract WstETHV1Adapter is AbstractAdapter, IwstETHV1Adapter {
         stETHTokenMask = _getMaskOrRevert(stETH); // F: [AWSTV1-1, AWSTV1-2]
     }
 
-    /// ---- ///
-    /// WRAP ///
-    /// ---- ///
+    // ---- //
+    // WRAP //
+    // ---- //
 
-    /// @inheritdoc IwstETHV1Adapter
+    /// @notice Wraps given amount of stETH into wstETH
+    /// @param amount Amount of stETH to wrap
     function wrap(uint256 amount)
         external
         override
@@ -49,7 +50,7 @@ contract WstETHV1Adapter is AbstractAdapter, IwstETHV1Adapter {
         (tokensToEnable, tokensToDisable) = _wrap(amount, false); // F: [AWSTV1-5]
     }
 
-    /// @inheritdoc IwstETHV1Adapter
+    /// @notice Wraps the entire balance of stETH into wstETH, disables stETH
     function wrapAll() external override creditFacadeOnly returns (uint256 tokensToEnable, uint256 tokensToDisable) {
         address creditAccount = _creditAccount(); // F: [AWSTV1-3]
 
@@ -75,11 +76,12 @@ contract WstETHV1Adapter is AbstractAdapter, IwstETHV1Adapter {
         (tokensToEnable, tokensToDisable) = (wstETHTokenMask, disableStETH ? stETHTokenMask : 0);
     }
 
-    /// ------ ///
-    /// UNWRAP ///
-    /// ------ ///
+    // ------ //
+    // UNWRAP //
+    // ------ //
 
-    /// @inheritdoc IwstETHV1Adapter
+    /// @notice Unwraps given amount of wstETH into stETH
+    /// @param amount Amount of wstETH to unwrap
     function unwrap(uint256 amount)
         external
         override
@@ -89,7 +91,7 @@ contract WstETHV1Adapter is AbstractAdapter, IwstETHV1Adapter {
         (tokensToEnable, tokensToDisable) = _unwrap(amount, false); // F: [AWSTV1-7]
     }
 
-    /// @inheritdoc IwstETHV1Adapter
+    /// @notice Unwraps the entire balance of wstETH to stETH, disables wstETH
     function unwrapAll() external override creditFacadeOnly returns (uint256 tokensToEnable, uint256 tokensToDisable) {
         address creditAccount = _creditAccount(); // F: [AWSTV1-3]
 

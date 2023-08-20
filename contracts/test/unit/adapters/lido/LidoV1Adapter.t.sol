@@ -213,7 +213,7 @@ contract LidoV1AdapterTest is
     /// @dev [LDOV1-7]: setLimit updates limit properly
     function test_LDOV1_07_submit_updates_limit_properly(uint256 amount) public {
         vm.expectEmit(false, false, false, true);
-        emit NewLimit(amount);
+        emit SetLimit(amount);
 
         vm.prank(CONFIGURATOR);
         lidoV1Adapter.setLimit(amount);
