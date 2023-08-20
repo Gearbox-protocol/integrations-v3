@@ -6,7 +6,7 @@ pragma solidity ^0.8.17;
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import {IWETH} from "@gearbox-protocol/core-v2/contracts/interfaces/external/IWETH.sol";
-import {ZeroAddressException} from "@gearbox-protocol/core-v2/contracts/interfaces/IErrors.sol";
+import {SanityCheckTrait} from "@gearbox-protocol/core-v3/contracts/traits/SanityCheckTrait.sol";
 
 import {ICompoundV2_Exceptions} from "../../interfaces/compound/ICompoundV2_CTokenAdapter.sol";
 import {ICEther} from "../../integrations/compound/ICEther.sol";
@@ -14,21 +14,21 @@ import {ICErc20Actions} from "../../integrations/compound/ICErc20.sol";
 
 /// @title CEther gateway
 /// @notice Wrapper around CEther that uses WETH for all operations instead of ETH
-contract CEtherGateway is ICErc20Actions, ICompoundV2_Exceptions {
+contract CEtherGateway is SanityCheckTrait, ICErc20Actions, ICompoundV2_Exceptions {
     /// @notice WETH token address
-    IWETH public immutable weth;
+    address public immutable weth;
     /// @notice cETH token address
-    ICEther public immutable ceth;
+    address public immutable ceth;
 
     /// @notice Constructor
     /// @param _weth WETH token address
     /// @param _ceth cETH token address
-    constructor(address _weth, address _ceth) {
-        if (_weth == address(0) || _ceth == address(0)) {
-            revert ZeroAddressException(); // F: [CEG-1]
-        }
-        weth = IWETH(_weth); // F: [CEG-2]
-        ceth = ICEther(_ceth); // F: [CEG-2]
+    constructor(address _weth, address _ceth)
+        nonZeroAddress(_weth) // F: [CEG-1]
+        nonZeroAddress(_ceth) // F: [CEG-1]
+    {
+        weth = _weth; // F: [CEG-2]
+        ceth = _ceth; // F: [CEG-2]
     }
 
     /// @notice Allows receiving ETH
@@ -40,15 +40,15 @@ contract CEtherGateway is ICErc20Actions, ICompoundV2_Exceptions {
     /// @return error Error code (always zero, added for compatibility)
     function mint(uint256 mintAmount) external override returns (uint256 error) {
         // transfer WETH from caller and unwrap it
-        IERC20(address(weth)).transferFrom(msg.sender, address(this), mintAmount);
-        weth.withdraw(mintAmount); // F: [CEG-4]
+        IERC20(weth).transferFrom(msg.sender, address(this), mintAmount);
+        IWETH(weth).withdraw(mintAmount); // F: [CEG-4]
 
         // deposit ETH to Compound
-        ceth.mint{value: mintAmount}(); // F: [CEG-4]
+        ICEther(ceth).mint{value: mintAmount}(); // F: [CEG-4]
         error = 0;
 
         // send cETH to caller
-        ceth.transfer(msg.sender, ceth.balanceOf(address(this)));
+        IERC20(ceth).transfer(msg.sender, IERC20(ceth).balanceOf(address(this)));
     }
 
     /// @notice Burn given amount of cETH to withdraw WETH
@@ -57,16 +57,16 @@ contract CEtherGateway is ICErc20Actions, ICompoundV2_Exceptions {
     /// @param error Error code (always zero, added for compatibility)
     function redeem(uint256 redeemTokens) external override returns (uint256 error) {
         // get specified amount of cETH from caller
-        ceth.transferFrom(msg.sender, address(this), redeemTokens);
+        IERC20(ceth).transferFrom(msg.sender, address(this), redeemTokens);
 
         // redeem ETH from Compound
-        error = ceth.redeem(redeemTokens); // F: [CEG-5]
+        error = ICEther(ceth).redeem(redeemTokens); // F: [CEG-5]
         if (error != 0) revert CTokenError(error); // F: [CEG-6]
 
         // wrap ETH and send to caller
         uint256 ethBalance = address(this).balance;
-        weth.deposit{value: ethBalance}(); // F: [CEG-5]
-        weth.transfer(msg.sender, ethBalance);
+        IWETH(weth).deposit{value: ethBalance}(); // F: [CEG-5]
+        IERC20(weth).transfer(msg.sender, ethBalance);
     }
 
     /// @notice Withdraw given amount of WETH from Compound
@@ -75,19 +75,19 @@ contract CEtherGateway is ICErc20Actions, ICompoundV2_Exceptions {
     /// @return error Error code (always zero, added for compatibility)
     function redeemUnderlying(uint256 redeemAmount) external override returns (uint256 error) {
         // transfer all cETH from caller
-        ceth.transferFrom(msg.sender, address(this), ceth.balanceOf(msg.sender));
+        IERC20(ceth).transferFrom(msg.sender, address(this), IERC20(ceth).balanceOf(msg.sender));
 
         // redeem ETH from Compound
-        error = ceth.redeemUnderlying(redeemAmount); // F: [CEG-7]
+        error = ICEther(ceth).redeemUnderlying(redeemAmount); // F: [CEG-7]
         if (error != 0) revert CTokenError(error); // F: [CEG-8]
 
         // return the remaining cETH (if any) back to caller
-        uint256 cethBalance = ceth.balanceOf(address(this));
-        if (cethBalance > 0) ceth.transfer(msg.sender, cethBalance);
+        uint256 cethBalance = IERC20(ceth).balanceOf(address(this));
+        if (cethBalance > 0) IERC20(ceth).transfer(msg.sender, cethBalance);
 
         // wrap ETH and send to caller
         uint256 ethBalance = address(this).balance;
-        weth.deposit{value: ethBalance}(); // F: [CEG-7]
-        weth.transfer(msg.sender, ethBalance);
+        IWETH(weth).deposit{value: ethBalance}(); // F: [CEG-7]
+        IERC20(weth).transfer(msg.sender, ethBalance);
     }
 }

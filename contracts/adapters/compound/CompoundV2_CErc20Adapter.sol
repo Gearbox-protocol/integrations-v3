@@ -13,17 +13,17 @@ import {ICompoundV2_CTokenAdapter} from "../../interfaces/compound/ICompoundV2_C
 
 /// @title Compound V2 CErc20 adapter
 contract CompoundV2_CErc20Adapter is CompoundV2_CTokenAdapter {
-    /// @inheritdoc ICompoundV2_CTokenAdapter
-    address public immutable override underlying;
-
-    /// @inheritdoc ICompoundV2_CTokenAdapter
-    uint256 public immutable override tokenMask;
-
-    /// @inheritdoc ICompoundV2_CTokenAdapter
-    uint256 public immutable override cTokenMask;
-
     AdapterType public constant override _gearboxAdapterType = AdapterType.COMPOUND_V2_CERC20;
     uint16 public constant override _gearboxAdapterVersion = 1;
+
+    /// @notice cToken's underlying token
+    address public immutable override underlying;
+
+    /// @notice Collateral token mask of underlying token in the credit manager
+    uint256 public immutable override tokenMask;
+
+    /// @notice Collateral token mask of cToken in the credit manager
+    uint256 public immutable override cTokenMask;
 
     /// @notice Constructor
     /// @param _creditManager Credit manager address
@@ -35,14 +35,10 @@ contract CompoundV2_CErc20Adapter is CompoundV2_CTokenAdapter {
         tokenMask = _getMaskOrRevert(underlying); // F: [ACV2CERC-2]
     }
 
-    /// @inheritdoc ICompoundV2_CTokenAdapter
+    /// @notice cToken that this adapter is connected to
     function cToken() external view override returns (address) {
         return targetContract; // F: [ACV2CERC-2]
     }
-
-    /// -------------------------------- ///
-    /// VIRTUAL FUNCTIONS IMPLEMENTATION ///
-    /// -------------------------------- ///
 
     /// @dev Internal implementation of `mint`
     ///      - underlying is approved before the call because cToken needs permission to transfer it
@@ -65,12 +61,11 @@ contract CompoundV2_CErc20Adapter is CompoundV2_CTokenAdapter {
     ///      - underlying is disabled after the call because operation spends the entire balance
     function _mintAll() internal override returns (uint256 tokensToEnable, uint256 tokensToDisable, uint256 error) {
         address creditAccount = _creditAccount();
-        uint256 balance = IERC20(underlying).balanceOf(creditAccount);
-        if (balance <= 1) return (0, 0, 0);
 
-        uint256 amount;
+        uint256 amount = IERC20(underlying).balanceOf(creditAccount);
+        if (amount <= 1) return (0, 0, 0);
         unchecked {
-            amount = balance - 1;
+            --amount;
         }
 
         _approveToken(underlying, type(uint256).max);
@@ -98,12 +93,11 @@ contract CompoundV2_CErc20Adapter is CompoundV2_CTokenAdapter {
     ///      - cToken is disabled after the call because operation spends the entire balance
     function _redeemAll() internal override returns (uint256 tokensToEnable, uint256 tokensToDisable, uint256 error) {
         address creditAccount = _creditAccount();
-        uint256 balance = ICErc20(targetContract).balanceOf(creditAccount);
-        if (balance <= 1) return (0, 0, 0);
 
-        uint256 amount;
+        uint256 amount = ICErc20(targetContract).balanceOf(creditAccount);
+        if (amount <= 1) return (0, 0, 0);
         unchecked {
-            amount = balance - 1;
+            --amount;
         }
 
         error = abi.decode(_execute(_encodeRedeem(amount)), (uint256));
