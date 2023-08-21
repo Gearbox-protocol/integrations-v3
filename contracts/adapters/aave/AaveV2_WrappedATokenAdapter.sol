@@ -6,7 +6,7 @@ pragma solidity ^0.8.17;
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import {AbstractAdapter} from "../AbstractAdapter.sol";
-import {AdapterType} from "@gearbox-protocol/sdk/contracts/AdapterType.sol";
+import {AdapterType} from "@gearbox-protocol/sdk-gov/contracts/AdapterType.sol";
 
 import {IAaveV2_WrappedATokenAdapter} from "../../interfaces/aave/IAaveV2_WrappedATokenAdapter.sol";
 import {IWrappedATokenV2} from "@gearbox-protocol/oracles-v3/contracts/interfaces/aave/IWrappedATokenV2.sol";

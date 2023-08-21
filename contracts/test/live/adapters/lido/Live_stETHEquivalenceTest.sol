@@ -8,8 +8,8 @@ pragma solidity ^0.8.17;
 // import {ICurvePool2Assets} from "../../../../integrations/curve/ICurvePool_2.sol";
 // import {ICurveV1_2AssetsAdapter} from "../../../../interfaces/curve/ICurveV1_2AssetsAdapter.sol";
 
-// import {Tokens} from "@gearbox-protocol/sdk/contracts/Tokens.sol";
-// import {Contracts} from "@gearbox-protocol/sdk/contracts/SupportedContracts.sol";
+// import {Tokens} from "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
+// import {Contracts} from "@gearbox-protocol/sdk-gov/contracts/SupportedContracts.sol";
 
 // import {MultiCall} from "@gearbox-protocol/core-v2/contracts/libraries/MultiCall.sol";
 // import {MultiCallBuilder} from "@gearbox-protocol/core-v3/contracts/test/lib/MultiCallBuilder.sol";

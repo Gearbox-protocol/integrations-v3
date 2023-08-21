@@ -7,7 +7,7 @@ import {YearnV2Adapter} from "../../../../adapters/yearn/YearnV2.sol";
 
 import {YearnV2Mock} from "../../../mocks/integrations/YearnV2Mock.sol";
 
-import {Tokens} from "@gearbox-protocol/sdk/contracts/Tokens.sol";
+import {Tokens} from "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
 import {YearnPriceFeed} from "@gearbox-protocol/oracles-v3/contracts/oracles/yearn/YearnPriceFeed.sol";
 
 // TEST

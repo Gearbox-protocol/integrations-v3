@@ -8,11 +8,11 @@ import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {ICreditManagerV3} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditManagerV3.sol";
 import {ICreditConfiguratorV3} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditConfiguratorV3.sol";
 // CONFIG
-import {Tokens} from "@gearbox-protocol/sdk/contracts/Tokens.sol";
-import {AdapterData} from "@gearbox-protocol/sdk/contracts/AdapterData.sol";
-import {SupportedContracts, Contracts} from "@gearbox-protocol/sdk/contracts/SupportedContracts.sol";
+import {Tokens} from "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
+import {AdapterData} from "@gearbox-protocol/sdk-gov/contracts/AdapterData.sol";
+import {SupportedContracts, Contracts} from "@gearbox-protocol/sdk-gov/contracts/SupportedContracts.sol";
 
-import {AdapterType} from "@gearbox-protocol/sdk/contracts/AdapterType.sol";
+import {AdapterType} from "@gearbox-protocol/sdk-gov/contracts/AdapterType.sol";
 
 // SIMPLE ADAPTERS
 import {UniswapV2Adapter} from "../../adapters/uniswap/UniswapV2.sol";

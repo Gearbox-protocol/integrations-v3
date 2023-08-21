@@ -12,7 +12,7 @@ import {
 } from "@gearbox-protocol/core-v3/contracts/interfaces/IAddressProviderV3.sol";
 
 import {AbstractAdapter} from "../AbstractAdapter.sol";
-import {AdapterType} from "@gearbox-protocol/sdk/contracts/AdapterType.sol";
+import {AdapterType} from "@gearbox-protocol/sdk-gov/contracts/AdapterType.sol";
 
 import {IstETH} from "../../integrations/lido/IstETH.sol";
 import {ILidoV1Adapter} from "../../interfaces/lido/ILidoV1Adapter.sol";

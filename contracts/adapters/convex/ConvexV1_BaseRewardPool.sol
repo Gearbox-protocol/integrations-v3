@@ -4,7 +4,7 @@
 pragma solidity ^0.8.17;
 
 import {AbstractAdapter} from "../AbstractAdapter.sol";
-import {AdapterType} from "@gearbox-protocol/sdk/contracts/AdapterType.sol";
+import {AdapterType} from "@gearbox-protocol/sdk-gov/contracts/AdapterType.sol";
 import {BitMask} from "@gearbox-protocol/core-v3/contracts/libraries/BitMask.sol";
 
 import {IBooster} from "../../integrations/convex/IBooster.sol";

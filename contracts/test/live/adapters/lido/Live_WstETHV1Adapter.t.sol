@@ -10,7 +10,7 @@ pragma solidity ^0.8.10;
 
 // // TEST
 // import "../../../lib/constants.sol";
-// import {Tokens} from "@gearbox-protocol/sdk/contracts/Tokens.sol";
+// import {Tokens} from "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
 
 // // SUITES
 

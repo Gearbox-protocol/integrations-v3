@@ -5,7 +5,7 @@ pragma solidity ^0.8.17;
 
 import {LiveTestHelper} from "../suites/LiveTestHelper.sol";
 
-import {Tokens} from "@gearbox-protocol/sdk/contracts/Tokens.sol";
+import {Tokens} from "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
 import "forge-std/console.sol";
 
 contract Live_LidoEquivalenceTest is LiveTestHelper {

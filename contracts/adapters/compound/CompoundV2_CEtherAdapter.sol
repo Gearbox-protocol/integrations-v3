@@ -5,7 +5,7 @@ pragma solidity ^0.8.17;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-import {AdapterType} from "@gearbox-protocol/sdk/contracts/AdapterType.sol";
+import {AdapterType} from "@gearbox-protocol/sdk-gov/contracts/AdapterType.sol";
 
 import {CEtherGateway} from "../../helpers/compound/CompoundV2_CEtherGateway.sol";
 import {CompoundV2_CTokenAdapter} from "./CompoundV2_CTokenAdapter.sol";

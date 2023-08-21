@@ -3,7 +3,7 @@
 // (c) Gearbox Foundation, 2023.
 pragma solidity ^0.8.17;
 
-import {AdapterType} from "@gearbox-protocol/sdk/contracts/AdapterType.sol";
+import {AdapterType} from "@gearbox-protocol/sdk-gov/contracts/AdapterType.sol";
 import {IAdapter} from "@gearbox-protocol/core-v2/contracts/interfaces/IAdapter.sol";
 
 import {N_COINS} from "../../integrations/curve/ICurvePool_2.sol";

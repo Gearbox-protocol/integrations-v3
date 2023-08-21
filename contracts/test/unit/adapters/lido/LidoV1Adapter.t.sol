@@ -9,7 +9,7 @@ import {ILidoV1AdapterEvents, ILidoV1AdapterExceptions} from "../../../../interf
 import {LidoV1Gateway} from "../../../../helpers/lido/LidoV1_WETHGateway.sol";
 import {LidoMock, ILidoMockEvents} from "../../../mocks/integrations/LidoMock.sol";
 
-import {Tokens} from "@gearbox-protocol/sdk/contracts/Tokens.sol";
+import {Tokens} from "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
 
 // TEST
 import "../../../lib/constants.sol";

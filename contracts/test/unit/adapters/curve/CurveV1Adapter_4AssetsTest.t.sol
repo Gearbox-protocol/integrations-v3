@@ -7,7 +7,7 @@ import {N_COINS, CurveV1Adapter4Assets} from "../../../../adapters/curve/CurveV1
 
 import {CurveV1Mock_4Assets} from "../../../mocks/integrations/CurveV1Mock_4Assets.sol";
 
-import {Tokens} from "@gearbox-protocol/sdk/contracts/Tokens.sol";
+import {Tokens} from "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
 
 // TEST
 import "../../../lib/constants.sol";

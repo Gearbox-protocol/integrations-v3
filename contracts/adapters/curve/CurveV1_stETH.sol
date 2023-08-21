@@ -7,7 +7,7 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import {RAY} from "@gearbox-protocol/core-v2/contracts/libraries/Constants.sol";
 
-import {AdapterType} from "@gearbox-protocol/sdk/contracts/AdapterType.sol";
+import {AdapterType} from "@gearbox-protocol/sdk-gov/contracts/AdapterType.sol";
 
 import {N_COINS} from "../../integrations/curve/ICurvePool_2.sol";
 import {ICurveV1Adapter} from "../../interfaces/curve/ICurveV1Adapter.sol";

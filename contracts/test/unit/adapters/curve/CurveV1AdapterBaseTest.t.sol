@@ -3,14 +3,14 @@
 // (c) Gearbox Foundation, 2023.
 pragma solidity ^0.8.17;
 
-import {AdapterType} from "@gearbox-protocol/sdk/contracts/AdapterType.sol";
+import {AdapterType} from "@gearbox-protocol/sdk-gov/contracts/AdapterType.sol";
 
 import {CurveV1AdapterBase} from "../../../../adapters/curve/CurveV1_Base.sol";
 import {ICurveV1Adapter} from "../../../../interfaces/curve/ICurveV1Adapter.sol";
 
 import {CurveV1Mock} from "../../../mocks/integrations/CurveV1Mock.sol";
 
-import {Tokens} from "@gearbox-protocol/sdk/contracts/Tokens.sol";
+import {Tokens} from "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
 
 import {ICurvePool2Assets} from "../../../../integrations/curve/ICurvePool_2.sol";
 import {ICurvePool3Assets} from "../../../../integrations/curve/ICurvePool_3.sol";

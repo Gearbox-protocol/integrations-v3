@@ -16,7 +16,7 @@ import {
 import {WrappedATokenV2} from "@gearbox-protocol/oracles-v3/contracts/tokens/aave/WrappedATokenV2.sol";
 import {IAToken} from "../../../../integrations/aave/IAToken.sol";
 
-import {Tokens} from "@gearbox-protocol/sdk/contracts/Tokens.sol";
+import {Tokens} from "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
 import {ATokenMock} from "../../../mocks/integrations/aave/ATokenMock.sol";
 import {LendingPoolMock} from "../../../mocks/integrations/aave/LendingPoolMock.sol";
 

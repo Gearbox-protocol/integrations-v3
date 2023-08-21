@@ -5,7 +5,7 @@ pragma solidity ^0.8.17;
 
 import {N_COINS, CurveV1Adapter3Assets} from "../../../../adapters/curve/CurveV1_3.sol";
 import {CurveV1Mock_3Assets} from "../../../mocks/integrations/CurveV1Mock_3Assets.sol";
-import {Tokens} from "@gearbox-protocol/sdk/contracts/Tokens.sol";
+import {Tokens} from "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
 
 // TEST
 import "../../../lib/constants.sol";

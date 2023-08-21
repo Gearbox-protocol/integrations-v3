@@ -8,7 +8,7 @@ import {UniswapV2Adapter} from "../../../../adapters/uniswap/UniswapV2.sol";
 import {IUniswapV2Adapter, IUniswapV2AdapterExceptions} from "../../../../interfaces/uniswap/IUniswapV2Adapter.sol";
 import {UniswapV2Mock} from "../../../mocks/integrations/UniswapV2Mock.sol";
 
-import {Tokens} from "@gearbox-protocol/sdk/contracts/Tokens.sol";
+import {Tokens} from "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
 
 // TEST
 import "../../../lib/constants.sol";

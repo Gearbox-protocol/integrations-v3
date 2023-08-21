@@ -14,7 +14,7 @@ import {
 } from "../../../../interfaces/uniswap/IUniswapV3Adapter.sol";
 import {UniswapV3Mock} from "../../../mocks/integrations/UniswapV3Mock.sol";
 
-import {Tokens} from "@gearbox-protocol/sdk/contracts/Tokens.sol";
+import {Tokens} from "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
 
 // TEST
 import "../../../lib/constants.sol";

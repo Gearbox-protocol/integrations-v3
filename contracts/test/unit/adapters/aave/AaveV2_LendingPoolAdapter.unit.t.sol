@@ -5,7 +5,7 @@ pragma solidity ^0.8.17;
 
 import {USER, CONFIGURATOR} from "@gearbox-protocol/core-v3/contracts/test/lib/constants.sol";
 import {AaveV2_LendingPoolAdapter} from "../../../../adapters/aave/AaveV2_LendingPoolAdapter.sol";
-import {Tokens} from "@gearbox-protocol/sdk/contracts/Tokens.sol";
+import {Tokens} from "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
 import {AaveTestHelper} from "./AaveTestHelper.sol";
 import "@gearbox-protocol/core-v3/contracts/interfaces/IExceptions.sol";
 

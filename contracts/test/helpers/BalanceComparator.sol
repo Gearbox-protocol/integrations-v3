@@ -3,7 +3,7 @@
 // (c) Gearbox Foundation, 2023.
 pragma solidity ^0.8.10;
 
-import {Tokens} from "@gearbox-protocol/sdk/contracts/Tokens.sol";
+import {Tokens} from "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 

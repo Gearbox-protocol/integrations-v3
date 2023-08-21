@@ -9,7 +9,7 @@ import {ICurvePool2Assets} from "../../../../integrations/curve/ICurvePool_2.sol
 
 import {CurveV1Mock_2Assets} from "../../../mocks/integrations/CurveV1Mock_2Assets.sol";
 
-import {Tokens} from "@gearbox-protocol/sdk/contracts/Tokens.sol";
+import {Tokens} from "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
 
 // TEST
 import "../../../lib/constants.sol";

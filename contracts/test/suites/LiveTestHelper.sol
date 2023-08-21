@@ -3,8 +3,8 @@
 // (c) Gearbox Foundation, 2023.
 pragma solidity ^0.8.10;
 
-import {Tokens} from "@gearbox-protocol/sdk/contracts/Tokens.sol";
-import {SupportedContracts, Contracts} from "@gearbox-protocol/sdk/contracts/SupportedContracts.sol";
+import {Tokens} from "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
+import {SupportedContracts, Contracts} from "@gearbox-protocol/sdk-gov/contracts/SupportedContracts.sol";
 import {IPoolV3DeployConfig} from "@gearbox-protocol/core-v3/contracts/test/interfaces/ICreditConfig.sol";
 
 import {PriceFeedDeployer} from "@gearbox-protocol/oracles-v3/contracts/test/suites/PriceFeedDeployer.sol";

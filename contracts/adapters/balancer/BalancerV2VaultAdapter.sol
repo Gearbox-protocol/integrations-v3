@@ -9,7 +9,7 @@ import {RAY} from "@gearbox-protocol/core-v2/contracts/libraries/Constants.sol";
 import {BitMask} from "@gearbox-protocol/core-v3/contracts/libraries/BitMask.sol";
 
 import {AbstractAdapter} from "../AbstractAdapter.sol";
-import {AdapterType} from "@gearbox-protocol/sdk/contracts/AdapterType.sol";
+import {AdapterType} from "@gearbox-protocol/sdk-gov/contracts/AdapterType.sol";
 
 import {IAsset} from "../../integrations/balancer/IAsset.sol";
 import {

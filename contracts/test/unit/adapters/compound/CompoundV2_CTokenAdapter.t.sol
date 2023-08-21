@@ -12,7 +12,7 @@ import {CompoundV2_CEtherAdapter} from "../../../../adapters/compound/CompoundV2
 import {CompoundV2_CTokenAdapter} from "../../../../adapters/compound/CompoundV2_CTokenAdapter.sol";
 import {ICompoundV2_Exceptions} from "../../../../interfaces/compound/ICompoundV2_CTokenAdapter.sol";
 
-import {Tokens} from "@gearbox-protocol/sdk/contracts/Tokens.sol";
+import {Tokens} from "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
 
 import {
     CErc20Mock,

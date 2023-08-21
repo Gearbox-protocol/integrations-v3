@@ -31,7 +31,7 @@ import {BPTWeightedPriceFeed} from "@gearbox-protocol/oracles-v3/contracts/oracl
 import {IBalancerV2VaultAdapter} from "../../../../interfaces/balancer/IBalancerV2VaultAdapter.sol";
 import {BalancerVaultMock} from "../../../mocks/integrations/BalancerVaultMock.sol";
 
-import {Tokens} from "@gearbox-protocol/sdk/contracts/Tokens.sol";
+import {Tokens} from "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
 
 // TEST
 import "../../../lib/constants.sol";

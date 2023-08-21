@@ -8,7 +8,7 @@ import {USER, CONFIGURATOR} from "@gearbox-protocol/core-v3/contracts/test/lib/c
 
 import {AaveV2_WrappedATokenAdapter} from "../../../../adapters/aave/AaveV2_WrappedATokenAdapter.sol";
 import {IWrappedATokenV2} from "@gearbox-protocol/oracles-v3/contracts/interfaces/aave/IWrappedATokenV2.sol";
-import {Tokens} from "@gearbox-protocol/sdk/contracts/Tokens.sol";
+import {Tokens} from "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
 import {AaveTestHelper} from "./AaveTestHelper.sol";
 
 import "@gearbox-protocol/core-v3/contracts/interfaces/IExceptions.sol";

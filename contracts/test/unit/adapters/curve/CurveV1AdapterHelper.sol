@@ -23,7 +23,7 @@ import {CurveV1Mock_2Assets} from "../../../mocks/integrations/CurveV1Mock_2Asse
 import {CurveV1Mock_3Assets} from "../../../mocks/integrations/CurveV1Mock_3Assets.sol";
 import {CurveV1Mock_4Assets} from "../../../mocks/integrations/CurveV1Mock_4Assets.sol";
 
-import {Tokens} from "@gearbox-protocol/sdk/contracts/Tokens.sol";
+import {Tokens} from "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
 
 import {PriceFeedParams} from "@gearbox-protocol/oracles-v3/contracts/oracles/PriceFeedParams.sol";
 import {CurveStableLPPriceFeed} from "@gearbox-protocol/oracles-v3/contracts/oracles/curve/CurveStableLPPriceFeed.sol";

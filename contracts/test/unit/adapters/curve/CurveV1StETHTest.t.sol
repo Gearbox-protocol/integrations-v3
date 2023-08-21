@@ -10,7 +10,7 @@ import {CurveV1AdapterStETH} from "../../../../adapters/curve/CurveV1_stETH.sol"
 import {ICurvePool2Assets} from "../../../../integrations/curve/ICurvePool_2.sol";
 import {CurveV1Mock} from "../../../mocks/integrations/CurveV1Mock.sol";
 
-import {Tokens} from "@gearbox-protocol/sdk/contracts/Tokens.sol";
+import {Tokens} from "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
 
 // TEST
 import "../../../lib/constants.sol";

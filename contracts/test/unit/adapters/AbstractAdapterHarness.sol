@@ -4,7 +4,7 @@
 pragma solidity ^0.8.17;
 
 import {AbstractAdapter} from "../../../adapters/AbstractAdapter.sol";
-import {AdapterType} from "@gearbox-protocol/sdk/contracts/AdapterType.sol";
+import {AdapterType} from "@gearbox-protocol/sdk-gov/contracts/AdapterType.sol";
 
 contract AbstractAdapterHarness is AbstractAdapter {
     AdapterType public constant override _gearboxAdapterType = AdapterType.ABSTRACT;

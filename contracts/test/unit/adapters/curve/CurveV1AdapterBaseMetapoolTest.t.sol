@@ -8,7 +8,7 @@ import {ICurveV1Adapter} from "../../../../interfaces/curve/ICurveV1Adapter.sol"
 
 import {CurveV1MetapoolMock} from "../../../mocks/integrations/CurveV1MetapoolMock.sol";
 
-import {Tokens} from "@gearbox-protocol/sdk/contracts/Tokens.sol";
+import {Tokens} from "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
 
 // TEST
 import "../../../lib/constants.sol";

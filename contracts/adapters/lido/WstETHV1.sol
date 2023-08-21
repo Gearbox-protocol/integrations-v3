@@ -6,7 +6,7 @@ pragma solidity ^0.8.17;
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import {AbstractAdapter} from "../AbstractAdapter.sol";
-import {AdapterType} from "@gearbox-protocol/sdk/contracts/AdapterType.sol";
+import {AdapterType} from "@gearbox-protocol/sdk-gov/contracts/AdapterType.sol";
 
 import {IwstETH} from "../../integrations/lido/IwstETH.sol";
 import {IwstETHV1Adapter} from "../../interfaces/lido/IwstETHV1Adapter.sol";

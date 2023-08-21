@@ -10,7 +10,7 @@ import {IwstETH} from "../../../../integrations/lido/IwstETH.sol";
 
 // TEST
 import "../../../lib/constants.sol";
-import {Tokens} from "@gearbox-protocol/sdk/contracts/Tokens.sol";
+import {Tokens} from "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
 
 import {AdapterTestHelper} from "../AdapterTestHelper.sol";
 import {ERC20Mock} from "@gearbox-protocol/core-v3/contracts/test/mocks/token/ERC20Mock.sol";

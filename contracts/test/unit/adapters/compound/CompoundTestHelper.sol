@@ -13,7 +13,7 @@ import {
 
 import {CEtherGateway} from "../../../../helpers/compound/CompoundV2_CEtherGateway.sol";
 
-import {Tokens} from "@gearbox-protocol/sdk/contracts/Tokens.sol";
+import {Tokens} from "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
 import {CErc20Mock} from "../../../mocks/integrations/compound/CErc20Mock.sol";
 import {CEtherMock} from "../../../mocks/integrations/compound/CEtherMock.sol";
 import {AdapterTestHelper} from "../AdapterTestHelper.sol";

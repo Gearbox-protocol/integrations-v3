@@ -8,7 +8,7 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {RAY} from "@gearbox-protocol/core-v2/contracts/libraries/Constants.sol";
 
 import {AbstractAdapter} from "../AbstractAdapter.sol";
-import {AdapterType} from "@gearbox-protocol/sdk/contracts/AdapterType.sol";
+import {AdapterType} from "@gearbox-protocol/sdk-gov/contracts/AdapterType.sol";
 
 import {ISwapRouter} from "../../integrations/uniswap/IUniswapV3.sol";
 import {BytesLib} from "../../integrations/uniswap/BytesLib.sol";

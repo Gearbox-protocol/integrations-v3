@@ -3,8 +3,8 @@
 // (c) Gearbox Foundation, 2023.
 pragma solidity ^0.8.17;
 
-import {Tokens} from "@gearbox-protocol/sdk/contracts/Tokens.sol";
-import {Contracts} from "@gearbox-protocol/sdk/contracts/SupportedContracts.sol";
+import {Tokens} from "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
+import {Contracts} from "@gearbox-protocol/sdk-gov/contracts/SupportedContracts.sol";
 import {
     LinearIRMV3DeployParams,
     PoolV3DeployParams,
