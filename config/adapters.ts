@@ -1,37 +1,40 @@
-import { SupportedContract } from "@gearbox-protocol/sdk";
+import { AdapterDeployConfig } from "@gearbox-protocol/sdk-gov/lib/state/adapters";
 
-export const adapters: Array<SupportedContract> = [
+export const adapters: Array<AdapterDeployConfig> = [
   /// SWAPPERS
-  "UNISWAP_V3_ROUTER",
-  "UNISWAP_V2_ROUTER",
-  "SUSHISWAP_ROUTER",
-  "LIDO_STETH_GATEWAY",
+  {
+    contract: "UNISWAP_V3_ROUTER",
+    allowed: [{ token0: "WETH", token1: "USDC", fee: 500 }],
+  },
+  { contract: "UNISWAP_V2_ROUTER" },
+  { contract: "SUSHISWAP_ROUTER" },
+  { contract: "LIDO_STETH_GATEWAY" },
 
   // CURVE
-  "CURVE_3CRV_POOL",
-  "CURVE_FRAX_USDC_POOL",
-  "CURVE_STETH_GATEWAY",
-  "CURVE_FRAX_POOL",
-  "CURVE_SUSD_POOL",
-  "CURVE_LUSD_POOL",
-  "CURVE_GUSD_POOL",
-  "CURVE_SUSD_DEPOSIT",
+  { contract: "CURVE_3CRV_POOL" },
+  { contract: "CURVE_FRAX_USDC_POOL" },
+  { contract: "CURVE_STETH_GATEWAY" },
+  { contract: "CURVE_FRAX_POOL" },
+  { contract: "CURVE_SUSD_POOL" },
+  { contract: "CURVE_LUSD_POOL" },
+  { contract: "CURVE_GUSD_POOL" },
+  { contract: "CURVE_SUSD_DEPOSIT" },
 
   // YEARN
-  "YEARN_DAI_VAULT",
-  "YEARN_USDC_VAULT",
-  "YEARN_WETH_VAULT",
-  "YEARN_WBTC_VAULT",
-  "YEARN_CURVE_FRAX_VAULT",
-  "YEARN_CURVE_STETH_VAULT",
+  { contract: "YEARN_DAI_VAULT" },
+  { contract: "YEARN_USDC_VAULT" },
+  { contract: "YEARN_WETH_VAULT" },
+  { contract: "YEARN_WBTC_VAULT" },
+  { contract: "YEARN_CURVE_FRAX_VAULT" },
+  { contract: "YEARN_CURVE_STETH_VAULT" },
 
   // CONVEX
-  "CONVEX_FRAX3CRV_POOL",
-  "CONVEX_LUSD3CRV_POOL",
-  "CONVEX_GUSD_POOL",
-  "CONVEX_SUSD_POOL",
-  "CONVEX_3CRV_POOL",
-  "CONVEX_FRAX_USDC_POOL",
-  "CONVEX_STECRV_POOL",
-  "CONVEX_BOOSTER",
+  { contract: "CONVEX_FRAX3CRV_POOL" },
+  { contract: "CONVEX_LUSD3CRV_POOL" },
+  { contract: "CONVEX_GUSD_POOL" },
+  { contract: "CONVEX_SUSD_POOL" },
+  { contract: "CONVEX_3CRV_POOL" },
+  { contract: "CONVEX_FRAX_USDC_POOL" },
+  { contract: "CONVEX_STECRV_POOL" },
+  { contract: "CONVEX_BOOSTER" },
 ];

@@ -13,7 +13,10 @@ import {
     PoolQuotaLimit,
     CollateralToken,
     IPoolV3DeployConfig,
-    CollateralTokenHuman
+    CollateralTokenHuman,
+    UniswapV2Pair,
+    UniswapV3Pair,
+    BalancerPool
 } from "@gearbox-protocol/core-v3/contracts/test/interfaces/ICreditConfig.sol";
 
 contract CONFIG_MAINNET_USDC_LEV_V3 is IPoolV3DeployConfig {
@@ -233,8 +236,16 @@ contract CONFIG_MAINNET_USDC_LEV_V3 is IPoolV3DeployConfig {
         cts.push(CollateralTokenHuman({token: Tokens.SNX, lt: 25}));
         Contracts[] storage cs = cp.contracts;
         cs.push(Contracts.UNISWAP_V3_ROUTER);
+        UniswapV3Pair[] storage uv3p = cp.uniswapV3Pairs;
+        uv3p.push(UniswapV3Pair({token0: Tokens.WETH, token1: Tokens.USDC, fee: 500}));
         cs.push(Contracts.UNISWAP_V2_ROUTER);
+        {
+            UniswapV2Pair[] storage uv2p = cp.uniswapV2Pairs;
+        }
         cs.push(Contracts.SUSHISWAP_ROUTER);
+        {
+            UniswapV2Pair[] storage uv2p = cp.uniswapV2Pairs;
+        }
         cs.push(Contracts.LIDO_STETH_GATEWAY);
         cs.push(Contracts.CURVE_3CRV_POOL);
         cs.push(Contracts.CURVE_FRAX_USDC_POOL);

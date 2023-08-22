@@ -1343,10 +1343,15 @@
   dependencies:
     "@typechain/ethers-v5" "^10.2.1"
 
-"@gearbox-protocol/core-v3@^1.34.1", "@gearbox-protocol/core-v3@^1.36.3":
+"@gearbox-protocol/core-v3@^1.34.1":
   version "1.36.3"
   resolved "https://registry.yarnpkg.com/@gearbox-protocol/core-v3/-/core-v3-1.36.3.tgz#9d122862c2c92ff41b08585432b4f5b17d5e6b9f"
   integrity sha512-sbJkgY8aWTM+AOIFlrRAwO/IRzA4LGt+0asaPJc1k+yp+b6YQftua85OWr0jqmzOKlgcw3MAR/Yw0i9586jWWg==
+
+"@gearbox-protocol/core-v3@^1.36.4":
+  version "1.36.4"
+  resolved "https://registry.yarnpkg.com/@gearbox-protocol/core-v3/-/core-v3-1.36.4.tgz#012537ebd4a967935a335f757062da1c2db63684"
+  integrity sha512-efv01HHHelmXHs9aJMJkLVvkCAuKCOetDhPtK0TRVa1dxnjNUWLXbpcH2CSAHlNymXekUzanuWwNv41noNI9lQ==
 
 "@gearbox-protocol/eslint-config@^1.6.1":
   version "1.6.1"
@@ -1382,17 +1387,19 @@
   resolved "https://registry.yarnpkg.com/@gearbox-protocol/prettier-config/-/prettier-config-1.5.0.tgz#4df8e9fd2305fee6ab8c1417a02e31343836932a"
   integrity sha512-FUoprSsBdZyBjgxXCKL6mTkbeUJytaLzPJqIOoQpDmBRTX0seCc2o5I9PI9tySoRIlNnd/XXnKCXq1xHDEGbxw==
 
-"@gearbox-protocol/sdk-gov@^1.4.7":
-  version "1.4.7"
-  resolved "https://registry.yarnpkg.com/@gearbox-protocol/sdk-gov/-/sdk-gov-1.4.7.tgz#a6ff58b07d75a50388831126a6e0993ddad95f61"
-  integrity sha512-YLOXtx4AZwLWY+ycjdRpxL2NviFh9FotBRhKSiHT63V14u5PLT5K6AsVJ6PO5xCKnYPQE/huQKvvYE10Yfw76Q==
+"@gearbox-protocol/sdk-gov@^1.5.9":
+  version "1.5.9"
+  resolved "https://registry.yarnpkg.com/@gearbox-protocol/sdk-gov/-/sdk-gov-1.5.9.tgz#baed17e9757b02b18b35b4320f9fd362cb604de2"
+  integrity sha512-Rau8lXdJ6HBvPiRD09jPRVTAFxQV2x/BGGSoDiWxJh54j+S+QS2mHMipsbkJN9KdyGeGW5K7W8IY6UiLOb4+UA==
   dependencies:
     "@gearbox-protocol/core-v2" "^1.21.0"
     "@gearbox-protocol/core-v3" "^1.34.1"
     "@gearbox-protocol/eslint-config" "^1.6.1"
     "@gearbox-protocol/integrations-v3" "1.7.0-legacy.7"
     "@gearbox-protocol/prettier-config" "^1.5.0"
+    "@gearbox-protocol/sdk" "^2.1.27"
     "@types/chai" "^4.3.5"
+    "@types/mocha" "^10.0.1"
     axios "^1.4.0"
     chai "^4.3.7"
     dotenv "^16.3.1"
@@ -1408,6 +1415,17 @@
   dependencies:
     "@types/deep-eql" "^4.0.0"
     axios "^1.2.0"
+    decimal.js-light "^2.5.1"
+    deep-eql "^4.1.0"
+    moment "^2.29.4"
+
+"@gearbox-protocol/sdk@^2.1.27":
+  version "2.1.27"
+  resolved "https://registry.yarnpkg.com/@gearbox-protocol/sdk/-/sdk-2.1.27.tgz#93cd56948d23aca7a05f9302152cd65be174dfd8"
+  integrity sha512-gjPPqf2AW1Bz1HmkAmPsIrDkafLF2J5BzX9Dloti6EYYXx8quxLN4f6+n/K9HbDG4yRfZOdeRJJQce9QTmTisA==
+  dependencies:
+    "@types/deep-eql" "^4.0.0"
+    axios "^1.2.6"
     decimal.js-light "^2.5.1"
     deep-eql "^4.1.0"
     moment "^2.29.4"
@@ -1651,6 +1669,11 @@
   version "1.2.2"
   resolved "https://registry.yarnpkg.com/@types/minimist/-/minimist-1.2.2.tgz#ee771e2ba4b3dc5b372935d549fd9617bf345b8c"
   integrity sha512-jhuKLIRrhvCPLqwPcx6INqmKeiA5EWrsCOPhrlFSrbrmU4ZMPjj5Ul/oLCMDO98XRUIwVm78xICz4EPCektzeQ==
+
+"@types/mocha@^10.0.1":
+  version "10.0.1"
+  resolved "https://registry.yarnpkg.com/@types/mocha/-/mocha-10.0.1.tgz#2f4f65bb08bc368ac39c96da7b2f09140b26851b"
+  integrity sha512-/fvYntiO1GeICvqbQ3doGDIP97vWmvFt83GKguJ6prmQM2iXZfFcq6YE8KteFyRtX2/h5Hf91BYvPodJKFYv5Q==
 
 "@types/node@*":
   version "20.5.1"
@@ -2012,7 +2035,7 @@ axios@^0.27.2:
     follow-redirects "^1.14.9"
     form-data "^4.0.0"
 
-axios@^1.1.3, axios@^1.2.0, axios@^1.4.0:
+axios@^1.1.3, axios@^1.2.0, axios@^1.2.6, axios@^1.4.0:
   version "1.4.0"
   resolved "https://registry.yarnpkg.com/axios/-/axios-1.4.0.tgz#38a7bf1224cd308de271146038b551d725f0be1f"
   integrity sha512-S4XCWMEmzvo64T9GfvQDOXgYRDJ/wsSZc7Jvdgx5u1sd0JwsuPLqb3SYmusag+edF6ziyMensPVqLTSc1PiSEA==

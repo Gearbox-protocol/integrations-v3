@@ -47,7 +47,7 @@ export const config: PoolV3DeployConfig = {
           lt: 8700,
         },
       ],
-      adapters: ["UNISWAP_V3_ROUTER"],
+      adapters: [{ contract: "UNISWAP_V3_ROUTER" }],
     },
   ],
   supportsQuotas: false,
