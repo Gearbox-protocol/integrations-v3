@@ -241,6 +241,7 @@ contract CONFIG_MAINNET_USDC_LEV_V3 is IPoolV3DeployConfig {
         cs.push(Contracts.UNISWAP_V2_ROUTER);
         {
             UniswapV2Pair[] storage uv2p = cp.uniswapV2Pairs;
+            uv2p.push(UniswapV2Pair({router: Contracts.UNISWAP_V2_ROUTER, token0: Tokens.WETH, token1: Tokens.USDC}));
         }
         cs.push(Contracts.SUSHISWAP_ROUTER);
         {

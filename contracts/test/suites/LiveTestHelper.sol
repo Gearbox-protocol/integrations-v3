@@ -62,7 +62,12 @@ contract LiveTestHelper is IntegrationTestHelper {
             new AdapterDeployer(address(creditManagers[i]), config.creditManagers()[i].contracts, tokenTestSuite, supportedContracts );
 
             adapterDeployer.connectAdapters();
+            _configureAdapters();
         }
+    }
+
+    function _configureAdapters() internal {
+        /// Config your adapoters here!
     }
 
     function _setUp() public virtual liveTest {

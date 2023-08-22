@@ -6,7 +6,10 @@ export const adapters: Array<AdapterDeployConfig> = [
     contract: "UNISWAP_V3_ROUTER",
     allowed: [{ token0: "WETH", token1: "USDC", fee: 500 }],
   },
-  { contract: "UNISWAP_V2_ROUTER" },
+  {
+    contract: "UNISWAP_V2_ROUTER",
+    allowed: [{ token0: "WETH", token1: "USDC" }],
+  },
   { contract: "SUSHISWAP_ROUTER" },
   { contract: "LIDO_STETH_GATEWAY" },
 
