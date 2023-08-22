@@ -6,7 +6,7 @@ pragma solidity ^0.8.17;
 import {AdapterType} from "@gearbox-protocol/sdk-gov/contracts/AdapterType.sol";
 import {IAdapter} from "@gearbox-protocol/core-v2/contracts/interfaces/IAdapter.sol";
 
-import {N_COINS} from "../../integrations/curve/ICurvePool_2.sol";
+import {ICurvePool2Assets, N_COINS} from "../../integrations/curve/ICurvePool_2.sol";
 import {ICurveV1_2AssetsAdapter} from "../../interfaces/curve/ICurveV1_2AssetsAdapter.sol";
 import {CurveV1AdapterBase} from "./CurveV1_Base.sol";
 
@@ -35,6 +35,33 @@ contract CurveV1Adapter2Assets is CurveV1AdapterBase, ICurveV1_2AssetsAdapter {
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
         (tokensToEnable, tokensToDisable) = _add_liquidity(amounts[0] > 1, amounts[1] > 1, false, false); // F: [ACV1_2-4, ACV1S-1]
+    }
+
+    /// @dev Returns calldata for adding liquidity in coin `i`
+    function _getAddLiquidityOneCoinCallData(uint256 i, uint256 amount, uint256 minAmount)
+        internal
+        pure
+        override
+        returns (bytes memory)
+    {
+        uint256[2] memory amounts;
+        amounts[i] = amount;
+        return abi.encodeCall(ICurvePool2Assets.add_liquidity, (amounts, minAmount));
+    }
+
+    /// @dev Returns calldata for calculating the result of adding liquidity in coin `i`
+    function _getCalcAddOneCoinCallData(uint256 i, uint256 amount)
+        internal
+        pure
+        override
+        returns (bytes memory, bytes memory)
+    {
+        uint256[2] memory amounts;
+        amounts[i] = amount;
+        return (
+            abi.encodeCall(ICurvePool2Assets.calc_token_amount, (amounts, true)),
+            abi.encodeWithSignature("calc_token_amount(uint256[2])", amounts)
+        );
     }
 
     /// @notice Remove liquidity from the pool

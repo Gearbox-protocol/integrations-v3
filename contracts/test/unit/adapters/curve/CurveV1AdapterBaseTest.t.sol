@@ -29,6 +29,20 @@ contract CurveV1AdapterBaseHarness is CurveV1AdapterBase {
     constructor(address _creditManager, address _curvePool, address _lp_token, address _metapoolBase, uint256 _nCoins)
         CurveV1AdapterBase(_creditManager, _curvePool, _lp_token, _metapoolBase, _nCoins)
     {}
+
+    function _getAddLiquidityOneCoinCallData(uint256 i, uint256 amount, uint256 minAmount)
+        internal
+        view
+        override
+        returns (bytes memory)
+    {}
+
+    function _getCalcAddOneCoinCallData(uint256 i, uint256 amount)
+        internal
+        view
+        override
+        returns (bytes memory, bytes memory)
+    {}
 }
 
 /// @title CurveV1AdapterBaseTest
@@ -173,7 +187,7 @@ contract CurveV1AdapterBaseTest is Test, CurveV1AdapterHelper {
             "Incorrect LP token mask"
         );
         assertEq(adapter.nCoins(), 4, "Incorrect nCoins");
-        assertTrue(!adapter.use256(), "Adapter incorrectly uses uint256");
+        assertTrue(!adapter.isCrypto(), "Adapter incorrectly determines stableswap");
 
         // tokens
         assertEq(address(adapter.token0()), tokenTestSuite.addressOf(poolTkns[0]), "Incorrect token 0");
