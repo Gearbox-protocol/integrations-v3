@@ -10,7 +10,7 @@ import {CurveV1Adapter3Assets} from "../../../../adapters/curve/CurveV1_3.sol";
 import {CurveV1Adapter4Assets} from "../../../../adapters/curve/CurveV1_4.sol";
 import {CurveV1StETHPoolGateway} from "../../../../helpers/curve/CurveV1_stETHGateway.sol";
 import {CurveV1AdapterStETH} from "../../../../adapters/curve/CurveV1_stETH.sol";
-import {ICurveV1Adapter, ICurveV1AdapterExceptions} from "../../../../interfaces/curve/ICurveV1Adapter.sol";
+import {ICurveV1Adapter} from "../../../../interfaces/curve/ICurveV1Adapter.sol";
 import {ICurvePoolStETH} from "../../../../integrations/curve/ICurvePoolStETH.sol";
 import {ICurvePool} from "../../../../integrations/curve/ICurvePool.sol";
 import {ICRVToken} from "../../../../integrations/curve/ICRVToken.sol";
@@ -41,7 +41,7 @@ uint256 constant LINK_TO_LP = LINK_ACCOUNT_AMOUNT / 5;
 
 /// @title CurveV1AdapterHelper
 /// @notice Designed for unit test purposes only
-contract CurveV1AdapterHelper is Test, AdapterTestHelper, ICurveV1AdapterExceptions {
+contract CurveV1AdapterHelper is Test, AdapterTestHelper {
     address internal _curveV1MockAddr;
     address internal _adapterAddr;
 

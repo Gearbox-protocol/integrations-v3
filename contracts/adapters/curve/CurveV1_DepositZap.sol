@@ -34,7 +34,7 @@ contract CurveV1AdapterDeposit is CurveV1AdapterBase {
 
     /// @inheritdoc CurveV1AdapterBase
     /// @dev Unlike other adapters, approves the LP token to the target
-    function remove_liquidity_one_coin(uint256 _token_amount, uint256 i, uint256 min_amount)
+    function remove_liquidity_one_coin(uint256 amount, uint256 i, uint256 minAmount)
         public
         virtual
         override
@@ -42,7 +42,7 @@ contract CurveV1AdapterDeposit is CurveV1AdapterBase {
         withLPTokenApproval
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        (tokensToEnable, tokensToDisable) = _remove_liquidity_one_coin(_token_amount, i, min_amount);
+        (tokensToEnable, tokensToDisable) = _remove_liquidity_one_coin(amount, i, minAmount);
     }
 
     /// @inheritdoc CurveV1AdapterBase
@@ -57,4 +57,20 @@ contract CurveV1AdapterDeposit is CurveV1AdapterBase {
     {
         (tokensToEnable, tokensToDisable) = _remove_all_liquidity_one_coin(i, rateMinRAY);
     }
+
+    /// @dev Does nothing since this adapter should not be used to add liquidity
+    function _getAddLiquidityOneCoinCallData(uint256 i, uint256 amount, uint256 minAmount)
+        internal
+        view
+        override
+        returns (bytes memory)
+    {}
+
+    /// @dev Does nothing since this adapter should not be used to add liquidity
+    function _getCalcAddOneCoinCallData(uint256 i, uint256 amount)
+        internal
+        view
+        override
+        returns (bytes memory, bytes memory)
+    {}
 }
