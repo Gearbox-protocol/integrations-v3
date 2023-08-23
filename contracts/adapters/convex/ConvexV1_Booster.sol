@@ -132,17 +132,16 @@ contract ConvexV1BoosterAdapter is AbstractAdapter, IConvexV1BoosterAdapter {
         ICreditManagerV3 cm = ICreditManagerV3(creditManager);
         ICreditConfiguratorV3 cc = ICreditConfiguratorV3(cm.creditConfigurator());
 
-        address[] memory allowedContracts = cc.allowedAdapters();
-        uint256 len = allowedContracts.length;
+        address[] memory allowedAdapters = cc.allowedAdapters();
+        uint256 len = allowedAdapters.length;
 
         for (uint256 i = 0; i < len;) {
-            address allowedContract = allowedContracts[i];
-
-            address adapter = cm.contractToAdapter(allowedContract);
+            address adapter = allowedAdapters[i];
+            address targetContract = IAdapter(adapter).targetContract();
             AdapterType aType = IAdapter(adapter)._gearboxAdapterType();
 
             if (aType == AdapterType.CONVEX_V1_BASE_REWARD_POOL) {
-                uint256 pid = IBaseRewardPool(allowedContract).pid();
+                uint256 pid = IBaseRewardPool(targetContract).pid();
                 pidToPhantomToken[pid] = IConvexV1BaseRewardPoolAdapter(adapter).stakedPhantomToken();
             }
 

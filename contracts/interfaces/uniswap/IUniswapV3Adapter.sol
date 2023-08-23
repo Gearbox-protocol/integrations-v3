@@ -7,7 +7,7 @@ import {IAdapter} from "@gearbox-protocol/core-v2/contracts/interfaces/IAdapter.
 
 import {ISwapRouter} from "../../integrations/uniswap/IUniswapV3.sol";
 
-struct PoolStatus {
+struct UniswapV3PoolStatus {
     address token0;
     address token1;
     uint24 fee;
@@ -89,5 +89,5 @@ interface IUniswapV3Adapter is
 
     function isPoolAllowed(address token0, address token1, uint24 fee) external view returns (bool);
 
-    function setPoolStatusBatch(PoolStatus[] calldata pools) external;
+    function setPoolStatusBatch(UniswapV3PoolStatus[] calldata pools) external;
 }

@@ -12,7 +12,7 @@ import {AdapterType} from "@gearbox-protocol/sdk-gov/contracts/AdapterType.sol";
 
 import {ISwapRouter} from "../../integrations/uniswap/IUniswapV3.sol";
 import {BytesLib} from "../../integrations/uniswap/BytesLib.sol";
-import {IUniswapV3Adapter, PoolStatus} from "../../interfaces/uniswap/IUniswapV3Adapter.sol";
+import {IUniswapV3Adapter, UniswapV3PoolStatus} from "../../interfaces/uniswap/IUniswapV3Adapter.sol";
 
 /// @title Uniswap V3 Router adapter interface
 /// @notice Implements logic allowing CAs to perform swaps via Uniswap V3
@@ -212,8 +212,8 @@ contract UniswapV3Adapter is AbstractAdapter, IUniswapV3Adapter {
     }
 
     /// @notice Sets status for a batch of pools
-    /// @param pools Array of `PoolStatus` objects
-    function setPoolStatusBatch(PoolStatus[] calldata pools) external override configuratorOnly {
+    /// @param pools Array of `UniswapV3PoolStatus` objects
+    function setPoolStatusBatch(UniswapV3PoolStatus[] calldata pools) external override configuratorOnly {
         uint256 len = pools.length;
         unchecked {
             for (uint256 i; i < len; ++i) {

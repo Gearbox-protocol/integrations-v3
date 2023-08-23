@@ -11,7 +11,7 @@ import {AbstractAdapter} from "../AbstractAdapter.sol";
 import {AdapterType} from "@gearbox-protocol/sdk-gov/contracts/AdapterType.sol";
 
 import {IUniswapV2Router02} from "../../integrations/uniswap/IUniswapV2Router02.sol";
-import {IUniswapV2Adapter, PairStatus} from "../../interfaces/uniswap/IUniswapV2Adapter.sol";
+import {IUniswapV2Adapter, UniswapV2PairStatus} from "../../interfaces/uniswap/IUniswapV2Adapter.sol";
 
 /// @title Uniswap V2 Router adapter interface
 /// @notice Implements logic allowing CAs to perform swaps via Uniswap V2 and its forks
@@ -133,8 +133,8 @@ contract UniswapV2Adapter is AbstractAdapter, IUniswapV2Adapter {
     }
 
     /// @notice Sets status for a batch of pairs
-    /// @param pairs Array of `PairStatus` objects
-    function setPairStatusBatch(PairStatus[] calldata pairs) external override configuratorOnly {
+    /// @param pairs Array of `UniswapV2PairStatus` objects
+    function setPairStatusBatch(UniswapV2PairStatus[] calldata pairs) external override configuratorOnly {
         uint256 len = pairs.length;
         unchecked {
             for (uint256 i; i < len; ++i) {

@@ -5,7 +5,7 @@ pragma solidity ^0.8.17;
 
 import {IAdapter} from "@gearbox-protocol/core-v2/contracts/interfaces/IAdapter.sol";
 
-struct PairStatus {
+struct UniswapV2PairStatus {
     address token0;
     address token1;
     bool allowed;
@@ -49,5 +49,5 @@ interface IUniswapV2Adapter is IAdapter, IUniswapV2AdapterEvents, IUniswapV2Adap
 
     function isPairAllowed(address token0, address token1) external view returns (bool);
 
-    function setPairStatusBatch(PairStatus[] calldata pairs) external;
+    function setPairStatusBatch(UniswapV2PairStatus[] calldata pairs) external;
 }
