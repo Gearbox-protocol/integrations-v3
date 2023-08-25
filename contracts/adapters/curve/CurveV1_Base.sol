@@ -144,6 +144,24 @@ abstract contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
         creditFacadeOnly
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
+        return _exchange(i, j, dx, min_dy);
+    }
+
+    /// @dev Same as the previous one but accepts coin indexes as `int128`
+    function exchange(int128 i, int128 j, uint256 dx, uint256 min_dy)
+        external
+        override
+        creditFacadeOnly
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+    {
+        return _exchange(_toU256(i), _toU256(j), dx, min_dy);
+    }
+
+    /// @dev Implementation of both versions of `exchange`
+    function _exchange(uint256 i, uint256 j, uint256 dx, uint256 min_dy)
+        internal
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+    {
         (tokensToEnable, tokensToDisable) = _exchange_impl(i, j, _getExchangeCallData(i, j, dx, min_dy), false); // F: [ACV1-4]
     }
 
@@ -155,6 +173,24 @@ abstract contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
         external
         override
         creditFacadeOnly
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+    {
+        return _exchange_all(i, j, rateMinRAY);
+    }
+
+    /// @dev Same as the previous one but accepts coin indexes as `int128`
+    function exchange_all(int128 i, int128 j, uint256 rateMinRAY)
+        external
+        override
+        creditFacadeOnly
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+    {
+        return _exchange_all(_toU256(i), _toU256(j), rateMinRAY);
+    }
+
+    /// @dev Implementation of both versions of `exchange_all`
+    function _exchange_all(uint256 i, uint256 j, uint256 rateMinRAY)
+        internal
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
         address creditAccount = _creditAccount(); // F: [ACV1-3]
@@ -207,6 +243,24 @@ abstract contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
         creditFacadeOnly
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
+        return _exchange_underlying(i, j, dx, min_dy);
+    }
+
+    /// @dev Same as the previous one but accepts coin indexes as `int128`
+    function exchange_underlying(int128 i, int128 j, uint256 dx, uint256 min_dy)
+        external
+        override
+        creditFacadeOnly
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+    {
+        return _exchange_underlying(_toU256(i), _toU256(j), dx, min_dy);
+    }
+
+    /// @dev Implementation of both versions of `exchange_underlying`
+    function _exchange_underlying(uint256 i, uint256 j, uint256 dx, uint256 min_dy)
+        internal
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+    {
         (tokensToEnable, tokensToDisable) =
             _exchange_underlying_impl(i, j, _getExchangeUnderlyingCallData(i, j, dx, min_dy), false); // F: [ACV1-6]
     }
@@ -219,6 +273,24 @@ abstract contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
         external
         override
         creditFacadeOnly
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+    {
+        return _exchange_all_underlying(i, j, rateMinRAY);
+    }
+
+    /// @dev Same as the previous one but accepts coin indexes as `int128`
+    function exchange_all_underlying(int128 i, int128 j, uint256 rateMinRAY)
+        external
+        override
+        creditFacadeOnly
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+    {
+        return _exchange_all_underlying(_toU256(i), _toU256(j), rateMinRAY);
+    }
+
+    /// @dev Implementation of both versions of `exchange_all_underlying`
+    function _exchange_all_underlying(uint256 i, uint256 j, uint256 rateMinRAY)
+        internal
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
         address creditAccount = _creditAccount(); //F: [ACV1-3]
@@ -403,7 +475,18 @@ abstract contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
         (tokensToEnable, tokensToDisable) = _remove_liquidity_one_coin(amount, i, minAmount);
     }
 
-    /// @dev Internal implementation of `remove_liquidity_one_coin`
+    /// @dev Same as the previous one but accepts coin indexes as `int128`
+    function remove_liquidity_one_coin(uint256 amount, int128 i, uint256 minAmount)
+        external
+        virtual
+        override
+        creditFacadeOnly
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+    {
+        (tokensToEnable, tokensToDisable) = _remove_liquidity_one_coin(amount, _toU256(i), minAmount);
+    }
+
+    /// @dev Implementation of both versions of `remove_liquidity_one_coin`
     function _remove_liquidity_one_coin(uint256 amount, uint256 i, uint256 minAmount)
         internal
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
@@ -425,7 +508,18 @@ abstract contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
         (tokensToEnable, tokensToDisable) = _remove_all_liquidity_one_coin(i, rateMinRAY);
     }
 
-    /// @dev Internal implementation of `remove_all_liquidity_one_coin`
+    /// @dev Same as the previous one but accepts coin indexes as `int128`
+    function remove_all_liquidity_one_coin(int128 i, uint256 rateMinRAY)
+        external
+        virtual
+        override
+        creditFacadeOnly
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+    {
+        (tokensToEnable, tokensToDisable) = _remove_all_liquidity_one_coin(_toU256(i), rateMinRAY);
+    }
+
+    /// @dev Implementation of both versions of `remove_all_liquidity_one_coin`
     function _remove_all_liquidity_one_coin(uint256 i, uint256 rateMinRAY)
         internal
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
@@ -539,5 +633,10 @@ abstract contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
         if (t1Approve) _approveToken(token1, amount); // F: [ACV1_2-4, ACV1_3-4, ACV1_4-4]
         if (t2Approve) _approveToken(token2, amount); // F: [ACV1_3-4, ACV1_4-4]
         if (t3Approve) _approveToken(token3, amount); // F: [ACV1_4-4]
+    }
+
+    /// @dev Returns `int128`-typed number as `uint256`
+    function _toU256(int128 i) internal pure returns (uint256) {
+        return uint256(int256(i));
     }
 }
