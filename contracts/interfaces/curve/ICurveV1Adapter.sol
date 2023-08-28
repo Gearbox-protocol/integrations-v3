@@ -17,7 +17,7 @@ interface ICurveV1Adapter is IAdapter {
 
     function nCoins() external view returns (uint256);
 
-    function isCrypto() external view returns (bool);
+    function use256() external view returns (bool);
 
     function token0() external view returns (address);
     function token1() external view returns (address);

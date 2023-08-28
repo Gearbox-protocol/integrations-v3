@@ -37,7 +37,7 @@ abstract contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
     uint256 public immutable override nCoins;
 
     /// @notice Whether pool is cryptoswap or stableswap
-    bool public immutable override isCrypto;
+    bool public immutable override use256;
 
     address public immutable override token0;
     address public immutable override token1;
@@ -75,7 +75,7 @@ abstract contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
         lp_token = _lp_token; // F: [ACV1-2]
         metapoolBase = _metapoolBase; // F: [ACV1-2]
         nCoins = _nCoins; // F: [ACV1-2]
-        isCrypto = _isCrypto();
+        use256 = _use256();
 
         address[4] memory tokens;
         uint256[4] memory tokenMasks;
@@ -227,7 +227,7 @@ abstract contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
         view
         returns (bytes memory)
     {
-        return isCrypto
+        return use256
             ? abi.encodeWithSignature("exchange(uint256,uint256,uint256,uint256)", i, j, dx, min_dy)
             : abi.encodeWithSignature("exchange(int128,int128,uint256,uint256)", i, j, dx, min_dy);
     }
@@ -328,7 +328,7 @@ abstract contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
         view
         returns (bytes memory)
     {
-        return isCrypto
+        return use256
             ? abi.encodeWithSignature("exchange_underlying(uint256,uint256,uint256,uint256)", i, j, dx, min_dy)
             : abi.encodeWithSignature("exchange_underlying(int128,int128,uint256,uint256)", i, j, dx, min_dy);
     }
@@ -555,7 +555,7 @@ abstract contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
         view
         returns (bytes memory)
     {
-        return isCrypto
+        return use256
             ? abi.encodeWithSignature("remove_liquidity_one_coin(uint256,uint256,uint256)", amount, i, minAmount)
             : abi.encodeWithSignature("remove_liquidity_one_coin(uint256,int128,uint256)", amount, i, minAmount);
     }
@@ -565,7 +565,7 @@ abstract contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
     // ------- //
 
     /// @dev Returns true if pool is a cryptoswap pool, which is determined by whether it implements `mid_fee`
-    function _isCrypto() internal view returns (bool result) {
+    function _use256() internal view returns (bool result) {
         try ICurvePool(targetContract).mid_fee() returns (uint256) {
             result = true;
         } catch {
