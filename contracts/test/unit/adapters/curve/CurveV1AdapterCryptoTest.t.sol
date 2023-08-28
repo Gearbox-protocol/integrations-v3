@@ -47,7 +47,7 @@ contract CurveV1AdapterCryptoTest is Test, CurveV1AdapterHelper {
 
     /// @dev [ACC-1]: constructor sets correct values
     function test_ACC_01_constructor_sets_correct_values() public {
-        assertTrue(adapter.isCrypto(), "Adapter incorrectly determines cryptoswap");
+        assertTrue(adapter.use256(), "Adapter incorrectly determines cryptoswap");
     }
 
     /// @dev [ACC-2]: exchange works for user as expected

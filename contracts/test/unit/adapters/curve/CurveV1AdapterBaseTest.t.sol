@@ -187,7 +187,7 @@ contract CurveV1AdapterBaseTest is Test, CurveV1AdapterHelper {
             "Incorrect LP token mask"
         );
         assertEq(adapter.nCoins(), 4, "Incorrect nCoins");
-        assertTrue(!adapter.isCrypto(), "Adapter incorrectly determines stableswap");
+        assertTrue(!adapter.use256(), "Adapter incorrectly determines stableswap");
 
         // tokens
         assertEq(address(adapter.token0()), tokenTestSuite.addressOf(poolTkns[0]), "Incorrect token 0");
