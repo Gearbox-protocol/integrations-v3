@@ -5,13 +5,8 @@ pragma solidity ^0.8.17;
 
 import {IAdapter} from "@gearbox-protocol/core-v2/contracts/interfaces/IAdapter.sol";
 
-interface ICurveV1AdapterExceptions {
-    /// @notice Thrown when trying to pass incorrect asset index as parameter to an adapter function
-    error IncorrectIndexException();
-}
-
 /// @title Curve V1 base adapter interface
-interface ICurveV1Adapter is IAdapter, ICurveV1AdapterExceptions {
+interface ICurveV1Adapter is IAdapter {
     function token() external view returns (address);
 
     function lp_token() external view returns (address);
@@ -22,7 +17,7 @@ interface ICurveV1Adapter is IAdapter, ICurveV1AdapterExceptions {
 
     function nCoins() external view returns (uint256);
 
-    function use256() external view returns (bool);
+    function isCrypto() external view returns (bool);
 
     function token0() external view returns (address);
     function token1() external view returns (address);
@@ -52,7 +47,15 @@ interface ICurveV1Adapter is IAdapter, ICurveV1AdapterExceptions {
         external
         returns (uint256 tokensToEnable, uint256 tokensToDisable);
 
+    function exchange(int128 i, int128 j, uint256 dx, uint256 min_dy)
+        external
+        returns (uint256 tokensToEnable, uint256 tokensToDisable);
+
     function exchange_all(uint256 i, uint256 j, uint256 rateMinRAY)
+        external
+        returns (uint256 tokensToEnable, uint256 tokensToDisable);
+
+    function exchange_all(int128 i, int128 j, uint256 rateMinRAY)
         external
         returns (uint256 tokensToEnable, uint256 tokensToDisable);
 
@@ -60,7 +63,15 @@ interface ICurveV1Adapter is IAdapter, ICurveV1AdapterExceptions {
         external
         returns (uint256 tokensToEnable, uint256 tokensToDisable);
 
+    function exchange_underlying(int128 i, int128 j, uint256 dx, uint256 min_dy)
+        external
+        returns (uint256 tokensToEnable, uint256 tokensToDisable);
+
     function exchange_all_underlying(uint256 i, uint256 j, uint256 rateMinRAY)
+        external
+        returns (uint256 tokensToEnable, uint256 tokensToDisable);
+
+    function exchange_all_underlying(int128 i, int128 j, uint256 rateMinRAY)
         external
         returns (uint256 tokensToEnable, uint256 tokensToDisable);
 
@@ -76,11 +87,17 @@ interface ICurveV1Adapter is IAdapter, ICurveV1AdapterExceptions {
         external
         returns (uint256 tokensToEnable, uint256 tokensToDisable);
 
+    function calc_add_one_coin(uint256 amount, uint256 i) external view returns (uint256);
+
     // ---------------- //
     // REMOVE LIQUIDITY //
     // ---------------- //
 
-    function remove_liquidity_one_coin(uint256 _token_amount, uint256 i, uint256 min_amount)
+    function remove_liquidity_one_coin(uint256 amount, uint256 i, uint256 minAmount)
+        external
+        returns (uint256 tokensToEnable, uint256 tokensToDisable);
+
+    function remove_liquidity_one_coin(uint256 amount, int128 i, uint256 minAmount)
         external
         returns (uint256 tokensToEnable, uint256 tokensToDisable);
 
@@ -88,9 +105,7 @@ interface ICurveV1Adapter is IAdapter, ICurveV1AdapterExceptions {
         external
         returns (uint256 tokensToEnable, uint256 tokensToDisable);
 
-    // ------------ //
-    // CALCULATIONS //
-    // ------------ //
-
-    function calc_add_one_coin(uint256 amount, uint256 i) external view returns (uint256);
+    function remove_all_liquidity_one_coin(int128 i, uint256 rateMinRAY)
+        external
+        returns (uint256 tokensToEnable, uint256 tokensToDisable);
 }
