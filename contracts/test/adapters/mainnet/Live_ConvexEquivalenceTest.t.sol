@@ -81,6 +81,14 @@ contract Live_ConvexEquivalenceTest is DSTest, LiveEnvHelper {
 
     /// HELPER
 
+    function _isSupportedPool(ICreditFacade creditFacade, address basePoolAdapter) internal view returns (bool) {
+        address spt = IConvexV1BaseRewardPoolAdapter(basePoolAdapter).stakedPhantomToken();
+
+        uint256 tokenMask = creditFacade.creditManager().tokenMasksMap(spt);
+
+        return (tokenMask != 0) && (creditFacade.creditManager().forbiddenTokenMask() & tokenMask == 0);
+    }
+
     function _getTokensToTrack(address basePoolAdapter) internal view returns (Tokens[] memory tokensToTrack) {
         address targetContract = IConvexV1BaseRewardPoolAdapter(basePoolAdapter).targetContract();
 
@@ -303,6 +311,8 @@ contract Live_ConvexEquivalenceTest is DSTest, LiveEnvHelper {
             uint256 snapshot0 = evm.snapshot();
 
             address basePoolAdapter = lts.getAdapter(address(creditFacade.creditManager()), convexPools[i]);
+
+            if (!_isSupportedPool(creditFacade, basePoolAdapter)) continue;
 
             address creditAccount = openCreditAccountWithUnderlying(
                 creditFacade,
