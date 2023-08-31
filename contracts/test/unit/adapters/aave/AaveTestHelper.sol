@@ -13,7 +13,7 @@ import {
     WETH_EXCHANGE_AMOUNT
 } from "@gearbox-protocol/core-v3/contracts/test/lib/constants.sol";
 
-import {WrappedATokenV2} from "@gearbox-protocol/oracles-v3/contracts/tokens/aave/WrappedATokenV2.sol";
+import {WrappedAToken} from "../../../../helpers/aave/AaveV2_WrappedAToken.sol";
 import {IAToken} from "../../../../integrations/aave/IAToken.sol";
 
 import {Tokens} from "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
@@ -81,9 +81,9 @@ contract AaveTestHelper is AdapterTestHelper {
     }
 
     function _setupWrappers() internal {
-        waDai = address(new WrappedATokenV2(aDai));
-        waUsdc = address(new WrappedATokenV2(aUsdc));
-        waWeth = address(new WrappedATokenV2(aWeth));
+        waDai = address(new WrappedAToken(aDai));
+        waUsdc = address(new WrappedAToken(aUsdc));
+        waWeth = address(new WrappedAToken(aWeth));
         vm.label(waDai, "waDAI");
         vm.label(waUsdc, "waUSDC");
         vm.label(waWeth, "waWETH");
@@ -149,7 +149,7 @@ contract AaveTestHelper is AdapterTestHelper {
 
         tokenTestSuite.approve(underlying, USER, waToken, amount);
         vm.prank(USER);
-        balance = WrappedATokenV2(waToken).depositUnderlying(amount);
+        balance = WrappedAToken(waToken).depositUnderlying(amount);
 
         tokenTestSuite.approve(waToken, USER, address(creditManager), balance);
         vm.prank(USER);

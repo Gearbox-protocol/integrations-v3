@@ -7,7 +7,7 @@ import {WAD} from "@gearbox-protocol/core-v2/contracts/libraries/Constants.sol";
 import {USER, CONFIGURATOR} from "@gearbox-protocol/core-v3/contracts/test/lib/constants.sol";
 
 import {AaveV2_WrappedATokenAdapter} from "../../../../adapters/aave/AaveV2_WrappedATokenAdapter.sol";
-import {IWrappedATokenV2} from "@gearbox-protocol/oracles-v3/contracts/interfaces/aave/IWrappedATokenV2.sol";
+import {WrappedAToken} from "../../../../helpers/aave/AaveV2_WrappedAToken.sol";
 import {Tokens} from "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
 import {AaveTestHelper} from "./AaveTestHelper.sol";
 
@@ -91,13 +91,13 @@ contract AaveV2_WrappedATokenAdapter_Test is AaveTestHelper {
             uint256 depositAmount = initialBalance / 2;
 
             bytes memory callData = fromUnderlying == 1
-                ? abi.encodeCall(IWrappedATokenV2.depositUnderlying, (depositAmount))
-                : abi.encodeCall(IWrappedATokenV2.deposit, (depositAmount));
+                ? abi.encodeCall(WrappedAToken.depositUnderlying, (depositAmount))
+                : abi.encodeCall(WrappedAToken.deposit, (depositAmount));
             expectMulticallStackCalls(address(adapter), waUsdc, USER, callData, tokenIn, waUsdc, true);
             executeOneLineMulticall(creditAccount, address(adapter), callData);
 
             expectBalance(tokenIn, creditAccount, initialBalance - depositAmount);
-            expectBalance(waUsdc, creditAccount, depositAmount * WAD / IWrappedATokenV2(waUsdc).exchangeRate());
+            expectBalance(waUsdc, creditAccount, depositAmount * WAD / WrappedAToken(waUsdc).exchangeRate());
 
             expectAllowance(tokenIn, creditAccount, waUsdc, 1);
 
@@ -125,8 +125,8 @@ contract AaveV2_WrappedATokenAdapter_Test is AaveTestHelper {
             if (fromUnderlying == 0) initialBalance = tokenTestSuite.balanceOf(aUsdc, creditAccount);
 
             bytes memory expectedCallData = fromUnderlying == 1
-                ? abi.encodeCall(IWrappedATokenV2.depositUnderlying, (initialBalance - 1))
-                : abi.encodeCall(IWrappedATokenV2.deposit, (initialBalance - 1));
+                ? abi.encodeCall(WrappedAToken.depositUnderlying, (initialBalance - 1))
+                : abi.encodeCall(WrappedAToken.deposit, (initialBalance - 1));
             expectMulticallStackCalls(address(adapter), waUsdc, USER, expectedCallData, tokenIn, waUsdc, true);
 
             bytes memory callData = fromUnderlying == 1
@@ -135,7 +135,7 @@ contract AaveV2_WrappedATokenAdapter_Test is AaveTestHelper {
             executeOneLineMulticall(creditAccount, address(adapter), callData);
 
             expectBalance(tokenIn, creditAccount, 1);
-            expectBalance(waUsdc, creditAccount, (initialBalance - 1) * WAD / IWrappedATokenV2(waUsdc).exchangeRate());
+            expectBalance(waUsdc, creditAccount, (initialBalance - 1) * WAD / WrappedAToken(waUsdc).exchangeRate());
 
             expectAllowance(tokenIn, creditAccount, waUsdc, 1);
 
@@ -160,13 +160,13 @@ contract AaveV2_WrappedATokenAdapter_Test is AaveTestHelper {
             uint256 withdrawAmount = initialBalance / 2;
 
             bytes memory callData = toUnderlying == 1
-                ? abi.encodeCall(IWrappedATokenV2.withdrawUnderlying, (withdrawAmount))
-                : abi.encodeCall(IWrappedATokenV2.withdraw, (withdrawAmount));
+                ? abi.encodeCall(WrappedAToken.withdrawUnderlying, (withdrawAmount))
+                : abi.encodeCall(WrappedAToken.withdraw, (withdrawAmount));
             expectMulticallStackCalls(address(adapter), waUsdc, USER, callData, waUsdc, tokenOut, false);
             executeOneLineMulticall(creditAccount, address(adapter), callData);
 
             expectBalance(waUsdc, creditAccount, initialBalance - withdrawAmount);
-            expectBalance(tokenOut, creditAccount, withdrawAmount * IWrappedATokenV2(waUsdc).exchangeRate() / WAD);
+            expectBalance(tokenOut, creditAccount, withdrawAmount * WrappedAToken(waUsdc).exchangeRate() / WAD);
 
             expectTokenIsEnabled(creditAccount, waUsdc, true);
             expectTokenIsEnabled(creditAccount, tokenOut, true);
@@ -188,8 +188,8 @@ contract AaveV2_WrappedATokenAdapter_Test is AaveTestHelper {
             vm.warp(block.timestamp + timedelta);
 
             bytes memory expectedCallData = toUnderlying == 1
-                ? abi.encodeCall(IWrappedATokenV2.withdrawUnderlying, (initialBalance - 1))
-                : abi.encodeCall(IWrappedATokenV2.withdraw, (initialBalance - 1));
+                ? abi.encodeCall(WrappedAToken.withdrawUnderlying, (initialBalance - 1))
+                : abi.encodeCall(WrappedAToken.withdraw, (initialBalance - 1));
             expectMulticallStackCalls(address(adapter), waUsdc, USER, expectedCallData, waUsdc, tokenOut, false);
 
             bytes memory callData = toUnderlying == 1
@@ -198,7 +198,7 @@ contract AaveV2_WrappedATokenAdapter_Test is AaveTestHelper {
             executeOneLineMulticall(creditAccount, address(adapter), callData);
 
             expectBalance(waUsdc, creditAccount, 1);
-            expectBalance(tokenOut, creditAccount, (initialBalance - 1) * IWrappedATokenV2(waUsdc).exchangeRate() / WAD);
+            expectBalance(tokenOut, creditAccount, (initialBalance - 1) * WrappedAToken(waUsdc).exchangeRate() / WAD);
 
             expectTokenIsEnabled(creditAccount, waUsdc, false);
             expectTokenIsEnabled(creditAccount, tokenOut, true);
