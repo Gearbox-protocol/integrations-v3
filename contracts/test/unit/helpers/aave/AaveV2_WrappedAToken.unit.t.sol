@@ -58,6 +58,9 @@ contract WrappedATokenUnitTest is Test, BalanceHelper, IWrappedATokenEvents {
         assertEq(waToken.name(), "Wrapped Aave interest bearing Test Token", "Incorrect name");
         assertEq(waToken.symbol(), "waTEST", "Incorrect symbol");
         assertEq(waToken.decimals(), 6, "Incorrect decimals");
+        assertEq(
+            ERC20Mock(token).allowance(address(waToken), address(lendingPool)), type(uint256).max, "Incorrect allowance"
+        );
     }
 
     /// @notice U:[WAT-3]: `balanceOfUnderlying` works correctly
@@ -174,6 +177,9 @@ contract WrappedATokenUnitTest is Test, BalanceHelper, IWrappedATokenEvents {
         expectBalance(token, address(waToken), 0);
         expectBalanceGe(aToken, address(waToken), assets - 1, "");
         expectBalanceLe(aToken, address(waToken), assets + 1, "");
+        assertEq(
+            ERC20Mock(token).allowance(address(waToken), address(lendingPool)), type(uint256).max, "Incorrect allowance"
+        );
     }
 
     /// @notice U:[WAT-7]: `withdraw` works correctly
@@ -234,23 +240,6 @@ contract WrappedATokenUnitTest is Test, BalanceHelper, IWrappedATokenEvents {
         expectBalance(token, address(waToken), 0);
         expectBalanceGe(aToken, address(waToken), wrapperBalance - assets - 1, "");
         expectBalanceLe(aToken, address(waToken), wrapperBalance - assets + 1, "");
-    }
-
-    /// @notice U:[WAT-9]: waToken resets lendingPool allowance if it falls too low
-    function test_U_WAT_09_waToken_resets_lendingPool_allowance_if_it_falls_too_low() public {
-        uint256 amount = _mintUnderlying(USER);
-        tokenTestSuite.approve(token, USER, address(waToken), amount);
-
-        // simulate the situation when lendingPool runs out of approval for underlying from waToken
-        tokenTestSuite.approve(token, address(waToken), address(lendingPool), amount - 1);
-
-        // waToken then should reset it back to max
-        vm.expectCall(
-            token, abi.encodeWithSignature("approve(address,uint256)", address(lendingPool), type(uint256).max)
-        );
-
-        vm.prank(USER);
-        waToken.depositUnderlying(amount);
     }
 
     /// @dev Mints token to user
