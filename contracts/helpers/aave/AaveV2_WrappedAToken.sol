@@ -62,7 +62,7 @@ contract WrappedAToken is ERC20, SanityCheckTrait, IWrappedATokenEvents {
         lendingPool = address(IAToken(aToken).POOL()); // U:[WAT-2]
         _normalizedIncome = ILendingPool(lendingPool).getReserveNormalizedIncome(underlying);
         _decimals = IAToken(aToken).decimals(); // U:[WAT-2]
-        ERC20(underlying).approve(lendingPool, type(uint256).max);
+        _resetAllowance(); // U:[WAT-2]
     }
 
     /// @notice waToken decimals, same as underlying and aToken
@@ -93,8 +93,8 @@ contract WrappedAToken is ERC20, SanityCheckTrait, IWrappedATokenEvents {
     /// @return shares Amount of waTokens minted to the caller
     function depositUnderlying(uint256 assets) external returns (uint256 shares) {
         ERC20(underlying).safeTransferFrom(msg.sender, address(this), assets);
-        _ensureAllowance(assets);
         ILendingPool(lendingPool).deposit(underlying, assets, address(this), 0); // U:[WAT-6]
+        _resetAllowance(); // U:[WAT-6]
         shares = _deposit(assets); // U:[WAT-6]
     }
 
@@ -128,10 +128,8 @@ contract WrappedAToken is ERC20, SanityCheckTrait, IWrappedATokenEvents {
         emit Withdraw(msg.sender, assets, shares); // U:[WAT-7,8]
     }
 
-    /// @dev Gives lending pool max approval for underlying if it falls below `amount`
-    function _ensureAllowance(uint256 amount) internal {
-        if (ERC20(underlying).allowance(address(this), lendingPool) < amount) {
-            ERC20(underlying).approve(lendingPool, type(uint256).max); // [WAT-9]
-        }
+    /// @dev Gives lending pool max approval for underlying
+    function _resetAllowance() internal {
+        ERC20(underlying).approve(lendingPool, type(uint256).max);
     }
 }
