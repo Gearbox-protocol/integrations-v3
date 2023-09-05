@@ -55,18 +55,15 @@ contract PriceFeedDataLive {
     SingeTokenPriceFeedData wstethPriceFeed;
 
     constructor(uint8 networkId) {
-        if (networkId == 1) {
-            // $CHAINLINK_PRICE_FEEDS
-            // $CURVE_LIKE_PRICE_FEEDS
-            // $COMPOSITE_PRICE_FEEDS
-            // $BOUNDED_PRICE_FEEDS
-        } else if (networkId == 2) {
-            // $GOERLI_CHAINLINK_PRICE_FEEDS
-            // $GOERLI_CURVE_LIKE_PRICE_FEEDS
-            // $GOERLI_COMPOSITE_PRICE_FEEDS
-            // $GOERLI_BOUNDED_PRICE_FEEDS
+
+        if (networkId != 1) {
+            revert("Network id not supported");
         }
 
+        // $CHAINLINK_PRICE_FEEDS
+        // $CURVE_LIKE_PRICE_FEEDS
+        // $COMPOSITE_PRICE_FEEDS
+        // $BOUNDED_PRICE_FEEDS
         // $ZERO_PRICE_FEEDS
         // $CURVE_PRICE_FEEDS
         // $YEARN_PRICE_FEEDS

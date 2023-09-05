@@ -85,8 +85,8 @@ const standardSushiswapConfig: Array<UniswapV2PairConfig> = [
 export const mainnetCreditManagers: Array<CMConfig> = [
   {
     symbol: "DAI",
-    minAmount: WAD.mul(150000),
-    maxAmount: WAD.mul(1000000), // maxBorrowAmount = 10K + 3 x 10K = 40K
+    minAmount: BigInt(150_000) * WAD,
+    maxAmount: BigInt(1_000_000) * WAD, // maxBorrowAmount = 10K + 3 x 10K = 40K
     collateralTokens: [
       // Liquidation threshold will be multiplied x100 to be used as CreditFilter.sol contract parameter
 
@@ -150,8 +150,8 @@ export const mainnetCreditManagers: Array<CMConfig> = [
   },
   {
     symbol: "USDC",
-    minAmount: WAD.mul(150000).div(BigNumber.from(10).pow(12)),
-    maxAmount: WAD.mul(1000000).div(BigNumber.from(10).pow(12)), // maxBorrowAmount = 10K + 3 x 10K = 40K
+    minAmount: BigInt(150_000) * BigInt(1_000_000),
+    maxAmount: BigInt(1_000_000) * BigInt(1_000_000),
     collateralTokens: [
       // Liquidation threshold will be multiplied x100 to be used as CreditFilter.sol contract parameter
       { symbol: "WETH", liquidationThreshold: 85 }, // Token address is token from priceFeed map above
@@ -216,8 +216,8 @@ export const mainnetCreditManagers: Array<CMConfig> = [
   {
     symbol: "WETH",
 
-    minAmount: WAD.mul(100), // 0.3 WETH
-    maxAmount: WAD.mul(600), // 100WETH ~ 400K
+    minAmount: BigInt(100) * WAD, // 0.3 WETH
+    maxAmount: BigInt(600) * WAD, // 100WETH ~ 400K
     collateralTokens: [
       // Liquidation threshold will be multiplied x100 to be used as CreditFilter.sol contract parameter
       { symbol: "STETH", liquidationThreshold: 90 }, // Token address is token from priceFeed map above
@@ -282,8 +282,8 @@ export const mainnetCreditManagers: Array<CMConfig> = [
   {
     symbol: "wstETH",
 
-    minAmount: WAD.mul(100), // 0.3 WETH
-    maxAmount: WAD.mul(600), // 100WETH ~ 400K
+    minAmount: BigInt(100) * WAD, // 0.3 WETH
+    maxAmount: BigInt(600) * WAD, // 100WETH ~ 400K
     collateralTokens: [
       // Liquidation threshold will be multiplied x100 to be used as CreditFilter.sol contract parameter
       { symbol: "STETH", liquidationThreshold: 94.5 }, // Token address is token from priceFeed map above
@@ -413,8 +413,8 @@ export const mainnetCreditManagers: Array<CMConfig> = [
   },
   {
     symbol: "FRAX",
-    minAmount: WAD.mul(150000),
-    maxAmount: WAD.mul(1000000), // maxBorrowAmount = 10K + 3 x 10K = 40K
+    minAmount: BigInt(150_000) * WAD,
+    maxAmount: BigInt(1_000_000) * WAD, // maxBorrowAmount = 10K + 3 x 10K = 40K
     collateralTokens: [
       // Liquidation threshold will be multiplied x100 to be used as CreditFilter.sol contract parameter
 
@@ -590,8 +590,8 @@ export const mainnetCreditManagers: Array<CMConfig> = [
   {
     symbol: "WETH",
 
-    minAmount: WAD.mul(100), // 0.3 WETH
-    maxAmount: WAD.mul(600), // 100WETH ~ 400K
+    minAmount: BigInt(100) * WAD, // 0.3 WETH
+    maxAmount: BigInt(600) * WAD, // 100WETH ~ 400K
     collateralTokens: [
       // Liquidation threshold will be multiplied x100 to be used as CreditFilter.sol contract parameter
       { symbol: "WBTC", liquidationThreshold: 85 }, // Token address is token from priceFeed map above

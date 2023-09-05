@@ -35,12 +35,14 @@ contract SupportedContracts is ISupportedContracts {
     uint256 public override contractCount;
 
     constructor(uint8 networkId) {
-        ContractData[] memory cd;
-        if (networkId == 1) {
-            // $CONTRACTS_ADDRESSES$
-        } else if (networkId == 2) {
-            // $GOERLI_CONTRACTS_ADDRESSES$
+
+        if (networkId != 1) {
+            revert("Network id not supported");
         }
+
+        ContractData[] memory cd;
+        // $CONTRACTS_ADDRESSES$
+
         uint256 len = cd.length;
         contractCount = len;
         unchecked {

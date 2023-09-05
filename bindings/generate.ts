@@ -5,14 +5,16 @@ import {
   CurveLPTokenData,
   LPTokens,
   lpTokens,
-  OracleType,
-  priceFeedsByNetwork,
   SupportedContract,
   SupportedToken,
   supportedTokens,
   tokenDataByNetwork,
   TokenType,
+  NOT_DEPLOYED,
 } from "@gearbox-protocol/sdk";
+
+import { priceFeedsByToken, PriceFeedType } from "@gearbox-protocol/sdk-gov";
+
 import { BalancerLpTokenData } from "@gearbox-protocol/sdk/lib/tokens/balancer";
 import { support } from "@gearbox-protocol/sdk/lib/types/contracts";
 import * as fs from "fs";
@@ -24,6 +26,15 @@ function safeEnum(t: string): string {
     return `_${t}`;
   }
   return t;
+}
+
+function isCurvePriceFeed(t: PriceFeedType): boolean {
+  return (
+    t === PriceFeedType.CURVE_2LP_ORACLE ||
+    t === PriceFeedType.CURVE_3LP_ORACLE ||
+    t === PriceFeedType.CURVE_4LP_ORACLE ||
+    t === PriceFeedType.CURVE_CRYPTO_ORACLE
+  );
 }
 
 const tokens: Array<SupportedToken> = Object.keys(supportedTokens).filter(
@@ -45,24 +56,8 @@ tokenAddresses += tokens
   .map(
     (t, num) =>
       `td[${num}] = TokenData({ id: Tokens.${safeEnum(t)}, addr: ${
-        tokenDataByNetwork.Mainnet[t] !== "deploy me"
+        tokenDataByNetwork.Mainnet[t] !== NOT_DEPLOYED
           ? tokenDataByNetwork.Mainnet[t]
-          : "address(0)"
-      }, symbol: "${t}", tokenType: TokenType.${
-        TokenType[supportedTokens[t].type]
-      } });`,
-  )
-
-  .join("\n");
-
-let tokenAddressesGoerli = `td = new TokenData[](${tokens.length});`;
-
-tokenAddressesGoerli += tokens
-  .map(
-    (t, num) =>
-      `td[${num}] = TokenData({ id: Tokens.${safeEnum(t)}, addr: ${
-        tokenDataByNetwork.Goerli[t] !== "deploy me"
-          ? tokenDataByNetwork.Goerli[t]
           : "address(0)"
       }, symbol: "${t}", tokenType: TokenType.${
         TokenType[supportedTokens[t].type]
@@ -73,27 +68,30 @@ tokenAddressesGoerli += tokens
 
 file = fs.readFileSync("./bindings/TokensDataLive.sol").toString();
 file = file.replace("// $TOKEN_ADDRESSES$", tokenAddresses);
-file = file.replace("// $GOERLI_TOKEN_ADDRESSES$", tokenAddressesGoerli);
 fs.writeFileSync("./contracts/test/config/TokensDataLive.sol", file);
 
 /// ---------------- PriceFeedDataLive.sol -----------------------------
 
-const chainlinkPriceFeeds = Object.entries(priceFeedsByNetwork)
+const chainlinkPriceFeeds = Object.entries(priceFeedsByToken)
   .filter(
     ([, oracleData]) =>
-      oracleData.priceFeedUSD?.type === OracleType.CHAINLINK_ORACLE,
+      oracleData.type === PriceFeedType.NETWORK_DEPENDENT &&
+      oracleData.feeds.Mainnet.type == PriceFeedType.CHAINLINK_ORACLE,
   )
   .map(([token, oracleData]) => {
-    if (oracleData.priceFeedUSD?.type === OracleType.CHAINLINK_ORACLE) {
+    if (
+      oracleData.type === PriceFeedType.NETWORK_DEPENDENT &&
+      oracleData.feeds.Mainnet.type == PriceFeedType.CHAINLINK_ORACLE
+    ) {
       const address: string | undefined =
-        oracleData.priceFeedUSD!.address.Mainnet !== "deploy me"
-          ? oracleData.priceFeedUSD!.address.Mainnet
+        oracleData.feeds.Mainnet.address !== NOT_DEPLOYED
+          ? oracleData.feeds.Mainnet.address
           : "";
 
       return address
         ? `chainlinkPriceFeeds.push(ChainlinkPriceFeedData({
     token: Tokens.${safeEnum(token as SupportedToken)},
-    priceFeed: ${oracleData.priceFeedUSD!.address.Mainnet}
+    priceFeed: ${address}
   }));`
         : "";
     }
@@ -103,35 +101,12 @@ const chainlinkPriceFeeds = Object.entries(priceFeedsByNetwork)
   .filter(t => t !== "")
   .join("\n");
 
-const chainlinkPriceFeedsGoerli = Object.entries(priceFeedsByNetwork)
+const zeroPriceFeeds = Object.entries(priceFeedsByToken)
   .filter(
     ([, oracleData]) =>
-      oracleData.priceFeedUSD?.type === OracleType.CHAINLINK_ORACLE,
-  )
-  .map(([token, oracleData]) => {
-    if (oracleData.priceFeedUSD?.type === OracleType.CHAINLINK_ORACLE) {
-      const address: string | undefined =
-        oracleData.priceFeedUSD!.address.Goerli !== "deploy me"
-          ? oracleData.priceFeedUSD!.address.Goerli
-          : "";
-
-      return address
-        ? `chainlinkPriceFeeds.push(ChainlinkPriceFeedData({
-  token: Tokens.${safeEnum(token as SupportedToken)},
-  priceFeed: ${oracleData.priceFeedUSD!.address.Goerli}
-}));`
-        : "";
-    }
-
-    return "";
-  })
-  .filter(t => t !== "")
-  .join("\n");
-
-const zeroPriceFeeds = Object.entries(priceFeedsByNetwork)
-  .filter(
-    ([, oracleData]) =>
-      oracleData.priceFeedUSD?.type === OracleType.ZERO_ORACLE,
+      oracleData.type === PriceFeedType.ZERO_ORACLE ||
+      (oracleData.type === PriceFeedType.NETWORK_DEPENDENT &&
+        oracleData.feeds.Mainnet.type == PriceFeedType.ZERO_ORACLE),
   )
   .map(
     ([token]) =>
@@ -141,25 +116,29 @@ const zeroPriceFeeds = Object.entries(priceFeedsByNetwork)
   )
   .join("\n");
 
-const curvePriceFeeds = Object.entries(priceFeedsByNetwork)
+const curvePriceFeeds = Object.entries(priceFeedsByToken)
   .filter(
     ([, oracleData]) =>
-      oracleData.priceFeedUSD?.type === OracleType.CURVE_LP_TOKEN_ORACLE ||
-      oracleData.priceFeedUSD?.type === OracleType.CURVE_CRYPTO_ORACLE,
+      oracleData.type === PriceFeedType.CURVE_2LP_ORACLE ||
+      oracleData.type === PriceFeedType.CURVE_3LP_ORACLE ||
+      oracleData.type === PriceFeedType.CURVE_4LP_ORACLE ||
+      oracleData.type === PriceFeedType.CURVE_CRYPTO_ORACLE,
   )
   .map(([token, oracleData]) => {
     if (
-      oracleData.priceFeedUSD?.type === OracleType.CURVE_LP_TOKEN_ORACLE ||
-      oracleData.priceFeedUSD?.type === OracleType.CURVE_CRYPTO_ORACLE
+      oracleData.type === PriceFeedType.CURVE_2LP_ORACLE ||
+      oracleData.type === PriceFeedType.CURVE_3LP_ORACLE ||
+      oracleData.type === PriceFeedType.CURVE_4LP_ORACLE ||
+      oracleData.type === PriceFeedType.CURVE_CRYPTO_ORACLE
     ) {
-      const assets = oracleData.priceFeedUSD.assets
+      const assets = oracleData.assets
         .map(a => `Tokens.${safeEnum(a)}`)
         .join(", ");
 
       const curveType =
-        oracleData.priceFeedUSD?.type === OracleType.CURVE_LP_TOKEN_ORACLE
-          ? "STABLE"
-          : "CRYPTO";
+        oracleData.type === PriceFeedType.CURVE_CRYPTO_ORACLE
+          ? "CRYPTO"
+          : "STABLE";
 
       return `curvePriceFeeds.push(CurvePriceFeedData({
           poolType: CurvePoolType.${curveType},
@@ -175,17 +154,19 @@ const curvePriceFeeds = Object.entries(priceFeedsByNetwork)
   .filter(t => t !== "")
   .join("\n");
 
-const curveLikePriceFeeds = Object.entries(priceFeedsByNetwork)
+const curveLikePriceFeeds = Object.entries(priceFeedsByToken)
   .filter(
     ([token, oracleData]) =>
-      oracleData.priceFeedUSD?.type === OracleType.LIKE_CURVE_LP_TOKEN_ORACLE &&
+      oracleData.type === PriceFeedType.THE_SAME_AS &&
+      isCurvePriceFeed(priceFeedsByToken[oracleData.token].type) &&
       tokenDataByNetwork.Mainnet[token as SupportedToken] !== "",
   )
   .map(([token, oracleData]) => {
     if (
-      oracleData.priceFeedUSD?.type === OracleType.LIKE_CURVE_LP_TOKEN_ORACLE
+      oracleData.type === PriceFeedType.THE_SAME_AS &&
+      isCurvePriceFeed(priceFeedsByToken[oracleData.token].type)
     ) {
-      const symbol = oracleData.priceFeedUSD.curveSymbol;
+      const symbol = oracleData.token;
       if (tokenDataByNetwork.Mainnet[token as SupportedToken] !== "") {
         return `likeCurvePriceFeeds.push(CurveLikePriceFeedData({
         lpToken: Tokens.${safeEnum(token as SupportedToken)},
@@ -198,45 +179,26 @@ const curveLikePriceFeeds = Object.entries(priceFeedsByNetwork)
   .filter(t => t !== "")
   .join("\n");
 
-const curveLikePriceFeedsGoerli = Object.entries(priceFeedsByNetwork)
+const boundedPriceFeeds = Object.entries(priceFeedsByToken)
   .filter(
     ([token, oracleData]) =>
-      oracleData.priceFeedUSD?.type === OracleType.LIKE_CURVE_LP_TOKEN_ORACLE &&
-      tokenDataByNetwork.Goerli[token as SupportedToken] !== "",
+      oracleData.type === PriceFeedType.NETWORK_DEPENDENT &&
+      oracleData.feeds.Mainnet.type == PriceFeedType.BOUNDED_ORACLE &&
+      tokenDataByNetwork.Mainnet[token as SupportedToken] !== "",
   )
   .map(([token, oracleData]) => {
     if (
-      oracleData.priceFeedUSD?.type === OracleType.LIKE_CURVE_LP_TOKEN_ORACLE
+      oracleData.type === PriceFeedType.NETWORK_DEPENDENT &&
+      oracleData.feeds.Mainnet.type == PriceFeedType.BOUNDED_ORACLE
     ) {
-      const symbol = oracleData.priceFeedUSD.curveSymbol;
-      if (tokenDataByNetwork.Goerli[token as SupportedToken] !== "") {
-        return `likeCurvePriceFeeds.push(CurveLikePriceFeedData({
-        lpToken: Tokens.${safeEnum(token as SupportedToken)},
-        curveToken: Tokens.${safeEnum(symbol as SupportedToken)}
-      }));`;
-      }
-    }
-    return "";
-  })
-  .filter(t => t !== "")
-  .join("\n");
-
-const boundedPriceFeeds = Object.entries(priceFeedsByNetwork)
-  .filter(
-    ([token, oracleData]) =>
-      oracleData.priceFeedUSD?.type === OracleType.BOUNDED_ORACLE &&
-      tokenDataByNetwork.Mainnet[token as SupportedToken] !== "",
-  )
-  .map(([token, oracleData]) => {
-    if (oracleData.priceFeedUSD?.type === OracleType.BOUNDED_ORACLE) {
       const targetPriceFeed: string | undefined =
-        oracleData.priceFeedUSD!.targetPriceFeed.Mainnet;
+        oracleData.feeds.Mainnet.priceFeed;
 
       return targetPriceFeed
         ? `boundedPriceFeeds.push(BoundedPriceFeedData({
   token: Tokens.${safeEnum(token as SupportedToken)},
   priceFeed: ${targetPriceFeed},
-  upperBound: ${oracleData.priceFeedUSD!.upperBound}
+  upperBound: ${oracleData.feeds.Mainnet.upperBound}
 }));`
         : "";
     }
@@ -245,45 +207,25 @@ const boundedPriceFeeds = Object.entries(priceFeedsByNetwork)
   .filter(t => t !== "")
   .join("\n");
 
-const boundedPriceFeedsGoerli = Object.entries(priceFeedsByNetwork)
+const compositePriceFeeds = Object.entries(priceFeedsByToken)
   .filter(
     ([token, oracleData]) =>
-      oracleData.priceFeedUSD?.type === OracleType.BOUNDED_ORACLE &&
-      tokenDataByNetwork.Goerli[token as SupportedToken] !== "",
-  )
-  .map(([token, oracleData]) => {
-    if (oracleData.priceFeedUSD?.type === OracleType.BOUNDED_ORACLE) {
-      const targetPriceFeed: string | undefined =
-        oracleData.priceFeedUSD!.targetPriceFeed.Goerli;
-
-      return targetPriceFeed
-        ? `boundedPriceFeeds.push(BoundedPriceFeedData({
-  token: Tokens.${safeEnum(token as SupportedToken)},
-  priceFeed: ${targetPriceFeed},
-  upperBound: ${oracleData.priceFeedUSD!.upperBound}
-}));`
-        : "";
-    }
-    return "";
-  })
-  .filter(t => t !== "")
-  .join("\n");
-
-const compositePriceFeeds = Object.entries(priceFeedsByNetwork)
-  .filter(
-    ([token, oracleData]) =>
-      oracleData.priceFeedUSD?.type === OracleType.COMPOSITE_ORACLE &&
+      oracleData.type === PriceFeedType.NETWORK_DEPENDENT &&
+      oracleData.feeds.Mainnet.type === PriceFeedType.COMPOSITE_ORACLE &&
       tokenDataByNetwork.Mainnet[token as SupportedToken] !== "",
   )
   .map(([token, oracleData]) => {
-    if (oracleData.priceFeedUSD?.type === OracleType.COMPOSITE_ORACLE) {
+    if (
+      oracleData.type === PriceFeedType.NETWORK_DEPENDENT &&
+      oracleData.feeds.Mainnet.type === PriceFeedType.COMPOSITE_ORACLE
+    ) {
       const targetToBaseFeed: string | undefined =
-        oracleData.priceFeedUSD!.targetToBasePriceFeed.Mainnet !== "deploy me"
-          ? oracleData.priceFeedUSD!.targetToBasePriceFeed.Mainnet
+        oracleData.feeds.Mainnet.targetToBasePriceFeed !== NOT_DEPLOYED
+          ? oracleData.feeds.Mainnet.targetToBasePriceFeed
           : "address(0)";
       const baseToUSDFeed: string | undefined =
-        oracleData.priceFeedUSD!.baseToUsdPriceFeed.Mainnet !== "deploy me"
-          ? oracleData.priceFeedUSD!.baseToUsdPriceFeed.Mainnet
+        oracleData.feeds.Mainnet.baseToUsdPriceFeed !== NOT_DEPLOYED
+          ? oracleData.feeds.Mainnet.baseToUsdPriceFeed
           : "address(0)";
 
       return targetToBaseFeed && baseToUSDFeed
@@ -299,42 +241,8 @@ const compositePriceFeeds = Object.entries(priceFeedsByNetwork)
   .filter(t => t !== "")
   .join("\n");
 
-const compositePriceFeedsGoerli = Object.entries(priceFeedsByNetwork)
-  .filter(
-    ([token, oracleData]) =>
-      oracleData.priceFeedUSD?.type === OracleType.COMPOSITE_ORACLE &&
-      tokenDataByNetwork.Goerli[token as SupportedToken] !== "",
-  )
-  .map(([token, oracleData]) => {
-    if (oracleData.priceFeedUSD?.type === OracleType.COMPOSITE_ORACLE) {
-      const targetToBaseFeed: string | undefined =
-        oracleData.priceFeedUSD!.targetToBasePriceFeed.Goerli !== "deploy me"
-          ? oracleData.priceFeedUSD!.targetToBasePriceFeed.Goerli
-          : "address(0)";
-      const baseToUSDFeed: string | undefined =
-        oracleData.priceFeedUSD!.baseToUsdPriceFeed.Goerli !== "deploy me"
-          ? oracleData.priceFeedUSD!.baseToUsdPriceFeed.Goerli
-          : "address(0)";
-
-      return targetToBaseFeed && baseToUSDFeed
-        ? `compositePriceFeeds.push(CompositePriceFeedData({
-        token: Tokens.${safeEnum(token as SupportedToken)},
-        targetToBaseFeed: ${targetToBaseFeed},
-        baseToUSDFeed: ${baseToUSDFeed}
-      }));`
-        : "";
-    }
-    return "";
-  })
-  .filter(t => t !== "")
-  .join("\n");
-
-const yearnPriceFeeds = Object.entries(priceFeedsByNetwork)
-  .filter(
-    ([, oracleData]) =>
-      oracleData.priceFeedUSD?.type === OracleType.YEARN_TOKEN_ORACLE ||
-      oracleData.priceFeedUSD?.type === OracleType.YEARN_CURVE_LP_TOKEN_ORACLE,
-  )
+const yearnPriceFeeds = Object.entries(priceFeedsByToken)
+  .filter(([, oracleData]) => oracleData.type === PriceFeedType.YEARN_ORACLE)
   .map(
     ([token]) =>
       `yearnPriceFeeds.push(SingeTokenPriceFeedData({ token: Tokens.${safeEnum(
@@ -343,10 +251,11 @@ const yearnPriceFeeds = Object.entries(priceFeedsByNetwork)
   )
   .join("\n");
 
-const wstethPriceFeed = Object.entries(priceFeedsByNetwork)
+const wstethPriceFeed = Object.entries(priceFeedsByToken)
   .filter(
     ([, oracleData]) =>
-      oracleData.priceFeedUSD?.type === OracleType.WSTETH_ORACLE,
+      oracleData.type === PriceFeedType.NETWORK_DEPENDENT &&
+      oracleData.feeds.Mainnet.type == PriceFeedType.WSTETH_ORACLE,
   )
   .map(
     ([token]) =>
@@ -359,24 +268,11 @@ const wstethPriceFeed = Object.entries(priceFeedsByNetwork)
 file = fs.readFileSync("./bindings/PriceFeedDataLive.sol").toString();
 
 file = file.replace("// $CHAINLINK_PRICE_FEEDS", chainlinkPriceFeeds);
-file = file.replace(
-  "// $GOERLI_CHAINLINK_PRICE_FEEDS",
-  chainlinkPriceFeedsGoerli,
-);
 file = file.replace("// $ZERO_PRICE_FEEDS", zeroPriceFeeds);
 file = file.replace("// $CURVE_PRICE_FEEDS", curvePriceFeeds);
 file = file.replace("// $CURVE_LIKE_PRICE_FEEDS", curveLikePriceFeeds);
-file = file.replace(
-  "// $GOERLI_CURVE_LIKE_PRICE_FEEDS",
-  curveLikePriceFeedsGoerli,
-);
 file = file.replace("// $BOUNDED_PRICE_FEEDS", boundedPriceFeeds);
-file = file.replace("// $GOERLI_BOUNDED_PRICE_FEEDS", boundedPriceFeedsGoerli);
 file = file.replace("// $COMPOSITE_PRICE_FEEDS", compositePriceFeeds);
-file = file.replace(
-  "// $GOERLI_COMPOSITE_PRICE_FEEDS",
-  compositePriceFeedsGoerli,
-);
 file = file.replace("// $YEARN_PRICE_FEEDS", yearnPriceFeeds);
 file = file.replace("// $WSTETH_PRICE_FEED", wstethPriceFeed);
 
@@ -395,20 +291,8 @@ contractAddresses += contracts
   .map(
     (t, num) =>
       `cd[${num}] = ContractData({ id: Contracts.${t}, addr:  ${
-        contractsByNetwork.Mainnet[t] !== "deploy me"
+        contractsByNetwork.Mainnet[t] !== NOT_DEPLOYED
           ? contractsByNetwork.Mainnet[t]
-          : "address(0)"
-      }, name: "${t}" });`,
-  )
-  .join("\n");
-
-let contractAddressesGoerli = `cd = new  ContractData[](${contracts.length});`;
-contractAddressesGoerli += contracts
-  .map(
-    (t, num) =>
-      `cd[${num}] = ContractData({ id: Contracts.${t}, addr:  ${
-        contractsByNetwork.Goerli[t] !== "deploy me"
-          ? contractsByNetwork.Goerli[t]
           : "address(0)"
       }, name: "${t}" });`,
   )
@@ -418,7 +302,6 @@ file = fs.readFileSync("./bindings/SupportedContracts.sol").toString();
 
 file = file.replace("// $CONTRACTS_ENUM$", `, ${contractsEnum}`);
 file = file.replace("// $CONTRACTS_ADDRESSES$", contractAddresses);
-file = file.replace("// $GOERLI_CONTRACTS_ADDRESSES$", contractAddressesGoerli);
 
 fs.writeFileSync("./contracts/test/config/SupportedContracts.sol", file);
 

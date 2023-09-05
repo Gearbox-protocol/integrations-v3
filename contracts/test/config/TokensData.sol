@@ -135,7 +135,7 @@ contract TokensData {
                 symbol: "cDAI",
                 decimals: 18,
                 price: 10 ** 8,
-                tokenType: TokenType.C_TOKEN,
+                tokenType: TokenType.COMPOUND_V2_C_TOKEN,
                 underlying: Tokens.DAI
             }),
             TestToken({
@@ -143,7 +143,7 @@ contract TokensData {
                 symbol: "cUSDC",
                 decimals: 6,
                 price: 10 ** 8,
-                tokenType: TokenType.C_TOKEN,
+                tokenType: TokenType.COMPOUND_V2_C_TOKEN,
                 underlying: Tokens.USDC
             }),
             TestToken({
@@ -151,7 +151,7 @@ contract TokensData {
                 symbol: "cUSDT",
                 decimals: 18,
                 price: 99 * 10 ** 7, // .99 for test purposes
-                tokenType: TokenType.C_TOKEN,
+                tokenType: TokenType.COMPOUND_V2_C_TOKEN,
                 underlying: Tokens.USDT
             }),
             TestToken({
@@ -159,7 +159,7 @@ contract TokensData {
                 symbol: "cLINK",
                 decimals: 18,
                 price: 15 * 10 ** 8,
-                tokenType: TokenType.C_TOKEN,
+                tokenType: TokenType.COMPOUND_V2_C_TOKEN,
                 underlying: Tokens.LINK
             })
         ];
@@ -187,7 +187,7 @@ contract TokensData {
                 t = new ERC20Mock(token.symbol, token.symbol, token.decimals);
                 ERC20Mock(address(t)).set_minter(msg.sender);
             }
-        } else if (token.tokenType == TokenType.C_TOKEN) {
+        } else if (token.tokenType == TokenType.COMPOUND_V2_C_TOKEN) {
             address underlying = addressOf[token.underlying];
             t = new cERC20Mock(
                 token.symbol,

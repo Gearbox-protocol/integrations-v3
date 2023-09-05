@@ -136,18 +136,18 @@ contract AdapterData {
         );
         curveAdapters.push(
             CurveAdapter({
-                targetContract: Contracts.CURVE_OHMFRAXBP_POOL,
-                adapterType: AdapterType.CURVE_V1_2ASSETS,
-                lpToken: Tokens.OHMFRAXBP,
-                basePool: Contracts.CURVE_FRAX_USDC_POOL
-            })
-        );
-        curveAdapters.push(
-            CurveAdapter({
                 targetContract: Contracts.CURVE_MIM_POOL,
                 adapterType: AdapterType.CURVE_V1_2ASSETS,
                 lpToken: Tokens.MIM_3LP3CRV,
                 basePool: Contracts.CURVE_3CRV_POOL
+            })
+        );
+        curveAdapters.push(
+            CurveAdapter({
+                targetContract: Contracts.CURVE_OHMFRAXBP_POOL,
+                adapterType: AdapterType.CURVE_V1_2ASSETS,
+                lpToken: Tokens.OHMFRAXBP,
+                basePool: Contracts.CURVE_FRAX_USDC_POOL
             })
         );
         curveAdapters.push(
@@ -179,6 +179,38 @@ contract AdapterData {
                 targetContract: Contracts.CURVE_LDOETH_POOL,
                 adapterType: AdapterType.CURVE_V1_2ASSETS,
                 lpToken: Tokens.LDOETH,
+                basePool: Contracts.NO_CONTRACT
+            })
+        );
+        curveAdapters.push(
+            CurveAdapter({
+                targetContract: Contracts.CURVE_CRVUSD_USDC_POOL,
+                adapterType: AdapterType.CURVE_V1_2ASSETS,
+                lpToken: Tokens.crvUSDUSDC,
+                basePool: Contracts.NO_CONTRACT
+            })
+        );
+        curveAdapters.push(
+            CurveAdapter({
+                targetContract: Contracts.CURVE_CRVUSD_USDT_POOL,
+                adapterType: AdapterType.CURVE_V1_2ASSETS,
+                lpToken: Tokens.crvUSDUSDT,
+                basePool: Contracts.NO_CONTRACT
+            })
+        );
+        curveAdapters.push(
+            CurveAdapter({
+                targetContract: Contracts.CURVE_CRVUSD_FRAX_POOL,
+                adapterType: AdapterType.CURVE_V1_2ASSETS,
+                lpToken: Tokens.crvUSDFRAX,
+                basePool: Contracts.NO_CONTRACT
+            })
+        );
+        curveAdapters.push(
+            CurveAdapter({
+                targetContract: Contracts.CURVE_TRI_CRV_POOL,
+                adapterType: AdapterType.CURVE_V1_3ASSETS,
+                lpToken: Tokens.crvUSDETHCRV,
                 basePool: Contracts.NO_CONTRACT
             })
         );
@@ -246,16 +278,16 @@ contract AdapterData {
         );
         convexBasePoolAdapters.push(
             ConvexBasePoolAdapter({
-                targetContract: Contracts.CONVEX_OHMFRAXBP_POOL,
+                targetContract: Contracts.CONVEX_MIM3CRV_POOL,
                 adapterType: AdapterType.CONVEX_V1_BASE_REWARD_POOL,
-                stakedToken: Tokens.stkcvxOHMFRAXBP
+                stakedToken: Tokens.stkcvxMIM_3LP3CRV
             })
         );
         convexBasePoolAdapters.push(
             ConvexBasePoolAdapter({
-                targetContract: Contracts.CONVEX_MIM3CRV_POOL,
+                targetContract: Contracts.CONVEX_OHMFRAXBP_POOL,
                 adapterType: AdapterType.CONVEX_V1_BASE_REWARD_POOL,
-                stakedToken: Tokens.stkcvxMIM_3LP3CRV
+                stakedToken: Tokens.stkcvxOHMFRAXBP
             })
         );
         convexBasePoolAdapters.push(

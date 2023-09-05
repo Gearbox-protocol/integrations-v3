@@ -35,6 +35,10 @@ enum Contracts {
     CURVE_3CRYPTO_POOL,
     CURVE_LDOETH_POOL,
     CURVE_GEAR_POOL,
+    CURVE_CRVUSD_USDC_POOL,
+    CURVE_CRVUSD_USDT_POOL,
+    CURVE_CRVUSD_FRAX_POOL,
+    CURVE_TRI_CRV_POOL,
     YEARN_DAI_VAULT,
     YEARN_USDC_VAULT,
     YEARN_WETH_VAULT,
@@ -59,7 +63,20 @@ enum Contracts {
     LIDO_STETH_GATEWAY,
     LIDO_WSTETH,
     BALANCER_VAULT,
-    UNIVERSAL_ADAPTER
+    UNIVERSAL_ADAPTER,
+    AAVE_V2_DAI_POOL,
+    AAVE_V2_USDC_POOL,
+    AAVE_V2_USDT_POOL,
+    AAVE_V2_WETH_POOL,
+    AAVE_V2_DAI_TOKEN_WRAPPER,
+    AAVE_V2_USDC_TOKEN_WRAPPER,
+    AAVE_V2_USDT_TOKEN_WRAPPER,
+    AAVE_V2_WETH_TOKEN_WRAPPER,
+    COMPOUND_V2_DAI_POOL,
+    COMPOUND_V2_USDC_POOL,
+    COMPOUND_V2_USDT_POOL,
+    COMPOUND_V2_LINK_POOL,
+    COMPOUND_V2_ETH_POOL
 }
 
 struct ContractData {
@@ -78,387 +95,294 @@ contract SupportedContracts is ISupportedContracts {
     uint256 public override contractCount;
 
     constructor(uint8 networkId) {
-        ContractData[] memory cd;
-        if (networkId == 1) {
-            cd = new  ContractData[](43);
-            cd[0] = ContractData({
-                id: Contracts.UNISWAP_V2_ROUTER,
-                addr: 0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D,
-                name: "UNISWAP_V2_ROUTER"
-            });
-            cd[1] = ContractData({
-                id: Contracts.UNISWAP_V3_ROUTER,
-                addr: 0xE592427A0AEce92De3Edee1F18E0157C05861564,
-                name: "UNISWAP_V3_ROUTER"
-            });
-            cd[2] = ContractData({
-                id: Contracts.SUSHISWAP_ROUTER,
-                addr: 0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F,
-                name: "SUSHISWAP_ROUTER"
-            });
-            cd[3] = ContractData({
-                id: Contracts.CURVE_3CRV_POOL,
-                addr: 0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7,
-                name: "CURVE_3CRV_POOL"
-            });
-            cd[4] = ContractData({
-                id: Contracts.CURVE_FRAX_USDC_POOL,
-                addr: 0xDcEF968d416a41Cdac0ED8702fAC8128A64241A2,
-                name: "CURVE_FRAX_USDC_POOL"
-            });
-            cd[5] = ContractData({
-                id: Contracts.CURVE_STETH_GATEWAY,
-                addr: 0xEf0D72C594b28252BF7Ea2bfbF098792430815b1,
-                name: "CURVE_STETH_GATEWAY"
-            });
-            cd[6] = ContractData({
-                id: Contracts.CURVE_FRAX_POOL,
-                addr: 0xd632f22692FaC7611d2AA1C0D552930D43CAEd3B,
-                name: "CURVE_FRAX_POOL"
-            });
-            cd[7] = ContractData({
-                id: Contracts.CURVE_LUSD_POOL,
-                addr: 0xEd279fDD11cA84bEef15AF5D39BB4d4bEE23F0cA,
-                name: "CURVE_LUSD_POOL"
-            });
-            cd[8] = ContractData({
-                id: Contracts.CURVE_SUSD_POOL,
-                addr: 0xA5407eAE9Ba41422680e2e00537571bcC53efBfD,
-                name: "CURVE_SUSD_POOL"
-            });
-            cd[9] = ContractData({
-                id: Contracts.CURVE_SUSD_DEPOSIT,
-                addr: 0xFCBa3E75865d2d561BE8D220616520c171F12851,
-                name: "CURVE_SUSD_DEPOSIT"
-            });
-            cd[10] = ContractData({
-                id: Contracts.CURVE_GUSD_POOL,
-                addr: 0x4f062658EaAF2C1ccf8C8e36D6824CDf41167956,
-                name: "CURVE_GUSD_POOL"
-            });
-            cd[11] = ContractData({
-                id: Contracts.CURVE_MIM_POOL,
-                addr: 0x5a6A4D54456819380173272A5E8E9B9904BdF41B,
-                name: "CURVE_MIM_POOL"
-            });
-            cd[12] = ContractData({
-                id: Contracts.CURVE_OHMFRAXBP_POOL,
-                addr: 0xFc1e8bf3E81383Ef07Be24c3FD146745719DE48D,
-                name: "CURVE_OHMFRAXBP_POOL"
-            });
-            cd[13] = ContractData({
-                id: Contracts.CURVE_CRVETH_POOL,
-                addr: 0x8301AE4fc9c624d1D396cbDAa1ed877821D7C511,
-                name: "CURVE_CRVETH_POOL"
-            });
-            cd[14] = ContractData({
-                id: Contracts.CURVE_CVXETH_POOL,
-                addr: 0xB576491F1E6e5E62f1d8F26062Ee822B40B0E0d4,
-                name: "CURVE_CVXETH_POOL"
-            });
-            cd[15] = ContractData({
-                id: Contracts.CURVE_3CRYPTO_POOL,
-                addr: 0xf5f5B97624542D72A9E06f04804Bf81baA15e2B4,
-                name: "CURVE_3CRYPTO_POOL"
-            });
-            cd[16] = ContractData({
-                id: Contracts.CURVE_LDOETH_POOL,
-                addr: 0x9409280DC1e6D33AB7A8C6EC03e5763FB61772B5,
-                name: "CURVE_LDOETH_POOL"
-            });
-            cd[17] = ContractData({
-                id: Contracts.CURVE_GEAR_POOL,
-                addr: 0x0E9B5B092caD6F1c5E6bc7f89Ffe1abb5c95F1C2,
-                name: "CURVE_GEAR_POOL"
-            });
-            cd[18] = ContractData({
-                id: Contracts.YEARN_DAI_VAULT,
-                addr: 0xdA816459F1AB5631232FE5e97a05BBBb94970c95,
-                name: "YEARN_DAI_VAULT"
-            });
-            cd[19] = ContractData({
-                id: Contracts.YEARN_USDC_VAULT,
-                addr: 0xa354F35829Ae975e850e23e9615b11Da1B3dC4DE,
-                name: "YEARN_USDC_VAULT"
-            });
-            cd[20] = ContractData({
-                id: Contracts.YEARN_WETH_VAULT,
-                addr: 0xa258C4606Ca8206D8aA700cE2143D7db854D168c,
-                name: "YEARN_WETH_VAULT"
-            });
-            cd[21] = ContractData({
-                id: Contracts.YEARN_WBTC_VAULT,
-                addr: 0xA696a63cc78DfFa1a63E9E50587C197387FF6C7E,
-                name: "YEARN_WBTC_VAULT"
-            });
-            cd[22] = ContractData({
-                id: Contracts.YEARN_CURVE_FRAX_VAULT,
-                addr: 0xB4AdA607B9d6b2c9Ee07A275e9616B84AC560139,
-                name: "YEARN_CURVE_FRAX_VAULT"
-            });
-            cd[23] = ContractData({
-                id: Contracts.YEARN_CURVE_STETH_VAULT,
-                addr: 0xdCD90C7f6324cfa40d7169ef80b12031770B4325,
-                name: "YEARN_CURVE_STETH_VAULT"
-            });
-            cd[24] = ContractData({
-                id: Contracts.CONVEX_BOOSTER,
-                addr: 0xF403C135812408BFbE8713b5A23a04b3D48AAE31,
-                name: "CONVEX_BOOSTER"
-            });
-            cd[25] = ContractData({
-                id: Contracts.CONVEX_3CRV_POOL,
-                addr: 0x689440f2Ff927E1f24c72F1087E1FAF471eCe1c8,
-                name: "CONVEX_3CRV_POOL"
-            });
-            cd[26] = ContractData({
-                id: Contracts.CONVEX_FRAX_USDC_POOL,
-                addr: 0x7e880867363A7e321f5d260Cade2B0Bb2F717B02,
-                name: "CONVEX_FRAX_USDC_POOL"
-            });
-            cd[27] = ContractData({
-                id: Contracts.CONVEX_GUSD_POOL,
-                addr: 0x7A7bBf95C44b144979360C3300B54A7D34b44985,
-                name: "CONVEX_GUSD_POOL"
-            });
-            cd[28] = ContractData({
-                id: Contracts.CONVEX_SUSD_POOL,
-                addr: 0x22eE18aca7F3Ee920D01F25dA85840D12d98E8Ca,
-                name: "CONVEX_SUSD_POOL"
-            });
-            cd[29] = ContractData({
-                id: Contracts.CONVEX_STECRV_POOL,
-                addr: 0x0A760466E1B4621579a82a39CB56Dda2F4E70f03,
-                name: "CONVEX_STECRV_POOL"
-            });
-            cd[30] = ContractData({
-                id: Contracts.CONVEX_FRAX3CRV_POOL,
-                addr: 0xB900EF131301B307dB5eFcbed9DBb50A3e209B2e,
-                name: "CONVEX_FRAX3CRV_POOL"
-            });
-            cd[31] = ContractData({
-                id: Contracts.CONVEX_LUSD3CRV_POOL,
-                addr: 0x2ad92A7aE036a038ff02B96c88de868ddf3f8190,
-                name: "CONVEX_LUSD3CRV_POOL"
-            });
-            cd[32] = ContractData({
-                id: Contracts.CONVEX_CLAIM_ZAP,
-                addr: 0x92Cf9E5e4D1Dfbf7dA0d2BB3e884a68416a65070,
-                name: "CONVEX_CLAIM_ZAP"
-            });
-            cd[33] = ContractData({
-                id: Contracts.CONVEX_OHMFRAXBP_POOL,
-                addr: 0x27A8c58e3DE84280826d615D80ddb33930383fE9,
-                name: "CONVEX_OHMFRAXBP_POOL"
-            });
-            cd[34] = ContractData({
-                id: Contracts.CONVEX_MIM3CRV_POOL,
-                addr: 0xFd5AbF66b003881b88567EB9Ed9c651F14Dc4771,
-                name: "CONVEX_MIM3CRV_POOL"
-            });
-            cd[35] = ContractData({
-                id: Contracts.CONVEX_CRVETH_POOL,
-                addr: 0x085A2054c51eA5c91dbF7f90d65e728c0f2A270f,
-                name: "CONVEX_CRVETH_POOL"
-            });
-            cd[36] = ContractData({
-                id: Contracts.CONVEX_CVXETH_POOL,
-                addr: 0xb1Fb0BA0676A1fFA83882c7F4805408bA232C1fA,
-                name: "CONVEX_CVXETH_POOL"
-            });
-            cd[37] = ContractData({
-                id: Contracts.CONVEX_3CRYPTO_POOL,
-                addr: 0xb05262D4aaAA38D0Af4AaB244D446ebDb5afd4A7,
-                name: "CONVEX_3CRYPTO_POOL"
-            });
-            cd[38] = ContractData({
-                id: Contracts.CONVEX_LDOETH_POOL,
-                addr: 0x8CA990E954611E5E3d2cc51C013fCC372c8c1D38,
-                name: "CONVEX_LDOETH_POOL"
-            });
-            cd[39] = ContractData({
-                id: Contracts.LIDO_STETH_GATEWAY,
-                addr: 0x6f4b4aB5142787c05b7aB9A9692A0f46b997C29D,
-                name: "LIDO_STETH_GATEWAY"
-            });
-            cd[40] = ContractData({
-                id: Contracts.LIDO_WSTETH,
-                addr: 0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0,
-                name: "LIDO_WSTETH"
-            });
-            cd[41] = ContractData({
-                id: Contracts.BALANCER_VAULT,
-                addr: 0xBA12222222228d8Ba445958a75a0704d566BF2C8,
-                name: "BALANCER_VAULT"
-            });
-            cd[42] = ContractData({
-                id: Contracts.UNIVERSAL_ADAPTER,
-                addr: 0xCcCCccccCCCCcCCCCCCcCcCccCcCCCcCcccccccC,
-                name: "UNIVERSAL_ADAPTER"
-            });
-        } else if (networkId == 2) {
-            cd = new  ContractData[](43);
-            cd[0] = ContractData({
-                id: Contracts.UNISWAP_V2_ROUTER,
-                addr: 0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D,
-                name: "UNISWAP_V2_ROUTER"
-            });
-            cd[1] = ContractData({
-                id: Contracts.UNISWAP_V3_ROUTER,
-                addr: 0xE592427A0AEce92De3Edee1F18E0157C05861564,
-                name: "UNISWAP_V3_ROUTER"
-            });
-            cd[2] = ContractData({
-                id: Contracts.SUSHISWAP_ROUTER,
-                addr: 0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506,
-                name: "SUSHISWAP_ROUTER"
-            });
-            cd[3] = ContractData({
-                id: Contracts.CURVE_3CRV_POOL,
-                addr: 0x6491f8A62678c90C84b237791d9D7cF21b4D1418,
-                name: "CURVE_3CRV_POOL"
-            });
-            cd[4] = ContractData({
-                id: Contracts.CURVE_FRAX_USDC_POOL,
-                addr: 0x9C85E4F4061160B6177cad3f72EDfd374Dc8AD88,
-                name: "CURVE_FRAX_USDC_POOL"
-            });
-            cd[5] = ContractData({
-                id: Contracts.CURVE_STETH_GATEWAY,
-                addr: 0x6019fEa75c460ef205ef4C626F196055BAD89D1E,
-                name: "CURVE_STETH_GATEWAY"
-            });
-            cd[6] = ContractData({
-                id: Contracts.CURVE_FRAX_POOL,
-                addr: 0x12Ad3125C67eC5325Cc94AFdA8B26cd12BCe1E9b,
-                name: "CURVE_FRAX_POOL"
-            });
-            cd[7] = ContractData({
-                id: Contracts.CURVE_LUSD_POOL,
-                addr: 0x348B1846b87cA12D23A9A4E73B1CfAc2Aad49cf4,
-                name: "CURVE_LUSD_POOL"
-            });
-            cd[8] = ContractData({
-                id: Contracts.CURVE_SUSD_POOL,
-                addr: 0x2A1b874C86734feA5be050d32fAb02FCF9eB1Bc2,
-                name: "CURVE_SUSD_POOL"
-            });
-            cd[9] = ContractData({
-                id: Contracts.CURVE_SUSD_DEPOSIT,
-                addr: 0x9782f1fF1AEFb387F01cae72F668F13E8061d9Dd,
-                name: "CURVE_SUSD_DEPOSIT"
-            });
-            cd[10] = ContractData({
-                id: Contracts.CURVE_GUSD_POOL,
-                addr: 0x8C954d89C2fB2c96F0195738b8c5538B34D5344E,
-                name: "CURVE_GUSD_POOL"
-            });
-            cd[11] = ContractData({id: Contracts.CURVE_MIM_POOL, addr: address(0), name: "CURVE_MIM_POOL"});
-            cd[12] = ContractData({id: Contracts.CURVE_OHMFRAXBP_POOL, addr: address(0), name: "CURVE_OHMFRAXBP_POOL"});
-            cd[13] = ContractData({id: Contracts.CURVE_CRVETH_POOL, addr: address(0), name: "CURVE_CRVETH_POOL"});
-            cd[14] = ContractData({id: Contracts.CURVE_CVXETH_POOL, addr: address(0), name: "CURVE_CVXETH_POOL"});
-            cd[15] = ContractData({id: Contracts.CURVE_3CRYPTO_POOL, addr: address(0), name: "CURVE_3CRYPTO_POOL"});
-            cd[16] = ContractData({id: Contracts.CURVE_LDOETH_POOL, addr: address(0), name: "CURVE_LDOETH_POOL"});
-            cd[17] = ContractData({id: Contracts.CURVE_GEAR_POOL, addr: address(0), name: "CURVE_GEAR_POOL"});
-            cd[18] = ContractData({
-                id: Contracts.YEARN_DAI_VAULT,
-                addr: 0xAAC67551F8d1D052E375BaCf774b494850BBca87,
-                name: "YEARN_DAI_VAULT"
-            });
-            cd[19] = ContractData({
-                id: Contracts.YEARN_USDC_VAULT,
-                addr: 0x05724F02a0270F08E525F2681afA9173957c505e,
-                name: "YEARN_USDC_VAULT"
-            });
-            cd[20] = ContractData({
-                id: Contracts.YEARN_WETH_VAULT,
-                addr: 0xEe8Adf657c5EF8e10622b6B47014D2C6f6993E5E,
-                name: "YEARN_WETH_VAULT"
-            });
-            cd[21] = ContractData({
-                id: Contracts.YEARN_WBTC_VAULT,
-                addr: 0x683fcBf347b90C652b4B07648180C0b54c258815,
-                name: "YEARN_WBTC_VAULT"
-            });
-            cd[22] = ContractData({
-                id: Contracts.YEARN_CURVE_FRAX_VAULT,
-                addr: 0x43d45AEf2BAb5fa79e3bBDb2dB7E4443B8123C8f,
-                name: "YEARN_CURVE_FRAX_VAULT"
-            });
-            cd[23] = ContractData({
-                id: Contracts.YEARN_CURVE_STETH_VAULT,
-                addr: 0x2681AFa48aCFC2Ae5308bf6127d2fb563763f13E,
-                name: "YEARN_CURVE_STETH_VAULT"
-            });
-            cd[24] = ContractData({
-                id: Contracts.CONVEX_BOOSTER,
-                addr: 0xbd1D47bbF57F49D9a72ca7f879A096d3abDF4c40,
-                name: "CONVEX_BOOSTER"
-            });
-            cd[25] = ContractData({
-                id: Contracts.CONVEX_3CRV_POOL,
-                addr: 0xfB9b98558c3d6851291Fbf74fa7F022a787cD795,
-                name: "CONVEX_3CRV_POOL"
-            });
-            cd[26] = ContractData({
-                id: Contracts.CONVEX_FRAX_USDC_POOL,
-                addr: 0xAc22d4495166c945cc91FDB611b7515eBbfd60c0,
-                name: "CONVEX_FRAX_USDC_POOL"
-            });
-            cd[27] = ContractData({
-                id: Contracts.CONVEX_GUSD_POOL,
-                addr: 0xa8eD353f56BB2e1063B8a011F0491a1703998De4,
-                name: "CONVEX_GUSD_POOL"
-            });
-            cd[28] = ContractData({
-                id: Contracts.CONVEX_SUSD_POOL,
-                addr: 0x85825316be95FBb3F6B5a2Dd9f1eb9577803e441,
-                name: "CONVEX_SUSD_POOL"
-            });
-            cd[29] = ContractData({
-                id: Contracts.CONVEX_STECRV_POOL,
-                addr: 0xd9de8eA4289e7a4458Bebad8c31bb7576f1C2B72,
-                name: "CONVEX_STECRV_POOL"
-            });
-            cd[30] = ContractData({
-                id: Contracts.CONVEX_FRAX3CRV_POOL,
-                addr: 0x08513eA45fdd7A9cFC33702f722090a182e4a101,
-                name: "CONVEX_FRAX3CRV_POOL"
-            });
-            cd[31] = ContractData({
-                id: Contracts.CONVEX_LUSD3CRV_POOL,
-                addr: 0x8550134faa6Cb42a7668f3D9098EBa59FA959b40,
-                name: "CONVEX_LUSD3CRV_POOL"
-            });
-            cd[32] = ContractData({
-                id: Contracts.CONVEX_CLAIM_ZAP,
-                addr: 0x74C7Bb6493C5EcfDb49E3ED5Ee4B60012b724b4b,
-                name: "CONVEX_CLAIM_ZAP"
-            });
-            cd[33] =
-                ContractData({id: Contracts.CONVEX_OHMFRAXBP_POOL, addr: address(0), name: "CONVEX_OHMFRAXBP_POOL"});
-            cd[34] = ContractData({id: Contracts.CONVEX_MIM3CRV_POOL, addr: address(0), name: "CONVEX_MIM3CRV_POOL"});
-            cd[35] = ContractData({id: Contracts.CONVEX_CRVETH_POOL, addr: address(0), name: "CONVEX_CRVETH_POOL"});
-            cd[36] = ContractData({id: Contracts.CONVEX_CVXETH_POOL, addr: address(0), name: "CONVEX_CVXETH_POOL"});
-            cd[37] = ContractData({id: Contracts.CONVEX_3CRYPTO_POOL, addr: address(0), name: "CONVEX_3CRYPTO_POOL"});
-            cd[38] = ContractData({id: Contracts.CONVEX_LDOETH_POOL, addr: address(0), name: "CONVEX_LDOETH_POOL"});
-            cd[39] = ContractData({
-                id: Contracts.LIDO_STETH_GATEWAY,
-                addr: 0x9290E44f5f819b7de0Fb88b10641f9F08a999BF7,
-                name: "LIDO_STETH_GATEWAY"
-            });
-            cd[40] = ContractData({
-                id: Contracts.LIDO_WSTETH,
-                addr: 0x5E590e6c887A84098F3fa465267a44AaE058eBbb,
-                name: "LIDO_WSTETH"
-            });
-            cd[41] = ContractData({id: Contracts.BALANCER_VAULT, addr: address(0), name: "BALANCER_VAULT"});
-            cd[42] = ContractData({
-                id: Contracts.UNIVERSAL_ADAPTER,
-                addr: 0xCcCCccccCCCCcCCCCCCcCcCccCcCCCcCcccccccC,
-                name: "UNIVERSAL_ADAPTER"
-            });
+        if (networkId != 1) {
+            revert("Network id not supported");
         }
+
+        ContractData[] memory cd;
+        cd = new  ContractData[](60);
+        cd[0] = ContractData({
+            id: Contracts.UNISWAP_V2_ROUTER,
+            addr: 0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D,
+            name: "UNISWAP_V2_ROUTER"
+        });
+        cd[1] = ContractData({
+            id: Contracts.UNISWAP_V3_ROUTER,
+            addr: 0xE592427A0AEce92De3Edee1F18E0157C05861564,
+            name: "UNISWAP_V3_ROUTER"
+        });
+        cd[2] = ContractData({
+            id: Contracts.SUSHISWAP_ROUTER,
+            addr: 0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F,
+            name: "SUSHISWAP_ROUTER"
+        });
+        cd[3] = ContractData({
+            id: Contracts.CURVE_3CRV_POOL,
+            addr: 0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7,
+            name: "CURVE_3CRV_POOL"
+        });
+        cd[4] = ContractData({
+            id: Contracts.CURVE_FRAX_USDC_POOL,
+            addr: 0xDcEF968d416a41Cdac0ED8702fAC8128A64241A2,
+            name: "CURVE_FRAX_USDC_POOL"
+        });
+        cd[5] = ContractData({
+            id: Contracts.CURVE_STETH_GATEWAY,
+            addr: 0xEf0D72C594b28252BF7Ea2bfbF098792430815b1,
+            name: "CURVE_STETH_GATEWAY"
+        });
+        cd[6] = ContractData({
+            id: Contracts.CURVE_FRAX_POOL,
+            addr: 0xd632f22692FaC7611d2AA1C0D552930D43CAEd3B,
+            name: "CURVE_FRAX_POOL"
+        });
+        cd[7] = ContractData({
+            id: Contracts.CURVE_LUSD_POOL,
+            addr: 0xEd279fDD11cA84bEef15AF5D39BB4d4bEE23F0cA,
+            name: "CURVE_LUSD_POOL"
+        });
+        cd[8] = ContractData({
+            id: Contracts.CURVE_SUSD_POOL,
+            addr: 0xA5407eAE9Ba41422680e2e00537571bcC53efBfD,
+            name: "CURVE_SUSD_POOL"
+        });
+        cd[9] = ContractData({
+            id: Contracts.CURVE_SUSD_DEPOSIT,
+            addr: 0xFCBa3E75865d2d561BE8D220616520c171F12851,
+            name: "CURVE_SUSD_DEPOSIT"
+        });
+        cd[10] = ContractData({
+            id: Contracts.CURVE_GUSD_POOL,
+            addr: 0x4f062658EaAF2C1ccf8C8e36D6824CDf41167956,
+            name: "CURVE_GUSD_POOL"
+        });
+        cd[11] = ContractData({
+            id: Contracts.CURVE_MIM_POOL,
+            addr: 0x5a6A4D54456819380173272A5E8E9B9904BdF41B,
+            name: "CURVE_MIM_POOL"
+        });
+        cd[12] = ContractData({
+            id: Contracts.CURVE_OHMFRAXBP_POOL,
+            addr: 0xFc1e8bf3E81383Ef07Be24c3FD146745719DE48D,
+            name: "CURVE_OHMFRAXBP_POOL"
+        });
+        cd[13] = ContractData({
+            id: Contracts.CURVE_CRVETH_POOL,
+            addr: 0x8301AE4fc9c624d1D396cbDAa1ed877821D7C511,
+            name: "CURVE_CRVETH_POOL"
+        });
+        cd[14] = ContractData({
+            id: Contracts.CURVE_CVXETH_POOL,
+            addr: 0xB576491F1E6e5E62f1d8F26062Ee822B40B0E0d4,
+            name: "CURVE_CVXETH_POOL"
+        });
+        cd[15] = ContractData({
+            id: Contracts.CURVE_3CRYPTO_POOL,
+            addr: 0xf5f5B97624542D72A9E06f04804Bf81baA15e2B4,
+            name: "CURVE_3CRYPTO_POOL"
+        });
+        cd[16] = ContractData({
+            id: Contracts.CURVE_LDOETH_POOL,
+            addr: 0x9409280DC1e6D33AB7A8C6EC03e5763FB61772B5,
+            name: "CURVE_LDOETH_POOL"
+        });
+        cd[17] = ContractData({
+            id: Contracts.CURVE_GEAR_POOL,
+            addr: 0x0E9B5B092caD6F1c5E6bc7f89Ffe1abb5c95F1C2,
+            name: "CURVE_GEAR_POOL"
+        });
+        cd[18] = ContractData({
+            id: Contracts.CURVE_CRVUSD_USDC_POOL,
+            addr: 0x4DEcE678ceceb27446b35C672dC7d61F30bAD69E,
+            name: "CURVE_CRVUSD_USDC_POOL"
+        });
+        cd[19] = ContractData({
+            id: Contracts.CURVE_CRVUSD_USDT_POOL,
+            addr: 0x390f3595bCa2Df7d23783dFd126427CCeb997BF4,
+            name: "CURVE_CRVUSD_USDT_POOL"
+        });
+        cd[20] = ContractData({
+            id: Contracts.CURVE_CRVUSD_FRAX_POOL,
+            addr: 0x0CD6f267b2086bea681E922E19D40512511BE538,
+            name: "CURVE_CRVUSD_FRAX_POOL"
+        });
+        cd[21] = ContractData({
+            id: Contracts.CURVE_TRI_CRV_POOL,
+            addr: 0x4eBdF703948ddCEA3B11f675B4D1Fba9d2414A14,
+            name: "CURVE_TRI_CRV_POOL"
+        });
+        cd[22] = ContractData({
+            id: Contracts.YEARN_DAI_VAULT,
+            addr: 0xdA816459F1AB5631232FE5e97a05BBBb94970c95,
+            name: "YEARN_DAI_VAULT"
+        });
+        cd[23] = ContractData({
+            id: Contracts.YEARN_USDC_VAULT,
+            addr: 0xa354F35829Ae975e850e23e9615b11Da1B3dC4DE,
+            name: "YEARN_USDC_VAULT"
+        });
+        cd[24] = ContractData({
+            id: Contracts.YEARN_WETH_VAULT,
+            addr: 0xa258C4606Ca8206D8aA700cE2143D7db854D168c,
+            name: "YEARN_WETH_VAULT"
+        });
+        cd[25] = ContractData({
+            id: Contracts.YEARN_WBTC_VAULT,
+            addr: 0xA696a63cc78DfFa1a63E9E50587C197387FF6C7E,
+            name: "YEARN_WBTC_VAULT"
+        });
+        cd[26] = ContractData({
+            id: Contracts.YEARN_CURVE_FRAX_VAULT,
+            addr: 0xB4AdA607B9d6b2c9Ee07A275e9616B84AC560139,
+            name: "YEARN_CURVE_FRAX_VAULT"
+        });
+        cd[27] = ContractData({
+            id: Contracts.YEARN_CURVE_STETH_VAULT,
+            addr: 0xdCD90C7f6324cfa40d7169ef80b12031770B4325,
+            name: "YEARN_CURVE_STETH_VAULT"
+        });
+        cd[28] = ContractData({
+            id: Contracts.CONVEX_BOOSTER,
+            addr: 0xF403C135812408BFbE8713b5A23a04b3D48AAE31,
+            name: "CONVEX_BOOSTER"
+        });
+        cd[29] = ContractData({
+            id: Contracts.CONVEX_3CRV_POOL,
+            addr: 0x689440f2Ff927E1f24c72F1087E1FAF471eCe1c8,
+            name: "CONVEX_3CRV_POOL"
+        });
+        cd[30] = ContractData({
+            id: Contracts.CONVEX_FRAX_USDC_POOL,
+            addr: 0x7e880867363A7e321f5d260Cade2B0Bb2F717B02,
+            name: "CONVEX_FRAX_USDC_POOL"
+        });
+        cd[31] = ContractData({
+            id: Contracts.CONVEX_GUSD_POOL,
+            addr: 0x7A7bBf95C44b144979360C3300B54A7D34b44985,
+            name: "CONVEX_GUSD_POOL"
+        });
+        cd[32] = ContractData({
+            id: Contracts.CONVEX_SUSD_POOL,
+            addr: 0x22eE18aca7F3Ee920D01F25dA85840D12d98E8Ca,
+            name: "CONVEX_SUSD_POOL"
+        });
+        cd[33] = ContractData({
+            id: Contracts.CONVEX_STECRV_POOL,
+            addr: 0x0A760466E1B4621579a82a39CB56Dda2F4E70f03,
+            name: "CONVEX_STECRV_POOL"
+        });
+        cd[34] = ContractData({
+            id: Contracts.CONVEX_FRAX3CRV_POOL,
+            addr: 0xB900EF131301B307dB5eFcbed9DBb50A3e209B2e,
+            name: "CONVEX_FRAX3CRV_POOL"
+        });
+        cd[35] = ContractData({
+            id: Contracts.CONVEX_LUSD3CRV_POOL,
+            addr: 0x2ad92A7aE036a038ff02B96c88de868ddf3f8190,
+            name: "CONVEX_LUSD3CRV_POOL"
+        });
+        cd[36] = ContractData({
+            id: Contracts.CONVEX_CLAIM_ZAP,
+            addr: 0x92Cf9E5e4D1Dfbf7dA0d2BB3e884a68416a65070,
+            name: "CONVEX_CLAIM_ZAP"
+        });
+        cd[37] = ContractData({
+            id: Contracts.CONVEX_OHMFRAXBP_POOL,
+            addr: 0x27A8c58e3DE84280826d615D80ddb33930383fE9,
+            name: "CONVEX_OHMFRAXBP_POOL"
+        });
+        cd[38] = ContractData({
+            id: Contracts.CONVEX_MIM3CRV_POOL,
+            addr: 0xFd5AbF66b003881b88567EB9Ed9c651F14Dc4771,
+            name: "CONVEX_MIM3CRV_POOL"
+        });
+        cd[39] = ContractData({
+            id: Contracts.CONVEX_CRVETH_POOL,
+            addr: 0x085A2054c51eA5c91dbF7f90d65e728c0f2A270f,
+            name: "CONVEX_CRVETH_POOL"
+        });
+        cd[40] = ContractData({
+            id: Contracts.CONVEX_CVXETH_POOL,
+            addr: 0xb1Fb0BA0676A1fFA83882c7F4805408bA232C1fA,
+            name: "CONVEX_CVXETH_POOL"
+        });
+        cd[41] = ContractData({
+            id: Contracts.CONVEX_3CRYPTO_POOL,
+            addr: 0xb05262D4aaAA38D0Af4AaB244D446ebDb5afd4A7,
+            name: "CONVEX_3CRYPTO_POOL"
+        });
+        cd[42] = ContractData({
+            id: Contracts.CONVEX_LDOETH_POOL,
+            addr: 0x8CA990E954611E5E3d2cc51C013fCC372c8c1D38,
+            name: "CONVEX_LDOETH_POOL"
+        });
+        cd[43] = ContractData({
+            id: Contracts.LIDO_STETH_GATEWAY,
+            addr: 0x6f4b4aB5142787c05b7aB9A9692A0f46b997C29D,
+            name: "LIDO_STETH_GATEWAY"
+        });
+        cd[44] = ContractData({
+            id: Contracts.LIDO_WSTETH,
+            addr: 0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0,
+            name: "LIDO_WSTETH"
+        });
+        cd[45] = ContractData({
+            id: Contracts.BALANCER_VAULT,
+            addr: 0xBA12222222228d8Ba445958a75a0704d566BF2C8,
+            name: "BALANCER_VAULT"
+        });
+        cd[46] = ContractData({
+            id: Contracts.UNIVERSAL_ADAPTER,
+            addr: 0xCcCCccccCCCCcCCCCCCcCcCccCcCCCcCcccccccC,
+            name: "UNIVERSAL_ADAPTER"
+        });
+        cd[47] = ContractData({id: Contracts.AAVE_V2_DAI_POOL, addr: address(0), name: "AAVE_V2_DAI_POOL"});
+        cd[48] = ContractData({id: Contracts.AAVE_V2_USDC_POOL, addr: address(0), name: "AAVE_V2_USDC_POOL"});
+        cd[49] = ContractData({id: Contracts.AAVE_V2_USDT_POOL, addr: address(0), name: "AAVE_V2_USDT_POOL"});
+        cd[50] = ContractData({id: Contracts.AAVE_V2_WETH_POOL, addr: address(0), name: "AAVE_V2_WETH_POOL"});
+        cd[51] =
+            ContractData({id: Contracts.AAVE_V2_DAI_TOKEN_WRAPPER, addr: address(0), name: "AAVE_V2_DAI_TOKEN_WRAPPER"});
+        cd[52] = ContractData({
+            id: Contracts.AAVE_V2_USDC_TOKEN_WRAPPER,
+            addr: address(0),
+            name: "AAVE_V2_USDC_TOKEN_WRAPPER"
+        });
+        cd[53] = ContractData({
+            id: Contracts.AAVE_V2_USDT_TOKEN_WRAPPER,
+            addr: address(0),
+            name: "AAVE_V2_USDT_TOKEN_WRAPPER"
+        });
+        cd[54] = ContractData({
+            id: Contracts.AAVE_V2_WETH_TOKEN_WRAPPER,
+            addr: address(0),
+            name: "AAVE_V2_WETH_TOKEN_WRAPPER"
+        });
+        cd[55] = ContractData({
+            id: Contracts.COMPOUND_V2_DAI_POOL,
+            addr: 0x5d3a536E4D6DbD6114cc1Ead35777bAB948E3643,
+            name: "COMPOUND_V2_DAI_POOL"
+        });
+        cd[56] = ContractData({
+            id: Contracts.COMPOUND_V2_USDC_POOL,
+            addr: 0x39AA39c021dfbaE8faC545936693aC917d5E7563,
+            name: "COMPOUND_V2_USDC_POOL"
+        });
+        cd[57] = ContractData({
+            id: Contracts.COMPOUND_V2_USDT_POOL,
+            addr: 0xf650C3d88D12dB855b8bf7D11Be6C55A4e07dCC9,
+            name: "COMPOUND_V2_USDT_POOL"
+        });
+        cd[58] = ContractData({
+            id: Contracts.COMPOUND_V2_LINK_POOL,
+            addr: 0xFAce851a4921ce59e912d19329929CE6da6EB0c7,
+            name: "COMPOUND_V2_LINK_POOL"
+        });
+        cd[59] = ContractData({
+            id: Contracts.COMPOUND_V2_ETH_POOL,
+            addr: 0x4Ddc2D193948926D02f9B1fE9e1daa0718270ED5,
+            name: "COMPOUND_V2_ETH_POOL"
+        });
+
         uint256 len = cd.length;
         contractCount = len;
         unchecked {

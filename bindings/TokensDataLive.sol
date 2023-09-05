@@ -11,13 +11,14 @@ contract TokensDataLive {
     TokenData[] tokenData;
 
     constructor(uint8 networkId) {
+
+        if (networkId != 1) {
+            revert("Network id not supported");
+        }
+
         TokenData[] memory td;
 
-        if (networkId == 1) {
-            // $TOKEN_ADDRESSES$
-        } else if (networkId == 2) {
-            // $GOERLI_TOKEN_ADDRESSES$
-        }
+        // $TOKEN_ADDRESSES$
 
         for (uint256 i = 0; i < td.length; ++i) {
             tokenData.push(td[i]);

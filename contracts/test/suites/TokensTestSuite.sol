@@ -206,7 +206,7 @@ contract TokensTestSuite is DSTest, TokensTestSuiteHelper {
                 evm.deal(address(this), amount);
                 LidoMock(payable(token)).submit{value: amount}(address(this));
                 IERC20(token).transfer(to, amount);
-            } else if (tokenTypes[tokenIndexes[token]] == TokenType.C_TOKEN) {
+            } else if (tokenTypes[tokenIndexes[token]] == TokenType.COMPOUND_V2_C_TOKEN) {
                 address underlying = cERC20Mock(token).underlying();
                 mint(tokenIndexes[underlying], address(this), amount);
                 IERC20(underlying).approve(token, amount);
