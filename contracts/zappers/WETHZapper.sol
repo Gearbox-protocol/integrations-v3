@@ -13,6 +13,8 @@ import {ZapperBase} from "./ZapperBase.sol";
 /// @title WETH zapper
 /// @notice Allows users to deposit/withdraw pure ETH to/from a WETH pool in a single operation
 contract WETHZapper is ZapperBase {
+    using Address for address payable;
+
     /// @notice Constructor
     /// @param pool_ Pool to connect this zapper to
     constructor(address pool_) ZapperBase(pool_) {}
@@ -46,7 +48,7 @@ contract WETHZapper is ZapperBase {
     /// @dev Unwraps WETH and sends it to `receiver`
     function _unwrapAndSend(uint256 amount, address receiver) internal override returns (uint256 unwrappedAmount) {
         IWETH(wrappedToken).withdraw(amount);
-        Address.sendValue(payable(receiver), amount);
+        payable(receiver).sendValue(amount);
         return amount;
     }
 
@@ -61,5 +63,5 @@ contract WETHZapper is ZapperBase {
     }
 
     /// @dev Pool has infinite WETH allowance so this step can be skipped
-    function _ensurePoolAllowance(uint256) internal override {}
+    function _resetPoolAllowance() internal override {}
 }

@@ -4,6 +4,7 @@
 pragma solidity ^0.8.17;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {SafeERC20} from "@1inch/solidity-utils/contracts/libraries/SafeERC20.sol";
 
 import {IPoolV3} from "@gearbox-protocol/core-v3/contracts/interfaces/IPoolV3.sol";
 
@@ -11,6 +12,8 @@ import {IPoolV3} from "@gearbox-protocol/core-v3/contracts/interfaces/IPoolV3.so
 /// @notice Base contract for zappers allowing users to deposit/withdraw an unwrapped token
 ///         to/from a Gearbox pool with wrapped token as underlying in a single operation
 abstract contract ZapperBase {
+    using SafeERC20 for IERC20;
+
     /// @notice Pool this zapper is connected to
     address public immutable pool;
     /// @notice Underlying token of the pool
@@ -21,7 +24,7 @@ abstract contract ZapperBase {
     constructor(address pool_) {
         pool = pool_;
         wrappedToken = IPoolV3(pool_).asset();
-        IERC20(wrappedToken).approve(pool_, type(uint256).max);
+        _resetPoolAllowance();
     }
 
     /// @notice Returns number of pool shares one would receive for depositing `amount` of unwrapped token
@@ -41,8 +44,8 @@ abstract contract ZapperBase {
     ///      - Deposits wrapped token into the pool and mints pool shares to `receiver`
     function _deposit(uint256 amount, address receiver) internal virtual returns (uint256 shares) {
         uint256 assets = _receiveAndWrap(amount);
-        _ensurePoolAllowance(assets);
         shares = IPoolV3(pool).deposit(assets, receiver);
+        _resetPoolAllowance();
     }
 
     /// @dev Same as `_deposit` but allows to specify the referral code
@@ -52,8 +55,8 @@ abstract contract ZapperBase {
         returns (uint256 shares)
     {
         uint256 assets = _receiveAndWrap(amount);
-        _ensurePoolAllowance(assets);
         shares = IPoolV3(pool).depositWithReferral(assets, receiver, referralCode);
+        _resetPoolAllowance();
     }
 
     /// @dev Implementation of redeem zap
@@ -78,15 +81,13 @@ abstract contract ZapperBase {
     ///      must be overriden by derived zappers
     function _previewUnwrap(uint256 amount) internal view virtual returns (uint256 unwrappedAmount);
 
-    /// @dev Gives `pool` max allowance for the `wrappedToken` if it falls below `amount`
-    function _ensurePoolAllowance(uint256 amount) internal virtual {
-        _ensureAllowance(wrappedToken, pool, amount);
+    /// @dev Gives `pool` max allowance for the `wrappedToken`
+    function _resetPoolAllowance() internal virtual {
+        _resetAllowance(wrappedToken, pool);
     }
 
-    /// @dev Gives `spender` max allowance for this contract's `token` if it falls below `amount`
-    function _ensureAllowance(address token, address spender, uint256 amount) internal {
-        if (IERC20(token).allowance(address(this), spender) < amount) {
-            IERC20(token).approve(spender, type(uint256).max);
-        }
+    /// @dev Gives `spender` max allowance for this contract's `token`
+    function _resetAllowance(address token, address spender) internal {
+        IERC20(token).forceApprove(spender, type(uint256).max);
     }
 }

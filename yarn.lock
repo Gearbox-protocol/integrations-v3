@@ -2,7 +2,7 @@
 # yarn lockfile v1
 
 
-"@1inch/solidity-utils@^2.2.27":
+"@1inch/solidity-utils@2.4.0":
   version "2.4.0"
   resolved "https://registry.yarnpkg.com/@1inch/solidity-utils/-/solidity-utils-2.4.0.tgz#23268c5061521933b6e95a8d2c2d620d8851f7d3"
   integrity sha512-qX+TkF9IPppC5Ghr+ZsZYmFVaSs+Uyc91VgRtghgj7INjjaSaTANl70wqrv5utVCiIR70s8FZGXbpzwAwIEoww==
@@ -1549,7 +1549,7 @@
   resolved "https://registry.yarnpkg.com/@openzeppelin/contracts/-/contracts-4.8.2.tgz#d815ade0027b50beb9bcca67143c6bcc3e3923d6"
   integrity sha512-kEUOgPQszC0fSYWpbh2kT94ltOJwj1qfT2DWo+zVttmGmf97JZ99LspePNaeeaLhCImaHVeBbjaQFZQn7+Zc5g==
 
-"@openzeppelin/contracts@^4.4.2", "@openzeppelin/contracts@^4.7.3":
+"@openzeppelin/contracts@4.9.3", "@openzeppelin/contracts@^4.7.3":
   version "4.9.3"
   resolved "https://registry.yarnpkg.com/@openzeppelin/contracts/-/contracts-4.9.3.tgz#00d7a8cf35a475b160b3f0293a6403c511099364"
   integrity sha512-He3LieZ1pP2TNt5JbkPA4PNT9WC3gOTOlDcFGJW4Le4QKqwmiNJCRt44APfxMxvq7OugU/cqYuPcSBzOw38DAg==
@@ -1559,7 +1559,7 @@
   resolved "https://registry.yarnpkg.com/@openzeppelin/contracts/-/contracts-4.3.3.tgz#ff6ee919fc2a1abaf72b22814bfb72ed129ec137"
   integrity sha512-tDBopO1c98Yk7Cv/PZlHqrvtVjlgK5R4J6jxLwoO7qxK4xqOiZG+zSkIvGFpPZ0ikc3QOED3plgdqjgNTnBc7g==
 
-"@redstone-finance/evm-connector@^0.2.3":
+"@redstone-finance/evm-connector@0.2.5":
   version "0.2.5"
   resolved "https://registry.yarnpkg.com/@redstone-finance/evm-connector/-/evm-connector-0.2.5.tgz#8d3b64cd068dea73a9f2287c91672dfb652a4725"
   integrity sha512-JjMJVXbgmvmbKleIwzMOKu10mDXTABVoYmmfErF2M7M6pftPiKFIVH16gycU93aQVZeRQ74rieQ55Q691xPS8Q==
@@ -2039,6 +2039,15 @@ axios@^1.1.3, axios@^1.2.0, axios@^1.2.6, axios@^1.4.0:
   version "1.4.0"
   resolved "https://registry.yarnpkg.com/axios/-/axios-1.4.0.tgz#38a7bf1224cd308de271146038b551d725f0be1f"
   integrity sha512-S4XCWMEmzvo64T9GfvQDOXgYRDJ/wsSZc7Jvdgx5u1sd0JwsuPLqb3SYmusag+edF6ziyMensPVqLTSc1PiSEA==
+  dependencies:
+    follow-redirects "^1.15.0"
+    form-data "^4.0.0"
+    proxy-from-env "^1.1.0"
+
+axios@^1.5.0:
+  version "1.5.0"
+  resolved "https://registry.yarnpkg.com/axios/-/axios-1.5.0.tgz#f02e4af823e2e46a9768cfc74691fdd0517ea267"
+  integrity sha512-D4DdjDo5CY50Qms0qGQTTw6Q44jl7zRwY7bthds06pUGfChBCTcQs+N743eFWGEd6pRTMd6A+I87aWyFV5wiZQ==
   dependencies:
     follow-redirects "^1.15.0"
     form-data "^4.0.0"
@@ -2988,7 +2997,7 @@ ethers@5.6.9:
     "@ethersproject/web" "5.6.1"
     "@ethersproject/wordlists" "5.6.1"
 
-ethers@5.7.2, ethers@^5.0.15, ethers@^5.3.1, ethers@^5.6.8, ethers@^5.6.9, ethers@^5.7.2:
+ethers@5.7.2, ethers@^5.0.15, ethers@^5.3.1, ethers@^5.6.8, ethers@^5.7.2:
   version "5.7.2"
   resolved "https://registry.yarnpkg.com/ethers/-/ethers-5.7.2.tgz#3a7deeabbb8c030d4126b24f84e525466145872e"
   integrity sha512-wswUsmWo1aOK8rR7DIKiWSw9DbLWe6x98Jrn8wcTflTVvaXhAMaB5zGAXy0GYQEQp9iO1iSHWVyARQm11zUtyg==
@@ -4513,24 +4522,24 @@ redstone-protocol@*, redstone-protocol@^1.0.5:
     ethers "^5.6.8"
 
 redstone-sdk@^1.6.1:
-  version "1.6.1"
-  resolved "https://registry.yarnpkg.com/redstone-sdk/-/redstone-sdk-1.6.1.tgz#421f163f75ac539b663eb3c70c86986437789396"
-  integrity sha512-SgeRKXdVsN6dpPH3M7CeebVvfX/ClzVKTelrVViBCHCpFqwYNDaSWhBh08DdGteo4ab/7EIRETvkoqfAUsDTnw==
+  version "1.8.0"
+  resolved "https://registry.yarnpkg.com/redstone-sdk/-/redstone-sdk-1.8.0.tgz#1a95f7d3f520684422df7c6324d7cd18b140a395"
+  integrity sha512-665xtGaUZP0/pJr+Akq8jOW+RcSRdWro6tO/jTUf+s+1ctEryWrnGt9+T6l3vVbLHRRvCgh/u9/Mks61SLGRLA==
   dependencies:
     axios "^0.27.2"
     ethers "^5.7.2"
     redstone-oracles-smartweave-contracts "*"
     redstone-protocol "*"
-    redstone-utils "*"
+    redstone-utils "^0.1.0"
 
-redstone-utils@*:
-  version "0.0.1"
-  resolved "https://registry.yarnpkg.com/redstone-utils/-/redstone-utils-0.0.1.tgz#d012f3a3db0c243e596a52874a3196088a88be23"
-  integrity sha512-tIDWU8mKdDUqOKpup+5U1FjNRp6EigyCHzBtaVB59CHS1D8uUe9j+H6tm4RtnuL6YQojOY57ZV2R4L1jdAwrRA==
+redstone-utils@^0.1.0:
+  version "0.1.0"
+  resolved "https://registry.yarnpkg.com/redstone-utils/-/redstone-utils-0.1.0.tgz#5af17f5371f940978b5dd0d1776cf48822e75355"
+  integrity sha512-p0MJV5W3RbGX5xDchgQ1Aik7VQ1q0FStDo5TgCl3midng/V8RhLI0IjhKXjC037DwgKbMFOo//rSuQGlJqhZ4A==
   dependencies:
+    axios "^1.5.0"
     decimal.js "^10.4.3"
     ethereum-multicall "^2.19.0"
-    ethers "^5.6.9"
 
 reduce-flatten@^2.0.0:
   version "2.0.0"
