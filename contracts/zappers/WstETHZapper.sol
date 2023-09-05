@@ -18,7 +18,7 @@ contract WstETHZapper is WERC20ZapperBase {
     /// @param pool_ Pool to connect this zapper to
     constructor(address pool_) WERC20ZapperBase(pool_) {
         _stETH = IwstETH(wrappedToken).stETH();
-        IERC20(_stETH).approve(wrappedToken, type(uint256).max);
+        _resetWrapperAllowance();
     }
 
     /// @notice stETH address

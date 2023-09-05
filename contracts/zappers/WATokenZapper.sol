@@ -20,7 +20,7 @@ contract WATokenZapper is WERC20ZapperBase {
     /// @param pool_ Pool to connect this zapper to
     constructor(address pool_) WERC20ZapperBase(pool_) {
         _aToken = WrappedAToken(wrappedToken).aToken();
-        IERC20(_aToken).approve(wrappedToken, type(uint256).max);
+        _resetWrapperAllowance();
     }
 
     /// @notice aToken address
@@ -49,5 +49,5 @@ contract WATokenZapper is WERC20ZapperBase {
     }
 
     /// @dev Pool has infinite waToken allowance so this step can be skipped
-    function _ensurePoolAllowance(uint256) internal override {}
+    function _resetPoolAllowance() internal override {}
 }
