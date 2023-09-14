@@ -17,8 +17,6 @@
   ],
   "license": "BUSL-1.1",
   "scripts": {
-    "types": "typechain --target ethers-v5 --discriminate-types --out-dir types \"./forge-out/**/!(*.t|test|*Mock|*Test).sol/!(*.abi).json\" && rm -rf ./forge-out",
-    "build:lib": "tsc --p tsconfig.build.json",
     "prepare": "husky install",
     "prettier": "forge fmt",
     "prettier:ci": "forge fmt",
