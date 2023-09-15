@@ -8,12 +8,16 @@ import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 import {IWETH} from "@gearbox-protocol/core-v2/contracts/interfaces/external/IWETH.sol";
 import {ReceiveIsNotAllowedException} from "@gearbox-protocol/core-v3/contracts/interfaces/IExceptions.sol";
 
+import {IWETHZapper, ETH_ADDRESS} from "../interfaces/zappers/IWETHZapper.sol";
 import {ZapperBase} from "./ZapperBase.sol";
 
 /// @title WETH zapper
 /// @notice Allows users to deposit/withdraw pure ETH to/from a WETH pool in a single operation
-contract WETHZapper is ZapperBase {
+contract WETHZapper is ZapperBase, IWETHZapper {
     using Address for address payable;
+
+    /// @notice Special address that corresponds to pure ETH
+    address public constant override unwrappedToken = ETH_ADDRESS;
 
     /// @notice Constructor
     /// @param pool_ Pool to connect this zapper to
@@ -25,17 +29,22 @@ contract WETHZapper is ZapperBase {
     }
 
     /// @notice Zaps wrapping ETH and depositing it to the pool into a single operation
-    function deposit(address receiver) external payable returns (uint256 shares) {
+    function deposit(address receiver) external payable override returns (uint256 shares) {
         shares = _deposit(msg.value, receiver);
     }
 
     /// @notice Same as `deposit` but allows to specify the referral code
-    function depositWithReferral(address receiver, uint16 referralCode) external payable returns (uint256 shares) {
+    function depositWithReferral(address receiver, uint16 referralCode)
+        external
+        payable
+        override
+        returns (uint256 shares)
+    {
         shares = _depositWithReferral(msg.value, receiver, referralCode);
     }
 
     /// @notice Zaps redeeming WETH from the pool and unwrapping it into a single operation
-    function redeem(uint256 shares, address receiver, address owner) external returns (uint256 amount) {
+    function redeem(uint256 shares, address receiver, address owner) external override returns (uint256 amount) {
         amount = _redeem(shares, receiver, owner);
     }
 

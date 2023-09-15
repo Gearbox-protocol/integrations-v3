@@ -8,16 +8,18 @@ import {SafeERC20} from "@1inch/solidity-utils/contracts/libraries/SafeERC20.sol
 
 import {IPoolV3} from "@gearbox-protocol/core-v3/contracts/interfaces/IPoolV3.sol";
 
+import {IZapper} from "../interfaces/zappers/IZapper.sol";
+
 /// @title Zapper base
 /// @notice Base contract for zappers allowing users to deposit/withdraw an unwrapped token
 ///         to/from a Gearbox pool with wrapped token as underlying in a single operation
-abstract contract ZapperBase {
+abstract contract ZapperBase is IZapper {
     using SafeERC20 for IERC20;
 
     /// @notice Pool this zapper is connected to
-    address public immutable pool;
+    address public immutable override pool;
     /// @notice Underlying token of the pool
-    address public immutable wrappedToken;
+    address public immutable override wrappedToken;
 
     /// @notice Constructor
     /// @param pool_ Pool to connect this zapper to
@@ -28,13 +30,13 @@ abstract contract ZapperBase {
     }
 
     /// @notice Returns number of pool shares one would receive for depositing `amount` of unwrapped token
-    function previewDeposit(uint256 amount) external view returns (uint256 shares) {
+    function previewDeposit(uint256 amount) external view override returns (uint256 shares) {
         uint256 assets = _previewWrap(amount);
         return IPoolV3(pool).previewDeposit(assets);
     }
 
     /// @notice Returns amount of unwrapped token one would receive for redeeming `shares` of pool shares
-    function previewRedeem(uint256 shares) external view returns (uint256 amount) {
+    function previewRedeem(uint256 shares) external view override returns (uint256 amount) {
         uint256 assets = IPoolV3(pool).previewRedeem(shares);
         return _previewUnwrap(assets);
     }
