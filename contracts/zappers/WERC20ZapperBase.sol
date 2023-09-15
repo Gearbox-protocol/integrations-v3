@@ -6,6 +6,7 @@ pragma solidity ^0.8.17;
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@1inch/solidity-utils/contracts/libraries/SafeERC20.sol";
 
+import {IWERC20Zapper} from "../interfaces/zappers/IWERC20Zapper.sol";
 import {ZapperBase} from "./ZapperBase.sol";
 
 /// @title wERC20 zapper base
@@ -14,7 +15,7 @@ import {ZapperBase} from "./ZapperBase.sol";
 /// @dev Default implementation assumes that unwrapped token has no transfer fees
 /// @dev Derived zappers must call `_resetWrapperAllowance` in their constructor after
 ///      initializing `unwrappedToken()`
-abstract contract WERC20ZapperBase is ZapperBase {
+abstract contract WERC20ZapperBase is ZapperBase, IWERC20Zapper {
     using SafeERC20 for IERC20;
 
     /// @notice Constructor
@@ -22,23 +23,24 @@ abstract contract WERC20ZapperBase is ZapperBase {
     constructor(address pool_) ZapperBase(pool_) {}
 
     /// @dev Returns uwnrapped token, must be overriden by derived zappers
-    function unwrappedToken() public view virtual returns (address);
+    function unwrappedToken() public view virtual override returns (address);
 
     /// @notice Zaps wrapping a token and depositing it to the pool into a single operation
-    function deposit(uint256 amount, address receiver) external returns (uint256 shares) {
+    function deposit(uint256 amount, address receiver) external override returns (uint256 shares) {
         shares = _deposit(amount, receiver);
     }
 
     /// @notice Same as `deposit` but allows to specify the referral code
-    function depositWithUnderlying(uint256 amount, address receiver, uint16 referralCode)
+    function depositWithReferral(uint256 amount, address receiver, uint16 referralCode)
         external
+        override
         returns (uint256 shares)
     {
         shares = _depositWithReferral(amount, receiver, referralCode);
     }
 
     /// @notice Zaps redeeming token from the pool and unwrapping it into a single operation
-    function redeem(uint256 shares, address receiver, address owner) external returns (uint256 amount) {
+    function redeem(uint256 shares, address receiver, address owner) external override returns (uint256 amount) {
         amount = _redeem(shares, receiver, owner);
     }
 
