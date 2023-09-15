@@ -30,7 +30,7 @@ abstract contract WERC20ZapperBase is ZapperBase {
     }
 
     /// @notice Same as `deposit` but allows to specify the referral code
-    function depositWithUnderlying(uint256 amount, address receiver, uint16 referralCode)
+    function depositWithReferral(uint256 amount, address receiver, uint16 referralCode)
         external
         returns (uint256 shares)
     {
