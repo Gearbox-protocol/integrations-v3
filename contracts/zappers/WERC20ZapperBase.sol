@@ -13,8 +13,8 @@ import {ZapperBase} from "./ZapperBase.sol";
 /// @notice Base contract for zappers allowing users to deposit/withdraw an ERC20 token
 ///         to/from a Gearbox pool with its wrapper as underlying in a single operation
 /// @dev Default implementation assumes that unwrapped token has no transfer fees
-/// @dev Derived zappers must call `_resetWrapperAllowance` in their constructor after
-///      initializing `unwrappedToken()`
+/// @dev Derived zappers must call `super._resetWrapperAllowance()` in their constructor
+///      after initializing `unwrappedToken()`
 abstract contract WERC20ZapperBase is ZapperBase, IWERC20Zapper {
     using SafeERC20 for IERC20;
 
