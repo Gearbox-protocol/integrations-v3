@@ -22,16 +22,17 @@ abstract contract ZapperBase is IZapper {
     /// @notice Underlying token of the pool
     address public immutable override wrappedToken;
 
-    /// @notice Token this zapper returns when deposit (underlying / staked one)
-    address public immutable override tokenOut;
-
     /// @notice Constructor
     /// @param pool_ Pool to connect this zapper to
     constructor(address pool_) {
         pool = pool_;
         wrappedToken = IPoolV3(pool_).asset();
-        tokenOut = pool_;
-        _resetPoolAllowance();
+        ZapperBase._resetPoolAllowance();
+    }
+
+    /// @notice Token that this zapper produces (might differ from the pool share token)
+    function tokenOut() public view virtual override returns (address) {
+        return pool;
     }
 
     /// @notice Returns number of pool shares one would receive for depositing `amount` of unwrapped token

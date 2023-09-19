@@ -20,7 +20,7 @@ contract WATokenZapper is WERC20ZapperBase {
     /// @param pool_ Pool to connect this zapper to
     constructor(address pool_) WERC20ZapperBase(pool_) {
         _aToken = WrappedAToken(wrappedToken).aToken();
-        _resetWrapperAllowance();
+        super._resetWrapperAllowance();
     }
 
     /// @notice aToken address

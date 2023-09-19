@@ -6,9 +6,9 @@ pragma solidity ^0.8.17;
 interface IZapper {
     function pool() external view returns (address);
 
-    function unwrappedToken() external view returns (address);
-
     function tokenOut() external view returns (address);
+
+    function unwrappedToken() external view returns (address);
 
     function wrappedToken() external view returns (address);
 
