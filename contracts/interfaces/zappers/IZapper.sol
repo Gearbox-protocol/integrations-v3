@@ -8,6 +8,8 @@ interface IZapper {
 
     function unwrappedToken() external view returns (address);
 
+    function tokenOut() external view returns (address);
+
     function wrappedToken() external view returns (address);
 
     function previewDeposit(uint256 amount) external view returns (uint256 shares);

@@ -70,7 +70,4 @@ contract WETHZapper is ZapperBase, IWETHZapper {
     function _previewUnwrap(uint256 amount) internal pure override returns (uint256 unwrappedAmount) {
         return amount;
     }
-
-    /// @dev Pool has infinite WETH allowance so this step can be skipped
-    function _resetPoolAllowance() internal override {}
 }
