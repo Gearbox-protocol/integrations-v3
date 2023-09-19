@@ -21,7 +21,9 @@ contract WETHZapper is ZapperBase, IWETHZapper {
 
     /// @notice Constructor
     /// @param pool_ Pool to connect this zapper to
-    constructor(address pool_) ZapperBase(pool_) {}
+    constructor(address pool_) ZapperBase(pool_) {
+        super._resetPoolAllowance();
+    }
 
     /// @notice Allows this contract to unwrap WETH and forbids other direct ETH transfers
     receive() external payable {
@@ -70,4 +72,7 @@ contract WETHZapper is ZapperBase, IWETHZapper {
     function _previewUnwrap(uint256 amount) internal pure override returns (uint256 unwrappedAmount) {
         return amount;
     }
+
+    /// @dev Pool has infinite WETH allowance so this step can be skipped
+    function _resetPoolAllowance() internal override {}
 }
