@@ -65,6 +65,7 @@ contract LiveEnvTestSuite is CreditConfigLive {
     address public ROOT_ADDRESS;
 
     AddressProvider public addressProvider;
+    ContractsRegister public cr;
     ACL public acl;
     TokensTestSuite public tokenTestSuite;
     SupportedContracts public supportedContracts;
@@ -108,6 +109,7 @@ contract LiveEnvTestSuite is CreditConfigLive {
 
             supportedContracts = new SupportedContracts(networkId);
             addressProvider = AddressProvider(ap);
+            cr = ContractsRegister(addressProvider.getContractsRegister());
             acl = ACL(addressProvider.getACL());
             ROOT_ADDRESS = acl.owner();
 
@@ -118,29 +120,31 @@ contract LiveEnvTestSuite is CreditConfigLive {
 
                 IDataCompressor dc = IDataCompressor(addressProvider.getDataCompressor());
 
-                CreditManagerData[] memory cmList = dc.getCreditManagersList();
-
-                bool mintedNFT = false;
+                address[] memory cmList = cr.getCreditManagers();
 
                 for (uint256 i = 0; i < cmList.length; ++i) {
-                    if (cmList[i].version == 2 || cmList[i].version == 2_10) {
-                        Tokens underlyingT = tokenTestSuite.tokenIndexes(cmList[i].underlying);
+                    if (CreditManager(cmList[i]).version() == 2 || CreditManager(cmList[i]).version() == 2_10) {
+                        Tokens underlyingT = tokenTestSuite.tokenIndexes(CreditManager(cmList[i]).underlying());
 
-                        _creditManagers[underlyingT].push(CreditManager(cmList[i].addr));
-                        _creditFacades[underlyingT].push(CreditFacade(cmList[i].creditFacade));
-                        _creditConfigurators[underlyingT].push(CreditConfigurator(cmList[i].creditConfigurator));
+                        _creditManagers[underlyingT].push(CreditManager(cmList[i]));
+
+                        CreditFacade cf = CreditFacade(CreditManager(cmList[i]).creditFacade());
+
+                        _creditFacades[underlyingT].push(cf);
+                        _creditConfigurators[underlyingT].push(
+                            CreditConfigurator(CreditManager(cmList[i]).creditConfigurator())
+                        );
 
                         string memory underlyingSymbol = tokenTestSuite.symbols(underlyingT);
 
-                        if (CreditFacade(cmList[i].creditFacade).whitelisted() && !mintedNFT) {
-                            DegenNFT dnft = DegenNFT(CreditFacade(cmList[i].creditFacade).degenNFT());
+                        if (cf.whitelisted()) {
+                            DegenNFT dnft = DegenNFT(cf.degenNFT());
 
                             evm.prank(dnft.minter());
                             dnft.mint(USER, 30);
-                            mintedNFT = true;
                         }
 
-                        IPoolService pool = IPoolService(CreditManager(cmList[i].addr).pool());
+                        IPoolService pool = IPoolService(CreditManager(cmList[i]).pool());
 
                         if (address(pools[underlyingT]) == address(0)) {
                             pools[underlyingT] = PoolService(address(pool));
@@ -162,7 +166,7 @@ contract LiveEnvTestSuite is CreditConfigLive {
                         }
 
                         evm.label(
-                            cmList[i].creditFacade,
+                            address(cf),
                             string(
                                 abi.encodePacked(
                                     "CREDIT_FACADE_", underlyingSymbol, "_", _creditFacades[underlyingT].length
@@ -170,7 +174,7 @@ contract LiveEnvTestSuite is CreditConfigLive {
                             )
                         );
                         evm.label(
-                            cmList[i].addr,
+                            cmList[i],
                             string(
                                 abi.encodePacked(
                                     "CREDIT_MANAGER_", underlyingSymbol, "_", _creditManagers[underlyingT].length
@@ -178,7 +182,7 @@ contract LiveEnvTestSuite is CreditConfigLive {
                             )
                         );
                         evm.label(
-                            cmList[i].creditConfigurator,
+                            CreditManager(cmList[i]).creditConfigurator(),
                             string(
                                 abi.encodePacked(
                                     "CREDIT_CONFIGURATOR_",
@@ -212,8 +216,6 @@ contract LiveEnvTestSuite is CreditConfigLive {
                 evm.prank(ROOT_ADDRESS);
                 addressProvider.setPriceOracle(address(priceOracle)); // T:[GD-1]
 
-                ContractsRegister cr = ContractsRegister(addressProvider.getContractsRegister());
-
                 if (!_wstETHPoolExists(cr)) {
                     // SETUP wstETH pool if none is already deployed
                     new WstETHPoolSetup(
@@ -232,7 +234,7 @@ contract LiveEnvTestSuite is CreditConfigLive {
                     );
                 }
 
-                _setPools(cr);
+                _setPools();
 
                 uint256 len = numOpts;
                 unchecked {
@@ -539,7 +541,7 @@ contract LiveEnvTestSuite is CreditConfigLive {
         UniswapV3Adapter(uniV3Adapter).setPoolBatchAllowanceStatus(pools);
     }
 
-    function _setPools(ContractsRegister cr) internal {
+    function _setPools() internal {
         address[] memory poolsList = cr.getPools();
         uint256 len = poolsList.length;
 
