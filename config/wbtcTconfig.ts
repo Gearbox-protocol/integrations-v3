@@ -26,7 +26,7 @@ export const config: PoolV3DeployConfig = {
     USDC: {
       minRate: 0,
       maxRate: 3000,
-      quotaIncreaseFee: 0,
+      quotaIncreaseFee: 100,
       limit: (BigInt(30e6) * POOL_DECIMALS) / POOL_DIVIDER,
     },
   },
