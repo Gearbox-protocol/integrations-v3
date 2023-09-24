@@ -39,11 +39,6 @@ abstract contract WERC20ZapperBase is ZapperBase, IWERC20Zapper {
         shares = _depositWithReferral(amount, receiver, referralCode);
     }
 
-    /// @notice Zaps redeeming token from the pool and unwrapping it into a single operation
-    function redeem(uint256 shares, address receiver, address owner) external override returns (uint256 amount) {
-        amount = _redeem(shares, receiver, owner);
-    }
-
     /// @dev Receives unwrapped token from `msg.sender` and wraps it
     function _receiveAndWrap(uint256 amount) internal virtual override returns (uint256 wrappedAmount) {
         IERC20(unwrappedToken()).safeTransferFrom(msg.sender, address(this), amount);
