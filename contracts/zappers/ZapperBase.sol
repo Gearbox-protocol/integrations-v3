@@ -47,6 +47,27 @@ abstract contract ZapperBase is IZapper {
         return _previewUnwrap(assets);
     }
 
+    /// @notice Zaps redeeming underlying from the pool and unwrapping it into a single operation
+    /// @dev Requires `owner`'s approval for pool shares to this contract
+    function redeem(uint256 shares, address receiver, address owner) external override returns (uint256 amount) {
+        amount = _redeem(shares, receiver, owner);
+    }
+
+    /// @notice Zaps redeeming underlying from the pool and unwrapping it into a single operation
+    /// @dev `v`, `r`, `s` must be a valid signature of the permit message for pool shares from `owner` to this contract
+    function redeemWithPermit(
+        uint256 shares,
+        address receiver,
+        address owner,
+        uint256 deadline,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) external override returns (uint256 amount) {
+        try IPoolV3(pool).permit(owner, address(this), shares, deadline, v, r, s) {} catch {}
+        amount = _redeem(shares, receiver, owner);
+    }
+
     /// @dev Implementation of deposit zap
     ///      - Receives `amount` of unwrapped token from `msg.sender` and wraps it
     ///      - Deposits wrapped token into the pool and mints pool shares to `receiver`
@@ -68,7 +89,7 @@ abstract contract ZapperBase is IZapper {
     }
 
     /// @dev Implementation of redeem zap
-    ///      - Burns `owner`'s pool shares and redeems wrapped token (requires `owner`'s approval)
+    ///      - Burns `owner`'s pool shares and redeems wrapped token
     ///      - Unwraps redeemed token and sends `amount` of unwrapped token to `receiver`
     function _redeem(uint256 shares, address receiver, address owner) internal virtual returns (uint256 amount) {
         uint256 assets = IPoolV3(pool).redeem(shares, address(this), owner);
