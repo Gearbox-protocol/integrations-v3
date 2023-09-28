@@ -66,6 +66,6 @@
     "resolveJsonModule": true,
     "outDir": "./npm-root/"
   },
-  "include": ["types"],
+  "include": ["config"],
   "exclude": ["node_modules", "lib", "npm-root"]
 }

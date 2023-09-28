@@ -3,7 +3,7 @@ import {
   BalancerVaultConfig,
   UniV2Config,
   UniV3Config,
-} from "@gearbox-protocol/sdk-gov/lib/state/adapters";
+} from "@gearbox-protocol/sdk-gov";
 
 const standardUniV2Config: UniV2Config = {
   contract: "UNISWAP_V2_ROUTER",
@@ -86,7 +86,7 @@ const standardSushiswapConfig: UniV2Config = {
 };
 
 const standardBalancerConfig: BalancerVaultConfig = {
-  contract: "BALANCER_V2_VAULT",
+  contract: "BALANCER_VAULT",
   allowed: [
     {
       pool: "50OHM_50DAI",
