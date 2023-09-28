@@ -1,5 +1,7 @@
-import { PoolV3CoreConfigurator } from "@gearbox-protocol/sdk-gov/lib/state/poolV3Core";
-import { PoolV3DeployConfig } from "@gearbox-protocol/sdk-gov/lib/state/poolV3DeployConfig";
+import {
+  PoolV3CoreConfigurator,
+  PoolV3DeployConfig,
+} from "@gearbox-protocol/sdk-gov";
 
 import { adapters } from "./adapters";
 

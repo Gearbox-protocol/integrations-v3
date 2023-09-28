@@ -43,11 +43,6 @@ contract WETHZapper is ZapperBase, IWETHZapper {
         shares = _depositWithReferral(msg.value, receiver, referralCode);
     }
 
-    /// @notice Zaps redeeming WETH from the pool and unwrapping it into a single operation
-    function redeem(uint256 shares, address receiver, address owner) external override returns (uint256 amount) {
-        amount = _redeem(shares, receiver, owner);
-    }
-
     /// @dev Wraps ETH
     function _receiveAndWrap(uint256 amount) internal override returns (uint256 wrappedAmount) {
         IWETH(wrappedToken).deposit{value: amount}();
