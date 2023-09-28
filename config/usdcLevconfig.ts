@@ -40,6 +40,12 @@ export const config: PoolV3DeployConfig = {
       quotaIncreaseFee: 0,
       limit: (BigInt(1e7) * POOL_DECIMALS) / POOL_DIVIDER,
     },
+    wstETH: {
+      minRate: 1,
+      maxRate: 3000,
+      quotaIncreaseFee: 0,
+      limit: (BigInt(1e7) * POOL_DECIMALS) / POOL_DIVIDER,
+    },
     WBTC: {
       minRate: 1,
       maxRate: 3000,
@@ -301,6 +307,7 @@ export const config: PoolV3DeployConfig = {
       collateralTokens: [
         { token: "WETH", lt: 85_00 }, // Token address is token from priceFeed map above
         { token: "STETH", lt: 82_50 }, // Token address is token from priceFeed map above
+        { token: "wstETH", lt: 82_50 },
         { token: "WBTC", lt: 85_00 }, // Token address is token from priceFeed map above
 
         { token: "DAI", lt: 92_00 }, // Token address is token from priceFeed map above
@@ -352,7 +359,7 @@ export const config: PoolV3DeployConfig = {
         { token: "LDO", lt: 0 },
         { token: "SNX", lt: 25 },
       ],
-      adapters,
+      adapters: [...adapters, { contract: "LIDO_WSTETH" }],
     },
   ],
   supportsQuotas: true,

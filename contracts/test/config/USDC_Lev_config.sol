@@ -51,6 +51,7 @@ contract CONFIG_MAINNET_USDC_LEV_V3 is IPoolV3DeployConfig {
     constructor() {
         _gaugeRates.push(GaugeRate({token: Tokens.WETH, minRate: 1, maxRate: 30_00}));
         _gaugeRates.push(GaugeRate({token: Tokens.STETH, minRate: 1, maxRate: 30_00}));
+        _gaugeRates.push(GaugeRate({token: Tokens.wstETH, minRate: 1, maxRate: 30_00}));
         _gaugeRates.push(GaugeRate({token: Tokens.WBTC, minRate: 1, maxRate: 30_00}));
         _gaugeRates.push(GaugeRate({token: Tokens.DAI, minRate: 1, maxRate: 30_00}));
         _gaugeRates.push(GaugeRate({token: Tokens.USDT, minRate: 1, maxRate: 30_00}));
@@ -93,6 +94,7 @@ contract CONFIG_MAINNET_USDC_LEV_V3 is IPoolV3DeployConfig {
         _gaugeRates.push(GaugeRate({token: Tokens.SNX, minRate: 1, maxRate: 30_00}));
         _quotaLimits.push(PoolQuotaLimit({token: Tokens.WETH, quotaIncreaseFee: 0, limit: 10_000_000_000_000}));
         _quotaLimits.push(PoolQuotaLimit({token: Tokens.STETH, quotaIncreaseFee: 0, limit: 10_000_000_000_000}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.wstETH, quotaIncreaseFee: 0, limit: 10_000_000_000_000}));
         _quotaLimits.push(PoolQuotaLimit({token: Tokens.WBTC, quotaIncreaseFee: 0, limit: 10_000_000_000_000}));
         _quotaLimits.push(PoolQuotaLimit({token: Tokens.DAI, quotaIncreaseFee: 0, limit: 10_000_000_000_000}));
         _quotaLimits.push(PoolQuotaLimit({token: Tokens.USDT, quotaIncreaseFee: 0, limit: 10_000_000_000_000}));
@@ -160,6 +162,8 @@ contract CONFIG_MAINNET_USDC_LEV_V3 is IPoolV3DeployConfig {
         cts.push(CollateralTokenHuman({token: Tokens.WETH, lt: 85_00}));
 
         cts.push(CollateralTokenHuman({token: Tokens.STETH, lt: 82_50}));
+
+        cts.push(CollateralTokenHuman({token: Tokens.wstETH, lt: 82_50}));
 
         cts.push(CollateralTokenHuman({token: Tokens.WBTC, lt: 85_00}));
 
@@ -335,6 +339,7 @@ contract CONFIG_MAINNET_USDC_LEV_V3 is IPoolV3DeployConfig {
         cs.push(Contracts.CONVEX_FRAX_USDC_POOL);
         cs.push(Contracts.CONVEX_STECRV_POOL);
         cs.push(Contracts.CONVEX_BOOSTER);
+        cs.push(Contracts.LIDO_WSTETH);
     }
 
     // GETTERS
