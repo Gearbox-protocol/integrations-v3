@@ -18,8 +18,6 @@ import {IstETH} from "../../integrations/lido/IstETH.sol";
 import {ILidoV1Adapter} from "../../interfaces/lido/ILidoV1Adapter.sol";
 import {LidoV1Gateway} from "../../helpers/lido/LidoV1_WETHGateway.sol";
 
-uint256 constant LIDO_STETH_LIMIT = 20000 ether;
-
 /// @title Lido V1 adapter
 /// @notice Implements logic for interacting with the Lido contract through the gateway
 contract LidoV1Adapter is AbstractAdapter, ILidoV1Adapter {
