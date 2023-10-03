@@ -5,18 +5,8 @@ pragma solidity ^0.8.17;
 
 import {IAdapter} from "@gearbox-protocol/core-v2/contracts/interfaces/IAdapter.sol";
 
-interface ILidoV1AdapterEvents {
-    /// @notice Emitted when configurator sets new deposit limit
-    event SetLimit(uint256 _limit);
-}
-
-interface ILidoV1AdapterExceptions {
-    /// @notice Thrown when trying to stake more than the current limit
-    error LimitIsOverException();
-}
-
 /// @title Lido V1 adapter interface
-interface ILidoV1Adapter is IAdapter, ILidoV1AdapterEvents, ILidoV1AdapterExceptions {
+interface ILidoV1Adapter is IAdapter {
     function weth() external view returns (address);
 
     function stETH() external view returns (address);
