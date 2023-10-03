@@ -19,7 +19,7 @@ import {IConvexV1BaseRewardPoolAdapter} from "../../interfaces/convex/IConvexV1B
 /// @notice Implements logic allowing CAs to interact with Convex Booster
 contract ConvexV1BoosterAdapter is AbstractAdapter, IConvexV1BoosterAdapter {
     AdapterType public constant override _gearboxAdapterType = AdapterType.CONVEX_V1_BOOSTER;
-    uint16 public constant override _gearboxAdapterVersion = 2;
+    uint16 public constant override _gearboxAdapterVersion = 3_00;
 
     event SetPidToPhantomToken(uint256 indexed pid, address indexed phantomToken);
 

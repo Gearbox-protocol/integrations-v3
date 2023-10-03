@@ -31,7 +31,7 @@ contract BalancerV2VaultAdapter is AbstractAdapter, IBalancerV2VaultAdapter {
     using BitMask for uint256;
 
     AdapterType public constant override _gearboxAdapterType = AdapterType.BALANCER_VAULT;
-    uint16 public constant override _gearboxAdapterVersion = 1;
+    uint16 public constant override _gearboxAdapterVersion = 3_00;
 
     /// @notice Mapping from poolId to status of the pool: whether it is not supported, fully supported or swap-only
     mapping(bytes32 => PoolStatus) public override poolStatus;

@@ -8,7 +8,7 @@ import {AdapterType} from "@gearbox-protocol/sdk-gov/contracts/AdapterType.sol";
 
 contract AbstractAdapterHarness is AbstractAdapter {
     AdapterType public constant override _gearboxAdapterType = AdapterType.ABSTRACT;
-    uint16 public constant override _gearboxAdapterVersion = 1;
+    uint16 public constant override _gearboxAdapterVersion = 3_00;
 
     constructor(address _creditManager, address _targetContract) AbstractAdapter(_creditManager, _targetContract) {}
 

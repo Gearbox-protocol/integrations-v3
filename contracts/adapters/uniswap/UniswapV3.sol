@@ -20,7 +20,7 @@ contract UniswapV3Adapter is AbstractAdapter, IUniswapV3Adapter {
     using BytesLib for bytes;
 
     AdapterType public constant override _gearboxAdapterType = AdapterType.UNISWAP_V3_ROUTER;
-    uint16 public constant override _gearboxAdapterVersion = 3;
+    uint16 public constant override _gearboxAdapterVersion = 3_00;
 
     /// @dev The length of the bytes encoded address
     uint256 private constant ADDR_SIZE = 20;

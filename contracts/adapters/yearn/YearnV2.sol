@@ -15,7 +15,7 @@ import {IYearnV2Adapter} from "../../interfaces/yearn/IYearnV2Adapter.sol";
 /// @notice Implements logic allowing CAs to deposit into Yearn vaults
 contract YearnV2Adapter is AbstractAdapter, IYearnV2Adapter {
     AdapterType public constant override _gearboxAdapterType = AdapterType.YEARN_V2;
-    uint16 public constant override _gearboxAdapterVersion = 3;
+    uint16 public constant override _gearboxAdapterVersion = 3_00;
 
     /// @notice Vault's underlying token address
     address public immutable override token;
