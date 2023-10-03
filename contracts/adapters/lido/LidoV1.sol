@@ -41,9 +41,6 @@ contract LidoV1Adapter is AbstractAdapter, ILidoV1Adapter {
     /// @notice Address of Gearbox treasury
     address public immutable override treasury;
 
-    /// @notice The amount of WETH that can be deposited through this adapter
-    uint256 public override limit;
-
     /// @notice Constructor
     /// @param _creditManager Credit manager address
     /// @param _lidoGateway Lido gateway address
@@ -55,7 +52,6 @@ contract LidoV1Adapter is AbstractAdapter, ILidoV1Adapter {
         wethTokenMask = _getMaskOrRevert(weth); // F: [LDOV1-1]
 
         treasury = IAddressProviderV3(addressProvider).getAddressOrRevert(AP_TREASURY, NO_VERSION_CONTROL); // F: [LDOV1-1]
-        limit = LIDO_STETH_LIMIT; // F: [LDOV1-1]
     }
 
     /// @notice Stakes given amount of WETH in Lido via Gateway
@@ -91,27 +87,9 @@ contract LidoV1Adapter is AbstractAdapter, ILidoV1Adapter {
         internal
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        if (amount > limit) revert LimitIsOverException(); // F: [LDOV1-5]
-        unchecked {
-            limit -= amount; // F: [LDOV1-5]
-        }
-
         _approveToken(weth, type(uint256).max);
         _execute(abi.encodeCall(LidoV1Gateway.submit, (amount, treasury)));
         _approveToken(weth, 1);
         (tokensToEnable, tokensToDisable) = (stETHTokenMask, disableWETH ? wethTokenMask : 0);
-    }
-
-    /// @notice Set a new deposit limit
-    /// @param _limit New value for the limit
-    function setLimit(uint256 _limit)
-        external
-        override
-        configuratorOnly // F: [LDOV1-6]
-    {
-        if (limit != _limit) {
-            limit = _limit; // F: [LDOV1-7]
-            emit SetLimit(_limit); // F: [LDOV1-7]
-        }
     }
 }

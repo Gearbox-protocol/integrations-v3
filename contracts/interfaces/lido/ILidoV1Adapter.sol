@@ -27,11 +27,7 @@ interface ILidoV1Adapter is IAdapter, ILidoV1AdapterEvents, ILidoV1AdapterExcept
 
     function treasury() external view returns (address);
 
-    function limit() external view returns (uint256);
-
     function submit(uint256 amount) external returns (uint256 tokensToEnable, uint256 tokensToDisable);
 
     function submitAll() external returns (uint256 tokensToEnable, uint256 tokensToDisable);
-
-    function setLimit(uint256 _limit) external;
 }
