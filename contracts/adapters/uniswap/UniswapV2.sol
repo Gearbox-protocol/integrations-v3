@@ -17,7 +17,7 @@ import {IUniswapV2Adapter, UniswapV2PairStatus} from "../../interfaces/uniswap/I
 /// @notice Implements logic allowing CAs to perform swaps via Uniswap V2 and its forks
 contract UniswapV2Adapter is AbstractAdapter, IUniswapV2Adapter {
     AdapterType public constant override _gearboxAdapterType = AdapterType.UNISWAP_V2_ROUTER;
-    uint16 public constant override _gearboxAdapterVersion = 3;
+    uint16 public constant override _gearboxAdapterVersion = 3_00;
 
     /// @dev Mapping from (token0, token1) to whether the pair can be traded through the adapter
     mapping(address => mapping(address => bool)) internal _pairStatus;

@@ -14,7 +14,7 @@ import {ICompoundV2_CTokenAdapter} from "../../interfaces/compound/ICompoundV2_C
 /// @title Compound V2 CErc20 adapter
 contract CompoundV2_CErc20Adapter is CompoundV2_CTokenAdapter {
     AdapterType public constant override _gearboxAdapterType = AdapterType.COMPOUND_V2_CERC20;
-    uint16 public constant override _gearboxAdapterVersion = 1;
+    uint16 public constant override _gearboxAdapterVersion = 3_00;
 
     /// @notice cToken's underlying token
     address public immutable override underlying;
