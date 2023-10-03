@@ -4,8 +4,7 @@
 pragma solidity ^0.8.17;
 
 import "@gearbox-protocol/core-v3/contracts/interfaces/IAddressProviderV3.sol";
-import {LidoV1Adapter, LIDO_STETH_LIMIT} from "../../../../adapters/lido/LidoV1.sol";
-import {ILidoV1AdapterEvents, ILidoV1AdapterExceptions} from "../../../../interfaces/lido/ILidoV1Adapter.sol";
+import {LidoV1Adapter} from "../../../../adapters/lido/LidoV1.sol";
 import {LidoV1Gateway} from "../../../../helpers/lido/LidoV1_WETHGateway.sol";
 import {LidoMock, ILidoMockEvents} from "../../../mocks/integrations/LidoMock.sol";
 
@@ -25,13 +24,7 @@ uint256 constant STETH_TOTAL_SHARES = WAD;
 
 /// @title LidoV1AdapterTest
 /// @notice Designed for unit test purposes only
-contract LidoV1AdapterTest is
-    Test,
-    AdapterTestHelper,
-    ILidoMockEvents,
-    ILidoV1AdapterEvents,
-    ILidoV1AdapterExceptions
-{
+contract LidoV1AdapterTest is Test, AdapterTestHelper, ILidoMockEvents {
     LidoMock public lidoV1Mock;
     LidoV1Gateway public lidoV1Gateway;
     LidoV1Adapter public lidoV1Adapter;
