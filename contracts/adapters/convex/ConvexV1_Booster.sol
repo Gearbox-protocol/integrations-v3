@@ -21,8 +21,6 @@ contract ConvexV1BoosterAdapter is AbstractAdapter, IConvexV1BoosterAdapter {
     AdapterType public constant override _gearboxAdapterType = AdapterType.CONVEX_V1_BOOSTER;
     uint16 public constant override _gearboxAdapterVersion = 3_00;
 
-    event SetPidToPhantomToken(uint256 indexed pid, address indexed phantomToken);
-
     /// @notice Maps pool ID to phantom token representing staked position
     mapping(uint256 => address) public override pidToPhantomToken;
 
