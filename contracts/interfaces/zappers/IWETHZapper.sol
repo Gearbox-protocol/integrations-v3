@@ -11,5 +11,5 @@ address constant ETH_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 interface IWETHZapper is IZapper {
     function deposit(address receiver) external payable returns (uint256 shares);
 
-    function depositWithReferral(address receiver, uint16 referralCode) external payable returns (uint256 shares);
+    function depositWithReferral(address receiver, uint256 referralCode) external payable returns (uint256 shares);
 }
