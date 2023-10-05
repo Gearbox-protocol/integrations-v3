@@ -9,7 +9,7 @@ const POOL_DIVIDER = BigInt(1);
 export const config: PoolV3DeployConfig = {
   id: "mainnet-usdc-mt-v3",
   symbol: "dUSDCV3",
-  name: "Diesel USDC V3 pool",
+  name: "USDC v3 trade",
   network: "Mainnet",
   underlying: "USDC",
   accountAmount: BigInt(1_000_000) * POOL_DECIMALS,

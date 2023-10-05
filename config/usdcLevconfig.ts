@@ -11,7 +11,7 @@ const POOL_DIVIDER = BigInt(1);
 export const config: PoolV3DeployConfig = {
   id: "mainnet-usdc-lev-v3",
   symbol: "dUSDC-lev-V3",
-  name: "Diesel USDC V3 leverage pool",
+  name: "USDC v3 farm",
   network: "Mainnet",
   underlying: "USDC",
   accountAmount: BigInt(1_000_000) * POOL_DECIMALS,
