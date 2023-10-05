@@ -67,6 +67,7 @@ const standardUniV3Config: UniV3Config = {
     { token0: "WETH", token1: "CVX", fee: 10000 },
     { token0: "SNX", token1: "USDC", fee: 10000 },
     { token0: "OHM", token1: "USDC", fee: 3000 },
+    { token0: "WETH", token1: "LINK", fee: 3000 },
   ],
 };
 
@@ -100,6 +101,7 @@ export const adapters: Array<AdapterDeployConfig> = [
   standardUniV3Config,
   standardUniV2Config,
   standardSushiswapConfig,
+  standardBalancerConfig,
   // CURVE
   { contract: "CURVE_3CRV_POOL" },
   { contract: "CURVE_FRAX_USDC_POOL" },

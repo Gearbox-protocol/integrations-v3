@@ -52,6 +52,36 @@ export const config: PoolV3DeployConfig = {
       quotaIncreaseFee: 0,
       limit: (BigInt(1e7) * POOL_DECIMALS) / POOL_DIVIDER,
     },
+    LINK: {
+      minRate: 1,
+      maxRate: 3000,
+      quotaIncreaseFee: 0,
+      limit: (BigInt(1e7) * POOL_DECIMALS) / POOL_DIVIDER,
+    },
+    aDAI: {
+      minRate: 1,
+      maxRate: 3000,
+      quotaIncreaseFee: 0,
+      limit: (BigInt(1e7) * POOL_DECIMALS) / POOL_DIVIDER,
+    },
+    cLINK: {
+      minRate: 1,
+      maxRate: 3000,
+      quotaIncreaseFee: 0,
+      limit: (BigInt(1e7) * POOL_DECIMALS) / POOL_DIVIDER,
+    },
+    sDAI: {
+      minRate: 1,
+      maxRate: 3000,
+      quotaIncreaseFee: 0,
+      limit: (BigInt(1e7) * POOL_DECIMALS) / POOL_DIVIDER,
+    },
+    YieldETH: {
+      minRate: 1,
+      maxRate: 3000,
+      quotaIncreaseFee: 0,
+      limit: (BigInt(1e7) * POOL_DECIMALS) / POOL_DIVIDER,
+    },
 
     DAI: {
       minRate: 1,
@@ -309,6 +339,11 @@ export const config: PoolV3DeployConfig = {
         { token: "STETH", lt: 82_50 }, // Token address is token from priceFeed map above
         { token: "wstETH", lt: 82_50 },
         { token: "WBTC", lt: 85_00 }, // Token address is token from priceFeed map above
+        { token: "LINK", lt: 80_00 },
+
+        { token: "aDAI", lt: 92_00 },
+        { token: "cLINK", lt: 85_00 },
+        { token: "sDAI", lt: 92_00 },
 
         { token: "DAI", lt: 92_00 }, // Token address is token from priceFeed map above
         { token: "USDT", lt: 90_00 }, // Token address is token from priceFeed map above
@@ -359,7 +394,13 @@ export const config: PoolV3DeployConfig = {
         { token: "LDO", lt: 0 },
         { token: "SNX", lt: 25 },
       ],
-      adapters: [...adapters, { contract: "LIDO_WSTETH" }],
+      adapters: [
+        ...adapters,
+        { contract: "LIDO_WSTETH" },
+        { contract: "AAVE_V2_LENDING_POOL" },
+        { contract: "COMPOUND_V2_LINK_POOL" },
+        { contract: "MAKER_DSR_VAULT" },
+      ],
     },
   ],
   supportsQuotas: true,

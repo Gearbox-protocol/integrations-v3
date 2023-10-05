@@ -53,6 +53,11 @@ contract CONFIG_MAINNET_USDC_LEV_V3 is IPoolV3DeployConfig {
         _gaugeRates.push(GaugeRate({token: Tokens.STETH, minRate: 1, maxRate: 30_00}));
         _gaugeRates.push(GaugeRate({token: Tokens.wstETH, minRate: 1, maxRate: 30_00}));
         _gaugeRates.push(GaugeRate({token: Tokens.WBTC, minRate: 1, maxRate: 30_00}));
+        _gaugeRates.push(GaugeRate({token: Tokens.LINK, minRate: 1, maxRate: 30_00}));
+        _gaugeRates.push(GaugeRate({token: Tokens.aDAI, minRate: 1, maxRate: 30_00}));
+        _gaugeRates.push(GaugeRate({token: Tokens.cLINK, minRate: 1, maxRate: 30_00}));
+        _gaugeRates.push(GaugeRate({token: Tokens.sDAI, minRate: 1, maxRate: 30_00}));
+        _gaugeRates.push(GaugeRate({token: Tokens.YieldETH, minRate: 1, maxRate: 30_00}));
         _gaugeRates.push(GaugeRate({token: Tokens.DAI, minRate: 1, maxRate: 30_00}));
         _gaugeRates.push(GaugeRate({token: Tokens.USDT, minRate: 1, maxRate: 30_00}));
         _gaugeRates.push(GaugeRate({token: Tokens.sUSD, minRate: 1, maxRate: 30_00}));
@@ -96,6 +101,11 @@ contract CONFIG_MAINNET_USDC_LEV_V3 is IPoolV3DeployConfig {
         _quotaLimits.push(PoolQuotaLimit({token: Tokens.STETH, quotaIncreaseFee: 0, limit: 10_000_000_000_000}));
         _quotaLimits.push(PoolQuotaLimit({token: Tokens.wstETH, quotaIncreaseFee: 0, limit: 10_000_000_000_000}));
         _quotaLimits.push(PoolQuotaLimit({token: Tokens.WBTC, quotaIncreaseFee: 0, limit: 10_000_000_000_000}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.LINK, quotaIncreaseFee: 0, limit: 10_000_000_000_000}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.aDAI, quotaIncreaseFee: 0, limit: 10_000_000_000_000}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.cLINK, quotaIncreaseFee: 0, limit: 10_000_000_000_000}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.sDAI, quotaIncreaseFee: 0, limit: 10_000_000_000_000}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.YieldETH, quotaIncreaseFee: 0, limit: 10_000_000_000_000}));
         _quotaLimits.push(PoolQuotaLimit({token: Tokens.DAI, quotaIncreaseFee: 0, limit: 10_000_000_000_000}));
         _quotaLimits.push(PoolQuotaLimit({token: Tokens.USDT, quotaIncreaseFee: 0, limit: 10_000_000_000_000}));
         _quotaLimits.push(PoolQuotaLimit({token: Tokens.sUSD, quotaIncreaseFee: 0, limit: 10_000_000_000_000}));
@@ -166,6 +176,14 @@ contract CONFIG_MAINNET_USDC_LEV_V3 is IPoolV3DeployConfig {
         cts.push(CollateralTokenHuman({token: Tokens.wstETH, lt: 82_50}));
 
         cts.push(CollateralTokenHuman({token: Tokens.WBTC, lt: 85_00}));
+
+        cts.push(CollateralTokenHuman({token: Tokens.LINK, lt: 80_00}));
+
+        cts.push(CollateralTokenHuman({token: Tokens.aDAI, lt: 92_00}));
+
+        cts.push(CollateralTokenHuman({token: Tokens.cLINK, lt: 85_00}));
+
+        cts.push(CollateralTokenHuman({token: Tokens.sDAI, lt: 92_00}));
 
         cts.push(CollateralTokenHuman({token: Tokens.DAI, lt: 92_00}));
 
@@ -293,6 +311,7 @@ contract CONFIG_MAINNET_USDC_LEV_V3 is IPoolV3DeployConfig {
         uv3p.push(UniswapV3Pair({token0: Tokens.WETH, token1: Tokens.CVX, fee: 10000}));
         uv3p.push(UniswapV3Pair({token0: Tokens.SNX, token1: Tokens.USDC, fee: 10000}));
         uv3p.push(UniswapV3Pair({token0: Tokens.OHM, token1: Tokens.USDC, fee: 3000}));
+        uv3p.push(UniswapV3Pair({token0: Tokens.WETH, token1: Tokens.LINK, fee: 3000}));
         cs.push(Contracts.UNISWAP_V2_ROUTER);
         {
             UniswapV2Pair[] storage uv2p = cp.uniswapV2Pairs;
@@ -317,6 +336,10 @@ contract CONFIG_MAINNET_USDC_LEV_V3 is IPoolV3DeployConfig {
             uv2p.push(UniswapV2Pair({router: Contracts.SUSHISWAP_ROUTER, token0: Tokens.CRV, token1: Tokens.WETH}));
             uv2p.push(UniswapV2Pair({router: Contracts.SUSHISWAP_ROUTER, token0: Tokens.SNX, token1: Tokens.WETH}));
         }
+        cs.push(Contracts.BALANCER_VAULT);
+        BalancerPool[] storage bp = cp.balancerPools;
+
+        bp.push(BalancerPool({poolId: 0x76fcf0e8c7ff37a47a799fa2cd4c13cde0d981c90002000000000000000003d2, status: 2}));
         cs.push(Contracts.CURVE_3CRV_POOL);
         cs.push(Contracts.CURVE_FRAX_USDC_POOL);
         cs.push(Contracts.CURVE_STETH_GATEWAY);
@@ -340,6 +363,9 @@ contract CONFIG_MAINNET_USDC_LEV_V3 is IPoolV3DeployConfig {
         cs.push(Contracts.CONVEX_STECRV_POOL);
         cs.push(Contracts.CONVEX_BOOSTER);
         cs.push(Contracts.LIDO_WSTETH);
+        cs.push(Contracts.AAVE_V2_LENDING_POOL);
+        cs.push(Contracts.COMPOUND_V2_LINK_POOL);
+        cs.push(Contracts.MAKER_DSR_VAULT);
     }
 
     // GETTERS

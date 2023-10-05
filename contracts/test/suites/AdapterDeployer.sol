@@ -31,6 +31,16 @@ import {CurveV1AdapterDeposit} from "../../adapters/curve/CurveV1_DepositZap.sol
 
 import {ConvexV1BaseRewardPoolAdapter} from "../../adapters/convex/ConvexV1_BaseRewardPool.sol";
 
+import {CompoundV2_CErc20Adapter} from "../../adapters/compound/CompoundV2_CErc20Adapter.sol";
+import {CompoundV2_CEtherAdapter} from "../../adapters/compound/CompoundV2_CEtherAdapter.sol";
+
+import {AaveV2_LendingPoolAdapter} from "../../adapters/aave/AaveV2_LendingPoolAdapter.sol";
+import {AaveV2_WrappedATokenAdapter} from "../../adapters/aave/AaveV2_WrappedATokenAdapter.sol";
+
+import {ERC4626Adapter} from "../../adapters/erc4626/ERC4626Adapter.sol";
+
+import {BalancerV2VaultAdapter} from "../../adapters/balancer/BalancerV2VaultAdapter.sol";
+
 import {TokensTestSuite} from "@gearbox-protocol/core-v3/contracts/test/suites/TokensTestSuite.sol";
 import {Test} from "forge-std/Test.sol";
 
@@ -127,6 +137,48 @@ contract AdapterDeployer is AdapterData, Test {
                                       address(creditManager),
                                     tokenTestSuite.addressOf(Tokens.wstETH)
                                 )
+                        );
+                    } else if (at == AdapterType.COMPOUND_V2_CERC20) {
+                        adapter = address(
+                            new CompoundV2_CErc20Adapter(
+                                address(creditManager),
+                                targetContract
+                            )
+                        );
+                    } else if (at == AdapterType.COMPOUND_V2_CETHER) {
+                        adapter = address(
+                            new CompoundV2_CEtherAdapter(
+                                address(creditManager),
+                                targetContract
+                            )
+                        );
+                    } else if (at == AdapterType.AAVE_V2_LENDING_POOL) {
+                        adapter = address(
+                            new AaveV2_LendingPoolAdapter(
+                                address(creditManager),
+                                targetContract
+                            )
+                        );
+                    } else if (at == AdapterType.AAVE_V2_WRAPPED_ATOKEN) {
+                        adapter = address(
+                            new AaveV2_WrappedATokenAdapter(
+                                address(creditManager),
+                                targetContract
+                            )
+                        );
+                    } else if (at == AdapterType.ERC4626_VAULT) {
+                        adapter = address(
+                            new ERC4626Adapter(
+                                address(creditManager),
+                                targetContract
+                            )
+                        );
+                    } else if (at == AdapterType.BALANCER_VAULT) {
+                        adapter = address(
+                            new BalancerV2VaultAdapter(
+                                address(creditManager),
+                                targetContract
+                            )
                         );
                     }
 
