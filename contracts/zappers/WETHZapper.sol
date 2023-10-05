@@ -34,7 +34,7 @@ contract WETHZapper is ZapperBase, IWETHZapper {
     }
 
     /// @notice Same as `deposit` but allows to specify the referral code
-    function depositWithReferral(address receiver, uint16 referralCode)
+    function depositWithReferral(address receiver, uint256 referralCode)
         external
         payable
         override

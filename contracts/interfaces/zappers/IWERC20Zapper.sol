@@ -8,7 +8,7 @@ import {IZapper} from "./IZapper.sol";
 interface IWERC20Zapper is IZapper {
     function deposit(uint256 amount, address receiver) external returns (uint256 shares);
 
-    function depositWithReferral(uint256 amount, address receiver, uint16 referralCode)
+    function depositWithReferral(uint256 amount, address receiver, uint256 referralCode)
         external
         returns (uint256 shares);
 }
