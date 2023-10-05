@@ -70,19 +70,22 @@ contract ConvexV1BaseRewardPoolAdapter is AbstractAdapter, IConvexV1BaseRewardPo
         address _extraReward1;
         address _extraReward2;
         uint256 extraRewardLength = IBaseRewardPool(_baseRewardPool).extraRewardsLength();
+
         if (extraRewardLength >= 1) {
             _extraReward1 = IRewards(IBaseRewardPool(_baseRewardPool).extraRewards(0)).rewardToken();
 
-            try IExtraRewardWrapper(_extraReward1).booster() returns (address) {
+            try ICreditManagerV3(creditManager).getTokenMaskOrRevert(_extraReward1) returns (uint256) {}
+            catch {
                 _extraReward1 = IExtraRewardWrapper(_extraReward1).token();
-            } catch {}
+            }
 
             if (extraRewardLength >= 2) {
                 _extraReward2 = IRewards(IBaseRewardPool(_baseRewardPool).extraRewards(1)).rewardToken();
 
-                try IExtraRewardWrapper(_extraReward2).booster() returns (address) {
+                try ICreditManagerV3(creditManager).getTokenMaskOrRevert(_extraReward2) returns (uint256) {}
+                catch {
                     _extraReward2 = IExtraRewardWrapper(_extraReward2).token();
-                } catch {}
+                }
             }
         }
 
