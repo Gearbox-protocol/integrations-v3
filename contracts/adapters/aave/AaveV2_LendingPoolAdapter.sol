@@ -15,7 +15,7 @@ import {IAaveV2_LendingPoolAdapter} from "../../interfaces/aave/IAaveV2_LendingP
 /// @notice Implements logic allowing CAs to interact with Aave's lending pool
 contract AaveV2_LendingPoolAdapter is AbstractAdapter, IAaveV2_LendingPoolAdapter {
     AdapterType public constant override _gearboxAdapterType = AdapterType.AAVE_V2_LENDING_POOL;
-    uint16 public constant override _gearboxAdapterVersion = 1;
+    uint16 public constant override _gearboxAdapterVersion = 3_00;
 
     /// @notice Constructor
     /// @param _creditManager Credit manager address

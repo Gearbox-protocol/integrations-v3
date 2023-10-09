@@ -9,7 +9,7 @@ const POOL_DIVIDER = BigInt(1800);
 export const config: PoolV3DeployConfig = {
   id: "mainnet-weth-mt-v3",
   symbol: "dWETHV3",
-  name: "Diesel WETH V3 pool",
+  name: "WETH v3",
   network: "Mainnet",
   underlying: "WETH",
   accountAmount: BigInt(1_000_000) * POOL_DECIMALS,
@@ -34,7 +34,7 @@ export const config: PoolV3DeployConfig = {
     USDC: {
       minRate: 0,
       maxRate: 3000,
-      quotaIncreaseFee: 0,
+      quotaIncreaseFee: 100,
       limit: (BigInt(30e6) * POOL_DECIMALS) / POOL_DIVIDER,
     },
   },

@@ -15,7 +15,7 @@ import {IwstETHV1Adapter} from "../../interfaces/lido/IwstETHV1Adapter.sol";
 /// @notice Implements logic for wrapping / unwrapping stETH
 contract WstETHV1Adapter is AbstractAdapter, IwstETHV1Adapter {
     AdapterType public constant override _gearboxAdapterType = AdapterType.LIDO_WSTETH_V1;
-    uint16 public constant override _gearboxAdapterVersion = 2;
+    uint16 public constant override _gearboxAdapterVersion = 3_00;
 
     /// @notice Address of the stETH token
     address public immutable override stETH;

@@ -3,6 +3,7 @@
 // (c) Gearbox Foundation, 2023.
 pragma solidity ^0.8.17;
 
+import {ICreditManagerV3} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditManagerV3.sol";
 import {AbstractAdapter} from "../AbstractAdapter.sol";
 import {AdapterType} from "@gearbox-protocol/sdk-gov/contracts/AdapterType.sol";
 import {BitMask} from "@gearbox-protocol/core-v3/contracts/libraries/BitMask.sol";
@@ -18,7 +19,7 @@ contract ConvexV1BaseRewardPoolAdapter is AbstractAdapter, IConvexV1BaseRewardPo
     using BitMask for uint256;
 
     AdapterType public constant override _gearboxAdapterType = AdapterType.CONVEX_V1_BASE_REWARD_POOL;
-    uint16 public constant override _gearboxAdapterVersion = 2;
+    uint16 public constant override _gearboxAdapterVersion = 3_00;
 
     /// @notice Address of a Curve LP token deposited into the Convex pool
     address public immutable override curveLPtoken;
@@ -76,19 +77,22 @@ contract ConvexV1BaseRewardPoolAdapter is AbstractAdapter, IConvexV1BaseRewardPo
         address _extraReward1;
         address _extraReward2;
         uint256 extraRewardLength = IBaseRewardPool(_baseRewardPool).extraRewardsLength();
+
         if (extraRewardLength >= 1) {
             _extraReward1 = IRewards(IBaseRewardPool(_baseRewardPool).extraRewards(0)).rewardToken();
 
-            try IExtraRewardWrapper(_extraReward1).booster() returns (address) {
+            try ICreditManagerV3(creditManager).getTokenMaskOrRevert(_extraReward1) returns (uint256) {}
+            catch {
                 _extraReward1 = IExtraRewardWrapper(_extraReward1).token();
-            } catch {}
+            }
 
             if (extraRewardLength >= 2) {
                 _extraReward2 = IRewards(IBaseRewardPool(_baseRewardPool).extraRewards(1)).rewardToken();
 
-                try IExtraRewardWrapper(_extraReward2).booster() returns (address) {
+                try ICreditManagerV3(creditManager).getTokenMaskOrRevert(_extraReward2) returns (uint256) {}
+                catch {
                     _extraReward2 = IExtraRewardWrapper(_extraReward2).token();
-                } catch {}
+                }
             }
         }
 

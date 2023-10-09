@@ -19,7 +19,7 @@ import {AbstractAdapter} from "../AbstractAdapter.sol";
 abstract contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
     using BitMask for uint256;
 
-    uint16 public constant override _gearboxAdapterVersion = 2;
+    uint16 public constant override _gearboxAdapterVersion = 3_00;
 
     /// @notice Pool LP token address (added for backward compatibility)
     address public immutable override token;

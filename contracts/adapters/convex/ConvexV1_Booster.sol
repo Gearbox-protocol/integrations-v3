@@ -19,7 +19,7 @@ import {IConvexV1BaseRewardPoolAdapter} from "../../interfaces/convex/IConvexV1B
 /// @notice Implements logic allowing CAs to interact with Convex Booster
 contract ConvexV1BoosterAdapter is AbstractAdapter, IConvexV1BoosterAdapter {
     AdapterType public constant override _gearboxAdapterType = AdapterType.CONVEX_V1_BOOSTER;
-    uint16 public constant override _gearboxAdapterVersion = 2;
+    uint16 public constant override _gearboxAdapterVersion = 3_00;
 
     /// @notice Maps pool ID to phantom token representing staked position
     mapping(uint256 => address) public override pidToPhantomToken;
@@ -134,19 +134,18 @@ contract ConvexV1BoosterAdapter is AbstractAdapter, IConvexV1BoosterAdapter {
 
         address[] memory allowedAdapters = cc.allowedAdapters();
         uint256 len = allowedAdapters.length;
+        unchecked {
+            for (uint256 i = 0; i < len; ++i) {
+                address adapter = allowedAdapters[i];
+                address targetContract = IAdapter(adapter).targetContract();
+                AdapterType aType = IAdapter(adapter)._gearboxAdapterType();
 
-        for (uint256 i = 0; i < len;) {
-            address adapter = allowedAdapters[i];
-            address targetContract = IAdapter(adapter).targetContract();
-            AdapterType aType = IAdapter(adapter)._gearboxAdapterType();
-
-            if (aType == AdapterType.CONVEX_V1_BASE_REWARD_POOL) {
-                uint256 pid = IBaseRewardPool(targetContract).pid();
-                pidToPhantomToken[pid] = IConvexV1BaseRewardPoolAdapter(adapter).stakedPhantomToken();
-            }
-
-            unchecked {
-                ++i;
+                if (aType == AdapterType.CONVEX_V1_BASE_REWARD_POOL) {
+                    uint256 pid = IBaseRewardPool(targetContract).pid();
+                    address phantomToken = IConvexV1BaseRewardPoolAdapter(adapter).stakedPhantomToken();
+                    pidToPhantomToken[pid] = phantomToken;
+                    emit SetPidToPhantomToken(pid, phantomToken);
+                }
             }
         }
     }

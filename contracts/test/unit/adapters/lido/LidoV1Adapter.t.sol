@@ -4,8 +4,7 @@
 pragma solidity ^0.8.17;
 
 import "@gearbox-protocol/core-v3/contracts/interfaces/IAddressProviderV3.sol";
-import {LidoV1Adapter, LIDO_STETH_LIMIT} from "../../../../adapters/lido/LidoV1.sol";
-import {ILidoV1AdapterEvents, ILidoV1AdapterExceptions} from "../../../../interfaces/lido/ILidoV1Adapter.sol";
+import {LidoV1Adapter} from "../../../../adapters/lido/LidoV1.sol";
 import {LidoV1Gateway} from "../../../../helpers/lido/LidoV1_WETHGateway.sol";
 import {LidoMock, ILidoMockEvents} from "../../../mocks/integrations/LidoMock.sol";
 
@@ -25,13 +24,7 @@ uint256 constant STETH_TOTAL_SHARES = WAD;
 
 /// @title LidoV1AdapterTest
 /// @notice Designed for unit test purposes only
-contract LidoV1AdapterTest is
-    Test,
-    AdapterTestHelper,
-    ILidoMockEvents,
-    ILidoV1AdapterEvents,
-    ILidoV1AdapterExceptions
-{
+contract LidoV1AdapterTest is Test, AdapterTestHelper, ILidoMockEvents {
     LidoMock public lidoV1Mock;
     LidoV1Gateway public lidoV1Gateway;
     LidoV1Adapter public lidoV1Adapter;
@@ -96,8 +89,6 @@ contract LidoV1AdapterTest is
             addressProvider.getAddressOrRevert(AP_TREASURY, NO_VERSION_CONTROL),
             "Treasury address incorrect"
         );
-
-        assertEq(lidoV1Adapter.limit(), LIDO_STETH_LIMIT, "Limit is set incorrect");
     }
 
     // /// @dev [LDOV1-2]: submit and submitAll reverts if user has no account
@@ -148,9 +139,6 @@ contract LidoV1AdapterTest is
     function test_LDOV1_04_submitAll_works_correctly() public {
         setUp();
 
-        vm.prank(CONFIGURATOR);
-        lidoV1Adapter.setLimit(RAY);
-
         (address creditAccount, uint256 initialWETHamount) = _openTestCreditAccount();
 
         expectAllowance(Tokens.WETH, creditAccount, address(lidoV1Gateway), 0);
@@ -184,40 +172,5 @@ contract LidoV1AdapterTest is
         expectAllowance(Tokens.WETH, creditAccount, address(lidoV1Gateway), 1);
         expectTokenIsEnabled(creditAccount, Tokens.WETH, false);
         expectTokenIsEnabled(creditAccount, Tokens.STETH, true);
-    }
-
-    /// @dev [LDOV1-5]: submit and submitAll correctly update the limit and revert on violating it
-    function test_LDOV1_05_submit_updates_limit_and_reverts_on_limit_exceeded() public {
-        (address creditAccount,) = _openTestCreditAccount();
-
-        vm.prank(CONFIGURATOR);
-        lidoV1Adapter.setLimit(2 * WAD);
-
-        executeOneLineMulticall(creditAccount, address(lidoV1Adapter), abi.encodeCall(lidoV1Adapter.submit, (WAD)));
-
-        assertEq(lidoV1Adapter.limit(), WAD, "New limit was set incorrectly");
-
-        vm.expectRevert(LimitIsOverException.selector);
-        executeOneLineMulticall(creditAccount, address(lidoV1Adapter), abi.encodeCall(lidoV1Adapter.submit, (WAD + 1)));
-
-        vm.expectRevert(LimitIsOverException.selector);
-        executeOneLineMulticall(creditAccount, address(lidoV1Adapter), abi.encodeCall(lidoV1Adapter.submitAll, ()));
-    }
-
-    /// @dev [LDOV1-6]: setLimit reverts if called by Non-configurator
-    function test_LDOV1_06_submit_updates_limit_and_reverts_on_limit_exceeded() public {
-        vm.expectRevert(CallerNotConfiguratorException.selector);
-        lidoV1Adapter.setLimit(0);
-    }
-
-    /// @dev [LDOV1-7]: setLimit updates limit properly
-    function test_LDOV1_07_submit_updates_limit_properly(uint256 amount) public {
-        vm.expectEmit(false, false, false, true);
-        emit SetLimit(amount);
-
-        vm.prank(CONFIGURATOR);
-        lidoV1Adapter.setLimit(amount);
-
-        assertEq(lidoV1Adapter.limit(), amount, "Incorrect limit set");
     }
 }

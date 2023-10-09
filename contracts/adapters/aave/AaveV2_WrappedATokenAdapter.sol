@@ -15,7 +15,7 @@ import {IAaveV2_WrappedATokenAdapter} from "../../interfaces/aave/IAaveV2_Wrappe
 /// @notice Implements logic allowing CAs to convert between waTokens, aTokens and underlying tokens
 contract AaveV2_WrappedATokenAdapter is AbstractAdapter, IAaveV2_WrappedATokenAdapter {
     AdapterType public constant override _gearboxAdapterType = AdapterType.AAVE_V2_WRAPPED_ATOKEN;
-    uint16 public constant override _gearboxAdapterVersion = 1;
+    uint16 public constant override _gearboxAdapterVersion = 3_00;
 
     /// @notice Underlying aToken
     address public immutable override aToken;
