@@ -93,6 +93,10 @@ const standardBalancerConfig: BalancerVaultConfig = {
       pool: "50OHM_50DAI",
       status: 2,
     },
+    {
+      pool: "B_rETH_STABLE",
+      status: 1,
+    },
   ],
 };
 
@@ -111,6 +115,7 @@ export const adapters: Array<AdapterDeployConfig> = [
   { contract: "CURVE_LUSD_POOL" },
   { contract: "CURVE_GUSD_POOL" },
   { contract: "CURVE_SUSD_DEPOSIT" },
+  { contract: "CURVE_RETH_ETH_POOL" },
 
   // YEARN
   { contract: "YEARN_DAI_VAULT" },

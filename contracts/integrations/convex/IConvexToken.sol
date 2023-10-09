@@ -10,6 +10,8 @@ interface IConvexToken is IERC20 {
 
     function maxSupply() external view returns (uint256);
 
+    function EMISSIONS_MAX_SUPPLY() external view returns (uint256);
+
     function totalCliffs() external view returns (uint256);
 
     function reductionPerCliff() external view returns (uint256);

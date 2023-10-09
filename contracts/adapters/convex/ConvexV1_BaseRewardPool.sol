@@ -41,6 +41,12 @@ contract ConvexV1BaseRewardPoolAdapter is AbstractAdapter, IConvexV1BaseRewardPo
     /// @notice Bitmask of all reward tokens of the pool (CRV, CVX, extra reward tokens, if any) in the credit manager
     uint256 public immutable override rewardTokensMask;
 
+    /// @notice Reward paid by the extra reward pool 1 (address(0) if none)
+    address public immutable override extraReward1;
+
+    /// @notice Reward paid by the extra reward pool 2 (address(0) if none)
+    address public immutable override extraReward2;
+
     /// @notice Constructor
     /// @param _creditManager Credit manager address
     /// @param _baseRewardPool BaseRewardPool address
@@ -85,6 +91,9 @@ contract ConvexV1BaseRewardPoolAdapter is AbstractAdapter, IConvexV1BaseRewardPo
                 } catch {}
             }
         }
+
+        extraReward1 = _extraReward1;
+        extraReward2 = _extraReward2;
 
         if (_extraReward1 != address(0)) _rewardTokensMask = _rewardTokensMask.enable(_getMaskOrRevert(_extraReward1)); // F: [ACVX1_P-2]
         if (_extraReward2 != address(0)) _rewardTokensMask = _rewardTokensMask.enable(_getMaskOrRevert(_extraReward2)); // F: [ACVX1_P-2]

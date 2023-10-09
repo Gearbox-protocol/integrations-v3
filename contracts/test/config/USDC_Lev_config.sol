@@ -175,6 +175,8 @@ contract CONFIG_MAINNET_USDC_LEV_V3 is IPoolV3DeployConfig {
 
         cts.push(CollateralTokenHuman({token: Tokens.wstETH, lt: 82_50}));
 
+        cts.push(CollateralTokenHuman({token: Tokens.rETH, lt: 82_50}));
+
         cts.push(CollateralTokenHuman({token: Tokens.WBTC, lt: 85_00}));
 
         cts.push(CollateralTokenHuman({token: Tokens.LINK, lt: 80_00}));
@@ -196,6 +198,8 @@ contract CONFIG_MAINNET_USDC_LEV_V3 is IPoolV3DeployConfig {
         cts.push(CollateralTokenHuman({token: Tokens.GUSD, lt: 90_00}));
 
         cts.push(CollateralTokenHuman({token: Tokens.LUSD, lt: 90_00}));
+
+        cts.push(CollateralTokenHuman({token: Tokens.rETH_f, lt: 82_50}));
 
         cts.push(CollateralTokenHuman({token: Tokens.steCRV, lt: 82_50}));
 
@@ -239,6 +243,12 @@ contract CONFIG_MAINNET_USDC_LEV_V3 is IPoolV3DeployConfig {
 
         cts.push(CollateralTokenHuman({token: Tokens.stkcvxcrvFRAX, lt: 90_00}));
 
+        cts.push(CollateralTokenHuman({token: Tokens.B_rETH_STABLE, lt: 82_00}));
+
+        cts.push(CollateralTokenHuman({token: Tokens.auraB_rETH_STABLE, lt: 82_00}));
+
+        cts.push(CollateralTokenHuman({token: Tokens.auraB_rETH_STABLE_vault, lt: 82_00}));
+
         cts.push(CollateralTokenHuman({token: Tokens.yvDAI, lt: 90_00}));
 
         cts.push(CollateralTokenHuman({token: Tokens.yvUSDC, lt: 90_00}));
@@ -261,7 +271,11 @@ contract CONFIG_MAINNET_USDC_LEV_V3 is IPoolV3DeployConfig {
 
         cts.push(CollateralTokenHuman({token: Tokens.LDO, lt: 0}));
 
-        cts.push(CollateralTokenHuman({token: Tokens.SNX, lt: 25}));
+        cts.push(CollateralTokenHuman({token: Tokens.SNX, lt: 25_00}));
+
+        cts.push(CollateralTokenHuman({token: Tokens.BAL, lt: 25_00}));
+
+        cts.push(CollateralTokenHuman({token: Tokens.AURA, lt: 0}));
         Contracts[] storage cs = cp.contracts;
         cs.push(Contracts.UNISWAP_V3_ROUTER);
         UniswapV3Pair[] storage uv3p = cp.uniswapV3Pairs;
@@ -340,6 +354,8 @@ contract CONFIG_MAINNET_USDC_LEV_V3 is IPoolV3DeployConfig {
         BalancerPool[] storage bp = cp.balancerPools;
 
         bp.push(BalancerPool({poolId: 0x76fcf0e8c7ff37a47a799fa2cd4c13cde0d981c90002000000000000000003d2, status: 2}));
+
+        bp.push(BalancerPool({poolId: 0x1e19cf2d73a72ef1332c882f20534b6519be0276000200000000000000000112, status: 1}));
         cs.push(Contracts.CURVE_3CRV_POOL);
         cs.push(Contracts.CURVE_FRAX_USDC_POOL);
         cs.push(Contracts.CURVE_STETH_GATEWAY);
@@ -348,6 +364,7 @@ contract CONFIG_MAINNET_USDC_LEV_V3 is IPoolV3DeployConfig {
         cs.push(Contracts.CURVE_LUSD_POOL);
         cs.push(Contracts.CURVE_GUSD_POOL);
         cs.push(Contracts.CURVE_SUSD_DEPOSIT);
+        cs.push(Contracts.CURVE_RETH_ETH_POOL);
         cs.push(Contracts.YEARN_DAI_VAULT);
         cs.push(Contracts.YEARN_USDC_VAULT);
         cs.push(Contracts.YEARN_WETH_VAULT);
@@ -366,6 +383,8 @@ contract CONFIG_MAINNET_USDC_LEV_V3 is IPoolV3DeployConfig {
         cs.push(Contracts.AAVE_V2_LENDING_POOL);
         cs.push(Contracts.COMPOUND_V2_LINK_POOL);
         cs.push(Contracts.MAKER_DSR_VAULT);
+        cs.push(Contracts.AURA_BOOSTER);
+        cs.push(Contracts.AURA_B_RETH_STABLE_POOL);
     }
 
     // GETTERS
