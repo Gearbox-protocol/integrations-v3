@@ -3,13 +3,13 @@ import {
   PoolV3DeployConfig,
 } from "@gearbox-protocol/sdk-gov";
 
-const POOL_DECIMALS = BigInt(1e6);
-const POOL_DIVIDER = BigInt(29000);
+const POOL_DECIMALS = BigInt(1e8);
+const POOL_DIVIDER = BigInt(26000);
 
 export const config: PoolV3DeployConfig = {
   id: "mainnet-wbtc-mt-v3",
   symbol: "dWBTCV3",
-  name: "Diesel WBTC V3 pool",
+  name: "WBTC v3",
   network: "Mainnet",
   underlying: "WBTC",
   accountAmount: BigInt(1_000_000) * POOL_DECIMALS,
