@@ -333,65 +333,72 @@ contract LiveEnvTestSuite is CreditConfigLive {
                             _configureBalancerPools(address(cmf.creditManager()), i);
                         }
 
-                        // MOCK CREDIT MANAGERS
-                        // Mock credit managers skip health checks
-                        if (underlyingT == Tokens.DAI || underlyingT == Tokens.wstETH) {
-                            address underlying = tokenTestSuite.addressOf(underlyingT);
+                        // // MOCK CREDIT MANAGERS
+                        // // Mock credit managers skip health checks
+                        // bool deployMocks;
+                        // try evm.envBool("ETH_FORK_DEPLOY_MOCKS") returns (bool val) {
+                        //     deployMocks = val;
+                        // } catch {
+                        //     deployMocks = false;
+                        // }
 
-                            (CreditManagerOpts memory cmOpts, Contracts[] memory adaptersList) =
-                                getCreditManagerConfig(i, true);
+                        // if ((underlyingT == Tokens.DAI || underlyingT == Tokens.wstETH) && deployMocks) {
+                        //     address underlying = tokenTestSuite.addressOf(underlyingT);
 
-                            CreditManagerMockFactory cmf = new CreditManagerMockFactory(
-                                    address(pools[underlyingT]),
-                                    cmOpts,
-                                    0
-                                );
+                        //     (CreditManagerOpts memory cmOpts, Contracts[] memory adaptersList) =
+                        //         getCreditManagerConfig(i, true);
 
-                            string memory underlyingSymbol = tokenTestSuite.symbols(underlyingT);
+                        //     CreditManagerMockFactory cmf = new CreditManagerMockFactory(
+                        //             address(pools[underlyingT]),
+                        //             cmOpts,
+                        //             0
+                        //         );
 
-                            AdapterDeployer ad = new AdapterDeployer(
-                                address(cmf.creditManager()),
-                                adaptersList,
-                                tokenTestSuite,
-                                supportedContracts,
-                                string(
-                                    abi.encodePacked(
-                                        "CM_MOCK_",
-                                        underlyingSymbol,
-                                        "_"
-                                    )
-                                ),
-                                true
-                            );
-                            cmf.addAdapters(ad.getAdapters());
+                        //     string memory underlyingSymbol = tokenTestSuite.symbols(underlyingT);
 
-                            evm.prank(ROOT_ADDRESS);
-                            acl.transferOwnership(address(cmf));
-                            cmf.configure();
+                        //     AdapterDeployer ad = new AdapterDeployer(
+                        //         address(cmf.creditManager()),
+                        //         adaptersList,
+                        //         tokenTestSuite,
+                        //         supportedContracts,
+                        //         string(
+                        //             abi.encodePacked(
+                        //                 "CM_MOCK_",
+                        //                 underlyingSymbol,
+                        //                 "_"
+                        //             )
+                        //         ),
+                        //         true
+                        //     );
+                        //     cmf.addAdapters(ad.getAdapters());
 
-                            evm.label(
-                                address(cmf.creditFacade()),
-                                string(abi.encodePacked("CREDIT_FACADE_MOCK_", underlyingSymbol))
-                            );
-                            evm.label(
-                                address(cmf.creditManager()),
-                                string(abi.encodePacked("CREDIT_MANAGER_MOCK_", underlyingSymbol))
-                            );
-                            evm.label(
-                                address(cmf.creditConfigurator()),
-                                string(abi.encodePacked("CREDIT_CONFIGURATOR_MOCK_", underlyingSymbol))
-                            );
+                        //     evm.prank(ROOT_ADDRESS);
+                        //     acl.transferOwnership(address(cmf));
+                        //     cmf.configure();
 
-                            creditManagerMocks[underlyingT] = cmf.creditManager();
-                            creditFacadeMocks[underlyingT] = cmf.creditFacade();
-                            creditConfiguratorMocks[underlyingT] = cmf.creditConfigurator();
+                        //     evm.label(
+                        //         address(cmf.creditFacade()),
+                        //         string(abi.encodePacked("CREDIT_FACADE_MOCK_", underlyingSymbol))
+                        //     );
+                        //     evm.label(
+                        //         address(cmf.creditManager()),
+                        //         string(abi.encodePacked("CREDIT_MANAGER_MOCK_", underlyingSymbol))
+                        //     );
+                        //     evm.label(
+                        //         address(cmf.creditConfigurator()),
+                        //         string(abi.encodePacked("CREDIT_CONFIGURATOR_MOCK_", underlyingSymbol))
+                        //     );
 
-                            _configureUniswapV2Pairs(address(cmf.creditManager()), i);
-                            _configureUniswapV3Pools(address(cmf.creditManager()), i);
-                            _configureSushiswapPairs(address(cmf.creditManager()), i);
-                            _configureConvexPhantomTokens(address(cmf.creditManager()));
-                            _configureBalancerPools(address(cmf.creditManager()), i);
-                        }
+                        //     creditManagerMocks[underlyingT] = cmf.creditManager();
+                        //     creditFacadeMocks[underlyingT] = cmf.creditFacade();
+                        //     creditConfiguratorMocks[underlyingT] = cmf.creditConfigurator();
+
+                        //     _configureUniswapV2Pairs(address(cmf.creditManager()), i);
+                        //     _configureUniswapV3Pools(address(cmf.creditManager()), i);
+                        //     _configureSushiswapPairs(address(cmf.creditManager()), i);
+                        //     _configureConvexPhantomTokens(address(cmf.creditManager()));
+                        //     _configureBalancerPools(address(cmf.creditManager()), i);
+                        // }
                     }
                 }
             }

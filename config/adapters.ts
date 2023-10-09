@@ -1,4 +1,4 @@
-import { SupportedContract } from "@gearbox-protocol/sdk";
+import { SupportedContract } from "@gearbox-protocol/sdk-gov";
 
 export const adapters: Array<SupportedContract> = [
   /// SWAPPERS
@@ -6,6 +6,7 @@ export const adapters: Array<SupportedContract> = [
   "UNISWAP_V2_ROUTER",
   "SUSHISWAP_ROUTER",
   "LIDO_STETH_GATEWAY",
+  "LIDO_WSTETH",
 
   // CURVE
   "CURVE_3CRV_POOL",

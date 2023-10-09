@@ -11,12 +11,11 @@ import {
   tokenDataByNetwork,
   TokenType,
   NOT_DEPLOYED,
-} from "@gearbox-protocol/sdk";
+} from "@gearbox-protocol/sdk-gov";
 
 import { priceFeedsByToken, PriceFeedType } from "@gearbox-protocol/sdk-gov";
 
-import { BalancerLpTokenData } from "@gearbox-protocol/sdk/lib/tokens/balancer";
-import { support } from "@gearbox-protocol/sdk/lib/types/contracts";
+import { BalancerLpTokenData } from "@gearbox-protocol/sdk-gov/lib/tokens/balancer";
 import * as fs from "fs";
 
 import { mainnetCreditManagers } from "../config/liveTests";
@@ -60,7 +59,11 @@ tokenAddresses += tokens
           ? tokenDataByNetwork.Mainnet[t]
           : "address(0)"
       }, symbol: "${t}", tokenType: TokenType.${
-        TokenType[supportedTokens[t].type]
+        TokenType[
+          supportedTokens[t].type === TokenType.WRAPPED_TOKEN
+            ? TokenType.NORMAL_TOKEN
+            : supportedTokens[t].type
+        ]
       } });`,
   )
 

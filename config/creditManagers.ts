@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2022. Gearbox
  */
-import { UNISWAP_V3_QUOTER, WAD } from "@gearbox-protocol/sdk";
+import { UNISWAP_V3_QUOTER, WAD } from "@gearbox-protocol/sdk-gov";
 import { BigNumber } from "ethers";
 
 import {
@@ -92,6 +92,7 @@ export const mainnetCreditManagers: Array<CMConfig> = [
 
       { symbol: "WETH", liquidationThreshold: 85 }, // Token address is token from priceFeed map above
       { symbol: "STETH", liquidationThreshold: 82.5 }, // Token address is token from priceFeed map above
+      { symbol: "wstETH", liquidationThreshold: 82.5 },
       { symbol: "WBTC", liquidationThreshold: 85 }, // Token address is token from priceFeed map above
 
       { symbol: "USDC", liquidationThreshold: 92 }, // Token address is token from priceFeed map above
@@ -156,6 +157,7 @@ export const mainnetCreditManagers: Array<CMConfig> = [
       // Liquidation threshold will be multiplied x100 to be used as CreditFilter.sol contract parameter
       { symbol: "WETH", liquidationThreshold: 85 }, // Token address is token from priceFeed map above
       { symbol: "STETH", liquidationThreshold: 82.5 }, // Token address is token from priceFeed map above
+      { symbol: "wstETH", liquidationThreshold: 82.5 },
       { symbol: "WBTC", liquidationThreshold: 85 }, // Token address is token from priceFeed map above
 
       { symbol: "DAI", liquidationThreshold: 92 }, // Token address is token from priceFeed map above
@@ -221,6 +223,7 @@ export const mainnetCreditManagers: Array<CMConfig> = [
     collateralTokens: [
       // Liquidation threshold will be multiplied x100 to be used as CreditFilter.sol contract parameter
       { symbol: "STETH", liquidationThreshold: 90 }, // Token address is token from priceFeed map above
+      { symbol: "wstETH", liquidationThreshold: 90 },
       { symbol: "WBTC", liquidationThreshold: 85 }, // Token address is token from priceFeed map above
 
       { symbol: "USDC", liquidationThreshold: 82.5 }, // Token address is token from priceFeed map above
@@ -343,7 +346,7 @@ export const mainnetCreditManagers: Array<CMConfig> = [
     uniV2Pairs: standardUniV2Config,
     uniV3Pools: standardUniV3Config,
     sushiswapPairs: standardSushiswapConfig,
-    adapters: [...adapters, "LIDO_WSTETH"],
+    adapters: adapters,
   },
 
   {
@@ -355,6 +358,7 @@ export const mainnetCreditManagers: Array<CMConfig> = [
       // Liquidation threshold will be multiplied x100 to be used as CreditFilter.sol contract parameter
       { symbol: "WETH", liquidationThreshold: 85 }, // Token address is token from priceFeed map above
       { symbol: "STETH", liquidationThreshold: 82.5 }, // Token address is token from priceFeed map above
+      { symbol: "wstETH", liquidationThreshold: 82.5 },
 
       { symbol: "USDC", liquidationThreshold: 82.5 }, // Token address is token from priceFeed map above
       { symbol: "DAI", liquidationThreshold: 82.5 }, // Token address is token from priceFeed map above
@@ -420,6 +424,7 @@ export const mainnetCreditManagers: Array<CMConfig> = [
 
       { symbol: "WETH", liquidationThreshold: 85 }, // Token address is token from priceFeed map above
       { symbol: "STETH", liquidationThreshold: 82.5 }, // Token address is token from priceFeed map above
+      { symbol: "wstETH", liquidationThreshold: 82.5 },
       { symbol: "WBTC", liquidationThreshold: 85 }, // Token address is token from priceFeed map above
 
       { symbol: "USDC", liquidationThreshold: 92 }, // Token address is token from priceFeed map above
@@ -596,14 +601,15 @@ export const mainnetCreditManagers: Array<CMConfig> = [
       // Liquidation threshold will be multiplied x100 to be used as CreditFilter.sol contract parameter
       { symbol: "WBTC", liquidationThreshold: 85 }, // Token address is token from priceFeed map above
       { symbol: "USDT", liquidationThreshold: 85 }, // Token address is token from priceFeed map above
-
+      { symbol: "crvUSD", liquidationThreshold: 85},
+ 
       { symbol: "crvUSDTWBTCWETH", liquidationThreshold: 88 }, // Token address is token from priceFeed map above
       { symbol: "cvxcrvUSDTWBTCWETH", liquidationThreshold: 88 }, // Token address is token from priceFeed map above
       { symbol: "stkcvxcrvUSDTWBTCWETH", liquidationThreshold: 88 }, // Token address is token from priceFeed map above
 
-      { symbol: "crvCRVETH", liquidationThreshold: 82 }, // Token address is token from priceFeed map above
-      { symbol: "cvxcrvCRVETH", liquidationThreshold: 82 }, // Token address is token from priceFeed map above
-      { symbol: "stkcvxcrvCRVETH", liquidationThreshold: 82 }, // Token address is token from priceFeed map above
+      { symbol: "crvUSDETHCRV", liquidationThreshold: 82 }, // Token address is token from priceFeed map above
+      { symbol: "cvxcrvUSDETHCRV", liquidationThreshold: 82 }, // Token address is token from priceFeed map above
+      { symbol: "stkcvxcrvUSDETHCRV", liquidationThreshold: 82 }, // Token address is token from priceFeed map above
 
       { symbol: "crvCVXETH", liquidationThreshold: 82 }, // Token address is token from priceFeed map above
       { symbol: "cvxcrvCVXETH", liquidationThreshold: 82 }, // Token address is token from priceFeed map above
@@ -620,13 +626,13 @@ export const mainnetCreditManagers: Array<CMConfig> = [
     adapters: [
       // CURVE
       "CURVE_3CRYPTO_POOL",
-      "CURVE_CRVETH_POOL",
+      "CURVE_TRI_CRV_POOL",
       "CURVE_CVXETH_POOL",
       "CURVE_LDOETH_POOL",
 
       // CONVEX
       "CONVEX_3CRYPTO_POOL",
-      "CONVEX_CRVETH_POOL",
+      "CONVEX_TRI_CRV_POOL",
       "CONVEX_CVXETH_POOL",
       "CONVEX_LDOETH_POOL",
       "CONVEX_BOOSTER",

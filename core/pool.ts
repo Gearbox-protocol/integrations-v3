@@ -1,5 +1,6 @@
-import { NormalToken, SupportedContract } from "@gearbox-protocol/sdk";
-import { BalancerLPToken } from "@gearbox-protocol/sdk/lib/tokens/balancer";
+import { NormalToken, SupportedContract } from "@gearbox-protocol/sdk-gov";
+import { BalancerLPToken } from "@gearbox-protocol/sdk-gov/lib/tokens/balancer";
+import { WrappedToken } from "@gearbox-protocol/sdk-gov/lib/tokens/wrapped"
 import { BigNumberish } from "ethers";
 
 import { CollateralTokenSymbol } from "./creditFilter";
@@ -32,5 +33,5 @@ export interface CreditConfigLive {
 }
 
 export interface CMConfig extends CreditConfigLive {
-  symbol: NormalToken;
+  symbol: NormalToken | WrappedToken;
 }

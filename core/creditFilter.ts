@@ -1,4 +1,4 @@
-import { SupportedToken } from "@gearbox-protocol/sdk";
+import { SupportedToken } from "@gearbox-protocol/sdk-gov";
 
 export interface AllowedToken {
   address: string;
