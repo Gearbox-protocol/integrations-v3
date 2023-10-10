@@ -14,7 +14,7 @@
   },
   "files": [
     "contracts",
-    "config"
+    "dist"
   ],
   "license": "BUSL-1.1",
   "scripts": {
@@ -24,7 +24,8 @@
     "lint": "eslint \"**/*.ts\" --fix",
     "lint:ci": "eslint \"**/*.ts\"",
     "typecheck:ci": "tsc --noEmit",
-    "forge-install": "forge install --no-commit foundry-rs/forge-std"
+    "forge-install": "forge install --no-commit foundry-rs/forge-std",
+    "build": "tsc --p tsconfig.build.json"
   },
   "dependencies": {},
   "devDependencies": {
