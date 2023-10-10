@@ -46,6 +46,12 @@ export const config: PoolV3DeployConfig = {
       quotaIncreaseFee: 0,
       limit: (BigInt(1e7) * POOL_DECIMALS) / POOL_DIVIDER,
     },
+    rETH: {
+      minRate: 1,
+      maxRate: 3000,
+      quotaIncreaseFee: 0,
+      limit: (BigInt(1e7) * POOL_DECIMALS) / POOL_DIVIDER,
+    },
     WBTC: {
       minRate: 1,
       maxRate: 3000,
@@ -119,7 +125,12 @@ export const config: PoolV3DeployConfig = {
       quotaIncreaseFee: 0,
       limit: (BigInt(1e7) * POOL_DECIMALS) / POOL_DIVIDER,
     },
-
+    rETH_f: {
+      minRate: 1,
+      maxRate: 3000,
+      quotaIncreaseFee: 0,
+      limit: (BigInt(1e7) * POOL_DECIMALS) / POOL_DIVIDER,
+    },
     steCRV: {
       minRate: 1,
       maxRate: 3000,
@@ -252,7 +263,24 @@ export const config: PoolV3DeployConfig = {
       quotaIncreaseFee: 0,
       limit: (BigInt(1e7) * POOL_DECIMALS) / POOL_DIVIDER,
     },
-
+    B_rETH_STABLE: {
+      minRate: 1,
+      maxRate: 3000,
+      quotaIncreaseFee: 0,
+      limit: (BigInt(1e7) * POOL_DECIMALS) / POOL_DIVIDER,
+    },
+    auraB_rETH_STABLE: {
+      minRate: 1,
+      maxRate: 3000,
+      quotaIncreaseFee: 0,
+      limit: (BigInt(1e7) * POOL_DECIMALS) / POOL_DIVIDER,
+    },
+    auraB_rETH_STABLE_vault: {
+      minRate: 1,
+      maxRate: 3000,
+      quotaIncreaseFee: 0,
+      limit: (BigInt(1e7) * POOL_DECIMALS) / POOL_DIVIDER,
+    },
     yvDAI: {
       minRate: 1,
       maxRate: 3000,
@@ -321,6 +349,18 @@ export const config: PoolV3DeployConfig = {
       limit: (BigInt(1e7) * POOL_DECIMALS) / POOL_DIVIDER,
     },
     SNX: {
+      minRate: 1,
+      maxRate: 3000,
+      quotaIncreaseFee: 0,
+      limit: (BigInt(1e7) * POOL_DECIMALS) / POOL_DIVIDER,
+    },
+    BAL: {
+      minRate: 1,
+      maxRate: 3000,
+      quotaIncreaseFee: 0,
+      limit: (BigInt(1e7) * POOL_DECIMALS) / POOL_DIVIDER,
+    },
+    AURA: {
       minRate: 1,
       maxRate: 3000,
       quotaIncreaseFee: 0,

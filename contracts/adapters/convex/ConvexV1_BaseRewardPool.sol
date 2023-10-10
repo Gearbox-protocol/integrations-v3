@@ -83,7 +83,11 @@ contract ConvexV1BaseRewardPoolAdapter is AbstractAdapter, IConvexV1BaseRewardPo
 
             try ICreditManagerV3(creditManager).getTokenMaskOrRevert(_extraReward1) returns (uint256) {}
             catch {
-                _extraReward1 = IExtraRewardWrapper(_extraReward1).token();
+                try IExtraRewardWrapper(_extraReward1).token() returns (address baseToken) {
+                    _extraReward1 = baseToken;
+                } catch {
+                    _extraReward1 = IExtraRewardWrapper(_extraReward1).baseToken();
+                }
             }
 
             if (extraRewardLength >= 2) {
@@ -91,7 +95,11 @@ contract ConvexV1BaseRewardPoolAdapter is AbstractAdapter, IConvexV1BaseRewardPo
 
                 try ICreditManagerV3(creditManager).getTokenMaskOrRevert(_extraReward2) returns (uint256) {}
                 catch {
-                    _extraReward2 = IExtraRewardWrapper(_extraReward2).token();
+                    try IExtraRewardWrapper(_extraReward2).token() returns (address baseToken) {
+                        _extraReward2 = baseToken;
+                    } catch {
+                        _extraReward2 = IExtraRewardWrapper(_extraReward2).baseToken();
+                    }
                 }
             }
         }
