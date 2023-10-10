@@ -1363,10 +1363,10 @@
   resolved "https://registry.yarnpkg.com/@gearbox-protocol/prettier-config/-/prettier-config-1.5.0.tgz#4df8e9fd2305fee6ab8c1417a02e31343836932a"
   integrity sha512-FUoprSsBdZyBjgxXCKL6mTkbeUJytaLzPJqIOoQpDmBRTX0seCc2o5I9PI9tySoRIlNnd/XXnKCXq1xHDEGbxw==
 
-"@gearbox-protocol/sdk-gov@^1.8.2":
-  version "1.8.2"
-  resolved "https://registry.yarnpkg.com/@gearbox-protocol/sdk-gov/-/sdk-gov-1.8.2.tgz#c7287d068703eb8c05539b33ae419349582856a0"
-  integrity sha512-/A3LmvmJ2ETKxW++YATRnfLZPfQhGo56NeiXdoASCgtuYYqb7SXjAeaXnwlfNuaklWZd96OjBTMzLIODc+9M0g==
+"@gearbox-protocol/sdk-gov@^1.11.0":
+  version "1.11.0"
+  resolved "https://registry.yarnpkg.com/@gearbox-protocol/sdk-gov/-/sdk-gov-1.11.0.tgz#b7080d2872e5c4f9a357c0db1cfb25e474b15422"
+  integrity sha512-vcDE0UDJJy3YSCPyGxoeczpRNOQeZEGLiEiE2s/L6LWWZ5Yqrksl6vPsRcfJ1grswV7Tb1PxKl5WWdUMxbVdqg==
   dependencies:
     "@types/yaml" "^1.9.7"
     add "^2.0.6"
