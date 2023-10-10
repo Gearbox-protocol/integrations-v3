@@ -30,6 +30,12 @@ contract ConvexV1BaseRewardPoolAdapter is AbstractAdapter, IConvexV1BaseRewardPo
     /// @notice Address of a phantom token representing account's stake in the reward pool
     address public immutable override stakedPhantomToken;
 
+    /// @notice Address of a reward token of the first extra reward pool, if any
+    address public immutable override extraReward1;
+
+    /// @notice Address of a reward token of the second extra reward pool, if any
+    address public immutable override extraReward2;
+
     /// @notice Collateral token mask of a Curve LP token in the credit manager
     uint256 public immutable override curveLPTokenMask;
 
@@ -41,12 +47,6 @@ contract ConvexV1BaseRewardPoolAdapter is AbstractAdapter, IConvexV1BaseRewardPo
 
     /// @notice Bitmask of all reward tokens of the pool (CRV, CVX, extra reward tokens, if any) in the credit manager
     uint256 public immutable override rewardTokensMask;
-
-    /// @notice Reward paid by the extra reward pool 1 (address(0) if none)
-    address public immutable override extraReward1;
-
-    /// @notice Reward paid by the extra reward pool 2 (address(0) if none)
-    address public immutable override extraReward2;
 
     /// @notice Constructor
     /// @param _creditManager Credit manager address
@@ -79,38 +79,37 @@ contract ConvexV1BaseRewardPoolAdapter is AbstractAdapter, IConvexV1BaseRewardPo
         uint256 extraRewardLength = IBaseRewardPool(_baseRewardPool).extraRewardsLength();
 
         if (extraRewardLength >= 1) {
-            _extraReward1 = IRewards(IBaseRewardPool(_baseRewardPool).extraRewards(0)).rewardToken();
-
-            try ICreditManagerV3(creditManager).getTokenMaskOrRevert(_extraReward1) returns (uint256) {}
-            catch {
-                try IExtraRewardWrapper(_extraReward1).token() returns (address baseToken) {
-                    _extraReward1 = baseToken;
-                } catch {
-                    _extraReward1 = IExtraRewardWrapper(_extraReward1).baseToken();
-                }
-            }
+            uint256 _extraRewardMask;
+            (_extraReward1, _extraRewardMask) = _getExtraReward(0);
+            _rewardTokensMask = _rewardTokensMask.enable(_extraRewardMask); // F: [ACVX1_P-2]
 
             if (extraRewardLength >= 2) {
-                _extraReward2 = IRewards(IBaseRewardPool(_baseRewardPool).extraRewards(1)).rewardToken();
-
-                try ICreditManagerV3(creditManager).getTokenMaskOrRevert(_extraReward2) returns (uint256) {}
-                catch {
-                    try IExtraRewardWrapper(_extraReward2).token() returns (address baseToken) {
-                        _extraReward2 = baseToken;
-                    } catch {
-                        _extraReward2 = IExtraRewardWrapper(_extraReward2).baseToken();
-                    }
-                }
+                (_extraReward2, _extraRewardMask) = _getExtraReward(1);
+                _rewardTokensMask = _rewardTokensMask.enable(_extraRewardMask); // F: [ACVX1_P-2]
             }
         }
 
-        extraReward1 = _extraReward1;
-        extraReward2 = _extraReward2;
-
-        if (_extraReward1 != address(0)) _rewardTokensMask = _rewardTokensMask.enable(_getMaskOrRevert(_extraReward1)); // F: [ACVX1_P-2]
-        if (_extraReward2 != address(0)) _rewardTokensMask = _rewardTokensMask.enable(_getMaskOrRevert(_extraReward2)); // F: [ACVX1_P-2]
-
+        extraReward1 = _extraReward1; // F: [ACVX1_P-1]
+        extraReward2 = _extraReward2; // F: [ACVX1_P-1]
         rewardTokensMask = _rewardTokensMask; // F: [ACVX1_P-1]
+    }
+
+    /// @dev Returns `i`-th extra reward token and its collateral mask in the credit mnager
+    function _getExtraReward(uint256 i) internal view returns (address extraReward, uint256 extraRewardMask) {
+        extraReward = IRewards(IBaseRewardPool(targetContract).extraRewards(i)).rewardToken();
+
+        // `extraReward` might be a wrapper around the reward token, and there seems to be no reliable way to check it
+        // programatically, so we assume that it's a wrapper if it's not recognized as collateral in the credit manager
+        try ICreditManagerV3(creditManager).getTokenMaskOrRevert(extraReward) returns (uint256 mask) {
+            extraRewardMask = mask;
+        } catch {
+            try IExtraRewardWrapper(extraReward).token() returns (address baseToken) {
+                extraReward = baseToken;
+            } catch {
+                extraReward = IExtraRewardWrapper(extraReward).baseToken();
+            }
+            extraRewardMask = _getMaskOrRevert(extraReward);
+        }
     }
 
     // ----- //
