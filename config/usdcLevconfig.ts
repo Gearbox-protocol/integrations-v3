@@ -5,7 +5,7 @@ import { adapters } from "./adapters";
 const POOL_DECIMALS = BigInt(1e6);
 const POOL_DIVIDER = BigInt(1);
 
-export const usdcLevConfig: PoolV3DeployConfig = {
+export const config: PoolV3DeployConfig = {
   id: "mainnet-usdc-lev-v3",
   symbol: "dUSDC-lev-V3",
   name: "USDC v3 farm",

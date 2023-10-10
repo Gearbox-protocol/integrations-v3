@@ -3,7 +3,7 @@ import { PoolV3DeployConfig } from "@gearbox-protocol/sdk-gov";
 const POOL_DECIMALS = BigInt(1e18);
 const POOL_DIVIDER = BigInt(1800);
 
-export const wethMTData: PoolV3DeployConfig = {
+export const config: PoolV3DeployConfig = {
   id: "mainnet-weth-mt-v3",
   symbol: "dWETHV3",
   name: "WETH v3",

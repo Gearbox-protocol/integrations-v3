@@ -13,7 +13,8 @@
     "url": "https://github.com/Gearbox-protocol/integrations-v3"
   },
   "files": [
-    "contracts"
+    "contracts",
+    "config"
   ],
   "license": "BUSL-1.1",
   "scripts": {

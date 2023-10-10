@@ -1,8 +1,8 @@
 import { PoolV3CoreConfigurator } from "@gearbox-protocol/sdk-gov";
 
-import { usdcMTConfig } from "../usdcMTconfig";
+import { config } from "../usdcMTconfig";
 
-const poolCfg = PoolV3CoreConfigurator.new(usdcMTConfig);
+const poolCfg = PoolV3CoreConfigurator.new(config);
 console.error(poolCfg.toString());
 
 console.log(poolCfg.deployConfig());

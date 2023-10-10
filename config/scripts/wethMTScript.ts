@@ -1,8 +1,8 @@
 import { PoolV3CoreConfigurator } from "@gearbox-protocol/sdk-gov";
 
-import { wethMTData } from "../wethMTconfig";
+import { config } from "../wethMTconfig";
 
-const poolCfg = PoolV3CoreConfigurator.new(wethMTData);
+const poolCfg = PoolV3CoreConfigurator.new(config);
 console.error(poolCfg.toString());
 
 console.log(poolCfg.deployConfig());
