@@ -1,7 +1,4 @@
-import {
-  PoolV3CoreConfigurator,
-  PoolV3DeployConfig,
-} from "@gearbox-protocol/sdk-gov";
+import { PoolV3DeployConfig } from "@gearbox-protocol/sdk-gov";
 
 const POOL_DECIMALS = BigInt(1e8);
 const POOL_DIVIDER = BigInt(26000);
@@ -54,8 +51,3 @@ export const config: PoolV3DeployConfig = {
   ],
   supportsQuotas: false,
 };
-
-const poolCfg = PoolV3CoreConfigurator.new(config);
-console.error(poolCfg.toString());
-
-console.log(poolCfg.deployConfig());
