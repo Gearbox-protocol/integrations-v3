@@ -39,7 +39,9 @@ jobs:
         run: forge build
         timeout-minutes: 10
 
-      
+      - name: Build dist
+        run: yarn build
+
       - name: Semantic Release
         uses: cycjimmy/semantic-release-action@v3
         env:
