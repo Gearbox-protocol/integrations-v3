@@ -290,6 +290,7 @@ export const config: PoolV3DeployConfig = {
   },
   creditManagers: [
     {
+      name: "Farm USDC v3",
       degenNft: false,
       expirationDate: undefined,
       minDebt: (BigInt(1e4) * POOL_DECIMALS) / POOL_DIVIDER,
