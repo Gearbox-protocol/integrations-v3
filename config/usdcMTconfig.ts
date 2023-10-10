@@ -47,13 +47,13 @@ export const config: PoolV3DeployConfig = {
       limit: (BigInt(5e5) * POOL_DECIMALS) / POOL_DIVIDER,
     },
     RPL: {
-      minRate: 0,
+      minRate: 1,
       maxRate: 3000,
       quotaIncreaseFee: 200,
       limit: (BigInt(3e5) * POOL_DECIMALS) / POOL_DIVIDER,
     },
     CRV: {
-      minRate: 0,
+      minRate: 1,
       maxRate: 3000,
       quotaIncreaseFee: 200,
       limit: (BigInt(25e4) * POOL_DECIMALS) / POOL_DIVIDER,
