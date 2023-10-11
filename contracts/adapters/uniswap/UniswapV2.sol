@@ -13,7 +13,7 @@ import {AdapterType} from "@gearbox-protocol/sdk-gov/contracts/AdapterType.sol";
 import {IUniswapV2Router02} from "../../integrations/uniswap/IUniswapV2Router02.sol";
 import {IUniswapV2Adapter, UniswapV2PairStatus} from "../../interfaces/uniswap/IUniswapV2Adapter.sol";
 
-/// @title Uniswap V2 Router adapter interface
+/// @title Uniswap V2 Router adapter
 /// @notice Implements logic allowing CAs to perform swaps via Uniswap V2 and its forks
 contract UniswapV2Adapter is AbstractAdapter, IUniswapV2Adapter {
     AdapterType public constant override _gearboxAdapterType = AdapterType.UNISWAP_V2_ROUTER;
@@ -25,7 +25,9 @@ contract UniswapV2Adapter is AbstractAdapter, IUniswapV2Adapter {
     /// @notice Constructor
     /// @param _creditManager Credit manager address
     /// @param _router Uniswap V2 Router address
-    constructor(address _creditManager, address _router) AbstractAdapter(_creditManager, _router) {}
+    constructor(address _creditManager, address _router)
+        AbstractAdapter(_creditManager, _router) // U:[UNI2-1]
+    {}
 
     /// @notice Swap input token for given amount of output token
     /// @param amountOut Amount of output token to receive
@@ -40,11 +42,16 @@ contract UniswapV2Adapter is AbstractAdapter, IUniswapV2Adapter {
         address[] calldata path,
         address,
         uint256 deadline
-    ) external override creditFacadeOnly returns (uint256 tokensToEnable, uint256 tokensToDisable) {
-        address creditAccount = _creditAccount(); // F: [AUV2-1]
+    )
+        external
+        override
+        creditFacadeOnly // U:[UNI2-2]
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+    {
+        address creditAccount = _creditAccount(); // U:[UNI2-3]
 
-        (bool valid, address tokenIn, address tokenOut) = _validatePath(path); // F: [AUV2-2]
-        if (!valid) revert InvalidPathException(); // F: [AUV2-5]
+        (bool valid, address tokenIn, address tokenOut) = _validatePath(path);
+        if (!valid) revert InvalidPathException(); // U:[UNI2-3]
 
         // calling `_executeSwap` because we need to check if output token is registered as collateral token in the CM
         (tokensToEnable, tokensToDisable,) = _executeSwapSafeApprove(
@@ -54,7 +61,7 @@ contract UniswapV2Adapter is AbstractAdapter, IUniswapV2Adapter {
                 IUniswapV2Router02.swapTokensForExactTokens, (amountOut, amountInMax, path, creditAccount, deadline)
             ),
             false
-        ); // F: [AUV2-2]
+        ); // U:[UNI2-3]
     }
 
     /// @notice Swap given amount of input token to output token
@@ -70,11 +77,16 @@ contract UniswapV2Adapter is AbstractAdapter, IUniswapV2Adapter {
         address[] calldata path,
         address,
         uint256 deadline
-    ) external override creditFacadeOnly returns (uint256 tokensToEnable, uint256 tokensToDisable) {
-        address creditAccount = _creditAccount(); // F: [AUV2-1]
+    )
+        external
+        override
+        creditFacadeOnly // U:[UNI2-2]
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+    {
+        address creditAccount = _creditAccount(); // U:[UNI2-4]
 
-        (bool valid, address tokenIn, address tokenOut) = _validatePath(path); // F: [AUV2-3]
-        if (!valid) revert InvalidPathException(); // F: [AUV2-5]
+        (bool valid, address tokenIn, address tokenOut) = _validatePath(path);
+        if (!valid) revert InvalidPathException(); // U:[UNI2-4]
 
         // calling `_executeSwap` because we need to check if output token is registered as collateral token in the CM
         (tokensToEnable, tokensToDisable,) = _executeSwapSafeApprove(
@@ -84,7 +96,7 @@ contract UniswapV2Adapter is AbstractAdapter, IUniswapV2Adapter {
                 IUniswapV2Router02.swapExactTokensForTokens, (amountIn, amountOutMin, path, creditAccount, deadline)
             ),
             false
-        ); // F: [AUV2-3]
+        ); // U:[UNI2-4]
     }
 
     /// @notice Swap the entire balance of input token to output token, disables input token
@@ -95,19 +107,19 @@ contract UniswapV2Adapter is AbstractAdapter, IUniswapV2Adapter {
     function swapAllTokensForTokens(uint256 rateMinRAY, address[] calldata path, uint256 deadline)
         external
         override
-        creditFacadeOnly
+        creditFacadeOnly // U:[UNI2-2]
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        address creditAccount = _creditAccount(); // F: [AUV2-1]
+        address creditAccount = _creditAccount(); // U:[UNI2-5]
 
-        (bool valid, address tokenIn, address tokenOut) = _validatePath(path); // F: [AUV2-4]
-        if (!valid) revert InvalidPathException(); // F: [AUV2-5]
+        (bool valid, address tokenIn, address tokenOut) = _validatePath(path);
+        if (!valid) revert InvalidPathException(); // U:[UNI2-5]
 
-        uint256 balance = IERC20(tokenIn).balanceOf(creditAccount); // F: [AUV2-4]
+        uint256 balance = IERC20(tokenIn).balanceOf(creditAccount); // U:[UNI2-5]
         if (balance <= 1) return (0, 0);
 
         unchecked {
-            balance--;
+            balance--; // U:[UNI2-5]
         }
 
         // calling `_executeSwap` because we need to check if output token is registered as collateral token in the CM
@@ -119,7 +131,7 @@ contract UniswapV2Adapter is AbstractAdapter, IUniswapV2Adapter {
                 (balance, (balance * rateMinRAY) / RAY, path, creditAccount, deadline)
             ),
             true
-        ); // F: [AUV2-4]
+        ); // U:[UNI2-5]
     }
 
     // ------------- //
@@ -134,13 +146,17 @@ contract UniswapV2Adapter is AbstractAdapter, IUniswapV2Adapter {
 
     /// @notice Sets status for a batch of pairs
     /// @param pairs Array of `UniswapV2PairStatus` objects
-    function setPairStatusBatch(UniswapV2PairStatus[] calldata pairs) external override configuratorOnly {
+    function setPairStatusBatch(UniswapV2PairStatus[] calldata pairs)
+        external
+        override
+        configuratorOnly // U:[UNI2-6]
+    {
         uint256 len = pairs.length;
         unchecked {
             for (uint256 i; i < len; ++i) {
                 (address token0, address token1) = _sortTokens(pairs[i].token0, pairs[i].token1);
-                _pairStatus[token0][token1] = pairs[i].allowed;
-                emit SetPairStatus(token0, token1, pairs[i].allowed);
+                _pairStatus[token0][token1] = pairs[i].allowed; // U:[UNI2-6]
+                emit SetPairStatus(token0, token1, pairs[i].allowed); // U:[UNI2-6]
             }
         }
     }
@@ -158,14 +174,14 @@ contract UniswapV2Adapter is AbstractAdapter, IUniswapV2Adapter {
         returns (bool valid, address tokenIn, address tokenOut)
     {
         uint256 len = path.length;
-        if (len < 2 || len > 4) return (false, tokenIn, tokenOut);
+        if (len < 2 || len > 4) return (false, tokenIn, tokenOut); // U:[UNI2-7]
 
-        tokenIn = path[0];
-        tokenOut = path[len - 1];
+        tokenIn = path[0]; // U:[UNI2-7]
+        tokenOut = path[len - 1]; // U:[UNI2-7]
         valid = isPairAllowed(path[0], path[1]);
         if (valid && len > 2) {
-            valid = isPairAllowed(path[1], path[2]);
-            if (valid && len > 3) valid = isPairAllowed(path[2], path[3]);
+            valid = isPairAllowed(path[1], path[2]); // U:[UNI2-7]
+            if (valid && len > 3) valid = isPairAllowed(path[2], path[3]); // U:[UNI2-7]
         }
     }
 

@@ -14,7 +14,7 @@ import {ISwapRouter} from "../../integrations/uniswap/IUniswapV3.sol";
 import {BytesLib} from "../../integrations/uniswap/BytesLib.sol";
 import {IUniswapV3Adapter, UniswapV3PoolStatus} from "../../interfaces/uniswap/IUniswapV3Adapter.sol";
 
-/// @title Uniswap V3 Router adapter interface
+/// @title Uniswap V3 Router adapter
 /// @notice Implements logic allowing CAs to perform swaps via Uniswap V3
 contract UniswapV3Adapter is AbstractAdapter, IUniswapV3Adapter {
     using BytesLib for bytes;
@@ -46,7 +46,9 @@ contract UniswapV3Adapter is AbstractAdapter, IUniswapV3Adapter {
     /// @notice Constructor
     /// @param _creditManager Credit manager address
     /// @param _router Uniswap V3 Router address
-    constructor(address _creditManager, address _router) AbstractAdapter(_creditManager, _router) {}
+    constructor(address _creditManager, address _router)
+        AbstractAdapter(_creditManager, _router) // U:[UNI3-1]
+    {}
 
     /// @notice Swaps given amount of input token for output token through a single pool
     /// @param params Swap params, see `ISwapRouter.ExactInputSingleParams` for details
@@ -54,18 +56,18 @@ contract UniswapV3Adapter is AbstractAdapter, IUniswapV3Adapter {
     function exactInputSingle(ISwapRouter.ExactInputSingleParams calldata params)
         external
         override
-        creditFacadeOnly
+        creditFacadeOnly // U:[UNI3-2]
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        address creditAccount = _creditAccount(); // F: [AUV3-1]
+        address creditAccount = _creditAccount(); // U:[UNI3-3]
 
-        ISwapRouter.ExactInputSingleParams memory paramsUpdate = params; // F: [AUV3-2]
-        paramsUpdate.recipient = creditAccount; // F: [AUV3-2]
+        ISwapRouter.ExactInputSingleParams memory paramsUpdate = params; // U:[UNI3-3]
+        paramsUpdate.recipient = creditAccount; // U:[UNI3-3]
 
         // // calling `_executeSwap` because we need to check if output token is registered as collateral token in the CM
         (tokensToEnable, tokensToDisable,) = _executeSwapSafeApprove(
             params.tokenIn, params.tokenOut, abi.encodeCall(ISwapRouter.exactInputSingle, (paramsUpdate)), false
-        ); // F: [AUV3-2]
+        ); // U:[UNI3-3]
     }
 
     /// @notice Swaps all balance of input token for output token through a single pool, disables input token
@@ -73,16 +75,16 @@ contract UniswapV3Adapter is AbstractAdapter, IUniswapV3Adapter {
     function exactAllInputSingle(ExactAllInputSingleParams calldata params)
         external
         override
-        creditFacadeOnly
+        creditFacadeOnly // U:[UNI3-2]
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        address creditAccount = _creditAccount(); // F: [AUV3-1]
+        address creditAccount = _creditAccount(); // U:[UNI3-4]
 
-        uint256 balance = IERC20(params.tokenIn).balanceOf(creditAccount); // F: [AUV3-3]
+        uint256 balance = IERC20(params.tokenIn).balanceOf(creditAccount); // U:[UNI3-4]
         if (balance <= 1) return (0, 0);
 
         unchecked {
-            balance--;
+            balance--; // U:[UNI3-4]
         }
 
         ISwapRouter.ExactInputSingleParams memory paramsUpdate = ISwapRouter.ExactInputSingleParams({
@@ -94,12 +96,12 @@ contract UniswapV3Adapter is AbstractAdapter, IUniswapV3Adapter {
             amountIn: balance,
             amountOutMinimum: (balance * params.rateMinRAY) / RAY,
             sqrtPriceLimitX96: params.sqrtPriceLimitX96
-        }); // F: [AUV3-3]
+        }); // U:[UNI3-4]
 
         // calling `_executeSwap` because we need to check if output token is registered as collateral token in the CM
         (tokensToEnable, tokensToDisable,) = _executeSwapSafeApprove(
             params.tokenIn, params.tokenOut, abi.encodeCall(ISwapRouter.exactInputSingle, (paramsUpdate)), true
-        ); // F: [AUV3-3]
+        ); // U:[UNI3-4]
     }
 
     /// @notice Swaps given amount of input token for output token through multiple pools
@@ -109,20 +111,20 @@ contract UniswapV3Adapter is AbstractAdapter, IUniswapV3Adapter {
     function exactInput(ISwapRouter.ExactInputParams calldata params)
         external
         override
-        creditFacadeOnly
+        creditFacadeOnly // U:[UNI3-2]
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        address creditAccount = _creditAccount(); // F: [AUV3-1]
+        address creditAccount = _creditAccount(); // U:[UNI3-5]
 
         (bool valid, address tokenIn, address tokenOut) = _validatePath(params.path);
-        if (!valid) revert InvalidPathException(); // F: [AUV3-9]
+        if (!valid) revert InvalidPathException(); // U:[UNI3-5]
 
-        ISwapRouter.ExactInputParams memory paramsUpdate = params; // F: [AUV3-4]
-        paramsUpdate.recipient = creditAccount; // F: [AUV3-4]
+        ISwapRouter.ExactInputParams memory paramsUpdate = params; // U:[UNI3-5]
+        paramsUpdate.recipient = creditAccount; // U:[UNI3-5]
 
         // calling `_executeSwap` because we need to check if output token is registered as collateral token in the CM
         (tokensToEnable, tokensToDisable,) =
-            _executeSwapSafeApprove(tokenIn, tokenOut, abi.encodeCall(ISwapRouter.exactInput, (paramsUpdate)), false); // F: [AUV3-4]
+            _executeSwapSafeApprove(tokenIn, tokenOut, abi.encodeCall(ISwapRouter.exactInput, (paramsUpdate)), false); // U:[UNI3-5]
     }
 
     /// @notice Swaps all balance of input token for output token through multiple pools, disables input token
@@ -131,19 +133,19 @@ contract UniswapV3Adapter is AbstractAdapter, IUniswapV3Adapter {
     function exactAllInput(ExactAllInputParams calldata params)
         external
         override
-        creditFacadeOnly
+        creditFacadeOnly // U:[UNI3-2]
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        address creditAccount = _creditAccount(); // F: [AUV3-1]
+        address creditAccount = _creditAccount(); // U:[UNI3-6]
 
         (bool valid, address tokenIn, address tokenOut) = _validatePath(params.path);
-        if (!valid) revert InvalidPathException(); // F: [AUV3-9]
+        if (!valid) revert InvalidPathException(); // U:[UNI3-6]
 
-        uint256 balance = IERC20(tokenIn).balanceOf(creditAccount); // F: [AUV3-5]
+        uint256 balance = IERC20(tokenIn).balanceOf(creditAccount); // U:[UNI3-6]
         if (balance <= 1) return (0, 0);
 
         unchecked {
-            balance--;
+            balance--; // U:[UNI3-6]
         }
         ISwapRouter.ExactInputParams memory paramsUpdate = ISwapRouter.ExactInputParams({
             path: params.path,
@@ -151,11 +153,11 @@ contract UniswapV3Adapter is AbstractAdapter, IUniswapV3Adapter {
             deadline: params.deadline,
             amountIn: balance,
             amountOutMinimum: (balance * params.rateMinRAY) / RAY
-        }); // F: [AUV3-5]
+        }); // U:[UNI3-6]
 
         // calling `_executeSwap` because we need to check if output token is registered as collateral token in the CM
         (tokensToEnable, tokensToDisable,) =
-            _executeSwapSafeApprove(tokenIn, tokenOut, abi.encodeCall(ISwapRouter.exactInput, (paramsUpdate)), true); // F: [AUV3-5]
+            _executeSwapSafeApprove(tokenIn, tokenOut, abi.encodeCall(ISwapRouter.exactInput, (paramsUpdate)), true); // U:[UNI3-6]
     }
 
     /// @notice Swaps input token for given amount of output token through a single pool
@@ -164,18 +166,18 @@ contract UniswapV3Adapter is AbstractAdapter, IUniswapV3Adapter {
     function exactOutputSingle(ISwapRouter.ExactOutputSingleParams calldata params)
         external
         override
-        creditFacadeOnly
+        creditFacadeOnly // U:[UNI3-2]
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        address creditAccount = _creditAccount(); // F: [AUV3-1]
+        address creditAccount = _creditAccount(); // U:[UNI3-7]
 
-        ISwapRouter.ExactOutputSingleParams memory paramsUpdate = params; // F: [AUV3-6]
-        paramsUpdate.recipient = creditAccount; // F: [AUV3-6]
+        ISwapRouter.ExactOutputSingleParams memory paramsUpdate = params; // U:[UNI3-7]
+        paramsUpdate.recipient = creditAccount; // U:[UNI3-7]
 
         // calling `_executeSwap` because we need to check if output token is registered as collateral token in the CM
         (tokensToEnable, tokensToDisable,) = _executeSwapSafeApprove(
             params.tokenIn, params.tokenOut, abi.encodeCall(ISwapRouter.exactOutputSingle, (paramsUpdate)), false
-        ); // F: [AUV3-6]
+        ); // U:[UNI3-7]
     }
 
     /// @notice Swaps input token for given amount of output token through multiple pools
@@ -185,20 +187,20 @@ contract UniswapV3Adapter is AbstractAdapter, IUniswapV3Adapter {
     function exactOutput(ISwapRouter.ExactOutputParams calldata params)
         external
         override
-        creditFacadeOnly
+        creditFacadeOnly // U:[UNI3-2]
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        address creditAccount = _creditAccount(); // F: [AUV3-1]
+        address creditAccount = _creditAccount(); // U:[UNI3-8]
 
         (bool valid, address tokenOut, address tokenIn) = _validatePath(params.path);
-        if (!valid) revert InvalidPathException(); // F: [AUV3-9]
+        if (!valid) revert InvalidPathException(); // U:[UNI3-8]
 
-        ISwapRouter.ExactOutputParams memory paramsUpdate = params; // F: [AUV3-7]
-        paramsUpdate.recipient = creditAccount; // F: [AUV3-7]
+        ISwapRouter.ExactOutputParams memory paramsUpdate = params; // U:[UNI3-8]
+        paramsUpdate.recipient = creditAccount; // U:[UNI3-8]
 
         // calling `_executeSwap` because we need to check if output token is registered as collateral token in the CM
         (tokensToEnable, tokensToDisable,) =
-            _executeSwapSafeApprove(tokenIn, tokenOut, abi.encodeCall(ISwapRouter.exactOutput, (paramsUpdate)), false); // F: [AUV3-7]
+            _executeSwapSafeApprove(tokenIn, tokenOut, abi.encodeCall(ISwapRouter.exactOutput, (paramsUpdate)), false); // U:[UNI3-8]
     }
 
     // ------------- //
@@ -213,13 +215,17 @@ contract UniswapV3Adapter is AbstractAdapter, IUniswapV3Adapter {
 
     /// @notice Sets status for a batch of pools
     /// @param pools Array of `UniswapV3PoolStatus` objects
-    function setPoolStatusBatch(UniswapV3PoolStatus[] calldata pools) external override configuratorOnly {
+    function setPoolStatusBatch(UniswapV3PoolStatus[] calldata pools)
+        external
+        override
+        configuratorOnly // U:[UNI3-9]
+    {
         uint256 len = pools.length;
         unchecked {
             for (uint256 i; i < len; ++i) {
                 (address token0, address token1) = _sortTokens(pools[i].token0, pools[i].token1);
-                _poolStatus[token0][token1][pools[i].fee] = pools[i].allowed;
-                emit SetPoolStatus(token0, token1, pools[i].fee, pools[i].allowed);
+                _poolStatus[token0][token1][pools[i].fee] = pools[i].allowed; // U:[UNI3-9]
+                emit SetPoolStatus(token0, token1, pools[i].fee, pools[i].allowed); // U:[UNI3-9]
             }
         }
     }
@@ -233,24 +239,24 @@ contract UniswapV3Adapter is AbstractAdapter, IUniswapV3Adapter {
     ///      - Each swap must be through an allowed pool
     function _validatePath(bytes memory path) internal view returns (bool valid, address tokenIn, address tokenOut) {
         uint256 len = path.length;
-        if (len != PATH_2_LENGTH && len != PATH_3_LENGTH && len != PATH_4_LENGTH) return (false, tokenIn, tokenOut);
+        if (len != PATH_2_LENGTH && len != PATH_3_LENGTH && len != PATH_4_LENGTH) return (false, tokenIn, tokenOut); // U:[UNI3-10]
 
-        tokenIn = path.toAddress(0);
+        tokenIn = path.toAddress(0); // U:[UNI3-10]
         uint24 fee = path.toUint24(ADDR_SIZE);
-        tokenOut = path.toAddress(NEXT_OFFSET);
-        valid = isPoolAllowed(tokenIn, tokenOut, fee);
+        tokenOut = path.toAddress(NEXT_OFFSET); // U:[UNI3-10]
+        valid = isPoolAllowed(tokenIn, tokenOut, fee); // U:[UNI3-10]
 
         if (valid && len > PATH_2_LENGTH) {
             address tokenMid = tokenOut;
             fee = path.toUint24(NEXT_OFFSET + ADDR_SIZE);
-            tokenOut = path.toAddress(2 * NEXT_OFFSET);
-            valid = isPoolAllowed(tokenMid, tokenOut, fee);
+            tokenOut = path.toAddress(2 * NEXT_OFFSET); // U:[UNI3-10]
+            valid = isPoolAllowed(tokenMid, tokenOut, fee); // U:[UNI3-10]
 
             if (valid && len > PATH_3_LENGTH) {
                 tokenMid = tokenOut;
                 fee = path.toUint24(2 * NEXT_OFFSET + ADDR_SIZE);
-                tokenOut = path.toAddress(3 * NEXT_OFFSET);
-                valid = isPoolAllowed(tokenMid, tokenOut, fee);
+                tokenOut = path.toAddress(3 * NEXT_OFFSET); // U:[UNI3-10]
+                valid = isPoolAllowed(tokenMid, tokenOut, fee); // U:[UNI3-10]
             }
         }
     }
