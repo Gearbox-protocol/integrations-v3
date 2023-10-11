@@ -23,13 +23,13 @@ export const config: PoolV3DeployConfig = {
   },
   ratesAndLimits: {
     STETH: {
-      minRate: 0,
+      minRate: 1,
       maxRate: 200,
       quotaIncreaseFee: 0,
       limit: (BigInt(30e6) * POOL_DECIMALS) / POOL_DIVIDER,
     },
     USDC: {
-      minRate: 0,
+      minRate: 1,
       maxRate: 3000,
       quotaIncreaseFee: 100,
       limit: (BigInt(30e6) * POOL_DECIMALS) / POOL_DIVIDER,
@@ -37,6 +37,7 @@ export const config: PoolV3DeployConfig = {
   },
   creditManagers: [
     {
+      name: "WETH v3",
       degenNft: false,
       expirationDate: undefined,
       minDebt: (BigInt(1e4) * POOL_DECIMALS) / POOL_DIVIDER,
