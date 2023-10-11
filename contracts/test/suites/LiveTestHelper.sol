@@ -87,11 +87,20 @@ contract LiveTestHelper is IntegrationTestHelper {
     function _configureAdapters(address creditManager, CreditManagerV3DeployParams memory creditManagerParams)
         internal
     {
-        // CONVEX BOOSTER
+        // CONVEX AND AURA BOOSTER
         address boosterAdapter = getAdapter(creditManager, Contracts.CONVEX_BOOSTER);
 
-        vm.prank(CONFIGURATOR);
-        IConvexV1BoosterAdapter(boosterAdapter).updateStakedPhantomTokensMap();
+        if (boosterAdapter != address(0)) {
+            vm.prank(CONFIGURATOR);
+            IConvexV1BoosterAdapter(boosterAdapter).updateStakedPhantomTokensMap();
+        }
+
+        boosterAdapter = getAdapter(creditManager, Contracts.AURA_BOOSTER);
+
+        if (boosterAdapter != address(0)) {
+            vm.prank(CONFIGURATOR);
+            IConvexV1BoosterAdapter(boosterAdapter).updateStakedPhantomTokensMap();
+        }
 
         // BALANCER VAULT
         BalancerPool[] memory bPools = creditManagerParams.balancerPools;

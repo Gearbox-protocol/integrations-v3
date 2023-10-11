@@ -137,11 +137,14 @@ contract ConvexV1BoosterAdapter is AbstractAdapter, IConvexV1BoosterAdapter {
         unchecked {
             for (uint256 i = 0; i < len; ++i) {
                 address adapter = allowedAdapters[i];
-                address targetContract = IAdapter(adapter).targetContract();
+                address poolTargetContract = IAdapter(adapter).targetContract();
                 AdapterType aType = IAdapter(adapter)._gearboxAdapterType();
 
-                if (aType == AdapterType.CONVEX_V1_BASE_REWARD_POOL) {
-                    uint256 pid = IBaseRewardPool(targetContract).pid();
+                if (
+                    aType == AdapterType.CONVEX_V1_BASE_REWARD_POOL
+                        && IBaseRewardPool(poolTargetContract).operator() == targetContract
+                ) {
+                    uint256 pid = IBaseRewardPool(poolTargetContract).pid();
                     address phantomToken = IConvexV1BaseRewardPoolAdapter(adapter).stakedPhantomToken();
                     pidToPhantomToken[pid] = phantomToken;
                     emit SetPidToPhantomToken(pid, phantomToken);
