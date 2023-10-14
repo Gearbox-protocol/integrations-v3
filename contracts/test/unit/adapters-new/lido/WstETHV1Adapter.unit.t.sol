@@ -8,7 +8,7 @@ import {IwstETH, IwstETHGetters} from "../../../../integrations/lido/IwstETH.sol
 import {AdapterUnitTestHelper} from "../AdapterUnitTestHelper.sol";
 
 /// @title wstETH v1 adapter unit test
-/// @notice U:[WST]: Unit tests for wstETH v1 adapter
+/// @notice U:[LDO1W]: Unit tests for wstETH v1 adapter
 contract WstETHV1AdapterUnitTest is AdapterUnitTestHelper {
     WstETHV1Adapter adapter;
 
@@ -28,8 +28,8 @@ contract WstETHV1AdapterUnitTest is AdapterUnitTestHelper {
         adapter = new WstETHV1Adapter(address(creditManager), wstETH);
     }
 
-    /// @notice U:[WST-1]: Constructor works as expected
-    function test_U_WST_01_constructor_works_as_expected() public {
+    /// @notice U:[LDO1W-1]: Constructor works as expected
+    function test_U_LDO1W_01_constructor_works_as_expected() public {
         _readsTokenMask(stETH);
         _readsTokenMask(wstETH);
         adapter = new WstETHV1Adapter(address(creditManager), wstETH);
@@ -42,8 +42,8 @@ contract WstETHV1AdapterUnitTest is AdapterUnitTestHelper {
         assertEq(adapter.wstETHTokenMask(), wstETHMask, "Incorrect wstETHMask");
     }
 
-    /// @notice U:[WST-2]: Wrapper functions revert on wrong caller
-    function test_U_WST_02_wrapper_functions_revert_on_wrong_caller() public {
+    /// @notice U:[LDO1W-2]: Wrapper functions revert on wrong caller
+    function test_U_LDO1W_02_wrapper_functions_revert_on_wrong_caller() public {
         _revertsOnNonFacadeCaller();
         adapter.wrap(0);
 
@@ -57,8 +57,8 @@ contract WstETHV1AdapterUnitTest is AdapterUnitTestHelper {
         adapter.unwrapAll();
     }
 
-    /// @notice U:[WST-3]: `wrap` works as expected
-    function test_U_WST_03_wrap_works_as_expected() public {
+    /// @notice U:[LDO1W-3]: `wrap` works as expected
+    function test_U_LDO1W_03_wrap_works_as_expected() public {
         _executesSwap({
             tokenIn: stETH,
             tokenOut: wstETH,
@@ -73,8 +73,8 @@ contract WstETHV1AdapterUnitTest is AdapterUnitTestHelper {
         assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
     }
 
-    /// @notice U:[WST-4]: `wrapAll` works as expected
-    function test_U_WST_04_wrapAll_works_as_expected() public {
+    /// @notice U:[LDO1W-4]: `wrapAll` works as expected
+    function test_U_LDO1W_04_wrapAll_works_as_expected() public {
         deal({token: stETH, to: creditAccount, give: 1000});
 
         _readsActiveAccount();
@@ -92,8 +92,8 @@ contract WstETHV1AdapterUnitTest is AdapterUnitTestHelper {
         assertEq(tokensToDisable, stETHMask, "Incorrect tokensToDisable");
     }
 
-    /// @notice U:[WST-5]: `unwrap` works as expected
-    function test_U_WST_05_unwrap_works_as_expected() public {
+    /// @notice U:[LDO1W-5]: `unwrap` works as expected
+    function test_U_LDO1W_05_unwrap_works_as_expected() public {
         _executesSwap({
             tokenIn: wstETH,
             tokenOut: stETH,
@@ -108,8 +108,8 @@ contract WstETHV1AdapterUnitTest is AdapterUnitTestHelper {
         assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
     }
 
-    /// @notice U:[WST-6]: `unwrapAll` works as expected
-    function test_U_WST_06_unwrapAll_works_as_expected() public {
+    /// @notice U:[LDO1W-6]: `unwrapAll` works as expected
+    function test_U_LDO1W_06_unwrapAll_works_as_expected() public {
         deal({token: wstETH, to: creditAccount, give: 1000});
 
         _readsActiveAccount();

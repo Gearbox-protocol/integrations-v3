@@ -15,11 +15,13 @@ abstract contract CompoundV2_CTokenAdapter is AbstractAdapter, ICompoundV2_CToke
     /// @notice Constructor
     /// @param _creditManager Credit manager address
     /// @param _targetContract Target contract address, must implement `ICErc20Actions`
-    constructor(address _creditManager, address _targetContract) AbstractAdapter(_creditManager, _targetContract) {}
+    constructor(address _creditManager, address _targetContract)
+        AbstractAdapter(_creditManager, _targetContract) // U:[COMP2-1]
+    {}
 
     /// @dev Reverts if CToken operation produced non-zero error code
     function _revertOnError(uint256 error) internal pure {
-        if (error != 0) revert CTokenError(error);
+        if (error != 0) revert CTokenError(error); // U:[COMP2-3]
     }
 
     // ------- //
@@ -31,24 +33,24 @@ abstract contract CompoundV2_CTokenAdapter is AbstractAdapter, ICompoundV2_CToke
     function mint(uint256 amount)
         external
         override
-        creditFacadeOnly // F: [ACV2CT-1]
+        creditFacadeOnly // U:[COMP2-2]
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
         uint256 error;
-        (tokensToEnable, tokensToDisable, error) = _mint(amount); // F: [ACV2CT-2, ACV2CT-3]
-        _revertOnError(error);
+        (tokensToEnable, tokensToDisable, error) = _mint(amount); // U:[COMP2-4]
+        _revertOnError(error); // U:[COMP2-3]
     }
 
     /// @notice Deposit all underlying tokens into Compound in exchange for cTokens, disables underlying
     function mintAll()
         external
         override
-        creditFacadeOnly // F: [ACV2CT-1]
+        creditFacadeOnly // U:[COMP2-2]
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
         uint256 error;
-        (tokensToEnable, tokensToDisable, error) = _mintAll(); // F: [ACV2CT-4, ACV2CT-5]
-        _revertOnError(error);
+        (tokensToEnable, tokensToDisable, error) = _mintAll(); // U:[COMP2-5]
+        _revertOnError(error); // U:[COMP2-3]
     }
 
     /// @dev Internal implementation of `mint`
@@ -66,7 +68,7 @@ abstract contract CompoundV2_CTokenAdapter is AbstractAdapter, ICompoundV2_CToke
 
     /// @dev Encodes calldata for `ICErc20Actions.mint` call
     function _encodeMint(uint256 amount) internal pure returns (bytes memory callData) {
-        callData = abi.encodeCall(ICErc20Actions.mint, (amount)); // F: [ACV2CT-2, ACV2CT-4]
+        callData = abi.encodeCall(ICErc20Actions.mint, (amount)); // U:[COMP2-4,5]
     }
 
     // --------- //
@@ -78,24 +80,24 @@ abstract contract CompoundV2_CTokenAdapter is AbstractAdapter, ICompoundV2_CToke
     function redeem(uint256 amount)
         external
         override
-        creditFacadeOnly // F: [ACV2CT-1]
+        creditFacadeOnly // U:[COMP2-2]
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
         uint256 error;
-        (tokensToEnable, tokensToDisable, error) = _redeem(amount); // F: [ACV2CT-6, ACV2CT-7]
-        _revertOnError(error);
+        (tokensToEnable, tokensToDisable, error) = _redeem(amount); // U:[COMP2-6]
+        _revertOnError(error); // U:[COMP2-3]
     }
 
     /// @notice Withdraw all underlying tokens from Compound and burn cTokens, disables cToken
     function redeemAll()
         external
         override
-        creditFacadeOnly // F: [ACV2CT-1]
+        creditFacadeOnly // U:[COMP2-2]
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
         uint256 error;
-        (tokensToEnable, tokensToDisable, error) = _redeemAll(); // F: [ACV2CT-8, ACV2CT-9]
-        _revertOnError(error);
+        (tokensToEnable, tokensToDisable, error) = _redeemAll(); // U:[COMP2-7]
+        _revertOnError(error); // U:[COMP2-3]
     }
 
     /// @dev Internal implementation of `redeem`
@@ -113,7 +115,7 @@ abstract contract CompoundV2_CTokenAdapter is AbstractAdapter, ICompoundV2_CToke
 
     /// @dev Encodes calldata for `ICErc20Actions.redeem` call
     function _encodeRedeem(uint256 amount) internal pure returns (bytes memory callData) {
-        callData = abi.encodeCall(ICErc20Actions.redeem, (amount)); // F: [ACV2CT-6, ACV2CT-8]
+        callData = abi.encodeCall(ICErc20Actions.redeem, (amount)); // U:[COMP2-6,7]
     }
 
     // -------------------- //
@@ -125,12 +127,12 @@ abstract contract CompoundV2_CTokenAdapter is AbstractAdapter, ICompoundV2_CToke
     function redeemUnderlying(uint256 amount)
         external
         override
-        creditFacadeOnly // F: [ACV2CT-1]
+        creditFacadeOnly // U:[COMP2-2]
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
         uint256 error;
-        (tokensToEnable, tokensToDisable, error) = _redeemUnderlying(amount); // F: [ACV2CT-10, ACV2CT-11]
-        _revertOnError(error);
+        (tokensToEnable, tokensToDisable, error) = _redeemUnderlying(amount); // U:[COMP2-8]
+        _revertOnError(error); // U:[COMP2-3]
     }
 
     /// @dev Internal implementation of `redeemUnderlying`
@@ -143,6 +145,6 @@ abstract contract CompoundV2_CTokenAdapter is AbstractAdapter, ICompoundV2_CToke
 
     /// @dev Encodes calldata for `ICErc20Actions.redeemUnderlying` call
     function _encodeRedeemUnderlying(uint256 amount) internal pure returns (bytes memory callData) {
-        callData = abi.encodeCall(ICErc20Actions.redeemUnderlying, (amount)); // F: [ACV2CT-10]
+        callData = abi.encodeCall(ICErc20Actions.redeemUnderlying, (amount)); // U:[COMP2-8]
     }
 }

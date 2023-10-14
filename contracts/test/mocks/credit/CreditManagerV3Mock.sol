@@ -3,12 +3,12 @@
 // (c) Gearbox Foundation, 2023.
 pragma solidity ^0.8.17;
 
-interface CreditManagerMockEvents {
+interface CreditManagerV3MockEvents {
     event Approve(address token, uint256 amount);
     event Execute();
 }
 
-contract CreditManagerMock is CreditManagerMockEvents {
+contract CreditManagerV3Mock is CreditManagerV3MockEvents {
     address public addressProvider;
     address public creditFacade;
 

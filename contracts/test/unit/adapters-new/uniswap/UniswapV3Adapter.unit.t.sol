@@ -15,7 +15,7 @@ import {UniswapV3AdapterHarness} from "./UniswapV3Adapter.harness.sol";
 
 /// @title Uniswap v3 adapter unit test
 /// @notice U:[UNI3]: Unit tests for Uniswap v3 swap router adapter
-contract UniswapV2AdapterUnitTest is
+contract UniswapV3AdapterUnitTest is
     AdapterUnitTestHelper,
     IUniswapV3AdapterEvents,
     IUniswapV3AdapterExceptions,

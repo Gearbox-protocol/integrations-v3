@@ -8,7 +8,7 @@ import {IYVault} from "../../../../integrations/yearn/IYVault.sol";
 import {AdapterUnitTestHelper} from "../AdapterUnitTestHelper.sol";
 
 /// @title Yearn v2 adapter unit test
-/// @notice U:[YFI]: Unit tests for Yearn v2 yToken adapter
+/// @notice U:[YFI2]: Unit tests for Yearn v2 yToken adapter
 contract YearnV2AdapterUnitTest is AdapterUnitTestHelper {
     YearnV2Adapter adapter;
 
@@ -28,8 +28,8 @@ contract YearnV2AdapterUnitTest is AdapterUnitTestHelper {
         adapter = new YearnV2Adapter(address(creditManager), yToken);
     }
 
-    /// @notice U:[YFI-1]: Constructor works as expected
-    function test_U_YFI_01_constructor_works_as_expected() public {
+    /// @notice U:[YFI2-1]: Constructor works as expected
+    function test_U_YFI2_01_constructor_works_as_expected() public {
         _readsTokenMask(token);
         _readsTokenMask(yToken);
         adapter = new YearnV2Adapter(address(creditManager), yToken);
@@ -42,8 +42,8 @@ contract YearnV2AdapterUnitTest is AdapterUnitTestHelper {
         assertEq(adapter.yTokenMask(), yTokenMask, "Incorrect yTokenMask");
     }
 
-    /// @notice U:[YFI-2]: Wrapper functions revert on wrong caller
-    function test_U_YFI_02_wrapper_functions_revert_on_wrong_caller() public {
+    /// @notice U:[YFI2-2]: Wrapper functions revert on wrong caller
+    function test_U_YFI2_02_wrapper_functions_revert_on_wrong_caller() public {
         _revertsOnNonFacadeCaller();
         adapter.deposit();
 
@@ -66,8 +66,8 @@ contract YearnV2AdapterUnitTest is AdapterUnitTestHelper {
         adapter.withdraw(0, address(0), 0);
     }
 
-    /// @notice U:[YFI-3]: `deposit()` works as expected
-    function test_U_YFI_03_deposit_works_as_expected() public {
+    /// @notice U:[YFI2-3]: `deposit()` works as expected
+    function test_U_YFI2_03_deposit_works_as_expected() public {
         deal({token: token, to: creditAccount, give: 1000});
 
         _readsActiveAccount();
@@ -85,8 +85,8 @@ contract YearnV2AdapterUnitTest is AdapterUnitTestHelper {
         assertEq(tokensToDisable, tokenMask, "Incorrect tokensToDisable");
     }
 
-    /// @notice U:[YFI-4]: `deposit(uint256)` works as expected
-    function test_U_YFI_04_deposit_uint256_works_as_expected() public {
+    /// @notice U:[YFI2-4]: `deposit(uint256)` works as expected
+    function test_U_YFI2_04_deposit_uint256_works_as_expected() public {
         _executesSwap({
             tokenIn: token,
             tokenOut: yToken,
@@ -101,8 +101,8 @@ contract YearnV2AdapterUnitTest is AdapterUnitTestHelper {
         assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
     }
 
-    /// @notice U:[YFI-5]: `deposit(uint256,address)` works as expected
-    function test_U_YFI_05_deposit_uint256_address_works_as_expected() public {
+    /// @notice U:[YFI2-5]: `deposit(uint256,address)` works as expected
+    function test_U_YFI2_05_deposit_uint256_address_works_as_expected() public {
         _executesSwap({
             tokenIn: token,
             tokenOut: yToken,
@@ -117,8 +117,8 @@ contract YearnV2AdapterUnitTest is AdapterUnitTestHelper {
         assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
     }
 
-    /// @notice U:[YFI-6]: `withdraw()` works as expected
-    function test_U_YFI_06_withdraw_works_as_expected() public {
+    /// @notice U:[YFI2-6]: `withdraw()` works as expected
+    function test_U_YFI2_06_withdraw_works_as_expected() public {
         deal({token: yToken, to: creditAccount, give: 1000});
 
         _readsActiveAccount();
@@ -136,8 +136,8 @@ contract YearnV2AdapterUnitTest is AdapterUnitTestHelper {
         assertEq(tokensToDisable, yTokenMask, "Incorrect tokensToDisable");
     }
 
-    /// @notice U:[TV-7]: `withdraw(uint256)` works as expected
-    function test_U_YFI_07_withdraw_uint256_works_as_expected() public {
+    /// @notice U:[YFI2-7]: `withdraw(uint256)` works as expected
+    function test_U_YFI2_07_withdraw_uint256_works_as_expected() public {
         _executesSwap({
             tokenIn: yToken,
             tokenOut: token,
@@ -152,8 +152,8 @@ contract YearnV2AdapterUnitTest is AdapterUnitTestHelper {
         assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
     }
 
-    /// @notice U:[YFI-8]: `withdraw(uint256,address)` works as expected
-    function test_U_YFI_08_withdraw_uint256_address_works_as_expected() public {
+    /// @notice U:[YFI2-8]: `withdraw(uint256,address)` works as expected
+    function test_U_YFI2_08_withdraw_uint256_address_works_as_expected() public {
         _executesSwap({
             tokenIn: yToken,
             tokenOut: token,
@@ -168,8 +168,8 @@ contract YearnV2AdapterUnitTest is AdapterUnitTestHelper {
         assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
     }
 
-    /// @notice U:[YFI-9]: `withdraw(uint256,address,uint256)` works as expected
-    function test_U_YFI_09_withdraw_uint256_address_uint256_works_as_expected() public {
+    /// @notice U:[YFI2-9]: `withdraw(uint256,address,uint256)` works as expected
+    function test_U_YFI2_09_withdraw_uint256_address_uint256_works_as_expected() public {
         _readsActiveAccount();
         _executesSwap({
             tokenIn: yToken,

@@ -43,15 +43,15 @@ contract LidoV1Adapter is AbstractAdapter, ILidoV1Adapter {
     /// @param _creditManager Credit manager address
     /// @param _lidoGateway Lido gateway address
     constructor(address _creditManager, address _lidoGateway)
-        AbstractAdapter(_creditManager, _lidoGateway) // U:[LDO-1]
+        AbstractAdapter(_creditManager, _lidoGateway) // U:[LDO1-1]
     {
-        stETH = LidoV1Gateway(payable(_lidoGateway)).stETH(); // U:[LDO-1]
-        stETHTokenMask = _getMaskOrRevert(stETH); // U:[LDO-1]
+        stETH = LidoV1Gateway(payable(_lidoGateway)).stETH(); // U:[LDO1-1]
+        stETHTokenMask = _getMaskOrRevert(stETH); // U:[LDO1-1]
 
-        weth = LidoV1Gateway(payable(_lidoGateway)).weth(); // U:[LDO-1]
-        wethTokenMask = _getMaskOrRevert(weth); // U:[LDO-1]
+        weth = LidoV1Gateway(payable(_lidoGateway)).weth(); // U:[LDO1-1]
+        wethTokenMask = _getMaskOrRevert(weth); // U:[LDO1-1]
 
-        treasury = IAddressProviderV3(addressProvider).getAddressOrRevert(AP_TREASURY, NO_VERSION_CONTROL); // U:[LDO-1]
+        treasury = IAddressProviderV3(addressProvider).getAddressOrRevert(AP_TREASURY, NO_VERSION_CONTROL); // U:[LDO1-1]
     }
 
     /// @notice Stakes given amount of WETH in Lido via Gateway
@@ -60,10 +60,10 @@ contract LidoV1Adapter is AbstractAdapter, ILidoV1Adapter {
     function submit(uint256 amount)
         external
         override
-        creditFacadeOnly // U:[LDO-2]
+        creditFacadeOnly // U:[LDO1-2]
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        (tokensToEnable, tokensToDisable) = _submit(amount, false); // U:[LDO-3]
+        (tokensToEnable, tokensToDisable) = _submit(amount, false); // U:[LDO1-3]
     }
 
     /// @notice Stakes the entire balance of WETH in Lido via Gateway, disables WETH
@@ -71,15 +71,15 @@ contract LidoV1Adapter is AbstractAdapter, ILidoV1Adapter {
     function submitAll()
         external
         override
-        creditFacadeOnly // U:[LDO-2]
+        creditFacadeOnly // U:[LDO1-2]
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        address creditAccount = _creditAccount(); // U:[LDO-4]
+        address creditAccount = _creditAccount(); // U:[LDO1-4]
 
-        uint256 balance = IERC20(weth).balanceOf(creditAccount); // U:[LDO-4]
+        uint256 balance = IERC20(weth).balanceOf(creditAccount); // U:[LDO1-4]
         if (balance > 1) {
             unchecked {
-                (tokensToEnable, tokensToDisable) = _submit(balance - 1, true); // U:[LDO-4]
+                (tokensToEnable, tokensToDisable) = _submit(balance - 1, true); // U:[LDO1-4]
             }
         }
     }
@@ -92,9 +92,9 @@ contract LidoV1Adapter is AbstractAdapter, ILidoV1Adapter {
         internal
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        _approveToken(weth, type(uint256).max); // U:[LDO-3,4]
-        _execute(abi.encodeCall(LidoV1Gateway.submit, (amount, treasury))); // U:[LDO-3,4]
-        _approveToken(weth, 1); // U:[LDO-3,4]
+        _approveToken(weth, type(uint256).max); // U:[LDO1-3,4]
+        _execute(abi.encodeCall(LidoV1Gateway.submit, (amount, treasury))); // U:[LDO1-3,4]
+        _approveToken(weth, 1); // U:[LDO1-3,4]
         (tokensToEnable, tokensToDisable) = (stETHTokenMask, disableWETH ? wethTokenMask : 0);
     }
 }

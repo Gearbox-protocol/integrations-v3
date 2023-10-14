@@ -9,7 +9,7 @@ import {LidoV1Gateway} from "../../../../helpers/lido/LidoV1_WETHGateway.sol";
 import {AdapterUnitTestHelper} from "../AdapterUnitTestHelper.sol";
 
 /// @title Lido v1 adapter unit test
-/// @notice U:[LDO]: Unit tests for Lido v1 adapter
+/// @notice U:[LDO1]: Unit tests for Lido v1 adapter
 contract LidoV1AdapterUnitTest is AdapterUnitTestHelper {
     LidoV1Adapter adapter;
 
@@ -40,8 +40,8 @@ contract LidoV1AdapterUnitTest is AdapterUnitTestHelper {
         adapter = new LidoV1Adapter(address(creditManager), gateway);
     }
 
-    /// @notice U:[LDO-1]: Constructor works as expected
-    function test_U_LDO_01_constructor_works_as_expected() public {
+    /// @notice U:[LDO1-1]: Constructor works as expected
+    function test_U_LDO1_01_constructor_works_as_expected() public {
         _readsTokenMask(weth);
         _readsTokenMask(stETH);
         adapter = new LidoV1Adapter(address(creditManager), gateway);
@@ -56,8 +56,8 @@ contract LidoV1AdapterUnitTest is AdapterUnitTestHelper {
         assertEq(adapter.treasury(), treasury, "Incorrect treasury");
     }
 
-    /// @notice U:[LDO-2]: Wrapper functions revert on wrong caller
-    function test_U_LDO_02_wrapper_functions_revert_on_wrong_caller() public {
+    /// @notice U:[LDO1-2]: Wrapper functions revert on wrong caller
+    function test_U_LDO1_02_wrapper_functions_revert_on_wrong_caller() public {
         _revertsOnNonFacadeCaller();
         adapter.submit(0);
 
@@ -65,8 +65,8 @@ contract LidoV1AdapterUnitTest is AdapterUnitTestHelper {
         adapter.submitAll();
     }
 
-    /// @notice U:[LDO-3]: `submit` works as expected
-    function test_U_LDO_03_submit_works_as_expected() public {
+    /// @notice U:[LDO1-3]: `submit` works as expected
+    function test_U_LDO1_03_submit_works_as_expected() public {
         _executesSwap({
             tokenIn: weth,
             tokenOut: stETH,
@@ -81,8 +81,8 @@ contract LidoV1AdapterUnitTest is AdapterUnitTestHelper {
         assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
     }
 
-    /// @notice U:[LDO-4]: `submitAll` works as expected
-    function test_U_LDO_04_submitAll_works_as_expected() public {
+    /// @notice U:[LDO1-4]: `submitAll` works as expected
+    function test_U_LDO1_04_submitAll_works_as_expected() public {
         deal({token: weth, to: creditAccount, give: 1000});
 
         _readsActiveAccount();

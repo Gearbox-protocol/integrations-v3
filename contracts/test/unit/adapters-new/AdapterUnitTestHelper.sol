@@ -14,13 +14,13 @@ import {AddressProviderV3ACLMock} from
     "@gearbox-protocol/core-v3/contracts/test/mocks/core/AddressProviderV3ACLMock.sol";
 import {ERC20Mock} from "@gearbox-protocol/core-v3/contracts/test/mocks/token/ERC20Mock.sol";
 
-import {CreditManagerMock, CreditManagerMockEvents} from "../../mocks/credit/CreditManagerMock.sol";
+import {CreditManagerV3Mock, CreditManagerV3MockEvents} from "../../mocks/credit/CreditManagerV3Mock.sol";
 
-contract AdapterUnitTestHelper is Test, CreditManagerMockEvents {
+contract AdapterUnitTestHelper is Test, CreditManagerV3MockEvents {
     address configurator;
     address creditFacade;
     address creditAccount;
-    CreditManagerMock creditManager;
+    CreditManagerV3Mock creditManager;
     AddressProviderV3ACLMock addressProvider;
 
     address[8] tokens;
@@ -33,7 +33,7 @@ contract AdapterUnitTestHelper is Test, CreditManagerMockEvents {
         vm.prank(configurator);
         addressProvider = new AddressProviderV3ACLMock();
 
-        creditManager = new CreditManagerMock(address(addressProvider), creditFacade);
+        creditManager = new CreditManagerV3Mock(address(addressProvider), creditFacade);
 
         for (uint256 i; i < tokens.length; ++i) {
             string memory name = string.concat("Test Token ", vm.toString(i));
