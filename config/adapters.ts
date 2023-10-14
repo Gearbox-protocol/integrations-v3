@@ -97,6 +97,10 @@ const standardBalancerConfig: BalancerVaultConfig = {
       pool: "B_rETH_STABLE",
       status: 1,
     },
+    {
+      pool: "USDC_DAI_USDT",
+      status: 1,
+    },
   ],
 };
 

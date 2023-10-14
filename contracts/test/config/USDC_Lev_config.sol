@@ -87,6 +87,7 @@ contract CONFIG_MAINNET_USDC_LEV_V3 is IPoolV3DeployConfig {
         _gaugeRates.push(GaugeRate({token: Tokens.crvFRAX, minRate: 1, maxRate: 30_00}));
         _gaugeRates.push(GaugeRate({token: Tokens.cvxcrvFRAX, minRate: 1, maxRate: 30_00}));
         _gaugeRates.push(GaugeRate({token: Tokens.stkcvxcrvFRAX, minRate: 1, maxRate: 30_00}));
+        _gaugeRates.push(GaugeRate({token: Tokens.USDC_DAI_USDT, minRate: 1, maxRate: 30_00}));
         _gaugeRates.push(GaugeRate({token: Tokens.B_rETH_STABLE, minRate: 1, maxRate: 30_00}));
         _gaugeRates.push(GaugeRate({token: Tokens.auraB_rETH_STABLE, minRate: 1, maxRate: 30_00}));
         _gaugeRates.push(GaugeRate({token: Tokens.auraB_rETH_STABLE_vault, minRate: 1, maxRate: 30_00}));
@@ -154,6 +155,7 @@ contract CONFIG_MAINNET_USDC_LEV_V3 is IPoolV3DeployConfig {
         _quotaLimits.push(PoolQuotaLimit({token: Tokens.crvFRAX, quotaIncreaseFee: 0, limit: 10_000_000_000_000}));
         _quotaLimits.push(PoolQuotaLimit({token: Tokens.cvxcrvFRAX, quotaIncreaseFee: 0, limit: 10_000_000_000_000}));
         _quotaLimits.push(PoolQuotaLimit({token: Tokens.stkcvxcrvFRAX, quotaIncreaseFee: 0, limit: 10_000_000_000_000}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.USDC_DAI_USDT, quotaIncreaseFee: 0, limit: 10_000_000_000_000}));
         _quotaLimits.push(PoolQuotaLimit({token: Tokens.B_rETH_STABLE, quotaIncreaseFee: 0, limit: 10_000_000_000_000}));
         _quotaLimits.push(
             PoolQuotaLimit({token: Tokens.auraB_rETH_STABLE, quotaIncreaseFee: 0, limit: 10_000_000_000_000})
@@ -260,6 +262,8 @@ contract CONFIG_MAINNET_USDC_LEV_V3 is IPoolV3DeployConfig {
         cts.push(CollateralTokenHuman({token: Tokens.cvxcrvFRAX, lt: 90_00}));
 
         cts.push(CollateralTokenHuman({token: Tokens.stkcvxcrvFRAX, lt: 90_00}));
+
+        cts.push(CollateralTokenHuman({token: Tokens.USDC_DAI_USDT, lt: 82_00}));
 
         cts.push(CollateralTokenHuman({token: Tokens.B_rETH_STABLE, lt: 82_00}));
 
@@ -374,6 +378,8 @@ contract CONFIG_MAINNET_USDC_LEV_V3 is IPoolV3DeployConfig {
         bp.push(BalancerPool({poolId: 0x76fcf0e8c7ff37a47a799fa2cd4c13cde0d981c90002000000000000000003d2, status: 2}));
 
         bp.push(BalancerPool({poolId: 0x1e19cf2d73a72ef1332c882f20534b6519be0276000200000000000000000112, status: 1}));
+
+        bp.push(BalancerPool({poolId: 0x79c58f70905f734641735bc61e45c19dd9ad60bc0000000000000000000004e7, status: 1}));
         cs.push(Contracts.CURVE_3CRV_POOL);
         cs.push(Contracts.CURVE_FRAX_USDC_POOL);
         cs.push(Contracts.CURVE_STETH_GATEWAY);
