@@ -4,116 +4,125 @@
 pragma solidity ^0.8.17;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {IERC20Permit} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Permit.sol";
 import {SafeERC20} from "@1inch/solidity-utils/contracts/libraries/SafeERC20.sol";
-
 import {IPoolV3} from "@gearbox-protocol/core-v3/contracts/interfaces/IPoolV3.sol";
-
 import {IZapper} from "../interfaces/zappers/IZapper.sol";
 
-/// @title Zapper base
-/// @notice Base contract for zappers allowing users to deposit/withdraw an unwrapped token
-///         to/from a Gearbox pool with wrapped token as underlying in a single operation
 abstract contract ZapperBase is IZapper {
     using SafeERC20 for IERC20;
 
-    /// @notice Pool this zapper is connected to
-    address public immutable override pool;
+    address public immutable pool;
 
-    /// @notice Underlying token of the pool
-    address public immutable override wrappedToken;
+    address public immutable underlying;
 
-    /// @notice Constructor
-    /// @param pool_ Pool to connect this zapper to
     constructor(address pool_) {
         pool = pool_;
-        wrappedToken = IPoolV3(pool_).asset();
-        ZapperBase._resetPoolAllowance();
+        underlying = IPoolV3(pool_).underlyingToken();
+        _resetAllowance(underlying, pool);
     }
 
-    /// @notice Token that this zapper produces (might differ from the pool share token)
-    function tokenOut() public view virtual override returns (address) {
-        return pool;
+    function tokenIn() public view virtual returns (address);
+
+    function tokenOut() public view virtual returns (address);
+
+    // ------- //
+    // PREVIEW //
+    // ------- //
+
+    function previewDeposit(uint256 tokenInAmount) external view returns (uint256 tokenOutAmount) {
+        uint256 assets = tokenIn() == underlying ? tokenInAmount : _previewTokenInToUnderlying(tokenInAmount);
+        uint256 shares = IPoolV3(pool).previewDeposit(assets);
+        tokenOutAmount = tokenOut() == pool ? shares : _previewSharesToTokenOut(shares);
     }
 
-    /// @notice Returns number of pool shares one would receive for depositing `amount` of unwrapped token
-    function previewDeposit(uint256 amount) external view override returns (uint256 shares) {
-        uint256 assets = _previewWrap(amount);
-        return IPoolV3(pool).previewDeposit(assets);
-    }
-
-    /// @notice Returns amount of unwrapped token one would receive for redeeming `shares` of pool shares
-    function previewRedeem(uint256 shares) external view override returns (uint256 amount) {
+    function previewRedeem(uint256 tokenOutAmount) external view returns (uint256 tokenInAmount) {
+        uint256 shares = tokenOut() == pool ? tokenOutAmount : _previewTokenOutToShares(tokenOutAmount);
         uint256 assets = IPoolV3(pool).previewRedeem(shares);
-        return _previewUnwrap(assets);
+        tokenInAmount = tokenIn() == underlying ? assets : _previewUnderlyingToTokenIn(assets);
     }
 
-    /// @notice Zaps redeeming underlying from the pool and unwrapping it into a single operation
-    /// @dev Requires `owner`'s approval for pool shares to this contract
-    function redeem(uint256 shares, address receiver, address owner) external override returns (uint256 amount) {
-        amount = _redeem(shares, receiver, owner);
+    function _previewTokenInToUnderlying(uint256 tokenInAmount) internal view virtual returns (uint256 assets);
+
+    function _previewUnderlyingToTokenIn(uint256 assets) internal view virtual returns (uint256 tokenInAmount);
+
+    function _previewSharesToTokenOut(uint256 shares) internal view virtual returns (uint256 tokenOutAmount);
+
+    function _previewTokenOutToShares(uint256 tokenOutAmount) internal view virtual returns (uint256 shares);
+
+    // --- //
+    // ZAP //
+    // --- //
+
+    function redeem(uint256 tokenOutAmount, address receiver, address owner) external returns (uint256 tokenInAmount) {
+        tokenInAmount = _redeem(tokenOutAmount, receiver, owner);
     }
 
-    /// @notice Zaps redeeming underlying from the pool and unwrapping it into a single operation
-    /// @dev `v`, `r`, `s` must be a valid signature of the permit message for pool shares from `owner` to this contract
     function redeemWithPermit(
-        uint256 shares,
+        uint256 tokenOutAmount,
         address receiver,
         address owner,
         uint256 deadline,
         uint8 v,
         bytes32 r,
         bytes32 s
-    ) external override returns (uint256 amount) {
-        try IPoolV3(pool).permit(owner, address(this), shares, deadline, v, r, s) {} catch {}
-        amount = _redeem(shares, receiver, owner);
+    ) external returns (uint256 tokenInAmount) {
+        try IERC20Permit(tokenOut()).permit(owner, address(this), tokenOutAmount, deadline, v, r, s) {} catch {}
+        tokenInAmount = _redeem(tokenOutAmount, receiver, owner);
     }
 
-    /// @dev Implementation of deposit zap
-    ///      - Receives `amount` of unwrapped token from `msg.sender` and wraps it
-    ///      - Deposits wrapped token into the pool and mints pool shares to `receiver`
-    function _deposit(uint256 amount, address receiver) internal virtual returns (uint256 shares) {
-        uint256 assets = _receiveAndWrap(amount);
-        shares = IPoolV3(pool).deposit(assets, receiver);
-        _resetPoolAllowance();
+    function _deposit(uint256 tokenInAmount, address receiver) internal virtual returns (uint256 tokenOutAmount) {
+        bool tokenOutIsPool = tokenOut() == pool;
+
+        uint256 assets = _tokenInToUnderlying(tokenInAmount);
+        uint256 shares = IPoolV3(pool).deposit({assets: assets, receiver: tokenOutIsPool ? receiver : address(this)});
+        tokenOutAmount = tokenOutIsPool ? shares : _sharesToTokenOut(shares, receiver);
     }
 
-    /// @dev Same as `_deposit` but allows to specify the referral code
-    function _depositWithReferral(uint256 amount, address receiver, uint256 referralCode)
+    function _depositWithReferral(uint256 tokenInAmount, address receiver, uint256 referralCode)
         internal
         virtual
-        returns (uint256 shares)
+        returns (uint256 tokenOutAmount)
     {
-        uint256 assets = _receiveAndWrap(amount);
-        shares = IPoolV3(pool).depositWithReferral(assets, receiver, referralCode);
-        _resetPoolAllowance();
+        bool tokenOutIsPool = tokenOut() == pool;
+
+        uint256 assets = _tokenInToUnderlying(tokenInAmount);
+        uint256 shares = IPoolV3(pool).depositWithReferral({
+            assets: assets,
+            receiver: tokenOutIsPool ? receiver : address(this),
+            referralCode: referralCode
+        });
+        tokenOutAmount = tokenOutIsPool ? shares : _sharesToTokenOut(shares, receiver);
     }
 
-    /// @dev Implementation of redeem zap
-    ///      - Burns `owner`'s pool shares and redeems wrapped token
-    ///      - Unwraps redeemed token and sends `amount` of unwrapped token to `receiver`
-    function _redeem(uint256 shares, address receiver, address owner) internal virtual returns (uint256 amount) {
-        uint256 assets = IPoolV3(pool).redeem(shares, address(this), owner);
-        amount = _unwrapAndSend(assets, receiver);
+    function _redeem(uint256 tokenOutAmount, address receiver, address owner)
+        internal
+        virtual
+        returns (uint256 tokenInAmount)
+    {
+        bool tokenOutIsPool = tokenOut() == pool;
+        bool tokenInIsUnderlying = tokenIn() == underlying;
+
+        uint256 shares = tokenOutIsPool ? tokenOutAmount : _tokenOutToShares(tokenOutAmount, owner);
+        uint256 assets = IPoolV3(pool).redeem({
+            shares: shares,
+            receiver: tokenInIsUnderlying ? receiver : address(this),
+            owner: tokenOutIsPool ? owner : address(this)
+        });
+        tokenInAmount = tokenInIsUnderlying ? assets : _underlyingToTokenIn(assets, receiver);
     }
 
-    /// @dev Receives unwrapped token from `msg.sender` and wraps it, must be overriden by derived zappers
-    function _receiveAndWrap(uint256 amount) internal virtual returns (uint256 wrappedAmount);
+    function _tokenInToUnderlying(uint256 tokenInAmount) internal virtual returns (uint256 assets);
 
-    /// @dev Unwraps pool's underlying and sends it to `receiver`, must be overriden by derived zappers
-    function _unwrapAndSend(uint256 amount, address receiver) internal virtual returns (uint256 unwrappedAmount);
+    function _underlyingToTokenIn(uint256 assets, address receiver) internal virtual returns (uint256 tokenInAmount);
 
-    /// @dev Returns amount of wrapped token one would receive for wrapping `amount` of unwrapped token,
-    ///      must be overriden by derived zappers
-    function _previewWrap(uint256 amount) internal view virtual returns (uint256 wrappedAmount);
+    function _sharesToTokenOut(uint256 shares, address receiver) internal virtual returns (uint256 tokenOutAmount);
 
-    /// @dev Returns amount of unwrapped token one would receive for unwrapping `amount` of wrapped token,
-    ///      must be overriden by derived zappers
-    function _previewUnwrap(uint256 amount) internal view virtual returns (uint256 unwrappedAmount);
+    function _tokenOutToShares(uint256 tokenOutAmount, address owner) internal virtual returns (uint256 shares);
 
-    /// @dev Gives `pool` max allowance for the `wrappedToken`
-    function _resetPoolAllowance() internal virtual {
-        _resetAllowance(wrappedToken, pool);
-    }
+    // --------- //
+    // INTERNALS //
+    // --------- //
 
     /// @dev Gives `spender` max allowance for this contract's `token`
     function _resetAllowance(address token, address spender) internal {
