@@ -15,7 +15,7 @@ abstract contract ERC20ZapperBase is ZapperBase, IERC20Zapper {
     ///         - converts `pool`'s shares to `tokenOutAmount` of `tokenOut` and sends it to `receiver`
     /// @dev Requires approval from `msg.sender` for `tokenIn` to this contract
     function deposit(uint256 tokenInAmount, address receiver) external returns (uint256 tokenOutAmount) {
-        tokenOutAmount = _deposit(tokenInAmount, receiver);
+        tokenOutAmount = _deposit(tokenInAmount, receiver, false, 0);
     }
 
     /// @notice Same as `deposit` but allows specifying the `referralCode` when depositing into the pool
@@ -23,6 +23,6 @@ abstract contract ERC20ZapperBase is ZapperBase, IERC20Zapper {
         external
         returns (uint256 tokenOutAmount)
     {
-        tokenOutAmount = _depositWithReferral(tokenInAmount, receiver, referralCode);
+        tokenOutAmount = _deposit(tokenInAmount, receiver, true, referralCode);
     }
 }

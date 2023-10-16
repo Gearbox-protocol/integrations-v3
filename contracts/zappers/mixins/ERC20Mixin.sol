@@ -20,14 +20,12 @@ abstract contract ERC20Mixin is ERC20ZapperBase {
     }
 
     /// @inheritdoc ZapperBase
-    function _previewTokenInToUnderlying(uint256 tokenInAmount) internal pure override returns (uint256 assets) {
-        assets = tokenInAmount;
-    }
+    /// @dev Does nothing
+    function _previewTokenInToUnderlying(uint256 tokenInAmount) internal pure override returns (uint256 assets) {}
 
     /// @inheritdoc ZapperBase
-    function _previewUnderlyingToTokenIn(uint256 assets) internal pure override returns (uint256 tokenInAmount) {
-        tokenInAmount = assets;
-    }
+    /// @dev Does nothing
+    function _previewUnderlyingToTokenIn(uint256 assets) internal pure override returns (uint256 tokenInAmount) {}
 
     /// @inheritdoc ZapperBase
     function _tokenInToUnderlying(uint256 tokenInAmount) internal override returns (uint256 assets) {
@@ -36,8 +34,6 @@ abstract contract ERC20Mixin is ERC20ZapperBase {
     }
 
     /// @inheritdoc ZapperBase
-    function _underlyingToTokenIn(uint256 assets, address receiver) internal override returns (uint256 tokenInAmount) {
-        tokenInAmount = assets;
-        IERC20(underlying).safeTransfer(receiver, tokenInAmount);
-    }
+    /// @dev Does nothing
+    function _underlyingToTokenIn(uint256 assets, address receiver) internal override returns (uint256 tokenInAmount) {}
 }

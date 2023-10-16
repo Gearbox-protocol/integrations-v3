@@ -24,9 +24,9 @@ abstract contract ZapperBase is IZapper {
     /// @notice Constructor
     /// @param pool_ Pool to connect a new zapper to
     constructor(address pool_) {
-        pool = pool_;
-        underlying = IPoolV3(pool_).underlyingToken();
-        _resetAllowance(underlying, pool);
+        pool = pool_; // U:[ZB-1]
+        underlying = IPoolV3(pool_).underlyingToken(); // U:[ZB-1]
+        _resetAllowance(underlying, pool); // U:[ZB-1]
     }
 
     /// @notice Zapper's input token
@@ -41,16 +41,16 @@ abstract contract ZapperBase is IZapper {
 
     /// @notice Returns the amount of `tokenOut` one would receive by depositing `tokenInAmount` of `tokenIn`
     function previewDeposit(uint256 tokenInAmount) external view returns (uint256 tokenOutAmount) {
-        uint256 assets = tokenIn() == underlying ? tokenInAmount : _previewTokenInToUnderlying(tokenInAmount);
-        uint256 shares = IPoolV3(pool).previewDeposit(assets);
-        tokenOutAmount = tokenOut() == pool ? shares : _previewSharesToTokenOut(shares);
+        uint256 assets = tokenIn() == underlying ? tokenInAmount : _previewTokenInToUnderlying(tokenInAmount); // U:[ZB-2]
+        uint256 shares = IPoolV3(pool).previewDeposit(assets); // U:[ZB-2]
+        tokenOutAmount = tokenOut() == pool ? shares : _previewSharesToTokenOut(shares); // U:[ZB-2]
     }
 
     /// @notice Returns the amount of `tokenIn` one would receive by redeeming `tokenOutAmount` of `tokenOut`
     function previewRedeem(uint256 tokenOutAmount) external view returns (uint256 tokenInAmount) {
-        uint256 shares = tokenOut() == pool ? tokenOutAmount : _previewTokenOutToShares(tokenOutAmount);
-        uint256 assets = IPoolV3(pool).previewRedeem(shares);
-        tokenInAmount = tokenIn() == underlying ? assets : _previewUnderlyingToTokenIn(assets);
+        uint256 shares = tokenOut() == pool ? tokenOutAmount : _previewTokenOutToShares(tokenOutAmount); // U:[ZB-3]
+        uint256 assets = IPoolV3(pool).previewRedeem(shares); // U:[ZB-3]
+        tokenInAmount = tokenIn() == underlying ? assets : _previewUnderlyingToTokenIn(assets); // U:[ZB-3]
     }
 
     /// @dev Returns the amount of `underlying` one would receive by converting `tokenInAmount` of `tokenIn`
@@ -89,34 +89,23 @@ abstract contract ZapperBase is IZapper {
         bytes32 r,
         bytes32 s
     ) external returns (uint256 tokenInAmount) {
-        try IERC20Permit(tokenOut()).permit(owner, address(this), tokenOutAmount, deadline, v, r, s) {} catch {}
+        try IERC20Permit(tokenOut()).permit(owner, address(this), tokenOutAmount, deadline, v, r, s) {} catch {} // U:[ZB-5]
         tokenInAmount = _redeem(tokenOutAmount, receiver, owner);
     }
 
-    /// @dev `deposit` implementation
+    /// @dev `deposit` and `depositWithReferral` implementation
     /// @dev If `tokenOut` is `pool`, skips `_sharesToTokenOut` and mints shares directly to `receiver` on deposit
-    function _deposit(uint256 tokenInAmount, address receiver) internal virtual returns (uint256 tokenOutAmount) {
-        bool tokenOutIsPool = tokenOut() == pool;
-        uint256 assets = _tokenInToUnderlying(tokenInAmount);
-        uint256 shares = IPoolV3(pool).deposit({assets: assets, receiver: tokenOutIsPool ? receiver : address(this)});
-        tokenOutAmount = tokenOutIsPool ? shares : _sharesToTokenOut(shares, receiver);
-    }
-
-    /// @dev `depositWithReferrral` implementation
-    /// @dev If `tokenOut` is `pool`, skips `_sharesToTokenOut` and mints shares directly to `receiver` on deposit
-    function _depositWithReferral(uint256 tokenInAmount, address receiver, uint256 referralCode)
+    function _deposit(uint256 tokenInAmount, address receiver, bool withReferral, uint256 referralCode)
         internal
         virtual
         returns (uint256 tokenOutAmount)
     {
         bool tokenOutIsPool = tokenOut() == pool;
-        uint256 assets = _tokenInToUnderlying(tokenInAmount);
-        uint256 shares = IPoolV3(pool).depositWithReferral({
-            assets: assets,
-            receiver: tokenOutIsPool ? receiver : address(this),
-            referralCode: referralCode
-        });
-        tokenOutAmount = tokenOutIsPool ? shares : _sharesToTokenOut(shares, receiver);
+        uint256 assets = _tokenInToUnderlying(tokenInAmount); // U:[ZB-4]
+        uint256 shares = withReferral
+            ? IPoolV3(pool).depositWithReferral(assets, tokenOutIsPool ? receiver : address(this), referralCode)
+            : IPoolV3(pool).deposit(assets, tokenOutIsPool ? receiver : address(this)); // U:[ZB-4]
+        tokenOutAmount = tokenOutIsPool ? shares : _sharesToTokenOut(shares, receiver); // U:[ZB-4]
     }
 
     /// @dev `redeem` and `redeemWithReferral` implementation
@@ -129,13 +118,13 @@ abstract contract ZapperBase is IZapper {
     {
         bool tokenOutIsPool = tokenOut() == pool;
         bool tokenInIsUnderlying = tokenIn() == underlying;
-        uint256 shares = tokenOutIsPool ? tokenOutAmount : _tokenOutToShares(tokenOutAmount, owner);
+        uint256 shares = tokenOutIsPool ? tokenOutAmount : _tokenOutToShares(tokenOutAmount, owner); // U:[ZB-5]
         uint256 assets = IPoolV3(pool).redeem({
             shares: shares,
             receiver: tokenInIsUnderlying ? receiver : address(this),
             owner: tokenOutIsPool ? owner : address(this)
-        });
-        tokenInAmount = tokenInIsUnderlying ? assets : _underlyingToTokenIn(assets, receiver);
+        }); // U:[ZB-5]
+        tokenInAmount = tokenInIsUnderlying ? assets : _underlyingToTokenIn(assets, receiver); // U:[ZB-5]
     }
 
     /// @dev Receives `tokenInAmount` of `tokenIn` from `msg.sender` and converts it to `underlying`

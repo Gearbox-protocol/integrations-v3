@@ -20,7 +20,7 @@ abstract contract ETHZapperBase is ZapperBase, IETHZapper {
     ///         - deposits `underlying` into `pool`
     ///         - converts `pool`'s shares to `tokenOutAmount` of `tokenOut` and sends it to `receiver`
     function deposit(address receiver) external payable returns (uint256 tokenOutAmount) {
-        tokenOutAmount = _deposit(msg.value, receiver);
+        tokenOutAmount = _deposit(msg.value, receiver, false, 0);
     }
 
     /// @notice Same as `deposit` but allows specifying the `referralCode` when depositing into the pool
@@ -29,6 +29,6 @@ abstract contract ETHZapperBase is ZapperBase, IETHZapper {
         payable
         returns (uint256 tokenOutAmount)
     {
-        tokenOutAmount = _depositWithReferral(msg.value, receiver, referralCode);
+        tokenOutAmount = _deposit(msg.value, receiver, true, referralCode);
     }
 }
