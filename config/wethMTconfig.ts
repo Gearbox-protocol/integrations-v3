@@ -42,7 +42,7 @@ export const config: PoolV3DeployConfig = {
       expirationDate: undefined,
       minDebt: (BigInt(1e4) * POOL_DECIMALS) / POOL_DIVIDER,
       maxDebt: (BigInt(1e6) * POOL_DECIMALS) / POOL_DIVIDER,
-      poolLimit: BigInt(0),
+      poolLimit: (BigInt(20_000_000) * POOL_DECIMALS) / POOL_DIVIDER,
       collateralTokens: [
         {
           token: "WBTC",
