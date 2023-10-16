@@ -552,13 +552,17 @@ contract BalancerV2VaultAdapter is AbstractAdapter, IBalancerV2VaultAdapter {
     }
 
     function _removeIndex(uint256[] memory array, uint256 index) internal pure returns (uint256[] memory res) {
-        if (index >= array.length) {
+        uint256 len = array.length;
+
+        if (index >= len) {
             return array;
         }
 
-        res = new uint256[](array.length - 1);
+        len = len - 1;
 
-        for (uint256 i = 0; i < array.length - 1;) {
+        res = new uint256[](len);
+
+        for (uint256 i = 0; i < len;) {
             if (i < index) {
                 res[i] = array[i];
             } else {
