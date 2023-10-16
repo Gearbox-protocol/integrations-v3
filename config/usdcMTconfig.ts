@@ -1,7 +1,4 @@
-import {
-  PoolV3CoreConfigurator,
-  PoolV3DeployConfig,
-} from "@gearbox-protocol/sdk-gov";
+import { PoolV3DeployConfig } from "@gearbox-protocol/sdk-gov";
 
 const POOL_DECIMALS = BigInt(1e6);
 const POOL_DIVIDER = BigInt(1);
@@ -9,7 +6,7 @@ const POOL_DIVIDER = BigInt(1);
 export const config: PoolV3DeployConfig = {
   id: "mainnet-usdc-mt-v3",
   symbol: "dUSDCV3",
-  name: "Diesel USDC V3 pool",
+  name: "USDC v3 trade",
   network: "Mainnet",
   underlying: "USDC",
   accountAmount: BigInt(1_000_000) * POOL_DECIMALS,
@@ -34,31 +31,31 @@ export const config: PoolV3DeployConfig = {
     UNI: {
       minRate: 1,
       maxRate: 3000,
-      quotaIncreaseFee: 0,
+      quotaIncreaseFee: 200,
       limit: (BigInt(1e6) * POOL_DECIMALS) / POOL_DIVIDER,
     },
     LINK: {
       minRate: 1,
       maxRate: 3000,
-      quotaIncreaseFee: 0,
+      quotaIncreaseFee: 200,
       limit: (BigInt(1e6) * POOL_DECIMALS) / POOL_DIVIDER,
     },
     LDO: {
       minRate: 1,
       maxRate: 3000,
-      quotaIncreaseFee: 0,
+      quotaIncreaseFee: 200,
       limit: (BigInt(5e5) * POOL_DECIMALS) / POOL_DIVIDER,
     },
     RPL: {
-      minRate: 0,
+      minRate: 1,
       maxRate: 3000,
-      quotaIncreaseFee: 0,
+      quotaIncreaseFee: 200,
       limit: (BigInt(3e5) * POOL_DECIMALS) / POOL_DIVIDER,
     },
     CRV: {
-      minRate: 0,
+      minRate: 1,
       maxRate: 3000,
-      quotaIncreaseFee: 0,
+      quotaIncreaseFee: 200,
       limit: (BigInt(25e4) * POOL_DECIMALS) / POOL_DIVIDER,
     },
     APE: {
@@ -82,6 +79,7 @@ export const config: PoolV3DeployConfig = {
   },
   creditManagers: [
     {
+      name: "Trade USDC v3",
       degenNft: false,
       expirationDate: undefined,
       minDebt: (BigInt(1e4) * POOL_DECIMALS) / POOL_DIVIDER,
@@ -138,8 +136,3 @@ export const config: PoolV3DeployConfig = {
   ],
   supportsQuotas: false,
 };
-
-const poolCfg = PoolV3CoreConfigurator.new(config);
-console.error(poolCfg.toString());
-
-console.log(poolCfg.deployConfig());

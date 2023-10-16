@@ -13,6 +13,10 @@ interface IConvexV1BaseRewardPoolAdapter is IAdapter {
 
     function stakedPhantomToken() external view returns (address);
 
+    function extraReward1() external view returns (address);
+
+    function extraReward2() external view returns (address);
+
     function curveLPTokenMask() external view returns (uint256);
 
     function stakingTokenMask() external view returns (uint256);

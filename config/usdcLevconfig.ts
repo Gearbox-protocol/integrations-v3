@@ -1,7 +1,4 @@
-import {
-  PoolV3CoreConfigurator,
-  PoolV3DeployConfig,
-} from "@gearbox-protocol/sdk-gov";
+import { PoolV3DeployConfig } from "@gearbox-protocol/sdk-gov";
 
 import { adapters } from "./adapters";
 
@@ -11,7 +8,7 @@ const POOL_DIVIDER = BigInt(1);
 export const config: PoolV3DeployConfig = {
   id: "mainnet-usdc-lev-v3",
   symbol: "dUSDC-lev-V3",
-  name: "Diesel USDC V3 leverage pool",
+  name: "USDC v3 farm",
   network: "Mainnet",
   underlying: "USDC",
   accountAmount: BigInt(1_000_000) * POOL_DECIMALS,
@@ -40,7 +37,49 @@ export const config: PoolV3DeployConfig = {
       quotaIncreaseFee: 0,
       limit: (BigInt(1e7) * POOL_DECIMALS) / POOL_DIVIDER,
     },
+    wstETH: {
+      minRate: 1,
+      maxRate: 3000,
+      quotaIncreaseFee: 0,
+      limit: (BigInt(1e7) * POOL_DECIMALS) / POOL_DIVIDER,
+    },
+    rETH: {
+      minRate: 1,
+      maxRate: 3000,
+      quotaIncreaseFee: 0,
+      limit: (BigInt(1e7) * POOL_DECIMALS) / POOL_DIVIDER,
+    },
     WBTC: {
+      minRate: 1,
+      maxRate: 3000,
+      quotaIncreaseFee: 0,
+      limit: (BigInt(1e7) * POOL_DECIMALS) / POOL_DIVIDER,
+    },
+    LINK: {
+      minRate: 1,
+      maxRate: 3000,
+      quotaIncreaseFee: 0,
+      limit: (BigInt(1e7) * POOL_DECIMALS) / POOL_DIVIDER,
+    },
+    aDAI: {
+      minRate: 1,
+      maxRate: 3000,
+      quotaIncreaseFee: 0,
+      limit: (BigInt(1e7) * POOL_DECIMALS) / POOL_DIVIDER,
+    },
+    cLINK: {
+      minRate: 1,
+      maxRate: 3000,
+      quotaIncreaseFee: 0,
+      limit: (BigInt(1e7) * POOL_DECIMALS) / POOL_DIVIDER,
+    },
+    sDAI: {
+      minRate: 1,
+      maxRate: 3000,
+      quotaIncreaseFee: 0,
+      limit: (BigInt(1e7) * POOL_DECIMALS) / POOL_DIVIDER,
+    },
+    YieldETH: {
       minRate: 1,
       maxRate: 3000,
       quotaIncreaseFee: 0,
@@ -83,7 +122,12 @@ export const config: PoolV3DeployConfig = {
       quotaIncreaseFee: 0,
       limit: (BigInt(1e7) * POOL_DECIMALS) / POOL_DIVIDER,
     },
-
+    rETH_f: {
+      minRate: 1,
+      maxRate: 3000,
+      quotaIncreaseFee: 0,
+      limit: (BigInt(1e7) * POOL_DECIMALS) / POOL_DIVIDER,
+    },
     steCRV: {
       minRate: 1,
       maxRate: 3000,
@@ -216,7 +260,24 @@ export const config: PoolV3DeployConfig = {
       quotaIncreaseFee: 0,
       limit: (BigInt(1e7) * POOL_DECIMALS) / POOL_DIVIDER,
     },
-
+    B_rETH_STABLE: {
+      minRate: 1,
+      maxRate: 3000,
+      quotaIncreaseFee: 0,
+      limit: (BigInt(1e7) * POOL_DECIMALS) / POOL_DIVIDER,
+    },
+    auraB_rETH_STABLE: {
+      minRate: 1,
+      maxRate: 3000,
+      quotaIncreaseFee: 0,
+      limit: (BigInt(1e7) * POOL_DECIMALS) / POOL_DIVIDER,
+    },
+    auraB_rETH_STABLE_vault: {
+      minRate: 1,
+      maxRate: 3000,
+      quotaIncreaseFee: 0,
+      limit: (BigInt(1e7) * POOL_DECIMALS) / POOL_DIVIDER,
+    },
     yvDAI: {
       minRate: 1,
       maxRate: 3000,
@@ -290,9 +351,22 @@ export const config: PoolV3DeployConfig = {
       quotaIncreaseFee: 0,
       limit: (BigInt(1e7) * POOL_DECIMALS) / POOL_DIVIDER,
     },
+    BAL: {
+      minRate: 1,
+      maxRate: 3000,
+      quotaIncreaseFee: 0,
+      limit: (BigInt(1e7) * POOL_DECIMALS) / POOL_DIVIDER,
+    },
+    AURA: {
+      minRate: 1,
+      maxRate: 3000,
+      quotaIncreaseFee: 0,
+      limit: (BigInt(1e7) * POOL_DECIMALS) / POOL_DIVIDER,
+    },
   },
   creditManagers: [
     {
+      name: "Farm USDC v3",
       degenNft: false,
       expirationDate: undefined,
       minDebt: (BigInt(1e4) * POOL_DECIMALS) / POOL_DIVIDER,
@@ -301,7 +375,14 @@ export const config: PoolV3DeployConfig = {
       collateralTokens: [
         { token: "WETH", lt: 85_00 }, // Token address is token from priceFeed map above
         { token: "STETH", lt: 82_50 }, // Token address is token from priceFeed map above
+        { token: "wstETH", lt: 82_50 },
+        { token: "rETH", lt: 82_50 },
         { token: "WBTC", lt: 85_00 }, // Token address is token from priceFeed map above
+        { token: "LINK", lt: 80_00 },
+
+        { token: "aDAI", lt: 92_00 },
+        { token: "cLINK", lt: 85_00 },
+        { token: "sDAI", lt: 92_00 },
 
         { token: "DAI", lt: 92_00 }, // Token address is token from priceFeed map above
         { token: "USDT", lt: 90_00 }, // Token address is token from priceFeed map above
@@ -309,6 +390,8 @@ export const config: PoolV3DeployConfig = {
         { token: "FRAX", lt: 90_00 }, // Token address is token from priceFeed map above
         { token: "GUSD", lt: 90_00 }, // Token address is token from priceFeed map above
         { token: "LUSD", lt: 90_00 }, // Token address is token from priceFeed map above
+
+        { token: "rETH_f", lt: 82_50 },
 
         { token: "steCRV", lt: 82_50 }, // Token address is token from priceFeed map above
         { token: "cvxsteCRV", lt: 82_50 }, // Token address is token from priceFeed map above
@@ -338,6 +421,10 @@ export const config: PoolV3DeployConfig = {
         { token: "cvxcrvFRAX", lt: 90_00 }, // Token address is token from priceFeed map above
         { token: "stkcvxcrvFRAX", lt: 90_00 }, // Token address is token from priceFeed map above
 
+        { token: "B_rETH_STABLE", lt: 82_00 },
+        { token: "auraB_rETH_STABLE", lt: 82_00 },
+        { token: "auraB_rETH_STABLE_vault", lt: 82_00 },
+
         { token: "yvDAI", lt: 90_00 }, // Token address is token from priceFeed map above
         { token: "yvUSDC", lt: 90_00 }, // Token address is token from priceFeed map above
         { token: "yvWETH", lt: 82_50 }, // Token address is token from priceFeed map above
@@ -350,15 +437,20 @@ export const config: PoolV3DeployConfig = {
         { token: "LQTY", lt: 0 },
         { token: "CRV", lt: 25_00 }, // Token address is token from priceFeed map above
         { token: "LDO", lt: 0 },
-        { token: "SNX", lt: 25 },
+        { token: "SNX", lt: 25_00 },
+        { token: "BAL", lt: 25_00 },
+        { token: "AURA", lt: 0 },
       ],
-      adapters,
+      adapters: [
+        ...adapters,
+        { contract: "LIDO_WSTETH" },
+        { contract: "AAVE_V2_LENDING_POOL" },
+        { contract: "COMPOUND_V2_LINK_POOL" },
+        { contract: "MAKER_DSR_VAULT" },
+        { contract: "AURA_BOOSTER" },
+        { contract: "AURA_B_RETH_STABLE_POOL" },
+      ],
     },
   ],
   supportsQuotas: true,
 };
-
-const poolCfg = PoolV3CoreConfigurator.new(config);
-console.error(poolCfg.toString());
-
-console.log(poolCfg.deployConfig());

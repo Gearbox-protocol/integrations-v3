@@ -14,9 +14,9 @@
     // "jsx": "preserve",                     /* Specify JSX code generation: 'preserve', 'react-native', or 'react'. */
     "declaration": true /* Generates corresponding '.d.ts' file. */,
     //    "composite": true,
-    "declarationMap": true,
+    // "declarationMap": true,
     // "declarationMap": true,                /* Generates a sourcemap for each corresponding '.d.ts' file. */
-    "sourceMap": true /* Generates corresponding '.map' file. */,
+    // "sourceMap": true /* Generates corresponding '.map' file. */,
     // "outFile": "./",                       /* Concatenate and emit output to single file. */
     //      "outDir": "./build",                        /* Redirect output structure to the directory. */
     //     "composite": true,                     /* Enable project compilation */
@@ -64,7 +64,7 @@
     "forceConsistentCasingInFileNames": true /* Disallow inconsistently-cased references to the same file. */,
     "useUnknownInCatchVariables": false,
     "resolveJsonModule": true,
-    "outDir": "./npm-root/"
+    "outDir": "./dist"
   },
   "include": ["config"],
   "exclude": ["node_modules", "lib", "npm-root"]

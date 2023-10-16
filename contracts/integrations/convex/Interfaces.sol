@@ -218,4 +218,6 @@ interface IExtraRewardWrapper {
     function booster() external view returns (address);
 
     function token() external view returns (address);
+
+    function baseToken() external view returns (address);
 }

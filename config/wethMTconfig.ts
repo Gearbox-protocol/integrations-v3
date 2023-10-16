@@ -1,7 +1,4 @@
-import {
-  PoolV3CoreConfigurator,
-  PoolV3DeployConfig,
-} from "@gearbox-protocol/sdk-gov";
+import { PoolV3DeployConfig } from "@gearbox-protocol/sdk-gov";
 
 const POOL_DECIMALS = BigInt(1e18);
 const POOL_DIVIDER = BigInt(1800);
@@ -9,7 +6,7 @@ const POOL_DIVIDER = BigInt(1800);
 export const config: PoolV3DeployConfig = {
   id: "mainnet-weth-mt-v3",
   symbol: "dWETHV3",
-  name: "Diesel WETH V3 pool",
+  name: "WETH v3",
   network: "Mainnet",
   underlying: "WETH",
   accountAmount: BigInt(1_000_000) * POOL_DECIMALS,
@@ -26,20 +23,21 @@ export const config: PoolV3DeployConfig = {
   },
   ratesAndLimits: {
     STETH: {
-      minRate: 0,
+      minRate: 1,
       maxRate: 200,
       quotaIncreaseFee: 0,
       limit: (BigInt(30e6) * POOL_DECIMALS) / POOL_DIVIDER,
     },
     USDC: {
-      minRate: 0,
+      minRate: 1,
       maxRate: 3000,
-      quotaIncreaseFee: 0,
+      quotaIncreaseFee: 100,
       limit: (BigInt(30e6) * POOL_DECIMALS) / POOL_DIVIDER,
     },
   },
   creditManagers: [
     {
+      name: "Trade WETH v3",
       degenNft: false,
       expirationDate: undefined,
       minDebt: (BigInt(1e4) * POOL_DECIMALS) / POOL_DIVIDER,
@@ -60,8 +58,3 @@ export const config: PoolV3DeployConfig = {
   ],
   supportsQuotas: false,
 };
-
-const poolCfg = PoolV3CoreConfigurator.new(config);
-console.error(poolCfg.toString());
-
-console.log(poolCfg.deployConfig());

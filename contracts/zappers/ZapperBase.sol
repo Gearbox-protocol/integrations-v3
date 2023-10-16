@@ -78,7 +78,7 @@ abstract contract ZapperBase is IZapper {
     }
 
     /// @dev Same as `_deposit` but allows to specify the referral code
-    function _depositWithReferral(uint256 amount, address receiver, uint16 referralCode)
+    function _depositWithReferral(uint256 amount, address receiver, uint256 referralCode)
         internal
         virtual
         returns (uint256 shares)

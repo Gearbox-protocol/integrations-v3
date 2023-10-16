@@ -13,7 +13,8 @@
     "url": "https://github.com/Gearbox-protocol/integrations-v3"
   },
   "files": [
-    "contracts"
+    "contracts",
+    "dist"
   ],
   "license": "BUSL-1.1",
   "scripts": {
@@ -23,7 +24,8 @@
     "lint": "eslint \"**/*.ts\" --fix",
     "lint:ci": "eslint \"**/*.ts\"",
     "typecheck:ci": "tsc --noEmit",
-    "forge-install": "forge install --no-commit foundry-rs/forge-std"
+    "forge-install": "forge install --no-commit foundry-rs/forge-std",
+    "build": "tsc --p tsconfig.build.json"
   },
   "dependencies": {},
   "devDependencies": {
@@ -32,11 +34,11 @@
     "@commitlint/cli": "^17.1.2",
     "@commitlint/config-conventional": "^17.1.0",
     "@gearbox-protocol/core-v2": "1.19.0-base.10",
-    "@gearbox-protocol/core-v3": "^1.40.0",
+    "@gearbox-protocol/core-v3": "^1.41.0",
     "@gearbox-protocol/eslint-config": "^1.6.1",
     "@gearbox-protocol/oracles-v3": "^1.7.6",
     "@gearbox-protocol/prettier-config": "^1.5.0",
-    "@gearbox-protocol/sdk-gov": "^1.6.2",
+    "@gearbox-protocol/sdk-gov": "^1.11.1",
     "@openzeppelin/contracts": "4.9.3",
     "@redstone-finance/evm-connector": "0.2.5",
     "@typechain/ethers-v5": "^10.1.0",
