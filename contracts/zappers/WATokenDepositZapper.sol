@@ -7,6 +7,8 @@ import {DepositMixin} from "./mixins/DepositMixin.sol";
 import {WATokenMixin} from "./mixins/WATokenMixin.sol";
 import {ZapperBase} from "./ZapperBase.sol";
 
+/// @title waToken deposit zapper
+/// @notice Zapper that allows to deposit aToken directly into a waToken pool
 contract WATokenDepositZapper is WATokenMixin, DepositMixin {
     constructor(address pool) ZapperBase(pool) WATokenMixin() {}
 }
