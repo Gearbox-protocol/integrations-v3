@@ -7,6 +7,8 @@ import {FarmingMixin} from "./mixins/FarmingMixin.sol";
 import {WETHMixin} from "./mixins/WETHMixin.sol";
 import {ZapperBase} from "./ZapperBase.sol";
 
+/// @title WETH farming zapper
+/// @notice Zapper that allows to deposit ETH directly into a WETH pool and stake shares in 1inch farming contract
 contract WETHFarmingZapper is WETHMixin, FarmingMixin {
     constructor(address pool, address farmingPool) ZapperBase(pool) FarmingMixin(farmingPool) {}
 }

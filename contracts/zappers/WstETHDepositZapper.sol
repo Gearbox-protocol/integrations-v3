@@ -7,6 +7,8 @@ import {DepositMixin} from "./mixins/DepositMixin.sol";
 import {WstETHMixin} from "./mixins/WstETHMixin.sol";
 import {ZapperBase} from "./ZapperBase.sol";
 
+/// @title wstETH deposit zapper
+/// @notice Zapper that allows to deposit stETH directly into a wstETH pool
 contract WstETHDepositZapper is WstETHMixin, DepositMixin {
     constructor(address pool) ZapperBase(pool) WstETHMixin() {}
 }
