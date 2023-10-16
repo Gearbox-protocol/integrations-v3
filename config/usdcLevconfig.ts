@@ -260,6 +260,12 @@ export const config: PoolV3DeployConfig = {
       quotaIncreaseFee: 0,
       limit: (BigInt(1e7) * POOL_DECIMALS) / POOL_DIVIDER,
     },
+    USDC_DAI_USDT: {
+      minRate: 1,
+      maxRate: 3000,
+      quotaIncreaseFee: 0,
+      limit: (BigInt(1e7) * POOL_DECIMALS) / POOL_DIVIDER,
+    },
     B_rETH_STABLE: {
       minRate: 1,
       maxRate: 3000,
@@ -420,6 +426,8 @@ export const config: PoolV3DeployConfig = {
         { token: "crvFRAX", lt: 90_00 }, // Token address is token from priceFeed map above
         { token: "cvxcrvFRAX", lt: 90_00 }, // Token address is token from priceFeed map above
         { token: "stkcvxcrvFRAX", lt: 90_00 }, // Token address is token from priceFeed map above
+
+        { token: "USDC_DAI_USDT", lt: 82_00 },
 
         { token: "B_rETH_STABLE", lt: 82_00 },
         { token: "auraB_rETH_STABLE", lt: 82_00 },

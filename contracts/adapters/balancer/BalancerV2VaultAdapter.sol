@@ -257,7 +257,7 @@ contract BalancerV2VaultAdapter is AbstractAdapter, IBalancerV2VaultAdapter {
                     poolId,
                     creditAccount,
                     creditAccount,
-                    _getJoinSingleAssetRequest(poolId, assetIn, amountIn, minAmountOut)
+                    _getJoinSingleAssetRequest(poolId, assetIn, amountIn, minAmountOut, bpt)
                 )
             ),
             false
@@ -301,7 +301,7 @@ contract BalancerV2VaultAdapter is AbstractAdapter, IBalancerV2VaultAdapter {
                     poolId,
                     creditAccount,
                     creditAccount,
-                    _getJoinSingleAssetRequest(poolId, assetIn, balanceInBefore, amountOutMin)
+                    _getJoinSingleAssetRequest(poolId, assetIn, balanceInBefore, amountOutMin, bpt)
                 )
             ),
             true
@@ -309,17 +309,20 @@ contract BalancerV2VaultAdapter is AbstractAdapter, IBalancerV2VaultAdapter {
     }
 
     /// @dev Internal function that builds a `JoinPoolRequest` struct for one-sided deposits
-    function _getJoinSingleAssetRequest(bytes32 poolId, IAsset assetIn, uint256 amountIn, uint256 minAmountOut)
-        internal
-        view
-        returns (JoinPoolRequest memory request)
-    {
+    function _getJoinSingleAssetRequest(
+        bytes32 poolId,
+        IAsset assetIn,
+        uint256 amountIn,
+        uint256 minAmountOut,
+        address bpt
+    ) internal view returns (JoinPoolRequest memory request) {
         (IERC20[] memory tokens,,) = IBalancerV2Vault(targetContract).getPoolTokens(poolId);
 
         uint256 len = tokens.length;
 
         request.assets = new IAsset[](tokens.length);
         request.maxAmountsIn = new uint256[](tokens.length);
+        uint256 bptIndex = tokens.length;
 
         unchecked {
             for (uint256 i; i < len; ++i) {
@@ -328,10 +331,14 @@ contract BalancerV2VaultAdapter is AbstractAdapter, IBalancerV2VaultAdapter {
                 if (request.assets[i] == assetIn) {
                     request.maxAmountsIn[i] = amountIn;
                 }
+
+                if (address(request.assets[i]) == bpt) {
+                    bptIndex = i;
+                }
             }
         }
 
-        request.userData = abi.encode(uint256(1), request.maxAmountsIn, minAmountOut);
+        request.userData = abi.encode(uint256(1), _removeIndex(request.maxAmountsIn, bptIndex), minAmountOut);
     }
 
     // --------- //
@@ -392,7 +399,7 @@ contract BalancerV2VaultAdapter is AbstractAdapter, IBalancerV2VaultAdapter {
                     poolId,
                     creditAccount,
                     payable(creditAccount),
-                    _getExitSingleAssetRequest(poolId, assetOut, amountIn, minAmountOut)
+                    _getExitSingleAssetRequest(poolId, assetOut, amountIn, minAmountOut, bpt)
                 )
             ),
             false
@@ -431,7 +438,7 @@ contract BalancerV2VaultAdapter is AbstractAdapter, IBalancerV2VaultAdapter {
                     poolId,
                     creditAccount,
                     payable(creditAccount),
-                    _getExitSingleAssetRequest(poolId, assetOut, balanceInBefore, amountOutMin)
+                    _getExitSingleAssetRequest(poolId, assetOut, balanceInBefore, amountOutMin, bpt)
                 )
             ),
             true
@@ -439,11 +446,13 @@ contract BalancerV2VaultAdapter is AbstractAdapter, IBalancerV2VaultAdapter {
     }
 
     /// @dev Internal function that builds an `ExitPoolRequest` struct for one-sided withdrawals
-    function _getExitSingleAssetRequest(bytes32 poolId, IAsset assetOut, uint256 amountIn, uint256 minAmountOut)
-        internal
-        view
-        returns (ExitPoolRequest memory request)
-    {
+    function _getExitSingleAssetRequest(
+        bytes32 poolId,
+        IAsset assetOut,
+        uint256 amountIn,
+        uint256 minAmountOut,
+        address bpt
+    ) internal view returns (ExitPoolRequest memory request) {
         (IERC20[] memory tokens,,) = IBalancerV2Vault(targetContract).getPoolTokens(poolId);
 
         uint256 len = tokens.length;
@@ -451,6 +460,7 @@ contract BalancerV2VaultAdapter is AbstractAdapter, IBalancerV2VaultAdapter {
         request.assets = new IAsset[](tokens.length);
         request.minAmountsOut = new uint256[](tokens.length);
         uint256 tokenIndex = tokens.length;
+        uint256 bptIndex = tokens.length;
 
         unchecked {
             for (uint256 i; i < len; ++i) {
@@ -460,8 +470,14 @@ contract BalancerV2VaultAdapter is AbstractAdapter, IBalancerV2VaultAdapter {
                     request.minAmountsOut[i] = minAmountOut;
                     tokenIndex = i;
                 }
+
+                if (address(request.assets[i]) == bpt) {
+                    bptIndex = i;
+                }
             }
         }
+
+        tokenIndex = tokenIndex > bptIndex ? tokenIndex - 1 : tokenIndex;
 
         request.userData = abi.encode(uint256(0), amountIn, tokenIndex);
     }
@@ -533,6 +549,30 @@ contract BalancerV2VaultAdapter is AbstractAdapter, IBalancerV2VaultAdapter {
             recipient: payable(creditAccount),
             toInternalBalance: false
         });
+    }
+
+    function _removeIndex(uint256[] memory array, uint256 index) internal pure returns (uint256[] memory res) {
+        uint256 len = array.length;
+
+        if (index >= len) {
+            return array;
+        }
+
+        len = len - 1;
+
+        res = new uint256[](len);
+
+        for (uint256 i = 0; i < len;) {
+            if (i < index) {
+                res[i] = array[i];
+            } else {
+                res[i] = array[i + 1];
+            }
+
+            unchecked {
+                ++i;
+            }
+        }
     }
 
     // ------------- //
