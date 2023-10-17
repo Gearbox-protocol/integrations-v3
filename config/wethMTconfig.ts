@@ -6,7 +6,7 @@ const POOL_DIVIDER = BigInt(1800);
 export const config: PoolV3DeployConfig = {
   id: "mainnet-weth-mt-v3",
   symbol: "dWETHV3",
-  name: "WETH v3 trade",
+  name: "Universal WETH v3",
   network: "Mainnet",
   underlying: "WETH",
   accountAmount: BigInt(1_000_000) * POOL_DECIMALS,
