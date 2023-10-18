@@ -6,9 +6,9 @@ pragma solidity ^0.8.17;
 import {IFarmingPool} from "@1inch/farming/contracts/interfaces/IFarmingPool.sol";
 import {ZapperBase} from "../ZapperBase.sol";
 
-/// @title Deposit mixin
+/// @title Deposit trait
 /// @dev Provides empty shares <-> tokenOut conversion functions implementation for zappers with pool as output token
-abstract contract DepositMixin is ZapperBase {
+abstract contract DepositTrait is ZapperBase {
     /// @inheritdoc ZapperBase
     /// @dev Returns pool address
     function tokenOut() public view override returns (address) {

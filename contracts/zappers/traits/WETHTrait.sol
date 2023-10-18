@@ -9,9 +9,9 @@ import {ReceiveIsNotAllowedException} from "@gearbox-protocol/core-v3/contracts/
 import {ETHZapperBase} from "../ETHZapperBase.sol";
 import {ZapperBase} from "../ZapperBase.sol";
 
-/// @title WETH mixin
+/// @title WETH trait
 /// @notice Implements tokenIn <-> underlying conversion functions for WETH pool zappers with ETH as input token
-abstract contract WETHMixin is ETHZapperBase {
+abstract contract WETHTrait is ETHZapperBase {
     using Address for address payable;
 
     /// @notice Allows this contract to unwrap WETH and forbids receiving ETH in other ways

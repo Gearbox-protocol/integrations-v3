@@ -8,9 +8,9 @@ import {SafeERC20} from "@1inch/solidity-utils/contracts/libraries/SafeERC20.sol
 import {IFarmingPool} from "@1inch/farming/contracts/interfaces/IFarmingPool.sol";
 import {ZapperBase} from "../ZapperBase.sol";
 
-/// @title Farming mixin
+/// @title Farming trait
 /// @dev Implements shares <-> tokenOut conversion functions for zappers that stake shares in 1inch `FarmingPool` contract
-abstract contract FarmingMixin is ZapperBase {
+abstract contract FarmingTrait is ZapperBase {
     using SafeERC20 for IERC20;
 
     /// @dev Farming pool to stake shares at

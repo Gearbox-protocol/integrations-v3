@@ -5,49 +5,50 @@ pragma solidity ^0.8.17;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@1inch/solidity-utils/contracts/libraries/SafeERC20.sol";
-import {IwstETH} from "../../integrations/lido/IwstETH.sol";
+import {WAD} from "@gearbox-protocol/core-v2/contracts/libraries/Constants.sol";
+import {WrappedAToken} from "../../helpers/aave/AaveV2_WrappedAToken.sol";
 import {ERC20ZapperBase} from "../ERC20ZapperBase.sol";
 import {ZapperBase} from "../ZapperBase.sol";
 
-/// @title wstETH mixin
-/// @notice Implements tokenIn <-> underlying conversion functions for wstETH pool zappers with stETH as input token
-abstract contract WstETHMixin is ERC20ZapperBase {
+/// @title waToken trait
+/// @notice Implements tokenIn <-> underlying conversion functions for waToken pool zappers with aToken as input token
+abstract contract WATokenTrait is ERC20ZapperBase {
     using SafeERC20 for IERC20;
 
-    /// @dev stETH address
-    address internal immutable _stETH;
+    /// @dev aToken address
+    address internal immutable _aToken;
 
     /// @notice Constructor
     constructor() {
-        _stETH = IwstETH(underlying).stETH();
-        _resetAllowance(_stETH, underlying);
+        _aToken = WrappedAToken(underlying).aToken();
+        _resetAllowance(_aToken, underlying);
     }
 
     /// @inheritdoc ZapperBase
-    /// @dev Returns stETH address
+    /// @dev Returns aToken address
     function tokenIn() public view override returns (address) {
-        return _stETH;
+        return _aToken;
     }
 
     /// @inheritdoc ZapperBase
     function _previewTokenInToUnderlying(uint256 tokenInAmount) internal view override returns (uint256 assets) {
-        assets = IwstETH(underlying).getWstETHByStETH(tokenInAmount);
+        assets = tokenInAmount * WAD / WrappedAToken(underlying).exchangeRate();
     }
 
     /// @inheritdoc ZapperBase
     function _previewUnderlyingToTokenIn(uint256 assets) internal view override returns (uint256 tokenInAmount) {
-        tokenInAmount = IwstETH(underlying).getStETHByWstETH(assets);
+        tokenInAmount = assets * WrappedAToken(underlying).exchangeRate() / WAD;
     }
 
     /// @inheritdoc ZapperBase
     function _tokenInToUnderlying(uint256 tokenInAmount) internal override returns (uint256 assets) {
-        IERC20(_stETH).safeTransferFrom(msg.sender, address(this), tokenInAmount);
-        assets = IwstETH(underlying).wrap(tokenInAmount);
+        IERC20(_aToken).safeTransferFrom(msg.sender, address(this), tokenInAmount);
+        assets = WrappedAToken(underlying).deposit(tokenInAmount);
     }
 
     /// @inheritdoc ZapperBase
     function _underlyingToTokenIn(uint256 assets, address receiver) internal override returns (uint256 tokenInAmount) {
-        tokenInAmount = IwstETH(underlying).unwrap(assets);
-        IERC20(_stETH).safeTransfer(receiver, tokenInAmount);
+        tokenInAmount = WrappedAToken(underlying).withdraw(assets);
+        IERC20(_aToken).safeTransfer(receiver, tokenInAmount);
     }
 }
