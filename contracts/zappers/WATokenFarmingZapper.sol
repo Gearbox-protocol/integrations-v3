@@ -3,12 +3,12 @@
 // (c) Gearbox Foundation, 2023.
 pragma solidity ^0.8.17;
 
-import {FarmingMixin} from "./mixins/FarmingMixin.sol";
-import {WATokenMixin} from "./mixins/WATokenMixin.sol";
+import {FarmingTrait} from "./traits/FarmingTrait.sol";
+import {WATokenTrait} from "./traits/WATokenTrait.sol";
 import {ZapperBase} from "./ZapperBase.sol";
 
 /// @title waToken farming zapper
 /// @notice Zapper that allows to deposit aToken directly into a waToken pool and stake shares in 1inch farming contract
-contract WATokenFarmingZapper is WATokenMixin, FarmingMixin {
-    constructor(address pool, address farmingPool) ZapperBase(pool) WATokenMixin() FarmingMixin(farmingPool) {}
+contract WATokenFarmingZapper is WATokenTrait, FarmingTrait {
+    constructor(address pool, address farmingPool) ZapperBase(pool) WATokenTrait() FarmingTrait(farmingPool) {}
 }
