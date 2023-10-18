@@ -6,7 +6,7 @@ const POOL_DIVIDER = BigInt(1800);
 export const config: PoolV3DeployConfig = {
   id: "mainnet-weth-mt-v3",
   symbol: "dWETHV3",
-  name: "WETH v3",
+  name: "Universal WETH v3",
   network: "Mainnet",
   underlying: "WETH",
   accountAmount: BigInt(1_000_000) * POOL_DECIMALS,
@@ -37,12 +37,12 @@ export const config: PoolV3DeployConfig = {
   },
   creditManagers: [
     {
-      name: "WETH v3",
+      name: "Trade WETH v3",
       degenNft: false,
       expirationDate: undefined,
       minDebt: (BigInt(1e4) * POOL_DECIMALS) / POOL_DIVIDER,
       maxDebt: (BigInt(1e6) * POOL_DECIMALS) / POOL_DIVIDER,
-      poolLimit: BigInt(0),
+      poolLimit: (BigInt(20_000_000) * POOL_DECIMALS) / POOL_DIVIDER,
       collateralTokens: [
         {
           token: "WBTC",

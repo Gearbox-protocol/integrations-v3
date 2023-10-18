@@ -60,6 +60,21 @@ contract LiveTestHelper is IntegrationTestHelper {
         }
     }
 
+    modifier attachOrSetupLiveCreditTest(string memory id) {
+        try vm.envAddress("ATTACH_ADDRESS_PROVIDER") returns (address val) {
+            _attachCore();
+            address[] memory cms = cr.getCreditManagers();
+            uint256 len = cms.length;
+            for (uint256 i = 0; i < len; ++i) {
+                _attachCreditManager(cms[i]);
+                _;
+            }
+        } catch {
+            _setupLiveCreditTest(id);
+            _;
+        }
+    }
+
     function _setupLiveCreditTest(string memory id) internal {
         _setupCore();
         console.log(tokenTestSuite.addressOf(Tokens.MKR));

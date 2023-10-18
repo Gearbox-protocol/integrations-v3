@@ -6,7 +6,7 @@ const POOL_DIVIDER = BigInt(1);
 export const config: PoolV3DeployConfig = {
   id: "mainnet-usdc-mt-v3",
   symbol: "dUSDCV3",
-  name: "USDC v3 trade",
+  name: "Trade USDC v3",
   network: "Mainnet",
   underlying: "USDC",
   accountAmount: BigInt(1_000_000) * POOL_DECIMALS,
@@ -84,7 +84,7 @@ export const config: PoolV3DeployConfig = {
       expirationDate: undefined,
       minDebt: (BigInt(1e4) * POOL_DECIMALS) / POOL_DIVIDER,
       maxDebt: (BigInt(1e6) * POOL_DECIMALS) / POOL_DIVIDER,
-      poolLimit: BigInt(0),
+      poolLimit: (BigInt(20_000_000) * POOL_DECIMALS) / POOL_DIVIDER,
       collateralTokens: [
         {
           token: "WETH",
