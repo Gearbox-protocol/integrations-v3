@@ -4,11 +4,11 @@
 pragma solidity ^0.8.17;
 
 import {ZapperBase} from "./ZapperBase.sol";
-import {IETHZapper, ETH_ADDRESS} from "../interfaces/zappers/IETHZapper.sol";
+import {IETHZapperDeposits, ETH_ADDRESS} from "../interfaces/zappers/IETHZapperDeposits.sol";
 
 /// @title ETH zapper base
 /// @notice Base contract for zappers with ETH as input token
-abstract contract ETHZapperBase is ZapperBase, IETHZapper {
+abstract contract ETHZapperBase is ZapperBase, IETHZapperDeposits {
     /// @inheritdoc ZapperBase
     /// @dev Returns special address denoting ETH
     function tokenIn() public pure override returns (address) {

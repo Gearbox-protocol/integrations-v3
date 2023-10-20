@@ -78,8 +78,11 @@ abstract contract ZapperBase is IZapper {
         tokenInAmount = _redeem(tokenOutAmount, receiver, owner);
     }
 
-    /// @notice Same as `redeem` but uses `owner`'s signed permit message for `tokenOut`
-    /// @dev `v`, `r`, `s` must be a valid signature of the permit message for `tokenOut` from `owner` to this contract
+    /// @notice Performs redeem zap using signed EIP-2612 permit message for zapper's output token:
+    ///         - receives `tokenOut` from `owner` and converts it to `pool`'s shares
+    ///         - redeems `pool`'s shares for `underlying`
+    ///         - converts `underlying` to `tokenIn` and sends it to `receiver`
+    /// @dev `v`, `r`, `s` must be a valid signature of the permit message from `owner` for `tokenOut` to this contract
     function redeemWithPermit(
         uint256 tokenOutAmount,
         address receiver,

@@ -3,7 +3,7 @@
 // (c) Gearbox Foundation, 2023.
 pragma solidity ^0.8.17;
 
-interface IERC20Zapper {
+interface IERC20ZapperDeposits {
     function deposit(uint256 tokenInAmount, address receiver) external returns (uint256 tokenOutAmount);
 
     function depositWithPermit(uint256 tokenInAmount, address receiver, uint256 deadline, uint8 v, bytes32 r, bytes32 s)
