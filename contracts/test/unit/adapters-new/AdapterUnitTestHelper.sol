@@ -20,6 +20,7 @@ contract AdapterUnitTestHelper is Test, CreditManagerV3MockEvents {
     address configurator;
     address creditFacade;
     address creditAccount;
+    address creditConfigurator;
     CreditManagerV3Mock creditManager;
     AddressProviderV3ACLMock addressProvider;
 
@@ -29,11 +30,12 @@ contract AdapterUnitTestHelper is Test, CreditManagerV3MockEvents {
         configurator = makeAddr("CONFIGURATOR");
         creditFacade = makeAddr("CREDIT_FACADE");
         creditAccount = makeAddr("CREDIT_ACCOUNT");
+        creditConfigurator = makeAddr("CREDIT_CONFIGURATOR");
 
         vm.prank(configurator);
         addressProvider = new AddressProviderV3ACLMock();
 
-        creditManager = new CreditManagerV3Mock(address(addressProvider), creditFacade);
+        creditManager = new CreditManagerV3Mock(address(addressProvider), creditFacade, creditConfigurator);
 
         for (uint256 i; i < tokens.length; ++i) {
             string memory name = string.concat("Test Token ", vm.toString(i));
@@ -94,6 +96,39 @@ contract AdapterUnitTestHelper is Test, CreditManagerV3MockEvents {
             vm.expectCall(address(creditManager), abi.encodeCall(ICreditManagerV3.approveCreditAccount, (tokenIn, 1)));
             vm.expectEmit(false, false, false, true, address(creditManager));
             emit Approve(tokenIn, 1);
+        }
+    }
+
+    function _executesCall(address[] memory tokensToApprove, address[] memory tokensToValidate, bytes memory callData)
+        internal
+    {
+        for (uint256 i; i < tokensToValidate.length; ++i) {
+            vm.expectCall(
+                address(creditManager), abi.encodeCall(ICreditManagerV3.getTokenMaskOrRevert, (tokensToValidate[i]))
+            );
+        }
+
+        for (uint256 i; i < tokensToApprove.length; ++i) {
+            vm.expectCall(
+                address(creditManager),
+                abi.encodeCall(ICreditManagerV3.approveCreditAccount, (tokensToApprove[i], type(uint256).max))
+            );
+
+            vm.expectEmit(false, false, false, true, address(creditManager));
+            emit Approve(tokensToApprove[i], type(uint256).max);
+        }
+
+        vm.expectCall(address(creditManager), abi.encodeCall(ICreditManagerV3.execute, (callData)));
+        vm.expectEmit(false, false, false, false, address(creditManager));
+        emit Execute();
+
+        for (uint256 i; i < tokensToApprove.length; ++i) {
+            vm.expectCall(
+                address(creditManager), abi.encodeCall(ICreditManagerV3.approveCreditAccount, (tokensToApprove[i], 1))
+            );
+
+            vm.expectEmit(false, false, false, true, address(creditManager));
+            emit Approve(tokensToApprove[i], 1);
         }
     }
 }
