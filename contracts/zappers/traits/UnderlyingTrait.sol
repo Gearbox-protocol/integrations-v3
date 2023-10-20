@@ -8,9 +8,9 @@ import {SafeERC20} from "@1inch/solidity-utils/contracts/libraries/SafeERC20.sol
 import {ERC20ZapperBase} from "../ERC20ZapperBase.sol";
 import {ZapperBase} from "../ZapperBase.sol";
 
-/// @title ERC20 trait
+/// @title Underlying trait
 /// @notice Implements tokenIn <-> underlying conversion functions for zappers with underlying as input token
-abstract contract ERC20Trait is ERC20ZapperBase {
+abstract contract UnderlyingTrait is ERC20ZapperBase {
     using SafeERC20 for IERC20;
 
     /// @inheritdoc ZapperBase

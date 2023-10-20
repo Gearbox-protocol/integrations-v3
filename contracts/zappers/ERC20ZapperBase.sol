@@ -5,11 +5,11 @@ pragma solidity ^0.8.17;
 
 import {IERC20Permit} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Permit.sol";
 import {ZapperBase} from "./ZapperBase.sol";
-import {IERC20Zapper} from "../interfaces/zappers/IERC20Zapper.sol";
+import {IERC20ZapperDeposits} from "../interfaces/zappers/IERC20ZapperDeposits.sol";
 
 /// @title ERC20 zapper base
 /// @notice Base contract for zappers with ERC20 input token
-abstract contract ERC20ZapperBase is ZapperBase, IERC20Zapper {
+abstract contract ERC20ZapperBase is ZapperBase, IERC20ZapperDeposits {
     /// @notice Performs deposit zap:
     ///         - receives `tokenInAmount` of `tokenIn` from `msg.sender` and converts it to `underlying`
     ///         - deposits `underlying` into `pool`
@@ -19,7 +19,7 @@ abstract contract ERC20ZapperBase is ZapperBase, IERC20Zapper {
         tokenOutAmount = _deposit(tokenInAmount, receiver, false, 0);
     }
 
-    /// @notice Performs deposit zap using signed EIP-2612 permit message for input token:
+    /// @notice Performs deposit zap using signed EIP-2612 permit message for zapper's input token:
     ///         - receives `tokenInAmount` of `tokenIn` from `msg.sender` and converts it to `underlying`
     ///         - deposits `underlying` into `pool`
     ///         - converts `pool`'s shares to `tokenOutAmount` of `tokenOut` and sends it to `receiver`
