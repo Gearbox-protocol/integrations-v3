@@ -63,7 +63,7 @@ abstract contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
     /// @param _creditManager Credit manager address
     /// @param _curvePool Target Curve pool address
     /// @param _lp_token Pool LP token address
-    /// @param _metapoolBase Base pool address (for metapools only) or zero address
+    /// @param _metapoolBase Metapool's base pool address (must have 2 or 3 coins) or zero address
     /// @param _nCoins Number of coins in the pool
     constructor(address _creditManager, address _curvePool, address _lp_token, address _metapoolBase, uint256 _nCoins)
         AbstractAdapter(_creditManager, _curvePool)
@@ -112,6 +112,7 @@ abstract contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
                         abi.encodeWithSignature("underlying_coins(int128)", i)
                     );
                     if (success && returnData.length > 0) underlyings[i] = abi.decode(returnData, (address));
+                    else break;
                 }
 
                 if (underlyings[i] != address(0)) underlyingMasks[i] = _getMaskOrRevert(underlyings[i]); // F: [ACV1-1]
@@ -578,7 +579,9 @@ abstract contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
         try ICurvePool(pool).coins(i) returns (address addr) {
             coin = addr;
         } catch {
-            coin = ICurvePool(pool).coins(int128(int256(i)));
+            try ICurvePool(pool).coins(int128(int256(i))) returns (address addr) {
+                coin = addr;
+            } catch {}
         }
     }
 
