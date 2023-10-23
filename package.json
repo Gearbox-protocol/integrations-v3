@@ -29,6 +29,7 @@
   },
   "dependencies": {},
   "devDependencies": {
+    "@1inch/farming": "3.1.0",
     "@1inch/solidity-utils": "2.4.0",
     "@chainlink/contracts": "^0.4.0",
     "@commitlint/cli": "^17.1.2",

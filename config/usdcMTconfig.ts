@@ -82,7 +82,7 @@ const mtFraxswapConfig: UniV2Config = {
 export const config: PoolV3DeployConfig = {
   id: "mainnet-usdc-mt-v3",
   symbol: "dUSDCV3",
-  name: "USDC v3 trade",
+  name: "Trade USDC v3",
   network: "Mainnet",
   underlying: "USDC",
   accountAmount: BigInt(1_000_000) * POOL_DECIMALS,

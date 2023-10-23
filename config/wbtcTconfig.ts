@@ -6,7 +6,7 @@ const POOL_DIVIDER = BigInt(26000);
 export const config: PoolV3DeployConfig = {
   id: "mainnet-wbtc-mt-v3",
   symbol: "dWBTCV3",
-  name: "WBTC v3",
+  name: "Universal WBTC v3",
   network: "Mainnet",
   underlying: "WBTC",
   accountAmount: BigInt(1_000_000) * POOL_DECIMALS,

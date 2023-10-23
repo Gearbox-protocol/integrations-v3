@@ -112,7 +112,7 @@ const levBalancerConfig: BalancerVaultConfig = {
 export const config: PoolV3DeployConfig = {
   id: "mainnet-usdc-lev-v3",
   symbol: "dUSDC-lev-V3",
-  name: "USDC v3 farm",
+  name: "Farm USDC v3",
   network: "Mainnet",
   underlying: "USDC",
   accountAmount: BigInt(1_000_000) * POOL_DECIMALS,
@@ -479,7 +479,7 @@ export const config: PoolV3DeployConfig = {
       expirationDate: undefined,
       minDebt: (BigInt(1e4) * POOL_DECIMALS) / POOL_DIVIDER,
       maxDebt: (BigInt(1e6) * POOL_DECIMALS) / POOL_DIVIDER,
-      poolLimit: (BigInt(10_000_000) * POOL_DECIMALS) / POOL_DIVIDER,
+      poolLimit: (BigInt(20_000_000) * POOL_DECIMALS) / POOL_DIVIDER,
       collateralTokens: [
         { token: "WETH", lt: 85_00 }, // Token address is token from priceFeed map above
         { token: "STETH", lt: 82_50 }, // Token address is token from priceFeed map above
