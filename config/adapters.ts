@@ -21,6 +21,12 @@ const standardUniV2Config: UniV2Config = {
 const standardUniV3Config: UniV3Config = {
   contract: "UNISWAP_V3_ROUTER",
   allowed: [
+    { token0: "APE", token1: "WETH", fee: 3000 },
+    { token0: "RPL", token1: "WETH", fee: 3000 },
+    { token0: "RPL", token1: "WETH", fee: 10000 },
+    { token0: "RPL", token1: "WETH", fee: 3000 },
+    { token0: "MKR", token1: "WETH", fee: 10000 },
+    { token0: "MKR", token1: "WETH", fee: 3000 },
     { token0: "SNX", token1: "WETH", fee: 3000 },
     { token0: "WBTC", token1: "WETH", fee: 500 },
     { token0: "DAI", token1: "WETH", fee: 500 },
