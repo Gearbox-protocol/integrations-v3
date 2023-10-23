@@ -62,7 +62,6 @@ contract LiveTestHelper is IntegrationTestHelper {
 
     function _setupLiveCreditTest(string memory id) internal {
         _setupCore();
-        console.log(tokenTestSuite.addressOf(Tokens.MKR));
         supportedContracts = new SupportedContracts(chainId);
 
         PriceFeedDeployer priceFeedDeployer =
@@ -150,8 +149,10 @@ contract LiveTestHelper is IntegrationTestHelper {
 
             address uniV2Adapter = getAdapter(creditManager, Contracts.UNISWAP_V2_ROUTER);
 
-            vm.prank(CONFIGURATOR);
-            UniswapV2Adapter(uniV2Adapter).setPairStatusBatch(pairs);
+            if (uniV2Adapter != address(0)) {
+                vm.prank(CONFIGURATOR);
+                UniswapV2Adapter(uniV2Adapter).setPairStatusBatch(pairs);
+            }
 
             pairs = new UniswapV2PairStatus[](uniV2Pairs.length);
 
@@ -166,8 +167,28 @@ contract LiveTestHelper is IntegrationTestHelper {
 
             address sushiAdapter = getAdapter(creditManager, Contracts.SUSHISWAP_ROUTER);
 
-            vm.prank(CONFIGURATOR);
-            UniswapV2Adapter(sushiAdapter).setPairStatusBatch(pairs);
+            if (sushiAdapter != address(0)) {
+                vm.prank(CONFIGURATOR);
+                UniswapV2Adapter(sushiAdapter).setPairStatusBatch(pairs);
+            }
+
+            pairs = new UniswapV2PairStatus[](uniV2Pairs.length);
+
+            for (uint256 i = 0; i < uniV2Pairs.length; ++i) {
+                if (uniV2Pairs[i].router != Contracts.FRAXSWAP_ROUTER) continue;
+                pairs[i] = UniswapV2PairStatus({
+                    token0: tokenTestSuite.addressOf(uniV2Pairs[i].token0),
+                    token1: tokenTestSuite.addressOf(uniV2Pairs[i].token1),
+                    allowed: true
+                });
+            }
+
+            address fraxAdapter = getAdapter(creditManager, Contracts.FRAXSWAP_ROUTER);
+
+            if (fraxAdapter != address(0)) {
+                vm.prank(CONFIGURATOR);
+                UniswapV2Adapter(fraxAdapter).setPairStatusBatch(pairs);
+            }
         }
     }
 
