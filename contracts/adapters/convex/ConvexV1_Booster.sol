@@ -27,7 +27,9 @@ contract ConvexV1BoosterAdapter is AbstractAdapter, IConvexV1BoosterAdapter {
     /// @notice Constructor
     /// @param _creditManager Credit manager address
     /// @param _booster Booster contract address
-    constructor(address _creditManager, address _booster) AbstractAdapter(_creditManager, _booster) {}
+    constructor(address _creditManager, address _booster)
+        AbstractAdapter(_creditManager, _booster) // U:[CVX1B-1]
+    {}
 
     // ------- //
     // DEPOSIT //
@@ -40,10 +42,10 @@ contract ConvexV1BoosterAdapter is AbstractAdapter, IConvexV1BoosterAdapter {
     function deposit(uint256 _pid, uint256, bool _stake)
         external
         override
-        creditFacadeOnly
+        creditFacadeOnly // U:[CVX1B-2]
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        (tokensToEnable, tokensToDisable) = _deposit(_pid, _stake, msg.data, false);
+        (tokensToEnable, tokensToDisable) = _deposit(_pid, _stake, msg.data, false); // U:[CVX1B-3]
     }
 
     /// @notice Deposits the entire balance of Curve LP tokens into Booster, disables Curve LP token
@@ -52,10 +54,10 @@ contract ConvexV1BoosterAdapter is AbstractAdapter, IConvexV1BoosterAdapter {
     function depositAll(uint256 _pid, bool _stake)
         external
         override
-        creditFacadeOnly
+        creditFacadeOnly // U:[CVX1B-2]
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        (tokensToEnable, tokensToDisable) = _deposit(_pid, _stake, msg.data, true);
+        (tokensToEnable, tokensToDisable) = _deposit(_pid, _stake, msg.data, true); // U:[CVX1B-4]
     }
 
     /// @dev Internal implementation of `deposit` and `depositAll`
@@ -68,11 +70,11 @@ contract ConvexV1BoosterAdapter is AbstractAdapter, IConvexV1BoosterAdapter {
     {
         IBooster.PoolInfo memory pool = IBooster(targetContract).poolInfo(_pid);
 
-        address tokenIn = pool.lptoken; // F: [ACVX1_B-2, ACVX1_B-3]
-        address tokenOut = _stake ? pidToPhantomToken[_pid] : pool.token; // F: [ACVX1_B-2, ACVX1_B-3]
+        address tokenIn = pool.lptoken; // U:[CVX1B-3,4]
+        address tokenOut = _stake ? pidToPhantomToken[_pid] : pool.token; // U:[CVX1B-3,4]
 
         // using `_executeSwap` because tokens are not known in advance and need to check if they are registered
-        (tokensToEnable, tokensToDisable,) = _executeSwapSafeApprove(tokenIn, tokenOut, callData, disableCurveLP);
+        (tokensToEnable, tokensToDisable,) = _executeSwapSafeApprove(tokenIn, tokenOut, callData, disableCurveLP); // U:[CVX1B-3,4]
     }
 
     // -------- //
@@ -85,10 +87,10 @@ contract ConvexV1BoosterAdapter is AbstractAdapter, IConvexV1BoosterAdapter {
     function withdraw(uint256 _pid, uint256)
         external
         override
-        creditFacadeOnly
+        creditFacadeOnly // U:[CVX1B-2]
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        (tokensToEnable, tokensToDisable) = _withdraw(_pid, msg.data, false);
+        (tokensToEnable, tokensToDisable) = _withdraw(_pid, msg.data, false); // U:[CVX1B-5]
     }
 
     /// @notice Withdraws all Curve LP tokens from Booster, disables Convex LP token
@@ -97,10 +99,10 @@ contract ConvexV1BoosterAdapter is AbstractAdapter, IConvexV1BoosterAdapter {
     function withdrawAll(uint256 _pid)
         external
         override
-        creditFacadeOnly
+        creditFacadeOnly // U:[CVX1B-2]
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        (tokensToEnable, tokensToDisable) = _withdraw(_pid, msg.data, true);
+        (tokensToEnable, tokensToDisable) = _withdraw(_pid, msg.data, true); // U:[CVX1B-6]
     }
 
     /// @dev Internal implementation of `withdraw` and `withdrawAll`
@@ -112,11 +114,11 @@ contract ConvexV1BoosterAdapter is AbstractAdapter, IConvexV1BoosterAdapter {
     {
         IBooster.PoolInfo memory pool = IBooster(targetContract).poolInfo(_pid);
 
-        address tokenIn = pool.token; // F: [ACVX1_B-4, ACVX1_B-5]
-        address tokenOut = pool.lptoken; // F: [ACVX1_B-4, ACVX1_B-5]
+        address tokenIn = pool.token; // U:[CVX1B-5,6]
+        address tokenOut = pool.lptoken; // U:[CVX1B-5,6]
 
         // using `_executeSwap` because tokens are not known in advance and need to check if they are registered
-        (tokensToEnable, tokensToDisable,) = _executeSwapNoApprove(tokenIn, tokenOut, callData, disableConvexLP);
+        (tokensToEnable, tokensToDisable,) = _executeSwapNoApprove(tokenIn, tokenOut, callData, disableConvexLP); // U:[CVX1B-5,6]
     }
 
     // ------------- //
@@ -127,7 +129,7 @@ contract ConvexV1BoosterAdapter is AbstractAdapter, IConvexV1BoosterAdapter {
     function updateStakedPhantomTokensMap()
         external
         override
-        configuratorOnly // F: [ACVX1_B-1]
+        configuratorOnly // U:[CVX1B-7]
     {
         ICreditManagerV3 cm = ICreditManagerV3(creditManager);
         ICreditConfiguratorV3 cc = ICreditConfiguratorV3(cm.creditConfigurator());

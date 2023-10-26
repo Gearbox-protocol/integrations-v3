@@ -23,14 +23,17 @@ contract LidoV1Gateway is SanityCheckTrait {
     /// @notice Constructor
     /// @param _weth WETH token address
     /// @param _stETH stETH contract address
-    constructor(address _weth, address _stETH) nonZeroAddress(_weth) nonZeroAddress(_stETH) {
-        weth = _weth;
-        stETH = _stETH;
+    constructor(address _weth, address _stETH)
+        nonZeroAddress(_weth) // U:[LWG-1]
+        nonZeroAddress(_stETH) // U:[LWG-1]
+    {
+        weth = _weth; // U:[LWG-1]
+        stETH = _stETH; // U:[LWG-1]
     }
 
     /// @notice Allows this contract to unwrap WETH, forbids receiving ETH in other ways
     receive() external payable {
-        if (msg.sender != weth) revert ReceiveIsNotAllowedException();
+        if (msg.sender != weth) revert ReceiveIsNotAllowedException(); // U:[LWG-2]
     }
 
     /// @notice Submits WETH to the stETH contract by first unwrapping it
@@ -38,9 +41,9 @@ contract LidoV1Gateway is SanityCheckTrait {
     /// @param _referral The address of the referrer
     function submit(uint256 amount, address _referral) external returns (uint256 value) {
         IERC20(weth).transferFrom(msg.sender, address(this), amount);
-        IWETH(weth).withdraw(amount);
+        IWETH(weth).withdraw(amount); // U:[LWG-3]
 
-        value = IstETH(stETH).submit{value: amount}(_referral);
+        value = IstETH(stETH).submit{value: amount}(_referral); // U:[LWG-3]
         IERC20(stETH).transfer(msg.sender, IERC20(stETH).balanceOf(address(this)));
     }
 }

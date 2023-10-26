@@ -31,10 +31,11 @@ contract CurveV1Adapter2Assets is CurveV1AdapterBase, ICurveV1_2AssetsAdapter {
     /// @dev `min_mint_amount` parameter is ignored because calldata is passed directly to the target contract
     function add_liquidity(uint256[N_COINS] calldata amounts, uint256)
         external
-        creditFacadeOnly
+        override
+        creditFacadeOnly // U:[CRV2-1]
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        (tokensToEnable, tokensToDisable) = _add_liquidity(amounts[0] > 1, amounts[1] > 1, false, false); // F: [ACV1_2-4, ACV1S-1]
+        (tokensToEnable, tokensToDisable) = _add_liquidity(amounts[0] > 1, amounts[1] > 1, false, false); // U:[CRV2-2]
     }
 
     /// @dev Returns calldata for adding liquidity in coin `i`
@@ -69,10 +70,10 @@ contract CurveV1Adapter2Assets is CurveV1AdapterBase, ICurveV1_2AssetsAdapter {
     function remove_liquidity(uint256, uint256[N_COINS] calldata)
         external
         virtual
-        creditFacadeOnly
+        creditFacadeOnly // U:[CRV2-1]
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        (tokensToEnable, tokensToDisable) = _remove_liquidity(); // F: [ACV1_2-5]
+        (tokensToEnable, tokensToDisable) = _remove_liquidity(); // U:[CRV2-3]
     }
 
     /// @notice Withdraw exact amounts of tokens from the pool
@@ -82,9 +83,9 @@ contract CurveV1Adapter2Assets is CurveV1AdapterBase, ICurveV1_2AssetsAdapter {
         external
         virtual
         override
-        creditFacadeOnly
+        creditFacadeOnly // U:[CRV2-1]
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        (tokensToEnable, tokensToDisable) = _remove_liquidity_imbalance(amounts[0] > 1, amounts[1] > 1, false, false); // F: [ACV1_2-6]
+        (tokensToEnable, tokensToDisable) = _remove_liquidity_imbalance(amounts[0] > 1, amounts[1] > 1, false, false); // U:[CRV2-4]
     }
 }

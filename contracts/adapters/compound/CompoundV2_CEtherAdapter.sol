@@ -32,12 +32,14 @@ contract CompoundV2_CEtherAdapter is CompoundV2_CTokenAdapter {
     /// @notice Constructor
     /// @param _creditManager Credit manager address
     /// @param _cethGateway CEther gateway contract address
-    constructor(address _creditManager, address _cethGateway) CompoundV2_CTokenAdapter(_creditManager, _cethGateway) {
-        cToken = CEtherGateway(payable(targetContract)).ceth(); // F: [ACV2CETH-1]
-        underlying = CEtherGateway(payable(targetContract)).weth(); // F: [ACV2CETH-1]
+    constructor(address _creditManager, address _cethGateway)
+        CompoundV2_CTokenAdapter(_creditManager, _cethGateway) // U:[COMP2E-1]
+    {
+        cToken = CEtherGateway(payable(targetContract)).ceth(); // U:[COMP2E-1]
+        underlying = CEtherGateway(payable(targetContract)).weth(); // U:[COMP2E-1]
 
-        cTokenMask = _getMaskOrRevert(cToken); // F: [ACV2CETH-1]
-        tokenMask = _getMaskOrRevert(underlying); // F: [ACV2CETH-1]
+        cTokenMask = _getMaskOrRevert(cToken); // U:[COMP2E-1]
+        tokenMask = _getMaskOrRevert(underlying); // U:[COMP2E-1]
     }
 
     /// @dev Internal implementation of `mint`
@@ -49,9 +51,9 @@ contract CompoundV2_CEtherAdapter is CompoundV2_CTokenAdapter {
         override
         returns (uint256 tokensToEnable, uint256 tokensToDisable, uint256 error)
     {
-        _approveToken(underlying, type(uint256).max);
-        error = abi.decode(_execute(_encodeMint(amount)), (uint256));
-        _approveToken(underlying, 1);
+        _approveToken(underlying, type(uint256).max); // U:[COMP2E-4]
+        error = abi.decode(_execute(_encodeMint(amount)), (uint256)); // U:[COMP2E-4]
+        _approveToken(underlying, 1); // U:[COMP2E-4]
         (tokensToEnable, tokensToDisable) = (cTokenMask, 0);
     }
 
@@ -60,17 +62,17 @@ contract CompoundV2_CEtherAdapter is CompoundV2_CTokenAdapter {
     ///      - cETH is enabled after the call
     ///      - WETH is disabled after the call because operation spends the entire balance
     function _mintAll() internal override returns (uint256 tokensToEnable, uint256 tokensToDisable, uint256 error) {
-        address creditAccount = _creditAccount();
+        address creditAccount = _creditAccount(); // U:[COMP2E-5]
 
-        uint256 amount = IERC20(underlying).balanceOf(creditAccount);
+        uint256 amount = IERC20(underlying).balanceOf(creditAccount); // U:[COMP2E-5]
         if (amount <= 1) return (0, 0, 0);
         unchecked {
-            --amount;
+            --amount; // U:[COMP2E-5]
         }
 
-        _approveToken(underlying, type(uint256).max);
-        error = abi.decode(_execute(_encodeMint(amount)), (uint256));
-        _approveToken(underlying, 1);
+        _approveToken(underlying, type(uint256).max); // U:[COMP2E-5]
+        error = abi.decode(_execute(_encodeMint(amount)), (uint256)); // U:[COMP2E-5]
+        _approveToken(underlying, 1); // U:[COMP2E-5]
         (tokensToEnable, tokensToDisable) = (cTokenMask, tokenMask);
     }
 
@@ -83,9 +85,9 @@ contract CompoundV2_CEtherAdapter is CompoundV2_CTokenAdapter {
         override
         returns (uint256 tokensToEnable, uint256 tokensToDisable, uint256 error)
     {
-        _approveToken(cToken, type(uint256).max);
-        error = abi.decode(_execute(_encodeRedeem(amount)), (uint256));
-        _approveToken(cToken, 1);
+        _approveToken(cToken, type(uint256).max); // U:[COMP2E-6]
+        error = abi.decode(_execute(_encodeRedeem(amount)), (uint256)); // U:[COMP2E-6]
+        _approveToken(cToken, 1); // U:[COMP2E-6]
         (tokensToEnable, tokensToDisable) = (tokenMask, 0);
     }
 
@@ -94,17 +96,17 @@ contract CompoundV2_CEtherAdapter is CompoundV2_CTokenAdapter {
     ///      - WETH is enabled after the call
     ///      - cETH is disabled after the call because operation spends the entire balance
     function _redeemAll() internal override returns (uint256 tokensToEnable, uint256 tokensToDisable, uint256 error) {
-        address creditAccount = _creditAccount();
+        address creditAccount = _creditAccount(); // U:[COMP2E-7]
 
-        uint256 amount = ICEther(cToken).balanceOf(creditAccount);
+        uint256 amount = ICEther(cToken).balanceOf(creditAccount); // U:[COMP2E-7]
         if (amount <= 1) return (0, 0, 0);
         unchecked {
-            --amount;
+            --amount; // U:[COMP2E-7]
         }
 
-        _approveToken(cToken, type(uint256).max);
-        error = abi.decode(_execute(_encodeRedeem(amount)), (uint256));
-        _approveToken(cToken, 1);
+        _approveToken(cToken, type(uint256).max); // U:[COMP2E-7]
+        error = abi.decode(_execute(_encodeRedeem(amount)), (uint256)); // U:[COMP2E-7]
+        _approveToken(cToken, 1); // U:[COMP2E-7]
         (tokensToEnable, tokensToDisable) = (tokenMask, cTokenMask);
     }
 
@@ -117,9 +119,9 @@ contract CompoundV2_CEtherAdapter is CompoundV2_CTokenAdapter {
         override
         returns (uint256 tokensToEnable, uint256 tokensToDisable, uint256 error)
     {
-        _approveToken(cToken, type(uint256).max);
-        error = abi.decode(_execute(_encodeRedeemUnderlying(amount)), (uint256));
-        _approveToken(cToken, 1);
+        _approveToken(cToken, type(uint256).max); // U:[COMP2E-8]
+        error = abi.decode(_execute(_encodeRedeemUnderlying(amount)), (uint256)); // U:[COMP2E-8]
+        _approveToken(cToken, 1); // U:[COMP2E-8]
         (tokensToEnable, tokensToDisable) = (tokenMask, 0);
     }
 }
