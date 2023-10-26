@@ -55,23 +55,27 @@ contract CompoundV2_CEtherAdapter is CompoundV2_CTokenAdapter {
         (tokensToEnable, tokensToDisable) = (cTokenMask, 0);
     }
 
-    /// @dev Internal implementation of `mintAll`
+    /// @dev Internal implementation of `mintDiff`
     ///      - WETH is approved before the call because Gateway needs permission to transfer it
     ///      - cETH is enabled after the call
-    ///      - WETH is disabled after the call because operation spends the entire balance
-    function _mintAll() internal override returns (uint256 tokensToEnable, uint256 tokensToDisable, uint256 error) {
+    ///      - WETH is disabled after the call if leftoverAmount <= 1
+    function _mintDiff(uint256 leftoverAmount)
+        internal
+        override
+        returns (uint256 tokensToEnable, uint256 tokensToDisable, uint256 error)
+    {
         address creditAccount = _creditAccount();
 
         uint256 amount = IERC20(underlying).balanceOf(creditAccount);
-        if (amount <= 1) return (0, 0, 0);
+        if (amount <= leftoverAmount) return (0, 0, 0);
         unchecked {
-            --amount;
+            amount -= leftoverAmount;
         }
 
         _approveToken(underlying, type(uint256).max);
         error = abi.decode(_execute(_encodeMint(amount)), (uint256));
         _approveToken(underlying, 1);
-        (tokensToEnable, tokensToDisable) = (cTokenMask, tokenMask);
+        (tokensToEnable, tokensToDisable) = (cTokenMask, leftoverAmount <= 1 ? tokenMask : 0);
     }
 
     /// @dev Internal implementation of `redeem`
@@ -89,23 +93,27 @@ contract CompoundV2_CEtherAdapter is CompoundV2_CTokenAdapter {
         (tokensToEnable, tokensToDisable) = (tokenMask, 0);
     }
 
-    /// @dev Internal implementation of `redeemAll`
+    /// @dev Internal implementation of `redeemDiff`
     ///      - cETH is approved before the call because Gateway needs permission to transfer it
     ///      - WETH is enabled after the call
-    ///      - cETH is disabled after the call because operation spends the entire balance
-    function _redeemAll() internal override returns (uint256 tokensToEnable, uint256 tokensToDisable, uint256 error) {
+    ///      - cETH is disabled after the call if leftoverAmount <= 1
+    function _redeemDiff(uint256 leftoverAmount)
+        internal
+        override
+        returns (uint256 tokensToEnable, uint256 tokensToDisable, uint256 error)
+    {
         address creditAccount = _creditAccount();
 
         uint256 amount = ICEther(cToken).balanceOf(creditAccount);
-        if (amount <= 1) return (0, 0, 0);
+        if (amount <= leftoverAmount) return (0, 0, 0);
         unchecked {
-            --amount;
+            amount -= leftoverAmount;
         }
 
         _approveToken(cToken, type(uint256).max);
         error = abi.decode(_execute(_encodeRedeem(amount)), (uint256));
         _approveToken(cToken, 1);
-        (tokensToEnable, tokensToDisable) = (tokenMask, cTokenMask);
+        (tokensToEnable, tokensToDisable) = (tokenMask, leftoverAmount <= 1 ? cTokenMask : 0);
     }
 
     /// @dev Internal implementation of `redeemUnderlying`

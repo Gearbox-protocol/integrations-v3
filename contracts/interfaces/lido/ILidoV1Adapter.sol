@@ -19,5 +19,7 @@ interface ILidoV1Adapter is IAdapter {
 
     function submit(uint256 amount) external returns (uint256 tokensToEnable, uint256 tokensToDisable);
 
+    function submitDiff(uint256 leftoverAmount) external returns (uint256 tokensToEnable, uint256 tokensToDisable);
+
     function submitAll() external returns (uint256 tokensToEnable, uint256 tokensToDisable);
 }

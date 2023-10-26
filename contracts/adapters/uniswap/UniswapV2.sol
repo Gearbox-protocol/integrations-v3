@@ -87,6 +87,21 @@ contract UniswapV2Adapter is AbstractAdapter, IUniswapV2Adapter {
         ); // F: [AUV2-3]
     }
 
+    /// @notice Swap the entire balance of input token to output token, except the specified amount
+    /// @param leftoverAmount Amount of tokenIn to keep on the account
+    /// @param rateMinRAY Minimum exchange rate between input and output tokens, scaled by 1e27
+    /// @param path Array of token addresses representing swap path, which must have at most 3 hops
+    ///        through registered connector tokens
+    /// @param deadline Maximum timestamp until which the transaction is valid
+    function swapDiffTokensForTokens(
+        uint256 leftoverAmount,
+        uint256 rateMinRAY,
+        address[] calldata path,
+        uint256 deadline
+    ) external override creditFacadeOnly returns (uint256 tokensToEnable, uint256 tokensToDisable) {
+        (tokensToEnable, tokensToDisable) = _swapDiffTokensForTokens(leftoverAmount, rateMinRAY, path, deadline);
+    }
+
     /// @notice Swap the entire balance of input token to output token, disables input token
     /// @param rateMinRAY Minimum exchange rate between input and output tokens, scaled by 1e27
     /// @param path Array of token addresses representing swap path, which must have at most 3 hops
@@ -98,16 +113,32 @@ contract UniswapV2Adapter is AbstractAdapter, IUniswapV2Adapter {
         creditFacadeOnly
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
+        (tokensToEnable, tokensToDisable) = _swapDiffTokensForTokens(1, rateMinRAY, path, deadline); // F: [AUV2-4]
+    }
+
+    /// @dev Internal implementation for `swapDiffTokensForTokens` and `swapAllTokensForTokens`.
+    function _swapDiffTokensForTokens(
+        uint256 leftoverAmount,
+        uint256 rateMinRAY,
+        address[] calldata path,
+        uint256 deadline
+    ) internal returns (uint256 tokensToEnable, uint256 tokensToDisable) {
         address creditAccount = _creditAccount(); // F: [AUV2-1]
 
-        (bool valid, address tokenIn, address tokenOut) = _validatePath(path); // F: [AUV2-4]
-        if (!valid) revert InvalidPathException(); // F: [AUV2-5]
+        address tokenIn;
+        address tokenOut;
 
-        uint256 balance = IERC20(tokenIn).balanceOf(creditAccount); // F: [AUV2-4]
-        if (balance <= 1) return (0, 0);
+        {
+            bool valid;
+            (valid, tokenIn, tokenOut) = _validatePath(path); // F: [AUV2-4]
+            if (!valid) revert InvalidPathException(); // F: [AUV2-5]
+        }
+
+        uint256 amount = IERC20(tokenIn).balanceOf(creditAccount); // F: [AUV2-4]
+        if (amount <= leftoverAmount) return (0, 0);
 
         unchecked {
-            balance--;
+            amount -= leftoverAmount;
         }
 
         // calling `_executeSwap` because we need to check if output token is registered as collateral token in the CM
@@ -116,10 +147,10 @@ contract UniswapV2Adapter is AbstractAdapter, IUniswapV2Adapter {
             tokenOut,
             abi.encodeCall(
                 IUniswapV2Router02.swapExactTokensForTokens,
-                (balance, (balance * rateMinRAY) / RAY, path, creditAccount, deadline)
+                (amount, (amount * rateMinRAY) / RAY, path, creditAccount, deadline)
             ),
-            true
-        ); // F: [AUV2-4]
+            leftoverAmount <= 1
+        );
     }
 
     // ------------- //

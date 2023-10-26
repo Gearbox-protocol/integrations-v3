@@ -41,12 +41,27 @@ contract YearnV2Adapter is AbstractAdapter, IYearnV2Adapter {
 
     /// @notice Deposit the entire balance of underlying tokens into the vault, disables underlying
     function deposit() external override creditFacadeOnly returns (uint256 tokensToEnable, uint256 tokensToDisable) {
+        (tokensToEnable, tokensToDisable) = _depositDiff(1);
+    }
+
+    /// @notice Deposit the entire balance of underlying tokens into the vault, except the specified amount
+    function depositDiff(uint256 leftoverAmount)
+        external
+        override
+        creditFacadeOnly
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+    {
+        (tokensToEnable, tokensToDisable) = _depositDiff(leftoverAmount);
+    }
+
+    /// @dev Internal implementation for `deposit` and `depositDiff`
+    function _depositDiff(uint256 leftoverAmount) internal returns (uint256 tokensToEnable, uint256 tokensToDisable) {
         address creditAccount = _creditAccount(); // F: [AYV2-3]
 
         uint256 balance = IERC20(token).balanceOf(creditAccount);
-        if (balance > 1) {
+        if (balance > leftoverAmount) {
             unchecked {
-                (tokensToEnable, tokensToDisable) = _deposit(balance - 1, true); // F: [AYV2-4]
+                (tokensToEnable, tokensToDisable) = _deposit(balance - leftoverAmount, leftoverAmount <= 1); // F: [AYV2-4]
             }
         }
     }
@@ -94,13 +109,28 @@ contract YearnV2Adapter is AbstractAdapter, IYearnV2Adapter {
 
     /// @notice Withdraw the entire balance of underlying from the vault, disables yToken
     function withdraw() external override creditFacadeOnly returns (uint256 tokensToEnable, uint256 tokensToDisable) {
+        (tokensToEnable, tokensToDisable) = _withdrawDiff(1);
+    }
+
+    /// @notice Withdraw the entire balance of underlying from the vault, except the specified amount
+    function withdrawDiff(uint256 leftoverAmount)
+        external
+        override
+        creditFacadeOnly
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+    {
+        (tokensToEnable, tokensToDisable) = _withdrawDiff(leftoverAmount);
+    }
+
+    /// @dev Internal implementation for `withdraw` and `withdrawDiff`
+    function _withdrawDiff(uint256 leftoverAmount) internal returns (uint256 tokensToEnable, uint256 tokensToDisable) {
         address creditAccount = _creditAccount(); // F: [AYV2-3]
 
         uint256 balance = IERC20(targetContract).balanceOf(creditAccount);
 
-        if (balance > 1) {
+        if (balance > leftoverAmount) {
             unchecked {
-                (tokensToEnable, tokensToDisable) = _withdraw(balance - 1, true); // F: [AYV2-7]
+                (tokensToEnable, tokensToDisable) = _withdraw(balance - leftoverAmount, leftoverAmount <= 1); // F: [AYV2-7]
             }
         }
     }

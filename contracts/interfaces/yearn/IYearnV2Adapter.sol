@@ -15,11 +15,15 @@ interface IYearnV2Adapter is IAdapter {
 
     function deposit() external returns (uint256 tokensToEnable, uint256 tokensToDisable);
 
+    function depositDiff(uint256 leftoverAmount) external returns (uint256 tokensToEnable, uint256 tokensToDisable);
+
     function deposit(uint256 amount) external returns (uint256 tokensToEnable, uint256 tokensToDisable);
 
     function deposit(uint256 amount, address) external returns (uint256 tokensToEnable, uint256 tokensToDisable);
 
     function withdraw() external returns (uint256 tokensToEnable, uint256 tokensToDisable);
+
+    function withdrawDiff(uint256 leftoverAmount) external returns (uint256 tokensToEnable, uint256 tokensToDisable);
 
     function withdraw(uint256 maxShares) external returns (uint256 tokensToEnable, uint256 tokensToDisable);
 

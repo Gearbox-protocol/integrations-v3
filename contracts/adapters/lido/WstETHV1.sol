@@ -50,14 +50,30 @@ contract WstETHV1Adapter is AbstractAdapter, IwstETHV1Adapter {
         (tokensToEnable, tokensToDisable) = _wrap(amount, false); // F: [AWSTV1-5]
     }
 
+    /// @notice Wraps the entire balance of stETH into wstETH, except the specified amount
+    /// @param leftoverAmount Amount of stETH to keep on the account
+    function wrapDiff(uint256 leftoverAmount)
+        external
+        override
+        creditFacadeOnly
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+    {
+        (tokensToEnable, tokensToDisable) = _wrapDiff(leftoverAmount);
+    }
+
     /// @notice Wraps the entire balance of stETH into wstETH, disables stETH
     function wrapAll() external override creditFacadeOnly returns (uint256 tokensToEnable, uint256 tokensToDisable) {
+        (tokensToEnable, tokensToDisable) = _wrapDiff(1);
+    }
+
+    /// @dev Internal implementation for `wrapDiff` and `wrapAll`.
+    function _wrapDiff(uint256 leftoverAmount) internal returns (uint256 tokensToEnable, uint256 tokensToDisable) {
         address creditAccount = _creditAccount(); // F: [AWSTV1-3]
 
         uint256 balance = IERC20(stETH).balanceOf(creditAccount);
-        if (balance > 1) {
+        if (balance > leftoverAmount) {
             unchecked {
-                (tokensToEnable, tokensToDisable) = _wrap(balance - 1, true); // F: [AWSTV1-4]
+                (tokensToEnable, tokensToDisable) = _wrap(balance - leftoverAmount, leftoverAmount <= 1); // F: [AWSTV1-4]
             }
         }
     }
@@ -91,14 +107,30 @@ contract WstETHV1Adapter is AbstractAdapter, IwstETHV1Adapter {
         (tokensToEnable, tokensToDisable) = _unwrap(amount, false); // F: [AWSTV1-7]
     }
 
+    /// @notice Unwraps the entire balance of wstETH to stETH, except the specified amount
+    /// @param leftoverAmount Amount of wstETH to keep on the account
+    function unwrapDiff(uint256 leftoverAmount)
+        external
+        override
+        creditFacadeOnly
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+    {
+        (tokensToEnable, tokensToDisable) = _unwrapDiff(leftoverAmount);
+    }
+
     /// @notice Unwraps the entire balance of wstETH to stETH, disables wstETH
     function unwrapAll() external override creditFacadeOnly returns (uint256 tokensToEnable, uint256 tokensToDisable) {
+        (tokensToEnable, tokensToDisable) = _unwrapDiff(1);
+    }
+
+    /// @dev Internal implementation for `unwrapDiff` and `unwrapAll`.
+    function _unwrapDiff(uint256 leftoverAmount) internal returns (uint256 tokensToEnable, uint256 tokensToDisable) {
         address creditAccount = _creditAccount(); // F: [AWSTV1-3]
 
         uint256 balance = IERC20(targetContract).balanceOf(creditAccount);
-        if (balance > 1) {
+        if (balance > leftoverAmount) {
             unchecked {
-                (tokensToEnable, tokensToDisable) = _unwrap(balance - 1, true); // F: [AWSTV1-6]
+                (tokensToEnable, tokensToDisable) = _unwrap(balance - leftoverAmount, leftoverAmount <= 1); // F: [AWSTV1-6]
             }
         }
     }

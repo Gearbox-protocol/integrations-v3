@@ -64,15 +64,31 @@ contract LidoV1Adapter is AbstractAdapter, ILidoV1Adapter {
         (tokensToEnable, tokensToDisable) = _submit(amount, false); // F: [LDOV1-3]
     }
 
+    /// @notice Stakes the entire balance of WETH in Lido via Gateway, except the specified amount
+    /// @dev The referral address is set to Gearbox treasury
+    function submitDiff(uint256 leftoverAmount)
+        external
+        override
+        creditFacadeOnly
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+    {
+        (tokensToEnable, tokensToDisable) = _submitDiff(leftoverAmount);
+    }
+
     /// @notice Stakes the entire balance of WETH in Lido via Gateway, disables WETH
     /// @dev The referral address is set to Gearbox treasury
     function submitAll() external override creditFacadeOnly returns (uint256 tokensToEnable, uint256 tokensToDisable) {
+        (tokensToEnable, tokensToDisable) = _submitDiff(1);
+    }
+
+    /// @dev Internal implementation for `submitDiff` and `submitAll`.
+    function _submitDiff(uint256 leftoverAmount) internal returns (uint256 tokensToEnable, uint256 tokensToDisable) {
         address creditAccount = _creditAccount(); // F: [LDOV1-2]
 
         uint256 balance = IERC20(weth).balanceOf(creditAccount);
-        if (balance > 1) {
+        if (balance > leftoverAmount) {
             unchecked {
-                (tokensToEnable, tokensToDisable) = _submit(balance - 1, true); // F: [LDOV1-4]
+                (tokensToEnable, tokensToDisable) = _submit(balance - leftoverAmount, leftoverAmount <= 1); // F: [LDOV1-4]
             }
         }
     }

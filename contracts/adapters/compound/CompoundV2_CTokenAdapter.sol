@@ -39,6 +39,19 @@ abstract contract CompoundV2_CTokenAdapter is AbstractAdapter, ICompoundV2_CToke
         _revertOnError(error);
     }
 
+    /// @notice Deposit all underlying tokens into Compound in exchange for cTokens, except for specified amount
+    /// @param leftoverAmount Amount of underlying tokens to keep on the account
+    function mintDiff(uint256 leftoverAmount)
+        external
+        override
+        creditFacadeOnly // F: [ACV2CT-1]
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+    {
+        uint256 error;
+        (tokensToEnable, tokensToDisable, error) = _mintDiff(leftoverAmount);
+        _revertOnError(error);
+    }
+
     /// @notice Deposit all underlying tokens into Compound in exchange for cTokens, disables underlying
     function mintAll()
         external
@@ -47,7 +60,7 @@ abstract contract CompoundV2_CTokenAdapter is AbstractAdapter, ICompoundV2_CToke
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
         uint256 error;
-        (tokensToEnable, tokensToDisable, error) = _mintAll(); // F: [ACV2CT-4, ACV2CT-5]
+        (tokensToEnable, tokensToDisable, error) = _mintDiff(1); // F: [ACV2CT-4, ACV2CT-5]
         _revertOnError(error);
     }
 
@@ -59,10 +72,13 @@ abstract contract CompoundV2_CTokenAdapter is AbstractAdapter, ICompoundV2_CToke
         virtual
         returns (uint256 tokensToEnable, uint256 tokensToDisable, uint256 error);
 
-    /// @dev Internal implementation of `mintAll`
+    /// @dev Internal implementation of `mintDiff`
     ///      Since minting process might be different for CErc20 and CEther,
     ///      it's up to deriving adapters to implement this function
-    function _mintAll() internal virtual returns (uint256 tokensToEnable, uint256 tokensToDisable, uint256 error);
+    function _mintDiff(uint256 leftoverAmount)
+        internal
+        virtual
+        returns (uint256 tokensToEnable, uint256 tokensToDisable, uint256 error);
 
     /// @dev Encodes calldata for `ICErc20Actions.mint` call
     function _encodeMint(uint256 amount) internal pure returns (bytes memory callData) {
@@ -86,6 +102,19 @@ abstract contract CompoundV2_CTokenAdapter is AbstractAdapter, ICompoundV2_CToke
         _revertOnError(error);
     }
 
+    /// @notice Withdraw all underlying tokens from Compound, except the specified amount, and burn cTokens
+    /// @param leftoverAmount Amount of cToken to leave on the account
+    function redeemDiff(uint256 leftoverAmount)
+        external
+        override
+        creditFacadeOnly // F: [ACV2CT-1]
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+    {
+        uint256 error;
+        (tokensToEnable, tokensToDisable, error) = _redeemDiff(leftoverAmount);
+        _revertOnError(error);
+    }
+
     /// @notice Withdraw all underlying tokens from Compound and burn cTokens, disables cToken
     function redeemAll()
         external
@@ -94,7 +123,7 @@ abstract contract CompoundV2_CTokenAdapter is AbstractAdapter, ICompoundV2_CToke
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
         uint256 error;
-        (tokensToEnable, tokensToDisable, error) = _redeemAll(); // F: [ACV2CT-8, ACV2CT-9]
+        (tokensToEnable, tokensToDisable, error) = _redeemDiff(1); // F: [ACV2CT-8, ACV2CT-9]
         _revertOnError(error);
     }
 
@@ -109,7 +138,10 @@ abstract contract CompoundV2_CTokenAdapter is AbstractAdapter, ICompoundV2_CToke
     /// @dev Internal implementation of `redeemAll`
     ///      Since redeeming process might be different for CErc20 and CEther,
     ///      it's up to deriving adapters to implement this function
-    function _redeemAll() internal virtual returns (uint256 tokensToEnable, uint256 tokensToDisable, uint256 error);
+    function _redeemDiff(uint256 leftoverAmount)
+        internal
+        virtual
+        returns (uint256 tokensToEnable, uint256 tokensToDisable, uint256 error);
 
     /// @dev Encodes calldata for `ICErc20Actions.redeem` call
     function _encodeRedeem(uint256 amount) internal pure returns (bytes memory callData) {

@@ -39,6 +39,13 @@ interface IUniswapV2Adapter is IAdapter, IUniswapV2AdapterEvents, IUniswapV2Adap
         uint256 deadline
     ) external returns (uint256 tokensToEnable, uint256 tokensToDisable);
 
+    function swapDiffTokensForTokens(
+        uint256 leftoverAmount,
+        uint256 rateMinRAY,
+        address[] calldata path,
+        uint256 deadline
+    ) external returns (uint256 tokensToEnable, uint256 tokensToDisable);
+
     function swapAllTokensForTokens(uint256 rateMinRAY, address[] calldata path, uint256 deadline)
         external
         returns (uint256 tokensToEnable, uint256 tokensToDisable);

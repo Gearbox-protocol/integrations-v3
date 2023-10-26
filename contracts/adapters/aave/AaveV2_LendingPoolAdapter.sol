@@ -46,6 +46,20 @@ contract AaveV2_LendingPoolAdapter is AbstractAdapter, IAaveV2_LendingPoolAdapte
         (tokensToEnable, tokensToDisable) = _deposit(creditAccount, asset, amount, false); // F: [AAV2LP-3]
     }
 
+    /// @notice Deposit all underlying tokens except a specified amount into Aave in exchange for aTokens
+    /// @param asset Address of underlying token to deposit
+    /// @param leftoverAmount Amount of asset to leave at the end of operation
+    function depositDiff(address asset, uint256 leftoverAmount)
+        external
+        override
+        creditFacadeOnly
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+    {
+        address creditAccount = _creditAccount();
+
+        (tokensToEnable, tokensToDisable) = _depositDiffInternal(creditAccount, asset, leftoverAmount);
+    }
+
     /// @notice Deposit all underlying tokens into Aave in exchange for aTokens, disables underlying
     /// @param asset Address of underlying token to deposit
     function depositAll(address asset)
@@ -56,16 +70,26 @@ contract AaveV2_LendingPoolAdapter is AbstractAdapter, IAaveV2_LendingPoolAdapte
     {
         address creditAccount = _creditAccount();
 
-        uint256 amount = IERC20(asset).balanceOf(creditAccount);
-        if (amount <= 1) return (0, 0);
-        unchecked {
-            --amount;
-        }
-
-        (tokensToEnable, tokensToDisable) = _deposit(creditAccount, asset, amount, true); // F: [AAV2LP-4]
+        (tokensToEnable, tokensToDisable) = _depositDiffInternal(creditAccount, asset, 1); // F: [AAV2LP-4]
     }
 
-    /// @dev Internal implementation of `deposit` and `depositAll` functions
+    /// @dev Internal implementation of `depositDiff` and `depositAll`.
+    ///      - Computes the amount to swap and passes to `_deposit`.
+    ///      - If the leftover amount is 1 or less, disables the underlying token.
+    function _depositDiffInternal(address creditAccount, address asset, uint256 leftoverAmount)
+        internal
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+    {
+        uint256 amount = IERC20(asset).balanceOf(creditAccount);
+        if (amount <= leftoverAmount) return (0, 0);
+        unchecked {
+            amount -= leftoverAmount;
+        }
+
+        (tokensToEnable, tokensToDisable) = _deposit(creditAccount, asset, amount, leftoverAmount <= 1);
+    }
+
+    /// @dev Internal implementation of all deposit functions
     ///      - using `_executeSwap` because need to check if tokens are recognized by the system
     ///      - underlying is approved before the call because lending pool needs permission to transfer it
     ///      - aToken is enabled after the call
@@ -99,10 +123,23 @@ contract AaveV2_LendingPoolAdapter is AbstractAdapter, IAaveV2_LendingPoolAdapte
     {
         address creditAccount = _creditAccount();
         if (amount == type(uint256).max) {
-            (tokensToEnable, tokensToDisable) = _withdrawAll(creditAccount, asset); // F: [AAV2LP-5B]
+            (tokensToEnable, tokensToDisable) = _withdrawDiffInternal(creditAccount, asset, 1); // F: [AAV2LP-5B]
         } else {
             (tokensToEnable, tokensToDisable) = _withdraw(creditAccount, asset, amount); // F: [AAV2LP-5A]
         }
+    }
+
+    /// @notice Burn all aTokens except the specified amount and convert to underlying
+    /// @param asset Address of underlying token to withdraw
+    /// @param leftoverAmount Amount of asset to leave after the operation
+    function withdrawDiff(address asset, uint256 leftoverAmount)
+        external
+        override
+        creditFacadeOnly
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+    {
+        address creditAccount = _creditAccount();
+        (tokensToEnable, tokensToDisable) = _withdrawDiffInternal(creditAccount, asset, leftoverAmount);
     }
 
     /// @notice Withdraw all underlying tokens from Aave and burn aTokens, disables aToken
@@ -114,7 +151,7 @@ contract AaveV2_LendingPoolAdapter is AbstractAdapter, IAaveV2_LendingPoolAdapte
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
         address creditAccount = _creditAccount();
-        (tokensToEnable, tokensToDisable) = _withdrawAll(creditAccount, asset); // F: [AAV2LP-6]
+        (tokensToEnable, tokensToDisable) = _withdrawDiffInternal(creditAccount, asset, 1); // F: [AAV2LP-6]
     }
 
     /// @dev Internal implementation of `withdraw` functionality
@@ -130,24 +167,24 @@ contract AaveV2_LendingPoolAdapter is AbstractAdapter, IAaveV2_LendingPoolAdapte
             _executeSwapNoApprove(_aToken(asset), asset, _encodeWithdraw(creditAccount, asset, amount), false); // F: [AAV2LP-2]
     }
 
-    /// @dev Internal implementation of `withdrawAll` functionality
+    /// @dev Internal implementation of `withdrawDiff` and `withdrawAll` functionality
     ///      - using `_executeSwap` because need to check if tokens are recognized by the system
     ///      - aToken is not approved before the call because lending pool doesn't need permission to burn it
     ///      - underlying is enabled after the call
-    ///      - aToken is not disabled because operation spends the entire balance
-    function _withdrawAll(address creditAccount, address asset)
+    ///      - aToken is disabled if the leftover is 0 or 1
+    function _withdrawDiffInternal(address creditAccount, address asset, uint256 leftoverAmount)
         internal
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
         address aToken = _aToken(asset);
         uint256 amount = IERC20(aToken).balanceOf(creditAccount);
-        if (amount <= 1) return (0, 0);
+        if (amount <= leftoverAmount) return (0, 0);
         unchecked {
-            --amount;
+            amount -= leftoverAmount;
         }
 
         (tokensToEnable, tokensToDisable,) =
-            _executeSwapNoApprove(aToken, asset, _encodeWithdraw(creditAccount, asset, amount), true); // F: [AAV2LP-2]
+            _executeSwapNoApprove(aToken, asset, _encodeWithdraw(creditAccount, asset, amount), leftoverAmount <= 1);
     }
 
     /// @dev Returns calldata for `ILendingPool.withdraw` call

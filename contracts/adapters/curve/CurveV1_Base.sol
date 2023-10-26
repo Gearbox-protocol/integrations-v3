@@ -166,6 +166,20 @@ abstract contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
         (tokensToEnable, tokensToDisable) = _exchange_impl(i, j, _getExchangeCallData(i, j, dx, min_dy), false); // F: [ACV1-4]
     }
 
+    /// @notice Exchanges the entire balance of one pool asset to another, except the specified amount
+    /// @param i Index of the asset to spend
+    /// @param j Index of the asset to receive
+    /// @param leftoverAmount Amount of input asset to keep on the account
+    /// @param rateMinRAY Minimum exchange rate between assets i and j, scaled by 1e27
+    function exchange_diff(uint256 i, uint256 j, uint256 leftoverAmount, uint256 rateMinRAY)
+        external
+        override
+        creditFacadeOnly
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+    {
+        return _exchange_diff(i, j, leftoverAmount, rateMinRAY);
+    }
+
     /// @notice Exchanges the entire balance of one pool asset to another, disables input asset
     /// @param i Index of the asset to spend
     /// @param j Index of the asset to receive
@@ -176,7 +190,7 @@ abstract contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
         creditFacadeOnly
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        return _exchange_all(i, j, rateMinRAY);
+        return _exchange_diff(i, j, 1, rateMinRAY);
     }
 
     /// @dev Same as the previous one but accepts coin indexes as `int128`
@@ -186,11 +200,11 @@ abstract contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
         creditFacadeOnly
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        return _exchange_all(_toU256(i), _toU256(j), rateMinRAY);
+        return _exchange_diff(_toU256(i), _toU256(j), 1, rateMinRAY);
     }
 
-    /// @dev Implementation of both versions of `exchange_all`
-    function _exchange_all(uint256 i, uint256 j, uint256 rateMinRAY)
+    /// @dev Implementation of both versions of `exchange_all` and `exchange_diff`
+    function _exchange_diff(uint256 i, uint256 j, uint256 leftoverAmount, uint256 rateMinRAY)
         internal
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
@@ -198,13 +212,14 @@ abstract contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
 
         address tokenIn = _get_token(i); // F: [ACV1-5]
         uint256 dx = IERC20(tokenIn).balanceOf(creditAccount); // F: [ACV1-5]
-        if (dx <= 1) return (0, 0);
+        if (dx <= leftoverAmount) return (0, 0);
 
         unchecked {
-            dx--;
+            dx -= leftoverAmount;
         }
         uint256 min_dy = (dx * rateMinRAY) / RAY; // F: [ACV1-5]
-        (tokensToEnable, tokensToDisable) = _exchange_impl(i, j, _getExchangeCallData(i, j, dx, min_dy), true); // F: [ACV1-5]
+        (tokensToEnable, tokensToDisable) =
+            _exchange_impl(i, j, _getExchangeCallData(i, j, dx, min_dy), leftoverAmount <= 1); // F: [ACV1-5]
     }
 
     /// @dev Internal implementation of `exchange` and `exchange_all`
@@ -266,6 +281,19 @@ abstract contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
             _exchange_underlying_impl(i, j, _getExchangeUnderlyingCallData(i, j, dx, min_dy), false); // F: [ACV1-6]
     }
 
+    /// @notice Exchanges the entire balance of one pool's underlying asset to another, except the specified amount
+    /// @param i Index of the underlying asset to spend
+    /// @param j Index of the underlying asset to receive
+    /// @param rateMinRAY Minimum exchange rate between underlying assets i and j, scaled by 1e27
+    function exchange_diff_underlying(uint256 i, uint256 j, uint256 leftoverAmount, uint256 rateMinRAY)
+        external
+        override
+        creditFacadeOnly
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+    {
+        return _exchange_diff_underlying(i, j, leftoverAmount, rateMinRAY);
+    }
+
     /// @notice Exchanges the entire balance of one pool's underlying asset to another, disables input asset
     /// @param i Index of the underlying asset to spend
     /// @param j Index of the underlying asset to receive
@@ -276,7 +304,7 @@ abstract contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
         creditFacadeOnly
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        return _exchange_all_underlying(i, j, rateMinRAY);
+        return _exchange_diff_underlying(i, j, 1, rateMinRAY);
     }
 
     /// @dev Same as the previous one but accepts coin indexes as `int128`
@@ -286,11 +314,11 @@ abstract contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
         creditFacadeOnly
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        return _exchange_all_underlying(_toU256(i), _toU256(j), rateMinRAY);
+        return _exchange_diff_underlying(_toU256(i), _toU256(j), 1, rateMinRAY);
     }
 
-    /// @dev Implementation of both versions of `exchange_all_underlying`
-    function _exchange_all_underlying(uint256 i, uint256 j, uint256 rateMinRAY)
+    /// @dev Implementation of both versions of `exchange_all_underlying` and `exchange_diff_underlying`
+    function _exchange_diff_underlying(uint256 i, uint256 j, uint256 leftoverAmount, uint256 rateMinRAY)
         internal
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
@@ -298,14 +326,14 @@ abstract contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
 
         address tokenIn = _get_underlying(i); // F: [ACV1-7]
         uint256 dx = IERC20(tokenIn).balanceOf(creditAccount); // F: [ACV1-7]
-        if (dx <= 1) return (0, 0);
+        if (dx <= leftoverAmount) return (0, 0);
 
         unchecked {
-            dx--; // F: [ACV1-7]
+            dx -= leftoverAmount; // F: [ACV1-7]
         }
         uint256 min_dy = (dx * rateMinRAY) / RAY; // F: [ACV1-7]
         (tokensToEnable, tokensToDisable) =
-            _exchange_underlying_impl(i, j, _getExchangeUnderlyingCallData(i, j, dx, min_dy), true); // F: [ACV1-7]
+            _exchange_underlying_impl(i, j, _getExchangeUnderlyingCallData(i, j, dx, min_dy), leftoverAmount <= 1); // F: [ACV1-7]
     }
 
     /// @dev Internal implementation of `exchange_underlying` and `exchange_all_underlying`
@@ -366,6 +394,19 @@ abstract contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
             _add_liquidity_one_coin_impl(i, _getAddLiquidityOneCoinCallData(i, amount, minAmount), false); // F: [ACV1-8]
     }
 
+    /// @notice Adds the entire balance of asset as liquidity to the pool, except the specified amount
+    /// @param leftoverAmount Amount of underlying to keep on the account
+    /// @param i Index of the asset to deposit
+    /// @param rateMinRAY Minimum exchange rate between deposited asset and LP token, scaled by 1e27
+    function add_diff_liquidity_one_coin(uint256 leftoverAmount, uint256 i, uint256 rateMinRAY)
+        external
+        override
+        creditFacadeOnly
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+    {
+        (tokensToEnable, tokensToDisable) = _add_diff_liquidity_one_coin(i, leftoverAmount, rateMinRAY);
+    }
+
     /// @notice Adds the entire balance of asset as liquidity to the pool, disables this asset
     /// @param i Index of the asset to deposit
     /// @param rateMinRAY Minimum exchange rate between deposited asset and LP token, scaled by 1e27
@@ -375,18 +416,26 @@ abstract contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
         creditFacadeOnly
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
+        (tokensToEnable, tokensToDisable) = _add_diff_liquidity_one_coin(i, 1, rateMinRAY);
+    }
+
+    /// @dev Internal implementation for `add_all_liquidity_one_coin` and `add_diff_liquidity_one_coin`.
+    function _add_diff_liquidity_one_coin(uint256 i, uint256 leftoverAmount, uint256 rateMinRAY)
+        internal
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+    {
         address creditAccount = _creditAccount();
 
         address tokenIn = _get_token(i);
         uint256 amount = IERC20(tokenIn).balanceOf(creditAccount); // F: [ACV1-9]
-        if (amount <= 1) return (0, 0);
+        if (amount <= leftoverAmount) return (0, 0);
 
         unchecked {
-            amount--; // F: [ACV1-9]
+            amount -= leftoverAmount; // F: [ACV1-9]
         }
         uint256 minAmount = (amount * rateMinRAY) / RAY; // F: [ACV1-9]
         (tokensToEnable, tokensToDisable) =
-            _add_liquidity_one_coin_impl(i, _getAddLiquidityOneCoinCallData(i, amount, minAmount), true); // F: [ACV1-9]
+            _add_liquidity_one_coin_impl(i, _getAddLiquidityOneCoinCallData(i, amount, minAmount), leftoverAmount <= 1); // F: [ACV1-9]
     }
 
     /// @dev Internal implementation of `add_liquidity_one_coin` and `add_all_liquidity_one_coin`
@@ -496,6 +545,20 @@ abstract contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
             _remove_liquidity_one_coin_impl(i, _getRemoveLiquidityOneCoinCallData(i, amount, minAmount), false); // F: [ACV1-10]
     }
 
+    /// @notice Removes all liquidity from the pool, except the specified amount, in a specified asset
+    /// @param leftoverAmount Amount of Curve LP to keep on the account
+    /// @param i Index of the asset to withdraw
+    /// @param rateMinRAY Minimum exchange rate between LP token and received token, scaled by 1e27
+    function remove_diff_liquidity_one_coin(uint256 leftoverAmount, uint256 i, uint256 rateMinRAY)
+        external
+        virtual
+        override
+        creditFacadeOnly
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+    {
+        return _remove_diff_liquidity_one_coin(i, leftoverAmount, rateMinRAY);
+    }
+
     /// @notice Removes all liquidity from the pool in a specified asset
     /// @param i Index of the asset to withdraw
     /// @param rateMinRAY Minimum exchange rate between LP token and received token, scaled by 1e27
@@ -506,7 +569,7 @@ abstract contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
         creditFacadeOnly
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        (tokensToEnable, tokensToDisable) = _remove_all_liquidity_one_coin(i, rateMinRAY);
+        return _remove_diff_liquidity_one_coin(i, 1, rateMinRAY);
     }
 
     /// @dev Same as the previous one but accepts coin indexes as `int128`
@@ -517,25 +580,26 @@ abstract contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
         creditFacadeOnly
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        (tokensToEnable, tokensToDisable) = _remove_all_liquidity_one_coin(_toU256(i), rateMinRAY);
+        return _remove_diff_liquidity_one_coin(_toU256(i), 1, rateMinRAY);
     }
 
-    /// @dev Implementation of both versions of `remove_all_liquidity_one_coin`
-    function _remove_all_liquidity_one_coin(uint256 i, uint256 rateMinRAY)
+    /// @dev Implementation of both versions of `remove_diff_liquidity_one_coin` and `remove_all_liquidity_one_coin`
+    function _remove_diff_liquidity_one_coin(uint256 i, uint256 leftoverAmount, uint256 rateMinRAY)
         internal
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
         address creditAccount = _creditAccount();
 
         uint256 amount = IERC20(lp_token).balanceOf(creditAccount); // F: [ACV1-11]
-        if (amount <= 1) return (0, 0);
+        if (amount <= leftoverAmount) return (0, 0);
 
         unchecked {
-            amount--; // F: [ACV1-11]
+            amount -= leftoverAmount; // F: [ACV1-11]
         }
         uint256 minAmount = (amount * rateMinRAY) / RAY; // F: [ACV1-11]
-        (tokensToEnable, tokensToDisable) =
-            _remove_liquidity_one_coin_impl(i, _getRemoveLiquidityOneCoinCallData(i, amount, minAmount), true); // F: [ACV1-11]
+        (tokensToEnable, tokensToDisable) = _remove_liquidity_one_coin_impl(
+            i, _getRemoveLiquidityOneCoinCallData(i, amount, minAmount), leftoverAmount <= 1
+        ); // F: [ACV1-11]
     }
 
     /// @dev Internal implementation of `remove_liquidity_one_coin` and `remove_all_liquidity_one_coin`

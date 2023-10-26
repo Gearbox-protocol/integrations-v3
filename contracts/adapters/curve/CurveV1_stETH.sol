@@ -84,6 +84,18 @@ contract CurveV1AdapterStETH is CurveV1Adapter2Assets {
 
     /// @inheritdoc CurveV1AdapterBase
     /// @dev Unlike other adapters, approves the LP token to the target
+    function remove_diff_liquidity_one_coin(uint256 leftoverAmount, uint256 i, uint256 rateMinRAY)
+        public
+        override(CurveV1AdapterBase, ICurveV1Adapter)
+        creditFacadeOnly
+        withLPTokenApproval // F: [ACV1S-5]
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+    {
+        (tokensToEnable, tokensToDisable) = _remove_diff_liquidity_one_coin(i, leftoverAmount, rateMinRAY); // F: [ACV1S-5]
+    }
+
+    /// @inheritdoc CurveV1AdapterBase
+    /// @dev Unlike other adapters, approves the LP token to the target
     function remove_all_liquidity_one_coin(uint256 i, uint256 rateMinRAY)
         public
         override(CurveV1AdapterBase, ICurveV1Adapter)
@@ -91,7 +103,7 @@ contract CurveV1AdapterStETH is CurveV1Adapter2Assets {
         withLPTokenApproval // F: [ACV1S-5]
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        (tokensToEnable, tokensToDisable) = _remove_all_liquidity_one_coin(i, rateMinRAY); // F: [ACV1S-5]
+        (tokensToEnable, tokensToDisable) = _remove_diff_liquidity_one_coin(i, 1, rateMinRAY); // F: [ACV1S-5]
     }
 
     /// @inheritdoc CurveV1AdapterBase
@@ -103,6 +115,6 @@ contract CurveV1AdapterStETH is CurveV1Adapter2Assets {
         withLPTokenApproval // F: [ACV1S-5]
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        (tokensToEnable, tokensToDisable) = _remove_all_liquidity_one_coin(_toU256(i), rateMinRAY); // F: [ACV1S-5]
+        (tokensToEnable, tokensToDisable) = _remove_diff_liquidity_one_coin(_toU256(i), 1, rateMinRAY); // F: [ACV1S-5]
     }
 }
