@@ -28,16 +28,18 @@ contract CompoundV2_CErc20Adapter is CompoundV2_CTokenAdapter {
     /// @notice Constructor
     /// @param _creditManager Credit manager address
     /// @param _cToken CErc20 token address
-    constructor(address _creditManager, address _cToken) CompoundV2_CTokenAdapter(_creditManager, _cToken) {
-        underlying = ICErc20(targetContract).underlying(); // F: [ACV2CERC-2]
+    constructor(address _creditManager, address _cToken)
+        CompoundV2_CTokenAdapter(_creditManager, _cToken) // U:[COMP2T-1]
+    {
+        underlying = ICErc20(targetContract).underlying(); // U:[COMP2T-1]
 
-        cTokenMask = _getMaskOrRevert(targetContract); // F: [ACV2CERC-1, ACV2CERC-2]
-        tokenMask = _getMaskOrRevert(underlying); // F: [ACV2CERC-2]
+        cTokenMask = _getMaskOrRevert(targetContract); // U:[COMP2T-1]
+        tokenMask = _getMaskOrRevert(underlying); // U:[COMP2T-1]
     }
 
     /// @notice cToken that this adapter is connected to
     function cToken() external view override returns (address) {
-        return targetContract; // F: [ACV2CERC-2]
+        return targetContract; // U:[COMP2T-1]
     }
 
     /// @dev Internal implementation of `mint`
@@ -49,9 +51,9 @@ contract CompoundV2_CErc20Adapter is CompoundV2_CTokenAdapter {
         override
         returns (uint256 tokensToEnable, uint256 tokensToDisable, uint256 error)
     {
-        _approveToken(underlying, type(uint256).max);
-        error = abi.decode(_execute(_encodeMint(amount)), (uint256));
-        _approveToken(underlying, 1);
+        _approveToken(underlying, type(uint256).max); // U:[COMP2T-4]
+        error = abi.decode(_execute(_encodeMint(amount)), (uint256)); // U:[COMP2T-4]
+        _approveToken(underlying, 1); // U:[COMP2T-4]
         (tokensToEnable, tokensToDisable) = (cTokenMask, 0);
     }
 
@@ -87,7 +89,7 @@ contract CompoundV2_CErc20Adapter is CompoundV2_CTokenAdapter {
         override
         returns (uint256 tokensToEnable, uint256 tokensToDisable, uint256 error)
     {
-        error = abi.decode(_execute(_encodeRedeem(amount)), (uint256));
+        error = abi.decode(_execute(_encodeRedeem(amount)), (uint256)); // U:[COMP2T-6]
         (tokensToEnable, tokensToDisable) = (tokenMask, 0);
     }
 
@@ -121,7 +123,7 @@ contract CompoundV2_CErc20Adapter is CompoundV2_CTokenAdapter {
         override
         returns (uint256 tokensToEnable, uint256 tokensToDisable, uint256 error)
     {
-        error = abi.decode(_execute(_encodeRedeemUnderlying(amount)), (uint256));
+        error = abi.decode(_execute(_encodeRedeemUnderlying(amount)), (uint256)); // U:[COMP2T-8]
         (tokensToEnable, tokensToDisable) = (tokenMask, 0);
     }
 }

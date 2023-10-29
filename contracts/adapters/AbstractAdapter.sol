@@ -24,12 +24,12 @@ abstract contract AbstractAdapter is IAdapter, ACLTrait {
     /// @param _creditManager Credit manager to connect the adapter to
     /// @param _targetContract Address of the adapted contract
     constructor(address _creditManager, address _targetContract)
-        ACLTrait(ICreditManagerV3(_creditManager).addressProvider()) // U:[AA-1A]
-        nonZeroAddress(_targetContract) // U:[AA-1A]
+        ACLTrait(ICreditManagerV3(_creditManager).addressProvider())
+        nonZeroAddress(_targetContract)
     {
-        creditManager = _creditManager; // U:[AA-1B]
-        addressProvider = ICreditManagerV3(_creditManager).addressProvider(); // U:[AA-1B]
-        targetContract = _targetContract; // U:[AA-1B]
+        creditManager = _creditManager;
+        addressProvider = ICreditManagerV3(_creditManager).addressProvider();
+        targetContract = _targetContract;
     }
 
     /// @dev Ensures that caller of the function is credit facade connected to the credit manager
@@ -42,18 +42,18 @@ abstract contract AbstractAdapter is IAdapter, ACLTrait {
     /// @dev Ensures that caller is credit facade connected to the credit manager
     function _revertIfCallerNotCreditFacade() internal view {
         if (msg.sender != ICreditManagerV3(creditManager).creditFacade()) {
-            revert CallerNotCreditFacadeException(); // U:[AA-2]
+            revert CallerNotCreditFacadeException();
         }
     }
 
     /// @dev Ensures that active credit account is set and returns its address
     function _creditAccount() internal view returns (address) {
-        return ICreditManagerV3(creditManager).getActiveCreditAccountOrRevert(); // U:[AA-3]
+        return ICreditManagerV3(creditManager).getActiveCreditAccountOrRevert();
     }
 
     /// @dev Ensures that token is registered as collateral in the credit manager and returns its mask
     function _getMaskOrRevert(address token) internal view returns (uint256 tokenMask) {
-        tokenMask = ICreditManagerV3(creditManager).getTokenMaskOrRevert(token); // U:[AA-4]
+        tokenMask = ICreditManagerV3(creditManager).getTokenMaskOrRevert(token);
     }
 
     /// @dev Approves target contract to spend given token from the active credit account
@@ -61,7 +61,7 @@ abstract contract AbstractAdapter is IAdapter, ACLTrait {
     /// @param token Token to approve
     /// @param amount Amount to approve
     function _approveToken(address token, uint256 amount) internal {
-        ICreditManagerV3(creditManager).approveCreditAccount(token, amount); // U:[AA-5]
+        ICreditManagerV3(creditManager).approveCreditAccount(token, amount);
     }
 
     /// @dev Executes an external call from the active credit account to the target contract
@@ -69,7 +69,7 @@ abstract contract AbstractAdapter is IAdapter, ACLTrait {
     /// @param callData Data to call the target contract with
     /// @return result Call result
     function _execute(bytes memory callData) internal returns (bytes memory result) {
-        return ICreditManagerV3(creditManager).execute(callData); // U:[AA-6]
+        return ICreditManagerV3(creditManager).execute(callData);
     }
 
     /// @dev Executes a swap operation without input token approval
@@ -86,10 +86,10 @@ abstract contract AbstractAdapter is IAdapter, ACLTrait {
         internal
         returns (uint256 tokensToEnable, uint256 tokensToDisable, bytes memory result)
     {
-        tokensToEnable = _getMaskOrRevert(tokenOut); // U:[AA-7]
+        tokensToEnable = _getMaskOrRevert(tokenOut);
         uint256 tokenInMask = _getMaskOrRevert(tokenIn);
-        if (disableTokenIn) tokensToDisable = tokenInMask; // U:[AA-7]
-        result = _execute(callData); // U:[AA-7]
+        if (disableTokenIn) tokensToDisable = tokenInMask;
+        result = _execute(callData);
     }
 
     /// @dev Executes a swap operation with maximum input token approval, and revokes approval after the call
@@ -107,10 +107,10 @@ abstract contract AbstractAdapter is IAdapter, ACLTrait {
         internal
         returns (uint256 tokensToEnable, uint256 tokensToDisable, bytes memory result)
     {
-        tokensToEnable = _getMaskOrRevert(tokenOut); // U:[AA-8]
-        if (disableTokenIn) tokensToDisable = _getMaskOrRevert(tokenIn); // U:[AA-8]
-        _approveToken(tokenIn, type(uint256).max); // U:[AA-8]
-        result = _execute(callData); // U:[AA-8]
-        _approveToken(tokenIn, 1); // U:[AA-8]
+        tokensToEnable = _getMaskOrRevert(tokenOut);
+        if (disableTokenIn) tokensToDisable = _getMaskOrRevert(tokenIn);
+        _approveToken(tokenIn, type(uint256).max);
+        result = _execute(callData);
+        _approveToken(tokenIn, 1);
     }
 }

@@ -29,10 +29,12 @@ contract WstETHV1Adapter is AbstractAdapter, IwstETHV1Adapter {
     /// @notice Constructor
     /// @param _creditManager Credit manager address
     /// @param _wstETH wstETH token address
-    constructor(address _creditManager, address _wstETH) AbstractAdapter(_creditManager, _wstETH) {
-        stETH = IwstETH(_wstETH).stETH(); // F: [AWSTV1-1]
-        wstETHTokenMask = _getMaskOrRevert(_wstETH); // F: [AWSTV1-1, AWSTV1-2]
-        stETHTokenMask = _getMaskOrRevert(stETH); // F: [AWSTV1-1, AWSTV1-2]
+    constructor(address _creditManager, address _wstETH)
+        AbstractAdapter(_creditManager, _wstETH) // U:[LDO1W-1]
+    {
+        stETH = IwstETH(_wstETH).stETH(); // U:[LDO1W-1]
+        wstETHTokenMask = _getMaskOrRevert(_wstETH); // U:[LDO1W-1]
+        stETHTokenMask = _getMaskOrRevert(stETH); // U:[LDO1W-1]
     }
 
     // ---- //
@@ -44,10 +46,10 @@ contract WstETHV1Adapter is AbstractAdapter, IwstETHV1Adapter {
     function wrap(uint256 amount)
         external
         override
-        creditFacadeOnly
+        creditFacadeOnly // U:[LDO1W-2]
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        (tokensToEnable, tokensToDisable) = _wrap(amount, false); // F: [AWSTV1-5]
+        (tokensToEnable, tokensToDisable) = _wrap(amount, false); // U:[LDO1W-3]
     }
 
     /// @notice Wraps the entire balance of stETH into wstETH, except the specified amount
@@ -68,12 +70,12 @@ contract WstETHV1Adapter is AbstractAdapter, IwstETHV1Adapter {
 
     /// @dev Internal implementation for `wrapDiff` and `wrapAll`.
     function _wrapDiff(uint256 leftoverAmount) internal returns (uint256 tokensToEnable, uint256 tokensToDisable) {
-        address creditAccount = _creditAccount(); // F: [AWSTV1-3]
+        address creditAccount = _creditAccount();
 
         uint256 balance = IERC20(stETH).balanceOf(creditAccount);
         if (balance > leftoverAmount) {
             unchecked {
-                (tokensToEnable, tokensToDisable) = _wrap(balance - leftoverAmount, leftoverAmount <= 1); // F: [AWSTV1-4]
+                (tokensToEnable, tokensToDisable) = _wrap(balance - leftoverAmount, leftoverAmount <= 1);
             }
         }
     }
@@ -86,9 +88,9 @@ contract WstETHV1Adapter is AbstractAdapter, IwstETHV1Adapter {
         internal
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        _approveToken(stETH, type(uint256).max);
-        _execute(abi.encodeCall(IwstETH.wrap, (amount)));
-        _approveToken(stETH, 1);
+        _approveToken(stETH, type(uint256).max); // U:[LDO1W-3,4]
+        _execute(abi.encodeCall(IwstETH.wrap, (amount))); // U:[LDO1W-3,4]
+        _approveToken(stETH, 1); // U:[LDO1W-3,4]
         (tokensToEnable, tokensToDisable) = (wstETHTokenMask, disableStETH ? stETHTokenMask : 0);
     }
 
@@ -101,10 +103,10 @@ contract WstETHV1Adapter is AbstractAdapter, IwstETHV1Adapter {
     function unwrap(uint256 amount)
         external
         override
-        creditFacadeOnly
+        creditFacadeOnly // U:[LDO1W-2]
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        (tokensToEnable, tokensToDisable) = _unwrap(amount, false); // F: [AWSTV1-7]
+        (tokensToEnable, tokensToDisable) = _unwrap(amount, false); // U:[LDO1W-5]
     }
 
     /// @notice Unwraps the entire balance of wstETH to stETH, except the specified amount
@@ -125,12 +127,12 @@ contract WstETHV1Adapter is AbstractAdapter, IwstETHV1Adapter {
 
     /// @dev Internal implementation for `unwrapDiff` and `unwrapAll`.
     function _unwrapDiff(uint256 leftoverAmount) internal returns (uint256 tokensToEnable, uint256 tokensToDisable) {
-        address creditAccount = _creditAccount(); // F: [AWSTV1-3]
+        address creditAccount = _creditAccount();
 
         uint256 balance = IERC20(targetContract).balanceOf(creditAccount);
         if (balance > leftoverAmount) {
             unchecked {
-                (tokensToEnable, tokensToDisable) = _unwrap(balance - leftoverAmount, leftoverAmount <= 1); // F: [AWSTV1-6]
+                (tokensToEnable, tokensToDisable) = _unwrap(balance - leftoverAmount, leftoverAmount <= 1);
             }
         }
     }
@@ -143,7 +145,7 @@ contract WstETHV1Adapter is AbstractAdapter, IwstETHV1Adapter {
         internal
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        _execute(abi.encodeCall(IwstETH.unwrap, (amount)));
+        _execute(abi.encodeCall(IwstETH.unwrap, (amount))); // U:[LDO1W-5,6]
         (tokensToEnable, tokensToDisable) = (stETHTokenMask, disableWstETH ? wstETHTokenMask : 0);
     }
 }

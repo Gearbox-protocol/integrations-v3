@@ -29,10 +29,12 @@ contract ERC4626Adapter is AbstractAdapter, IERC4626Adapter {
     /// @notice Constructor
     /// @param _creditManager Credit manager address
     /// @param _vault ERC4626 vault address
-    constructor(address _creditManager, address _vault) AbstractAdapter(_creditManager, _vault) {
-        asset = IERC4626(_vault).asset();
-        assetMask = _getMaskOrRevert(asset);
-        sharesMask = _getMaskOrRevert(_vault);
+    constructor(address _creditManager, address _vault)
+        AbstractAdapter(_creditManager, _vault) // U:[TV-1]
+    {
+        asset = IERC4626(_vault).asset(); // U:[TV-1]
+        assetMask = _getMaskOrRevert(asset); // U:[TV-1]
+        sharesMask = _getMaskOrRevert(_vault); // U:[TV-1]
     }
 
     /// @notice Deposits a specified amount of underlying asset from the Credit Account
@@ -41,11 +43,11 @@ contract ERC4626Adapter is AbstractAdapter, IERC4626Adapter {
     function deposit(uint256 assets, address)
         external
         override
-        creditFacadeOnly
+        creditFacadeOnly // U:[TV-2]
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        address creditAccount = _creditAccount();
-        (tokensToEnable, tokensToDisable) = _deposit(creditAccount, assets, false);
+        address creditAccount = _creditAccount(); // U:[TV-3]
+        (tokensToEnable, tokensToDisable) = _deposit(creditAccount, assets, false); // U:[TV-3]
     }
 
     /// @notice Deposits the entire balance of underlying asset from the Credit Account, except the specified amount
@@ -63,7 +65,7 @@ contract ERC4626Adapter is AbstractAdapter, IERC4626Adapter {
     function depositAll()
         external
         override
-        creditFacadeOnly
+        creditFacadeOnly // U:[TV-2]
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
         (tokensToEnable, tokensToDisable) = _depositDiff(1);
@@ -87,7 +89,7 @@ contract ERC4626Adapter is AbstractAdapter, IERC4626Adapter {
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
         (tokensToEnable, tokensToDisable) =
-            _executeDeposit(disableTokenIn, abi.encodeCall(IERC4626.deposit, (assets, creditAccount)));
+            _executeDeposit(disableTokenIn, abi.encodeCall(IERC4626.deposit, (assets, creditAccount))); // U:[TV-3,4]
     }
 
     /// @notice Deposits an amount of asset required to mint exactly 'shares' of Vault shares
@@ -96,12 +98,12 @@ contract ERC4626Adapter is AbstractAdapter, IERC4626Adapter {
     function mint(uint256 shares, address)
         external
         override
-        creditFacadeOnly
+        creditFacadeOnly // U:[TV-2]
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        address creditAccount = _creditAccount();
+        address creditAccount = _creditAccount(); // U:[TV-5]
         (tokensToEnable, tokensToDisable) =
-            _executeDeposit(false, abi.encodeCall(IERC4626.mint, (shares, creditAccount)));
+            _executeDeposit(false, abi.encodeCall(IERC4626.mint, (shares, creditAccount))); // U:[TV-5]
     }
 
     /// @notice Burns an amount of shares required to get exactly `assets` of asset
@@ -110,12 +112,12 @@ contract ERC4626Adapter is AbstractAdapter, IERC4626Adapter {
     function withdraw(uint256 assets, address, address)
         external
         override
-        creditFacadeOnly
+        creditFacadeOnly // U:[TV-2]
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        address creditAccount = _creditAccount();
+        address creditAccount = _creditAccount(); // U:[TV-6]
         (tokensToEnable, tokensToDisable) =
-            _executeWithdrawal(false, abi.encodeCall(IERC4626.withdraw, (assets, creditAccount, creditAccount)));
+            _executeWithdrawal(false, abi.encodeCall(IERC4626.withdraw, (assets, creditAccount, creditAccount))); // U:[TV-6]
     }
 
     /// @notice Burns a specified amount of shares from the Credit Account
@@ -124,11 +126,11 @@ contract ERC4626Adapter is AbstractAdapter, IERC4626Adapter {
     function redeem(uint256 shares, address, address)
         external
         override
-        creditFacadeOnly
+        creditFacadeOnly // U:[TV-2]
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        address creditAccount = _creditAccount();
-        (tokensToEnable, tokensToDisable) = _redeem(creditAccount, shares, false);
+        address creditAccount = _creditAccount(); // U:[TV-7]
+        (tokensToEnable, tokensToDisable) = _redeem(creditAccount, shares, false); // U:[TV-7]
     }
 
     /// @notice Burns the entire balance of shares from the Credit Account, except the specified amount
@@ -164,7 +166,7 @@ contract ERC4626Adapter is AbstractAdapter, IERC4626Adapter {
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
         (tokensToEnable, tokensToDisable) =
-            _executeWithdrawal(disableTokenIn, abi.encodeCall(IERC4626.redeem, (shares, creditAccount, creditAccount)));
+            _executeWithdrawal(disableTokenIn, abi.encodeCall(IERC4626.redeem, (shares, creditAccount, creditAccount))); // U:[TV-7,8]
     }
 
     /// @dev Implementation for deposit (asset => shares) actions execution
@@ -174,9 +176,9 @@ contract ERC4626Adapter is AbstractAdapter, IERC4626Adapter {
         internal
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        _approveToken(asset, type(uint256).max);
-        _execute(callData);
-        _approveToken(asset, 1);
+        _approveToken(asset, type(uint256).max); // U:[TV-3,4,5]
+        _execute(callData); // U:[TV-3,4,5]
+        _approveToken(asset, 1); // U:[TV-3,4,5]
         tokensToEnable = sharesMask;
         tokensToDisable = disableAsset ? assetMask : 0;
     }
@@ -188,7 +190,7 @@ contract ERC4626Adapter is AbstractAdapter, IERC4626Adapter {
         internal
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        _execute(callData);
+        _execute(callData); // U:[TV-6,7,8]
         tokensToEnable = assetMask;
         tokensToDisable = disableShares ? sharesMask : 0;
     }

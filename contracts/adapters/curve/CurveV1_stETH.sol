@@ -40,10 +40,10 @@ contract CurveV1AdapterStETH is CurveV1Adapter2Assets {
         external
         override
         creditFacadeOnly
-        withLPTokenApproval // F: [ACV1S-2]
+        withLPTokenApproval
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        (tokensToEnable, tokensToDisable) = _remove_liquidity(); // F: [ACV1S-2]
+        (tokensToEnable, tokensToDisable) = _remove_liquidity();
     }
 
     /// @inheritdoc CurveV1Adapter2Assets
@@ -52,10 +52,10 @@ contract CurveV1AdapterStETH is CurveV1Adapter2Assets {
         external
         override
         creditFacadeOnly
-        withLPTokenApproval // F: [ACV1S-6]
+        withLPTokenApproval
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        (tokensToEnable, tokensToDisable) = _remove_liquidity_imbalance(amounts[0] > 1, amounts[1] > 1, false, false); // F: [ACV1S-6]
+        (tokensToEnable, tokensToDisable) = _remove_liquidity_imbalance(amounts[0] > 1, amounts[1] > 1, false, false);
     }
 
     /// @inheritdoc CurveV1AdapterBase
@@ -64,10 +64,10 @@ contract CurveV1AdapterStETH is CurveV1Adapter2Assets {
         public
         override(CurveV1AdapterBase, ICurveV1Adapter)
         creditFacadeOnly
-        withLPTokenApproval // F: [ACV1S-4]
+        withLPTokenApproval
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        (tokensToEnable, tokensToDisable) = _remove_liquidity_one_coin(amount, i, minAmount); // F: [ACV1S-4]
+        (tokensToEnable, tokensToDisable) = _remove_liquidity_one_coin(amount, i, minAmount);
     }
 
     /// @inheritdoc CurveV1AdapterBase
@@ -76,10 +76,10 @@ contract CurveV1AdapterStETH is CurveV1Adapter2Assets {
         public
         override(CurveV1AdapterBase, ICurveV1Adapter)
         creditFacadeOnly
-        withLPTokenApproval // F: [ACV1S-4]
+        withLPTokenApproval
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        (tokensToEnable, tokensToDisable) = _remove_liquidity_one_coin(amount, _toU256(i), minAmount); // F: [ACV1S-4]
+        (tokensToEnable, tokensToDisable) = _remove_liquidity_one_coin(amount, _toU256(i), minAmount);
     }
 
     /// @inheritdoc CurveV1AdapterBase
@@ -91,7 +91,7 @@ contract CurveV1AdapterStETH is CurveV1Adapter2Assets {
         withLPTokenApproval // F: [ACV1S-5]
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        (tokensToEnable, tokensToDisable) = _remove_diff_liquidity_one_coin(i, leftoverAmount, rateMinRAY); // F: [ACV1S-5]
+        (tokensToEnable, tokensToDisable) = _remove_diff_liquidity_one_coin(i, leftoverAmount, rateMinRAY);
     }
 
     /// @inheritdoc CurveV1AdapterBase
@@ -100,10 +100,10 @@ contract CurveV1AdapterStETH is CurveV1Adapter2Assets {
         public
         override(CurveV1AdapterBase, ICurveV1Adapter)
         creditFacadeOnly
-        withLPTokenApproval // F: [ACV1S-5]
+        withLPTokenApproval
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        (tokensToEnable, tokensToDisable) = _remove_diff_liquidity_one_coin(i, 1, rateMinRAY); // F: [ACV1S-5]
+        (tokensToEnable, tokensToDisable) = _remove_diff_liquidity_one_coin(i, 1, rateMinRAY);
     }
 
     /// @inheritdoc CurveV1AdapterBase
@@ -112,9 +112,9 @@ contract CurveV1AdapterStETH is CurveV1Adapter2Assets {
         public
         override(CurveV1AdapterBase, ICurveV1Adapter)
         creditFacadeOnly
-        withLPTokenApproval // F: [ACV1S-5]
+        withLPTokenApproval
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        (tokensToEnable, tokensToDisable) = _remove_diff_liquidity_one_coin(_toU256(i), 1, rateMinRAY); // F: [ACV1S-5]
+        (tokensToEnable, tokensToDisable) = _remove_diff_liquidity_one_coin(_toU256(i), 1, rateMinRAY);
     }
 }

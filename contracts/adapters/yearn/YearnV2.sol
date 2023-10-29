@@ -29,10 +29,12 @@ contract YearnV2Adapter is AbstractAdapter, IYearnV2Adapter {
     /// @notice Constructor
     /// @param _creditManager Credit manager address
     /// @param _vault Yearn vault address
-    constructor(address _creditManager, address _vault) AbstractAdapter(_creditManager, _vault) {
-        token = IYVault(targetContract).token(); // F: [AYV2-1]
-        tokenMask = _getMaskOrRevert(token); // F: [AYV2-1, AYV2-2]
-        yTokenMask = _getMaskOrRevert(_vault); // F: [AYV2-1, AYV2-2]
+    constructor(address _creditManager, address _vault)
+        AbstractAdapter(_creditManager, _vault) // U:[YFI2-1]
+    {
+        token = IYVault(targetContract).token(); // U:[YFI2-1]
+        tokenMask = _getMaskOrRevert(token); // U:[YFI2-1]
+        yTokenMask = _getMaskOrRevert(_vault); // U:[YFI2-1]
     }
 
     // -------- //
@@ -56,12 +58,12 @@ contract YearnV2Adapter is AbstractAdapter, IYearnV2Adapter {
 
     /// @dev Internal implementation for `deposit` and `depositDiff`
     function _depositDiff(uint256 leftoverAmount) internal returns (uint256 tokensToEnable, uint256 tokensToDisable) {
-        address creditAccount = _creditAccount(); // F: [AYV2-3]
+        address creditAccount = _creditAccount();
 
         uint256 balance = IERC20(token).balanceOf(creditAccount);
         if (balance > leftoverAmount) {
             unchecked {
-                (tokensToEnable, tokensToDisable) = _deposit(balance - leftoverAmount, leftoverAmount <= 1); // F: [AYV2-4]
+                (tokensToEnable, tokensToDisable) = _deposit(balance - leftoverAmount, leftoverAmount <= 1);
             }
         }
     }
@@ -71,10 +73,10 @@ contract YearnV2Adapter is AbstractAdapter, IYearnV2Adapter {
     function deposit(uint256 amount)
         external
         override
-        creditFacadeOnly
+        creditFacadeOnly // U:[YFI2-2]
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        (tokensToEnable, tokensToDisable) = _deposit(amount, false); // F: [AYV2-5]
+        (tokensToEnable, tokensToDisable) = _deposit(amount, false); // U:[YFI2-4]
     }
 
     /// @notice Deposit given amount of underlying tokens into the vault
@@ -83,10 +85,10 @@ contract YearnV2Adapter is AbstractAdapter, IYearnV2Adapter {
     function deposit(uint256 amount, address)
         external
         override
-        creditFacadeOnly
+        creditFacadeOnly // U:[YFI2-2]
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        (tokensToEnable, tokensToDisable) = _deposit(amount, false); // F: [AYV2-6]
+        (tokensToEnable, tokensToDisable) = _deposit(amount, false); // U:[YFI2-5]
     }
 
     /// @dev Internal implementation of `deposit` functions
@@ -97,9 +99,9 @@ contract YearnV2Adapter is AbstractAdapter, IYearnV2Adapter {
         internal
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        _approveToken(token, type(uint256).max);
-        _execute(abi.encodeWithSignature("deposit(uint256)", amount));
-        _approveToken(token, 1);
+        _approveToken(token, type(uint256).max); // U:[YFI2-3,4,5]
+        _execute(abi.encodeWithSignature("deposit(uint256)", amount)); // U:[YFI2-3,4,5]
+        _approveToken(token, 1); // U:[YFI2-3,4,5]
         (tokensToEnable, tokensToDisable) = (yTokenMask, disableTokenIn ? tokenMask : 0);
     }
 
@@ -124,13 +126,13 @@ contract YearnV2Adapter is AbstractAdapter, IYearnV2Adapter {
 
     /// @dev Internal implementation for `withdraw` and `withdrawDiff`
     function _withdrawDiff(uint256 leftoverAmount) internal returns (uint256 tokensToEnable, uint256 tokensToDisable) {
-        address creditAccount = _creditAccount(); // F: [AYV2-3]
+        address creditAccount = _creditAccount();
 
-        uint256 balance = IERC20(targetContract).balanceOf(creditAccount);
+        uint256 balance = IERC20(targetContract).balanceOf(creditAccount); // U:[YFI2-6]
 
         if (balance > leftoverAmount) {
             unchecked {
-                (tokensToEnable, tokensToDisable) = _withdraw(balance - leftoverAmount, leftoverAmount <= 1); // F: [AYV2-7]
+                (tokensToEnable, tokensToDisable) = _withdraw(balance - leftoverAmount, leftoverAmount <= 1);
             }
         }
     }
@@ -140,10 +142,10 @@ contract YearnV2Adapter is AbstractAdapter, IYearnV2Adapter {
     function withdraw(uint256 maxShares)
         external
         override
-        creditFacadeOnly
+        creditFacadeOnly // U:[YFI2-2]
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        (tokensToEnable, tokensToDisable) = _withdraw(maxShares, false); // F: [AYV2-8]
+        (tokensToEnable, tokensToDisable) = _withdraw(maxShares, false); // U:[YFI2-7]
     }
 
     /// @notice Burn given amount of yTokens to withdraw corresponding amount of underlying from the vault
@@ -152,10 +154,10 @@ contract YearnV2Adapter is AbstractAdapter, IYearnV2Adapter {
     function withdraw(uint256 maxShares, address)
         external
         override
-        creditFacadeOnly
+        creditFacadeOnly // U:[YFI2-2]
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        (tokensToEnable, tokensToDisable) = _withdraw(maxShares, false); // F: [AYV2-9]
+        (tokensToEnable, tokensToDisable) = _withdraw(maxShares, false); // U:[YFI2-8]
     }
 
     /// @notice Burn given amount of yTokens to withdraw corresponding amount of underlying from the vault
@@ -165,11 +167,11 @@ contract YearnV2Adapter is AbstractAdapter, IYearnV2Adapter {
     function withdraw(uint256 maxShares, address, uint256 maxLoss)
         external
         override
-        creditFacadeOnly
+        creditFacadeOnly // U:[YFI2-2]
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        address creditAccount = _creditAccount(); // F: [AYV2-3]
-        (tokensToEnable, tokensToDisable) = _withdraw(maxShares, creditAccount, maxLoss); // F: [AYV2-10, AYV2-11]
+        address creditAccount = _creditAccount(); // U:[YFI2-9]
+        (tokensToEnable, tokensToDisable) = _withdraw(maxShares, creditAccount, maxLoss); // U:[YFI2-9]
     }
 
     /// @dev Internal implementation of `withdraw` functions
@@ -180,7 +182,7 @@ contract YearnV2Adapter is AbstractAdapter, IYearnV2Adapter {
         internal
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        _execute(abi.encodeWithSignature("withdraw(uint256)", maxShares));
+        _execute(abi.encodeWithSignature("withdraw(uint256)", maxShares)); // U:[YFI2-6,7,8]
         (tokensToEnable, tokensToDisable) = (tokenMask, disableTokenIn ? yTokenMask : 0);
     }
 
@@ -192,7 +194,7 @@ contract YearnV2Adapter is AbstractAdapter, IYearnV2Adapter {
         internal
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        _execute(abi.encodeWithSignature("withdraw(uint256,address,uint256)", maxShares, creditAccount, maxLoss));
+        _execute(abi.encodeWithSignature("withdraw(uint256,address,uint256)", maxShares, creditAccount, maxLoss)); // U:[YFI2-9]
         (tokensToEnable, tokensToDisable) = (tokenMask, 0);
     }
 }

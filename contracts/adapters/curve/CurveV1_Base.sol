@@ -66,36 +66,36 @@ abstract contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
     /// @param _metapoolBase Metapool's base pool address (must have 2 or 3 coins) or zero address
     /// @param _nCoins Number of coins in the pool
     constructor(address _creditManager, address _curvePool, address _lp_token, address _metapoolBase, uint256 _nCoins)
-        AbstractAdapter(_creditManager, _curvePool)
-        nonZeroAddress(_lp_token) // F: [ACV1-1]
+        AbstractAdapter(_creditManager, _curvePool) // U:[CRVB-1]
+        nonZeroAddress(_lp_token) // U:[CRVB-1]
     {
-        lpTokenMask = _getMaskOrRevert(_lp_token); // F: [ACV1-2]
+        lpTokenMask = _getMaskOrRevert(_lp_token); // U:[CRVB-1]
 
-        token = _lp_token; // F: [ACV1-2]
-        lp_token = _lp_token; // F: [ACV1-2]
-        metapoolBase = _metapoolBase; // F: [ACV1-2]
-        nCoins = _nCoins; // F: [ACV1-2]
+        token = _lp_token; // U:[CRVB-1]
+        lp_token = _lp_token; // U:[CRVB-1]
+        metapoolBase = _metapoolBase; // U:[CRVB-1]
+        nCoins = _nCoins; // U:[CRVB-1]
         use256 = _use256();
 
         address[4] memory tokens;
         uint256[4] memory tokenMasks;
         unchecked {
             for (uint256 i; i < nCoins; ++i) {
-                tokens[i] = _getCoin(_curvePool, i);
-                if (tokens[i] == address(0)) revert IncorrectParameterException(); // F: [ACV1-1]
-                tokenMasks[i] = _getMaskOrRevert(tokens[i]);
+                tokens[i] = _getCoin(_curvePool, i); // U:[CRVB-1]
+                if (tokens[i] == address(0)) revert IncorrectParameterException(); // U:[CRVB-1]
+                tokenMasks[i] = _getMaskOrRevert(tokens[i]); // U:[CRVB-1]
             }
         }
 
-        token0 = tokens[0]; // F: [ACV1-2]
-        token1 = tokens[1]; // F: [ACV1-2]
-        token2 = tokens[2]; // F: [ACV1-2]
-        token3 = tokens[3]; // F: [ACV1-2]
+        token0 = tokens[0];
+        token1 = tokens[1];
+        token2 = tokens[2];
+        token3 = tokens[3];
 
-        token0Mask = tokenMasks[0]; // F: [ACV1-2]
-        token1Mask = tokenMasks[1]; // F: [ACV1-2]
-        token2Mask = tokenMasks[2]; // F: [ACV1-2]
-        token3Mask = tokenMasks[3]; // F: [ACV1-2]
+        token0Mask = tokenMasks[0];
+        token1Mask = tokenMasks[1];
+        token2Mask = tokenMasks[2];
+        token3Mask = tokenMasks[3];
 
         // underlying tokens (only relevant for meta and lending pools)
         address[4] memory underlyings;
@@ -103,31 +103,31 @@ abstract contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
         unchecked {
             for (uint256 i; i < 4; ++i) {
                 if (_metapoolBase != address(0)) {
-                    underlyings[i] = i == 0 ? token0 : _getCoin(_metapoolBase, i - 1);
+                    underlyings[i] = i == 0 ? token0 : _getCoin(_metapoolBase, i - 1); // U:[CRVB-1]
                 } else {
                     // some pools are proxy contracts and return empty data when there is no function with given signature,
                     // which later results in revert when trying to decode the result, so low-level call is used instead
                     (bool success, bytes memory returnData) = _callWithAlternative(
                         abi.encodeWithSignature("underlying_coins(uint256)", i),
                         abi.encodeWithSignature("underlying_coins(int128)", i)
-                    );
+                    ); // U:[CRVB-1]
                     if (success && returnData.length > 0) underlyings[i] = abi.decode(returnData, (address));
                     else break;
                 }
 
-                if (underlyings[i] != address(0)) underlyingMasks[i] = _getMaskOrRevert(underlyings[i]); // F: [ACV1-1]
+                if (underlyings[i] != address(0)) underlyingMasks[i] = _getMaskOrRevert(underlyings[i]); // U:[CRVB-1]
             }
         }
 
-        underlying0 = underlyings[0]; // F: [ACV1-2]
-        underlying1 = underlyings[1]; // F: [ACV1-2]
-        underlying2 = underlyings[2]; // F: [ACV1-2]
-        underlying3 = underlyings[3]; // F: [ACV1-2]
+        underlying0 = underlyings[0];
+        underlying1 = underlyings[1];
+        underlying2 = underlyings[2];
+        underlying3 = underlyings[3];
 
-        underlying0Mask = underlyingMasks[0]; // F: [ACV1-2]
-        underlying1Mask = underlyingMasks[1]; // F: [ACV1-2]
-        underlying2Mask = underlyingMasks[2]; // F: [ACV1-2]
-        underlying3Mask = underlyingMasks[3]; // F: [ACV1-2]
+        underlying0Mask = underlyingMasks[0];
+        underlying1Mask = underlyingMasks[1];
+        underlying2Mask = underlyingMasks[2];
+        underlying3Mask = underlyingMasks[3];
     }
 
     // -------- //
@@ -142,20 +142,20 @@ abstract contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
     function exchange(uint256 i, uint256 j, uint256 dx, uint256 min_dy)
         external
         override
-        creditFacadeOnly
+        creditFacadeOnly // U:[CRVB-2]
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        return _exchange(i, j, dx, min_dy);
+        return _exchange(i, j, dx, min_dy); // U:[CRVB-3]
     }
 
     /// @dev Same as the previous one but accepts coin indexes as `int128`
     function exchange(int128 i, int128 j, uint256 dx, uint256 min_dy)
         external
         override
-        creditFacadeOnly
+        creditFacadeOnly // U:[CRVB-2]
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        return _exchange(_toU256(i), _toU256(j), dx, min_dy);
+        return _exchange(_toU256(i), _toU256(j), dx, min_dy); // U:[CRVB-3]
     }
 
     /// @dev Implementation of both versions of `exchange`
@@ -163,7 +163,7 @@ abstract contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
         internal
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        (tokensToEnable, tokensToDisable) = _exchange_impl(i, j, _getExchangeCallData(i, j, dx, min_dy), false); // F: [ACV1-4]
+        (tokensToEnable, tokensToDisable) = _exchange_impl(i, j, _getExchangeCallData(i, j, dx, min_dy), false); // U:[CRVB-3]
     }
 
     /// @notice Exchanges the entire balance of one pool asset to another, except the specified amount
@@ -187,20 +187,20 @@ abstract contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
     function exchange_all(uint256 i, uint256 j, uint256 rateMinRAY)
         external
         override
-        creditFacadeOnly
+        creditFacadeOnly // U:[CRVB-2]
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        return _exchange_diff(i, j, 1, rateMinRAY);
+        return _exchange_diff(i, j, 1, rateMinRAY); // U:[CRVB-4]
     }
 
     /// @dev Same as the previous one but accepts coin indexes as `int128`
     function exchange_all(int128 i, int128 j, uint256 rateMinRAY)
         external
         override
-        creditFacadeOnly
+        creditFacadeOnly // U:[CRVB-2]
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        return _exchange_diff(_toU256(i), _toU256(j), 1, rateMinRAY);
+        return _exchange_diff(_toU256(i), _toU256(j), 1, rateMinRAY); // U:[CRVB-4]
     }
 
     /// @dev Implementation of both versions of `exchange_all` and `exchange_diff`
@@ -208,18 +208,18 @@ abstract contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
         internal
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        address creditAccount = _creditAccount(); // F: [ACV1-3]
+        address creditAccount = _creditAccount(); // U:[CRVB-4]
 
-        address tokenIn = _get_token(i); // F: [ACV1-5]
-        uint256 dx = IERC20(tokenIn).balanceOf(creditAccount); // F: [ACV1-5]
+        address tokenIn = _get_token(i);
+        uint256 dx = IERC20(tokenIn).balanceOf(creditAccount);
         if (dx <= leftoverAmount) return (0, 0);
 
         unchecked {
             dx -= leftoverAmount;
         }
-        uint256 min_dy = (dx * rateMinRAY) / RAY; // F: [ACV1-5]
+        uint256 min_dy = (dx * rateMinRAY) / RAY;
         (tokensToEnable, tokensToDisable) =
-            _exchange_impl(i, j, _getExchangeCallData(i, j, dx, min_dy), leftoverAmount <= 1); // F: [ACV1-5]
+            _exchange_impl(i, j, _getExchangeCallData(i, j, dx, min_dy), leftoverAmount <= 1);
     }
 
     /// @dev Internal implementation of `exchange` and `exchange_all`
@@ -231,10 +231,10 @@ abstract contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
         internal
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        _approveToken(_get_token(i), type(uint256).max);
-        _execute(callData);
-        _approveToken(_get_token(i), 1);
-        (tokensToEnable, tokensToDisable) = (_get_token_mask(j), disableTokenIn ? _get_token_mask(i) : 0);
+        _approveToken(_get_token(i), type(uint256).max); // U:[CRVB-3,4]
+        _execute(callData); // U:[CRVB-3,4]
+        _approveToken(_get_token(i), 1); // U:[CRVB-3,4]
+        (tokensToEnable, tokensToDisable) = (_get_token_mask(j), disableTokenIn ? _get_token_mask(i) : 0); // U:[CRVB-3,4]
     }
 
     /// @dev Returns calldata for `exchange` and `exchange_all` calls
@@ -245,7 +245,7 @@ abstract contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
     {
         return use256
             ? abi.encodeWithSignature("exchange(uint256,uint256,uint256,uint256)", i, j, dx, min_dy)
-            : abi.encodeWithSignature("exchange(int128,int128,uint256,uint256)", i, j, dx, min_dy);
+            : abi.encodeWithSignature("exchange(int128,int128,uint256,uint256)", i, j, dx, min_dy); // U:[CRVB-3,4]
     }
 
     /// @notice Exchanges one pool's underlying asset to another
@@ -256,20 +256,20 @@ abstract contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
     function exchange_underlying(uint256 i, uint256 j, uint256 dx, uint256 min_dy)
         external
         override
-        creditFacadeOnly
+        creditFacadeOnly // U:[CRVB-2]
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        return _exchange_underlying(i, j, dx, min_dy);
+        return _exchange_underlying(i, j, dx, min_dy); // U:[CRVB-5]
     }
 
     /// @dev Same as the previous one but accepts coin indexes as `int128`
     function exchange_underlying(int128 i, int128 j, uint256 dx, uint256 min_dy)
         external
         override
-        creditFacadeOnly
+        creditFacadeOnly // U:[CRVB-2]
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        return _exchange_underlying(_toU256(i), _toU256(j), dx, min_dy);
+        return _exchange_underlying(_toU256(i), _toU256(j), dx, min_dy); // U:[CRVB-5]
     }
 
     /// @dev Implementation of both versions of `exchange_underlying`
@@ -278,7 +278,7 @@ abstract contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
         (tokensToEnable, tokensToDisable) =
-            _exchange_underlying_impl(i, j, _getExchangeUnderlyingCallData(i, j, dx, min_dy), false); // F: [ACV1-6]
+            _exchange_underlying_impl(i, j, _getExchangeUnderlyingCallData(i, j, dx, min_dy), false); // U:[CRVB-5]
     }
 
     /// @notice Exchanges the entire balance of one pool's underlying asset to another, except the specified amount
@@ -301,20 +301,20 @@ abstract contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
     function exchange_all_underlying(uint256 i, uint256 j, uint256 rateMinRAY)
         external
         override
-        creditFacadeOnly
+        creditFacadeOnly // U:[CRVB-2]
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        return _exchange_diff_underlying(i, j, 1, rateMinRAY);
+        return _exchange_diff_underlying(i, j, 1, rateMinRAY); // U:[CRVB-6]
     }
 
     /// @dev Same as the previous one but accepts coin indexes as `int128`
     function exchange_all_underlying(int128 i, int128 j, uint256 rateMinRAY)
         external
         override
-        creditFacadeOnly
+        creditFacadeOnly // U:[CRVB-2]
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        return _exchange_diff_underlying(_toU256(i), _toU256(j), 1, rateMinRAY);
+        return _exchange_diff_underlying(_toU256(i), _toU256(j), 1, rateMinRAY); // U:[CRVB-6]
     }
 
     /// @dev Implementation of both versions of `exchange_all_underlying` and `exchange_diff_underlying`
@@ -322,18 +322,18 @@ abstract contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
         internal
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        address creditAccount = _creditAccount(); //F: [ACV1-3]
+        address creditAccount = _creditAccount();
 
-        address tokenIn = _get_underlying(i); // F: [ACV1-7]
-        uint256 dx = IERC20(tokenIn).balanceOf(creditAccount); // F: [ACV1-7]
+        address tokenIn = _get_underlying(i);
+        uint256 dx = IERC20(tokenIn).balanceOf(creditAccount);
         if (dx <= leftoverAmount) return (0, 0);
 
         unchecked {
-            dx -= leftoverAmount; // F: [ACV1-7]
+            dx -= leftoverAmount;
         }
-        uint256 min_dy = (dx * rateMinRAY) / RAY; // F: [ACV1-7]
+        uint256 min_dy = (dx * rateMinRAY) / RAY;
         (tokensToEnable, tokensToDisable) =
-            _exchange_underlying_impl(i, j, _getExchangeUnderlyingCallData(i, j, dx, min_dy), leftoverAmount <= 1); // F: [ACV1-7]
+            _exchange_underlying_impl(i, j, _getExchangeUnderlyingCallData(i, j, dx, min_dy), leftoverAmount <= 1);
     }
 
     /// @dev Internal implementation of `exchange_underlying` and `exchange_all_underlying`
@@ -345,10 +345,10 @@ abstract contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
         internal
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        _approveToken(_get_underlying(i), type(uint256).max);
-        _execute(callData);
-        _approveToken(_get_underlying(i), 1);
-        (tokensToEnable, tokensToDisable) = (_get_underlying_mask(j), disableTokenIn ? _get_underlying_mask(i) : 0);
+        _approveToken(_get_underlying(i), type(uint256).max); // U:[CRVB-5,6]
+        _execute(callData); // U:[CRVB-5,6]
+        _approveToken(_get_underlying(i), 1); // U:[CRVB-5,6]
+        (tokensToEnable, tokensToDisable) = (_get_underlying_mask(j), disableTokenIn ? _get_underlying_mask(i) : 0); // U:[CRVB-5,6]
     }
 
     /// @dev Returns calldata for `exchange_underlying` and `exchange_all_underlying` calls
@@ -359,7 +359,7 @@ abstract contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
     {
         return use256
             ? abi.encodeWithSignature("exchange_underlying(uint256,uint256,uint256,uint256)", i, j, dx, min_dy)
-            : abi.encodeWithSignature("exchange_underlying(int128,int128,uint256,uint256)", i, j, dx, min_dy);
+            : abi.encodeWithSignature("exchange_underlying(int128,int128,uint256,uint256)", i, j, dx, min_dy); // U:[CRVB-5,6]
     }
 
     // ------------- //
@@ -374,10 +374,10 @@ abstract contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
         internal
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        _approveTokens(t0Approve, t1Approve, t2Approve, t3Approve, type(uint256).max);
-        _execute(msg.data);
-        _approveTokens(t0Approve, t1Approve, t2Approve, t3Approve, 1);
-        (tokensToEnable, tokensToDisable) = (lpTokenMask, 0);
+        _approveTokens(t0Approve, t1Approve, t2Approve, t3Approve, type(uint256).max); // U:[CRV2-2, CRV3-2, CRV4-2]
+        _execute(msg.data); // U:[CRV2-2, CRV3-2, CRV4-2]
+        _approveTokens(t0Approve, t1Approve, t2Approve, t3Approve, 1); // U:[CRV2-2, CRV3-2, CRV4-2]
+        (tokensToEnable, tokensToDisable) = (lpTokenMask, 0); // U:[CRV2-2, CRV3-2, CRV4-2]
     }
 
     /// @notice Adds given amount of asset as liquidity to the pool
@@ -387,11 +387,11 @@ abstract contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
     function add_liquidity_one_coin(uint256 amount, uint256 i, uint256 minAmount)
         external
         override
-        creditFacadeOnly
+        creditFacadeOnly // U:[CRVB-2]
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
         (tokensToEnable, tokensToDisable) =
-            _add_liquidity_one_coin_impl(i, _getAddLiquidityOneCoinCallData(i, amount, minAmount), false); // F: [ACV1-8]
+            _add_liquidity_one_coin_impl(i, _getAddLiquidityOneCoinCallData(i, amount, minAmount), false); // U:[CRVB-7]
     }
 
     /// @notice Adds the entire balance of asset as liquidity to the pool, except the specified amount
@@ -413,7 +413,7 @@ abstract contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
     function add_all_liquidity_one_coin(uint256 i, uint256 rateMinRAY)
         external
         override
-        creditFacadeOnly
+        creditFacadeOnly // U:[CRVB-2]
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
         (tokensToEnable, tokensToDisable) = _add_diff_liquidity_one_coin(i, 1, rateMinRAY);
@@ -427,15 +427,15 @@ abstract contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
         address creditAccount = _creditAccount();
 
         address tokenIn = _get_token(i);
-        uint256 amount = IERC20(tokenIn).balanceOf(creditAccount); // F: [ACV1-9]
+        uint256 amount = IERC20(tokenIn).balanceOf(creditAccount);
         if (amount <= leftoverAmount) return (0, 0);
 
         unchecked {
-            amount -= leftoverAmount; // F: [ACV1-9]
+            amount -= leftoverAmount;
         }
-        uint256 minAmount = (amount * rateMinRAY) / RAY; // F: [ACV1-9]
+        uint256 minAmount = (amount * rateMinRAY) / RAY;
         (tokensToEnable, tokensToDisable) =
-            _add_liquidity_one_coin_impl(i, _getAddLiquidityOneCoinCallData(i, amount, minAmount), leftoverAmount <= 1); // F: [ACV1-9]
+            _add_liquidity_one_coin_impl(i, _getAddLiquidityOneCoinCallData(i, amount, minAmount), leftoverAmount <= 1);
     }
 
     /// @dev Internal implementation of `add_liquidity_one_coin` and `add_all_liquidity_one_coin`
@@ -447,10 +447,10 @@ abstract contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
         internal
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        _approveToken(_get_token(i), type(uint256).max);
-        _execute(callData);
-        _approveToken(_get_token(i), 1);
-        (tokensToEnable, tokensToDisable) = (lpTokenMask, disableTokenIn ? _get_token_mask(i) : 0);
+        _approveToken(_get_token(i), type(uint256).max); // U:[CRVB-7,8]
+        _execute(callData); // U:[CRVB-7,8]
+        _approveToken(_get_token(i), 1); // U:[CRVB-7,8]
+        (tokensToEnable, tokensToDisable) = (lpTokenMask, disableTokenIn ? _get_token_mask(i) : 0); // U:[CRVB-7,8]
     }
 
     /// @notice Returns the amount of LP token received for adding a single asset to the pool
@@ -491,8 +491,8 @@ abstract contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
     ///      - passes calldata to the target contract
     ///      - enables all pool tokens
     function _remove_liquidity() internal returns (uint256 tokensToEnable, uint256 tokensToDisable) {
-        _execute(msg.data);
-        (tokensToEnable, tokensToDisable) = (token0Mask | token1Mask | token2Mask | token3Mask, 0); // F: [ACV1_2-5, ACV1_3-5, ACV1_4-5]
+        _execute(msg.data); // U:[CRV2-3, CRV3-3, CRV4-3]
+        (tokensToEnable, tokensToDisable) = (token0Mask | token1Mask | token2Mask | token3Mask, 0); // U:[CRV2-3, CRV3-3, CRV4-3]
     }
 
     /// @dev Internal implementation of `remove_liquidity_imbalance`
@@ -502,13 +502,13 @@ abstract contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
         internal
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        _execute(msg.data);
+        _execute(msg.data); // U:[CRV2-4, CRV3-4, CRV4-4]
 
-        if (t0Enable) tokensToEnable = tokensToEnable.enable(token0Mask); // F: [ACV1_2-6, ACV1_3-6, ACV1_4-6]
-        if (t1Enable) tokensToEnable = tokensToEnable.enable(token1Mask); // F: [ACV1_2-6, ACV1_3-6, ACV1_4-6]
-        if (t2Enable) tokensToEnable = tokensToEnable.enable(token2Mask); // F: [ACV1_3-6, ACV1_4-6]
-        if (t3Enable) tokensToEnable = tokensToEnable.enable(token3Mask); // F: [ACV1_4-6]
-        tokensToDisable = 0; // F: [ACV1_2-6, ACV1_3-6, ACV1_4-6]
+        if (t0Enable) tokensToEnable = tokensToEnable.enable(token0Mask); // U:[CRV2-4, CRV3-4, CRV4-4]
+        if (t1Enable) tokensToEnable = tokensToEnable.enable(token1Mask); // U:[CRV2-4, CRV3-4, CRV4-4]
+        if (t2Enable) tokensToEnable = tokensToEnable.enable(token2Mask); // U:[CRV3-4, CRV4-4]
+        if (t3Enable) tokensToEnable = tokensToEnable.enable(token3Mask); // U:[CRV4-4]
+        tokensToDisable = 0; // U:[CRV2-4, CRV3-4, CRV4-4]
     }
 
     /// @notice Removes liquidity from the pool in a specified asset
@@ -519,10 +519,10 @@ abstract contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
         external
         virtual
         override
-        creditFacadeOnly
+        creditFacadeOnly // U:[CRVB-2]
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        (tokensToEnable, tokensToDisable) = _remove_liquidity_one_coin(amount, i, minAmount);
+        (tokensToEnable, tokensToDisable) = _remove_liquidity_one_coin(amount, i, minAmount); // U:[CRVB-9]
     }
 
     /// @dev Same as the previous one but accepts coin indexes as `int128`
@@ -530,10 +530,10 @@ abstract contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
         external
         virtual
         override
-        creditFacadeOnly
+        creditFacadeOnly // U:[CRVB-2]
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        (tokensToEnable, tokensToDisable) = _remove_liquidity_one_coin(amount, _toU256(i), minAmount);
+        (tokensToEnable, tokensToDisable) = _remove_liquidity_one_coin(amount, _toU256(i), minAmount); // U:[CRVB-9]
     }
 
     /// @dev Implementation of both versions of `remove_liquidity_one_coin`
@@ -542,7 +542,7 @@ abstract contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
         (tokensToEnable, tokensToDisable) =
-            _remove_liquidity_one_coin_impl(i, _getRemoveLiquidityOneCoinCallData(i, amount, minAmount), false); // F: [ACV1-10]
+            _remove_liquidity_one_coin_impl(i, _getRemoveLiquidityOneCoinCallData(i, amount, minAmount), false); // U:[CRVB-9]
     }
 
     /// @notice Removes all liquidity from the pool, except the specified amount, in a specified asset
@@ -566,10 +566,10 @@ abstract contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
         external
         virtual
         override
-        creditFacadeOnly
+        creditFacadeOnly // U:[CRVB-2]
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        return _remove_diff_liquidity_one_coin(i, 1, rateMinRAY);
+        return _remove_diff_liquidity_one_coin(i, 1, rateMinRAY); // U:[CRVB-10]
     }
 
     /// @dev Same as the previous one but accepts coin indexes as `int128`
@@ -577,10 +577,10 @@ abstract contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
         external
         virtual
         override
-        creditFacadeOnly
+        creditFacadeOnly // U:[CRVB-2]
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        return _remove_diff_liquidity_one_coin(_toU256(i), 1, rateMinRAY);
+        return _remove_diff_liquidity_one_coin(_toU256(i), 1, rateMinRAY); // U:[CRVB-10]
     }
 
     /// @dev Implementation of both versions of `remove_diff_liquidity_one_coin` and `remove_all_liquidity_one_coin`
@@ -590,16 +590,16 @@ abstract contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
     {
         address creditAccount = _creditAccount();
 
-        uint256 amount = IERC20(lp_token).balanceOf(creditAccount); // F: [ACV1-11]
+        uint256 amount = IERC20(lp_token).balanceOf(creditAccount);
         if (amount <= leftoverAmount) return (0, 0);
 
         unchecked {
-            amount -= leftoverAmount; // F: [ACV1-11]
+            amount -= leftoverAmount;
         }
-        uint256 minAmount = (amount * rateMinRAY) / RAY; // F: [ACV1-11]
+        uint256 minAmount = (amount * rateMinRAY) / RAY;
         (tokensToEnable, tokensToDisable) = _remove_liquidity_one_coin_impl(
             i, _getRemoveLiquidityOneCoinCallData(i, amount, minAmount), leftoverAmount <= 1
-        ); // F: [ACV1-11]
+        );
     }
 
     /// @dev Internal implementation of `remove_liquidity_one_coin` and `remove_all_liquidity_one_coin`
@@ -611,7 +611,7 @@ abstract contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
         _execute(callData);
-        (tokensToEnable, tokensToDisable) = (_get_token_mask(i), disableLP ? lpTokenMask : 0);
+        (tokensToEnable, tokensToDisable) = (_get_token_mask(i), disableLP ? lpTokenMask : 0); // U:[CRVB-9,10]
     }
 
     /// @dev Returns calldata for `remove_liquidity_one_coin` and `remove_all_liquidity_one_coin` calls
@@ -622,7 +622,7 @@ abstract contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
     {
         return use256
             ? abi.encodeWithSignature("remove_liquidity_one_coin(uint256,uint256,uint256)", amount, i, minAmount)
-            : abi.encodeWithSignature("remove_liquidity_one_coin(uint256,int128,uint256)", amount, i, minAmount);
+            : abi.encodeWithSignature("remove_liquidity_one_coin(uint256,int128,uint256)", amount, i, minAmount); // U:[CRVB-9,10]
     }
 
     // ------- //

@@ -35,14 +35,16 @@ contract AaveV2_WrappedATokenAdapter is AbstractAdapter, IAaveV2_WrappedATokenAd
     /// @notice Constructor
     /// @param _creditManager Credit manager address
     /// @param _waToken Wrapped aToken address
-    constructor(address _creditManager, address _waToken) AbstractAdapter(_creditManager, _waToken) {
-        waTokenMask = _getMaskOrRevert(targetContract); // F: [AAV2W-1, AAV2W-2]
+    constructor(address _creditManager, address _waToken)
+        AbstractAdapter(_creditManager, _waToken) // U:[AAVE2W-1]
+    {
+        waTokenMask = _getMaskOrRevert(targetContract); // U:[AAVE2W-1]
 
-        aToken = WrappedAToken(targetContract).aToken(); // F: [AAV2W-2]
-        aTokenMask = _getMaskOrRevert(aToken); // F: [AAV2W-2]
+        aToken = WrappedAToken(targetContract).aToken(); // U:[AAVE2W-1]
+        aTokenMask = _getMaskOrRevert(aToken); // U:[AAVE2W-1]
 
-        underlying = WrappedAToken(targetContract).underlying(); // F: [AAV2W-2]
-        tokenMask = _getMaskOrRevert(underlying); // F: [AAV2W-2]
+        underlying = WrappedAToken(targetContract).underlying(); // U:[AAVE2W-1]
+        tokenMask = _getMaskOrRevert(underlying); // U:[AAVE2W-1]
     }
 
     // -------- //
@@ -54,10 +56,10 @@ contract AaveV2_WrappedATokenAdapter is AbstractAdapter, IAaveV2_WrappedATokenAd
     function deposit(uint256 assets)
         external
         override
-        creditFacadeOnly // F: [AAV2W-3]
+        creditFacadeOnly // U:[AAVE2W-2]
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        (tokensToEnable, tokensToDisable) = _deposit(assets, false); // F: [AAV2W-4]
+        (tokensToEnable, tokensToDisable) = _deposit(assets, false); // U:[AAVE2W-3]
     }
 
     /// @notice Deposit all aTokens except the specified amount
@@ -75,10 +77,10 @@ contract AaveV2_WrappedATokenAdapter is AbstractAdapter, IAaveV2_WrappedATokenAd
     function depositAll()
         external
         override
-        creditFacadeOnly // F: [AAV2W-3]
+        creditFacadeOnly // U:[AAVE2W-2]
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        (tokensToEnable, tokensToDisable) = _depositDiff(false, 1); // F: [AAV2W-5]
+        (tokensToEnable, tokensToDisable) = _depositDiff(false, 1); // U:[AAVE2W-4]
     }
 
     /// @notice Deposit given amount underlying tokens
@@ -86,10 +88,10 @@ contract AaveV2_WrappedATokenAdapter is AbstractAdapter, IAaveV2_WrappedATokenAd
     function depositUnderlying(uint256 assets)
         external
         override
-        creditFacadeOnly // F: [AAV2W-3]
+        creditFacadeOnly // U:[AAVE2W-2]
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        (tokensToEnable, tokensToDisable) = _deposit(assets, true); // F: [AAV2W-4]
+        (tokensToEnable, tokensToDisable) = _deposit(assets, true); // U:[AAVE2W-5]
     }
 
     /// @notice Deposit all underlying tokens except the specified amount
@@ -107,10 +109,10 @@ contract AaveV2_WrappedATokenAdapter is AbstractAdapter, IAaveV2_WrappedATokenAd
     function depositAllUnderlying()
         external
         override
-        creditFacadeOnly // F: [AAV2W-3]
+        creditFacadeOnly // U:[AAVE2W-2]
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        (tokensToEnable, tokensToDisable) = _depositDiff(true, 1); // F: [AAV2W-5]
+        (tokensToEnable, tokensToDisable) = _depositDiff(true, 1); // U:[AAVE2W-6]
     }
 
     /// @dev Internal implementation of `deposit` and `depositUnderlying`
@@ -123,10 +125,10 @@ contract AaveV2_WrappedATokenAdapter is AbstractAdapter, IAaveV2_WrappedATokenAd
     {
         address tokenIn = fromUnderlying ? underlying : aToken;
 
-        _approveToken(tokenIn, type(uint256).max);
-        _execute(_encodeDeposit(assets, fromUnderlying));
-        _approveToken(tokenIn, 1);
-        (tokensToEnable, tokensToDisable) = (waTokenMask, 0);
+        _approveToken(tokenIn, type(uint256).max); // U:[AAVE2W-3,5]
+        _execute(_encodeDeposit(assets, fromUnderlying)); // U:[AAVE2W-3,5]
+        _approveToken(tokenIn, 1); // U:[AAVE2W-3,5]
+        (tokensToEnable, tokensToDisable) = (waTokenMask, 0); // U:[AAVE2W-3,5]
     }
 
     /// @dev Internal implementation of `depositAll`, `depositDiff`, `depositAllUnderlying` and `depositDiffUnderlying`
@@ -169,10 +171,10 @@ contract AaveV2_WrappedATokenAdapter is AbstractAdapter, IAaveV2_WrappedATokenAd
     function withdraw(uint256 shares)
         external
         override
-        creditFacadeOnly // F: [AAV2W-3]
+        creditFacadeOnly // U:[AAVE2W-2]
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        (tokensToEnable, tokensToDisable) = _withdraw(shares, false); // F: [AAV2W-6]
+        (tokensToEnable, tokensToDisable) = _withdraw(shares, false); // U:[AAVE2W-7]
     }
 
     /// @notice Withdraw all waTokens to aTokens except the specified amount
@@ -189,10 +191,10 @@ contract AaveV2_WrappedATokenAdapter is AbstractAdapter, IAaveV2_WrappedATokenAd
     function withdrawAll()
         external
         override
-        creditFacadeOnly // F: [AAV2W-3]
+        creditFacadeOnly // U:[AAVE2W-2]
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        (tokensToEnable, tokensToDisable) = _withdrawDiff(false, 1); // F: [AAV2W-7]
+        (tokensToEnable, tokensToDisable) = _withdrawDiff(false, 1); // U:[AAVE2W-8]
     }
 
     /// @notice Withdraw given amount of waTokens for underlying tokens
@@ -200,10 +202,10 @@ contract AaveV2_WrappedATokenAdapter is AbstractAdapter, IAaveV2_WrappedATokenAd
     function withdrawUnderlying(uint256 shares)
         external
         override
-        creditFacadeOnly // F: [AAV2W-3]
+        creditFacadeOnly // U:[AAVE2W-2]
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        (tokensToEnable, tokensToDisable) = _withdraw(shares, true); // F: [AAV2W-6]
+        (tokensToEnable, tokensToDisable) = _withdraw(shares, true); // U:[AAVE2W-9]
     }
 
     /// @notice Withdraw all waTokens to underlying tokens except the specified amount
@@ -220,10 +222,10 @@ contract AaveV2_WrappedATokenAdapter is AbstractAdapter, IAaveV2_WrappedATokenAd
     function withdrawAllUnderlying()
         external
         override
-        creditFacadeOnly // F: [AAV2W-3]
+        creditFacadeOnly // U:[AAVE2W-2]
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        (tokensToEnable, tokensToDisable) = _withdrawDiff(true, 1); // F: [AAV2W-7]
+        (tokensToEnable, tokensToDisable) = _withdrawDiff(true, 1); // U:[AAVE2W-10]
     }
 
     /// @dev Internal implementation of `withdraw` and `withdrawUnderlying`
@@ -234,8 +236,8 @@ contract AaveV2_WrappedATokenAdapter is AbstractAdapter, IAaveV2_WrappedATokenAd
         internal
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        _execute(_encodeWithdraw(shares, toUnderlying));
-        (tokensToEnable, tokensToDisable) = (toUnderlying ? tokenMask : aTokenMask, 0);
+        _execute(_encodeWithdraw(shares, toUnderlying)); // U:[AAVE2W-7,9]
+        (tokensToEnable, tokensToDisable) = (toUnderlying ? tokenMask : aTokenMask, 0); // U:[AAVE2W-7,9]
     }
 
     /// @dev Internal implementation of `withdrawAll`, `withdrawAllUnderlying`, `withdrawDiff` and `withdrawDiffUnderlying`

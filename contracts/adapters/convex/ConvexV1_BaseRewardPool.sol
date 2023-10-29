@@ -55,26 +55,26 @@ contract ConvexV1BaseRewardPoolAdapter is AbstractAdapter, IConvexV1BaseRewardPo
     /// @param _baseRewardPool BaseRewardPool address
     /// @param _stakedPhantomToken Reward pool stake token address
     constructor(address _creditManager, address _baseRewardPool, address _stakedPhantomToken)
-        AbstractAdapter(_creditManager, _baseRewardPool)
+        AbstractAdapter(_creditManager, _baseRewardPool) // U:[CVX1R-1]
     {
-        stakingToken = address(IBaseRewardPool(_baseRewardPool).stakingToken()); // F: [ACVX1_P-1]
-        stakingTokenMask = _getMaskOrRevert(stakingToken); // F: [ACVX1_P-1, ACVX1_P-2]
+        stakingToken = address(IBaseRewardPool(_baseRewardPool).stakingToken()); // U:[CVX1R-1]
+        stakingTokenMask = _getMaskOrRevert(stakingToken); // U:[CVX1R-1]
 
-        stakedPhantomToken = _stakedPhantomToken; // F: [ACVX1_P-1]
-        stakedTokenMask = _getMaskOrRevert(stakedPhantomToken); // F: [ACVX1_P-1, ACVX1_P-2]
+        stakedPhantomToken = _stakedPhantomToken; // U:[CVX1R-1]
+        stakedTokenMask = _getMaskOrRevert(stakedPhantomToken); // U:[CVX1R-1]
 
         address booster = IBaseRewardPool(_baseRewardPool).operator();
         IBooster.PoolInfo memory poolInfo = IBooster(booster).poolInfo(IBaseRewardPool(_baseRewardPool).pid());
-        curveLPtoken = poolInfo.lptoken; // F: [ACVX1_P-1]
-        curveLPTokenMask = _getMaskOrRevert(curveLPtoken); // F: [ACVX1_P-1, ACVX1_P-2]
+        curveLPtoken = poolInfo.lptoken; // U:[CVX1R-1]
+        curveLPTokenMask = _getMaskOrRevert(curveLPtoken); // U:[CVX1R-1]
 
         uint256 _rewardTokensMask;
 
         address rewardToken = address(IBaseRewardPool(_baseRewardPool).rewardToken());
-        _rewardTokensMask = _rewardTokensMask.enable(_getMaskOrRevert(rewardToken)); // F: [ACVX1_P-2]
+        _rewardTokensMask = _rewardTokensMask.enable(_getMaskOrRevert(rewardToken)); // U:[CVX1R-1]
 
         address cvx = IBooster(booster).minter();
-        _rewardTokensMask = _rewardTokensMask.enable(_getMaskOrRevert(cvx)); // F: [ACVX1_P-2]
+        _rewardTokensMask = _rewardTokensMask.enable(_getMaskOrRevert(cvx)); // U:[CVX1R-1]
 
         address _extraReward1;
         address _extraReward2;
@@ -83,17 +83,17 @@ contract ConvexV1BaseRewardPoolAdapter is AbstractAdapter, IConvexV1BaseRewardPo
         if (extraRewardLength >= 1) {
             uint256 _extraRewardMask;
             (_extraReward1, _extraRewardMask) = _getExtraReward(0);
-            _rewardTokensMask = _rewardTokensMask.enable(_extraRewardMask); // F: [ACVX1_P-2]
+            _rewardTokensMask = _rewardTokensMask.enable(_extraRewardMask);
 
             if (extraRewardLength >= 2) {
                 (_extraReward2, _extraRewardMask) = _getExtraReward(1);
-                _rewardTokensMask = _rewardTokensMask.enable(_extraRewardMask); // F: [ACVX1_P-2]
+                _rewardTokensMask = _rewardTokensMask.enable(_extraRewardMask);
             }
         }
 
-        extraReward1 = _extraReward1; // F: [ACVX1_P-1]
-        extraReward2 = _extraReward2; // F: [ACVX1_P-1]
-        rewardTokensMask = _rewardTokensMask; // F: [ACVX1_P-1]
+        extraReward1 = _extraReward1; // U:[CVX1R-2]
+        extraReward2 = _extraReward2; // U:[CVX1R-2]
+        rewardTokensMask = _rewardTokensMask; // U:[CVX1R-2]
     }
 
     /// @dev Returns `i`-th extra reward token and its collateral mask in the credit mnager
@@ -123,10 +123,10 @@ contract ConvexV1BaseRewardPoolAdapter is AbstractAdapter, IConvexV1BaseRewardPo
     function stake(uint256)
         external
         override
-        creditFacadeOnly
+        creditFacadeOnly // U:[CVX1R-3]
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        (tokensToEnable, tokensToDisable) = _stake(msg.data, false); // F: [ACVX1_P-3]
+        (tokensToEnable, tokensToDisable) = _stake(msg.data, false); // U:[CVX1R-4]
     }
 
     /// @notice Stakes the entire balance of Convex LP token in the reward pool, except the specified amount
@@ -142,7 +142,7 @@ contract ConvexV1BaseRewardPoolAdapter is AbstractAdapter, IConvexV1BaseRewardPo
 
     /// @notice Stakes the entire balance of Convex LP token in the reward pool, disables LP token
     function stakeAll() external override creditFacadeOnly returns (uint256 tokensToEnable, uint256 tokensToDisable) {
-        (tokensToEnable, tokensToDisable) = _stakeDiff(1); // F: [ACVX1_P-4]
+        (tokensToEnable, tokensToDisable) = _stakeDiff(1);
     }
 
     /// @dev Internal implementation for `stakeDiff` and `stakeAll`.
@@ -167,9 +167,9 @@ contract ConvexV1BaseRewardPoolAdapter is AbstractAdapter, IConvexV1BaseRewardPo
         internal
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        _approveToken(stakingToken, type(uint256).max);
-        _execute(callData);
-        _approveToken(stakingToken, 1);
+        _approveToken(stakingToken, type(uint256).max); // U:[CVX1R-4,5]
+        _execute(callData); // U:[CVX1R-4,5]
+        _approveToken(stakingToken, 1); // U:[CVX1R-4,5]
         (tokensToEnable, tokensToDisable) = (stakedTokenMask, disableStakingToken ? stakingTokenMask : 0);
     }
 
@@ -178,9 +178,14 @@ contract ConvexV1BaseRewardPoolAdapter is AbstractAdapter, IConvexV1BaseRewardPo
     // ----- //
 
     /// @notice Claims rewards on the current position, enables reward tokens
-    function getReward() external override creditFacadeOnly returns (uint256 tokensToEnable, uint256 tokensToDisable) {
-        _execute(msg.data); // F: [ACVX1_P-5]
-        (tokensToEnable, tokensToDisable) = (rewardTokensMask, 0); // F: [ACVX1_P-5]
+    function getReward()
+        external
+        override
+        creditFacadeOnly // U:[CVX1R-3]
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+    {
+        _execute(msg.data); // U:[CVX1R-6]
+        (tokensToEnable, tokensToDisable) = (rewardTokensMask, 0); // U:[CVX1R-6]
     }
 
     // -------- //
@@ -193,10 +198,10 @@ contract ConvexV1BaseRewardPoolAdapter is AbstractAdapter, IConvexV1BaseRewardPo
     function withdraw(uint256, bool claim)
         external
         override
-        creditFacadeOnly
+        creditFacadeOnly // U:[CVX1R-3]
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        (tokensToEnable, tokensToDisable) = _withdraw(msg.data, claim, false); // F: [ACVX1_P-6]
+        (tokensToEnable, tokensToDisable) = _withdraw(msg.data, claim, false); // U:[CVX1R-7]
     }
 
     /// @notice Withdraws the entire balance of Convex LP token from the reward pool, except the specified amount
@@ -216,10 +221,10 @@ contract ConvexV1BaseRewardPoolAdapter is AbstractAdapter, IConvexV1BaseRewardPo
     function withdrawAll(bool claim)
         external
         override
-        creditFacadeOnly
+        creditFacadeOnly // U:[CVX1R-3]
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        (tokensToEnable, tokensToDisable) = _withdrawDiff(1, claim); // F: [ACVX1_P-7]
+        (tokensToEnable, tokensToDisable) = _withdrawDiff(1, claim);
     }
 
     /// @dev Internal implementation for `withdrawDiff` and `withdrawAll`.
@@ -250,7 +255,7 @@ contract ConvexV1BaseRewardPoolAdapter is AbstractAdapter, IConvexV1BaseRewardPo
         internal
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        _execute(callData);
+        _execute(callData); // U:[CVX1R-7,8]
         (tokensToEnable, tokensToDisable) =
             (stakingTokenMask.enable(claim ? rewardTokensMask : 0), disableStakedToken ? stakedTokenMask : 0);
     }
@@ -265,10 +270,10 @@ contract ConvexV1BaseRewardPoolAdapter is AbstractAdapter, IConvexV1BaseRewardPo
     function withdrawAndUnwrap(uint256, bool claim)
         external
         override
-        creditFacadeOnly
+        creditFacadeOnly // U:[CVX1R-3]
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        (tokensToEnable, tokensToDisable) = _withdrawAndUnwrap(msg.data, claim, false); // F: [ACVX1_P-8]
+        (tokensToEnable, tokensToDisable) = _withdrawAndUnwrap(msg.data, claim, false); // U:[CVX1R-9]
     }
 
     /// @notice Withdraws the entire balance of Convex LP token from the reward pool, except the specified amount
@@ -290,7 +295,7 @@ contract ConvexV1BaseRewardPoolAdapter is AbstractAdapter, IConvexV1BaseRewardPo
     function withdrawAllAndUnwrap(bool claim)
         external
         override
-        creditFacadeOnly
+        creditFacadeOnly // U:[CVX1R-3]
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
         (tokensToEnable, tokensToDisable) = _withdrawDiffAndUnwrap(1, claim); // F: [ACVX1_P-9]
@@ -324,7 +329,7 @@ contract ConvexV1BaseRewardPoolAdapter is AbstractAdapter, IConvexV1BaseRewardPo
         internal
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        _execute(callData);
+        _execute(callData); // U:[CVX1R-9,10]
         (tokensToEnable, tokensToDisable) =
             (curveLPTokenMask.enable(claim ? rewardTokensMask : 0), disableStakedToken ? stakedTokenMask : 0);
     }
