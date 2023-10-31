@@ -36,10 +36,16 @@ contract ConvexV1BoosterAdapterUnitTest is AdapterUnitTestHelper {
         adapter.deposit(0, 0, false);
 
         _revertsOnNonFacadeCaller();
+        adapter.depositDiff(0, 0, false);
+
+        _revertsOnNonFacadeCaller();
         adapter.depositAll(0, false);
 
         _revertsOnNonFacadeCaller();
         adapter.withdraw(0, 0);
+
+        _revertsOnNonFacadeCaller();
+        adapter.withdrawDiff(0, 0);
 
         _revertsOnNonFacadeCaller();
         adapter.withdrawAll(0);
@@ -68,13 +74,14 @@ contract ConvexV1BoosterAdapterUnitTest is AdapterUnitTestHelper {
 
     /// @notice U:[CVX1B-4]: `depositAll` works as expected
     function test_U_CVX1B_04_depositAll_works_as_expected() public {
+        deal({token: tokens[0], to: creditAccount, give: 1000});
         for (uint256 i; i < 2; ++i) {
             bool stake = i == 1;
-
+            _readsActiveAccount();
             _executesSwap({
                 tokenIn: tokens[0],
                 tokenOut: stake ? tokens[2] : tokens[1],
-                callData: abi.encodeCall(adapter.depositAll, (42, stake)),
+                callData: abi.encodeCall(adapter.deposit, (42, 999, stake)),
                 requiresApproval: true,
                 validatesTokens: true
             });
@@ -84,6 +91,28 @@ contract ConvexV1BoosterAdapterUnitTest is AdapterUnitTestHelper {
 
             assertEq(tokensToEnable, stake ? 4 : 2, "Incorrect tokensToEnable");
             assertEq(tokensToDisable, 1, "Incorrect tokensToDisable");
+        }
+    }
+
+    /// @notice U:[CVX1B-4A]: `depositDiff` works as expected
+    function test_U_CVX1B_04A_depositDiff_works_as_expected() public diffTestCases {
+        deal({token: tokens[0], to: creditAccount, give: diffMintedAmount});
+        for (uint256 i; i < 2; ++i) {
+            bool stake = i == 1;
+            _readsActiveAccount();
+            _executesSwap({
+                tokenIn: tokens[0],
+                tokenOut: stake ? tokens[2] : tokens[1],
+                callData: abi.encodeCall(adapter.deposit, (42, diffInputAmount, stake)),
+                requiresApproval: true,
+                validatesTokens: true
+            });
+
+            vm.prank(creditFacade);
+            (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.depositDiff(42, diffLeftoverAmount, stake);
+
+            assertEq(tokensToEnable, stake ? 4 : 2, "Incorrect tokensToEnable");
+            assertEq(tokensToDisable, diffDisableTokenIn ? 1 : 0, "Incorrect tokensToDisable");
         }
     }
 
@@ -106,10 +135,12 @@ contract ConvexV1BoosterAdapterUnitTest is AdapterUnitTestHelper {
 
     /// @notice U:[CVX1B-6]: `withdrawAll` works as expected
     function test_U_CVX1B_06_withdrawAll_works_as_expected() public {
+        deal({token: tokens[1], to: creditAccount, give: 1000});
+        _readsActiveAccount();
         _executesSwap({
             tokenIn: tokens[1],
             tokenOut: tokens[0],
-            callData: abi.encodeCall(adapter.withdrawAll, (42)),
+            callData: abi.encodeCall(adapter.withdraw, (42, 999)),
             requiresApproval: false,
             validatesTokens: true
         });
@@ -119,6 +150,25 @@ contract ConvexV1BoosterAdapterUnitTest is AdapterUnitTestHelper {
 
         assertEq(tokensToEnable, 1, "Incorrect tokensToEnable");
         assertEq(tokensToDisable, 2, "Incorrect tokensToDisable");
+    }
+
+    /// @notice U:[CVX1B-6A]: `withdrawDiff` works as expected
+    function test_U_CVX1B_06A_withdrawDiff_works_as_expected() public diffTestCases {
+        deal({token: tokens[1], to: creditAccount, give: diffMintedAmount});
+        _readsActiveAccount();
+        _executesSwap({
+            tokenIn: tokens[1],
+            tokenOut: tokens[0],
+            callData: abi.encodeCall(adapter.withdraw, (42, diffInputAmount)),
+            requiresApproval: false,
+            validatesTokens: true
+        });
+
+        vm.prank(creditFacade);
+        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.withdrawDiff(42, diffLeftoverAmount);
+
+        assertEq(tokensToEnable, 1, "Incorrect tokensToEnable");
+        assertEq(tokensToDisable, diffDisableTokenIn ? 2 : 0, "Incorrect tokensToDisable");
     }
 
     /// @notice U:[CVX1B-7]: `updatedStakedPhantomTokensMap` reverts on wrong caller

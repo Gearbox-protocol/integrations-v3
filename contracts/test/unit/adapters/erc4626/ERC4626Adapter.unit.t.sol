@@ -48,6 +48,9 @@ contract ERC4626AdapterUnitTest is AdapterUnitTestHelper {
         adapter.deposit(0, address(0));
 
         _revertsOnNonFacadeCaller();
+        adapter.depositDiff(0);
+
+        _revertsOnNonFacadeCaller();
         adapter.depositAll();
 
         _revertsOnNonFacadeCaller();
@@ -58,6 +61,9 @@ contract ERC4626AdapterUnitTest is AdapterUnitTestHelper {
 
         _revertsOnNonFacadeCaller();
         adapter.redeem(0, address(0), address(0));
+
+        _revertsOnNonFacadeCaller();
+        adapter.redeemDiff(0);
 
         _revertsOnNonFacadeCaller();
         adapter.redeemAll();
@@ -97,6 +103,25 @@ contract ERC4626AdapterUnitTest is AdapterUnitTestHelper {
 
         assertEq(tokensToEnable, sharesMask, "Incorrect tokensToEnable");
         assertEq(tokensToDisable, assetMask, "Incorrect tokensToDisable");
+    }
+
+    /// @notice U:[TV-4A]: `depositDiff` works as expected
+    function test_U_TV_04A_depositDiff_works_as_expected() public diffTestCases {
+        deal({token: asset, to: creditAccount, give: diffMintedAmount});
+
+        _readsActiveAccount();
+        _executesSwap({
+            tokenIn: asset,
+            tokenOut: vault,
+            callData: abi.encodeCall(IERC4626.deposit, (diffInputAmount, creditAccount)),
+            requiresApproval: true,
+            validatesTokens: false
+        });
+        vm.prank(creditFacade);
+        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.depositDiff(diffLeftoverAmount);
+
+        assertEq(tokensToEnable, sharesMask, "Incorrect tokensToEnable");
+        assertEq(tokensToDisable, diffDisableTokenIn ? assetMask : 0, "Incorrect tokensToDisable");
     }
 
     /// @notice U:[TV-5]: `mint` works as expected
@@ -167,5 +192,24 @@ contract ERC4626AdapterUnitTest is AdapterUnitTestHelper {
 
         assertEq(tokensToEnable, assetMask, "Incorrect tokensToEnable");
         assertEq(tokensToDisable, sharesMask, "Incorrect tokensToDisable");
+    }
+
+    /// @notice U:[TV-8A]: `redeemDiff` works as expected
+    function test_U_TV_08_redeemDiff_works_as_expected() public diffTestCases {
+        deal({token: vault, to: creditAccount, give: diffMintedAmount});
+
+        _readsActiveAccount();
+        _executesSwap({
+            tokenIn: vault,
+            tokenOut: asset,
+            callData: abi.encodeCall(IERC4626.redeem, (diffInputAmount, creditAccount, creditAccount)),
+            requiresApproval: false,
+            validatesTokens: false
+        });
+        vm.prank(creditFacade);
+        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.redeemDiff(diffLeftoverAmount);
+
+        assertEq(tokensToEnable, assetMask, "Incorrect tokensToEnable");
+        assertEq(tokensToDisable, diffDisableTokenIn ? sharesMask : 0, "Incorrect tokensToDisable");
     }
 }

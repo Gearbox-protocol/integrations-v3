@@ -26,6 +26,11 @@ contract AdapterUnitTestHelper is Test, CreditManagerV3MockEvents {
 
     address[8] tokens;
 
+    uint256 diffMintedAmount = 1001;
+    uint256 diffLeftoverAmount;
+    uint256 diffInputAmount;
+    bool diffDisableTokenIn;
+
     function _setUp() internal {
         configurator = makeAddr("CONFIGURATOR");
         creditFacade = makeAddr("CREDIT_FACADE");
@@ -45,6 +50,22 @@ contract AdapterUnitTestHelper is Test, CreditManagerV3MockEvents {
         }
 
         creditManager.setActiveCreditAccount(creditAccount);
+    }
+
+    modifier diffTestCases() {
+        uint256 snapshot = vm.snapshot();
+
+        diffLeftoverAmount = 501;
+        diffInputAmount = 500;
+        diffDisableTokenIn = false;
+        _;
+
+        vm.revertTo(snapshot);
+
+        diffLeftoverAmount = 1;
+        diffInputAmount = 1000;
+        diffDisableTokenIn = true;
+        _;
     }
 
     function _revertsOnNonConfiguratorCaller() internal {

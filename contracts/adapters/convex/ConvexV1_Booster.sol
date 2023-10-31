@@ -51,10 +51,10 @@ contract ConvexV1BoosterAdapter is AbstractAdapter, IConvexV1BoosterAdapter {
     }
 
     /// @notice Deposits the entire balance of Curve LP tokens into Booster, except the specified amount
-    /// @param leftoverAmount Amount of Curve LP to keep on the account
     /// @param _pid ID of the pool to deposit to
+    /// @param leftoverAmount Amount of Curve LP to keep on the account
     /// @param _stake Whether to stake Convex LP tokens in the rewards pool
-    function depositDiff(uint256 leftoverAmount, uint256 _pid, bool _stake)
+    function depositDiff(uint256 _pid, uint256 leftoverAmount, bool _stake)
         external
         override
         creditFacadeOnly
@@ -135,9 +135,9 @@ contract ConvexV1BoosterAdapter is AbstractAdapter, IConvexV1BoosterAdapter {
     }
 
     /// @notice Withdraws all Curve LP tokens from Booster, except the specified amount
-    /// @param leftoverAmount Amount of Convex LP to keep on the account
     /// @param _pid ID of the pool to withdraw from
-    function withdrawDiff(uint256 leftoverAmount, uint256 _pid)
+    /// @param leftoverAmount Amount of Convex LP to keep on the account
+    function withdrawDiff(uint256 _pid, uint256 leftoverAmount)
         external
         override
         creditFacadeOnly
@@ -173,7 +173,7 @@ contract ConvexV1BoosterAdapter is AbstractAdapter, IConvexV1BoosterAdapter {
 
         if (balance > leftoverAmount) {
             unchecked {
-                (tokensToEnable, tokensToDisable,) = _executeSwapSafeApprove(
+                (tokensToEnable, tokensToDisable,) = _executeSwapNoApprove(
                     tokenIn,
                     tokenOut,
                     abi.encodeCall(IBooster.withdraw, (_pid, balance - leftoverAmount)),

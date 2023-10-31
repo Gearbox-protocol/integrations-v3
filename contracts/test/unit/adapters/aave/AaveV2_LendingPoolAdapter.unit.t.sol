@@ -39,10 +39,16 @@ contract AaveV2_LendingPoolAdapterUnitTest is AdapterUnitTestHelper {
         adapter.deposit(address(0), 0, address(0), 0);
 
         _revertsOnNonFacadeCaller();
+        adapter.depositDiff(address(0), 0);
+
+        _revertsOnNonFacadeCaller();
         adapter.depositAll(address(0));
 
         _revertsOnNonFacadeCaller();
         adapter.withdraw(address(0), 0, address(0));
+
+        _revertsOnNonFacadeCaller();
+        adapter.withdrawDiff(address(0), 0);
 
         _revertsOnNonFacadeCaller();
         adapter.withdrawAll(address(0));
@@ -84,6 +90,26 @@ contract AaveV2_LendingPoolAdapterUnitTest is AdapterUnitTestHelper {
 
         assertEq(tokensToEnable, 2, "Incorrect tokensToEnable");
         assertEq(tokensToDisable, 1, "Incorrect tokensToDisable");
+    }
+
+    /// @notice U:[AAVE2-4A]: `depositDiff` works as expected
+    function test_U_AAVE2_04A_depositDiff_works_as_expected() public diffTestCases {
+        deal({token: tokens[0], to: creditAccount, give: diffMintedAmount});
+
+        _readsActiveAccount();
+        _executesSwap({
+            tokenIn: tokens[0],
+            tokenOut: tokens[1],
+            callData: abi.encodeCall(ILendingPool.deposit, (tokens[0], diffInputAmount, creditAccount, 0)),
+            requiresApproval: true,
+            validatesTokens: true
+        });
+
+        vm.prank(creditFacade);
+        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.depositDiff(tokens[0], diffLeftoverAmount);
+
+        assertEq(tokensToEnable, 2, "Incorrect tokensToEnable");
+        assertEq(tokensToDisable, diffDisableTokenIn ? 1 : 0, "Incorrect tokensToDisable");
     }
 
     /// @notice U:[AAVE2-5A]: `withdraw` works as expected
@@ -141,5 +167,25 @@ contract AaveV2_LendingPoolAdapterUnitTest is AdapterUnitTestHelper {
 
         assertEq(tokensToEnable, 1, "Incorrect tokensToEnable");
         assertEq(tokensToDisable, 2, "Incorrect tokensToDisable");
+    }
+
+    /// @notice U:[AAVE2-6A]: `withdrawDiff` works as expected
+    function test_U_AAVE2_06A_withdrawDiff_works_as_expected() public diffTestCases {
+        deal({token: tokens[1], to: creditAccount, give: diffMintedAmount});
+
+        _readsActiveAccount();
+        _executesSwap({
+            tokenIn: tokens[1],
+            tokenOut: tokens[0],
+            callData: abi.encodeCall(ILendingPool.withdraw, (tokens[0], diffInputAmount, creditAccount)),
+            requiresApproval: false,
+            validatesTokens: true
+        });
+
+        vm.prank(creditFacade);
+        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.withdrawDiff(tokens[0], diffLeftoverAmount);
+
+        assertEq(tokensToEnable, 1, "Incorrect tokensToEnable");
+        assertEq(tokensToDisable, diffDisableTokenIn ? 2 : 0, "Incorrect tokensToDisable");
     }
 }

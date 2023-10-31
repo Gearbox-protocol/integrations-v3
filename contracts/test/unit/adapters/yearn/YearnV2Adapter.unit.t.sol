@@ -48,6 +48,9 @@ contract YearnV2AdapterUnitTest is AdapterUnitTestHelper {
         adapter.deposit();
 
         _revertsOnNonFacadeCaller();
+        adapter.depositDiff(0);
+
+        _revertsOnNonFacadeCaller();
         adapter.deposit(0);
 
         _revertsOnNonFacadeCaller();
@@ -55,6 +58,9 @@ contract YearnV2AdapterUnitTest is AdapterUnitTestHelper {
 
         _revertsOnNonFacadeCaller();
         adapter.withdraw();
+
+        _revertsOnNonFacadeCaller();
+        adapter.withdrawDiff(0);
 
         _revertsOnNonFacadeCaller();
         adapter.withdraw(0);
@@ -83,6 +89,25 @@ contract YearnV2AdapterUnitTest is AdapterUnitTestHelper {
 
         assertEq(tokensToEnable, yTokenMask, "Incorrect tokensToEnable");
         assertEq(tokensToDisable, tokenMask, "Incorrect tokensToDisable");
+    }
+
+    /// @notice U:[YFI2-3A]: `depositDiff()` works as expected
+    function test_U_YFI2_03A_depositDiff_works_as_expected() public diffTestCases {
+        deal({token: token, to: creditAccount, give: diffMintedAmount});
+
+        _readsActiveAccount();
+        _executesSwap({
+            tokenIn: token,
+            tokenOut: yToken,
+            callData: abi.encodeWithSignature("deposit(uint256)", diffInputAmount),
+            requiresApproval: true,
+            validatesTokens: false
+        });
+        vm.prank(creditFacade);
+        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.depositDiff(diffLeftoverAmount);
+
+        assertEq(tokensToEnable, yTokenMask, "Incorrect tokensToEnable");
+        assertEq(tokensToDisable, diffDisableTokenIn ? tokenMask : 0, "Incorrect tokensToDisable");
     }
 
     /// @notice U:[YFI2-4]: `deposit(uint256)` works as expected
@@ -134,6 +159,25 @@ contract YearnV2AdapterUnitTest is AdapterUnitTestHelper {
 
         assertEq(tokensToEnable, tokenMask, "Incorrect tokensToEnable");
         assertEq(tokensToDisable, yTokenMask, "Incorrect tokensToDisable");
+    }
+
+    /// @notice U:[YFI2-6A]: `withdrawDiff()` works as expected
+    function test_U_YFI2_06A_withdrawDiff_works_as_expected() public diffTestCases {
+        deal({token: yToken, to: creditAccount, give: diffMintedAmount});
+
+        _readsActiveAccount();
+        _executesSwap({
+            tokenIn: yToken,
+            tokenOut: token,
+            callData: abi.encodeWithSignature("withdraw(uint256)", diffInputAmount),
+            requiresApproval: false,
+            validatesTokens: false
+        });
+        vm.prank(creditFacade);
+        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.withdrawDiff(diffLeftoverAmount);
+
+        assertEq(tokensToEnable, tokenMask, "Incorrect tokensToEnable");
+        assertEq(tokensToDisable, diffDisableTokenIn ? yTokenMask : 0, "Incorrect tokensToDisable");
     }
 
     /// @notice U:[YFI2-7]: `withdraw(uint256)` works as expected

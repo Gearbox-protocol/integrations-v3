@@ -48,10 +48,16 @@ contract WstETHV1AdapterUnitTest is AdapterUnitTestHelper {
         adapter.wrap(0);
 
         _revertsOnNonFacadeCaller();
+        adapter.wrapDiff(0);
+
+        _revertsOnNonFacadeCaller();
         adapter.wrapAll();
 
         _revertsOnNonFacadeCaller();
         adapter.unwrap(0);
+
+        _revertsOnNonFacadeCaller();
+        adapter.unwrapDiff(0);
 
         _revertsOnNonFacadeCaller();
         adapter.unwrapAll();
@@ -92,6 +98,25 @@ contract WstETHV1AdapterUnitTest is AdapterUnitTestHelper {
         assertEq(tokensToDisable, stETHMask, "Incorrect tokensToDisable");
     }
 
+    /// @notice U:[LDO1W-4A]: `wrapDiff` works as expected
+    function test_U_LDO1W_04A_wrapDiff_works_as_expected() public diffTestCases {
+        deal({token: stETH, to: creditAccount, give: diffMintedAmount});
+
+        _readsActiveAccount();
+        _executesSwap({
+            tokenIn: stETH,
+            tokenOut: wstETH,
+            callData: abi.encodeCall(IwstETH.wrap, (diffInputAmount)),
+            requiresApproval: true,
+            validatesTokens: false
+        });
+        vm.prank(creditFacade);
+        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.wrapDiff(diffLeftoverAmount);
+
+        assertEq(tokensToEnable, wstETHMask, "Incorrect tokensToEnable");
+        assertEq(tokensToDisable, diffDisableTokenIn ? stETHMask : 0, "Incorrect tokensToDisable");
+    }
+
     /// @notice U:[LDO1W-5]: `unwrap` works as expected
     function test_U_LDO1W_05_unwrap_works_as_expected() public {
         _executesSwap({
@@ -125,5 +150,24 @@ contract WstETHV1AdapterUnitTest is AdapterUnitTestHelper {
 
         assertEq(tokensToEnable, stETHMask, "Incorrect tokensToEnable");
         assertEq(tokensToDisable, wstETHMask, "Incorrect tokensToDisable");
+    }
+
+    /// @notice U:[LDO1W-6A]: `unwrapAll` works as expected
+    function test_U_LDO1W_06A_unwrapAll_works_as_expected() public diffTestCases {
+        deal({token: wstETH, to: creditAccount, give: diffMintedAmount});
+
+        _readsActiveAccount();
+        _executesSwap({
+            tokenIn: wstETH,
+            tokenOut: stETH,
+            callData: abi.encodeCall(IwstETH.unwrap, (diffInputAmount)),
+            requiresApproval: false,
+            validatesTokens: false
+        });
+        vm.prank(creditFacade);
+        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.unwrapDiff(diffLeftoverAmount);
+
+        assertEq(tokensToEnable, stETHMask, "Incorrect tokensToEnable");
+        assertEq(tokensToDisable, diffDisableTokenIn ? wstETHMask : 0, "Incorrect tokensToDisable");
     }
 }
