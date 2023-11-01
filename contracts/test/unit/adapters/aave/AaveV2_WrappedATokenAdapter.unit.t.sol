@@ -60,16 +60,10 @@ contract AaveV2_WrappedATokenAdapterUnitTest is AdapterUnitTestHelper {
         adapter.depositDiff(0);
 
         _revertsOnNonFacadeCaller();
-        adapter.depositAll();
-
-        _revertsOnNonFacadeCaller();
         adapter.depositUnderlying(0);
 
         _revertsOnNonFacadeCaller();
         adapter.depositDiffUnderlying(0);
-
-        _revertsOnNonFacadeCaller();
-        adapter.depositAllUnderlying();
 
         _revertsOnNonFacadeCaller();
         adapter.withdraw(0);
@@ -78,16 +72,10 @@ contract AaveV2_WrappedATokenAdapterUnitTest is AdapterUnitTestHelper {
         adapter.withdrawDiff(0);
 
         _revertsOnNonFacadeCaller();
-        adapter.withdrawAll();
-
-        _revertsOnNonFacadeCaller();
         adapter.withdrawUnderlying(0);
 
         _revertsOnNonFacadeCaller();
         adapter.withdrawDiffUnderlying(0);
-
-        _revertsOnNonFacadeCaller();
-        adapter.withdrawAllUnderlying();
     }
 
     /// @notice U:[AAVE2W-3]: `deposit` works as expected
@@ -104,25 +92,6 @@ contract AaveV2_WrappedATokenAdapterUnitTest is AdapterUnitTestHelper {
 
         assertEq(tokensToEnable, waTokenMask, "Incorrect tokensToEnable");
         assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
-    }
-
-    /// @notice U:[AAVE2W-4]: `depositAll` works as expected
-    function test_U_AAVE2W_04_depositAll_works_as_expected() public {
-        deal({token: aToken, to: creditAccount, give: 1001});
-
-        _readsActiveAccount();
-        _executesSwap({
-            tokenIn: aToken,
-            tokenOut: waToken,
-            callData: abi.encodeCall(WrappedAToken.deposit, (1000)),
-            requiresApproval: true,
-            validatesTokens: false
-        });
-        vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.depositAll();
-
-        assertEq(tokensToEnable, waTokenMask, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, aTokenMask, "Incorrect tokensToDisable");
     }
 
     /// @notice U:[AAVE2-4A]: `depositDiff` works as expected
@@ -161,25 +130,6 @@ contract AaveV2_WrappedATokenAdapterUnitTest is AdapterUnitTestHelper {
         assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
     }
 
-    /// @notice U:[AAVE2W-6]: `depositAllUnderlying` works as expected
-    function test_U_AAVE2W_06_depositAllUnderlying_works_as_expected() public {
-        deal({token: token, to: creditAccount, give: 1001});
-
-        _readsActiveAccount();
-        _executesSwap({
-            tokenIn: token,
-            tokenOut: waToken,
-            callData: abi.encodeCall(WrappedAToken.depositUnderlying, (1000)),
-            requiresApproval: true,
-            validatesTokens: false
-        });
-        vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.depositAllUnderlying();
-
-        assertEq(tokensToEnable, waTokenMask, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, tokenMask, "Incorrect tokensToDisable");
-    }
-
     /// @notice U:[AAVE2-6A]: `depositDiffUnderlying` works as expected
     function test_U_AAVE2_06A_depositDiffUnderlying_works_as_expected() public diffTestCases {
         deal({token: token, to: creditAccount, give: diffMintedAmount});
@@ -216,25 +166,6 @@ contract AaveV2_WrappedATokenAdapterUnitTest is AdapterUnitTestHelper {
         assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
     }
 
-    /// @notice U:[AAVE2W-8]: `withdrawAll` works as expected
-    function test_U_AAVE2W_08_withdrawAll_works_as_expected() public {
-        deal({token: waToken, to: creditAccount, give: 1001});
-
-        _readsActiveAccount();
-        _executesSwap({
-            tokenIn: waToken,
-            tokenOut: aToken,
-            callData: abi.encodeCall(WrappedAToken.withdraw, (1000)),
-            requiresApproval: false,
-            validatesTokens: false
-        });
-        vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.withdrawAll();
-
-        assertEq(tokensToEnable, aTokenMask, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, waTokenMask, "Incorrect tokensToDisable");
-    }
-
     /// @notice U:[AAVE2-8A]: `withdrawDiff` works as expected
     function test_U_AAVE2_08A_withdrawDiff_works_as_expected() public diffTestCases {
         deal({token: waToken, to: creditAccount, give: diffMintedAmount});
@@ -269,25 +200,6 @@ contract AaveV2_WrappedATokenAdapterUnitTest is AdapterUnitTestHelper {
 
         assertEq(tokensToEnable, tokenMask, "Incorrect tokensToEnable");
         assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
-    }
-
-    /// @notice U:[AAVE2W-10]: `withdrawAllUnderlying` works as expected
-    function test_U_AAVE2W_10_withdrawAllUnderlying_works_as_expected() public {
-        deal({token: waToken, to: creditAccount, give: 1001});
-
-        _readsActiveAccount();
-        _executesSwap({
-            tokenIn: waToken,
-            tokenOut: token,
-            callData: abi.encodeCall(WrappedAToken.withdrawUnderlying, (1000)),
-            requiresApproval: false,
-            validatesTokens: false
-        });
-        vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.withdrawAllUnderlying();
-
-        assertEq(tokensToEnable, tokenMask, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, waTokenMask, "Incorrect tokensToDisable");
     }
 
     /// @notice U:[AAVE2-10A]: `withdrawDiffUnderlying` works as expected

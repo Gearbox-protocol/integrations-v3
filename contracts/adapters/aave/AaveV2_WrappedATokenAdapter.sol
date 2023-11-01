@@ -73,16 +73,6 @@ contract AaveV2_WrappedATokenAdapter is AbstractAdapter, IAaveV2_WrappedATokenAd
         (tokensToEnable, tokensToDisable) = _depositDiff(false, leftoverAssets);
     }
 
-    /// @notice Deposit all balance of aTokens, disables aToken
-    function depositAll()
-        external
-        override
-        creditFacadeOnly // U:[AAVE2W-2]
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
-    {
-        (tokensToEnable, tokensToDisable) = _depositDiff(false, 1); // U:[AAVE2W-4]
-    }
-
     /// @notice Deposit given amount underlying tokens
     /// @param assets Amount of underlying tokens to deposit in exchange for waTokens
     function depositUnderlying(uint256 assets)
@@ -105,16 +95,6 @@ contract AaveV2_WrappedATokenAdapter is AbstractAdapter, IAaveV2_WrappedATokenAd
         (tokensToEnable, tokensToDisable) = _depositDiff(true, leftoverAssets);
     }
 
-    /// @notice Deposit all balance of underlying tokens, disables underlying
-    function depositAllUnderlying()
-        external
-        override
-        creditFacadeOnly // U:[AAVE2W-2]
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
-    {
-        (tokensToEnable, tokensToDisable) = _depositDiff(true, 1); // U:[AAVE2W-6]
-    }
-
     /// @dev Internal implementation of `deposit` and `depositUnderlying`
     ///      - underlying / aAoken is approved because waToken contract needs permission to transfer it
     ///      - waToken is enabled after the call
@@ -131,7 +111,7 @@ contract AaveV2_WrappedATokenAdapter is AbstractAdapter, IAaveV2_WrappedATokenAd
         (tokensToEnable, tokensToDisable) = (waTokenMask, 0); // U:[AAVE2W-3,5]
     }
 
-    /// @dev Internal implementation of `depositAll`, `depositDiff`, `depositAllUnderlying` and `depositDiffUnderlying`
+    /// @dev Internal implementation of `depositDiff` and `depositDiffUnderlying`
     ///      - underlying / aAoken is approved because wrapped aToken contract needs permission to transfer it
     ///      - waToken is enabled after the call
     ///      - underlying / aToken is disabled after the call if the leftover amount is 0 or 1
@@ -187,16 +167,6 @@ contract AaveV2_WrappedATokenAdapter is AbstractAdapter, IAaveV2_WrappedATokenAd
         (tokensToEnable, tokensToDisable) = _withdrawDiff(false, leftoverShares);
     }
 
-    /// @notice Withdraw all balance of waTokens for aTokens, disables waToken
-    function withdrawAll()
-        external
-        override
-        creditFacadeOnly // U:[AAVE2W-2]
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
-    {
-        (tokensToEnable, tokensToDisable) = _withdrawDiff(false, 1); // U:[AAVE2W-8]
-    }
-
     /// @notice Withdraw given amount of waTokens for underlying tokens
     /// @param shares Amount of waTokens to burn in exchange for underlying tokens
     function withdrawUnderlying(uint256 shares)
@@ -218,16 +188,6 @@ contract AaveV2_WrappedATokenAdapter is AbstractAdapter, IAaveV2_WrappedATokenAd
         (tokensToEnable, tokensToDisable) = _withdrawDiff(true, leftoverShares);
     }
 
-    /// @notice Withdraw all balance of waTokens for underlying tokens, disables waToken
-    function withdrawAllUnderlying()
-        external
-        override
-        creditFacadeOnly // U:[AAVE2W-2]
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
-    {
-        (tokensToEnable, tokensToDisable) = _withdrawDiff(true, 1); // U:[AAVE2W-10]
-    }
-
     /// @dev Internal implementation of `withdraw` and `withdrawUnderlying`
     ///      - waToken is not approved because it doesn't need permission to burn share tokens
     ///      - underlying / aToken is enabled after the call
@@ -240,7 +200,7 @@ contract AaveV2_WrappedATokenAdapter is AbstractAdapter, IAaveV2_WrappedATokenAd
         (tokensToEnable, tokensToDisable) = (toUnderlying ? tokenMask : aTokenMask, 0); // U:[AAVE2W-7,9]
     }
 
-    /// @dev Internal implementation of `withdrawAll`, `withdrawAllUnderlying`, `withdrawDiff` and `withdrawDiffUnderlying`
+    /// @dev Internal implementation of `withdrawDiff` and `withdrawDiffUnderlying`
     ///      - waToken is not approved because it doesn't need permission to burn share tokens
     ///      - underlying / aToken is enabled after the call
     ///      - waToken is disabled after the call because operation spends the entire balance

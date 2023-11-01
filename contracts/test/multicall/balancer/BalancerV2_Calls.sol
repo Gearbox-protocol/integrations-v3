@@ -8,7 +8,7 @@ import {MultiCall} from "@gearbox-protocol/core-v2/contracts/libraries/MultiCall
 import {
     IAsset,
     SingleSwap,
-    SingleSwapAll,
+    SingleSwapDiff,
     FundManagement,
     SwapKind,
     BatchSwapStep,
@@ -34,15 +34,15 @@ library BalancerV2_Calls {
         });
     }
 
-    function swapAll(
+    function swapDiff(
         BalancerV2_Multicaller c,
-        SingleSwapAll memory singleSwapAll,
+        SingleSwapDiff memory singleSwapDiff,
         uint256 limitRateRAY,
         uint256 deadline
     ) internal pure returns (MultiCall memory) {
         return MultiCall({
             target: address(c),
-            callData: abi.encodeCall(IBalancerV2VaultAdapter.swapAll, (singleSwapAll, limitRateRAY, deadline))
+            callData: abi.encodeCall(IBalancerV2VaultAdapter.swapDiff, (singleSwapDiff, limitRateRAY, deadline))
         });
     }
 
@@ -86,14 +86,18 @@ library BalancerV2_Calls {
         });
     }
 
-    function joinPoolSingleAssetAll(BalancerV2_Multicaller c, bytes32 poolId, IAsset assetIn, uint256 minRateRAY)
-        internal
-        pure
-        returns (MultiCall memory)
-    {
+    function joinPoolSingleAssetDiff(
+        BalancerV2_Multicaller c,
+        bytes32 poolId,
+        IAsset assetIn,
+        uint256 leftoverAmount,
+        uint256 minRateRAY
+    ) internal pure returns (MultiCall memory) {
         return MultiCall({
             target: address(c),
-            callData: abi.encodeCall(IBalancerV2VaultAdapter.joinPoolSingleAssetAll, (poolId, assetIn, minRateRAY))
+            callData: abi.encodeCall(
+                IBalancerV2VaultAdapter.joinPoolSingleAssetDiff, (poolId, assetIn, leftoverAmount, minRateRAY)
+                )
         });
     }
 
@@ -125,14 +129,18 @@ library BalancerV2_Calls {
         });
     }
 
-    function exitPoolSingleAssetAll(BalancerV2_Multicaller c, bytes32 poolId, IAsset assetOut, uint256 minRateRAY)
-        internal
-        pure
-        returns (MultiCall memory)
-    {
+    function exitPoolSingleAssetDiff(
+        BalancerV2_Multicaller c,
+        bytes32 poolId,
+        IAsset assetOut,
+        uint256 leftoverAmount,
+        uint256 minRateRAY
+    ) internal pure returns (MultiCall memory) {
         return MultiCall({
             target: address(c),
-            callData: abi.encodeCall(IBalancerV2VaultAdapter.exitPoolSingleAssetAll, (poolId, assetOut, minRateRAY))
+            callData: abi.encodeCall(
+                IBalancerV2VaultAdapter.exitPoolSingleAssetDiff, (poolId, assetOut, leftoverAmount, minRateRAY)
+                )
         });
     }
 }

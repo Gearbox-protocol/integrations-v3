@@ -63,9 +63,6 @@ contract LidoV1AdapterUnitTest is AdapterUnitTestHelper {
 
         _revertsOnNonFacadeCaller();
         adapter.submitDiff(0);
-
-        _revertsOnNonFacadeCaller();
-        adapter.submitAll();
     }
 
     /// @notice U:[LDO1-3]: `submit` works as expected
@@ -82,25 +79,6 @@ contract LidoV1AdapterUnitTest is AdapterUnitTestHelper {
 
         assertEq(tokensToEnable, stETHMask, "Incorrect tokensToEnable");
         assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
-    }
-
-    /// @notice U:[LDO1-4]: `submitAll` works as expected
-    function test_U_LDO1_04_submitAll_works_as_expected() public {
-        deal({token: weth, to: creditAccount, give: 1000});
-
-        _readsActiveAccount();
-        _executesSwap({
-            tokenIn: weth,
-            tokenOut: stETH,
-            callData: abi.encodeCall(LidoV1Gateway.submit, (999, treasury)),
-            requiresApproval: true,
-            validatesTokens: false
-        });
-        vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.submitAll();
-
-        assertEq(tokensToEnable, stETHMask, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, wethMask, "Incorrect tokensToDisable");
     }
 
     /// @notice U:[LDO1-4A]: `submitDiff` works as expected

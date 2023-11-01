@@ -140,12 +140,7 @@ contract ConvexV1BaseRewardPoolAdapter is AbstractAdapter, IConvexV1BaseRewardPo
         (tokensToEnable, tokensToDisable) = _stakeDiff(leftoverAmount);
     }
 
-    /// @notice Stakes the entire balance of Convex LP token in the reward pool, disables LP token
-    function stakeAll() external override creditFacadeOnly returns (uint256 tokensToEnable, uint256 tokensToDisable) {
-        (tokensToEnable, tokensToDisable) = _stakeDiff(1);
-    }
-
-    /// @dev Internal implementation for `stakeDiff` and `stakeAll`.
+    /// @dev Internal implementation for `stakeDiff`.
     function _stakeDiff(uint256 leftoverAmount) internal returns (uint256 tokensToEnable, uint256 tokensToDisable) {
         address creditAccount = _creditAccount();
 
@@ -216,18 +211,7 @@ contract ConvexV1BaseRewardPoolAdapter is AbstractAdapter, IConvexV1BaseRewardPo
         (tokensToEnable, tokensToDisable) = _withdrawDiff(leftoverAmount, claim);
     }
 
-    /// @notice Withdraws the entire balance of Convex LP token from the reward pool, disables staked token
-    /// @param claim Whether to claim staking rewards
-    function withdrawAll(bool claim)
-        external
-        override
-        creditFacadeOnly // U:[CVX1R-3]
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
-    {
-        (tokensToEnable, tokensToDisable) = _withdrawDiff(1, claim);
-    }
-
-    /// @dev Internal implementation for `withdrawDiff` and `withdrawAll`.
+    /// @dev Internal implementation for `withdrawDiff`.
     function _withdrawDiff(uint256 leftoverAmount, bool claim)
         internal
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
@@ -289,19 +273,7 @@ contract ConvexV1BaseRewardPoolAdapter is AbstractAdapter, IConvexV1BaseRewardPo
         (tokensToEnable, tokensToDisable) = _withdrawDiffAndUnwrap(leftoverAmount, claim);
     }
 
-    /// @notice Withdraws the entire balance of Convex LP token from the reward pool and unwraps it into Curve LP token,
-    ///         disables staked token
-    /// @param claim Whether to claim staking rewards
-    function withdrawAllAndUnwrap(bool claim)
-        external
-        override
-        creditFacadeOnly // U:[CVX1R-3]
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
-    {
-        (tokensToEnable, tokensToDisable) = _withdrawDiffAndUnwrap(1, claim); // F: [ACVX1_P-9]
-    }
-
-    /// @dev Internal implementation for `withdrawDiffAndUnwrap` and `withdrawAllAndUnwrap`.
+    /// @dev Internal implementation for `withdrawDiffAndUnwrap`.
     function _withdrawDiffAndUnwrap(uint256 leftoverAmount, bool claim)
         internal
         returns (uint256 tokensToEnable, uint256 tokensToDisable)

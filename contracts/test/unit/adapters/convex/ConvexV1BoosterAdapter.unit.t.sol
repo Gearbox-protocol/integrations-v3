@@ -39,16 +39,10 @@ contract ConvexV1BoosterAdapterUnitTest is AdapterUnitTestHelper {
         adapter.depositDiff(0, 0, false);
 
         _revertsOnNonFacadeCaller();
-        adapter.depositAll(0, false);
-
-        _revertsOnNonFacadeCaller();
         adapter.withdraw(0, 0);
 
         _revertsOnNonFacadeCaller();
         adapter.withdrawDiff(0, 0);
-
-        _revertsOnNonFacadeCaller();
-        adapter.withdrawAll(0);
     }
 
     /// @notice U:[CVX1B-3]: `deposit` works as expected
@@ -69,28 +63,6 @@ contract ConvexV1BoosterAdapterUnitTest is AdapterUnitTestHelper {
 
             assertEq(tokensToEnable, stake ? 4 : 2, "Incorrect tokensToEnable");
             assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
-        }
-    }
-
-    /// @notice U:[CVX1B-4]: `depositAll` works as expected
-    function test_U_CVX1B_04_depositAll_works_as_expected() public {
-        deal({token: tokens[0], to: creditAccount, give: 1000});
-        for (uint256 i; i < 2; ++i) {
-            bool stake = i == 1;
-            _readsActiveAccount();
-            _executesSwap({
-                tokenIn: tokens[0],
-                tokenOut: stake ? tokens[2] : tokens[1],
-                callData: abi.encodeCall(adapter.deposit, (42, 999, stake)),
-                requiresApproval: true,
-                validatesTokens: true
-            });
-
-            vm.prank(creditFacade);
-            (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.depositAll(42, stake);
-
-            assertEq(tokensToEnable, stake ? 4 : 2, "Incorrect tokensToEnable");
-            assertEq(tokensToDisable, 1, "Incorrect tokensToDisable");
         }
     }
 
@@ -131,25 +103,6 @@ contract ConvexV1BoosterAdapterUnitTest is AdapterUnitTestHelper {
 
         assertEq(tokensToEnable, 1, "Incorrect tokensToEnable");
         assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
-    }
-
-    /// @notice U:[CVX1B-6]: `withdrawAll` works as expected
-    function test_U_CVX1B_06_withdrawAll_works_as_expected() public {
-        deal({token: tokens[1], to: creditAccount, give: 1000});
-        _readsActiveAccount();
-        _executesSwap({
-            tokenIn: tokens[1],
-            tokenOut: tokens[0],
-            callData: abi.encodeCall(adapter.withdraw, (42, 999)),
-            requiresApproval: false,
-            validatesTokens: true
-        });
-
-        vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.withdrawAll(42);
-
-        assertEq(tokensToEnable, 1, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, 2, "Incorrect tokensToDisable");
     }
 
     /// @notice U:[CVX1B-6A]: `withdrawDiff` works as expected

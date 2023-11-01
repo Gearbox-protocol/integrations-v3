@@ -63,12 +63,7 @@ contract WstETHV1Adapter is AbstractAdapter, IwstETHV1Adapter {
         (tokensToEnable, tokensToDisable) = _wrapDiff(leftoverAmount);
     }
 
-    /// @notice Wraps the entire balance of stETH into wstETH, disables stETH
-    function wrapAll() external override creditFacadeOnly returns (uint256 tokensToEnable, uint256 tokensToDisable) {
-        (tokensToEnable, tokensToDisable) = _wrapDiff(1);
-    }
-
-    /// @dev Internal implementation for `wrapDiff` and `wrapAll`.
+    /// @dev Internal implementation for `wrapDiff`.
     function _wrapDiff(uint256 leftoverAmount) internal returns (uint256 tokensToEnable, uint256 tokensToDisable) {
         address creditAccount = _creditAccount();
 
@@ -80,7 +75,7 @@ contract WstETHV1Adapter is AbstractAdapter, IwstETHV1Adapter {
         }
     }
 
-    /// @dev Internal implementation of `wrap` and `wrapAll`
+    /// @dev Internal implementation of `wrap`
     ///      - stETH is approved before the call
     ///      - wstETH is enabled after the call
     ///      - stETH is only disabled if wrapping the entire balance
@@ -120,12 +115,7 @@ contract WstETHV1Adapter is AbstractAdapter, IwstETHV1Adapter {
         (tokensToEnable, tokensToDisable) = _unwrapDiff(leftoverAmount);
     }
 
-    /// @notice Unwraps the entire balance of wstETH to stETH, disables wstETH
-    function unwrapAll() external override creditFacadeOnly returns (uint256 tokensToEnable, uint256 tokensToDisable) {
-        (tokensToEnable, tokensToDisable) = _unwrapDiff(1);
-    }
-
-    /// @dev Internal implementation for `unwrapDiff` and `unwrapAll`.
+    /// @dev Internal implementation for `unwrapDiff`.
     function _unwrapDiff(uint256 leftoverAmount) internal returns (uint256 tokensToEnable, uint256 tokensToDisable) {
         address creditAccount = _creditAccount();
 
@@ -137,7 +127,7 @@ contract WstETHV1Adapter is AbstractAdapter, IwstETHV1Adapter {
         }
     }
 
-    /// @dev Internal implementation of `unwrap` and `unwrapAll`
+    /// @dev Internal implementation of `unwrap`
     ///      - wstETH is not approved before the call
     ///      - stETH is enabled after the call
     ///      - wstETH is only disabled if unwrapping the entire balance

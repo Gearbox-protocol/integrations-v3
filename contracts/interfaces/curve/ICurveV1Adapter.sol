@@ -55,14 +55,6 @@ interface ICurveV1Adapter is IAdapter {
         external
         returns (uint256 tokensToEnable, uint256 tokensToDisable);
 
-    function exchange_all(uint256 i, uint256 j, uint256 rateMinRAY)
-        external
-        returns (uint256 tokensToEnable, uint256 tokensToDisable);
-
-    function exchange_all(int128 i, int128 j, uint256 rateMinRAY)
-        external
-        returns (uint256 tokensToEnable, uint256 tokensToDisable);
-
     function exchange_underlying(uint256 i, uint256 j, uint256 dx, uint256 min_dy)
         external
         returns (uint256 tokensToEnable, uint256 tokensToDisable);
@@ -75,14 +67,6 @@ interface ICurveV1Adapter is IAdapter {
         external
         returns (uint256 tokensToEnable, uint256 tokensToDisable);
 
-    function exchange_all_underlying(uint256 i, uint256 j, uint256 rateMinRAY)
-        external
-        returns (uint256 tokensToEnable, uint256 tokensToDisable);
-
-    function exchange_all_underlying(int128 i, int128 j, uint256 rateMinRAY)
-        external
-        returns (uint256 tokensToEnable, uint256 tokensToDisable);
-
     // ------------- //
     // ADD LIQUIDITY //
     // ------------- //
@@ -92,10 +76,6 @@ interface ICurveV1Adapter is IAdapter {
         returns (uint256 tokensToEnable, uint256 tokensToDisable);
 
     function add_diff_liquidity_one_coin(uint256 leftoverAmount, uint256 i, uint256 rateMinRAY)
-        external
-        returns (uint256 tokensToEnable, uint256 tokensToDisable);
-
-    function add_all_liquidity_one_coin(uint256 i, uint256 rateMinRAY)
         external
         returns (uint256 tokensToEnable, uint256 tokensToDisable);
 
@@ -114,14 +94,6 @@ interface ICurveV1Adapter is IAdapter {
         returns (uint256 tokensToEnable, uint256 tokensToDisable);
 
     function remove_diff_liquidity_one_coin(uint256 leftoverAmount, uint256 i, uint256 rateMinRAY)
-        external
-        returns (uint256 tokensToEnable, uint256 tokensToDisable);
-
-    function remove_all_liquidity_one_coin(uint256 i, uint256 rateMinRAY)
-        external
-        returns (uint256 tokensToEnable, uint256 tokensToDisable);
-
-    function remove_all_liquidity_one_coin(int128 i, uint256 rateMinRAY)
         external
         returns (uint256 tokensToEnable, uint256 tokensToDisable);
 }

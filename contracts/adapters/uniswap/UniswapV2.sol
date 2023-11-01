@@ -114,21 +114,7 @@ contract UniswapV2Adapter is AbstractAdapter, IUniswapV2Adapter {
         (tokensToEnable, tokensToDisable) = _swapDiffTokensForTokens(leftoverAmount, rateMinRAY, path, deadline);
     }
 
-    /// @notice Swap the entire balance of input token to output token, disables input token
-    /// @param rateMinRAY Minimum exchange rate between input and output tokens, scaled by 1e27
-    /// @param path Array of token addresses representing swap path, which must have at most 3 hops
-    ///        through registered connector tokens
-    /// @param deadline Maximum timestamp until which the transaction is valid
-    function swapAllTokensForTokens(uint256 rateMinRAY, address[] calldata path, uint256 deadline)
-        external
-        override
-        creditFacadeOnly // U:[UNI2-2]
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
-    {
-        (tokensToEnable, tokensToDisable) = _swapDiffTokensForTokens(1, rateMinRAY, path, deadline);
-    }
-
-    /// @dev Internal implementation for `swapDiffTokensForTokens` and `swapAllTokensForTokens`.
+    /// @dev Internal implementation for `swapDiffTokensForTokens`.
     function _swapDiffTokensForTokens(
         uint256 leftoverAmount,
         uint256 rateMinRAY,

@@ -41,11 +41,6 @@ contract YearnV2Adapter is AbstractAdapter, IYearnV2Adapter {
     // DEPOSITS //
     // -------- //
 
-    /// @notice Deposit the entire balance of underlying tokens into the vault, disables underlying
-    function deposit() external override creditFacadeOnly returns (uint256 tokensToEnable, uint256 tokensToDisable) {
-        (tokensToEnable, tokensToDisable) = _depositDiff(1);
-    }
-
     /// @notice Deposit the entire balance of underlying tokens into the vault, except the specified amount
     function depositDiff(uint256 leftoverAmount)
         external
@@ -56,7 +51,7 @@ contract YearnV2Adapter is AbstractAdapter, IYearnV2Adapter {
         (tokensToEnable, tokensToDisable) = _depositDiff(leftoverAmount);
     }
 
-    /// @dev Internal implementation for `deposit` and `depositDiff`
+    /// @dev Internal implementation for `depositDiff`
     function _depositDiff(uint256 leftoverAmount) internal returns (uint256 tokensToEnable, uint256 tokensToDisable) {
         address creditAccount = _creditAccount();
 
@@ -109,11 +104,6 @@ contract YearnV2Adapter is AbstractAdapter, IYearnV2Adapter {
     // WITHDRAWALS //
     // ----------- //
 
-    /// @notice Withdraw the entire balance of underlying from the vault, disables yToken
-    function withdraw() external override creditFacadeOnly returns (uint256 tokensToEnable, uint256 tokensToDisable) {
-        (tokensToEnable, tokensToDisable) = _withdrawDiff(1);
-    }
-
     /// @notice Withdraw the entire balance of underlying from the vault, except the specified amount
     function withdrawDiff(uint256 leftoverAmount)
         external
@@ -124,7 +114,7 @@ contract YearnV2Adapter is AbstractAdapter, IYearnV2Adapter {
         (tokensToEnable, tokensToDisable) = _withdrawDiff(leftoverAmount);
     }
 
-    /// @dev Internal implementation for `withdraw` and `withdrawDiff`
+    /// @dev Internal implementation for `withdrawDiff`
     function _withdrawDiff(uint256 leftoverAmount) internal returns (uint256 tokensToEnable, uint256 tokensToDisable) {
         address creditAccount = _creditAccount();
 

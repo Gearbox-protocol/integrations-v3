@@ -93,28 +93,4 @@ contract CurveV1AdapterStETH is CurveV1Adapter2Assets {
     {
         (tokensToEnable, tokensToDisable) = _remove_diff_liquidity_one_coin(i, leftoverAmount, rateMinRAY);
     }
-
-    /// @inheritdoc CurveV1AdapterBase
-    /// @dev Unlike other adapters, approves the LP token to the target
-    function remove_all_liquidity_one_coin(uint256 i, uint256 rateMinRAY)
-        public
-        override(CurveV1AdapterBase, ICurveV1Adapter)
-        creditFacadeOnly
-        withLPTokenApproval
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
-    {
-        (tokensToEnable, tokensToDisable) = _remove_diff_liquidity_one_coin(i, 1, rateMinRAY);
-    }
-
-    /// @inheritdoc CurveV1AdapterBase
-    /// @dev Unlike other adapters, approves the LP token to the target
-    function remove_all_liquidity_one_coin(int128 i, uint256 rateMinRAY)
-        public
-        override(CurveV1AdapterBase, ICurveV1Adapter)
-        creditFacadeOnly
-        withLPTokenApproval
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
-    {
-        (tokensToEnable, tokensToDisable) = _remove_diff_liquidity_one_coin(_toU256(i), 1, rateMinRAY);
-    }
 }

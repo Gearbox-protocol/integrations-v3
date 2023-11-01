@@ -61,17 +61,7 @@ contract ERC4626Adapter is AbstractAdapter, IERC4626Adapter {
         (tokensToEnable, tokensToDisable) = _depositDiff(leftoverAmount);
     }
 
-    /// @notice Deposits the entire balance of underlying asset from the Credit Account
-    function depositAll()
-        external
-        override
-        creditFacadeOnly // U:[TV-2]
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
-    {
-        (tokensToEnable, tokensToDisable) = _depositDiff(1);
-    }
-
-    /// @dev Internal implementation for `depositDiff` and `depositAll`.
+    /// @dev Internal implementation for `depositDiff`.
     function _depositDiff(uint256 leftoverAmount) internal returns (uint256 tokensToEnable, uint256 tokensToDisable) {
         address creditAccount = _creditAccount();
         uint256 balance = IERC20(asset).balanceOf(creditAccount);
@@ -144,12 +134,7 @@ contract ERC4626Adapter is AbstractAdapter, IERC4626Adapter {
         (tokensToEnable, tokensToDisable) = _redeemDiff(leftoverAmount);
     }
 
-    /// @notice Burns the entire balance of shares from the Credit Account
-    function redeemAll() external override creditFacadeOnly returns (uint256 tokensToEnable, uint256 tokensToDisable) {
-        (tokensToEnable, tokensToDisable) = _redeemDiff(1);
-    }
-
-    /// @dev Internal implementation for `redeemDiff` and `redeemAll`.
+    /// @dev Internal implementation for `redeemDiff`.
     function _redeemDiff(uint256 leftoverAmount) internal returns (uint256 tokensToEnable, uint256 tokensToDisable) {
         address creditAccount = _creditAccount();
         uint256 balance = IERC20(targetContract).balanceOf(creditAccount);

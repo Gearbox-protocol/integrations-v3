@@ -42,16 +42,10 @@ contract AaveV2_LendingPoolAdapterUnitTest is AdapterUnitTestHelper {
         adapter.depositDiff(address(0), 0);
 
         _revertsOnNonFacadeCaller();
-        adapter.depositAll(address(0));
-
-        _revertsOnNonFacadeCaller();
         adapter.withdraw(address(0), 0, address(0));
 
         _revertsOnNonFacadeCaller();
         adapter.withdrawDiff(address(0), 0);
-
-        _revertsOnNonFacadeCaller();
-        adapter.withdrawAll(address(0));
     }
 
     /// @notice U:[AAVE2-3]: `deposit` works as expected
@@ -70,26 +64,6 @@ contract AaveV2_LendingPoolAdapterUnitTest is AdapterUnitTestHelper {
 
         assertEq(tokensToEnable, 2, "Incorrect tokensToEnable");
         assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
-    }
-
-    /// @notice U:[AAVE2-4]: `depositAll` works as expected
-    function test_U_AAVE2_04_depositAll_works_as_expected() public {
-        deal({token: tokens[0], to: creditAccount, give: 1001});
-
-        _readsActiveAccount();
-        _executesSwap({
-            tokenIn: tokens[0],
-            tokenOut: tokens[1],
-            callData: abi.encodeCall(ILendingPool.deposit, (tokens[0], 1000, creditAccount, 0)),
-            requiresApproval: true,
-            validatesTokens: true
-        });
-
-        vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.depositAll(tokens[0]);
-
-        assertEq(tokensToEnable, 2, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, 1, "Incorrect tokensToDisable");
     }
 
     /// @notice U:[AAVE2-4A]: `depositDiff` works as expected
@@ -144,26 +118,6 @@ contract AaveV2_LendingPoolAdapterUnitTest is AdapterUnitTestHelper {
 
         vm.prank(creditFacade);
         (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.withdraw(tokens[0], type(uint256).max, address(0));
-
-        assertEq(tokensToEnable, 1, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, 2, "Incorrect tokensToDisable");
-    }
-
-    /// @notice U:[AAVE2-6]: `withdrawAll` works as expected
-    function test_U_AAVE2_06_withdrawAll_works_as_expected() public {
-        deal({token: tokens[1], to: creditAccount, give: 1001});
-
-        _readsActiveAccount();
-        _executesSwap({
-            tokenIn: tokens[1],
-            tokenOut: tokens[0],
-            callData: abi.encodeCall(ILendingPool.withdraw, (tokens[0], 1000, creditAccount)),
-            requiresApproval: false,
-            validatesTokens: true
-        });
-
-        vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.withdrawAll(tokens[0]);
 
         assertEq(tokensToEnable, 1, "Incorrect tokensToEnable");
         assertEq(tokensToDisable, 2, "Incorrect tokensToDisable");

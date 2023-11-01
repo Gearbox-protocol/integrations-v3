@@ -21,13 +21,15 @@ library ConvexV1_BoosterCalls {
         });
     }
 
-    function depositAll(ConvexV1_BoosterMulticaller c, uint256 pid, bool stake)
+    function depositDiff(ConvexV1_BoosterMulticaller c, uint256 pid, uint256 leftoverAmount, bool stake)
         internal
         pure
         returns (MultiCall memory)
     {
-        return
-            MultiCall({target: address(c), callData: abi.encodeCall(IConvexV1BoosterAdapter.depositAll, (pid, stake))});
+        return MultiCall({
+            target: address(c),
+            callData: abi.encodeCall(IConvexV1BoosterAdapter.depositDiff, (pid, leftoverAmount, stake))
+        });
     }
 
     function withdraw(ConvexV1_BoosterMulticaller c, uint256 pid, uint256 amount)
@@ -39,7 +41,14 @@ library ConvexV1_BoosterCalls {
             MultiCall({target: address(c), callData: abi.encodeCall(IConvexV1BoosterAdapter.withdraw, (pid, amount))});
     }
 
-    function withdrawAll(ConvexV1_BoosterMulticaller c, uint256 pid) internal pure returns (MultiCall memory) {
-        return MultiCall({target: address(c), callData: abi.encodeCall(IConvexV1BoosterAdapter.withdrawAll, (pid))});
+    function withdrawDiff(ConvexV1_BoosterMulticaller c, uint256 pid, uint256 leftoverAmount)
+        internal
+        pure
+        returns (MultiCall memory)
+    {
+        return MultiCall({
+            target: address(c),
+            callData: abi.encodeCall(IConvexV1BoosterAdapter.withdrawDiff, (pid, leftoverAmount))
+        });
     }
 }

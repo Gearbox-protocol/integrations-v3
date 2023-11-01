@@ -63,19 +63,7 @@ contract ConvexV1BoosterAdapter is AbstractAdapter, IConvexV1BoosterAdapter {
         (tokensToEnable, tokensToDisable) = _depositDiff(leftoverAmount, _pid, _stake);
     }
 
-    /// @notice Deposits the entire balance of Curve LP tokens into Booster, disables Curve LP token
-    /// @param _pid ID of the pool to deposit to
-    /// @param _stake Whether to stake Convex LP tokens in the rewards pool
-    function depositAll(uint256 _pid, bool _stake)
-        external
-        override
-        creditFacadeOnly // U:[CVX1B-2]
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
-    {
-        (tokensToEnable, tokensToDisable) = _depositDiff(1, _pid, _stake);
-    }
-
-    /// @dev Internal implementation for `depositAll` and `depositDiff`
+    /// @dev Internal implementation for `depositDiff`
     function _depositDiff(uint256 leftoverAmount, uint256 _pid, bool _stake)
         internal
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
@@ -146,18 +134,7 @@ contract ConvexV1BoosterAdapter is AbstractAdapter, IConvexV1BoosterAdapter {
         (tokensToEnable, tokensToDisable) = _withdrawDiff(leftoverAmount, _pid);
     }
 
-    /// @notice Withdraws all Curve LP tokens from Booster, disables Convex LP token
-    /// @param _pid ID of the pool to withdraw from
-    function withdrawAll(uint256 _pid)
-        external
-        override
-        creditFacadeOnly // U:[CVX1B-2]
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
-    {
-        (tokensToEnable, tokensToDisable) = _withdrawDiff(1, _pid);
-    }
-
-    /// @dev Internal implementation for `withdrawAll` and `withdrawDiff`
+    /// @dev Internal implementation for `withdrawDiff`
     function _withdrawDiff(uint256 leftoverAmount, uint256 _pid)
         internal
         returns (uint256 tokensToEnable, uint256 tokensToDisable)

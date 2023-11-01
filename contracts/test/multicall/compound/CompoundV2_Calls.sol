@@ -14,8 +14,11 @@ library CompoundV2_Calls {
         return MultiCall({target: address(c), callData: abi.encodeCall(ICompoundV2_CTokenAdapter.mint, (mintAmount))});
     }
 
-    function mintAll(CompoundV2_Multicaller c) internal pure returns (MultiCall memory) {
-        return MultiCall({target: address(c), callData: abi.encodeCall(ICompoundV2_CTokenAdapter.mintAll, ())});
+    function mintDiff(CompoundV2_Multicaller c, uint256 leftoverAmount) internal pure returns (MultiCall memory) {
+        return MultiCall({
+            target: address(c),
+            callData: abi.encodeCall(ICompoundV2_CTokenAdapter.mintDiff, (leftoverAmount))
+        });
     }
 
     function redeem(CompoundV2_Multicaller c, uint256 redeemTokens) internal pure returns (MultiCall memory) {
@@ -23,8 +26,11 @@ library CompoundV2_Calls {
             MultiCall({target: address(c), callData: abi.encodeCall(ICompoundV2_CTokenAdapter.redeem, (redeemTokens))});
     }
 
-    function redeemAll(CompoundV2_Multicaller c) internal pure returns (MultiCall memory) {
-        return MultiCall({target: address(c), callData: abi.encodeCall(ICompoundV2_CTokenAdapter.redeemAll, ())});
+    function redeemDiff(CompoundV2_Multicaller c, uint256 leftoverAmount) internal pure returns (MultiCall memory) {
+        return MultiCall({
+            target: address(c),
+            callData: abi.encodeCall(ICompoundV2_CTokenAdapter.redeemDiff, (leftoverAmount))
+        });
     }
 
     function redeemUnderlying(CompoundV2_Multicaller c, uint256 redeemAmount)

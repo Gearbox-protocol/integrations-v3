@@ -71,32 +71,6 @@ contract CurveV1AdapterDeposit is CurveV1AdapterBase {
         (tokensToEnable, tokensToDisable) = _remove_diff_liquidity_one_coin(i, leftoverAmount, rateMinRAY);
     }
 
-    /// @inheritdoc CurveV1AdapterBase
-    /// @dev Unlike other adapters, approves the LP token to the target
-    function remove_all_liquidity_one_coin(uint256 i, uint256 rateMinRAY)
-        public
-        virtual
-        override
-        creditFacadeOnly
-        withLPTokenApproval
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
-    {
-        (tokensToEnable, tokensToDisable) = _remove_diff_liquidity_one_coin(i, 1, rateMinRAY);
-    }
-
-    /// @inheritdoc CurveV1AdapterBase
-    /// @dev Unlike other adapters, approves the LP token to the target
-    function remove_all_liquidity_one_coin(int128 i, uint256 rateMinRAY)
-        public
-        virtual
-        override
-        creditFacadeOnly
-        withLPTokenApproval
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
-    {
-        (tokensToEnable, tokensToDisable) = _remove_diff_liquidity_one_coin(_toU256(i), 1, rateMinRAY);
-    }
-
     /// @dev Does nothing since this adapter should not be used to add liquidity
     function _getAddLiquidityOneCoinCallData(uint256 i, uint256 amount, uint256 minAmount)
         internal

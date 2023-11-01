@@ -8,8 +8,9 @@ import {MultiCall} from "@gearbox-protocol/core-v2/contracts/libraries/MultiCall
 interface YearnV2_Multicaller {}
 
 library YearnV2_Calls {
-    function deposit(YearnV2_Multicaller c) internal pure returns (MultiCall memory) {
-        return MultiCall({target: address(c), callData: abi.encodeWithSignature("deposit()")});
+    function depositDiff(YearnV2_Multicaller c, uint256 leftoverAmount) internal pure returns (MultiCall memory) {
+        return
+            MultiCall({target: address(c), callData: abi.encodeWithSignature("depositDiff(uint256)", leftoverAmount)});
     }
 
     function deposit(YearnV2_Multicaller c, uint256 amount) internal pure returns (MultiCall memory) {
@@ -23,8 +24,9 @@ library YearnV2_Calls {
         });
     }
 
-    function withdraw(YearnV2_Multicaller c) internal pure returns (MultiCall memory) {
-        return MultiCall({target: address(c), callData: abi.encodeWithSignature("withdraw()")});
+    function withdrawDiff(YearnV2_Multicaller c, uint256 leftoverAmount) internal pure returns (MultiCall memory) {
+        return
+            MultiCall({target: address(c), callData: abi.encodeWithSignature("withdrawDiff(uint256)", leftoverAmount)});
     }
 
     function withdraw(YearnV2_Multicaller c, uint256 maxShares) internal pure returns (MultiCall memory) {

@@ -55,16 +55,10 @@ contract CompoundV2_CErc20AdapterUnitTest is AdapterUnitTestHelper, ICompoundV2_
         adapter.mintDiff(0);
 
         _revertsOnNonFacadeCaller();
-        adapter.mintAll();
-
-        _revertsOnNonFacadeCaller();
         adapter.redeem(0);
 
         _revertsOnNonFacadeCaller();
         adapter.redeemDiff(0);
-
-        _revertsOnNonFacadeCaller();
-        adapter.redeemAll();
 
         _revertsOnNonFacadeCaller();
         adapter.redeemUnderlying(0);
@@ -86,19 +80,11 @@ contract CompoundV2_CErc20AdapterUnitTest is AdapterUnitTestHelper, ICompoundV2_
 
         vm.expectRevert(abi.encodeWithSelector(CTokenError.selector, 1));
         vm.prank(creditFacade);
-        adapter.mintAll();
-
-        vm.expectRevert(abi.encodeWithSelector(CTokenError.selector, 1));
-        vm.prank(creditFacade);
         adapter.redeem(1);
 
         vm.expectRevert(abi.encodeWithSelector(CTokenError.selector, 1));
         vm.prank(creditFacade);
         adapter.redeemDiff(1);
-
-        vm.expectRevert(abi.encodeWithSelector(CTokenError.selector, 1));
-        vm.prank(creditFacade);
-        adapter.redeemAll();
 
         vm.expectRevert(abi.encodeWithSelector(CTokenError.selector, 1));
         vm.prank(creditFacade);
@@ -119,25 +105,6 @@ contract CompoundV2_CErc20AdapterUnitTest is AdapterUnitTestHelper, ICompoundV2_
 
         assertEq(tokensToEnable, cTokenMask, "Incorrect tokensToEnable");
         assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
-    }
-
-    /// @notice U:[COMP2T-5]: `mintAll` works as expected
-    function test_U_COMP2T_05_mintAll_works_as_expected() public {
-        deal({token: token, to: creditAccount, give: 1001});
-
-        _readsActiveAccount();
-        _executesSwap({
-            tokenIn: token,
-            tokenOut: cToken,
-            callData: abi.encodeCall(ICErc20Actions.mint, (1000)),
-            requiresApproval: true,
-            validatesTokens: false
-        });
-        vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.mintAll();
-
-        assertEq(tokensToEnable, cTokenMask, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, tokenMask, "Incorrect tokensToDisable");
     }
 
     /// @notice U:[COMP2T-5A]: `mintDiff` works as expected
@@ -173,25 +140,6 @@ contract CompoundV2_CErc20AdapterUnitTest is AdapterUnitTestHelper, ICompoundV2_
 
         assertEq(tokensToEnable, tokenMask, "Incorrect tokensToEnable");
         assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
-    }
-
-    /// @notice U:[COMP2T-7]: `redeemAll` works as expected
-    function test_U_COMP2T_07_redeemAll_works_as_expected() public {
-        deal({token: cToken, to: creditAccount, give: 1001});
-
-        _readsActiveAccount();
-        _executesSwap({
-            tokenIn: cToken,
-            tokenOut: token,
-            callData: abi.encodeCall(ICErc20Actions.redeem, (1000)),
-            requiresApproval: false,
-            validatesTokens: false
-        });
-        vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.redeemAll();
-
-        assertEq(tokensToEnable, tokenMask, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, cTokenMask, "Incorrect tokensToDisable");
     }
 
     /// @notice U:[COMP2T-7A]: `redeemDiff` works as expected

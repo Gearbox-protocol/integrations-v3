@@ -33,22 +33,6 @@ interface IUniswapV3AdapterTypes {
         uint160 sqrtPriceLimitX96;
     }
 
-    /// @notice Params for exact all input swap through a single pool
-    /// @param tokenIn Input token
-    /// @param tokenOut Output token
-    /// @param fee Fee level of the pool to swap through
-    /// @param deadline Maximum timestamp until which the transaction is valid
-    /// @param rateMinRAY Minimum exchange rate between input and output tokens, scaled by 1e27
-    /// @param sqrtPriceLimitX96 Maximum execution price, ignored if 0
-    struct ExactAllInputSingleParams {
-        address tokenIn;
-        address tokenOut;
-        uint24 fee;
-        uint256 deadline;
-        uint256 rateMinRAY;
-        uint160 sqrtPriceLimitX96;
-    }
-
     /// @notice Params for exact all input swap through multiple pools
     /// @param path Bytes-encoded swap path, see Uniswap docs for details
     /// @param deadline Maximum timestamp until which the transaction is valid
@@ -58,16 +42,6 @@ interface IUniswapV3AdapterTypes {
         bytes path;
         uint256 deadline;
         uint256 leftoverAmount;
-        uint256 rateMinRAY;
-    }
-
-    /// @notice Params for exact all input swap through multiple pools
-    /// @param path Bytes-encoded swap path, see Uniswap docs for details
-    /// @param deadline Maximum timestamp until which the transaction is valid
-    /// @param rateMinRAY Minimum exchange rate between input and output tokens, scaled by 1e27
-    struct ExactAllInputParams {
-        bytes path;
-        uint256 deadline;
         uint256 rateMinRAY;
     }
 }
@@ -97,19 +71,11 @@ interface IUniswapV3Adapter is
         external
         returns (uint256 tokensToEnable, uint256 tokensToDisable);
 
-    function exactAllInputSingle(ExactAllInputSingleParams calldata params)
-        external
-        returns (uint256 tokensToEnable, uint256 tokensToDisable);
-
     function exactInput(ISwapRouter.ExactInputParams calldata params)
         external
         returns (uint256 tokensToEnable, uint256 tokensToDisable);
 
     function exactDiffInput(ExactDiffInputParams calldata params)
-        external
-        returns (uint256 tokensToEnable, uint256 tokensToDisable);
-
-    function exactAllInput(ExactAllInputParams calldata params)
         external
         returns (uint256 tokensToEnable, uint256 tokensToDisable);
 

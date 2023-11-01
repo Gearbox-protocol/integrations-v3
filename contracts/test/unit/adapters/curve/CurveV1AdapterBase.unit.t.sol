@@ -170,12 +170,6 @@ contract CurveV1AdapterBaseUnitTest is AdapterUnitTestHelper {
         adapter.exchange_diff(uint256(0), uint256(0), 0, 0);
 
         _revertsOnNonFacadeCaller();
-        adapter.exchange_all(uint256(0), uint256(0), 0);
-
-        _revertsOnNonFacadeCaller();
-        adapter.exchange_all(int128(0), int128(0), 0);
-
-        _revertsOnNonFacadeCaller();
         adapter.exchange_underlying(uint256(0), uint256(0), 0, 0);
 
         _revertsOnNonFacadeCaller();
@@ -185,19 +179,10 @@ contract CurveV1AdapterBaseUnitTest is AdapterUnitTestHelper {
         adapter.exchange_diff_underlying(uint256(0), uint256(0), 0, 0);
 
         _revertsOnNonFacadeCaller();
-        adapter.exchange_all_underlying(uint256(0), uint256(0), 0);
-
-        _revertsOnNonFacadeCaller();
-        adapter.exchange_all_underlying(int128(0), int128(0), 0);
-
-        _revertsOnNonFacadeCaller();
         adapter.add_liquidity_one_coin(0, 0, 0);
 
         _revertsOnNonFacadeCaller();
         adapter.add_diff_liquidity_one_coin(0, 0, 0);
-
-        _revertsOnNonFacadeCaller();
-        adapter.add_all_liquidity_one_coin(0, 0);
 
         _revertsOnNonFacadeCaller();
         adapter.remove_liquidity_one_coin(0, uint256(0), 0);
@@ -207,12 +192,6 @@ contract CurveV1AdapterBaseUnitTest is AdapterUnitTestHelper {
 
         _revertsOnNonFacadeCaller();
         adapter.remove_diff_liquidity_one_coin(0, uint256(0), 0);
-
-        _revertsOnNonFacadeCaller();
-        adapter.remove_all_liquidity_one_coin(uint256(0), 0);
-
-        _revertsOnNonFacadeCaller();
-        adapter.remove_all_liquidity_one_coin(int128(0), 0);
     }
 
     // -------- //
@@ -247,39 +226,6 @@ contract CurveV1AdapterBaseUnitTest is AdapterUnitTestHelper {
 
             assertEq(tokensToEnable, token1Mask, "Incorrect tokensToEnable");
             assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
-        }
-    }
-
-    /// @notice U:[CRVB-4]: `exchange_all` works as expected
-    function test_U_CRVB_04_exchange_all_works_as_expected() public bothStableAndCryptoPools {
-        deal({token: token0, to: creditAccount, give: 1001});
-        for (uint256 i; i < 2; ++i) {
-            bool use256 = i == 2;
-
-            _readsActiveAccount();
-            _executesSwap({
-                tokenIn: token0,
-                tokenOut: token1,
-                callData: abi.encodeWithSignature(
-                    pool.isCrypto()
-                        ? "exchange(uint256,uint256,uint256,uint256)"
-                        : "exchange(int128,int128,uint256,uint256)",
-                    0,
-                    1,
-                    1000,
-                    500
-                    ),
-                requiresApproval: true,
-                validatesTokens: false
-            });
-
-            vm.prank(creditFacade);
-            (uint256 tokensToEnable, uint256 tokensToDisable) = use256
-                ? adapter.exchange_all(uint256(0), uint256(1), 0.5e27)
-                : adapter.exchange_all(int128(0), int128(1), 0.5e27);
-
-            assertEq(tokensToEnable, token1Mask, "Incorrect tokensToEnable");
-            assertEq(tokensToDisable, token0Mask, "Incorrect tokensToDisable");
         }
     }
 
@@ -341,39 +287,6 @@ contract CurveV1AdapterBaseUnitTest is AdapterUnitTestHelper {
         }
     }
 
-    /// @notice U:[CRVB-6]: `exchange_all_underlying` works as expected
-    function test_U_CRVB_06_exchange_all_underlying_works_as_expected() public bothStableAndCryptoPools diffTestCases {
-        deal({token: token0, to: creditAccount, give: 1001});
-        for (uint256 i; i < 2; ++i) {
-            bool use256 = i == 2;
-
-            _readsActiveAccount();
-            _executesSwap({
-                tokenIn: token0,
-                tokenOut: underlying0,
-                callData: abi.encodeWithSignature(
-                    pool.isCrypto()
-                        ? "exchange_underlying(uint256,uint256,uint256,uint256)"
-                        : "exchange_underlying(int128,int128,uint256,uint256)",
-                    0,
-                    1,
-                    1000,
-                    500
-                    ),
-                requiresApproval: true,
-                validatesTokens: false
-            });
-
-            vm.prank(creditFacade);
-            (uint256 tokensToEnable, uint256 tokensToDisable) = use256
-                ? adapter.exchange_all_underlying(uint256(0), uint256(1), 0.5e27)
-                : adapter.exchange_all_underlying(int128(0), int128(1), 0.5e27);
-
-            assertEq(tokensToEnable, underlying0Mask, "Incorrect tokensToEnable");
-            assertEq(tokensToDisable, token0Mask, "Incorrect tokensToDisable");
-        }
-    }
-
     /// @notice U:[CRVB-6A]: `exchange_diff_underlying` works as expected
     function test_U_CRVB_06A_exchange_diff_underlying_works_as_expected()
         public
@@ -428,25 +341,6 @@ contract CurveV1AdapterBaseUnitTest is AdapterUnitTestHelper {
         assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
     }
 
-    /// @notice U:[CRVB-8]: `add_all_liquidity_one_coin` works as expected
-    function test_U_CRVB_08_add_all_liquidity_one_coin_works_as_expected() public onlyStablePools {
-        deal({token: token0, to: creditAccount, give: 1001});
-
-        _executesSwap({
-            tokenIn: token0,
-            tokenOut: lpToken,
-            callData: abi.encodeWithSignature("add_liquidity(uint256[2],uint256)", 1000, 0, 500),
-            requiresApproval: true,
-            validatesTokens: false
-        });
-
-        vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.add_all_liquidity_one_coin(0, 0.5e27);
-
-        assertEq(tokensToEnable, lpTokenMask, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, token0Mask, "Incorrect tokensToDisable");
-    }
-
     /// @notice U:[CRVB-8A]: `add_diff_liquidity_one_coin` works as expected
     function test_U_CRVB_08A_add_diff_liquidity_one_coin_works_as_expected() public onlyStablePools diffTestCases {
         deal({token: token0, to: creditAccount, give: diffMintedAmount});
@@ -498,39 +392,6 @@ contract CurveV1AdapterBaseUnitTest is AdapterUnitTestHelper {
 
             assertEq(tokensToEnable, token0Mask, "Incorrect tokensToEnable");
             assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
-        }
-    }
-
-    /// @notice U:[CRVB-10]: `remove_all_liquidity_one_coin` works as expected
-    function test_U_CRVB_10_remove_all_liquidity_one_coin_works_as_expected() public bothStableAndCryptoPools {
-        deal({token: lpToken, to: creditAccount, give: 1001});
-
-        for (uint256 i; i < 2; ++i) {
-            bool use256 = i == 1;
-
-            _readsActiveAccount();
-            _executesSwap({
-                tokenIn: lpToken,
-                tokenOut: token0,
-                callData: abi.encodeWithSignature(
-                    pool.isCrypto()
-                        ? "remove_liquidity_one_coin(uint256,uint256,uint256)"
-                        : "remove_liquidity_one_coin(uint256,int128,uint256)",
-                    1000,
-                    0,
-                    500
-                    ),
-                requiresApproval: false,
-                validatesTokens: false
-            });
-
-            vm.prank(creditFacade);
-            (uint256 tokensToEnable, uint256 tokensToDisable) = use256
-                ? adapter.remove_all_liquidity_one_coin(uint256(0), 0.5e27)
-                : adapter.remove_all_liquidity_one_coin(int128(0), 0.5e27);
-
-            assertEq(tokensToEnable, token0Mask, "Incorrect tokensToEnable");
-            assertEq(tokensToDisable, lpTokenMask, "Incorrect tokensToDisable");
         }
     }
 

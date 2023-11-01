@@ -54,18 +54,6 @@ abstract contract CompoundV2_CTokenAdapter is AbstractAdapter, ICompoundV2_CToke
         _revertOnError(error);
     }
 
-    /// @notice Deposit all underlying tokens into Compound in exchange for cTokens, disables underlying
-    function mintAll()
-        external
-        override
-        creditFacadeOnly // U:[COMP2-2]
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
-    {
-        uint256 error;
-        (tokensToEnable, tokensToDisable, error) = _mintDiff(1); // U:[COMP2-5]
-        _revertOnError(error);
-    }
-
     /// @dev Internal implementation of `mint`
     ///      Since minting process might be different for CErc20 and CEther,
     ///      it's up to deriving adapters to implement this function
@@ -117,18 +105,6 @@ abstract contract CompoundV2_CTokenAdapter is AbstractAdapter, ICompoundV2_CToke
         _revertOnError(error);
     }
 
-    /// @notice Withdraw all underlying tokens from Compound and burn cTokens, disables cToken
-    function redeemAll()
-        external
-        override
-        creditFacadeOnly // U:[COMP2-2]
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
-    {
-        uint256 error;
-        (tokensToEnable, tokensToDisable, error) = _redeemDiff(1); // // U:[COMP2-7]
-        _revertOnError(error);
-    }
-
     /// @dev Internal implementation of `redeem`
     ///      Since redeeming process might be different for CErc20 and CEther,
     ///      it's up to deriving adapters to implement this function
@@ -137,7 +113,7 @@ abstract contract CompoundV2_CTokenAdapter is AbstractAdapter, ICompoundV2_CToke
         virtual
         returns (uint256 tokensToEnable, uint256 tokensToDisable, uint256 error);
 
-    /// @dev Internal implementation of `redeemAll`
+    /// @dev Internal implementation of `redeemDeef`
     ///      Since redeeming process might be different for CErc20 and CEther,
     ///      it's up to deriving adapters to implement this function
     function _redeemDiff(uint256 leftoverAmount)

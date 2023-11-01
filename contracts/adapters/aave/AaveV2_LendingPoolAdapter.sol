@@ -62,20 +62,7 @@ contract AaveV2_LendingPoolAdapter is AbstractAdapter, IAaveV2_LendingPoolAdapte
         (tokensToEnable, tokensToDisable) = _depositDiffInternal(creditAccount, asset, leftoverAmount);
     }
 
-    /// @notice Deposit all underlying tokens into Aave in exchange for aTokens, disables underlying
-    /// @param asset Address of underlying token to deposit
-    function depositAll(address asset)
-        external
-        override
-        creditFacadeOnly // U:[AAVE2-2]
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
-    {
-        address creditAccount = _creditAccount(); // U:[AAVE2-4]
-
-        (tokensToEnable, tokensToDisable) = _depositDiffInternal(creditAccount, asset, 1); // U:[AAVE2-4]
-    }
-
-    /// @dev Internal implementation of `depositDiff` and `depositAll`.
+    /// @dev Internal implementation of `depositDiff`
     ///      - Computes the amount to swap and passes to `_deposit`.
     ///      - If the leftover amount is 1 or less, disables the underlying token.
     function _depositDiffInternal(address creditAccount, address asset, uint256 leftoverAmount)
@@ -144,18 +131,6 @@ contract AaveV2_LendingPoolAdapter is AbstractAdapter, IAaveV2_LendingPoolAdapte
         (tokensToEnable, tokensToDisable) = _withdrawDiffInternal(creditAccount, asset, leftoverAmount);
     }
 
-    /// @notice Withdraw all underlying tokens from Aave and burn aTokens, disables aToken
-    /// @param asset Address of underlying token to withdraw
-    function withdrawAll(address asset)
-        external
-        override
-        creditFacadeOnly // U:[AAVE2-2]
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
-    {
-        address creditAccount = _creditAccount();
-        (tokensToEnable, tokensToDisable) = _withdrawDiffInternal(creditAccount, asset, 1); // U:[AAVE2-6]
-    }
-
     /// @dev Internal implementation of `withdraw` functionality
     ///      - using `_executeSwap` because need to check if tokens are recognized by the system
     ///      - aToken is not approved before the call because lending pool doesn't need permission to burn it
@@ -169,7 +144,7 @@ contract AaveV2_LendingPoolAdapter is AbstractAdapter, IAaveV2_LendingPoolAdapte
             _executeSwapNoApprove(_aToken(asset), asset, _encodeWithdraw(creditAccount, asset, amount), false); // U:[AAVE2-5A]
     }
 
-    /// @dev Internal implementation of `withdrawDiff` and `withdrawAll` functionality
+    /// @dev Internal implementation of `withdrawDiff`
     ///      - using `_executeSwap` because need to check if tokens are recognized by the system
     ///      - aToken is not approved before the call because lending pool doesn't need permission to burn it
     ///      - underlying is enabled after the call

@@ -14,8 +14,15 @@ library AaveV2_WrappedATokenCalls {
         return MultiCall({target: address(c), callData: abi.encodeCall(IAaveV2_WrappedATokenAdapter.deposit, (assets))});
     }
 
-    function depositAll(AaveV2_WrappedATokenMulticaller c) internal pure returns (MultiCall memory) {
-        return MultiCall({target: address(c), callData: abi.encodeCall(IAaveV2_WrappedATokenAdapter.depositAll, ())});
+    function depositDiff(AaveV2_WrappedATokenMulticaller c, uint256 leftoverAmount)
+        internal
+        pure
+        returns (MultiCall memory)
+    {
+        return MultiCall({
+            target: address(c),
+            callData: abi.encodeCall(IAaveV2_WrappedATokenAdapter.depositDiff, (leftoverAmount))
+        });
     }
 
     function depositUnderlying(AaveV2_WrappedATokenMulticaller c, uint256 assets)
@@ -29,10 +36,14 @@ library AaveV2_WrappedATokenCalls {
         });
     }
 
-    function depositAllUnderlying(AaveV2_WrappedATokenMulticaller c) internal pure returns (MultiCall memory) {
+    function depositDiffUnderlying(AaveV2_WrappedATokenMulticaller c, uint256 leftoverAmount)
+        internal
+        pure
+        returns (MultiCall memory)
+    {
         return MultiCall({
             target: address(c),
-            callData: abi.encodeCall(IAaveV2_WrappedATokenAdapter.depositAllUnderlying, ())
+            callData: abi.encodeCall(IAaveV2_WrappedATokenAdapter.depositDiffUnderlying, (leftoverAmount))
         });
     }
 
@@ -41,8 +52,15 @@ library AaveV2_WrappedATokenCalls {
             MultiCall({target: address(c), callData: abi.encodeCall(IAaveV2_WrappedATokenAdapter.withdraw, (shares))});
     }
 
-    function withdrawAll(AaveV2_WrappedATokenMulticaller c) internal pure returns (MultiCall memory) {
-        return MultiCall({target: address(c), callData: abi.encodeCall(IAaveV2_WrappedATokenAdapter.withdrawAll, ())});
+    function withdrawDiff(AaveV2_WrappedATokenMulticaller c, uint256 leftoverAmount)
+        internal
+        pure
+        returns (MultiCall memory)
+    {
+        return MultiCall({
+            target: address(c),
+            callData: abi.encodeCall(IAaveV2_WrappedATokenAdapter.withdrawDiff, (leftoverAmount))
+        });
     }
 
     function withdrawUnderlying(AaveV2_WrappedATokenMulticaller c, uint256 shares)
@@ -56,10 +74,14 @@ library AaveV2_WrappedATokenCalls {
         });
     }
 
-    function withdrawAllUnderlying(AaveV2_WrappedATokenMulticaller c) internal pure returns (MultiCall memory) {
+    function withdrawDiffUnderlying(AaveV2_WrappedATokenMulticaller c, uint256 leftoverAmount)
+        internal
+        pure
+        returns (MultiCall memory)
+    {
         return MultiCall({
             target: address(c),
-            callData: abi.encodeCall(IAaveV2_WrappedATokenAdapter.withdrawAllUnderlying, ())
+            callData: abi.encodeCall(IAaveV2_WrappedATokenAdapter.withdrawDiffUnderlying, (leftoverAmount))
         });
     }
 }

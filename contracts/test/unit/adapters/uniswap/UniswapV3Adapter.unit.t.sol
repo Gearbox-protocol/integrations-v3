@@ -51,10 +51,6 @@ contract UniswapV3AdapterUnitTest is
         _revertsOnNonFacadeCaller();
         adapter.exactDiffInputSingle(p2_2);
 
-        ExactAllInputSingleParams memory p2;
-        _revertsOnNonFacadeCaller();
-        adapter.exactAllInputSingle(p2);
-
         ISwapRouter.ExactInputParams memory p3;
         _revertsOnNonFacadeCaller();
         adapter.exactInput(p3);
@@ -62,10 +58,6 @@ contract UniswapV3AdapterUnitTest is
         ExactDiffInputParams memory p4_2;
         _revertsOnNonFacadeCaller();
         adapter.exactDiffInput(p4_2);
-
-        ExactAllInputParams memory p4;
-        _revertsOnNonFacadeCaller();
-        adapter.exactAllInput(p4);
 
         ISwapRouter.ExactOutputSingleParams memory p5;
         _revertsOnNonFacadeCaller();
@@ -104,49 +96,6 @@ contract UniswapV3AdapterUnitTest is
 
         assertEq(tokensToEnable, 2, "Incorrect tokensToEnable");
         assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
-    }
-
-    /// @notice U:[UNI3-4]: `exactAllInputSingle` works as expected
-    function test_U_UNI3_04_exactAllInputSingle_works_as_expected() public {
-        deal({token: tokens[0], to: creditAccount, give: 1001});
-
-        _readsActiveAccount();
-        _executesSwap({
-            tokenIn: tokens[0],
-            tokenOut: tokens[1],
-            callData: abi.encodeCall(
-                ISwapRouter.exactInputSingle,
-                (
-                    ISwapRouter.ExactInputSingleParams({
-                        tokenIn: tokens[0],
-                        tokenOut: tokens[1],
-                        fee: 500,
-                        amountIn: 1000,
-                        amountOutMinimum: 500,
-                        deadline: 789,
-                        recipient: creditAccount,
-                        sqrtPriceLimitX96: 0
-                    })
-                )
-                ),
-            requiresApproval: true,
-            validatesTokens: true
-        });
-
-        vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.exactAllInputSingle(
-            ExactAllInputSingleParams({
-                tokenIn: tokens[0],
-                tokenOut: tokens[1],
-                fee: 500,
-                deadline: 789,
-                rateMinRAY: 0.5e27,
-                sqrtPriceLimitX96: 0
-            })
-        );
-
-        assertEq(tokensToEnable, 2, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, 1, "Incorrect tokensToDisable");
     }
 
     /// @notice U:[UNI3-4A]: `exactDiffInputSingle` works as expected
@@ -222,43 +171,6 @@ contract UniswapV3AdapterUnitTest is
 
         assertEq(tokensToEnable, 4, "Incorrect tokensToEnable");
         assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
-    }
-
-    /// @notice U:[UNI3-6]: `exactAllInput` works as expected
-    function test_U_UNI3_06_exactAllInput_works_as_expected() public {
-        deal({token: tokens[0], to: creditAccount, give: 1001});
-
-        ExactAllInputParams memory params = ExactAllInputParams({path: _makePath(0), deadline: 789, rateMinRAY: 0.5e27});
-        vm.expectRevert(InvalidPathException.selector);
-        vm.prank(creditFacade);
-        adapter.exactAllInput(params);
-
-        params.path = _makePath(3);
-        _readsActiveAccount();
-        _executesSwap({
-            tokenIn: tokens[0],
-            tokenOut: tokens[2],
-            callData: abi.encodeCall(
-                ISwapRouter.exactInput,
-                (
-                    ISwapRouter.ExactInputParams({
-                        path: params.path,
-                        amountIn: 1000,
-                        amountOutMinimum: 500,
-                        deadline: 789,
-                        recipient: creditAccount
-                    })
-                )
-                ),
-            requiresApproval: true,
-            validatesTokens: true
-        });
-
-        vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.exactAllInput(params);
-
-        assertEq(tokensToEnable, 4, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, 1, "Incorrect tokensToDisable");
     }
 
     /// @notice U:[UNI3-6A]: `exactDiffInput` works as expected

@@ -21,8 +21,15 @@ library AaveV2_LendingPoolCalls {
         });
     }
 
-    function depositAll(AaveV2_LendingPoolMulticaller c, address asset) internal pure returns (MultiCall memory) {
-        return MultiCall({target: address(c), callData: abi.encodeCall(IAaveV2_LendingPoolAdapter.depositAll, (asset))});
+    function depositDiff(AaveV2_LendingPoolMulticaller c, address asset, uint256 leftoverAmount)
+        internal
+        pure
+        returns (MultiCall memory)
+    {
+        return MultiCall({
+            target: address(c),
+            callData: abi.encodeCall(IAaveV2_LendingPoolAdapter.depositDiff, (asset, leftoverAmount))
+        });
     }
 
     function withdraw(AaveV2_LendingPoolMulticaller c, address asset, uint256 amount, address)
@@ -36,8 +43,14 @@ library AaveV2_LendingPoolCalls {
         });
     }
 
-    function withdrawAll(AaveV2_LendingPoolMulticaller c, address asset) internal pure returns (MultiCall memory) {
-        return
-            MultiCall({target: address(c), callData: abi.encodeCall(IAaveV2_LendingPoolAdapter.withdrawAll, (asset))});
+    function withdrawDiff(AaveV2_LendingPoolMulticaller c, address asset, uint256 leftoverAmount)
+        internal
+        pure
+        returns (MultiCall memory)
+    {
+        return MultiCall({
+            target: address(c),
+            callData: abi.encodeCall(IAaveV2_LendingPoolAdapter.withdrawDiff, (asset, leftoverAmount))
+        });
     }
 }

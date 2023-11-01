@@ -92,29 +92,7 @@ contract UniswapV3Adapter is AbstractAdapter, IUniswapV3Adapter {
         );
     }
 
-    /// @notice Swaps all balance of input token for output token through a single pool, disables input token
-    /// @param params Swap params, see `ExactAllInputSingleParams` for details
-    function exactAllInputSingle(ExactAllInputSingleParams calldata params)
-        external
-        override
-        creditFacadeOnly // U:[UNI3-2]
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
-    {
-        address creditAccount = _creditAccount(); // U:[UNI3-4]
-
-        (tokensToEnable, tokensToDisable) = _exactDiffInputSingle(
-            params.tokenIn,
-            params.tokenOut,
-            params.fee,
-            creditAccount,
-            params.deadline,
-            1,
-            params.rateMinRAY,
-            params.sqrtPriceLimitX96
-        );
-    }
-
-    /// @dev Internal implementation for `exactAllInputDiff` and `exactAllInput`
+    /// @dev Internal implementation for `exactDiffInputSingle`
     function _exactDiffInputSingle(
         address tokenIn,
         address tokenOut,
@@ -186,22 +164,7 @@ contract UniswapV3Adapter is AbstractAdapter, IUniswapV3Adapter {
             _exactDiffInput(creditAccount, params.path, params.deadline, params.leftoverAmount, params.rateMinRAY);
     }
 
-    /// @notice Swaps all balance of input token for output token through multiple pools, disables input token
-    /// @param params Swap params, see `ExactAllInputParams` for details
-    /// @dev `params.path` must have at most 3 hops through registered connector tokens
-    function exactAllInput(ExactAllInputParams calldata params)
-        external
-        override
-        creditFacadeOnly // U:[UNI3-2]
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
-    {
-        address creditAccount = _creditAccount(); // U:[UNI3-6]
-
-        (tokensToEnable, tokensToDisable) =
-            _exactDiffInput(creditAccount, params.path, params.deadline, 1, params.rateMinRAY);
-    }
-
-    /// @dev Internal implementation for `exactAllInput` and `exactDiffInput`.
+    /// @dev Internal implementation for `exactDiffInput`.
     function _exactDiffInput(
         address creditAccount,
         bytes memory path,

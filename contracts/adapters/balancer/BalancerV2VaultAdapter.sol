@@ -22,10 +22,7 @@ import {
     ExitPoolRequest
 } from "../../integrations/balancer/IBalancerV2Vault.sol";
 import {
-    IBalancerV2VaultAdapter,
-    SingleSwapAll,
-    SingleSwapDiff,
-    PoolStatus
+    IBalancerV2VaultAdapter, SingleSwapDiff, PoolStatus
 } from "../../interfaces/balancer/IBalancerV2VaultAdapter.sol";
 
 /// @title Balancer V2 Vault adapter
@@ -119,36 +116,7 @@ contract BalancerV2VaultAdapter is AbstractAdapter, IBalancerV2VaultAdapter {
         );
     }
 
-    /// @notice Swaps the entire balance of a token for another token within a single pool, disables input token
-    /// @param singleSwapAll Struct containing swap parameters
-    ///        * `poolId` - ID of the pool to perform a swap in
-    ///        * `assetIn` - asset to send
-    ///        * `assetOut` - asset to receive
-    ///        * `userData` - additional generic blob used to pass extra data
-    /// @param limitRateRAY The minimal resulting exchange rate of assetOut to assetIn, scaled by 1e27
-    /// @param deadline The latest timestamp at which the swap would be executed
-    /// @dev The function reverts if the poolId status is not ALLOWED or SWAP_ONLY
-    function swapAll(SingleSwapAll memory singleSwapAll, uint256 limitRateRAY, uint256 deadline)
-        external
-        override
-        creditFacadeOnly // U:[BAL2-2]
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
-    {
-        address creditAccount = _creditAccount(); // U:[BAL2-4]
-
-        (tokensToEnable, tokensToDisable) = _swapDiffInternal(
-            creditAccount,
-            singleSwapAll.poolId,
-            singleSwapAll.assetIn,
-            singleSwapAll.assetOut,
-            1,
-            singleSwapAll.userData,
-            limitRateRAY,
-            deadline
-        ); // F: [ABV2-2]
-    }
-
-    /// @dev Implementation for `swapDiff` and `swapAll`.
+    /// @dev Implementation for `swapDiff`.
     function _swapDiffInternal(
         address creditAccount,
         bytes32 poolId,
@@ -324,22 +292,6 @@ contract BalancerV2VaultAdapter is AbstractAdapter, IBalancerV2VaultAdapter {
         ); // U:[BAL2-7]
     }
 
-    /// @notice Deposits the entire balance of given asset as liquidity into a Balancer pool, disables said asset
-    /// @param poolId ID of the pool to deposit into
-    /// @param assetIn Asset to deposit
-    /// @param minRateRAY The minimal exchange rate of assetIn to BPT, scaled by 1e27
-    /// @dev The function reverts if poolId status is not ALLOWED
-    function joinPoolSingleAssetAll(bytes32 poolId, IAsset assetIn, uint256 minRateRAY)
-        external
-        override
-        creditFacadeOnly // U:[BAL2-2]
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
-    {
-        address creditAccount = _creditAccount();
-        (tokensToEnable, tokensToDisable) =
-            _joinPoolSingleAssetDiffInternal(creditAccount, poolId, assetIn, 1, minRateRAY); // F: [ABV2-6]
-    }
-
     /// @notice Deposits the entire balance of given asset, except a specified amount, as liquidity into a Balancer pool
     /// @param poolId ID of the pool to deposit into
     /// @param assetIn Asset to deposit
@@ -357,7 +309,7 @@ contract BalancerV2VaultAdapter is AbstractAdapter, IBalancerV2VaultAdapter {
             _joinPoolSingleAssetDiffInternal(creditAccount, poolId, assetIn, leftoverAmount, minRateRAY);
     }
 
-    /// @dev Implementation for `joinPoolSingleAssetDiff` and `joinPoolSingleAssetAll`.
+    /// @dev Implementation for `joinPoolSingleAssetDiff`.
     function _joinPoolSingleAssetDiffInternal(
         address creditAccount,
         bytes32 poolId,
@@ -494,20 +446,6 @@ contract BalancerV2VaultAdapter is AbstractAdapter, IBalancerV2VaultAdapter {
         ); // U:[BAL2-10]
     }
 
-    /// @notice Withdraws all liquidity from a Balancer pool, burning BPT and receiving a single asset, disables BPT
-    /// @param poolId ID of the pool to withdraw from
-    /// @param assetOut Asset to withdraw
-    /// @param minRateRAY Minimal exchange rate of BPT to assetOut, scaled by 1e27
-    function exitPoolSingleAssetAll(bytes32 poolId, IAsset assetOut, uint256 minRateRAY)
-        external
-        override
-        creditFacadeOnly // U:[BAL2-2]
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
-    {
-        address creditAccount = _creditAccount();
-        (tokensToEnable, tokensToDisable) = _exitPoolSingleAssetDiff(creditAccount, poolId, assetOut, 1, minRateRAY); // U:[BAL2-11]
-    }
-
     /// @notice Withdraws all liquidity from a Balancer pool except the specified amount, burning BPT and receiving a single asset
     /// @param poolId ID of the pool to withdraw from
     /// @param assetOut Asset to withdraw
@@ -521,10 +459,10 @@ contract BalancerV2VaultAdapter is AbstractAdapter, IBalancerV2VaultAdapter {
     {
         address creditAccount = _creditAccount();
         (tokensToEnable, tokensToDisable) =
-            _exitPoolSingleAssetDiff(creditAccount, poolId, assetOut, leftoverAmount, minRateRAY); // F: [ABV2-9]
+            _exitPoolSingleAssetDiff(creditAccount, poolId, assetOut, leftoverAmount, minRateRAY);
     }
 
-    /// @dev Implementation for `exitPoolSingleAssetDiff` and `exitPoolSingleAssetAll`.
+    /// @dev Implementation for `exitPoolSingleAssetDiff`.
     function _exitPoolSingleAssetDiff(
         address creditAccount,
         bytes32 poolId,

@@ -180,29 +180,6 @@ abstract contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
         return _exchange_diff(i, j, leftoverAmount, rateMinRAY);
     }
 
-    /// @notice Exchanges the entire balance of one pool asset to another, disables input asset
-    /// @param i Index of the asset to spend
-    /// @param j Index of the asset to receive
-    /// @param rateMinRAY Minimum exchange rate between assets i and j, scaled by 1e27
-    function exchange_all(uint256 i, uint256 j, uint256 rateMinRAY)
-        external
-        override
-        creditFacadeOnly // U:[CRVB-2]
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
-    {
-        return _exchange_diff(i, j, 1, rateMinRAY); // U:[CRVB-4]
-    }
-
-    /// @dev Same as the previous one but accepts coin indexes as `int128`
-    function exchange_all(int128 i, int128 j, uint256 rateMinRAY)
-        external
-        override
-        creditFacadeOnly // U:[CRVB-2]
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
-    {
-        return _exchange_diff(_toU256(i), _toU256(j), 1, rateMinRAY); // U:[CRVB-4]
-    }
-
     /// @dev Implementation of both versions of `exchange_all` and `exchange_diff`
     function _exchange_diff(uint256 i, uint256 j, uint256 leftoverAmount, uint256 rateMinRAY)
         internal
@@ -294,30 +271,7 @@ abstract contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
         return _exchange_diff_underlying(i, j, leftoverAmount, rateMinRAY);
     }
 
-    /// @notice Exchanges the entire balance of one pool's underlying asset to another, disables input asset
-    /// @param i Index of the underlying asset to spend
-    /// @param j Index of the underlying asset to receive
-    /// @param rateMinRAY Minimum exchange rate between underlying assets i and j, scaled by 1e27
-    function exchange_all_underlying(uint256 i, uint256 j, uint256 rateMinRAY)
-        external
-        override
-        creditFacadeOnly // U:[CRVB-2]
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
-    {
-        return _exchange_diff_underlying(i, j, 1, rateMinRAY); // U:[CRVB-6]
-    }
-
-    /// @dev Same as the previous one but accepts coin indexes as `int128`
-    function exchange_all_underlying(int128 i, int128 j, uint256 rateMinRAY)
-        external
-        override
-        creditFacadeOnly // U:[CRVB-2]
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
-    {
-        return _exchange_diff_underlying(_toU256(i), _toU256(j), 1, rateMinRAY); // U:[CRVB-6]
-    }
-
-    /// @dev Implementation of both versions of `exchange_all_underlying` and `exchange_diff_underlying`
+    /// @dev Implementation of both versions of `exchange_diff_underlying`
     function _exchange_diff_underlying(uint256 i, uint256 j, uint256 leftoverAmount, uint256 rateMinRAY)
         internal
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
@@ -336,7 +290,7 @@ abstract contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
             _exchange_underlying_impl(i, j, _getExchangeUnderlyingCallData(i, j, dx, min_dy), leftoverAmount <= 1);
     }
 
-    /// @dev Internal implementation of `exchange_underlying` and `exchange_all_underlying`
+    /// @dev Internal implementation of `exchange_underlying`
     ///      - passes calldata to the target contract
     ///      - sets max approval for the input token before the call and resets it to 1 after
     ///      - enables output asset after the call
@@ -407,19 +361,7 @@ abstract contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
         (tokensToEnable, tokensToDisable) = _add_diff_liquidity_one_coin(i, leftoverAmount, rateMinRAY);
     }
 
-    /// @notice Adds the entire balance of asset as liquidity to the pool, disables this asset
-    /// @param i Index of the asset to deposit
-    /// @param rateMinRAY Minimum exchange rate between deposited asset and LP token, scaled by 1e27
-    function add_all_liquidity_one_coin(uint256 i, uint256 rateMinRAY)
-        external
-        override
-        creditFacadeOnly // U:[CRVB-2]
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
-    {
-        (tokensToEnable, tokensToDisable) = _add_diff_liquidity_one_coin(i, 1, rateMinRAY);
-    }
-
-    /// @dev Internal implementation for `add_all_liquidity_one_coin` and `add_diff_liquidity_one_coin`.
+    /// @dev Internal implementation for `add_diff_liquidity_one_coin`.
     function _add_diff_liquidity_one_coin(uint256 i, uint256 leftoverAmount, uint256 rateMinRAY)
         internal
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
@@ -438,7 +380,7 @@ abstract contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
             _add_liquidity_one_coin_impl(i, _getAddLiquidityOneCoinCallData(i, amount, minAmount), leftoverAmount <= 1);
     }
 
-    /// @dev Internal implementation of `add_liquidity_one_coin` and `add_all_liquidity_one_coin`
+    /// @dev Internal implementation of `add_liquidity_one_coin'
     ///      - passes calldata to the target contract
     ///      - sets max approval for the input token before the call and resets it to 1 after
     ///      - enables LP token
@@ -559,31 +501,7 @@ abstract contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
         return _remove_diff_liquidity_one_coin(i, leftoverAmount, rateMinRAY);
     }
 
-    /// @notice Removes all liquidity from the pool in a specified asset
-    /// @param i Index of the asset to withdraw
-    /// @param rateMinRAY Minimum exchange rate between LP token and received token, scaled by 1e27
-    function remove_all_liquidity_one_coin(uint256 i, uint256 rateMinRAY)
-        external
-        virtual
-        override
-        creditFacadeOnly // U:[CRVB-2]
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
-    {
-        return _remove_diff_liquidity_one_coin(i, 1, rateMinRAY); // U:[CRVB-10]
-    }
-
-    /// @dev Same as the previous one but accepts coin indexes as `int128`
-    function remove_all_liquidity_one_coin(int128 i, uint256 rateMinRAY)
-        external
-        virtual
-        override
-        creditFacadeOnly // U:[CRVB-2]
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
-    {
-        return _remove_diff_liquidity_one_coin(_toU256(i), 1, rateMinRAY); // U:[CRVB-10]
-    }
-
-    /// @dev Implementation of both versions of `remove_diff_liquidity_one_coin` and `remove_all_liquidity_one_coin`
+    /// @dev Implementation of `remove_diff_liquidity_one_coin`
     function _remove_diff_liquidity_one_coin(uint256 i, uint256 leftoverAmount, uint256 rateMinRAY)
         internal
         returns (uint256 tokensToEnable, uint256 tokensToDisable)

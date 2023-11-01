@@ -24,13 +24,9 @@ interface ICompoundV2_CTokenAdapter is IAdapter, ICompoundV2_Exceptions {
 
     function mintDiff(uint256 leftoverAmount) external returns (uint256 tokensToEnable, uint256 tokensToDisable);
 
-    function mintAll() external returns (uint256 tokensToEnable, uint256 tokensToDisable);
-
     function redeem(uint256 amount) external returns (uint256 tokensToEnable, uint256 tokensToDisable);
 
     function redeemDiff(uint256 leftoverAmount) external returns (uint256 tokensToEnable, uint256 tokensToDisable);
-
-    function redeemAll() external returns (uint256 tokensToEnable, uint256 tokensToDisable);
 
     function redeemUnderlying(uint256 amount) external returns (uint256 tokensToEnable, uint256 tokensToDisable);
 }
