@@ -48,13 +48,13 @@ contract WstETHV1AdapterUnitTest is AdapterUnitTestHelper {
         adapter.wrap(0);
 
         _revertsOnNonFacadeCaller();
-        adapter.wrapAll();
+        adapter.wrapDiff(0);
 
         _revertsOnNonFacadeCaller();
         adapter.unwrap(0);
 
         _revertsOnNonFacadeCaller();
-        adapter.unwrapAll();
+        adapter.unwrapDiff(0);
     }
 
     /// @notice U:[LDO1W-3]: `wrap` works as expected
@@ -73,23 +73,23 @@ contract WstETHV1AdapterUnitTest is AdapterUnitTestHelper {
         assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
     }
 
-    /// @notice U:[LDO1W-4]: `wrapAll` works as expected
-    function test_U_LDO1W_04_wrapAll_works_as_expected() public {
-        deal({token: stETH, to: creditAccount, give: 1000});
+    /// @notice U:[LDO1W-4A]: `wrapDiff` works as expected
+    function test_U_LDO1W_04A_wrapDiff_works_as_expected() public diffTestCases {
+        deal({token: stETH, to: creditAccount, give: diffMintedAmount});
 
         _readsActiveAccount();
         _executesSwap({
             tokenIn: stETH,
             tokenOut: wstETH,
-            callData: abi.encodeCall(IwstETH.wrap, (999)),
+            callData: abi.encodeCall(IwstETH.wrap, (diffInputAmount)),
             requiresApproval: true,
             validatesTokens: false
         });
         vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.wrapAll();
+        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.wrapDiff(diffLeftoverAmount);
 
         assertEq(tokensToEnable, wstETHMask, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, stETHMask, "Incorrect tokensToDisable");
+        assertEq(tokensToDisable, diffDisableTokenIn ? stETHMask : 0, "Incorrect tokensToDisable");
     }
 
     /// @notice U:[LDO1W-5]: `unwrap` works as expected
@@ -108,22 +108,22 @@ contract WstETHV1AdapterUnitTest is AdapterUnitTestHelper {
         assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
     }
 
-    /// @notice U:[LDO1W-6]: `unwrapAll` works as expected
-    function test_U_LDO1W_06_unwrapAll_works_as_expected() public {
-        deal({token: wstETH, to: creditAccount, give: 1000});
+    /// @notice U:[LDO1W-6A]: `unwrapDiff` works as expected
+    function test_U_LDO1W_06A_unwrapDiff_works_as_expected() public diffTestCases {
+        deal({token: wstETH, to: creditAccount, give: diffMintedAmount});
 
         _readsActiveAccount();
         _executesSwap({
             tokenIn: wstETH,
             tokenOut: stETH,
-            callData: abi.encodeCall(IwstETH.unwrap, (999)),
+            callData: abi.encodeCall(IwstETH.unwrap, (diffInputAmount)),
             requiresApproval: false,
             validatesTokens: false
         });
         vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.unwrapAll();
+        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.unwrapDiff(diffLeftoverAmount);
 
         assertEq(tokensToEnable, stETHMask, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, wstETHMask, "Incorrect tokensToDisable");
+        assertEq(tokensToDisable, diffDisableTokenIn ? wstETHMask : 0, "Incorrect tokensToDisable");
     }
 }

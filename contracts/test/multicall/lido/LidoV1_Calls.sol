@@ -14,7 +14,7 @@ library LidoV1_Calls {
         return MultiCall({target: address(c), callData: abi.encodeCall(ILidoV1Adapter.submit, (amount))});
     }
 
-    function submitAll(LidoV1_Multicaller c) internal pure returns (MultiCall memory) {
-        return MultiCall({target: address(c), callData: abi.encodeCall(ILidoV1Adapter.submitAll, ())});
+    function submitDiff(LidoV1_Multicaller c, uint256 leftoverAmount) internal pure returns (MultiCall memory) {
+        return MultiCall({target: address(c), callData: abi.encodeCall(ILidoV1Adapter.submitDiff, (leftoverAmount))});
     }
 }

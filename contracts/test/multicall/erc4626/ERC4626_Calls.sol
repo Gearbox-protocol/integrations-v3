@@ -14,8 +14,8 @@ library ERC4626_Calls {
         return MultiCall({target: address(c), callData: abi.encodeCall(IERC4626Adapter.deposit, (assets, address(0)))});
     }
 
-    function depositAll(ERC4626_Multicaller c) internal pure returns (MultiCall memory) {
-        return MultiCall({target: address(c), callData: abi.encodeCall(IERC4626Adapter.depositAll, ())});
+    function depositDiff(ERC4626_Multicaller c, uint256 leftoverAmount) internal pure returns (MultiCall memory) {
+        return MultiCall({target: address(c), callData: abi.encodeCall(IERC4626Adapter.depositDiff, (leftoverAmount))});
     }
 
     function mint(ERC4626_Multicaller c, uint256 shares, address) internal pure returns (MultiCall memory) {
@@ -40,7 +40,7 @@ library ERC4626_Calls {
         });
     }
 
-    function redeemAll(ERC4626_Multicaller c) internal pure returns (MultiCall memory) {
-        return MultiCall({target: address(c), callData: abi.encodeCall(IERC4626Adapter.redeemAll, ())});
+    function redeemDiff(ERC4626_Multicaller c, uint256 leftoverAmount) internal pure returns (MultiCall memory) {
+        return MultiCall({target: address(c), callData: abi.encodeCall(IERC4626Adapter.redeemDiff, (leftoverAmount))});
     }
 }

@@ -46,7 +46,7 @@ contract UniswapV2AdapterUnitTest is AdapterUnitTestHelper, IUniswapV2AdapterEve
         adapter.swapExactTokensForTokens(0, 0, emptyPath, address(0), 0);
 
         _revertsOnNonFacadeCaller();
-        adapter.swapAllTokensForTokens(0, emptyPath, 0);
+        adapter.swapDiffTokensForTokens(0, 0, emptyPath, 0);
     }
 
     /// @notice U:[UNI2-3]: `swapTokensForExactTokens` works as expected
@@ -99,30 +99,34 @@ contract UniswapV2AdapterUnitTest is AdapterUnitTestHelper, IUniswapV2AdapterEve
         assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
     }
 
-    /// @notice U:[UNI2-5]: `swapAllTokensForTokens` works as expected
-    function test_U_UNI2_05_swapAllTokensForTokens_works_as_expected() public {
-        deal({token: tokens[0], to: creditAccount, give: 1001});
+    /// @notice U:[UNI2-5A]: `swapDiffTokensForTokens` works as expected
+    function test_U_UNI2_05A_swapDiffTokensForTokens_works_as_expected() public diffTestCases {
+        deal({token: tokens[0], to: creditAccount, give: diffMintedAmount});
 
         address[] memory path = _makePath(0);
         vm.expectRevert(InvalidPathException.selector);
         vm.prank(creditFacade);
-        adapter.swapAllTokensForTokens(0.5e27, path, 789);
+        adapter.swapDiffTokensForTokens(diffInputAmount, 0.5e27, path, 789);
 
         path = _makePath(2);
         _readsActiveAccount();
         _executesSwap({
             tokenIn: tokens[0],
             tokenOut: tokens[1],
-            callData: abi.encodeCall(IUniswapV2Router01.swapExactTokensForTokens, (1000, 500, path, creditAccount, 789)),
+            callData: abi.encodeCall(
+                IUniswapV2Router01.swapExactTokensForTokens,
+                (diffInputAmount, diffInputAmount / 2, path, creditAccount, 789)
+                ),
             requiresApproval: true,
             validatesTokens: true
         });
 
         vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.swapAllTokensForTokens(0.5e27, path, 789);
+        (uint256 tokensToEnable, uint256 tokensToDisable) =
+            adapter.swapDiffTokensForTokens(diffLeftoverAmount, 0.5e27, path, 789);
 
         assertEq(tokensToEnable, 2, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, 1, "Incorrect tokensToDisable");
+        assertEq(tokensToDisable, diffDisableTokenIn ? 1 : 0, "Incorrect tokensToDisable");
     }
 
     /// @notice U:[UNI2-6]: `setPairStatusBatch` works as expected

@@ -15,9 +15,9 @@ interface IwstETHV1Adapter is IAdapter {
 
     function wrap(uint256 amount) external returns (uint256 tokensToEnable, uint256 tokensToDisable);
 
-    function wrapAll() external returns (uint256 tokensToEnable, uint256 tokensToDisable);
+    function wrapDiff(uint256 leftoverAmount) external returns (uint256 tokensToEnable, uint256 tokensToDisable);
 
     function unwrap(uint256 amount) external returns (uint256 tokensToEnable, uint256 tokensToDisable);
 
-    function unwrapAll() external returns (uint256 tokensToEnable, uint256 tokensToDisable);
+    function unwrapDiff(uint256 leftoverAmount) external returns (uint256 tokensToEnable, uint256 tokensToDisable);
 }

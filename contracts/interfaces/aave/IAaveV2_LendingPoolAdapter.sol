@@ -11,11 +11,15 @@ interface IAaveV2_LendingPoolAdapter is IAdapter {
         external
         returns (uint256 tokensToEnable, uint256 tokensToDisable);
 
-    function depositAll(address asset) external returns (uint256 tokensToEnable, uint256 tokensToDisable);
+    function depositDiff(address asset, uint256 leftoverAmount)
+        external
+        returns (uint256 tokensToEnable, uint256 tokensToDisable);
 
     function withdraw(address asset, uint256 amount, address)
         external
         returns (uint256 tokensToEnable, uint256 tokensToDisable);
 
-    function withdrawAll(address asset) external returns (uint256 tokensToEnable, uint256 tokensToDisable);
+    function withdrawDiff(address asset, uint256 leftoverAmount)
+        external
+        returns (uint256 tokensToEnable, uint256 tokensToDisable);
 }

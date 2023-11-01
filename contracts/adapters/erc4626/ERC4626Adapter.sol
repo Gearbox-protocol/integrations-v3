@@ -50,21 +50,27 @@ contract ERC4626Adapter is AbstractAdapter, IERC4626Adapter {
         (tokensToEnable, tokensToDisable) = _deposit(creditAccount, assets, false); // U:[TV-3]
     }
 
-    /// @notice Deposits the entire balance of underlying asset from the Credit Account
-    function depositAll()
+    /// @notice Deposits the entire balance of underlying asset from the Credit Account, except the specified amount
+    /// @param leftoverAmount Amount of underlying to keep on the account
+    function depositDiff(uint256 leftoverAmount)
         external
         override
-        creditFacadeOnly // U:[TV-2]
+        creditFacadeOnly
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        address creditAccount = _creditAccount(); // U:[TV-4]
-        uint256 balance = IERC20(asset).balanceOf(creditAccount); // U:[TV-4]
+        (tokensToEnable, tokensToDisable) = _depositDiff(leftoverAmount);
+    }
 
-        if (balance <= 1) return (0, 0);
+    /// @dev Internal implementation for `depositDiff`.
+    function _depositDiff(uint256 leftoverAmount) internal returns (uint256 tokensToEnable, uint256 tokensToDisable) {
+        address creditAccount = _creditAccount();
+        uint256 balance = IERC20(asset).balanceOf(creditAccount);
+
+        if (balance <= leftoverAmount) return (0, 0);
         unchecked {
-            balance--; // U:[TV-4]
+            balance -= leftoverAmount;
         }
-        (tokensToEnable, tokensToDisable) = _deposit(creditAccount, balance, true); // U:[TV-4]
+        (tokensToEnable, tokensToDisable) = _deposit(creditAccount, balance, leftoverAmount <= 1);
     }
 
     /// @dev Implementation for the deposit function
@@ -117,20 +123,26 @@ contract ERC4626Adapter is AbstractAdapter, IERC4626Adapter {
         (tokensToEnable, tokensToDisable) = _redeem(creditAccount, shares, false); // U:[TV-7]
     }
 
-    /// @notice Burns the entire balance of shares from the Credit Account
-    function redeemAll()
+    /// @notice Burns the entire balance of shares from the Credit Account, except the specified amount
+    /// @param leftoverAmount Amount of vault token to keep on the account
+    function redeemDiff(uint256 leftoverAmount)
         external
         override
-        creditFacadeOnly // U:[TV-2]
+        creditFacadeOnly
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        address creditAccount = _creditAccount(); // U:[TV-8]
-        uint256 balance = IERC20(targetContract).balanceOf(creditAccount); // U:[TV-8]
-        if (balance <= 1) return (0, 0);
+        (tokensToEnable, tokensToDisable) = _redeemDiff(leftoverAmount);
+    }
+
+    /// @dev Internal implementation for `redeemDiff`.
+    function _redeemDiff(uint256 leftoverAmount) internal returns (uint256 tokensToEnable, uint256 tokensToDisable) {
+        address creditAccount = _creditAccount();
+        uint256 balance = IERC20(targetContract).balanceOf(creditAccount);
+        if (balance <= leftoverAmount) return (0, 0);
         unchecked {
-            balance--; // U:[TV-8]
+            balance -= leftoverAmount;
         }
-        (tokensToEnable, tokensToDisable) = _redeem(creditAccount, balance, true); // U:[TV-8]
+        (tokensToEnable, tokensToDisable) = _redeem(creditAccount, balance, leftoverAmount <= 1);
     }
 
     /// @dev Implementation for the redeem function

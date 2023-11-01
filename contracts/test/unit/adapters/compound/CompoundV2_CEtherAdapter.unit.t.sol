@@ -57,13 +57,13 @@ contract CompoundV2_CEtherAdapterUnitTest is AdapterUnitTestHelper, ICompoundV2_
         adapter.mint(0);
 
         _revertsOnNonFacadeCaller();
-        adapter.mintAll();
+        adapter.mintDiff(0);
 
         _revertsOnNonFacadeCaller();
         adapter.redeem(0);
 
         _revertsOnNonFacadeCaller();
-        adapter.redeemAll();
+        adapter.redeemDiff(0);
 
         _revertsOnNonFacadeCaller();
         adapter.redeemUnderlying(0);
@@ -81,7 +81,7 @@ contract CompoundV2_CEtherAdapterUnitTest is AdapterUnitTestHelper, ICompoundV2_
 
         vm.expectRevert(abi.encodeWithSelector(CTokenError.selector, 1));
         vm.prank(creditFacade);
-        adapter.mintAll();
+        adapter.mintDiff(1);
 
         vm.expectRevert(abi.encodeWithSelector(CTokenError.selector, 1));
         vm.prank(creditFacade);
@@ -89,7 +89,7 @@ contract CompoundV2_CEtherAdapterUnitTest is AdapterUnitTestHelper, ICompoundV2_
 
         vm.expectRevert(abi.encodeWithSelector(CTokenError.selector, 1));
         vm.prank(creditFacade);
-        adapter.redeemAll();
+        adapter.redeemDiff(1);
 
         vm.expectRevert(abi.encodeWithSelector(CTokenError.selector, 1));
         vm.prank(creditFacade);
@@ -112,23 +112,23 @@ contract CompoundV2_CEtherAdapterUnitTest is AdapterUnitTestHelper, ICompoundV2_
         assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
     }
 
-    /// @notice U:[COMP2E-5]: `mintAll` works as expected
-    function test_U_COMP2E_05_mintAll_works_as_expected() public {
-        deal({token: token, to: creditAccount, give: 1001});
+    /// @notice U:[COMP2T-5A]: `mintDiff` works as expected
+    function test_U_COMP2E_05A_mintDiff_works_as_expected() public diffTestCases {
+        deal({token: token, to: creditAccount, give: diffMintedAmount});
 
         _readsActiveAccount();
         _executesSwap({
             tokenIn: token,
             tokenOut: cToken,
-            callData: abi.encodeCall(ICErc20Actions.mint, (1000)),
+            callData: abi.encodeCall(ICErc20Actions.mint, (diffInputAmount)),
             requiresApproval: true,
             validatesTokens: false
         });
         vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.mintAll();
+        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.mintDiff(diffLeftoverAmount);
 
         assertEq(tokensToEnable, cTokenMask, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, tokenMask, "Incorrect tokensToDisable");
+        assertEq(tokensToDisable, diffDisableTokenIn ? tokenMask : 0, "Incorrect tokensToDisable");
     }
 
     /// @notice U:[COMP2E-6]: `redeem` works as expected
@@ -147,23 +147,23 @@ contract CompoundV2_CEtherAdapterUnitTest is AdapterUnitTestHelper, ICompoundV2_
         assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
     }
 
-    /// @notice U:[COMP2E-7]: `redeemAll` works as expected
-    function test_U_COMP2E_07_redeemAll_works_as_expected() public {
-        deal({token: cToken, to: creditAccount, give: 1001});
+    /// @notice U:[COMP2T-7A]: `redeemDiff` works as expected
+    function test_U_COMP2T_07A_redeemDiff_works_as_expected() public diffTestCases {
+        deal({token: cToken, to: creditAccount, give: diffMintedAmount});
 
         _readsActiveAccount();
         _executesSwap({
             tokenIn: cToken,
             tokenOut: token,
-            callData: abi.encodeCall(ICErc20Actions.redeem, (1000)),
+            callData: abi.encodeCall(ICErc20Actions.redeem, (diffInputAmount)),
             requiresApproval: true,
             validatesTokens: false
         });
         vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.redeemAll();
+        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.redeemDiff(diffLeftoverAmount);
 
         assertEq(tokensToEnable, tokenMask, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, cTokenMask, "Incorrect tokensToDisable");
+        assertEq(tokensToDisable, diffDisableTokenIn ? cTokenMask : 0, "Incorrect tokensToDisable");
     }
 
     /// @notice U:[COMP2E-8]: `redeemUnderlying` works as expected

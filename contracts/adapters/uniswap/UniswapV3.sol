@@ -70,38 +70,60 @@ contract UniswapV3Adapter is AbstractAdapter, IUniswapV3Adapter {
         ); // U:[UNI3-3]
     }
 
-    /// @notice Swaps all balance of input token for output token through a single pool, disables input token
-    /// @param params Swap params, see `ExactAllInputSingleParams` for details
-    function exactAllInputSingle(ExactAllInputSingleParams calldata params)
+    /// @notice Swaps all balance of input token for output token through a single pool, except the specified amount
+    /// @param params Swap params, see `ExactDiffInputSingleParams` for details
+    function exactDiffInputSingle(ExactDiffInputSingleParams calldata params)
         external
         override
-        creditFacadeOnly // U:[UNI3-2]
+        creditFacadeOnly
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        address creditAccount = _creditAccount(); // U:[UNI3-4]
+        address creditAccount = _creditAccount(); // F: [AUV3-1]
 
-        uint256 balance = IERC20(params.tokenIn).balanceOf(creditAccount); // U:[UNI3-4]
-        if (balance <= 1) return (0, 0);
+        (tokensToEnable, tokensToDisable) = _exactDiffInputSingle(
+            params.tokenIn,
+            params.tokenOut,
+            params.fee,
+            creditAccount,
+            params.deadline,
+            params.leftoverAmount,
+            params.rateMinRAY,
+            params.sqrtPriceLimitX96
+        );
+    }
 
+    /// @dev Internal implementation for `exactDiffInputSingle`
+    function _exactDiffInputSingle(
+        address tokenIn,
+        address tokenOut,
+        uint24 fee,
+        address creditAccount,
+        uint256 deadline,
+        uint256 leftoverAmount,
+        uint256 rateMinRAY,
+        uint160 sqrtPriceLimitX96
+    ) internal returns (uint256 tokensToEnable, uint256 tokensToDisable) {
+        uint256 amount = IERC20(tokenIn).balanceOf(creditAccount);
+        if (amount <= leftoverAmount) return (0, 0);
         unchecked {
-            balance--; // U:[UNI3-4]
+            amount -= leftoverAmount;
         }
 
         ISwapRouter.ExactInputSingleParams memory paramsUpdate = ISwapRouter.ExactInputSingleParams({
-            tokenIn: params.tokenIn,
-            tokenOut: params.tokenOut,
-            fee: params.fee,
+            tokenIn: tokenIn,
+            tokenOut: tokenOut,
+            fee: fee,
             recipient: creditAccount,
-            deadline: params.deadline,
-            amountIn: balance,
-            amountOutMinimum: (balance * params.rateMinRAY) / RAY,
-            sqrtPriceLimitX96: params.sqrtPriceLimitX96
-        }); // U:[UNI3-4]
+            deadline: deadline,
+            amountIn: amount,
+            amountOutMinimum: (amount * rateMinRAY) / RAY,
+            sqrtPriceLimitX96: sqrtPriceLimitX96
+        });
 
         // calling `_executeSwap` because we need to check if output token is registered as collateral token in the CM
         (tokensToEnable, tokensToDisable,) = _executeSwapSafeApprove(
-            params.tokenIn, params.tokenOut, abi.encodeCall(ISwapRouter.exactInputSingle, (paramsUpdate)), true
-        ); // U:[UNI3-4]
+            tokenIn, tokenOut, abi.encodeCall(ISwapRouter.exactInputSingle, (paramsUpdate)), leftoverAmount <= 1
+        );
     }
 
     /// @notice Swaps given amount of input token for output token through multiple pools
@@ -127,37 +149,50 @@ contract UniswapV3Adapter is AbstractAdapter, IUniswapV3Adapter {
             _executeSwapSafeApprove(tokenIn, tokenOut, abi.encodeCall(ISwapRouter.exactInput, (paramsUpdate)), false); // U:[UNI3-5]
     }
 
-    /// @notice Swaps all balance of input token for output token through multiple pools, disables input token
-    /// @param params Swap params, see `ExactAllInputParams` for details
+    /// @notice Swaps all balance of input token for output token through multiple pools, except the specified amount
+    /// @param params Swap params, see `ExactDiffInputParams` for details
     /// @dev `params.path` must have at most 3 hops through registered connector tokens
-    function exactAllInput(ExactAllInputParams calldata params)
+    function exactDiffInput(ExactDiffInputParams calldata params)
         external
         override
-        creditFacadeOnly // U:[UNI3-2]
+        creditFacadeOnly
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        address creditAccount = _creditAccount(); // U:[UNI3-6]
+        address creditAccount = _creditAccount();
 
-        (bool valid, address tokenIn, address tokenOut) = _validatePath(params.path);
-        if (!valid) revert InvalidPathException(); // U:[UNI3-6]
+        (tokensToEnable, tokensToDisable) =
+            _exactDiffInput(creditAccount, params.path, params.deadline, params.leftoverAmount, params.rateMinRAY);
+    }
 
-        uint256 balance = IERC20(tokenIn).balanceOf(creditAccount); // U:[UNI3-6]
-        if (balance <= 1) return (0, 0);
+    /// @dev Internal implementation for `exactDiffInput`.
+    function _exactDiffInput(
+        address creditAccount,
+        bytes memory path,
+        uint256 deadline,
+        uint256 leftoverAmount,
+        uint256 rateMinRAY
+    ) internal returns (uint256 tokensToEnable, uint256 tokensToDisable) {
+        (bool valid, address tokenIn, address tokenOut) = _validatePath(path);
+        if (!valid) revert InvalidPathException();
+
+        uint256 amount = IERC20(tokenIn).balanceOf(creditAccount);
+        if (amount <= leftoverAmount) return (0, 0);
 
         unchecked {
-            balance--; // U:[UNI3-6]
+            amount -= leftoverAmount;
         }
         ISwapRouter.ExactInputParams memory paramsUpdate = ISwapRouter.ExactInputParams({
-            path: params.path,
+            path: path,
             recipient: creditAccount,
-            deadline: params.deadline,
-            amountIn: balance,
-            amountOutMinimum: (balance * params.rateMinRAY) / RAY
-        }); // U:[UNI3-6]
+            deadline: deadline,
+            amountIn: amount,
+            amountOutMinimum: (amount * rateMinRAY) / RAY
+        });
 
         // calling `_executeSwap` because we need to check if output token is registered as collateral token in the CM
-        (tokensToEnable, tokensToDisable,) =
-            _executeSwapSafeApprove(tokenIn, tokenOut, abi.encodeCall(ISwapRouter.exactInput, (paramsUpdate)), true); // U:[UNI3-6]
+        (tokensToEnable, tokensToDisable,) = _executeSwapSafeApprove(
+            tokenIn, tokenOut, abi.encodeCall(ISwapRouter.exactInput, (paramsUpdate)), leftoverAmount <= 1
+        );
     }
 
     /// @notice Swaps input token for given amount of output token through a single pool

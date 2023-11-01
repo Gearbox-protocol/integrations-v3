@@ -27,17 +27,21 @@ interface IConvexV1BaseRewardPoolAdapter is IAdapter {
 
     function stake(uint256) external returns (uint256 tokensToEnable, uint256 tokensToDisable);
 
-    function stakeAll() external returns (uint256 tokensToEnable, uint256 tokensToDisable);
+    function stakeDiff(uint256 leftoverAmount) external returns (uint256 tokensToEnable, uint256 tokensToDisable);
 
     function getReward() external returns (uint256 tokensToEnable, uint256 tokensToDisable);
 
     function withdraw(uint256, bool claim) external returns (uint256 tokensToEnable, uint256 tokensToDisable);
 
-    function withdrawAll(bool claim) external returns (uint256 tokensToEnable, uint256 tokensToDisable);
+    function withdrawDiff(uint256 leftoverAmount, bool claim)
+        external
+        returns (uint256 tokensToEnable, uint256 tokensToDisable);
 
     function withdrawAndUnwrap(uint256, bool claim)
         external
         returns (uint256 tokensToEnable, uint256 tokensToDisable);
 
-    function withdrawAllAndUnwrap(bool claim) external returns (uint256 tokensToEnable, uint256 tokensToDisable);
+    function withdrawDiffAndUnwrap(uint256 leftoverAmount, bool claim)
+        external
+        returns (uint256 tokensToEnable, uint256 tokensToDisable);
 }

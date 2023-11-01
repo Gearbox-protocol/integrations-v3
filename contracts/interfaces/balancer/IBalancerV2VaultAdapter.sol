@@ -21,8 +21,9 @@ enum PoolStatus {
     SWAP_ONLY
 }
 
-struct SingleSwapAll {
+struct SingleSwapDiff {
     bytes32 poolId;
+    uint256 leftoverAmount;
     IAsset assetIn;
     IAsset assetOut;
     bytes userData;
@@ -48,7 +49,7 @@ interface IBalancerV2VaultAdapter is IAdapter, IBalancerV2VaultAdapterEvents, IB
         external
         returns (uint256 tokensToEnable, uint256 tokensToDisable);
 
-    function swapAll(SingleSwapAll memory singleSwapAll, uint256 limitRateRAY, uint256 deadline)
+    function swapDiff(SingleSwapDiff memory singleSwapDiff, uint256 limitRateRAY, uint256 deadline)
         external
         returns (uint256 tokensToEnable, uint256 tokensToDisable);
 
@@ -73,7 +74,7 @@ interface IBalancerV2VaultAdapter is IAdapter, IBalancerV2VaultAdapterEvents, IB
         external
         returns (uint256 tokensToEnable, uint256 tokensToDisable);
 
-    function joinPoolSingleAssetAll(bytes32 poolId, IAsset assetIn, uint256 minRateRAY)
+    function joinPoolSingleAssetDiff(bytes32 poolId, IAsset assetIn, uint256 leftoverAmount, uint256 minRateRAY)
         external
         returns (uint256 tokensToEnable, uint256 tokensToDisable);
 
@@ -89,7 +90,7 @@ interface IBalancerV2VaultAdapter is IAdapter, IBalancerV2VaultAdapterEvents, IB
         external
         returns (uint256 tokensToEnable, uint256 tokensToDisable);
 
-    function exitPoolSingleAssetAll(bytes32 poolId, IAsset assetOut, uint256 minRateRAY)
+    function exitPoolSingleAssetDiff(bytes32 poolId, IAsset assetOut, uint256 leftoverAmount, uint256 minRateRAY)
         external
         returns (uint256 tokensToEnable, uint256 tokensToDisable);
 

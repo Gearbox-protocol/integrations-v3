@@ -47,17 +47,17 @@ contract UniswapV3AdapterUnitTest is
         _revertsOnNonFacadeCaller();
         adapter.exactInputSingle(p1);
 
-        ExactAllInputSingleParams memory p2;
+        ExactDiffInputSingleParams memory p2_2;
         _revertsOnNonFacadeCaller();
-        adapter.exactAllInputSingle(p2);
+        adapter.exactDiffInputSingle(p2_2);
 
         ISwapRouter.ExactInputParams memory p3;
         _revertsOnNonFacadeCaller();
         adapter.exactInput(p3);
 
-        ExactAllInputParams memory p4;
+        ExactDiffInputParams memory p4_2;
         _revertsOnNonFacadeCaller();
-        adapter.exactAllInput(p4);
+        adapter.exactDiffInput(p4_2);
 
         ISwapRouter.ExactOutputSingleParams memory p5;
         _revertsOnNonFacadeCaller();
@@ -98,9 +98,9 @@ contract UniswapV3AdapterUnitTest is
         assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
     }
 
-    /// @notice U:[UNI3-4]: `exactAllInputSingle` works as expected
-    function test_U_UNI3_04_exactAllInputSingle_works_as_expected() public {
-        deal({token: tokens[0], to: creditAccount, give: 1001});
+    /// @notice U:[UNI3-4A]: `exactDiffInputSingle` works as expected
+    function test_U_UNI3_04A_exactDiffInputSingle_works_as_expected() public diffTestCases {
+        deal({token: tokens[0], to: creditAccount, give: diffMintedAmount});
 
         _readsActiveAccount();
         _executesSwap({
@@ -113,8 +113,8 @@ contract UniswapV3AdapterUnitTest is
                         tokenIn: tokens[0],
                         tokenOut: tokens[1],
                         fee: 500,
-                        amountIn: 1000,
-                        amountOutMinimum: 500,
+                        amountIn: diffInputAmount,
+                        amountOutMinimum: diffInputAmount / 2,
                         deadline: 789,
                         recipient: creditAccount,
                         sqrtPriceLimitX96: 0
@@ -126,19 +126,20 @@ contract UniswapV3AdapterUnitTest is
         });
 
         vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.exactAllInputSingle(
-            ExactAllInputSingleParams({
+        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.exactDiffInputSingle(
+            ExactDiffInputSingleParams({
                 tokenIn: tokens[0],
                 tokenOut: tokens[1],
                 fee: 500,
                 deadline: 789,
+                leftoverAmount: diffLeftoverAmount,
                 rateMinRAY: 0.5e27,
                 sqrtPriceLimitX96: 0
             })
         );
 
         assertEq(tokensToEnable, 2, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, 1, "Incorrect tokensToDisable");
+        assertEq(tokensToDisable, diffDisableTokenIn ? 1 : 0, "Incorrect tokensToDisable");
     }
 
     /// @notice U:[UNI3-5]: `exactInput` works as expected
@@ -172,14 +173,19 @@ contract UniswapV3AdapterUnitTest is
         assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
     }
 
-    /// @notice U:[UNI3-6]: `exactAllInput` works as expected
-    function test_U_UNI3_06_exactAllInput_works_as_expected() public {
-        deal({token: tokens[0], to: creditAccount, give: 1001});
+    /// @notice U:[UNI3-6A]: `exactDiffInput` works as expected
+    function test_U_UNI3_06A_exactDiffInput_works_as_expected() public diffTestCases {
+        deal({token: tokens[0], to: creditAccount, give: diffMintedAmount});
 
-        ExactAllInputParams memory params = ExactAllInputParams({path: _makePath(0), deadline: 789, rateMinRAY: 0.5e27});
+        ExactDiffInputParams memory params = ExactDiffInputParams({
+            path: _makePath(0),
+            deadline: 789,
+            leftoverAmount: diffLeftoverAmount,
+            rateMinRAY: 0.5e27
+        });
         vm.expectRevert(InvalidPathException.selector);
         vm.prank(creditFacade);
-        adapter.exactAllInput(params);
+        adapter.exactDiffInput(params);
 
         params.path = _makePath(3);
         _readsActiveAccount();
@@ -191,8 +197,8 @@ contract UniswapV3AdapterUnitTest is
                 (
                     ISwapRouter.ExactInputParams({
                         path: params.path,
-                        amountIn: 1000,
-                        amountOutMinimum: 500,
+                        amountIn: diffInputAmount,
+                        amountOutMinimum: diffInputAmount / 2,
                         deadline: 789,
                         recipient: creditAccount
                     })
@@ -203,10 +209,10 @@ contract UniswapV3AdapterUnitTest is
         });
 
         vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.exactAllInput(params);
+        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.exactDiffInput(params);
 
         assertEq(tokensToEnable, 4, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, 1, "Incorrect tokensToDisable");
+        assertEq(tokensToDisable, diffDisableTokenIn ? 1 : 0, "Incorrect tokensToDisable");
     }
 
     /// @notice U:[UNI3-7]: `exactOutputSingle` works as expected

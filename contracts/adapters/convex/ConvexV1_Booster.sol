@@ -3,6 +3,8 @@
 // (c) Gearbox Foundation, 2023.
 pragma solidity ^0.8.17;
 
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+
 import {ICreditManagerV3} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditManagerV3.sol";
 import {ICreditConfiguratorV3} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditConfiguratorV3.sol";
 
@@ -48,19 +50,46 @@ contract ConvexV1BoosterAdapter is AbstractAdapter, IConvexV1BoosterAdapter {
         (tokensToEnable, tokensToDisable) = _deposit(_pid, _stake, msg.data, false); // U:[CVX1B-3]
     }
 
-    /// @notice Deposits the entire balance of Curve LP tokens into Booster, disables Curve LP token
+    /// @notice Deposits the entire balance of Curve LP tokens into Booster, except the specified amount
     /// @param _pid ID of the pool to deposit to
+    /// @param leftoverAmount Amount of Curve LP to keep on the account
     /// @param _stake Whether to stake Convex LP tokens in the rewards pool
-    function depositAll(uint256 _pid, bool _stake)
+    function depositDiff(uint256 _pid, uint256 leftoverAmount, bool _stake)
         external
         override
-        creditFacadeOnly // U:[CVX1B-2]
+        creditFacadeOnly
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        (tokensToEnable, tokensToDisable) = _deposit(_pid, _stake, msg.data, true); // U:[CVX1B-4]
+        (tokensToEnable, tokensToDisable) = _depositDiff(leftoverAmount, _pid, _stake);
     }
 
-    /// @dev Internal implementation of `deposit` and `depositAll`
+    /// @dev Internal implementation for `depositDiff`
+    function _depositDiff(uint256 leftoverAmount, uint256 _pid, bool _stake)
+        internal
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+    {
+        address creditAccount = _creditAccount();
+
+        IBooster.PoolInfo memory pool = IBooster(targetContract).poolInfo(_pid);
+
+        address tokenIn = pool.lptoken;
+        address tokenOut = _stake ? pidToPhantomToken[_pid] : pool.token;
+
+        uint256 balance = IERC20(tokenIn).balanceOf(creditAccount);
+
+        if (balance > leftoverAmount) {
+            unchecked {
+                (tokensToEnable, tokensToDisable,) = _executeSwapSafeApprove(
+                    tokenIn,
+                    tokenOut,
+                    abi.encodeCall(IBooster.deposit, (_pid, balance - leftoverAmount, _stake)),
+                    leftoverAmount <= 1
+                );
+            }
+        }
+    }
+
+    /// @dev Internal implementation of `deposit`
     ///      - Curve LP token is approved before the call
     ///      - Convex LP token (or staked phantom token, if `_stake` is true) is enabled after the call
     ///      - Curve LP token is only disabled when depositing the entire balance
@@ -93,16 +122,42 @@ contract ConvexV1BoosterAdapter is AbstractAdapter, IConvexV1BoosterAdapter {
         (tokensToEnable, tokensToDisable) = _withdraw(_pid, msg.data, false); // U:[CVX1B-5]
     }
 
-    /// @notice Withdraws all Curve LP tokens from Booster, disables Convex LP token
+    /// @notice Withdraws all Curve LP tokens from Booster, except the specified amount
     /// @param _pid ID of the pool to withdraw from
-    /// @dev `_amount` parameter is ignored since calldata is passed directly to the target contract
-    function withdrawAll(uint256 _pid)
+    /// @param leftoverAmount Amount of Convex LP to keep on the account
+    function withdrawDiff(uint256 _pid, uint256 leftoverAmount)
         external
         override
-        creditFacadeOnly // U:[CVX1B-2]
+        creditFacadeOnly
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        (tokensToEnable, tokensToDisable) = _withdraw(_pid, msg.data, true); // U:[CVX1B-6]
+        (tokensToEnable, tokensToDisable) = _withdrawDiff(leftoverAmount, _pid);
+    }
+
+    /// @dev Internal implementation for `withdrawDiff`
+    function _withdrawDiff(uint256 leftoverAmount, uint256 _pid)
+        internal
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+    {
+        address creditAccount = _creditAccount();
+
+        IBooster.PoolInfo memory pool = IBooster(targetContract).poolInfo(_pid);
+
+        address tokenIn = pool.token;
+        address tokenOut = pool.lptoken;
+
+        uint256 balance = IERC20(tokenIn).balanceOf(creditAccount);
+
+        if (balance > leftoverAmount) {
+            unchecked {
+                (tokensToEnable, tokensToDisable,) = _executeSwapNoApprove(
+                    tokenIn,
+                    tokenOut,
+                    abi.encodeCall(IBooster.withdraw, (_pid, balance - leftoverAmount)),
+                    leftoverAmount <= 1
+                );
+            }
+        }
     }
 
     /// @dev Internal implementation of `withdraw` and `withdrawAll`

@@ -52,24 +52,30 @@ contract WstETHV1Adapter is AbstractAdapter, IwstETHV1Adapter {
         (tokensToEnable, tokensToDisable) = _wrap(amount, false); // U:[LDO1W-3]
     }
 
-    /// @notice Wraps the entire balance of stETH into wstETH, disables stETH
-    function wrapAll()
+    /// @notice Wraps the entire balance of stETH into wstETH, except the specified amount
+    /// @param leftoverAmount Amount of stETH to keep on the account
+    function wrapDiff(uint256 leftoverAmount)
         external
         override
-        creditFacadeOnly // U:[LDO1W-2]
+        creditFacadeOnly
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        address creditAccount = _creditAccount(); // U:[LDO1W-4]
+        (tokensToEnable, tokensToDisable) = _wrapDiff(leftoverAmount);
+    }
 
-        uint256 balance = IERC20(stETH).balanceOf(creditAccount); // U:[LDO1W-4]
-        if (balance > 1) {
+    /// @dev Internal implementation for `wrapDiff`.
+    function _wrapDiff(uint256 leftoverAmount) internal returns (uint256 tokensToEnable, uint256 tokensToDisable) {
+        address creditAccount = _creditAccount();
+
+        uint256 balance = IERC20(stETH).balanceOf(creditAccount);
+        if (balance > leftoverAmount) {
             unchecked {
-                (tokensToEnable, tokensToDisable) = _wrap(balance - 1, true); // U:[LDO1W-4]
+                (tokensToEnable, tokensToDisable) = _wrap(balance - leftoverAmount, leftoverAmount <= 1);
             }
         }
     }
 
-    /// @dev Internal implementation of `wrap` and `wrapAll`
+    /// @dev Internal implementation of `wrap`
     ///      - stETH is approved before the call
     ///      - wstETH is enabled after the call
     ///      - stETH is only disabled if wrapping the entire balance
@@ -98,24 +104,30 @@ contract WstETHV1Adapter is AbstractAdapter, IwstETHV1Adapter {
         (tokensToEnable, tokensToDisable) = _unwrap(amount, false); // U:[LDO1W-5]
     }
 
-    /// @notice Unwraps the entire balance of wstETH to stETH, disables wstETH
-    function unwrapAll()
+    /// @notice Unwraps the entire balance of wstETH to stETH, except the specified amount
+    /// @param leftoverAmount Amount of wstETH to keep on the account
+    function unwrapDiff(uint256 leftoverAmount)
         external
         override
-        creditFacadeOnly // U:[LDO1W-2]
+        creditFacadeOnly
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        address creditAccount = _creditAccount(); // U:[LDO1W-6]
+        (tokensToEnable, tokensToDisable) = _unwrapDiff(leftoverAmount);
+    }
 
-        uint256 balance = IERC20(targetContract).balanceOf(creditAccount); // U:[LDO1W-6]
-        if (balance > 1) {
+    /// @dev Internal implementation for `unwrapDiff`.
+    function _unwrapDiff(uint256 leftoverAmount) internal returns (uint256 tokensToEnable, uint256 tokensToDisable) {
+        address creditAccount = _creditAccount();
+
+        uint256 balance = IERC20(targetContract).balanceOf(creditAccount);
+        if (balance > leftoverAmount) {
             unchecked {
-                (tokensToEnable, tokensToDisable) = _unwrap(balance - 1, true); // U:[LDO1W-6]
+                (tokensToEnable, tokensToDisable) = _unwrap(balance - leftoverAmount, leftoverAmount <= 1);
             }
         }
     }
 
-    /// @dev Internal implementation of `unwrap` and `unwrapAll`
+    /// @dev Internal implementation of `unwrap`
     ///      - wstETH is not approved before the call
     ///      - stETH is enabled after the call
     ///      - wstETH is only disabled if unwrapping the entire balance

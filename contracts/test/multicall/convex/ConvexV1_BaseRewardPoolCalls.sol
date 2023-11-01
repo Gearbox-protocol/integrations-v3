@@ -14,8 +14,15 @@ library ConvexV1_BaseRewardPoolCalls {
         return MultiCall({target: address(c), callData: abi.encodeCall(IConvexV1BaseRewardPoolAdapter.stake, (amount))});
     }
 
-    function stakeAll(ConvexV1_BaseRewardPoolMulticaller c) internal pure returns (MultiCall memory) {
-        return MultiCall({target: address(c), callData: abi.encodeCall(IConvexV1BaseRewardPoolAdapter.stakeAll, ())});
+    function stakeDiff(ConvexV1_BaseRewardPoolMulticaller c, uint256 leftoverAmount)
+        internal
+        pure
+        returns (MultiCall memory)
+    {
+        return MultiCall({
+            target: address(c),
+            callData: abi.encodeCall(IConvexV1BaseRewardPoolAdapter.stakeDiff, (leftoverAmount))
+        });
     }
 
     function withdraw(ConvexV1_BaseRewardPoolMulticaller c, uint256 amount, bool claim)
@@ -29,10 +36,14 @@ library ConvexV1_BaseRewardPoolCalls {
         });
     }
 
-    function withdrawAll(ConvexV1_BaseRewardPoolMulticaller c, bool claim) internal pure returns (MultiCall memory) {
+    function withdrawDiff(ConvexV1_BaseRewardPoolMulticaller c, uint256 leftoverAmount, bool claim)
+        internal
+        pure
+        returns (MultiCall memory)
+    {
         return MultiCall({
             target: address(c),
-            callData: abi.encodeCall(IConvexV1BaseRewardPoolAdapter.withdrawAll, (claim))
+            callData: abi.encodeCall(IConvexV1BaseRewardPoolAdapter.withdrawDiff, (leftoverAmount, claim))
         });
     }
 
@@ -47,14 +58,14 @@ library ConvexV1_BaseRewardPoolCalls {
         });
     }
 
-    function withdrawAllAndUnwrap(ConvexV1_BaseRewardPoolMulticaller c, bool claim)
+    function withdrawDiffAndUnwrap(ConvexV1_BaseRewardPoolMulticaller c, uint256 leftoverAmount, bool claim)
         internal
         pure
         returns (MultiCall memory)
     {
         return MultiCall({
             target: address(c),
-            callData: abi.encodeCall(IConvexV1BaseRewardPoolAdapter.withdrawAllAndUnwrap, (claim))
+            callData: abi.encodeCall(IConvexV1BaseRewardPoolAdapter.withdrawDiffAndUnwrap, (leftoverAmount, claim))
         });
     }
 

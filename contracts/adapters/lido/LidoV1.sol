@@ -66,25 +66,30 @@ contract LidoV1Adapter is AbstractAdapter, ILidoV1Adapter {
         (tokensToEnable, tokensToDisable) = _submit(amount, false); // U:[LDO1-3]
     }
 
-    /// @notice Stakes the entire balance of WETH in Lido via Gateway, disables WETH
+    /// @notice Stakes the entire balance of WETH in Lido via Gateway, except the specified amount
     /// @dev The referral address is set to Gearbox treasury
-    function submitAll()
+    function submitDiff(uint256 leftoverAmount)
         external
         override
-        creditFacadeOnly // U:[LDO1-2]
+        creditFacadeOnly
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        address creditAccount = _creditAccount(); // U:[LDO1-4]
+        (tokensToEnable, tokensToDisable) = _submitDiff(leftoverAmount);
+    }
 
-        uint256 balance = IERC20(weth).balanceOf(creditAccount); // U:[LDO1-4]
-        if (balance > 1) {
+    /// @dev Internal implementation for `submitDiff`.
+    function _submitDiff(uint256 leftoverAmount) internal returns (uint256 tokensToEnable, uint256 tokensToDisable) {
+        address creditAccount = _creditAccount();
+
+        uint256 balance = IERC20(weth).balanceOf(creditAccount);
+        if (balance > leftoverAmount) {
             unchecked {
-                (tokensToEnable, tokensToDisable) = _submit(balance - 1, true); // U:[LDO1-4]
+                (tokensToEnable, tokensToDisable) = _submit(balance - leftoverAmount, leftoverAmount <= 1);
             }
         }
     }
 
-    /// @dev Internal implementation of `submit` and `submitAll`
+    /// @dev Internal implementation of `submit`.
     ///      - WETH is approved before the call because Gateway needs permission to transfer it
     ///      - stETH is enabled after the call
     ///      - WETH is only disabled when staking the entire balance

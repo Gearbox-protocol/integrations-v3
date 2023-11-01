@@ -48,7 +48,7 @@ contract ERC4626AdapterUnitTest is AdapterUnitTestHelper {
         adapter.deposit(0, address(0));
 
         _revertsOnNonFacadeCaller();
-        adapter.depositAll();
+        adapter.depositDiff(0);
 
         _revertsOnNonFacadeCaller();
         adapter.mint(0, address(0));
@@ -60,7 +60,7 @@ contract ERC4626AdapterUnitTest is AdapterUnitTestHelper {
         adapter.redeem(0, address(0), address(0));
 
         _revertsOnNonFacadeCaller();
-        adapter.redeemAll();
+        adapter.redeemDiff(0);
     }
 
     /// @notice U:[TV-3]: `deposit` works as expected
@@ -80,23 +80,23 @@ contract ERC4626AdapterUnitTest is AdapterUnitTestHelper {
         assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
     }
 
-    /// @notice U:[TV-4]: `depositAll` works as expected
-    function test_U_TV_04_depositAll_works_as_expected() public {
-        deal({token: asset, to: creditAccount, give: 1000});
+    /// @notice U:[TV-4A]: `depositDiff` works as expected
+    function test_U_TV_04A_depositDiff_works_as_expected() public diffTestCases {
+        deal({token: asset, to: creditAccount, give: diffMintedAmount});
 
         _readsActiveAccount();
         _executesSwap({
             tokenIn: asset,
             tokenOut: vault,
-            callData: abi.encodeCall(IERC4626.deposit, (999, creditAccount)),
+            callData: abi.encodeCall(IERC4626.deposit, (diffInputAmount, creditAccount)),
             requiresApproval: true,
             validatesTokens: false
         });
         vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.depositAll();
+        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.depositDiff(diffLeftoverAmount);
 
         assertEq(tokensToEnable, sharesMask, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, assetMask, "Incorrect tokensToDisable");
+        assertEq(tokensToDisable, diffDisableTokenIn ? assetMask : 0, "Incorrect tokensToDisable");
     }
 
     /// @notice U:[TV-5]: `mint` works as expected
@@ -150,22 +150,22 @@ contract ERC4626AdapterUnitTest is AdapterUnitTestHelper {
         assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
     }
 
-    /// @notice U:[TV-8]: `redeemAll` works as expected
-    function test_U_TV_08_redeemAll_works_as_expected() public {
-        deal({token: vault, to: creditAccount, give: 1000});
+    /// @notice U:[TV-8A]: `redeemDiff` works as expected
+    function test_U_TV_08_redeemDiff_works_as_expected() public diffTestCases {
+        deal({token: vault, to: creditAccount, give: diffMintedAmount});
 
         _readsActiveAccount();
         _executesSwap({
             tokenIn: vault,
             tokenOut: asset,
-            callData: abi.encodeCall(IERC4626.redeem, (999, creditAccount, creditAccount)),
+            callData: abi.encodeCall(IERC4626.redeem, (diffInputAmount, creditAccount, creditAccount)),
             requiresApproval: false,
             validatesTokens: false
         });
         vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.redeemAll();
+        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.redeemDiff(diffLeftoverAmount);
 
         assertEq(tokensToEnable, assetMask, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, sharesMask, "Incorrect tokensToDisable");
+        assertEq(tokensToDisable, diffDisableTokenIn ? sharesMask : 0, "Incorrect tokensToDisable");
     }
 }

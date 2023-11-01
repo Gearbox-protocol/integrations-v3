@@ -41,15 +41,18 @@ library UniswapV2_Calls {
         });
     }
 
-    function swapAllTokensForTokens(
+    function swapDiffTokensForTokens(
         UniswapV2_Multicaller c,
+        uint256 leftoverAmount,
         uint256 rateMinRAY,
         address[] memory path,
         uint256 deadline
     ) internal pure returns (MultiCall memory) {
         return MultiCall({
             target: address(c),
-            callData: abi.encodeCall(IUniswapV2Adapter.swapAllTokensForTokens, (rateMinRAY, path, deadline))
+            callData: abi.encodeCall(
+                IUniswapV2Adapter.swapDiffTokensForTokens, (leftoverAmount, rateMinRAY, path, deadline)
+                )
         });
     }
 }

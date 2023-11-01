@@ -45,7 +45,7 @@ contract YearnV2AdapterUnitTest is AdapterUnitTestHelper {
     /// @notice U:[YFI2-2]: Wrapper functions revert on wrong caller
     function test_U_YFI2_02_wrapper_functions_revert_on_wrong_caller() public {
         _revertsOnNonFacadeCaller();
-        adapter.deposit();
+        adapter.depositDiff(0);
 
         _revertsOnNonFacadeCaller();
         adapter.deposit(0);
@@ -54,7 +54,7 @@ contract YearnV2AdapterUnitTest is AdapterUnitTestHelper {
         adapter.deposit(0, address(0));
 
         _revertsOnNonFacadeCaller();
-        adapter.withdraw();
+        adapter.withdrawDiff(0);
 
         _revertsOnNonFacadeCaller();
         adapter.withdraw(0);
@@ -66,23 +66,23 @@ contract YearnV2AdapterUnitTest is AdapterUnitTestHelper {
         adapter.withdraw(0, address(0), 0);
     }
 
-    /// @notice U:[YFI2-3]: `deposit()` works as expected
-    function test_U_YFI2_03_deposit_works_as_expected() public {
-        deal({token: token, to: creditAccount, give: 1000});
+    /// @notice U:[YFI2-3A]: `depositDiff()` works as expected
+    function test_U_YFI2_03A_depositDiff_works_as_expected() public diffTestCases {
+        deal({token: token, to: creditAccount, give: diffMintedAmount});
 
         _readsActiveAccount();
         _executesSwap({
             tokenIn: token,
             tokenOut: yToken,
-            callData: abi.encodeWithSignature("deposit(uint256)", 999),
+            callData: abi.encodeWithSignature("deposit(uint256)", diffInputAmount),
             requiresApproval: true,
             validatesTokens: false
         });
         vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.deposit();
+        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.depositDiff(diffLeftoverAmount);
 
         assertEq(tokensToEnable, yTokenMask, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, tokenMask, "Incorrect tokensToDisable");
+        assertEq(tokensToDisable, diffDisableTokenIn ? tokenMask : 0, "Incorrect tokensToDisable");
     }
 
     /// @notice U:[YFI2-4]: `deposit(uint256)` works as expected
@@ -117,23 +117,23 @@ contract YearnV2AdapterUnitTest is AdapterUnitTestHelper {
         assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
     }
 
-    /// @notice U:[YFI2-6]: `withdraw()` works as expected
-    function test_U_YFI2_06_withdraw_works_as_expected() public {
-        deal({token: yToken, to: creditAccount, give: 1000});
+    /// @notice U:[YFI2-6A]: `withdrawDiff()` works as expected
+    function test_U_YFI2_06A_withdrawDiff_works_as_expected() public diffTestCases {
+        deal({token: yToken, to: creditAccount, give: diffMintedAmount});
 
         _readsActiveAccount();
         _executesSwap({
             tokenIn: yToken,
             tokenOut: token,
-            callData: abi.encodeWithSignature("withdraw(uint256)", 999),
+            callData: abi.encodeWithSignature("withdraw(uint256)", diffInputAmount),
             requiresApproval: false,
             validatesTokens: false
         });
         vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.withdraw();
+        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.withdrawDiff(diffLeftoverAmount);
 
         assertEq(tokensToEnable, tokenMask, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, yTokenMask, "Incorrect tokensToDisable");
+        assertEq(tokensToDisable, diffDisableTokenIn ? yTokenMask : 0, "Incorrect tokensToDisable");
     }
 
     /// @notice U:[YFI2-7]: `withdraw(uint256)` works as expected

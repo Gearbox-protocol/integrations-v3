@@ -18,13 +18,13 @@ library UniswapV3_Calls {
         return MultiCall({target: address(c), callData: abi.encodeCall(IUniswapV3Adapter.exactInputSingle, (params))});
     }
 
-    function exactAllInputSingle(UniswapV3_Multicaller c, IUniswapV3Adapter.ExactAllInputSingleParams memory params)
+    function exactDiffInputSingle(UniswapV3_Multicaller c, IUniswapV3Adapter.ExactDiffInputSingleParams memory params)
         internal
         pure
         returns (MultiCall memory)
     {
         return
-            MultiCall({target: address(c), callData: abi.encodeCall(IUniswapV3Adapter.exactAllInputSingle, (params))});
+            MultiCall({target: address(c), callData: abi.encodeCall(IUniswapV3Adapter.exactDiffInputSingle, (params))});
     }
 
     function exactInput(UniswapV3_Multicaller c, ISwapRouter.ExactInputParams memory params)
@@ -35,12 +35,12 @@ library UniswapV3_Calls {
         return MultiCall({target: address(c), callData: abi.encodeCall(IUniswapV3Adapter.exactInput, (params))});
     }
 
-    function exactAllInput(UniswapV3_Multicaller c, IUniswapV3Adapter.ExactAllInputParams memory params)
+    function exactDiffInput(UniswapV3_Multicaller c, IUniswapV3Adapter.ExactDiffInputParams memory params)
         internal
         pure
         returns (MultiCall memory)
     {
-        return MultiCall({target: address(c), callData: abi.encodeCall(IUniswapV3Adapter.exactAllInput, (params))});
+        return MultiCall({target: address(c), callData: abi.encodeCall(IUniswapV3Adapter.exactDiffInput, (params))});
     }
 
     function exactOutputSingle(UniswapV3_Multicaller c, ISwapRouter.ExactOutputSingleParams memory params)
