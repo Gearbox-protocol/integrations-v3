@@ -66,8 +66,8 @@ contract YearnV2AdapterUnitTest is AdapterUnitTestHelper {
         adapter.withdraw(0, address(0), 0);
     }
 
-    /// @notice U:[YFI2-3A]: `depositDiff()` works as expected
-    function test_U_YFI2_03A_depositDiff_works_as_expected() public diffTestCases {
+    /// @notice U:[YFI2-3]: `depositDiff()` works as expected
+    function test_U_YFI2_03_depositDiff_works_as_expected() public diffTestCases {
         deal({token: token, to: creditAccount, give: diffMintedAmount});
 
         _readsActiveAccount();
@@ -117,8 +117,8 @@ contract YearnV2AdapterUnitTest is AdapterUnitTestHelper {
         assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
     }
 
-    /// @notice U:[YFI2-6A]: `withdrawDiff()` works as expected
-    function test_U_YFI2_06A_withdrawDiff_works_as_expected() public diffTestCases {
+    /// @notice U:[YFI2-6]: `withdrawDiff()` works as expected
+    function test_U_YFI2_06_withdrawDiff_works_as_expected() public diffTestCases {
         deal({token: yToken, to: creditAccount, give: diffMintedAmount});
 
         _readsActiveAccount();

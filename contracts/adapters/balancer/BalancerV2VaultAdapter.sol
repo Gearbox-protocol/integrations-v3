@@ -99,69 +99,46 @@ contract BalancerV2VaultAdapter is AbstractAdapter, IBalancerV2VaultAdapter {
     function swapDiff(SingleSwapDiff memory singleSwapDiff, uint256 limitRateRAY, uint256 deadline)
         external
         override
-        creditFacadeOnly
+        creditFacadeOnly // U:[BAL2-2]
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        address creditAccount = _creditAccount();
+        address creditAccount = _creditAccount(); // U:[BAL2-4]
 
-        (tokensToEnable, tokensToDisable) = _swapDiffInternal(
-            creditAccount,
-            singleSwapDiff.poolId,
-            singleSwapDiff.assetIn,
-            singleSwapDiff.assetOut,
-            singleSwapDiff.leftoverAmount,
-            singleSwapDiff.userData,
-            limitRateRAY,
-            deadline
-        );
-    }
-
-    /// @dev Implementation for `swapDiff`.
-    function _swapDiffInternal(
-        address creditAccount,
-        bytes32 poolId,
-        IAsset assetIn,
-        IAsset assetOut,
-        uint256 leftoverAmount,
-        bytes memory userData,
-        uint256 limitRateRAY,
-        uint256 deadline
-    ) internal returns (uint256 tokensToEnable, uint256 tokensToDisable) {
-        if (poolStatus[poolId] == PoolStatus.NOT_ALLOWED) {
-            revert PoolNotSupportedException();
+        if (poolStatus[singleSwapDiff.poolId] == PoolStatus.NOT_ALLOWED) {
+            revert PoolNotSupportedException(); // U:[BAL2-4]
         }
 
-        uint256 amount = IERC20(address(assetIn)).balanceOf(creditAccount);
-        if (amount <= leftoverAmount) return (0, 0);
+        uint256 amount = IERC20(address(singleSwapDiff.assetIn)).balanceOf(creditAccount); // U:[BAL2-4]
+        if (amount <= singleSwapDiff.leftoverAmount) return (0, 0);
 
         unchecked {
-            amount -= leftoverAmount;
+            amount -= singleSwapDiff.leftoverAmount; // U:[BAL2-4]
         }
 
-        FundManagement memory fundManagement = _getDefaultFundManagement(creditAccount);
+        FundManagement memory fundManagement = _getDefaultFundManagement(creditAccount); // U:[BAL2-4]
 
         // calling `_executeSwap` because we need to check if output token is registered as collateral token in the CM
         (tokensToEnable, tokensToDisable,) = _executeSwapSafeApprove(
-            address(assetIn),
-            address(assetOut),
+            address(singleSwapDiff.assetIn),
+            address(singleSwapDiff.assetOut),
             abi.encodeCall(
                 IBalancerV2Vault.swap,
                 (
                     SingleSwap({
-                        poolId: poolId,
+                        poolId: singleSwapDiff.poolId,
                         kind: SwapKind.GIVEN_IN,
-                        assetIn: assetIn,
-                        assetOut: assetOut,
+                        assetIn: singleSwapDiff.assetIn,
+                        assetOut: singleSwapDiff.assetOut,
                         amount: amount,
-                        userData: userData
+                        userData: singleSwapDiff.userData
                     }),
                     fundManagement,
                     (amount * limitRateRAY) / RAY,
                     deadline
                 )
             ),
-            leftoverAmount <= 1
-        );
+            singleSwapDiff.leftoverAmount <= 1
+        ); // U:[BAL2-4]
     }
 
     /// @notice Performs a multi-hop swap through several Balancer pools
@@ -301,51 +278,34 @@ contract BalancerV2VaultAdapter is AbstractAdapter, IBalancerV2VaultAdapter {
     function joinPoolSingleAssetDiff(bytes32 poolId, IAsset assetIn, uint256 leftoverAmount, uint256 minRateRAY)
         external
         override
-        creditFacadeOnly
+        creditFacadeOnly // U:[BAL2-2]
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        address creditAccount = _creditAccount();
-        (tokensToEnable, tokensToDisable) =
-            _joinPoolSingleAssetDiffInternal(creditAccount, poolId, assetIn, leftoverAmount, minRateRAY);
-    }
+        address creditAccount = _creditAccount(); // U:[BAL2-8]
 
-    /// @dev Implementation for `joinPoolSingleAssetDiff`.
-    function _joinPoolSingleAssetDiffInternal(
-        address creditAccount,
-        bytes32 poolId,
-        IAsset assetIn,
-        uint256 leftoverAmount,
-        uint256 minRateRAY
-    ) internal returns (uint256 tokensToEnable, uint256 tokensToDisable) {
         if (poolStatus[poolId] != PoolStatus.ALLOWED) {
             revert PoolNotSupportedException(); // U:[BAL2-8]
         }
 
-        uint256 amount = IERC20(address(assetIn)).balanceOf(creditAccount);
+        uint256 amount = IERC20(address(assetIn)).balanceOf(creditAccount); // U:[BAL2-8]
         if (amount <= leftoverAmount) return (0, 0);
 
         unchecked {
-            amount -= leftoverAmount;
+            amount -= leftoverAmount; // U:[BAL2-8]
         }
 
         (address bpt,) = IBalancerV2Vault(targetContract).getPool(poolId);
 
-        uint256 amountOutMin = (amount * minRateRAY) / RAY;
+        uint256 amountOutMin = (amount * minRateRAY) / RAY; // U:[BAL2-8]
+        JoinPoolRequest memory request = _getJoinSingleAssetRequest(poolId, assetIn, amount, amountOutMin, bpt); // U:[BAL2-8]
+
         // calling `_executeSwap` because we need to check if BPT is registered as collateral token in the CM
         (tokensToEnable, tokensToDisable,) = _executeSwapSafeApprove(
             address(assetIn),
             bpt,
-            abi.encodeCall(
-                IBalancerV2Vault.joinPool,
-                (
-                    poolId,
-                    creditAccount,
-                    creditAccount,
-                    _getJoinSingleAssetRequest(poolId, assetIn, amount, amountOutMin, bpt)
-                )
-            ),
+            abi.encodeCall(IBalancerV2Vault.joinPool, (poolId, creditAccount, creditAccount, request)),
             leftoverAmount <= 1
-        );
+        ); // U:[BAL2-8]
     }
 
     /// @dev Internal function that builds a `JoinPoolRequest` struct for one-sided deposits
@@ -454,47 +414,30 @@ contract BalancerV2VaultAdapter is AbstractAdapter, IBalancerV2VaultAdapter {
     function exitPoolSingleAssetDiff(bytes32 poolId, IAsset assetOut, uint256 leftoverAmount, uint256 minRateRAY)
         external
         override
-        creditFacadeOnly
+        creditFacadeOnly // U:[BAL2-2]
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        address creditAccount = _creditAccount();
-        (tokensToEnable, tokensToDisable) =
-            _exitPoolSingleAssetDiff(creditAccount, poolId, assetOut, leftoverAmount, minRateRAY);
-    }
+        address creditAccount = _creditAccount(); // U:[BAL2-11]
 
-    /// @dev Implementation for `exitPoolSingleAssetDiff`.
-    function _exitPoolSingleAssetDiff(
-        address creditAccount,
-        bytes32 poolId,
-        IAsset assetOut,
-        uint256 leftoverAmount,
-        uint256 minRateRAY
-    ) internal returns (uint256 tokensToEnable, uint256 tokensToDisable) {
         (address bpt,) = IBalancerV2Vault(targetContract).getPool(poolId);
 
-        uint256 amount = IERC20(bpt).balanceOf(creditAccount);
+        uint256 amount = IERC20(bpt).balanceOf(creditAccount); // U:[BAL2-11]
         if (amount <= leftoverAmount) return (0, 0);
 
         unchecked {
-            amount -= leftoverAmount;
+            amount -= leftoverAmount; // U:[BAL2-11]
         }
 
-        uint256 amountOutMin = (amount * minRateRAY) / RAY;
+        uint256 amountOutMin = (amount * minRateRAY) / RAY; // U:[BAL2-11]
+        ExitPoolRequest memory request = _getExitSingleAssetRequest(poolId, assetOut, amount, amountOutMin, bpt); // U:[BAL2-11]
+
         // calling `_executeSwap` because we need to check if asset is registered as collateral token in the CM
         (tokensToEnable, tokensToDisable,) = _executeSwapNoApprove(
             bpt,
             address(assetOut),
-            abi.encodeCall(
-                IBalancerV2Vault.exitPool,
-                (
-                    poolId,
-                    creditAccount,
-                    payable(creditAccount),
-                    _getExitSingleAssetRequest(poolId, assetOut, amount, amountOutMin, bpt)
-                )
-            ),
+            abi.encodeCall(IBalancerV2Vault.exitPool, (poolId, creditAccount, payable(creditAccount), request)),
             leftoverAmount <= 1
-        );
+        ); // U:[BAL2-11]
     }
 
     /// @dev Internal function that builds an `ExitPoolRequest` struct for one-sided withdrawals

@@ -71,20 +71,15 @@ contract LidoV1Adapter is AbstractAdapter, ILidoV1Adapter {
     function submitDiff(uint256 leftoverAmount)
         external
         override
-        creditFacadeOnly
+        creditFacadeOnly // U:[LDO1-2]
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        (tokensToEnable, tokensToDisable) = _submitDiff(leftoverAmount);
-    }
+        address creditAccount = _creditAccount(); // U:[LDO1-4]
 
-    /// @dev Internal implementation for `submitDiff`.
-    function _submitDiff(uint256 leftoverAmount) internal returns (uint256 tokensToEnable, uint256 tokensToDisable) {
-        address creditAccount = _creditAccount();
-
-        uint256 balance = IERC20(weth).balanceOf(creditAccount);
+        uint256 balance = IERC20(weth).balanceOf(creditAccount); // U:[LDO1-4]
         if (balance > leftoverAmount) {
             unchecked {
-                (tokensToEnable, tokensToDisable) = _submit(balance - leftoverAmount, leftoverAmount <= 1);
+                (tokensToEnable, tokensToDisable) = _submit(balance - leftoverAmount, leftoverAmount <= 1); // U:[LDO1-4]
             }
         }
     }

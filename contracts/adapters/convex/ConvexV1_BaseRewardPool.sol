@@ -134,27 +134,22 @@ contract ConvexV1BaseRewardPoolAdapter is AbstractAdapter, IConvexV1BaseRewardPo
     function stakeDiff(uint256 leftoverAmount)
         external
         override
-        creditFacadeOnly
+        creditFacadeOnly // U:[CVX1R-3]
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        (tokensToEnable, tokensToDisable) = _stakeDiff(leftoverAmount);
-    }
+        address creditAccount = _creditAccount(); // U:[CVX1R-5]
 
-    /// @dev Internal implementation for `stakeDiff`.
-    function _stakeDiff(uint256 leftoverAmount) internal returns (uint256 tokensToEnable, uint256 tokensToDisable) {
-        address creditAccount = _creditAccount();
-
-        uint256 balance = IERC20(stakingToken).balanceOf(creditAccount);
+        uint256 balance = IERC20(stakingToken).balanceOf(creditAccount); // U:[CVX1R-5]
 
         if (balance > leftoverAmount) {
             unchecked {
                 (tokensToEnable, tokensToDisable) =
-                    _stake(abi.encodeCall(IBaseRewardPool.stake, (balance - leftoverAmount)), leftoverAmount <= 1);
+                    _stake(abi.encodeCall(IBaseRewardPool.stake, (balance - leftoverAmount)), leftoverAmount <= 1); // U:[CVX1R-5]
             }
         }
     }
 
-    /// @dev Internal implementation of `stake` and `stakeAll`
+    /// @dev Internal implementation of `stake` and `stakeDiff`
     ///      - Staking token is approved because reward pool needs permission to transfer it
     ///      - Staked token is enabled after the call
     ///      - Staking token is only disabled when staking the entire balance
@@ -205,20 +200,12 @@ contract ConvexV1BaseRewardPoolAdapter is AbstractAdapter, IConvexV1BaseRewardPo
     function withdrawDiff(uint256 leftoverAmount, bool claim)
         external
         override
-        creditFacadeOnly
+        creditFacadeOnly // U:[CVX1R-3]
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        (tokensToEnable, tokensToDisable) = _withdrawDiff(leftoverAmount, claim);
-    }
+        address creditAccount = _creditAccount(); // U:[CVX1R-6]
 
-    /// @dev Internal implementation for `withdrawDiff`.
-    function _withdrawDiff(uint256 leftoverAmount, bool claim)
-        internal
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
-    {
-        address creditAccount = _creditAccount();
-
-        uint256 balance = IERC20(stakedPhantomToken).balanceOf(creditAccount);
+        uint256 balance = IERC20(stakedPhantomToken).balanceOf(creditAccount); // U:[CVX1R-6]
 
         if (balance > leftoverAmount) {
             unchecked {
@@ -226,12 +213,12 @@ contract ConvexV1BaseRewardPoolAdapter is AbstractAdapter, IConvexV1BaseRewardPo
                     abi.encodeCall(IBaseRewardPool.withdraw, (balance - leftoverAmount, claim)),
                     claim,
                     leftoverAmount <= 1
-                );
+                ); // U:[CVX1R-6]
             }
         }
     }
 
-    /// @dev Internal implementation of `withdraw` and `withdrawAll`
+    /// @dev Internal implementation of `withdraw` and `withdrawDiff`
     ///      - Staking token is enabled after the call
     ///      - Staked token is only disabled when withdrawing the entire balance
     ///      - Rewards tokens are enabled if `claim` is true
@@ -267,20 +254,12 @@ contract ConvexV1BaseRewardPoolAdapter is AbstractAdapter, IConvexV1BaseRewardPo
     function withdrawDiffAndUnwrap(uint256 leftoverAmount, bool claim)
         external
         override
-        creditFacadeOnly
+        creditFacadeOnly // U:[CVX1R-3]
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        (tokensToEnable, tokensToDisable) = _withdrawDiffAndUnwrap(leftoverAmount, claim);
-    }
+        address creditAccount = _creditAccount(); // U:[CVX1R-10]
 
-    /// @dev Internal implementation for `withdrawDiffAndUnwrap`.
-    function _withdrawDiffAndUnwrap(uint256 leftoverAmount, bool claim)
-        internal
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
-    {
-        address creditAccount = _creditAccount();
-
-        uint256 balance = IERC20(stakedPhantomToken).balanceOf(creditAccount);
+        uint256 balance = IERC20(stakedPhantomToken).balanceOf(creditAccount); // U:[CVX1R-10]
 
         if (balance > leftoverAmount) {
             unchecked {
@@ -288,12 +267,12 @@ contract ConvexV1BaseRewardPoolAdapter is AbstractAdapter, IConvexV1BaseRewardPo
                     abi.encodeCall(IBaseRewardPool.withdrawAndUnwrap, (balance - leftoverAmount, claim)),
                     claim,
                     leftoverAmount <= 1
-                );
+                ); // U:[CVX1R-10]
             }
         }
     }
 
-    /// @dev Internal implementation of `withdrawAndUnwrap` and `withdrawAllAndUnwrap`
+    /// @dev Internal implementation of `withdrawAndUnwrap` and `withdrawDiffAndUnwrap`
     ///      - Curve LP token is enabled after the call
     ///      - Staked token is only disabled when withdrawing the entire balance
     ///      - Rewards tokens are enabled if `claim` is true

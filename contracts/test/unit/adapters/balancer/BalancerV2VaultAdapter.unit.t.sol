@@ -135,8 +135,8 @@ contract BalancerV2VaultAdapterUnitTest is
         assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
     }
 
-    /// @notice U:[BAL2-4A]: `swapDiff` works as expected
-    function test_U_BAL2_04A_swapDiff_works_as_expected() public diffTestCases {
+    /// @notice U:[BAL2-4]: `swapDiff` works as expected
+    function test_U_BAL2_04_swapDiff_works_as_expected() public diffTestCases {
         deal({token: tokens[1], to: creditAccount, give: diffMintedAmount});
 
         SingleSwapDiff memory singleSwapDiff = SingleSwapDiff({
@@ -313,8 +313,8 @@ contract BalancerV2VaultAdapterUnitTest is
         assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
     }
 
-    /// @notice U:[BAL2-8A]: `joinPoolSingleAssetDiff` works as expected
-    function test_U_BAL2_08A_joinPoolSingleAssetDiff_works_as_expected() public diffTestCases {
+    /// @notice U:[BAL2-8]: `joinPoolSingleAssetDiff` works as expected
+    function test_U_BAL2_08_joinPoolSingleAssetDiff_works_as_expected() public diffTestCases {
         deal({token: tokens[2], to: creditAccount, give: diffMintedAmount});
 
         vm.expectRevert(PoolNotSupportedException.selector);
@@ -408,8 +408,8 @@ contract BalancerV2VaultAdapterUnitTest is
         assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
     }
 
-    /// @notice U:[BAL2-11A]: `exitPoolSingleAssetDiff` works as expected
-    function test_U_BAL2_11A_exitPoolSingleAssetDiff_works_as_expected() public diffTestCases {
+    /// @notice U:[BAL2-11]: `exitPoolSingleAssetDiff` works as expected
+    function test_U_BAL2_11_exitPoolSingleAssetDiff_works_as_expected() public diffTestCases {
         deal({token: tokens[0], to: creditAccount, give: diffMintedAmount});
 
         ExitPoolRequest memory request;

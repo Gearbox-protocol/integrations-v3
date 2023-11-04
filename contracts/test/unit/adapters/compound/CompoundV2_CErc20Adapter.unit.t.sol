@@ -107,8 +107,8 @@ contract CompoundV2_CErc20AdapterUnitTest is AdapterUnitTestHelper, ICompoundV2_
         assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
     }
 
-    /// @notice U:[COMP2T-5A]: `mintDiff` works as expected
-    function test_U_COMP2T_05A_mintDiff_works_as_expected() public diffTestCases {
+    /// @notice U:[COMP2T-5]: `mintDiff` works as expected
+    function test_U_COMP2T_05_mintDiff_works_as_expected() public diffTestCases {
         deal({token: token, to: creditAccount, give: diffMintedAmount});
 
         _readsActiveAccount();
@@ -142,8 +142,8 @@ contract CompoundV2_CErc20AdapterUnitTest is AdapterUnitTestHelper, ICompoundV2_
         assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
     }
 
-    /// @notice U:[COMP2T-7A]: `redeemDiff` works as expected
-    function test_U_COMP2T_07A_redeemDiff_works_as_expected() public diffTestCases {
+    /// @notice U:[COMP2T-7]: `redeemDiff` works as expected
+    function test_U_COMP2T_07_redeemDiff_works_as_expected() public diffTestCases {
         deal({token: cToken, to: creditAccount, give: diffMintedAmount});
 
         _readsActiveAccount();

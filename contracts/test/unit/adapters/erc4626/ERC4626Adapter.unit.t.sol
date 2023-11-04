@@ -80,8 +80,8 @@ contract ERC4626AdapterUnitTest is AdapterUnitTestHelper {
         assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
     }
 
-    /// @notice U:[TV-4A]: `depositDiff` works as expected
-    function test_U_TV_04A_depositDiff_works_as_expected() public diffTestCases {
+    /// @notice U:[TV-4]: `depositDiff` works as expected
+    function test_U_TV_04_depositDiff_works_as_expected() public diffTestCases {
         deal({token: asset, to: creditAccount, give: diffMintedAmount});
 
         _readsActiveAccount();
@@ -150,7 +150,7 @@ contract ERC4626AdapterUnitTest is AdapterUnitTestHelper {
         assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
     }
 
-    /// @notice U:[TV-8A]: `redeemDiff` works as expected
+    /// @notice U:[TV-8]: `redeemDiff` works as expected
     function test_U_TV_08_redeemDiff_works_as_expected() public diffTestCases {
         deal({token: vault, to: creditAccount, give: diffMintedAmount});
 

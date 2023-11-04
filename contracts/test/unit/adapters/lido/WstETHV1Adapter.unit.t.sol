@@ -73,8 +73,8 @@ contract WstETHV1AdapterUnitTest is AdapterUnitTestHelper {
         assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
     }
 
-    /// @notice U:[LDO1W-4A]: `wrapDiff` works as expected
-    function test_U_LDO1W_04A_wrapDiff_works_as_expected() public diffTestCases {
+    /// @notice U:[LDO1W-4]: `wrapDiff` works as expected
+    function test_U_LDO1W_04_wrapDiff_works_as_expected() public diffTestCases {
         deal({token: stETH, to: creditAccount, give: diffMintedAmount});
 
         _readsActiveAccount();
@@ -108,8 +108,8 @@ contract WstETHV1AdapterUnitTest is AdapterUnitTestHelper {
         assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
     }
 
-    /// @notice U:[LDO1W-6A]: `unwrapDiff` works as expected
-    function test_U_LDO1W_06A_unwrapDiff_works_as_expected() public diffTestCases {
+    /// @notice U:[LDO1W-6]: `unwrapDiff` works as expected
+    function test_U_LDO1W_06_unwrapDiff_works_as_expected() public diffTestCases {
         deal({token: wstETH, to: creditAccount, give: diffMintedAmount});
 
         _readsActiveAccount();

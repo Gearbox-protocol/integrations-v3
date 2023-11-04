@@ -229,8 +229,8 @@ contract CurveV1AdapterBaseUnitTest is AdapterUnitTestHelper {
         }
     }
 
-    /// @notice U:[CRVB-4A]: `exchange_diff` works as expected
-    function test_U_CRVB_04A_exchange_diff_works_as_expected() public bothStableAndCryptoPools diffTestCases {
+    /// @notice U:[CRVB-4]: `exchange_diff` works as expected
+    function test_U_CRVB_04_exchange_diff_works_as_expected() public bothStableAndCryptoPools diffTestCases {
         deal({token: token0, to: creditAccount, give: diffMintedAmount});
 
         _readsActiveAccount();
@@ -287,8 +287,8 @@ contract CurveV1AdapterBaseUnitTest is AdapterUnitTestHelper {
         }
     }
 
-    /// @notice U:[CRVB-6A]: `exchange_diff_underlying` works as expected
-    function test_U_CRVB_06A_exchange_diff_underlying_works_as_expected()
+    /// @notice U:[CRVB-6]: `exchange_diff_underlying` works as expected
+    function test_U_CRVB_06_exchange_diff_underlying_works_as_expected()
         public
         bothStableAndCryptoPools
         diffTestCases
@@ -341,8 +341,8 @@ contract CurveV1AdapterBaseUnitTest is AdapterUnitTestHelper {
         assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
     }
 
-    /// @notice U:[CRVB-8A]: `add_diff_liquidity_one_coin` works as expected
-    function test_U_CRVB_08A_add_diff_liquidity_one_coin_works_as_expected() public onlyStablePools diffTestCases {
+    /// @notice U:[CRVB-8]: `add_diff_liquidity_one_coin` works as expected
+    function test_U_CRVB_08_add_diff_liquidity_one_coin_works_as_expected() public onlyStablePools diffTestCases {
         deal({token: token0, to: creditAccount, give: diffMintedAmount});
 
         _executesSwap({
@@ -395,8 +395,8 @@ contract CurveV1AdapterBaseUnitTest is AdapterUnitTestHelper {
         }
     }
 
-    /// @notice U:[CRVB-10A]: `remove_diff_liquidity_one_coin` works as expected
-    function test_U_CRVB_10A_remove_diff_liquidity_one_coin_works_as_expected()
+    /// @notice U:[CRVB-10]: `remove_diff_liquidity_one_coin` works as expected
+    function test_U_CRVB_10_remove_diff_liquidity_one_coin_works_as_expected()
         public
         bothStableAndCryptoPools
         diffTestCases

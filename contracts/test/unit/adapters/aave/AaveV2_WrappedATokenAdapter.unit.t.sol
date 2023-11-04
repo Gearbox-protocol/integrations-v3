@@ -94,8 +94,8 @@ contract AaveV2_WrappedATokenAdapterUnitTest is AdapterUnitTestHelper {
         assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
     }
 
-    /// @notice U:[AAVE2-4A]: `depositDiff` works as expected
-    function test_U_AAVE2_04A_depositDiff_works_as_expected() public diffTestCases {
+    /// @notice U:[AAVE2W-4]: `depositDiff` works as expected
+    function test_U_AAVE2W_04_depositDiff_works_as_expected() public diffTestCases {
         deal({token: aToken, to: creditAccount, give: diffMintedAmount});
 
         _readsActiveAccount();
@@ -130,8 +130,8 @@ contract AaveV2_WrappedATokenAdapterUnitTest is AdapterUnitTestHelper {
         assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
     }
 
-    /// @notice U:[AAVE2-6A]: `depositDiffUnderlying` works as expected
-    function test_U_AAVE2_06A_depositDiffUnderlying_works_as_expected() public diffTestCases {
+    /// @notice U:[AAVE2W-6]: `depositDiffUnderlying` works as expected
+    function test_U_AAVE2W_06_depositDiffUnderlying_works_as_expected() public diffTestCases {
         deal({token: token, to: creditAccount, give: diffMintedAmount});
 
         _readsActiveAccount();
@@ -166,8 +166,8 @@ contract AaveV2_WrappedATokenAdapterUnitTest is AdapterUnitTestHelper {
         assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
     }
 
-    /// @notice U:[AAVE2-8A]: `withdrawDiff` works as expected
-    function test_U_AAVE2_08A_withdrawDiff_works_as_expected() public diffTestCases {
+    /// @notice U:[AAVE2W-8]: `withdrawDiff` works as expected
+    function test_U_AAVE2W_08_withdrawDiff_works_as_expected() public diffTestCases {
         deal({token: waToken, to: creditAccount, give: diffMintedAmount});
 
         _readsActiveAccount();
@@ -202,8 +202,8 @@ contract AaveV2_WrappedATokenAdapterUnitTest is AdapterUnitTestHelper {
         assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
     }
 
-    /// @notice U:[AAVE2-10A]: `withdrawDiffUnderlying` works as expected
-    function test_U_AAVE2_10A_withdrawDiffUnderlying_works_as_expected() public diffTestCases {
+    /// @notice U:[AAVE2W-10]: `withdrawDiffUnderlying` works as expected
+    function test_U_AAVE2W_10_withdrawDiffUnderlying_works_as_expected() public diffTestCases {
         deal({token: waToken, to: creditAccount, give: diffMintedAmount});
 
         _readsActiveAccount();

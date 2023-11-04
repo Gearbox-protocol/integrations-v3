@@ -88,7 +88,7 @@ contract CurveV1AdapterStETH is CurveV1Adapter2Assets {
         public
         override(CurveV1AdapterBase, ICurveV1Adapter)
         creditFacadeOnly
-        withLPTokenApproval // F: [ACV1S-5]
+        withLPTokenApproval
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
         (tokensToEnable, tokensToDisable) = _remove_diff_liquidity_one_coin(i, leftoverAmount, rateMinRAY);
