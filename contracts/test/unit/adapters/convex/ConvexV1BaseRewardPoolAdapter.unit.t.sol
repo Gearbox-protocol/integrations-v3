@@ -149,8 +149,8 @@ contract ConvexV1BaseRewardPoolAdapterUnitTest is AdapterUnitTestHelper {
         assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
     }
 
-    /// @notice U:[CVX1R-5A]: `stakeDiff` works as expected
-    function test_U_CVX1R_05A_stakeDiff_works_as_expected() public diffTestCases {
+    /// @notice U:[CVX1R-5]: `stakeDiff` works as expected
+    function test_U_CVX1R_05_stakeDiff_works_as_expected() public diffTestCases {
         deal({token: convexStakingToken, to: creditAccount, give: diffMintedAmount});
         _readsActiveAccount();
         _executesSwap({
@@ -205,8 +205,8 @@ contract ConvexV1BaseRewardPoolAdapterUnitTest is AdapterUnitTestHelper {
         }
     }
 
-    /// @notice U:[CVX1R-8A]: `withdrawDiff` works as expected
-    function test_U_CVX1R_08A_withdrawDiff_works_as_expected() public diffTestCases {
+    /// @notice U:[CVX1R-8]: `withdrawDiff` works as expected
+    function test_U_CVX1R_08_withdrawDiff_works_as_expected() public diffTestCases {
         deal({token: stakedPhantomToken, to: creditAccount, give: diffMintedAmount});
         for (uint256 i; i < 2; ++i) {
             bool claim = i == 1;

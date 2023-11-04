@@ -66,8 +66,8 @@ contract AaveV2_LendingPoolAdapterUnitTest is AdapterUnitTestHelper {
         assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
     }
 
-    /// @notice U:[AAVE2-4A]: `depositDiff` works as expected
-    function test_U_AAVE2_04A_depositDiff_works_as_expected() public diffTestCases {
+    /// @notice U:[AAVE2-4]: `depositDiff` works as expected
+    function test_U_AAVE2_04_depositDiff_works_as_expected() public diffTestCases {
         deal({token: tokens[0], to: creditAccount, give: diffMintedAmount});
 
         _readsActiveAccount();
@@ -123,8 +123,8 @@ contract AaveV2_LendingPoolAdapterUnitTest is AdapterUnitTestHelper {
         assertEq(tokensToDisable, 2, "Incorrect tokensToDisable");
     }
 
-    /// @notice U:[AAVE2-6A]: `withdrawDiff` works as expected
-    function test_U_AAVE2_06A_withdrawDiff_works_as_expected() public diffTestCases {
+    /// @notice U:[AAVE2-6]: `withdrawDiff` works as expected
+    function test_U_AAVE2_06_withdrawDiff_works_as_expected() public diffTestCases {
         deal({token: tokens[1], to: creditAccount, give: diffMintedAmount});
 
         _readsActiveAccount();

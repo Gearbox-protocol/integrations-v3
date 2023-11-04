@@ -66,17 +66,17 @@ contract CompoundV2_CEtherAdapter is CompoundV2_CTokenAdapter {
         override
         returns (uint256 tokensToEnable, uint256 tokensToDisable, uint256 error)
     {
-        address creditAccount = _creditAccount();
+        address creditAccount = _creditAccount(); // U:[COMP2E-5]
 
-        uint256 amount = IERC20(underlying).balanceOf(creditAccount);
+        uint256 amount = IERC20(underlying).balanceOf(creditAccount); // U:[COMP2E-5]
         if (amount <= leftoverAmount) return (0, 0, 0);
         unchecked {
-            amount -= leftoverAmount;
+            amount -= leftoverAmount; // U:[COMP2E-5]
         }
 
-        _approveToken(underlying, type(uint256).max);
-        error = abi.decode(_execute(_encodeMint(amount)), (uint256));
-        _approveToken(underlying, 1);
+        _approveToken(underlying, type(uint256).max); // U:[COMP2E-5]
+        error = abi.decode(_execute(_encodeMint(amount)), (uint256)); // U:[COMP2E-5]
+        _approveToken(underlying, 1); // U:[COMP2E-5]
         (tokensToEnable, tokensToDisable) = (cTokenMask, leftoverAmount <= 1 ? tokenMask : 0);
     }
 
@@ -104,17 +104,17 @@ contract CompoundV2_CEtherAdapter is CompoundV2_CTokenAdapter {
         override
         returns (uint256 tokensToEnable, uint256 tokensToDisable, uint256 error)
     {
-        address creditAccount = _creditAccount();
+        address creditAccount = _creditAccount(); // U:[COMP2E-7]
 
-        uint256 amount = ICEther(cToken).balanceOf(creditAccount);
+        uint256 amount = ICEther(cToken).balanceOf(creditAccount); // U:[COMP2E-7]
         if (amount <= leftoverAmount) return (0, 0, 0);
         unchecked {
-            amount -= leftoverAmount;
+            amount -= leftoverAmount; // U:[COMP2E-7]
         }
 
-        _approveToken(cToken, type(uint256).max);
-        error = abi.decode(_execute(_encodeRedeem(amount)), (uint256));
-        _approveToken(cToken, 1);
+        _approveToken(cToken, type(uint256).max); // U:[COMP2E-7]
+        error = abi.decode(_execute(_encodeRedeem(amount)), (uint256)); // U:[COMP2E-7]
+        _approveToken(cToken, 1); // U:[COMP2E-7]
         (tokensToEnable, tokensToDisable) = (tokenMask, leftoverAmount <= 1 ? cTokenMask : 0);
     }
 

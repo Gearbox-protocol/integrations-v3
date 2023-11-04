@@ -54,28 +54,18 @@ contract AaveV2_LendingPoolAdapter is AbstractAdapter, IAaveV2_LendingPoolAdapte
     function depositDiff(address asset, uint256 leftoverAmount)
         external
         override
-        creditFacadeOnly
+        creditFacadeOnly // U:[AAVE2-2]
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        address creditAccount = _creditAccount();
+        address creditAccount = _creditAccount(); // U:[AAVE2-4]
 
-        (tokensToEnable, tokensToDisable) = _depositDiffInternal(creditAccount, asset, leftoverAmount);
-    }
-
-    /// @dev Internal implementation of `depositDiff`
-    ///      - Computes the amount to swap and passes to `_deposit`.
-    ///      - If the leftover amount is 1 or less, disables the underlying token.
-    function _depositDiffInternal(address creditAccount, address asset, uint256 leftoverAmount)
-        internal
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
-    {
-        uint256 amount = IERC20(asset).balanceOf(creditAccount);
+        uint256 amount = IERC20(asset).balanceOf(creditAccount); // U:[AAVE2-4]
         if (amount <= leftoverAmount) return (0, 0);
         unchecked {
-            amount -= leftoverAmount;
+            amount -= leftoverAmount; // U:[AAVE2-4]
         }
 
-        (tokensToEnable, tokensToDisable) = _deposit(creditAccount, asset, amount, leftoverAmount <= 1);
+        (tokensToEnable, tokensToDisable) = _deposit(creditAccount, asset, amount, leftoverAmount <= 1); // U:[AAVE2-4]
     }
 
     /// @dev Internal implementation of all deposit functions
@@ -112,7 +102,7 @@ contract AaveV2_LendingPoolAdapter is AbstractAdapter, IAaveV2_LendingPoolAdapte
     {
         address creditAccount = _creditAccount(); // U:[AAVE2-5A,5B]
         if (amount == type(uint256).max) {
-            (tokensToEnable, tokensToDisable) = _withdrawDiffInternal(creditAccount, asset, 1); // U:[AAVE2-5B]
+            (tokensToEnable, tokensToDisable) = _withdrawDiff(creditAccount, asset, 1); // U:[AAVE2-5B]
         } else {
             (tokensToEnable, tokensToDisable) = _withdraw(creditAccount, asset, amount); // U:[AAVE2-5A]
         }
@@ -124,11 +114,11 @@ contract AaveV2_LendingPoolAdapter is AbstractAdapter, IAaveV2_LendingPoolAdapte
     function withdrawDiff(address asset, uint256 leftoverAmount)
         external
         override
-        creditFacadeOnly
+        creditFacadeOnly // U:[AAVE2-2]
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        address creditAccount = _creditAccount();
-        (tokensToEnable, tokensToDisable) = _withdrawDiffInternal(creditAccount, asset, leftoverAmount);
+        address creditAccount = _creditAccount(); // U:[AAVE2-6]
+        (tokensToEnable, tokensToDisable) = _withdrawDiff(creditAccount, asset, leftoverAmount); // U:[AAVE2-6]
     }
 
     /// @dev Internal implementation of `withdraw` functionality
@@ -144,24 +134,24 @@ contract AaveV2_LendingPoolAdapter is AbstractAdapter, IAaveV2_LendingPoolAdapte
             _executeSwapNoApprove(_aToken(asset), asset, _encodeWithdraw(creditAccount, asset, amount), false); // U:[AAVE2-5A]
     }
 
-    /// @dev Internal implementation of `withdrawDiff`
+    /// @dev Internal implementation of `withdrawDiff` functionality
     ///      - using `_executeSwap` because need to check if tokens are recognized by the system
     ///      - aToken is not approved before the call because lending pool doesn't need permission to burn it
     ///      - underlying is enabled after the call
     ///      - aToken is disabled if the leftover is 0 or 1
-    function _withdrawDiffInternal(address creditAccount, address asset, uint256 leftoverAmount)
+    function _withdrawDiff(address creditAccount, address asset, uint256 leftoverAmount)
         internal
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
         address aToken = _aToken(asset);
-        uint256 amount = IERC20(aToken).balanceOf(creditAccount);
+        uint256 amount = IERC20(aToken).balanceOf(creditAccount); // U:[AAVE2-5B,6]
         if (amount <= leftoverAmount) return (0, 0);
         unchecked {
-            amount -= leftoverAmount;
+            amount -= leftoverAmount; // U:[AAVE2-5B,6]
         }
 
         (tokensToEnable, tokensToDisable,) =
-            _executeSwapNoApprove(aToken, asset, _encodeWithdraw(creditAccount, asset, amount), leftoverAmount <= 1);
+            _executeSwapNoApprove(aToken, asset, _encodeWithdraw(creditAccount, asset, amount), leftoverAmount <= 1); // U:[AAVE2-5B,6]
     }
 
     /// @dev Returns calldata for `ILendingPool.withdraw` call

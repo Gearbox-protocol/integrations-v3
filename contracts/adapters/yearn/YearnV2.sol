@@ -45,20 +45,15 @@ contract YearnV2Adapter is AbstractAdapter, IYearnV2Adapter {
     function depositDiff(uint256 leftoverAmount)
         external
         override
-        creditFacadeOnly
+        creditFacadeOnly // U:[YFI2-2]
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        (tokensToEnable, tokensToDisable) = _depositDiff(leftoverAmount);
-    }
+        address creditAccount = _creditAccount(); // U:[YFI2-3]
 
-    /// @dev Internal implementation for `depositDiff`
-    function _depositDiff(uint256 leftoverAmount) internal returns (uint256 tokensToEnable, uint256 tokensToDisable) {
-        address creditAccount = _creditAccount();
-
-        uint256 balance = IERC20(token).balanceOf(creditAccount);
+        uint256 balance = IERC20(token).balanceOf(creditAccount); // U:[YFI2-3]
         if (balance > leftoverAmount) {
             unchecked {
-                (tokensToEnable, tokensToDisable) = _deposit(balance - leftoverAmount, leftoverAmount <= 1);
+                (tokensToEnable, tokensToDisable) = _deposit(balance - leftoverAmount, leftoverAmount <= 1); // U:[YFI2-3]
             }
         }
     }
@@ -108,21 +103,16 @@ contract YearnV2Adapter is AbstractAdapter, IYearnV2Adapter {
     function withdrawDiff(uint256 leftoverAmount)
         external
         override
-        creditFacadeOnly
+        creditFacadeOnly // U:[YFI2-2]
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        (tokensToEnable, tokensToDisable) = _withdrawDiff(leftoverAmount);
-    }
-
-    /// @dev Internal implementation for `withdrawDiff`
-    function _withdrawDiff(uint256 leftoverAmount) internal returns (uint256 tokensToEnable, uint256 tokensToDisable) {
-        address creditAccount = _creditAccount();
+        address creditAccount = _creditAccount(); // U:[YFI2-6]
 
         uint256 balance = IERC20(targetContract).balanceOf(creditAccount); // U:[YFI2-6]
 
         if (balance > leftoverAmount) {
             unchecked {
-                (tokensToEnable, tokensToDisable) = _withdraw(balance - leftoverAmount, leftoverAmount <= 1);
+                (tokensToEnable, tokensToDisable) = _withdraw(balance - leftoverAmount, leftoverAmount <= 1); // U:[YFI2-6]
             }
         }
     }

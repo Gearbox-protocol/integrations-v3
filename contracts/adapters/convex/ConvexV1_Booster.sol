@@ -57,25 +57,17 @@ contract ConvexV1BoosterAdapter is AbstractAdapter, IConvexV1BoosterAdapter {
     function depositDiff(uint256 _pid, uint256 leftoverAmount, bool _stake)
         external
         override
-        creditFacadeOnly
+        creditFacadeOnly // U:[CVX1B-2]
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        (tokensToEnable, tokensToDisable) = _depositDiff(leftoverAmount, _pid, _stake);
-    }
-
-    /// @dev Internal implementation for `depositDiff`
-    function _depositDiff(uint256 leftoverAmount, uint256 _pid, bool _stake)
-        internal
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
-    {
-        address creditAccount = _creditAccount();
+        address creditAccount = _creditAccount(); // U:[CVX1B-4]
 
         IBooster.PoolInfo memory pool = IBooster(targetContract).poolInfo(_pid);
 
-        address tokenIn = pool.lptoken;
-        address tokenOut = _stake ? pidToPhantomToken[_pid] : pool.token;
+        address tokenIn = pool.lptoken; // U:[CVX1B-4]
+        address tokenOut = _stake ? pidToPhantomToken[_pid] : pool.token; // U:[CVX1B-4]
 
-        uint256 balance = IERC20(tokenIn).balanceOf(creditAccount);
+        uint256 balance = IERC20(tokenIn).balanceOf(creditAccount); // U:[CVX1B-4]
 
         if (balance > leftoverAmount) {
             unchecked {
@@ -84,12 +76,12 @@ contract ConvexV1BoosterAdapter is AbstractAdapter, IConvexV1BoosterAdapter {
                     tokenOut,
                     abi.encodeCall(IBooster.deposit, (_pid, balance - leftoverAmount, _stake)),
                     leftoverAmount <= 1
-                );
+                ); // U:[CVX1B-4]
             }
         }
     }
 
-    /// @dev Internal implementation of `deposit`
+    /// @dev Internal implementation of `deposit` and `depositDiff`
     ///      - Curve LP token is approved before the call
     ///      - Convex LP token (or staked phantom token, if `_stake` is true) is enabled after the call
     ///      - Curve LP token is only disabled when depositing the entire balance
@@ -128,25 +120,17 @@ contract ConvexV1BoosterAdapter is AbstractAdapter, IConvexV1BoosterAdapter {
     function withdrawDiff(uint256 _pid, uint256 leftoverAmount)
         external
         override
-        creditFacadeOnly
+        creditFacadeOnly // U:[CVX1B-2]
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        (tokensToEnable, tokensToDisable) = _withdrawDiff(leftoverAmount, _pid);
-    }
-
-    /// @dev Internal implementation for `withdrawDiff`
-    function _withdrawDiff(uint256 leftoverAmount, uint256 _pid)
-        internal
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
-    {
-        address creditAccount = _creditAccount();
+        address creditAccount = _creditAccount(); // U:[CVX1B-6]
 
         IBooster.PoolInfo memory pool = IBooster(targetContract).poolInfo(_pid);
 
-        address tokenIn = pool.token;
-        address tokenOut = pool.lptoken;
+        address tokenIn = pool.token; // U:[CVX1B-6]
+        address tokenOut = pool.lptoken; // U:[CVX1B-6]
 
-        uint256 balance = IERC20(tokenIn).balanceOf(creditAccount);
+        uint256 balance = IERC20(tokenIn).balanceOf(creditAccount); // U:[CVX1B-6]
 
         if (balance > leftoverAmount) {
             unchecked {
@@ -155,12 +139,12 @@ contract ConvexV1BoosterAdapter is AbstractAdapter, IConvexV1BoosterAdapter {
                     tokenOut,
                     abi.encodeCall(IBooster.withdraw, (_pid, balance - leftoverAmount)),
                     leftoverAmount <= 1
-                );
+                ); // U:[CVX1B-6]
             }
         }
     }
 
-    /// @dev Internal implementation of `withdraw` and `withdrawAll`
+    /// @dev Internal implementation of `withdraw` and `withdrawDiff`
     ///      - Curve LP token is enabled after the call
     ///      - Convex LP token is only disabled when withdrawing the entire stake
     function _withdraw(uint256 _pid, bytes memory callData, bool disableConvexLP)

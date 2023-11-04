@@ -98,8 +98,8 @@ contract UniswapV3AdapterUnitTest is
         assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
     }
 
-    /// @notice U:[UNI3-4A]: `exactDiffInputSingle` works as expected
-    function test_U_UNI3_04A_exactDiffInputSingle_works_as_expected() public diffTestCases {
+    /// @notice U:[UNI3-4]: `exactDiffInputSingle` works as expected
+    function test_U_UNI3_04_exactDiffInputSingle_works_as_expected() public diffTestCases {
         deal({token: tokens[0], to: creditAccount, give: diffMintedAmount});
 
         _readsActiveAccount();
@@ -173,8 +173,8 @@ contract UniswapV3AdapterUnitTest is
         assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
     }
 
-    /// @notice U:[UNI3-6A]: `exactDiffInput` works as expected
-    function test_U_UNI3_06A_exactDiffInput_works_as_expected() public diffTestCases {
+    /// @notice U:[UNI3-6]: `exactDiffInput` works as expected
+    function test_U_UNI3_06_exactDiffInput_works_as_expected() public diffTestCases {
         deal({token: tokens[0], to: creditAccount, give: diffMintedAmount});
 
         ExactDiffInputParams memory params = ExactDiffInputParams({

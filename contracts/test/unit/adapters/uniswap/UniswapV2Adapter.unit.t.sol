@@ -99,8 +99,8 @@ contract UniswapV2AdapterUnitTest is AdapterUnitTestHelper, IUniswapV2AdapterEve
         assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
     }
 
-    /// @notice U:[UNI2-5A]: `swapDiffTokensForTokens` works as expected
-    function test_U_UNI2_05A_swapDiffTokensForTokens_works_as_expected() public diffTestCases {
+    /// @notice U:[UNI2-5]: `swapDiffTokensForTokens` works as expected
+    function test_U_UNI2_05_swapDiffTokensForTokens_works_as_expected() public diffTestCases {
         deal({token: tokens[0], to: creditAccount, give: diffMintedAmount});
 
         address[] memory path = _makePath(0);

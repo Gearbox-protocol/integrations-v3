@@ -66,8 +66,8 @@ contract ConvexV1BoosterAdapterUnitTest is AdapterUnitTestHelper {
         }
     }
 
-    /// @notice U:[CVX1B-4A]: `depositDiff` works as expected
-    function test_U_CVX1B_04A_depositDiff_works_as_expected() public diffTestCases {
+    /// @notice U:[CVX1B-4]: `depositDiff` works as expected
+    function test_U_CVX1B_04_depositDiff_works_as_expected() public diffTestCases {
         deal({token: tokens[0], to: creditAccount, give: diffMintedAmount});
         for (uint256 i; i < 2; ++i) {
             bool stake = i == 1;
@@ -105,8 +105,8 @@ contract ConvexV1BoosterAdapterUnitTest is AdapterUnitTestHelper {
         assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
     }
 
-    /// @notice U:[CVX1B-6A]: `withdrawDiff` works as expected
-    function test_U_CVX1B_06A_withdrawDiff_works_as_expected() public diffTestCases {
+    /// @notice U:[CVX1B-6]: `withdrawDiff` works as expected
+    function test_U_CVX1B_06_withdrawDiff_works_as_expected() public diffTestCases {
         deal({token: tokens[1], to: creditAccount, give: diffMintedAmount});
         _readsActiveAccount();
         _executesSwap({

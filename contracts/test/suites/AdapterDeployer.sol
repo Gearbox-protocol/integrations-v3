@@ -84,7 +84,7 @@ contract AdapterDeployer is AdapterData, Test {
     }
 
     function _isCollateralToken(address token) internal view returns (bool) {
-        try creditManager.getTokenMaskOrRevert(token) returns (uint256 mask) {
+        try creditManager.getTokenMaskOrRevert(token) returns (uint256) {
             return true;
         } catch {
             return false;

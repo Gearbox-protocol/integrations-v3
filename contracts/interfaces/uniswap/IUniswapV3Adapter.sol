@@ -33,7 +33,7 @@ interface IUniswapV3AdapterTypes {
         uint160 sqrtPriceLimitX96;
     }
 
-    /// @notice Params for exact all input swap through multiple pools
+    /// @notice Params for exact diff input swap through multiple pools
     /// @param path Bytes-encoded swap path, see Uniswap docs for details
     /// @param deadline Maximum timestamp until which the transaction is valid
     /// @param leftoverAmount Amount of tokenIn to keep on the account

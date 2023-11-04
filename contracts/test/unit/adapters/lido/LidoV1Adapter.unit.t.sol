@@ -81,8 +81,8 @@ contract LidoV1AdapterUnitTest is AdapterUnitTestHelper {
         assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
     }
 
-    /// @notice U:[LDO1-4A]: `submitDiff` works as expected
-    function test_U_LDO1_04A_submitDiff_works_as_expected() public diffTestCases {
+    /// @notice U:[LDO1-4]: `submitDiff` works as expected
+    function test_U_LDO1_04_submitDiff_works_as_expected() public diffTestCases {
         deal({token: weth, to: creditAccount, give: diffMintedAmount});
 
         _readsActiveAccount();

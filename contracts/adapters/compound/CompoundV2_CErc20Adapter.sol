@@ -66,17 +66,17 @@ contract CompoundV2_CErc20Adapter is CompoundV2_CTokenAdapter {
         override
         returns (uint256 tokensToEnable, uint256 tokensToDisable, uint256 error)
     {
-        address creditAccount = _creditAccount();
+        address creditAccount = _creditAccount(); // U:[COMP2T-5]
 
-        uint256 amount = IERC20(underlying).balanceOf(creditAccount);
+        uint256 amount = IERC20(underlying).balanceOf(creditAccount); // U:[COMP2T-5]
         if (amount <= leftoverAmount) return (0, 0, 0);
         unchecked {
-            amount -= leftoverAmount;
+            amount -= leftoverAmount; // U:[COMP2T-5]
         }
 
-        _approveToken(underlying, type(uint256).max);
-        error = abi.decode(_execute(_encodeMint(amount)), (uint256));
-        _approveToken(underlying, 1);
+        _approveToken(underlying, type(uint256).max); // U:[COMP2T-5]
+        error = abi.decode(_execute(_encodeMint(amount)), (uint256)); // U:[COMP2T-5]
+        _approveToken(underlying, 1); // U:[COMP2T-5]
         (tokensToEnable, tokensToDisable) = (cTokenMask, leftoverAmount <= 1 ? tokenMask : 0);
     }
 
@@ -96,21 +96,21 @@ contract CompoundV2_CErc20Adapter is CompoundV2_CTokenAdapter {
     /// @dev Internal implementation of `redeemDiff`
     ///      - cToken is not approved before the call because cToken doesn't need permission to burn it
     ///      - underlying is enabled after the call
-    ///      - cToken is disabled after the call because operation spends the entire balance
+    ///      - cToken is disabled after the call if leftoverAmount <= 1
     function _redeemDiff(uint256 leftoverAmount)
         internal
         override
         returns (uint256 tokensToEnable, uint256 tokensToDisable, uint256 error)
     {
-        address creditAccount = _creditAccount();
+        address creditAccount = _creditAccount(); // U:[COMP2T-7]
 
-        uint256 amount = ICErc20(targetContract).balanceOf(creditAccount);
+        uint256 amount = ICErc20(targetContract).balanceOf(creditAccount); // U:[COMP2T-7]
         if (amount <= leftoverAmount) return (0, 0, 0);
         unchecked {
-            amount -= leftoverAmount;
+            amount -= leftoverAmount; // U:[COMP2T-7]
         }
 
-        error = abi.decode(_execute(_encodeRedeem(amount)), (uint256));
+        error = abi.decode(_execute(_encodeRedeem(amount)), (uint256)); // U:[COMP2T-7]
         (tokensToEnable, tokensToDisable) = (tokenMask, leftoverAmount <= 1 ? cTokenMask : 0);
     }
 
