@@ -1367,10 +1367,10 @@
   resolved "https://registry.yarnpkg.com/@gearbox-protocol/core-v2/-/core-v2-1.19.0-base.10.tgz#a21bce9eac4ca1783f5fcb4322b1c1257158d2de"
   integrity sha512-S9reS5zGt+cKxEdQppVCU0cZEmnSqx8DaoloY6KXqCsAedVJvwNUoCHnLjh9s/oWyOHa37qExN1QohntNQyB2Q==
 
-"@gearbox-protocol/core-v3@^1.42.1":
-  version "1.42.2"
-  resolved "https://registry.yarnpkg.com/@gearbox-protocol/core-v3/-/core-v3-1.42.2.tgz#e8d3c90598351b5d245f4b5d86b36e6a4f5f7c35"
-  integrity sha512-Q+VIjZZog3bhwiWzQ6JoJsbQz1WdsD0OFfBtncTZLnSigRw5COY+/rP+gGi5Vxum5XCaz8vYAh5VKaWF35S5hg==
+"@gearbox-protocol/core-v3@^1.44.0":
+  version "1.44.0"
+  resolved "https://registry.yarnpkg.com/@gearbox-protocol/core-v3/-/core-v3-1.44.0.tgz#751ba99ef7f92de5126038b52e114350c377ebc4"
+  integrity sha512-dJSdsCvu67ZM8hs4OrSCwAyqxDzg/BxMjBC/EIozlKR7IIZ0hK0/mtNy02yo3WEpr2qF9FZjLMsL4AW6BVpPKg==
 
 "@gearbox-protocol/eslint-config@^1.6.1":
   version "1.6.1"
@@ -1387,10 +1387,10 @@
     eslint-plugin-simple-import-sort "^7.0.0"
     eslint-plugin-unused-imports "^2.0.0"
 
-"@gearbox-protocol/oracles-v3@^1.7.6":
-  version "1.7.6"
-  resolved "https://registry.yarnpkg.com/@gearbox-protocol/oracles-v3/-/oracles-v3-1.7.6.tgz#5b7a834bed48026766b0754be44ebf1e9c611713"
-  integrity sha512-aKjbhz8FI32I9ZJSM2BluJNrCUUo4FGQMT+ObxfYr4iEBSAlSKrZd7SiABGIMdy/7QRnS88qBvj5GH6VUi4HhQ==
+"@gearbox-protocol/oracles-v3@^1.8.1":
+  version "1.8.1"
+  resolved "https://registry.yarnpkg.com/@gearbox-protocol/oracles-v3/-/oracles-v3-1.8.1.tgz#ef92b2abbfa61b8807775cb849a25080d7cb13c6"
+  integrity sha512-4sCGNJAzyu26RCILym4dUJB+o5lP5yH1xvtc+mTNP+KuJwmJS4rX7tkP4Cis4S6lGRKJHweU6069vQgbSTr5wg==
   dependencies:
     redstone-protocol "^1.0.5"
 

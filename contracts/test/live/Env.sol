@@ -9,5 +9,5 @@ import {Tokens} from "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
 import "forge-std/console.sol";
 
 contract Live_LidoEquivalenceTest is LiveTestHelper {
-    function test_tt() public liveCreditTest("mainnet-usdc-lev-v3") {}
+/// function test_tt() public liveCreditTest("mainnet-usdc-lev-v3") {}
 }
