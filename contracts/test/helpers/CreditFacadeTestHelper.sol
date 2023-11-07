@@ -13,7 +13,7 @@ import {IntegrationTestHelper} from "@gearbox-protocol/core-v3/contracts/test/he
 import "../lib/constants.sol";
 
 contract CreditFacadeTestHelper is IntegrationTestHelper {
-    function addCollateral(address creditAccount, Tokens t, uint256 amount) internal {
+    function addCollateral(address, /*creditAccount*/ Tokens t, uint256 amount) internal {
         tokenTestSuite.mint(t, USER, amount);
         tokenTestSuite.approve(t, USER, address(creditManager));
 
@@ -25,8 +25,7 @@ contract CreditFacadeTestHelper is IntegrationTestHelper {
     function addMockPriceFeed(address token, uint256 price) public {
         address priceFeed = address(new PriceFeedMock(int256(price), 8));
 
-        vm.startPrank(CONFIGURATOR);
-        priceOracle.setPriceFeed(token, priceFeed, 48 hours);
-        vm.stopPrank();
+        vm.prank(CONFIGURATOR);
+        priceOracle.setPriceFeed(token, priceFeed, 48 hours, false);
     }
 }
