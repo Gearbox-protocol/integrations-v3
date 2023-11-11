@@ -397,9 +397,10 @@ contract ZapperBaseUnitTest is Test {
                     );
                 }
 
+                vm.prank(owner);
                 uint256 tokenInAmount = withPermit
-                    ? zapper.redeemWithPermit(cases[i].tokenOutAmount, receiver, owner, 0, 0, bytes32(0), bytes32(0))
-                    : zapper.redeem(cases[i].tokenOutAmount, receiver, owner);
+                    ? zapper.redeemWithPermit(cases[i].tokenOutAmount, receiver, 0, 0, bytes32(0), bytes32(0))
+                    : zapper.redeem(cases[i].tokenOutAmount, receiver);
 
                 assertEq(
                     tokenInAmount,
