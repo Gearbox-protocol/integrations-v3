@@ -16,15 +16,9 @@ interface IZapper {
 
     function previewRedeem(uint256 tokenOutAmount) external view returns (uint256 tokenInAmount);
 
-    function redeem(uint256 tokenOutAmount, address receiver, address owner) external returns (uint256 tokenInAmount);
+    function redeem(uint256 tokenOutAmount, address receiver) external returns (uint256 tokenInAmount);
 
-    function redeemWithPermit(
-        uint256 tokenOutAmount,
-        address receiver,
-        address owner,
-        uint256 deadline,
-        uint8 v,
-        bytes32 r,
-        bytes32 s
-    ) external returns (uint256 tokenInAmount);
+    function redeemWithPermit(uint256 tokenOutAmount, address receiver, uint256 deadline, uint8 v, bytes32 r, bytes32 s)
+        external
+        returns (uint256 tokenInAmount);
 }

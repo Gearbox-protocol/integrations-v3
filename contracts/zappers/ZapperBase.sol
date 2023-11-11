@@ -70,30 +70,25 @@ abstract contract ZapperBase is IZapper {
     // --- //
 
     /// @notice Performs redeem zap:
-    ///         - receives `tokenOut` from `owner` and converts it to `pool`'s shares
+    ///         - receives `tokenOut` from `msg.sender` and converts it to `pool`'s shares
     ///         - redeems `pool`'s shares for `underlying`
     ///         - converts `underlying` to `tokenIn` and sends it to `receiver`
-    /// @dev Requires approval from `owner` for `tokenOut` to this contract
-    function redeem(uint256 tokenOutAmount, address receiver, address owner) external returns (uint256 tokenInAmount) {
-        tokenInAmount = _redeem(tokenOutAmount, receiver, owner);
+    /// @dev Requires approval from `msg.sender` for `tokenOut` to this contract
+    function redeem(uint256 tokenOutAmount, address receiver) external returns (uint256 tokenInAmount) {
+        tokenInAmount = _redeem(tokenOutAmount, receiver, msg.sender);
     }
 
     /// @notice Performs redeem zap using signed EIP-2612 permit message for zapper's output token:
-    ///         - receives `tokenOut` from `owner` and converts it to `pool`'s shares
+    ///         - receives `tokenOut` from `msg.sender` and converts it to `pool`'s shares
     ///         - redeems `pool`'s shares for `underlying`
     ///         - converts `underlying` to `tokenIn` and sends it to `receiver`
-    /// @dev `v`, `r`, `s` must be a valid signature of the permit message from `owner` for `tokenOut` to this contract
-    function redeemWithPermit(
-        uint256 tokenOutAmount,
-        address receiver,
-        address owner,
-        uint256 deadline,
-        uint8 v,
-        bytes32 r,
-        bytes32 s
-    ) external returns (uint256 tokenInAmount) {
-        try IERC20Permit(tokenOut()).permit(owner, address(this), tokenOutAmount, deadline, v, r, s) {} catch {} // U:[ZB-5]
-        tokenInAmount = _redeem(tokenOutAmount, receiver, owner);
+    /// @dev `v`, `r`, `s` must be a valid signature of the permit message from `msg.sender` for `tokenOut` to this contract
+    function redeemWithPermit(uint256 tokenOutAmount, address receiver, uint256 deadline, uint8 v, bytes32 r, bytes32 s)
+        external
+        returns (uint256 tokenInAmount)
+    {
+        try IERC20Permit(tokenOut()).permit(msg.sender, address(this), tokenOutAmount, deadline, v, r, s) {} catch {} // U:[ZB-5]
+        tokenInAmount = _redeem(tokenOutAmount, receiver, msg.sender);
     }
 
     /// @dev `deposit` and `depositWithReferral` implementation
