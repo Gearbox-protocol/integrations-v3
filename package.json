@@ -45,7 +45,7 @@
   "dependencies": {
     "@gearbox-protocol/core-v2": "^1.16.2",
     "@gearbox-protocol/sdk": "^2.1.33",
-    "@gearbox-protocol/sdk-gov": "^1.5.16",
+    "@gearbox-protocol/sdk-gov": "^1.15.1",
     "axios": "^1.1.3"
   },
   "devDependencies": {
