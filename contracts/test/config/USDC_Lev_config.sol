@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 // Gearbox. Generalized leverage protocol that allows to take leverage and then use it across other DeFi protocols and platforms in a composable way.
-// (c) Gearbox Foundation, 2023
+// (c) Gearbox Holdings, 2022
 pragma solidity ^0.8.17;
 
 import {Tokens} from "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
@@ -29,7 +29,7 @@ contract CONFIG_MAINNET_USDC_LEV_V3 is IPoolV3DeployConfig {
     // POOL
 
     string public constant symbol = "dUSDC-lev-V3";
-    string public constant name = "USDC v3 farm";
+    string public constant name = "Farm USDC v3";
 
     PoolV3DeployParams _poolParams = PoolV3DeployParams({withdrawalFee: 0, expectedLiquidityLimit: 10_000_000_000_000});
 
@@ -61,7 +61,6 @@ contract CONFIG_MAINNET_USDC_LEV_V3 is IPoolV3DeployConfig {
         _gaugeRates.push(GaugeRate({token: Tokens.YieldETH, minRate: 1, maxRate: 30_00}));
         _gaugeRates.push(GaugeRate({token: Tokens.DAI, minRate: 1, maxRate: 30_00}));
         _gaugeRates.push(GaugeRate({token: Tokens.USDT, minRate: 1, maxRate: 30_00}));
-        _gaugeRates.push(GaugeRate({token: Tokens.sUSD, minRate: 1, maxRate: 30_00}));
         _gaugeRates.push(GaugeRate({token: Tokens.FRAX, minRate: 1, maxRate: 30_00}));
         _gaugeRates.push(GaugeRate({token: Tokens.GUSD, minRate: 1, maxRate: 30_00}));
         _gaugeRates.push(GaugeRate({token: Tokens.LUSD, minRate: 1, maxRate: 30_00}));
@@ -78,9 +77,6 @@ contract CONFIG_MAINNET_USDC_LEV_V3 is IPoolV3DeployConfig {
         _gaugeRates.push(GaugeRate({token: Tokens.LUSD3CRV, minRate: 1, maxRate: 30_00}));
         _gaugeRates.push(GaugeRate({token: Tokens.cvxLUSD3CRV, minRate: 1, maxRate: 30_00}));
         _gaugeRates.push(GaugeRate({token: Tokens.stkcvxLUSD3CRV, minRate: 1, maxRate: 30_00}));
-        _gaugeRates.push(GaugeRate({token: Tokens.crvPlain3andSUSD, minRate: 1, maxRate: 30_00}));
-        _gaugeRates.push(GaugeRate({token: Tokens.cvxcrvPlain3andSUSD, minRate: 1, maxRate: 30_00}));
-        _gaugeRates.push(GaugeRate({token: Tokens.stkcvxcrvPlain3andSUSD, minRate: 1, maxRate: 30_00}));
         _gaugeRates.push(GaugeRate({token: Tokens.gusd3CRV, minRate: 1, maxRate: 30_00}));
         _gaugeRates.push(GaugeRate({token: Tokens.cvxgusd3CRV, minRate: 1, maxRate: 30_00}));
         _gaugeRates.push(GaugeRate({token: Tokens.stkcvxgusd3CRV, minRate: 1, maxRate: 30_00}));
@@ -117,7 +113,6 @@ contract CONFIG_MAINNET_USDC_LEV_V3 is IPoolV3DeployConfig {
         _quotaLimits.push(PoolQuotaLimit({token: Tokens.YieldETH, quotaIncreaseFee: 0, limit: 10_000_000_000_000}));
         _quotaLimits.push(PoolQuotaLimit({token: Tokens.DAI, quotaIncreaseFee: 0, limit: 10_000_000_000_000}));
         _quotaLimits.push(PoolQuotaLimit({token: Tokens.USDT, quotaIncreaseFee: 0, limit: 10_000_000_000_000}));
-        _quotaLimits.push(PoolQuotaLimit({token: Tokens.sUSD, quotaIncreaseFee: 0, limit: 10_000_000_000_000}));
         _quotaLimits.push(PoolQuotaLimit({token: Tokens.FRAX, quotaIncreaseFee: 0, limit: 10_000_000_000_000}));
         _quotaLimits.push(PoolQuotaLimit({token: Tokens.GUSD, quotaIncreaseFee: 0, limit: 10_000_000_000_000}));
         _quotaLimits.push(PoolQuotaLimit({token: Tokens.LUSD, quotaIncreaseFee: 0, limit: 10_000_000_000_000}));
@@ -137,15 +132,6 @@ contract CONFIG_MAINNET_USDC_LEV_V3 is IPoolV3DeployConfig {
         _quotaLimits.push(PoolQuotaLimit({token: Tokens.cvxLUSD3CRV, quotaIncreaseFee: 0, limit: 10_000_000_000_000}));
         _quotaLimits.push(
             PoolQuotaLimit({token: Tokens.stkcvxLUSD3CRV, quotaIncreaseFee: 0, limit: 10_000_000_000_000})
-        );
-        _quotaLimits.push(
-            PoolQuotaLimit({token: Tokens.crvPlain3andSUSD, quotaIncreaseFee: 0, limit: 10_000_000_000_000})
-        );
-        _quotaLimits.push(
-            PoolQuotaLimit({token: Tokens.cvxcrvPlain3andSUSD, quotaIncreaseFee: 0, limit: 10_000_000_000_000})
-        );
-        _quotaLimits.push(
-            PoolQuotaLimit({token: Tokens.stkcvxcrvPlain3andSUSD, quotaIncreaseFee: 0, limit: 10_000_000_000_000})
         );
         _quotaLimits.push(PoolQuotaLimit({token: Tokens.gusd3CRV, quotaIncreaseFee: 0, limit: 10_000_000_000_000}));
         _quotaLimits.push(PoolQuotaLimit({token: Tokens.cvxgusd3CRV, quotaIncreaseFee: 0, limit: 10_000_000_000_000}));
@@ -178,237 +164,241 @@ contract CONFIG_MAINNET_USDC_LEV_V3 is IPoolV3DeployConfig {
         _quotaLimits.push(PoolQuotaLimit({token: Tokens.BAL, quotaIncreaseFee: 0, limit: 10_000_000_000_000}));
         _quotaLimits.push(PoolQuotaLimit({token: Tokens.AURA, quotaIncreaseFee: 0, limit: 10_000_000_000_000}));
 
-        /// CREDIT_MANAGER_0
-        CreditManagerV3DeployParams storage cp = _creditManagers.push();
-
-        cp.minDebt = 10_000_000_000;
-        cp.maxDebt = 1_000_000_000_000;
-        cp.whitelisted = false;
-        cp.expirable = false;
-        cp.skipInit = false;
-        cp.poolLimit = 10_000_000_000_000;
-
-        CollateralTokenHuman[] storage cts = cp.collateralTokens;
-        cts.push(CollateralTokenHuman({token: Tokens.WETH, lt: 85_00}));
-
-        cts.push(CollateralTokenHuman({token: Tokens.STETH, lt: 82_50}));
-
-        cts.push(CollateralTokenHuman({token: Tokens.wstETH, lt: 82_50}));
-
-        cts.push(CollateralTokenHuman({token: Tokens.rETH, lt: 82_50}));
-
-        cts.push(CollateralTokenHuman({token: Tokens.WBTC, lt: 85_00}));
-
-        cts.push(CollateralTokenHuman({token: Tokens.LINK, lt: 80_00}));
-
-        cts.push(CollateralTokenHuman({token: Tokens.aDAI, lt: 92_00}));
-
-        cts.push(CollateralTokenHuman({token: Tokens.cLINK, lt: 85_00}));
-
-        cts.push(CollateralTokenHuman({token: Tokens.sDAI, lt: 92_00}));
-
-        cts.push(CollateralTokenHuman({token: Tokens.DAI, lt: 92_00}));
-
-        cts.push(CollateralTokenHuman({token: Tokens.USDT, lt: 90_00}));
-
-        cts.push(CollateralTokenHuman({token: Tokens.sUSD, lt: 90_00}));
-
-        cts.push(CollateralTokenHuman({token: Tokens.FRAX, lt: 90_00}));
-
-        cts.push(CollateralTokenHuman({token: Tokens.GUSD, lt: 90_00}));
-
-        cts.push(CollateralTokenHuman({token: Tokens.LUSD, lt: 90_00}));
-
-        cts.push(CollateralTokenHuman({token: Tokens.rETH_f, lt: 82_50}));
-
-        cts.push(CollateralTokenHuman({token: Tokens.steCRV, lt: 82_50}));
-
-        cts.push(CollateralTokenHuman({token: Tokens.cvxsteCRV, lt: 82_50}));
-
-        cts.push(CollateralTokenHuman({token: Tokens.stkcvxsteCRV, lt: 82_50}));
-
-        cts.push(CollateralTokenHuman({token: Tokens._3Crv, lt: 90_00}));
-
-        cts.push(CollateralTokenHuman({token: Tokens.cvx3Crv, lt: 90_00}));
-
-        cts.push(CollateralTokenHuman({token: Tokens.stkcvx3Crv, lt: 90_00}));
-
-        cts.push(CollateralTokenHuman({token: Tokens.FRAX3CRV, lt: 90_00}));
-
-        cts.push(CollateralTokenHuman({token: Tokens.cvxFRAX3CRV, lt: 90_00}));
-
-        cts.push(CollateralTokenHuman({token: Tokens.stkcvxFRAX3CRV, lt: 90_00}));
-
-        cts.push(CollateralTokenHuman({token: Tokens.LUSD3CRV, lt: 90_00}));
-
-        cts.push(CollateralTokenHuman({token: Tokens.cvxLUSD3CRV, lt: 90_00}));
-
-        cts.push(CollateralTokenHuman({token: Tokens.stkcvxLUSD3CRV, lt: 90_00}));
-
-        cts.push(CollateralTokenHuman({token: Tokens.crvPlain3andSUSD, lt: 90_00}));
-
-        cts.push(CollateralTokenHuman({token: Tokens.cvxcrvPlain3andSUSD, lt: 90_00}));
-
-        cts.push(CollateralTokenHuman({token: Tokens.stkcvxcrvPlain3andSUSD, lt: 90_00}));
-
-        cts.push(CollateralTokenHuman({token: Tokens.gusd3CRV, lt: 90_00}));
-
-        cts.push(CollateralTokenHuman({token: Tokens.cvxgusd3CRV, lt: 90_00}));
-
-        cts.push(CollateralTokenHuman({token: Tokens.stkcvxgusd3CRV, lt: 90_00}));
-
-        cts.push(CollateralTokenHuman({token: Tokens.crvFRAX, lt: 90_00}));
-
-        cts.push(CollateralTokenHuman({token: Tokens.cvxcrvFRAX, lt: 90_00}));
-
-        cts.push(CollateralTokenHuman({token: Tokens.stkcvxcrvFRAX, lt: 90_00}));
-
-        cts.push(CollateralTokenHuman({token: Tokens.USDC_DAI_USDT, lt: 82_00}));
-
-        cts.push(CollateralTokenHuman({token: Tokens.B_rETH_STABLE, lt: 82_00}));
-
-        cts.push(CollateralTokenHuman({token: Tokens.auraB_rETH_STABLE, lt: 82_00}));
-
-        cts.push(CollateralTokenHuman({token: Tokens.auraB_rETH_STABLE_vault, lt: 82_00}));
-
-        cts.push(CollateralTokenHuman({token: Tokens.yvDAI, lt: 90_00}));
-
-        cts.push(CollateralTokenHuman({token: Tokens.yvUSDC, lt: 90_00}));
-
-        cts.push(CollateralTokenHuman({token: Tokens.yvWETH, lt: 82_50}));
-
-        cts.push(CollateralTokenHuman({token: Tokens.yvWBTC, lt: 82_50}));
-
-        cts.push(CollateralTokenHuman({token: Tokens.yvCurve_stETH, lt: 82_50}));
-
-        cts.push(CollateralTokenHuman({token: Tokens.yvCurve_FRAX, lt: 90_00}));
-
-        cts.push(CollateralTokenHuman({token: Tokens.CVX, lt: 0}));
-
-        cts.push(CollateralTokenHuman({token: Tokens.FXS, lt: 0}));
-
-        cts.push(CollateralTokenHuman({token: Tokens.LQTY, lt: 0}));
-
-        cts.push(CollateralTokenHuman({token: Tokens.CRV, lt: 25_00}));
-
-        cts.push(CollateralTokenHuman({token: Tokens.LDO, lt: 0}));
-
-        cts.push(CollateralTokenHuman({token: Tokens.SNX, lt: 25_00}));
-
-        cts.push(CollateralTokenHuman({token: Tokens.BAL, lt: 25_00}));
-
-        cts.push(CollateralTokenHuman({token: Tokens.AURA, lt: 0}));
-        Contracts[] storage cs = cp.contracts;
-        cs.push(Contracts.UNISWAP_V3_ROUTER);
-        UniswapV3Pair[] storage uv3p = cp.uniswapV3Pairs;
-        uv3p.push(UniswapV3Pair({token0: Tokens.SNX, token1: Tokens.WETH, fee: 3000}));
-        uv3p.push(UniswapV3Pair({token0: Tokens.WBTC, token1: Tokens.WETH, fee: 500}));
-        uv3p.push(UniswapV3Pair({token0: Tokens.DAI, token1: Tokens.WETH, fee: 500}));
-        uv3p.push(UniswapV3Pair({token0: Tokens.WBTC, token1: Tokens.WETH, fee: 3000}));
-        uv3p.push(UniswapV3Pair({token0: Tokens.DAI, token1: Tokens.WETH, fee: 3000}));
-        uv3p.push(UniswapV3Pair({token0: Tokens.USDC, token1: Tokens.WETH, fee: 500}));
-        uv3p.push(UniswapV3Pair({token0: Tokens.LDO, token1: Tokens.WETH, fee: 3000}));
-        uv3p.push(UniswapV3Pair({token0: Tokens.USDC, token1: Tokens.WETH, fee: 10000}));
-        uv3p.push(UniswapV3Pair({token0: Tokens.LDO, token1: Tokens.WETH, fee: 10000}));
-        uv3p.push(UniswapV3Pair({token0: Tokens.LQTY, token1: Tokens.WETH, fee: 3000}));
-        uv3p.push(UniswapV3Pair({token0: Tokens.FXS, token1: Tokens.WETH, fee: 10000}));
-        uv3p.push(UniswapV3Pair({token0: Tokens.USDC, token1: Tokens.WETH, fee: 3000}));
-        uv3p.push(UniswapV3Pair({token0: Tokens.DAI, token1: Tokens.WETH, fee: 10000}));
-        uv3p.push(UniswapV3Pair({token0: Tokens.WETH, token1: Tokens.USDT, fee: 3000}));
-        uv3p.push(UniswapV3Pair({token0: Tokens.FRAX, token1: Tokens.USDT, fee: 500}));
-        uv3p.push(UniswapV3Pair({token0: Tokens.WETH, token1: Tokens.USDT, fee: 500}));
-        uv3p.push(UniswapV3Pair({token0: Tokens.USDC, token1: Tokens.USDT, fee: 500}));
-        uv3p.push(UniswapV3Pair({token0: Tokens.WBTC, token1: Tokens.USDT, fee: 3000}));
-        uv3p.push(UniswapV3Pair({token0: Tokens.WETH, token1: Tokens.USDT, fee: 10000}));
-        uv3p.push(UniswapV3Pair({token0: Tokens.DAI, token1: Tokens.USDT, fee: 100}));
-        uv3p.push(UniswapV3Pair({token0: Tokens.USDC, token1: Tokens.USDT, fee: 10000}));
-        uv3p.push(UniswapV3Pair({token0: Tokens.USDC, token1: Tokens.USDT, fee: 3000}));
-        uv3p.push(UniswapV3Pair({token0: Tokens.FXS, token1: Tokens.USDT, fee: 3000}));
-        uv3p.push(UniswapV3Pair({token0: Tokens.USDC, token1: Tokens.USDT, fee: 100}));
-        uv3p.push(UniswapV3Pair({token0: Tokens.LUSD, token1: Tokens.USDC, fee: 500}));
-        uv3p.push(UniswapV3Pair({token0: Tokens.FRAX, token1: Tokens.USDC, fee: 100}));
-        uv3p.push(UniswapV3Pair({token0: Tokens.LUSD, token1: Tokens.USDC, fee: 3000}));
-        uv3p.push(UniswapV3Pair({token0: Tokens.FRAX, token1: Tokens.USDC, fee: 500}));
-        uv3p.push(UniswapV3Pair({token0: Tokens.DAI, token1: Tokens.USDC, fee: 500}));
-        uv3p.push(UniswapV3Pair({token0: Tokens.WBTC, token1: Tokens.USDC, fee: 3000}));
-        uv3p.push(UniswapV3Pair({token0: Tokens.LDO, token1: Tokens.USDC, fee: 10000}));
-        uv3p.push(UniswapV3Pair({token0: Tokens.WBTC, token1: Tokens.USDC, fee: 10000}));
-        uv3p.push(UniswapV3Pair({token0: Tokens.WBTC, token1: Tokens.USDC, fee: 500}));
-        uv3p.push(UniswapV3Pair({token0: Tokens.DAI, token1: Tokens.USDC, fee: 100}));
-        uv3p.push(UniswapV3Pair({token0: Tokens.WBTC, token1: Tokens.LQTY, fee: 10000}));
-        uv3p.push(UniswapV3Pair({token0: Tokens.sUSD, token1: Tokens.FRAX, fee: 500}));
-        uv3p.push(UniswapV3Pair({token0: Tokens.DAI, token1: Tokens.FRAX, fee: 500}));
-        uv3p.push(UniswapV3Pair({token0: Tokens.FXS, token1: Tokens.FRAX, fee: 10000}));
-        uv3p.push(UniswapV3Pair({token0: Tokens.WBTC, token1: Tokens.DAI, fee: 3000}));
-        uv3p.push(UniswapV3Pair({token0: Tokens.FXS, token1: Tokens.CVX, fee: 3000}));
-        uv3p.push(UniswapV3Pair({token0: Tokens.CVX, token1: Tokens.CRV, fee: 10000}));
-        uv3p.push(UniswapV3Pair({token0: Tokens.WETH, token1: Tokens.CRV, fee: 3000}));
-        uv3p.push(UniswapV3Pair({token0: Tokens.WETH, token1: Tokens.CRV, fee: 10000}));
-        uv3p.push(UniswapV3Pair({token0: Tokens.WETH, token1: Tokens.CVX, fee: 10000}));
-        uv3p.push(UniswapV3Pair({token0: Tokens.SNX, token1: Tokens.USDC, fee: 10000}));
-        uv3p.push(UniswapV3Pair({token0: Tokens.OHM, token1: Tokens.USDC, fee: 3000}));
-        uv3p.push(UniswapV3Pair({token0: Tokens.WETH, token1: Tokens.LINK, fee: 3000}));
-        cs.push(Contracts.UNISWAP_V2_ROUTER);
         {
-            UniswapV2Pair[] storage uv2p = cp.uniswapV2Pairs;
-            uv2p.push(UniswapV2Pair({router: Contracts.UNISWAP_V2_ROUTER, token0: Tokens.WETH, token1: Tokens.USDT}));
-            uv2p.push(UniswapV2Pair({router: Contracts.UNISWAP_V2_ROUTER, token0: Tokens.USDC, token1: Tokens.WETH}));
-            uv2p.push(UniswapV2Pair({router: Contracts.UNISWAP_V2_ROUTER, token0: Tokens.USDC, token1: Tokens.USDT}));
-            uv2p.push(UniswapV2Pair({router: Contracts.UNISWAP_V2_ROUTER, token0: Tokens.DAI, token1: Tokens.USDC}));
-            uv2p.push(UniswapV2Pair({router: Contracts.UNISWAP_V2_ROUTER, token0: Tokens.DAI, token1: Tokens.WETH}));
-            uv2p.push(UniswapV2Pair({router: Contracts.UNISWAP_V2_ROUTER, token0: Tokens.FXS, token1: Tokens.FRAX}));
-            uv2p.push(UniswapV2Pair({router: Contracts.UNISWAP_V2_ROUTER, token0: Tokens.WBTC, token1: Tokens.WETH}));
+            /// CREDIT_MANAGER_0
+            CreditManagerV3DeployParams storage cp = _creditManagers.push();
+
+            cp.minDebt = 10_000_000_000;
+            cp.maxDebt = 1_000_000_000_000;
+            cp.whitelisted = false;
+            cp.expirable = false;
+            cp.skipInit = false;
+            cp.poolLimit = 20_000_000_000_000;
+
+            CollateralTokenHuman[] storage cts = cp.collateralTokens;
+            cts.push(CollateralTokenHuman({token: Tokens.WETH, lt: 85_00}));
+
+            cts.push(CollateralTokenHuman({token: Tokens.STETH, lt: 82_50}));
+
+            cts.push(CollateralTokenHuman({token: Tokens.wstETH, lt: 82_50}));
+
+            cts.push(CollateralTokenHuman({token: Tokens.rETH, lt: 82_50}));
+
+            cts.push(CollateralTokenHuman({token: Tokens.WBTC, lt: 85_00}));
+
+            cts.push(CollateralTokenHuman({token: Tokens.LINK, lt: 80_00}));
+
+            cts.push(CollateralTokenHuman({token: Tokens.aDAI, lt: 92_00}));
+
+            cts.push(CollateralTokenHuman({token: Tokens.cLINK, lt: 85_00}));
+
+            cts.push(CollateralTokenHuman({token: Tokens.sDAI, lt: 92_00}));
+
+            cts.push(CollateralTokenHuman({token: Tokens.DAI, lt: 92_00}));
+
+            cts.push(CollateralTokenHuman({token: Tokens.USDT, lt: 90_00}));
+
+            cts.push(CollateralTokenHuman({token: Tokens.FRAX, lt: 90_00}));
+
+            cts.push(CollateralTokenHuman({token: Tokens.GUSD, lt: 90_00}));
+
+            cts.push(CollateralTokenHuman({token: Tokens.LUSD, lt: 90_00}));
+
+            cts.push(CollateralTokenHuman({token: Tokens.rETH_f, lt: 82_50}));
+
+            cts.push(CollateralTokenHuman({token: Tokens.steCRV, lt: 82_50}));
+
+            cts.push(CollateralTokenHuman({token: Tokens.cvxsteCRV, lt: 82_50}));
+
+            cts.push(CollateralTokenHuman({token: Tokens.stkcvxsteCRV, lt: 82_50}));
+
+            cts.push(CollateralTokenHuman({token: Tokens._3Crv, lt: 90_00}));
+
+            cts.push(CollateralTokenHuman({token: Tokens.cvx3Crv, lt: 90_00}));
+
+            cts.push(CollateralTokenHuman({token: Tokens.stkcvx3Crv, lt: 90_00}));
+
+            cts.push(CollateralTokenHuman({token: Tokens.FRAX3CRV, lt: 90_00}));
+
+            cts.push(CollateralTokenHuman({token: Tokens.cvxFRAX3CRV, lt: 90_00}));
+
+            cts.push(CollateralTokenHuman({token: Tokens.stkcvxFRAX3CRV, lt: 90_00}));
+
+            cts.push(CollateralTokenHuman({token: Tokens.LUSD3CRV, lt: 90_00}));
+
+            cts.push(CollateralTokenHuman({token: Tokens.cvxLUSD3CRV, lt: 90_00}));
+
+            cts.push(CollateralTokenHuman({token: Tokens.stkcvxLUSD3CRV, lt: 90_00}));
+
+            cts.push(CollateralTokenHuman({token: Tokens.gusd3CRV, lt: 90_00}));
+
+            cts.push(CollateralTokenHuman({token: Tokens.cvxgusd3CRV, lt: 90_00}));
+
+            cts.push(CollateralTokenHuman({token: Tokens.stkcvxgusd3CRV, lt: 90_00}));
+
+            cts.push(CollateralTokenHuman({token: Tokens.crvFRAX, lt: 90_00}));
+
+            cts.push(CollateralTokenHuman({token: Tokens.cvxcrvFRAX, lt: 90_00}));
+
+            cts.push(CollateralTokenHuman({token: Tokens.stkcvxcrvFRAX, lt: 90_00}));
+
+            cts.push(CollateralTokenHuman({token: Tokens.USDC_DAI_USDT, lt: 82_00}));
+
+            cts.push(CollateralTokenHuman({token: Tokens.B_rETH_STABLE, lt: 82_00}));
+
+            cts.push(CollateralTokenHuman({token: Tokens.auraB_rETH_STABLE, lt: 82_00}));
+
+            cts.push(CollateralTokenHuman({token: Tokens.auraB_rETH_STABLE_vault, lt: 82_00}));
+
+            cts.push(CollateralTokenHuman({token: Tokens.yvDAI, lt: 90_00}));
+
+            cts.push(CollateralTokenHuman({token: Tokens.yvUSDC, lt: 90_00}));
+
+            cts.push(CollateralTokenHuman({token: Tokens.yvWETH, lt: 82_50}));
+
+            cts.push(CollateralTokenHuman({token: Tokens.yvWBTC, lt: 82_50}));
+
+            cts.push(CollateralTokenHuman({token: Tokens.yvCurve_stETH, lt: 82_50}));
+
+            cts.push(CollateralTokenHuman({token: Tokens.yvCurve_FRAX, lt: 90_00}));
+
+            cts.push(CollateralTokenHuman({token: Tokens.CVX, lt: 0}));
+
+            cts.push(CollateralTokenHuman({token: Tokens.FXS, lt: 0}));
+
+            cts.push(CollateralTokenHuman({token: Tokens.LQTY, lt: 0}));
+
+            cts.push(CollateralTokenHuman({token: Tokens.CRV, lt: 25_00}));
+
+            cts.push(CollateralTokenHuman({token: Tokens.LDO, lt: 0}));
+
+            cts.push(CollateralTokenHuman({token: Tokens.SNX, lt: 25_00}));
+
+            cts.push(CollateralTokenHuman({token: Tokens.BAL, lt: 25_00}));
+
+            cts.push(CollateralTokenHuman({token: Tokens.AURA, lt: 0}));
+            Contracts[] storage cs = cp.contracts;
+            cs.push(Contracts.UNISWAP_V3_ROUTER);
+            UniswapV3Pair[] storage uv3p = cp.uniswapV3Pairs;
+            uv3p.push(UniswapV3Pair({token0: Tokens.SNX, token1: Tokens.WETH, fee: 3000}));
+            uv3p.push(UniswapV3Pair({token0: Tokens.WBTC, token1: Tokens.WETH, fee: 500}));
+            uv3p.push(UniswapV3Pair({token0: Tokens.DAI, token1: Tokens.WETH, fee: 500}));
+            uv3p.push(UniswapV3Pair({token0: Tokens.WBTC, token1: Tokens.WETH, fee: 3000}));
+            uv3p.push(UniswapV3Pair({token0: Tokens.DAI, token1: Tokens.WETH, fee: 3000}));
+            uv3p.push(UniswapV3Pair({token0: Tokens.USDC, token1: Tokens.WETH, fee: 500}));
+            uv3p.push(UniswapV3Pair({token0: Tokens.LDO, token1: Tokens.WETH, fee: 3000}));
+            uv3p.push(UniswapV3Pair({token0: Tokens.USDC, token1: Tokens.WETH, fee: 10000}));
+            uv3p.push(UniswapV3Pair({token0: Tokens.LDO, token1: Tokens.WETH, fee: 10000}));
+            uv3p.push(UniswapV3Pair({token0: Tokens.LQTY, token1: Tokens.WETH, fee: 3000}));
+            uv3p.push(UniswapV3Pair({token0: Tokens.FXS, token1: Tokens.WETH, fee: 10000}));
+            uv3p.push(UniswapV3Pair({token0: Tokens.USDC, token1: Tokens.WETH, fee: 3000}));
+            uv3p.push(UniswapV3Pair({token0: Tokens.DAI, token1: Tokens.WETH, fee: 10000}));
+            uv3p.push(UniswapV3Pair({token0: Tokens.WETH, token1: Tokens.USDT, fee: 3000}));
+            uv3p.push(UniswapV3Pair({token0: Tokens.FRAX, token1: Tokens.USDT, fee: 500}));
+            uv3p.push(UniswapV3Pair({token0: Tokens.WETH, token1: Tokens.USDT, fee: 500}));
+            uv3p.push(UniswapV3Pair({token0: Tokens.USDC, token1: Tokens.USDT, fee: 500}));
+            uv3p.push(UniswapV3Pair({token0: Tokens.WBTC, token1: Tokens.USDT, fee: 3000}));
+            uv3p.push(UniswapV3Pair({token0: Tokens.WETH, token1: Tokens.USDT, fee: 10000}));
+            uv3p.push(UniswapV3Pair({token0: Tokens.DAI, token1: Tokens.USDT, fee: 100}));
+            uv3p.push(UniswapV3Pair({token0: Tokens.USDC, token1: Tokens.USDT, fee: 10000}));
+            uv3p.push(UniswapV3Pair({token0: Tokens.USDC, token1: Tokens.USDT, fee: 3000}));
+            uv3p.push(UniswapV3Pair({token0: Tokens.FXS, token1: Tokens.USDT, fee: 3000}));
+            uv3p.push(UniswapV3Pair({token0: Tokens.USDC, token1: Tokens.USDT, fee: 100}));
+            uv3p.push(UniswapV3Pair({token0: Tokens.LUSD, token1: Tokens.USDC, fee: 500}));
+            uv3p.push(UniswapV3Pair({token0: Tokens.FRAX, token1: Tokens.USDC, fee: 100}));
+            uv3p.push(UniswapV3Pair({token0: Tokens.LUSD, token1: Tokens.USDC, fee: 3000}));
+            uv3p.push(UniswapV3Pair({token0: Tokens.FRAX, token1: Tokens.USDC, fee: 500}));
+            uv3p.push(UniswapV3Pair({token0: Tokens.DAI, token1: Tokens.USDC, fee: 500}));
+            uv3p.push(UniswapV3Pair({token0: Tokens.WBTC, token1: Tokens.USDC, fee: 3000}));
+            uv3p.push(UniswapV3Pair({token0: Tokens.LDO, token1: Tokens.USDC, fee: 10000}));
+            uv3p.push(UniswapV3Pair({token0: Tokens.WBTC, token1: Tokens.USDC, fee: 10000}));
+            uv3p.push(UniswapV3Pair({token0: Tokens.WBTC, token1: Tokens.USDC, fee: 500}));
+            uv3p.push(UniswapV3Pair({token0: Tokens.DAI, token1: Tokens.USDC, fee: 100}));
+            uv3p.push(UniswapV3Pair({token0: Tokens.WBTC, token1: Tokens.LQTY, fee: 10000}));
+            uv3p.push(UniswapV3Pair({token0: Tokens.DAI, token1: Tokens.FRAX, fee: 500}));
+            uv3p.push(UniswapV3Pair({token0: Tokens.FXS, token1: Tokens.FRAX, fee: 10000}));
+            uv3p.push(UniswapV3Pair({token0: Tokens.WBTC, token1: Tokens.DAI, fee: 3000}));
+            uv3p.push(UniswapV3Pair({token0: Tokens.FXS, token1: Tokens.CVX, fee: 3000}));
+            uv3p.push(UniswapV3Pair({token0: Tokens.CVX, token1: Tokens.CRV, fee: 10000}));
+            uv3p.push(UniswapV3Pair({token0: Tokens.WETH, token1: Tokens.CRV, fee: 3000}));
+            uv3p.push(UniswapV3Pair({token0: Tokens.WETH, token1: Tokens.CRV, fee: 10000}));
+            uv3p.push(UniswapV3Pair({token0: Tokens.WETH, token1: Tokens.CVX, fee: 10000}));
+            uv3p.push(UniswapV3Pair({token0: Tokens.SNX, token1: Tokens.USDC, fee: 10000}));
+            uv3p.push(UniswapV3Pair({token0: Tokens.OHM, token1: Tokens.USDC, fee: 3000}));
+            uv3p.push(UniswapV3Pair({token0: Tokens.WETH, token1: Tokens.LINK, fee: 3000}));
+            cs.push(Contracts.UNISWAP_V2_ROUTER);
+            {
+                UniswapV2Pair[] storage uv2p = cp.uniswapV2Pairs;
+                uv2p.push(
+                    UniswapV2Pair({router: Contracts.UNISWAP_V2_ROUTER, token0: Tokens.WETH, token1: Tokens.USDT})
+                );
+                uv2p.push(
+                    UniswapV2Pair({router: Contracts.UNISWAP_V2_ROUTER, token0: Tokens.USDC, token1: Tokens.WETH})
+                );
+                uv2p.push(
+                    UniswapV2Pair({router: Contracts.UNISWAP_V2_ROUTER, token0: Tokens.USDC, token1: Tokens.USDT})
+                );
+                uv2p.push(UniswapV2Pair({router: Contracts.UNISWAP_V2_ROUTER, token0: Tokens.DAI, token1: Tokens.USDC}));
+                uv2p.push(UniswapV2Pair({router: Contracts.UNISWAP_V2_ROUTER, token0: Tokens.DAI, token1: Tokens.WETH}));
+                uv2p.push(UniswapV2Pair({router: Contracts.UNISWAP_V2_ROUTER, token0: Tokens.FXS, token1: Tokens.FRAX}));
+                uv2p.push(
+                    UniswapV2Pair({router: Contracts.UNISWAP_V2_ROUTER, token0: Tokens.WBTC, token1: Tokens.WETH})
+                );
+            }
+            cs.push(Contracts.SUSHISWAP_ROUTER);
+            {
+                UniswapV2Pair[] storage uv2p = cp.uniswapV2Pairs;
+                uv2p.push(UniswapV2Pair({router: Contracts.SUSHISWAP_ROUTER, token0: Tokens.WBTC, token1: Tokens.WETH}));
+                uv2p.push(UniswapV2Pair({router: Contracts.SUSHISWAP_ROUTER, token0: Tokens.WETH, token1: Tokens.USDT}));
+                uv2p.push(UniswapV2Pair({router: Contracts.SUSHISWAP_ROUTER, token0: Tokens.USDC, token1: Tokens.WETH}));
+                uv2p.push(UniswapV2Pair({router: Contracts.SUSHISWAP_ROUTER, token0: Tokens.DAI, token1: Tokens.WETH}));
+                uv2p.push(UniswapV2Pair({router: Contracts.SUSHISWAP_ROUTER, token0: Tokens.WETH, token1: Tokens.FXS}));
+                uv2p.push(UniswapV2Pair({router: Contracts.SUSHISWAP_ROUTER, token0: Tokens.LDO, token1: Tokens.WETH}));
+                uv2p.push(UniswapV2Pair({router: Contracts.SUSHISWAP_ROUTER, token0: Tokens.CVX, token1: Tokens.WETH}));
+                uv2p.push(UniswapV2Pair({router: Contracts.SUSHISWAP_ROUTER, token0: Tokens.CRV, token1: Tokens.WETH}));
+                uv2p.push(UniswapV2Pair({router: Contracts.SUSHISWAP_ROUTER, token0: Tokens.SNX, token1: Tokens.WETH}));
+            }
+            cs.push(Contracts.BALANCER_VAULT);
+            BalancerPool[] storage bp = cp.balancerPools;
+
+            bp.push(
+                BalancerPool({poolId: 0x76fcf0e8c7ff37a47a799fa2cd4c13cde0d981c90002000000000000000003d2, status: 2})
+            );
+
+            bp.push(
+                BalancerPool({poolId: 0x1e19cf2d73a72ef1332c882f20534b6519be0276000200000000000000000112, status: 1})
+            );
+
+            bp.push(
+                BalancerPool({poolId: 0x79c58f70905f734641735bc61e45c19dd9ad60bc0000000000000000000004e7, status: 1})
+            );
+            cs.push(Contracts.CURVE_3CRV_POOL);
+            cs.push(Contracts.CURVE_FRAX_USDC_POOL);
+            cs.push(Contracts.CURVE_STETH_GATEWAY);
+            cs.push(Contracts.CURVE_FRAX_POOL);
+            cs.push(Contracts.CURVE_LUSD_POOL);
+            cs.push(Contracts.CURVE_GUSD_POOL);
+            cs.push(Contracts.CURVE_RETH_ETH_POOL);
+            cs.push(Contracts.YEARN_DAI_VAULT);
+            cs.push(Contracts.YEARN_USDC_VAULT);
+            cs.push(Contracts.YEARN_WETH_VAULT);
+            cs.push(Contracts.YEARN_WBTC_VAULT);
+            cs.push(Contracts.YEARN_CURVE_FRAX_VAULT);
+            cs.push(Contracts.YEARN_CURVE_STETH_VAULT);
+            cs.push(Contracts.CONVEX_FRAX3CRV_POOL);
+            cs.push(Contracts.CONVEX_LUSD3CRV_POOL);
+            cs.push(Contracts.CONVEX_GUSD_POOL);
+            cs.push(Contracts.CONVEX_3CRV_POOL);
+            cs.push(Contracts.CONVEX_FRAX_USDC_POOL);
+            cs.push(Contracts.CONVEX_STECRV_POOL);
+            cs.push(Contracts.CONVEX_BOOSTER);
+            cs.push(Contracts.LIDO_WSTETH);
+            cs.push(Contracts.AAVE_V2_LENDING_POOL);
+            cs.push(Contracts.COMPOUND_V2_LINK_POOL);
+            cs.push(Contracts.MAKER_DSR_VAULT);
+            cs.push(Contracts.AURA_BOOSTER);
+            cs.push(Contracts.AURA_B_RETH_STABLE_POOL);
         }
-        cs.push(Contracts.SUSHISWAP_ROUTER);
-        {
-            UniswapV2Pair[] storage uv2p = cp.uniswapV2Pairs;
-            uv2p.push(UniswapV2Pair({router: Contracts.SUSHISWAP_ROUTER, token0: Tokens.WBTC, token1: Tokens.WETH}));
-            uv2p.push(UniswapV2Pair({router: Contracts.SUSHISWAP_ROUTER, token0: Tokens.WETH, token1: Tokens.USDT}));
-            uv2p.push(UniswapV2Pair({router: Contracts.SUSHISWAP_ROUTER, token0: Tokens.USDC, token1: Tokens.WETH}));
-            uv2p.push(UniswapV2Pair({router: Contracts.SUSHISWAP_ROUTER, token0: Tokens.DAI, token1: Tokens.WETH}));
-            uv2p.push(UniswapV2Pair({router: Contracts.SUSHISWAP_ROUTER, token0: Tokens.WETH, token1: Tokens.FXS}));
-            uv2p.push(UniswapV2Pair({router: Contracts.SUSHISWAP_ROUTER, token0: Tokens.LDO, token1: Tokens.WETH}));
-            uv2p.push(UniswapV2Pair({router: Contracts.SUSHISWAP_ROUTER, token0: Tokens.CVX, token1: Tokens.WETH}));
-            uv2p.push(UniswapV2Pair({router: Contracts.SUSHISWAP_ROUTER, token0: Tokens.CRV, token1: Tokens.WETH}));
-            uv2p.push(UniswapV2Pair({router: Contracts.SUSHISWAP_ROUTER, token0: Tokens.SNX, token1: Tokens.WETH}));
-        }
-        cs.push(Contracts.BALANCER_VAULT);
-        BalancerPool[] storage bp = cp.balancerPools;
-
-        bp.push(BalancerPool({poolId: 0x76fcf0e8c7ff37a47a799fa2cd4c13cde0d981c90002000000000000000003d2, status: 2}));
-
-        bp.push(BalancerPool({poolId: 0x1e19cf2d73a72ef1332c882f20534b6519be0276000200000000000000000112, status: 1}));
-
-        bp.push(BalancerPool({poolId: 0x79c58f70905f734641735bc61e45c19dd9ad60bc0000000000000000000004e7, status: 1}));
-        cs.push(Contracts.CURVE_3CRV_POOL);
-        cs.push(Contracts.CURVE_FRAX_USDC_POOL);
-        cs.push(Contracts.CURVE_STETH_GATEWAY);
-        cs.push(Contracts.CURVE_FRAX_POOL);
-        cs.push(Contracts.CURVE_SUSD_POOL);
-        cs.push(Contracts.CURVE_LUSD_POOL);
-        cs.push(Contracts.CURVE_GUSD_POOL);
-        cs.push(Contracts.CURVE_SUSD_DEPOSIT);
-        cs.push(Contracts.CURVE_RETH_ETH_POOL);
-        cs.push(Contracts.YEARN_DAI_VAULT);
-        cs.push(Contracts.YEARN_USDC_VAULT);
-        cs.push(Contracts.YEARN_WETH_VAULT);
-        cs.push(Contracts.YEARN_WBTC_VAULT);
-        cs.push(Contracts.YEARN_CURVE_FRAX_VAULT);
-        cs.push(Contracts.YEARN_CURVE_STETH_VAULT);
-        cs.push(Contracts.CONVEX_FRAX3CRV_POOL);
-        cs.push(Contracts.CONVEX_LUSD3CRV_POOL);
-        cs.push(Contracts.CONVEX_GUSD_POOL);
-        cs.push(Contracts.CONVEX_SUSD_POOL);
-        cs.push(Contracts.CONVEX_3CRV_POOL);
-        cs.push(Contracts.CONVEX_FRAX_USDC_POOL);
-        cs.push(Contracts.CONVEX_STECRV_POOL);
-        cs.push(Contracts.CONVEX_BOOSTER);
-        cs.push(Contracts.LIDO_WSTETH);
-        cs.push(Contracts.AAVE_V2_LENDING_POOL);
-        cs.push(Contracts.COMPOUND_V2_LINK_POOL);
-        cs.push(Contracts.MAKER_DSR_VAULT);
-        cs.push(Contracts.AURA_BOOSTER);
-        cs.push(Contracts.AURA_B_RETH_STABLE_POOL);
     }
 
     // GETTERS
