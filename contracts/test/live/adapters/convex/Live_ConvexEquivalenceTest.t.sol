@@ -3,343 +3,312 @@
 // (c) Gearbox Foundation, 2023.
 pragma solidity ^0.8.17;
 
-// import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-// import {ICreditFacadeV3} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacadeV3.sol";
-// import {ICreditFacadeV3Multicall} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacadeV3Multicall.sol";
-// import {IBaseRewardPool} from "../../../../integrations/convex/IBaseRewardPool.sol";
-// import {IRewards} from "../../../../integrations/convex/IRewards.sol";
-// import {IBooster} from "../../../../integrations/convex/IBooster.sol";
-// import {IConvexV1BaseRewardPoolAdapter} from "../../../../interfaces/convex/IConvexV1BaseRewardPoolAdapter.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {ICreditFacadeV3} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacadeV3.sol";
+import {ICreditFacadeV3Multicall} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacadeV3Multicall.sol";
+import {IBaseRewardPool} from "../../../../integrations/convex/IBaseRewardPool.sol";
+import {IRewards} from "../../../../integrations/convex/IRewards.sol";
+import {IBooster} from "../../../../integrations/convex/IBooster.sol";
+import {IConvexV1BaseRewardPoolAdapter} from "../../../../interfaces/convex/IConvexV1BaseRewardPoolAdapter.sol";
 
-// import {Tokens} from "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
-// import {Contracts} from "@gearbox-protocol/sdk-gov/contracts/SupportedContracts.sol";
+import {
+    ConvexV1_BaseRewardPoolCalls,
+    ConvexV1_BaseRewardPoolMulticaller
+} from "../../../multicall/convex/ConvexV1_BaseRewardPoolCalls.sol";
+import {ConvexV1_BoosterCalls, ConvexV1_BoosterMulticaller} from "../../../multicall/convex/ConvexV1_BoosterCalls.sol";
 
-// import {MultiCall} from "@gearbox-protocol/core-v2/contracts/libraries/MultiCall.sol";
-// import {MultiCallBuilder} from "@gearbox-protocol/core-v3/contracts/test/lib/MultiCallBuilder.sol";
+import {Tokens} from "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
+import {Contracts} from "@gearbox-protocol/sdk-gov/contracts/SupportedContracts.sol";
 
-// import {AddressList} from "@gearbox-protocol/core-v3/contracts/test/lib/AddressList.sol";
-// // TEST
-// import "@gearbox-protocol/core-v3/contracts/test/lib/constants.sol";
+import {MultiCall} from "@gearbox-protocol/core-v2/contracts/libraries/MultiCall.sol";
+import {MultiCallBuilder} from "@gearbox-protocol/core-v3/contracts/test/lib/MultiCallBuilder.sol";
 
-// // SUITES
+import {AddressList} from "@gearbox-protocol/core-v3/contracts/test/lib/AddressList.sol";
+// TEST
+import "@gearbox-protocol/core-v3/contracts/test/lib/constants.sol";
+
+// SUITES
 
 import {LiveTestHelper} from "../../../suites/LiveTestHelper.sol";
-// import {BalanceComparator, BalanceBackup} from "../../../helpers/BalanceComparator.sol";
+import {BalanceComparator, BalanceBackup} from "../../../helpers/BalanceComparator.sol";
 
 contract Live_ConvexEquivalenceTest is LiveTestHelper {
-// using AddressList for address[];
-
-// string[14] stages = [
-//     "after_booster_deposit_no_staking",
-//     "after_booster_depositAll_no_staking",
-//     "after_basePool_stake",
-//     "after_basePool_stakeAll",
-//     "after_basePool_getReward_with_extras",
-//     "after_basePool_withdraw",
-//     "after_basePool_withdrawAll",
-//     "after_booster_withdraw",
-//     "after_booster_withdrawAll",
-//     "after_booster_deposit_with_staking",
-//     "after_booster_depositAll_with_staking",
-//     "after_basePool_withdrawAndUnwrap",
-//     "after_basePool_withdrawAllAndUnwrap"
-// ];
-
-// Contracts[6] convexPools = [
-//     Contracts.CONVEX_3CRV_POOL,
-//     Contracts.CONVEX_GUSD_POOL,
-//     Contracts.CONVEX_SUSD_POOL,
-//     Contracts.CONVEX_STECRV_POOL,
-//     Contracts.CONVEX_FRAX3CRV_POOL,
-//     Contracts.CONVEX_LUSD3CRV_POOL
-// ];
-
-// string[] _stages;
-
-// function setUp() public liveTest {
-//     _setUp();
-
-//     /// @notice Sets comparator for this equivalence test
-
-//     uint256 len = stages.length;
-//     _stages = new string[](len);
-//     unchecked {
-//         for (uint256 i; i < len; ++i) {
-//             _stages[i] = stages[i];
-//         }
-//     }
-// }
-
-// /// HELPER
-
-// function compareBehavior(
-//     address boosterAddress,
-//     address basePoolAddress,
-//     address accountToSaveBalances,
-//     bool adapters,
-//     BalanceComparator comparator
-// ) internal {
-//     if (adapters) {
-//         // ICreditFacadeV3 creditFacade = lts.creditFacades(Tokens.DAI);
-//         // ConvexV1_BoosterMulticaller booster = ConvexV1_BoosterMulticaller(boosterAddress);
-//         // ConvexV1_BaseRewardPoolMulticaller basePool = ConvexV1_BaseRewardPoolMulticaller(basePoolAddress);
-
-//         uint256 pid = IBaseRewardPool((IConvexV1BaseRewardPoolAdapter(basePoolAddress).targetContract())).pid();
-
-//         vm.prank(USER);
-//         creditFacade.multicall(
-//             MultiCallBuilder.build(boosterAddress, abi.encodeCall(IBooster.deposit, (pid, WAD, false)))
-//         );
-//         comparator.takeSnapshot("after_booster_deposit_no_staking", accountToSaveBalances);
-
-//         vm.prank(USER);
-//         creditFacade.multicall(
-//             MultiCallBuilder.build(
-//                 MultiCallBuilder.build(boosterAddress, abi.encodeCall(IBooster.depositAll, (pid, false)))
-//             )
-//         );
-//         comparator.takeSnapshot("after_booster_depositAll_no_staking", accountToSaveBalances);
-
-//         vm.prank(USER);
-//         creditFacade.multicall(MultiCallBuilder.build(basePool.stake(WAD)));
-//         comparator.takeSnapshot("after_basePool_stake", accountToSaveBalances);
-
-//         vm.prank(USER);
-//         creditFacade.multicall(MultiCallBuilder.build(basePool.stakeAll()));
-//         comparator.takeSnapshot("after_basePool_stakeAll", accountToSaveBalances);
-
-//         vm.warp(block.timestamp + 24 * 60 * 60);
-
-//         vm.prank(USER);
-//         creditFacade.multicall(MultiCallBuilder.build(basePool.getReward()));
-//         comparator.takeSnapshot("after_basePool_getReward_with_extras", accountToSaveBalances);
-
-//         vm.warp(block.timestamp + 24 * 60 * 60);
-
-//         vm.prank(USER);
-//         creditFacade.multicall(MultiCallBuilder.build(basePool.withdraw(WAD, true)));
-//         comparator.takeSnapshot("after_basePool_withdraw", accountToSaveBalances);
-
-//         vm.warp(block.timestamp + 24 * 60 * 60);
-
-//         vm.prank(USER);
-//         creditFacade.multicall(MultiCallBuilder.build(basePool.withdrawAll(true)));
-//         comparator.takeSnapshot("after_basePool_withdrawAll", accountToSaveBalances);
-
-//         vm.prank(USER);
-//         creditFacade.multicall(MultiCallBuilder.build(booster.withdraw(pid, WAD)));
-//         comparator.takeSnapshot("after_booster_withdraw", accountToSaveBalances);
+    using AddressList for address[];
+    using ConvexV1_BaseRewardPoolCalls for ConvexV1_BaseRewardPoolMulticaller;
+    using ConvexV1_BoosterCalls for ConvexV1_BoosterMulticaller;
+
+    string[14] stages = [
+        "after_booster_deposit_no_staking",
+        "after_booster_depositDiff_no_staking",
+        "after_basePool_stake",
+        "after_basePool_stakeDiff",
+        "after_basePool_getReward_with_extras",
+        "after_basePool_withdraw",
+        "after_basePool_withdrawDiff",
+        "after_booster_withdraw",
+        "after_booster_withdrawDiff",
+        "after_booster_deposit_with_staking",
+        "after_booster_depositDiff_with_staking",
+        "after_basePool_withdrawAndUnwrap",
+        "after_basePool_withdrawDiffAndUnwrap"
+    ];
 
-//         vm.prank(USER);
-//         creditFacade.multicall(MultiCallBuilder.build(booster.withdrawAll(pid)));
-//         comparator.takeSnapshot("after_booster_withdrawAll", accountToSaveBalances);
+    Contracts[6] convexPools = [
+        Contracts.CONVEX_3CRV_POOL,
+        Contracts.CONVEX_GUSD_POOL,
+        Contracts.CONVEX_SUSD_POOL,
+        Contracts.CONVEX_STECRV_POOL,
+        Contracts.CONVEX_FRAX3CRV_POOL,
+        Contracts.CONVEX_LUSD3CRV_POOL
+    ];
 
-//         vm.prank(USER);
-//         creditFacade.multicall(MultiCallBuilder.build(booster.deposit(pid, WAD, true)));
-//         comparator.takeSnapshot("after_booster_deposit_with_staking", accountToSaveBalances);
+    string[] _stages;
 
-//         vm.prank(USER);
-//         creditFacade.multicall(MultiCallBuilder.build(booster.depositAll(pid, true)));
-//         comparator.takeSnapshot("after_booster_depositAll_with_staking", accountToSaveBalances);
+    function setUp() public attachOrLiveTest {
+        _setUp();
 
-//         vm.warp(block.timestamp + 24 * 60 * 60);
+        /// @notice Sets comparator for this equivalence test
 
-//         vm.prank(USER);
-//         creditFacade.multicall(MultiCallBuilder.build(basePool.withdrawAndUnwrap(WAD, true)));
-//         comparator.takeSnapshot("after_basePool_withdrawAndUnwrap", accountToSaveBalances);
+        uint256 len = stages.length;
+        _stages = new string[](len);
+        unchecked {
+            for (uint256 i; i < len; ++i) {
+                _stages[i] = stages[i];
+            }
+        }
+    }
 
-//         vm.warp(block.timestamp + 24 * 60 * 60);
+    /// HELPER
 
-//         vm.prank(USER);
-//         creditFacade.multicall(MultiCallBuilder.build(basePool.withdrawAllAndUnwrap(true)));
-//         comparator.takeSnapshot("after_basePool_withdrawAllAndUnwrap", accountToSaveBalances);
-//     } else {
-//         IBooster booster = IBooster(boosterAddress);
-//         IBaseRewardPool basePool = IBaseRewardPool(basePoolAddress);
+    function compareBehavior(
+        address creditAccount,
+        address boosterAddress,
+        address basePoolAddress,
+        bool adapters,
+        BalanceComparator comparator
+    ) internal {
+        if (adapters) {
+            uint256 pid = IBaseRewardPool((IConvexV1BaseRewardPoolAdapter(basePoolAddress).targetContract())).pid();
+            ConvexV1_BoosterMulticaller booster = ConvexV1_BoosterMulticaller(boosterAddress);
+            ConvexV1_BaseRewardPoolMulticaller basePool = ConvexV1_BaseRewardPoolMulticaller(basePoolAddress);
 
-//         uint256 pid = basePool.pid();
+            vm.startPrank(USER);
 
-//         vm.prank(USER);
-//         booster.deposit(pid, WAD, false);
-//         comparator.takeSnapshot("after_booster_deposit_no_staking", accountToSaveBalances);
+            creditFacade.multicall(creditAccount, MultiCallBuilder.build(booster.deposit(pid, WAD, false)));
+            comparator.takeSnapshot("after_booster_deposit_no_staking", creditAccount);
 
-//         vm.prank(USER);
-//         booster.depositAll(pid, false);
-//         comparator.takeSnapshot("after_booster_depositAll_no_staking", accountToSaveBalances);
+            creditFacade.multicall(creditAccount, MultiCallBuilder.build(booster.depositDiff(pid, WAD, false)));
+            comparator.takeSnapshot("after_booster_depositDiff_no_staking", creditAccount);
 
-//         vm.prank(USER);
-//         basePool.stake(WAD);
-//         comparator.takeSnapshot("after_basePool_stake", accountToSaveBalances);
+            creditFacade.multicall(creditAccount, MultiCallBuilder.build(basePool.stake(WAD)));
+            comparator.takeSnapshot("after_basePool_stake", creditAccount);
 
-//         vm.prank(USER);
-//         basePool.stakeAll();
-//         comparator.takeSnapshot("after_basePool_stakeAll", accountToSaveBalances);
+            creditFacade.multicall(creditAccount, MultiCallBuilder.build(basePool.stakeDiff(WAD)));
+            comparator.takeSnapshot("after_basePool_stakeDiff", creditAccount);
 
-//         vm.warp(block.timestamp + 24 * 60 * 60);
+            vm.warp(block.timestamp + 24 * 60 * 60);
 
-//         vm.prank(USER);
-//         basePool.getReward();
-//         comparator.takeSnapshot("after_basePool_getReward_with_extras", accountToSaveBalances);
+            creditFacade.multicall(creditAccount, MultiCallBuilder.build(basePool.getReward()));
+            comparator.takeSnapshot("after_basePool_getReward_with_extras", creditAccount);
 
-//         vm.warp(block.timestamp + 24 * 60 * 60);
+            vm.warp(block.timestamp + 24 * 60 * 60);
 
-//         vm.prank(USER);
-//         basePool.withdraw(WAD, true);
-//         comparator.takeSnapshot("after_basePool_withdraw", accountToSaveBalances);
+            creditFacade.multicall(creditAccount, MultiCallBuilder.build(basePool.withdraw(WAD, true)));
+            comparator.takeSnapshot("after_basePool_withdraw", creditAccount);
 
-//         vm.warp(block.timestamp + 24 * 60 * 60);
+            vm.warp(block.timestamp + 24 * 60 * 60);
 
-//         vm.prank(USER);
-//         basePool.withdrawAll(true);
-//         comparator.takeSnapshot("after_basePool_withdrawAll", accountToSaveBalances);
+            creditFacade.multicall(creditAccount, MultiCallBuilder.build(basePool.withdrawDiff(WAD, true)));
+            comparator.takeSnapshot("after_basePool_withdrawDiff", creditAccount);
 
-//         vm.prank(USER);
-//         booster.withdraw(pid, WAD);
-//         comparator.takeSnapshot("after_booster_withdraw", accountToSaveBalances);
+            creditFacade.multicall(creditAccount, MultiCallBuilder.build(booster.withdraw(pid, WAD)));
+            comparator.takeSnapshot("after_booster_withdraw", creditAccount);
 
-//         vm.prank(USER);
-//         booster.withdrawAll(pid);
-//         comparator.takeSnapshot("after_booster_withdrawAll", accountToSaveBalances);
+            creditFacade.multicall(creditAccount, MultiCallBuilder.build(booster.withdrawDiff(pid, WAD)));
+            comparator.takeSnapshot("after_booster_withdrawDiff", creditAccount);
 
-//         vm.prank(USER);
-//         booster.deposit(pid, WAD, true);
-//         comparator.takeSnapshot("after_booster_deposit_with_staking", accountToSaveBalances);
+            creditFacade.multicall(creditAccount, MultiCallBuilder.build(booster.deposit(pid, WAD, true)));
+            comparator.takeSnapshot("after_booster_deposit_with_staking", creditAccount);
 
-//         vm.prank(USER);
-//         booster.depositAll(pid, true);
-//         comparator.takeSnapshot("after_booster_depositAll_with_staking", accountToSaveBalances);
+            creditFacade.multicall(creditAccount, MultiCallBuilder.build(booster.depositDiff(pid, WAD, true)));
+            comparator.takeSnapshot("after_booster_depositDiff_with_staking", creditAccount);
 
-//         vm.warp(block.timestamp + 24 * 60 * 60);
+            vm.warp(block.timestamp + 24 * 60 * 60);
 
-//         vm.prank(USER);
-//         basePool.withdrawAndUnwrap(WAD, true);
-//         comparator.takeSnapshot("after_basePool_withdrawAndUnwrap", accountToSaveBalances);
+            creditFacade.multicall(creditAccount, MultiCallBuilder.build(basePool.withdrawAndUnwrap(WAD, true)));
+            comparator.takeSnapshot("after_basePool_withdrawAndUnwrap", creditAccount);
 
-//         vm.warp(block.timestamp + 24 * 60 * 60);
+            vm.warp(block.timestamp + 24 * 60 * 60);
 
-//         vm.prank(USER);
-//         basePool.withdrawAllAndUnwrap(true);
-//         comparator.takeSnapshot("after_basePool_withdrawAllAndUnwrap", accountToSaveBalances);
-//     }
-// }
+            creditFacade.multicall(creditAccount, MultiCallBuilder.build(basePool.withdrawDiffAndUnwrap(WAD, true)));
+            comparator.takeSnapshot("after_basePool_withdrawDiffAndUnwrap", creditAccount);
 
-// function openCreditAccountWithUnderlying(address token, uint256 amount) internal returns (address creditAccount) {
-//     ICreditFacadeV3 creditFacade = creditFacades[Tokens.DAI];
+            vm.stopPrank();
+        } else {
+            IBooster booster = IBooster(boosterAddress);
+            IBaseRewardPool basePool = IBaseRewardPool(basePoolAddress);
 
-//     (uint256 minAmount,) = creditFacade.limits();
+            uint256 pid = basePool.pid();
 
-//     tokenTestSuite.mint(Tokens.DAI, USER, minAmount);
+            address crvToken = booster.poolInfo(pid).lptoken;
+            address cvxToken = address(basePool.stakingToken());
+            address stkcvxToken = address(basePool);
 
-//     // Approve tokens
-//     tokenTestSuite.approve(Tokens.DAI, USER, address(creditManager(Tokens.DAI)));
+            vm.startPrank(creditAccount);
 
-//     vm.startPrank(USER);
-//     creditFacade.openCreditAccountMulticall(
-//         minAmount,
-//         USER,
-//         MultiCallBuilder.build(
-//             address(creditFacade),
-//             abi.encodeCall(
-//                 ICreditFacadeV3Multicall.addCollateral, (USER, tokenTestSuite.addressOf(Tokens.DAI), minAmount)
-//             )
-//         ),
-//         0
-//     );
+            booster.deposit(pid, WAD, false);
+            comparator.takeSnapshot("after_booster_deposit_no_staking", creditAccount);
 
-//     vm.stopPrank();
+            uint256 remainingBalance = IERC20(crvToken).balanceOf(creditAccount);
+            booster.deposit(pid, remainingBalance - WAD, false);
+            comparator.takeSnapshot("after_booster_depositDiff_no_staking", creditAccount);
 
-//     creditAccount = creditManager(Tokens.DAI).getCreditAccountOrRevert(USER);
+            basePool.stake(WAD);
+            comparator.takeSnapshot("after_basePool_stake", creditAccount);
 
-//     tokenTestSuite.mint(token, creditAccount, amount);
-// }
+            remainingBalance = IERC20(cvxToken).balanceOf(creditAccount);
+            basePool.stake(remainingBalance - WAD);
+            comparator.takeSnapshot("after_basePool_stakeDiff", creditAccount);
 
-// function prepareComparator(address basePoolAdapter) internal returns (BalanceComparator comparator) {
-//     address targetContract = IConvexV1BaseRewardPoolAdapter(basePoolAdapter).targetContract();
+            vm.warp(block.timestamp + 24 * 60 * 60);
 
-//     address[] memory tokensToTrack = new address[](7);
+            basePool.getReward();
+            comparator.takeSnapshot("after_basePool_getReward_with_extras", creditAccount);
 
-//     tokensToTrack[0] = IConvexV1BaseRewardPoolAdapter(basePoolAdapter).curveLPtoken();
-//     tokensToTrack[1] = IConvexV1BaseRewardPoolAdapter(basePoolAdapter).stakingToken();
-//     tokensToTrack[2] = IConvexV1BaseRewardPoolAdapter(basePoolAdapter).stakedPhantomToken();
-//     tokensToTrack[3] = tokenTestSuite.addressOf(Tokens.CRV);
-//     tokensToTrack[4] = tokenTestSuite.addressOf(Tokens.CVX);
+            vm.warp(block.timestamp + 24 * 60 * 60);
 
-//     uint256 extraRewardLength = IBaseRewardPool(targetContract).extraRewardsLength();
-//     if (extraRewardLength >= 1) {
-//         tokensToTrack[5] = IRewards(IBaseRewardPool(targetContract).extraRewards(0)).rewardToken();
+            basePool.withdraw(WAD, true);
+            comparator.takeSnapshot("after_basePool_withdraw", creditAccount);
 
-//         if (extraRewardLength >= 2) {
-//             tokensToTrack[6] = IRewards(IBaseRewardPool(targetContract).extraRewards(1)).rewardToken();
-//         }
-//     }
-//     tokensToTrack = tokensToTrack.trim();
+            vm.warp(block.timestamp + 24 * 60 * 60);
 
-//     Tokens[] memory _tokensToTrack = new Tokens[](tokensToTrack.length);
+            remainingBalance = IERC20(stkcvxToken).balanceOf(creditAccount);
+            basePool.withdraw(remainingBalance - WAD, true);
+            comparator.takeSnapshot("after_basePool_withdrawDiff", creditAccount);
 
-//     for (uint256 j = 0; j < tokensToTrack.length; ++j) {
-//         _tokensToTrack[j] = tokenTestSuite.tokenIndexes(tokensToTrack[j]);
-//     }
+            booster.withdraw(pid, WAD);
+            comparator.takeSnapshot("after_booster_withdraw", creditAccount);
 
-//     comparator = new BalanceComparator(
-//         _stages,
-//         _tokensToTrack,
-//         tokenTestSuite
-//     );
-// }
+            remainingBalance = IERC20(cvxToken).balanceOf(creditAccount);
+            booster.withdraw(pid, remainingBalance - WAD);
+            comparator.takeSnapshot("after_booster_withdrawDiff", creditAccount);
 
-// /// @dev [L-CVXET-1]: convex adapters and original contracts work identically
-// function test_live_CVXET_01_Convex_adapters_and_original_contracts_are_equivalent() public liveTest {
-//     for (uint256 i = 0; i < convexPools.length; ++i) {
-//         uint256 snapshot0 = vm.snapshot();
-//         uint256 snapshot1 = vm.snapshot();
+            booster.deposit(pid, WAD, true);
+            comparator.takeSnapshot("after_booster_deposit_with_staking", creditAccount);
 
-//         address basePoolAdapter = getAdapter(Tokens.DAI, convexPools[i]);
+            remainingBalance = IERC20(crvToken).balanceOf(creditAccount);
+            booster.deposit(pid, remainingBalance - WAD, true);
+            comparator.takeSnapshot("after_booster_depositDiff_with_staking", creditAccount);
 
-//         BalanceComparator comparator = prepareComparator(basePoolAdapter);
+            vm.warp(block.timestamp + 24 * 60 * 60);
 
-//         tokenTestSuite.approve(
-//             IConvexV1BaseRewardPoolAdapter(basePoolAdapter).curveLPtoken(),
-//             USER,
-//             supportedContracts.addressOf(Contracts.CONVEX_BOOSTER)
-//         );
+            basePool.withdrawAndUnwrap(WAD, true);
+            comparator.takeSnapshot("after_basePool_withdrawAndUnwrap", creditAccount);
 
-//         tokenTestSuite.approve(
-//             address(IConvexV1BaseRewardPoolAdapter(basePoolAdapter).stakingToken()),
-//             USER,
-//             supportedContracts.addressOf(convexPools[i])
-//         );
+            vm.warp(block.timestamp + 24 * 60 * 60);
 
-//         tokenTestSuite.mint(IConvexV1BaseRewardPoolAdapter(basePoolAdapter).curveLPtoken(), USER, 3000 * WAD);
+            remainingBalance = IERC20(stkcvxToken).balanceOf(creditAccount);
+            basePool.withdrawAndUnwrap(remainingBalance - WAD, true);
+            comparator.takeSnapshot("after_basePool_withdrawDiffAndUnwrap", creditAccount);
 
-//         compareBehavior(
-//             supportedContracts.addressOf(Contracts.CONVEX_BOOSTER),
-//             supportedContracts.addressOf(convexPools[i]),
-//             USER,
-//             false,
-//             comparator
-//         );
+            vm.stopPrank();
+        }
+    }
 
-//         BalanceBackup[] memory savedBalanceSnapshots = comparator.exportSnapshots(USER);
+    function openCreditAccountWithUnderlying(address token, uint256 amount) internal returns (address creditAccount) {
+        vm.prank(USER);
+        creditAccount = creditFacade.openCreditAccount(USER, MultiCallBuilder.build(), 0);
 
-//         vm.revertTo(snapshot1);
+        tokenTestSuite.mint(token, creditAccount, amount);
+    }
 
-//         comparator = prepareComparator(basePoolAdapter);
+    function prepareComparator(address basePoolAdapter) internal returns (BalanceComparator comparator) {
+        address targetContract = IConvexV1BaseRewardPoolAdapter(basePoolAdapter).targetContract();
 
-//         address creditAccount = openCreditAccountWithUnderlying(
-//             IConvexV1BaseRewardPoolAdapter(basePoolAdapter).curveLPtoken(), 3000 * WAD
-//         );
+        address[] memory tokensToTrack = new address[](7);
 
-//         compareBehavior(
-//             getAdapter(Tokens.DAI, Contracts.CONVEX_BOOSTER),
-//             getAdapter(Tokens.DAI, convexPools[i]),
-//             creditAccount,
-//             true,
-//             comparator
-//         );
+        tokensToTrack[0] = IConvexV1BaseRewardPoolAdapter(basePoolAdapter).curveLPtoken();
+        tokensToTrack[1] = IConvexV1BaseRewardPoolAdapter(basePoolAdapter).stakingToken();
+        tokensToTrack[2] = IConvexV1BaseRewardPoolAdapter(basePoolAdapter).stakedPhantomToken();
+        tokensToTrack[3] = tokenTestSuite.addressOf(Tokens.CRV);
+        tokensToTrack[4] = tokenTestSuite.addressOf(Tokens.CVX);
 
-//         comparator.compareAllSnapshots(creditAccount, savedBalanceSnapshots);
+        uint256 extraRewardLength = IBaseRewardPool(targetContract).extraRewardsLength();
+        if (extraRewardLength >= 1) {
+            tokensToTrack[5] = IRewards(IBaseRewardPool(targetContract).extraRewards(0)).rewardToken();
 
-//         vm.revertTo(snapshot0);
-//     }
-// }
+            if (extraRewardLength >= 2) {
+                tokensToTrack[6] = IRewards(IBaseRewardPool(targetContract).extraRewards(1)).rewardToken();
+            }
+        }
+        tokensToTrack = tokensToTrack.trim();
+
+        Tokens[] memory _tokensToTrack = new Tokens[](tokensToTrack.length);
+
+        for (uint256 j = 0; j < tokensToTrack.length; ++j) {
+            _tokensToTrack[j] = tokenTestSuite.tokenIndexes(tokensToTrack[j]);
+        }
+
+        comparator = new BalanceComparator(_stages, _tokensToTrack, tokenTestSuite);
+    }
+
+    /// @dev [L-CVXET-1]: convex adapters and original contracts work identically
+    function test_live_CVXET_01_Convex_adapters_and_original_contracts_are_equivalent() public {
+        for (uint256 i = 0; i < convexPools.length; ++i) {
+            uint256 snapshot0 = vm.snapshot();
+
+            address basePoolAdapter = getAdapter(address(creditManager), convexPools[i]);
+
+            if (basePoolAdapter == address(0)) {
+                vm.revertTo(snapshot0);
+                continue;
+            }
+
+            address creditAccount = openCreditAccountWithUnderlying(
+                IConvexV1BaseRewardPoolAdapter(basePoolAdapter).curveLPtoken(), 3000 * WAD
+            );
+
+            tokenTestSuite.approve(
+                IConvexV1BaseRewardPoolAdapter(basePoolAdapter).curveLPtoken(),
+                creditAccount,
+                supportedContracts.addressOf(Contracts.CONVEX_BOOSTER)
+            );
+
+            tokenTestSuite.approve(
+                IConvexV1BaseRewardPoolAdapter(basePoolAdapter).stakingToken(),
+                creditAccount,
+                supportedContracts.addressOf(convexPools[i])
+            );
+
+            uint256 snapshot1 = vm.snapshot();
+
+            BalanceComparator comparator = prepareComparator(basePoolAdapter);
+
+            compareBehavior(
+                creditAccount,
+                supportedContracts.addressOf(Contracts.CONVEX_BOOSTER),
+                supportedContracts.addressOf(convexPools[i]),
+                false,
+                comparator
+            );
+
+            BalanceBackup[] memory savedBalanceSnapshots = comparator.exportSnapshots(creditAccount);
+
+            vm.revertTo(snapshot1);
+
+            comparator = prepareComparator(basePoolAdapter);
+
+            compareBehavior(
+                creditAccount,
+                getAdapter(address(creditManager), Contracts.CONVEX_BOOSTER),
+                getAdapter(address(creditManager), convexPools[i]),
+                true,
+                comparator
+            );
+
+            comparator.compareAllSnapshots(creditAccount, savedBalanceSnapshots);
+
+            vm.revertTo(snapshot0);
+        }
+    }
 }

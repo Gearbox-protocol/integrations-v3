@@ -586,6 +586,9 @@ export const config: PoolV3DeployConfig = {
         { contract: "CONVEX_STECRV_POOL" },
         { contract: "CONVEX_BOOSTER" },
 
+        // LIDO
+        { contract: "LIDO_STETH_GATEWAY" },
+
         // NEW PROTOCOLS
         { contract: "LIDO_WSTETH" },
         { contract: "AAVE_V2_LENDING_POOL" },
