@@ -57,7 +57,7 @@ const mainCreditManager: CreditManagerV3DeployConfig = {
   expirationDate: undefined,
   minDebt: (BigInt(2e4) * POOL_DECIMALS) / POOL_DIVIDER,
   maxDebt: (BigInt(1e6) * POOL_DECIMALS) / POOL_DIVIDER,
-  poolLimit: (BigInt(5e6) * POOL_DECIMALS) / POOL_DIVIDER,
+  poolLimit: (BigInt(3e6) * POOL_DECIMALS) / POOL_DIVIDER,
   collateralTokens: [
     {
       token: "WETH",
@@ -168,7 +168,7 @@ const bcCreditManager: CreditManagerV3DeployConfig = {
   expirationDate: undefined,
   minDebt: (BigInt(2e4) * POOL_DECIMALS) / POOL_DIVIDER,
   maxDebt: (BigInt(5e5) * POOL_DECIMALS) / POOL_DIVIDER,
-  poolLimit: (BigInt(5e6) * POOL_DECIMALS) / POOL_DIVIDER,
+  poolLimit: (BigInt(3e6) * POOL_DECIMALS) / POOL_DIVIDER,
   collateralTokens: [
     {
       token: "USDC",
@@ -286,7 +286,7 @@ const riskCreditManager: CreditManagerV3DeployConfig = {
   expirationDate: undefined,
   minDebt: (BigInt(2e4) * POOL_DECIMALS) / POOL_DIVIDER,
   maxDebt: (BigInt(2e5) * POOL_DECIMALS) / POOL_DIVIDER,
-  poolLimit: (BigInt(5e6) * POOL_DECIMALS) / POOL_DIVIDER,
+  poolLimit: (BigInt(3e6) * POOL_DECIMALS) / POOL_DIVIDER,
   collateralTokens: [
     {
       token: "USDC",
@@ -349,7 +349,7 @@ export const config: PoolV3DeployConfig = {
   underlying: "WBTC",
   accountAmount: (BigInt(100_000) * POOL_DECIMALS) / POOL_DIVIDER,
   withdrawalFee: 0,
-  expectedLiquidityLimit: (BigInt(2_000_000) * POOL_DECIMALS) / POOL_DIVIDER,
+  expectedLiquidityLimit: (BigInt(100_000_000) * POOL_DECIMALS) / POOL_DIVIDER,
   irm: {
     U1: 7000,
     U2: 9000,

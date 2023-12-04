@@ -31,7 +31,7 @@ contract CONFIG_MAINNET_USDC_MT_V3 is IPoolV3DeployConfig {
     string public constant symbol = "dUSDCV3";
     string public constant name = "Trade USDC v3";
 
-    PoolV3DeployParams _poolParams = PoolV3DeployParams({withdrawalFee: 0, expectedLiquidityLimit: 4_000_000_000_000});
+    PoolV3DeployParams _poolParams = PoolV3DeployParams({withdrawalFee: 0, expectedLiquidityLimit: 100_000_000_000_000});
 
     LinearIRMV3DeployParams _irm = LinearIRMV3DeployParams({
         U_1: 70_00,
@@ -91,7 +91,7 @@ contract CONFIG_MAINNET_USDC_MT_V3 is IPoolV3DeployConfig {
             cp.whitelisted = false;
             cp.expirable = false;
             cp.skipInit = false;
-            cp.poolLimit = 5_000_000_000_000;
+            cp.poolLimit = 3_000_000_000_000;
 
             CollateralTokenHuman[] storage cts = cp.collateralTokens;
             cts.push(CollateralTokenHuman({token: Tokens.WETH, lt: 90_00}));
@@ -172,7 +172,7 @@ contract CONFIG_MAINNET_USDC_MT_V3 is IPoolV3DeployConfig {
             cp.whitelisted = false;
             cp.expirable = false;
             cp.skipInit = false;
-            cp.poolLimit = 5_000_000_000_000;
+            cp.poolLimit = 3_000_000_000_000;
 
             CollateralTokenHuman[] storage cts = cp.collateralTokens;
             cts.push(CollateralTokenHuman({token: Tokens.WETH, lt: 90_00}));
@@ -246,7 +246,7 @@ contract CONFIG_MAINNET_USDC_MT_V3 is IPoolV3DeployConfig {
             cp.whitelisted = false;
             cp.expirable = false;
             cp.skipInit = false;
-            cp.poolLimit = 5_000_000_000_000;
+            cp.poolLimit = 3_000_000_000_000;
 
             CollateralTokenHuman[] storage cts = cp.collateralTokens;
             cts.push(CollateralTokenHuman({token: Tokens.WETH, lt: 90_00}));

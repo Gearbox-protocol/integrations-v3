@@ -31,7 +31,7 @@ contract CONFIG_MAINNET_WBTC_MT_V3 is IPoolV3DeployConfig {
     string public constant symbol = "dWBTCV3";
     string public constant name = "Trade WBTC v3";
 
-    PoolV3DeployParams _poolParams = PoolV3DeployParams({withdrawalFee: 0, expectedLiquidityLimit: 5_405_405_405});
+    PoolV3DeployParams _poolParams = PoolV3DeployParams({withdrawalFee: 0, expectedLiquidityLimit: 270_270_270_270});
 
     LinearIRMV3DeployParams _irm = LinearIRMV3DeployParams({
         U_1: 70_00,
@@ -93,7 +93,7 @@ contract CONFIG_MAINNET_WBTC_MT_V3 is IPoolV3DeployConfig {
             cp.whitelisted = false;
             cp.expirable = false;
             cp.skipInit = false;
-            cp.poolLimit = 13_513_513_513;
+            cp.poolLimit = 8_108_108_108;
 
             CollateralTokenHuman[] storage cts = cp.collateralTokens;
             cts.push(CollateralTokenHuman({token: Tokens.WETH, lt: 90_00}));
@@ -177,7 +177,7 @@ contract CONFIG_MAINNET_WBTC_MT_V3 is IPoolV3DeployConfig {
             cp.whitelisted = false;
             cp.expirable = false;
             cp.skipInit = false;
-            cp.poolLimit = 13_513_513_513;
+            cp.poolLimit = 8_108_108_108;
 
             CollateralTokenHuman[] storage cts = cp.collateralTokens;
             cts.push(CollateralTokenHuman({token: Tokens.USDC, lt: 90_00}));
@@ -264,7 +264,7 @@ contract CONFIG_MAINNET_WBTC_MT_V3 is IPoolV3DeployConfig {
             cp.whitelisted = false;
             cp.expirable = false;
             cp.skipInit = false;
-            cp.poolLimit = 13_513_513_513;
+            cp.poolLimit = 8_108_108_108;
 
             CollateralTokenHuman[] storage cts = cp.collateralTokens;
             cts.push(CollateralTokenHuman({token: Tokens.USDC, lt: 90_00}));

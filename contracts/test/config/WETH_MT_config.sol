@@ -32,7 +32,7 @@ contract CONFIG_MAINNET_WETH_MT_V3 is IPoolV3DeployConfig {
     string public constant name = "Trade WETH v3";
 
     PoolV3DeployParams _poolParams =
-        PoolV3DeployParams({withdrawalFee: 0, expectedLiquidityLimit: 1_000_000_000_000_000_000_000});
+        PoolV3DeployParams({withdrawalFee: 0, expectedLiquidityLimit: 50_000_000_000_000_000_000_000});
 
     LinearIRMV3DeployParams _irm = LinearIRMV3DeployParams({
         U_1: 70_00,
@@ -128,7 +128,7 @@ contract CONFIG_MAINNET_WETH_MT_V3 is IPoolV3DeployConfig {
             cp.whitelisted = false;
             cp.expirable = false;
             cp.skipInit = false;
-            cp.poolLimit = 2_500_000_000_000_000_000_000;
+            cp.poolLimit = 1_500_000_000_000_000_000_000;
 
             CollateralTokenHuman[] storage cts = cp.collateralTokens;
             cts.push(CollateralTokenHuman({token: Tokens.USDC, lt: 90_00}));
@@ -212,7 +212,7 @@ contract CONFIG_MAINNET_WETH_MT_V3 is IPoolV3DeployConfig {
             cp.whitelisted = false;
             cp.expirable = false;
             cp.skipInit = false;
-            cp.poolLimit = 2_500_000_000_000_000_000_000;
+            cp.poolLimit = 1_500_000_000_000_000_000_000;
 
             CollateralTokenHuman[] storage cts = cp.collateralTokens;
             cts.push(CollateralTokenHuman({token: Tokens.USDC, lt: 90_00}));
@@ -286,7 +286,7 @@ contract CONFIG_MAINNET_WETH_MT_V3 is IPoolV3DeployConfig {
             cp.whitelisted = false;
             cp.expirable = false;
             cp.skipInit = false;
-            cp.poolLimit = 2_500_000_000_000_000_000_000;
+            cp.poolLimit = 1_500_000_000_000_000_000_000;
 
             CollateralTokenHuman[] storage cts = cp.collateralTokens;
             cts.push(CollateralTokenHuman({token: Tokens.USDC, lt: 90_00}));
