@@ -61,7 +61,6 @@ contract CONFIG_MAINNET_USDC_LEV_V3 is IPoolV3DeployConfig {
         _gaugeRates.push(GaugeRate({token: Tokens.YieldETH, minRate: 1, maxRate: 30_00}));
         _gaugeRates.push(GaugeRate({token: Tokens.DAI, minRate: 1, maxRate: 30_00}));
         _gaugeRates.push(GaugeRate({token: Tokens.USDT, minRate: 1, maxRate: 30_00}));
-        _gaugeRates.push(GaugeRate({token: Tokens.sUSD, minRate: 1, maxRate: 30_00}));
         _gaugeRates.push(GaugeRate({token: Tokens.FRAX, minRate: 1, maxRate: 30_00}));
         _gaugeRates.push(GaugeRate({token: Tokens.GUSD, minRate: 1, maxRate: 30_00}));
         _gaugeRates.push(GaugeRate({token: Tokens.LUSD, minRate: 1, maxRate: 30_00}));
@@ -78,9 +77,6 @@ contract CONFIG_MAINNET_USDC_LEV_V3 is IPoolV3DeployConfig {
         _gaugeRates.push(GaugeRate({token: Tokens.LUSD3CRV, minRate: 1, maxRate: 30_00}));
         _gaugeRates.push(GaugeRate({token: Tokens.cvxLUSD3CRV, minRate: 1, maxRate: 30_00}));
         _gaugeRates.push(GaugeRate({token: Tokens.stkcvxLUSD3CRV, minRate: 1, maxRate: 30_00}));
-        _gaugeRates.push(GaugeRate({token: Tokens.crvPlain3andSUSD, minRate: 1, maxRate: 30_00}));
-        _gaugeRates.push(GaugeRate({token: Tokens.cvxcrvPlain3andSUSD, minRate: 1, maxRate: 30_00}));
-        _gaugeRates.push(GaugeRate({token: Tokens.stkcvxcrvPlain3andSUSD, minRate: 1, maxRate: 30_00}));
         _gaugeRates.push(GaugeRate({token: Tokens.gusd3CRV, minRate: 1, maxRate: 30_00}));
         _gaugeRates.push(GaugeRate({token: Tokens.cvxgusd3CRV, minRate: 1, maxRate: 30_00}));
         _gaugeRates.push(GaugeRate({token: Tokens.stkcvxgusd3CRV, minRate: 1, maxRate: 30_00}));
@@ -117,7 +113,6 @@ contract CONFIG_MAINNET_USDC_LEV_V3 is IPoolV3DeployConfig {
         _quotaLimits.push(PoolQuotaLimit({token: Tokens.YieldETH, quotaIncreaseFee: 0, limit: 10_000_000_000_000}));
         _quotaLimits.push(PoolQuotaLimit({token: Tokens.DAI, quotaIncreaseFee: 0, limit: 10_000_000_000_000}));
         _quotaLimits.push(PoolQuotaLimit({token: Tokens.USDT, quotaIncreaseFee: 0, limit: 10_000_000_000_000}));
-        _quotaLimits.push(PoolQuotaLimit({token: Tokens.sUSD, quotaIncreaseFee: 0, limit: 10_000_000_000_000}));
         _quotaLimits.push(PoolQuotaLimit({token: Tokens.FRAX, quotaIncreaseFee: 0, limit: 10_000_000_000_000}));
         _quotaLimits.push(PoolQuotaLimit({token: Tokens.GUSD, quotaIncreaseFee: 0, limit: 10_000_000_000_000}));
         _quotaLimits.push(PoolQuotaLimit({token: Tokens.LUSD, quotaIncreaseFee: 0, limit: 10_000_000_000_000}));
@@ -137,15 +132,6 @@ contract CONFIG_MAINNET_USDC_LEV_V3 is IPoolV3DeployConfig {
         _quotaLimits.push(PoolQuotaLimit({token: Tokens.cvxLUSD3CRV, quotaIncreaseFee: 0, limit: 10_000_000_000_000}));
         _quotaLimits.push(
             PoolQuotaLimit({token: Tokens.stkcvxLUSD3CRV, quotaIncreaseFee: 0, limit: 10_000_000_000_000})
-        );
-        _quotaLimits.push(
-            PoolQuotaLimit({token: Tokens.crvPlain3andSUSD, quotaIncreaseFee: 0, limit: 10_000_000_000_000})
-        );
-        _quotaLimits.push(
-            PoolQuotaLimit({token: Tokens.cvxcrvPlain3andSUSD, quotaIncreaseFee: 0, limit: 10_000_000_000_000})
-        );
-        _quotaLimits.push(
-            PoolQuotaLimit({token: Tokens.stkcvxcrvPlain3andSUSD, quotaIncreaseFee: 0, limit: 10_000_000_000_000})
         );
         _quotaLimits.push(PoolQuotaLimit({token: Tokens.gusd3CRV, quotaIncreaseFee: 0, limit: 10_000_000_000_000}));
         _quotaLimits.push(PoolQuotaLimit({token: Tokens.cvxgusd3CRV, quotaIncreaseFee: 0, limit: 10_000_000_000_000}));
@@ -212,8 +198,6 @@ contract CONFIG_MAINNET_USDC_LEV_V3 is IPoolV3DeployConfig {
 
             cts.push(CollateralTokenHuman({token: Tokens.USDT, lt: 90_00}));
 
-            cts.push(CollateralTokenHuman({token: Tokens.sUSD, lt: 90_00}));
-
             cts.push(CollateralTokenHuman({token: Tokens.FRAX, lt: 90_00}));
 
             cts.push(CollateralTokenHuman({token: Tokens.GUSD, lt: 90_00}));
@@ -245,12 +229,6 @@ contract CONFIG_MAINNET_USDC_LEV_V3 is IPoolV3DeployConfig {
             cts.push(CollateralTokenHuman({token: Tokens.cvxLUSD3CRV, lt: 90_00}));
 
             cts.push(CollateralTokenHuman({token: Tokens.stkcvxLUSD3CRV, lt: 90_00}));
-
-            cts.push(CollateralTokenHuman({token: Tokens.crvPlain3andSUSD, lt: 90_00}));
-
-            cts.push(CollateralTokenHuman({token: Tokens.cvxcrvPlain3andSUSD, lt: 90_00}));
-
-            cts.push(CollateralTokenHuman({token: Tokens.stkcvxcrvPlain3andSUSD, lt: 90_00}));
 
             cts.push(CollateralTokenHuman({token: Tokens.gusd3CRV, lt: 90_00}));
 
@@ -337,7 +315,6 @@ contract CONFIG_MAINNET_USDC_LEV_V3 is IPoolV3DeployConfig {
             uv3p.push(UniswapV3Pair({token0: Tokens.WBTC, token1: Tokens.USDC, fee: 500}));
             uv3p.push(UniswapV3Pair({token0: Tokens.DAI, token1: Tokens.USDC, fee: 100}));
             uv3p.push(UniswapV3Pair({token0: Tokens.WBTC, token1: Tokens.LQTY, fee: 10000}));
-            uv3p.push(UniswapV3Pair({token0: Tokens.sUSD, token1: Tokens.FRAX, fee: 500}));
             uv3p.push(UniswapV3Pair({token0: Tokens.DAI, token1: Tokens.FRAX, fee: 500}));
             uv3p.push(UniswapV3Pair({token0: Tokens.FXS, token1: Tokens.FRAX, fee: 10000}));
             uv3p.push(UniswapV3Pair({token0: Tokens.WBTC, token1: Tokens.DAI, fee: 3000}));
@@ -399,10 +376,8 @@ contract CONFIG_MAINNET_USDC_LEV_V3 is IPoolV3DeployConfig {
             cs.push(Contracts.CURVE_FRAX_USDC_POOL);
             cs.push(Contracts.CURVE_STETH_GATEWAY);
             cs.push(Contracts.CURVE_FRAX_POOL);
-            cs.push(Contracts.CURVE_SUSD_POOL);
             cs.push(Contracts.CURVE_LUSD_POOL);
             cs.push(Contracts.CURVE_GUSD_POOL);
-            cs.push(Contracts.CURVE_SUSD_DEPOSIT);
             cs.push(Contracts.CURVE_RETH_ETH_POOL);
             cs.push(Contracts.YEARN_DAI_VAULT);
             cs.push(Contracts.YEARN_USDC_VAULT);
@@ -413,7 +388,6 @@ contract CONFIG_MAINNET_USDC_LEV_V3 is IPoolV3DeployConfig {
             cs.push(Contracts.CONVEX_FRAX3CRV_POOL);
             cs.push(Contracts.CONVEX_LUSD3CRV_POOL);
             cs.push(Contracts.CONVEX_GUSD_POOL);
-            cs.push(Contracts.CONVEX_SUSD_POOL);
             cs.push(Contracts.CONVEX_3CRV_POOL);
             cs.push(Contracts.CONVEX_FRAX_USDC_POOL);
             cs.push(Contracts.CONVEX_STECRV_POOL);

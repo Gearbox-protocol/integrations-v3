@@ -61,7 +61,6 @@ const levUniV3Config: UniV3Config = {
     { token0: "WBTC", token1: "USDC", fee: 500 },
     { token0: "DAI", token1: "USDC", fee: 100 },
     { token0: "WBTC", token1: "LQTY", fee: 10000 },
-    { token0: "sUSD", token1: "FRAX", fee: 500 },
     { token0: "DAI", token1: "FRAX", fee: 500 },
     { token0: "FXS", token1: "FRAX", fee: 10000 },
     { token0: "WBTC", token1: "DAI", fee: 3000 },
@@ -200,12 +199,6 @@ export const config: PoolV3DeployConfig = {
       quotaIncreaseFee: 0,
       limit: (BigInt(1e7) * POOL_DECIMALS) / POOL_DIVIDER,
     },
-    sUSD: {
-      minRate: 1,
-      maxRate: 3000,
-      quotaIncreaseFee: 0,
-      limit: (BigInt(1e7) * POOL_DECIMALS) / POOL_DIVIDER,
-    },
     FRAX: {
       minRate: 1,
       maxRate: 3000,
@@ -305,26 +298,6 @@ export const config: PoolV3DeployConfig = {
       quotaIncreaseFee: 0,
       limit: (BigInt(1e7) * POOL_DECIMALS) / POOL_DIVIDER,
     },
-
-    crvPlain3andSUSD: {
-      minRate: 1,
-      maxRate: 3000,
-      quotaIncreaseFee: 0,
-      limit: (BigInt(1e7) * POOL_DECIMALS) / POOL_DIVIDER,
-    },
-    cvxcrvPlain3andSUSD: {
-      minRate: 1,
-      maxRate: 3000,
-      quotaIncreaseFee: 0,
-      limit: (BigInt(1e7) * POOL_DECIMALS) / POOL_DIVIDER,
-    },
-    stkcvxcrvPlain3andSUSD: {
-      minRate: 1,
-      maxRate: 3000,
-      quotaIncreaseFee: 0,
-      limit: (BigInt(1e7) * POOL_DECIMALS) / POOL_DIVIDER,
-    },
-
     gusd3CRV: {
       minRate: 1,
       maxRate: 3000,
@@ -494,7 +467,6 @@ export const config: PoolV3DeployConfig = {
 
         { token: "DAI", lt: 92_00 }, // Token address is token from priceFeed map above
         { token: "USDT", lt: 90_00 }, // Token address is token from priceFeed map above
-        { token: "sUSD", lt: 90_00 }, // Token address is token from priceFeed map above
         { token: "FRAX", lt: 90_00 }, // Token address is token from priceFeed map above
         { token: "GUSD", lt: 90_00 }, // Token address is token from priceFeed map above
         { token: "LUSD", lt: 90_00 }, // Token address is token from priceFeed map above
@@ -516,10 +488,6 @@ export const config: PoolV3DeployConfig = {
         { token: "LUSD3CRV", lt: 90_00 }, // Token address is token from priceFeed map above
         { token: "cvxLUSD3CRV", lt: 90_00 }, // Token address is token from priceFeed map above
         { token: "stkcvxLUSD3CRV", lt: 90_00 },
-
-        { token: "crvPlain3andSUSD", lt: 90_00 }, // Token address is token from priceFeed map above
-        { token: "cvxcrvPlain3andSUSD", lt: 90_00 }, // Token address is token from priceFeed map above
-        { token: "stkcvxcrvPlain3andSUSD", lt: 90_00 },
 
         { token: "gusd3CRV", lt: 90_00 }, // Token address is token from priceFeed map above
         { token: "cvxgusd3CRV", lt: 90_00 }, // Token address is token from priceFeed map above
@@ -562,10 +530,8 @@ export const config: PoolV3DeployConfig = {
         { contract: "CURVE_FRAX_USDC_POOL" },
         { contract: "CURVE_STETH_GATEWAY" },
         { contract: "CURVE_FRAX_POOL" },
-        { contract: "CURVE_SUSD_POOL" },
         { contract: "CURVE_LUSD_POOL" },
         { contract: "CURVE_GUSD_POOL" },
-        { contract: "CURVE_SUSD_DEPOSIT" },
         { contract: "CURVE_RETH_ETH_POOL" },
 
         // YEARN
@@ -580,7 +546,6 @@ export const config: PoolV3DeployConfig = {
         { contract: "CONVEX_FRAX3CRV_POOL" },
         { contract: "CONVEX_LUSD3CRV_POOL" },
         { contract: "CONVEX_GUSD_POOL" },
-        { contract: "CONVEX_SUSD_POOL" },
         { contract: "CONVEX_3CRV_POOL" },
         { contract: "CONVEX_FRAX_USDC_POOL" },
         { contract: "CONVEX_STECRV_POOL" },
