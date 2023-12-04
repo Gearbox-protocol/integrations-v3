@@ -7,15 +7,13 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {ICreditFacadeV3} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacadeV3.sol";
 import {ICurvePool2Assets} from "../../../../integrations/curve/ICurvePool_2.sol";
 import {ICurveV1_2AssetsAdapter} from "../../../../interfaces/curve/ICurveV1_2AssetsAdapter.sol";
+import {CurveV1Calls, CurveV1Multicaller} from "../../../multicall/curve/CurveV1_Calls.sol";
 
 import {Tokens} from "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
 import {Contracts} from "@gearbox-protocol/sdk-gov/contracts/SupportedContracts.sol";
 
 import {MultiCall} from "@gearbox-protocol/core-v2/contracts/libraries/MultiCall.sol";
 import {MultiCallBuilder} from "@gearbox-protocol/core-v3/contracts/test/lib/MultiCallBuilder.sol";
-
-import {CurveV1Calls, CurveV1Multicaller} from "../../../multicall/curve/CurveV1_Calls.sol";
-
 // TEST
 import "@gearbox-protocol/core-v3/contracts/test/lib/constants.sol";
 
@@ -24,7 +22,7 @@ import "@gearbox-protocol/core-v3/contracts/test/lib/constants.sol";
 import {LiveTestHelper} from "../../../suites/LiveTestHelper.sol";
 import {BalanceComparator, BalanceBackup} from "../../../helpers/BalanceComparator.sol";
 
-contract Live_FraxUsdcEquivalenceTest is LiveTestHelper {
+contract Live_CurveStETHEquivalenceTest is LiveTestHelper {
     using CurveV1Calls for CurveV1Multicaller;
 
     BalanceComparator comparator;
@@ -32,8 +30,7 @@ contract Live_FraxUsdcEquivalenceTest is LiveTestHelper {
     function setUp() public attachOrLiveTest {
         _setUp();
 
-        // TOKENS TO TRACK ["crvFRAX", "FRAX", "USDC"]
-        Tokens[3] memory tokensToTrack = [Tokens.crvFRAX, Tokens.FRAX, Tokens.USDC];
+        Tokens[3] memory tokensToTrack = [Tokens.steCRV, Tokens.WETH, Tokens.STETH];
 
         // STAGES
         string[9] memory stages = [
@@ -78,53 +75,45 @@ contract Live_FraxUsdcEquivalenceTest is LiveTestHelper {
             vm.startPrank(USER);
 
             creditFacade.multicall(
-                creditAccount, MultiCallBuilder.build(pool.exchange(int128(0), int128(1), 2000 * WAD, 1500 * (10 ** 6)))
+                creditAccount, MultiCallBuilder.build(pool.exchange(int128(0), int128(1), 5 * WAD, WAD))
             );
             comparator.takeSnapshot("after_exchange", creditAccount);
 
-            uint256[2] memory amounts = [1000 * WAD, 1000 * (10 ** 6)];
+            uint256[2] memory amounts = [4 * WAD, 4 * WAD];
 
             creditFacade.multicall(creditAccount, MultiCallBuilder.build(pool.add_liquidity(amounts, 0)));
             comparator.takeSnapshot("after_add_liquidity", creditAccount);
 
             amounts = [uint256(0), 0];
 
-            creditFacade.multicall(creditAccount, MultiCallBuilder.build(pool.remove_liquidity(500 * WAD, amounts)));
+            creditFacade.multicall(creditAccount, MultiCallBuilder.build(pool.remove_liquidity(WAD, amounts)));
             comparator.takeSnapshot("after_remove_liquidity", creditAccount);
 
             creditFacade.multicall(
-                creditAccount, MultiCallBuilder.build(pool.remove_liquidity_one_coin(500 * WAD, int128(1), 0))
+                creditAccount, MultiCallBuilder.build(pool.remove_liquidity_one_coin(WAD, int128(1), 0))
             );
             comparator.takeSnapshot("after_remove_liquidity_one_coin", creditAccount);
 
-            amounts = [500 * WAD, 100 * (10 ** 6)];
+            amounts = [WAD, WAD / 5];
 
             creditFacade.multicall(
-                creditAccount, MultiCallBuilder.build(pool.remove_liquidity_imbalance(amounts, type(uint256).max))
+                creditAccount, MultiCallBuilder.build(pool.remove_liquidity_imbalance(amounts, 2 * WAD))
             );
             comparator.takeSnapshot("after_remove_liquidity_imbalance", creditAccount);
 
-            creditFacade.multicall(
-                creditAccount, MultiCallBuilder.build(pool.add_liquidity_one_coin(100 * WAD, 0, 50 * WAD))
-            );
+            creditFacade.multicall(creditAccount, MultiCallBuilder.build(pool.add_liquidity_one_coin(WAD, 0, WAD / 2)));
             comparator.takeSnapshot("after_add_liquidity_one_coin", creditAccount);
 
-            creditFacade.multicall(
-                creditAccount, MultiCallBuilder.build(pool.exchange_diff(0, 1, 100 * WAD, RAY / 2 / 10 ** 12))
-            );
+            creditFacade.multicall(creditAccount, MultiCallBuilder.build(pool.exchange_diff(0, 1, 2 * WAD, RAY / 2)));
             comparator.takeSnapshot("after_exchange_diff", creditAccount);
 
             creditFacade.multicall(
-                creditAccount,
-                MultiCallBuilder.build(
-                    pool.add_diff_liquidity_one_coin(100 * 10 ** 6, uint256(1), (RAY * 10 ** 12) / 2)
-                )
+                creditAccount, MultiCallBuilder.build(pool.add_diff_liquidity_one_coin(2 * WAD, 1, RAY / 2))
             );
             comparator.takeSnapshot("after_add_diff_liquidity_one_coin", creditAccount);
 
             creditFacade.multicall(
-                creditAccount,
-                MultiCallBuilder.build(pool.remove_diff_liquidity_one_coin(100 * WAD, uint256(0), RAY / 2))
+                creditAccount, MultiCallBuilder.build(pool.remove_diff_liquidity_one_coin(2 * WAD, 0, RAY / 2))
             );
             comparator.takeSnapshot("after_remove_diff_liquidity_one_coin", creditAccount);
 
@@ -134,39 +123,37 @@ contract Live_FraxUsdcEquivalenceTest is LiveTestHelper {
 
             vm.startPrank(creditAccount);
 
-            pool.exchange(int128(0), int128(1), 2000 * WAD, 1500 * (10 ** 6));
+            pool.exchange(int128(0), int128(1), 5 * WAD, WAD);
             comparator.takeSnapshot("after_exchange", creditAccount);
 
-            uint256[2] memory amounts = [1000 * WAD, 1000 * (10 ** 6)];
+            uint256[2] memory amounts = [4 * WAD, 4 * WAD];
 
             pool.add_liquidity(amounts, 0);
             comparator.takeSnapshot("after_add_liquidity", creditAccount);
 
             amounts = [uint256(0), 0];
-
-            pool.remove_liquidity(500 * WAD, amounts);
+            pool.remove_liquidity(WAD, amounts);
             comparator.takeSnapshot("after_remove_liquidity", creditAccount);
 
-            pool.remove_liquidity_one_coin(500 * WAD, int128(1), 0);
+            pool.remove_liquidity_one_coin(WAD, int128(1), 0);
             comparator.takeSnapshot("after_remove_liquidity_one_coin", creditAccount);
 
-            amounts = [500 * WAD, 100 * (10 ** 6)];
-
-            pool.remove_liquidity_imbalance(amounts, type(uint256).max);
+            amounts = [WAD, WAD / 5];
+            pool.remove_liquidity_imbalance(amounts, 2 * WAD);
             comparator.takeSnapshot("after_remove_liquidity_imbalance", creditAccount);
 
-            pool.add_liquidity([100 * WAD, 0], 50 * WAD);
+            pool.add_liquidity([WAD, 0], WAD / 2);
             comparator.takeSnapshot("after_add_liquidity_one_coin", creditAccount);
 
-            uint256 balanceToSwap = tokenTestSuite.balanceOf(Tokens.FRAX, creditAccount) - 100 * WAD;
-            pool.exchange(int128(0), int128(1), balanceToSwap, balanceToSwap / (2 * 10 ** 12));
+            uint256 balanceToSwap = tokenTestSuite.balanceOf(Tokens.WETH, creditAccount) - 2 * WAD;
+            pool.exchange(int128(0), int128(1), balanceToSwap, balanceToSwap / 2);
             comparator.takeSnapshot("after_exchange_diff", creditAccount);
 
-            balanceToSwap = tokenTestSuite.balanceOf(Tokens.USDC, creditAccount) - 100 * 10 ** 6;
-            pool.add_liquidity([0, balanceToSwap], (balanceToSwap * 10 ** 12) / 2);
+            balanceToSwap = tokenTestSuite.balanceOf(Tokens.STETH, creditAccount) - 2 * WAD;
+            pool.add_liquidity([0, balanceToSwap], balanceToSwap / 2);
             comparator.takeSnapshot("after_add_diff_liquidity_one_coin", creditAccount);
 
-            balanceToSwap = tokenTestSuite.balanceOf(Tokens.crvFRAX, creditAccount) - 100 * WAD;
+            balanceToSwap = tokenTestSuite.balanceOf(Tokens.steCRV, creditAccount) - 2 * WAD;
             pool.remove_liquidity_one_coin(balanceToSwap, int128(0), balanceToSwap / 2);
             comparator.takeSnapshot("after_remove_diff_liquidity_one_coin", creditAccount);
 
@@ -176,44 +163,44 @@ contract Live_FraxUsdcEquivalenceTest is LiveTestHelper {
 
     /// @dev Opens credit account for USER and make amount of desired token equal
     /// amounts for USER and CA to be able to launch test for both
-    function openCreditAccountWithFrax(uint256 amount) internal returns (address creditAccount) {
+    function openCreditAccountWithWeth(uint256 amount) internal returns (address creditAccount) {
         vm.prank(USER);
         creditAccount = creditFacade.openCreditAccount(USER, MultiCallBuilder.build(), 0);
-        tokenTestSuite.mint(Tokens.FRAX, creditAccount, amount);
+        tokenTestSuite.mint(Tokens.WETH, creditAccount, amount);
     }
 
-    /// @dev [L-CRVET-4]: FraxUsdc adapter and normal account works identically
-    function test_live_CRVET_04_FraxUsdc_adapter_and_normal_account_works_identically() public {
-        address creditAccount = openCreditAccountWithFrax(10000 * WAD);
+    /// @dev [L-CRVET-3]: Curve steth adapter and normal account works identically
+    function test_live_CRVET_03_steth_adapter_and_normal_account_works_identically() public {
+        address creditAccount = openCreditAccountWithWeth(50 * WAD);
 
         tokenTestSuite.approve(
-            tokenTestSuite.addressOf(Tokens.FRAX),
+            tokenTestSuite.addressOf(Tokens.WETH),
             creditAccount,
-            supportedContracts.addressOf(Contracts.CURVE_FRAX_USDC_POOL)
+            supportedContracts.addressOf(Contracts.CURVE_STETH_GATEWAY)
         );
 
         tokenTestSuite.approve(
-            tokenTestSuite.addressOf(Tokens.USDC),
+            tokenTestSuite.addressOf(Tokens.STETH),
             creditAccount,
-            supportedContracts.addressOf(Contracts.CURVE_FRAX_USDC_POOL)
+            supportedContracts.addressOf(Contracts.CURVE_STETH_GATEWAY)
         );
 
         tokenTestSuite.approve(
-            tokenTestSuite.addressOf(Tokens.crvFRAX),
+            tokenTestSuite.addressOf(Tokens.steCRV),
             creditAccount,
-            supportedContracts.addressOf(Contracts.CURVE_FRAX_USDC_POOL)
+            supportedContracts.addressOf(Contracts.CURVE_STETH_GATEWAY)
         );
 
         uint256 snapshot = vm.snapshot();
 
-        compareBehavior(creditAccount, supportedContracts.addressOf(Contracts.CURVE_FRAX_USDC_POOL), false);
+        compareBehavior(creditAccount, supportedContracts.addressOf(Contracts.CURVE_STETH_GATEWAY), false);
 
         /// Stores save balances in memory, because all state data would be reverted afer snapshot
         BalanceBackup[] memory savedBalanceSnapshots = comparator.exportSnapshots(creditAccount);
 
         vm.revertTo(snapshot);
 
-        compareBehavior(creditAccount, getAdapter(address(creditManager), Contracts.CURVE_FRAX_USDC_POOL), true);
+        compareBehavior(creditAccount, getAdapter(address(creditManager), Contracts.CURVE_STETH_GATEWAY), true);
 
         comparator.compareAllSnapshots(creditAccount, savedBalanceSnapshots);
     }

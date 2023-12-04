@@ -3,289 +3,276 @@
 // (c) Gearbox Foundation, 2023.
 pragma solidity ^0.8.17;
 
-// import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-// import {ICreditFacadeV3} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacadeV3.sol";
-// import {ICurvePool2Assets} from "../../../../integrations/curve/ICurvePool_2.sol";
-// import {ICurveV1_2AssetsAdapter} from "../../../../interfaces/curve/ICurveV1_2AssetsAdapter.sol";
-// // import {CurveV1Calls, CurveV1Multicaller} from "../../../../multicall/curve/CurveV1_Calls.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import {ICreditFacadeV3} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacadeV3.sol";
+import {ICurvePool2Assets} from "../../../../integrations/curve/ICurvePool_2.sol";
+import {ICurveV1Adapter} from "../../../../interfaces/curve/ICurveV1Adapter.sol";
+import {ICurveV1_2AssetsAdapter} from "../../../../interfaces/curve/ICurveV1_2AssetsAdapter.sol";
+import {CurveV1Calls, CurveV1Multicaller} from "../../../multicall/curve/CurveV1_Calls.sol";
 
-// import {Tokens} from "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
-// import {Contracts} from "@gearbox-protocol/sdk-gov/contracts/SupportedContracts.sol";
+import {Tokens} from "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
+import {Contracts} from "@gearbox-protocol/sdk-gov/contracts/SupportedContracts.sol";
 
-// import {MultiCall} from "@gearbox-protocol/core-v2/contracts/libraries/MultiCall.sol";
-// import {MultiCallBuilder} from "@gearbox-protocol/core-v3/contracts/test/lib/MultiCallBuilder.sol";
-// // TEST
-// import "@gearbox-protocol/core-v3/contracts/test/lib/constants.sol";
+import {MultiCall} from "@gearbox-protocol/core-v2/contracts/libraries/MultiCall.sol";
+import {MultiCallBuilder} from "@gearbox-protocol/core-v3/contracts/test/lib/MultiCallBuilder.sol";
+// TEST
+import "@gearbox-protocol/core-v3/contracts/test/lib/constants.sol";
 
-// // SUITES
+// SUITES
 
 import {LiveTestHelper} from "../../../suites/LiveTestHelper.sol";
-// import {BalanceComparator, BalanceBackup} from "../../../helpers/BalanceComparator.sol";
-
-contract Live_MetapoolTest is LiveTestHelper {
-// using CreditFacadeV3Calls for CreditFacadeV3Multicaller;
-// using CurveV1Calls for CurveV1Multicaller;
-
-// BalanceComparator comparator;
-
-// string[] _stages;
-
-// function setUp() public liveTest {
-//     _setUp();
-
-//     // STAGES
-//     string[11] memory stages = [
-//         "after_exchange",
-//         "after_exchange_underlying",
-//         "after_add_liquidity",
-//         "after_remove_liquidity",
-//         "after_remove_liquidity_one_coin",
-//         "after_remove_liquidity_imbalance",
-//         "after_add_liquidity_one_coin",
-//         "after_exchange_all",
-//         "after_add_all_liquidity_one_coin",
-//         "after_remove_all_liquidity_one_coin",
-//         "after_exchange_all_underlying"
-//     ];
+import {BalanceComparator, BalanceBackup} from "../../../helpers/BalanceComparator.sol";
+
+contract Live_CurveMetapoolTest is LiveTestHelper {
+    using CurveV1Calls for CurveV1Multicaller;
+
+    Contracts[2] curveMetapools = [Contracts.CURVE_FRAX_POOL, Contracts.CURVE_LUSD_POOL];
+
+    string[] _stages;
+
+    function setUp() public attachOrLiveTest {
+        _setUp();
+
+        // STAGES
+        string[11] memory stages = [
+            "after_exchange",
+            "after_exchange_underlying",
+            "after_add_liquidity",
+            "after_remove_liquidity",
+            "after_remove_liquidity_one_coin",
+            "after_remove_liquidity_imbalance",
+            "after_add_liquidity_one_coin",
+            "after_exchange_diff",
+            "after_add_diff_liquidity_one_coin",
+            "after_remove_diff_liquidity_one_coin",
+            "after_exchange_diff_underlying"
+        ];
 
-//     /// @notice Sets comparator for this equivalence test
-
-//     uint256 len = stages.length;
-//     _stages = new string[](len);
-//     unchecked {
-//         for (uint256 i; i < len; ++i) {
-//             _stages[i] = stages[i];
-//         }
-//     }
-// }
-
-// /// HELPER
+        /// @notice Sets comparator for this equivalence test
 
-// function compareBehavior(address curvePoolAddr, address accountToSaveBalances, bool isAdapter) internal {
-//     if (isAdapter) {
-//         ICreditFacadeV3 creditFacade = lts.creditFacades(Tokens.DAI);
-//         CurveV1Multicaller pool = CurveV1Multicaller(curvePoolAddr);
-
-//         vm.prank(USER);
-//         creditFacade.multicall(MultiCallBuilder.build(pool.exchange(int128(1), int128(0), 3000 * WAD, 2000 * WAD)));
-//         comparator.takeSnapshot("after_exchange", accountToSaveBalances);
-
-//         vm.prank(USER);
-//         creditFacade.multicall(
-//             MultiCallBuilder.build(pool.exchange_underlying(int128(0), int128(2), 500 * WAD, 125 * (10 ** 6)))
-//         );
-//         comparator.takeSnapshot("after_exchange_underlying", accountToSaveBalances);
-
-//         uint256[2] memory amounts = [1500 * WAD, 1500 * WAD];
-
-//         vm.prank(USER);
-//         creditFacade.multicall(MultiCallBuilder.build(pool.add_liquidity(amounts, 0)));
-//         comparator.takeSnapshot("after_add_liquidity", accountToSaveBalances);
-
-//         amounts = [uint256(0), 0];
-
-//         vm.prank(USER);
-//         creditFacade.multicall(MultiCallBuilder.build(pool.remove_liquidity(500 * WAD, amounts)));
-//         comparator.takeSnapshot("after_remove_liquidity", accountToSaveBalances);
-
-//         vm.prank(USER);
-//         creditFacade.multicall(MultiCallBuilder.build(pool.remove_liquidity_one_coin(500 * WAD, int128(1), 0)));
-//         comparator.takeSnapshot("after_remove_liquidity_one_coin", accountToSaveBalances);
-
-//         amounts = [100 * WAD, 500 * WAD];
-
-//         vm.prank(USER);
-//         creditFacade.multicall(MultiCallBuilder.build(pool.remove_liquidity_imbalance(amounts, type(uint256).max)));
-//         comparator.takeSnapshot("after_remove_liquidity_imbalance", accountToSaveBalances);
-
-//         vm.prank(USER);
-//         creditFacade.multicall(MultiCallBuilder.build(pool.add_liquidity_one_coin(100 * WAD, int128(1), 50 * WAD)));
-//         comparator.takeSnapshot("after_add_liquidity_one_coin", accountToSaveBalances);
-
-//         vm.prank(USER);
-//         creditFacade.multicall(MultiCallBuilder.build(pool.exchange_all(int128(1), int128(0), RAY / 2)));
-//         comparator.takeSnapshot("after_exchange_all", accountToSaveBalances);
-
-//         vm.prank(USER);
-//         creditFacade.multicall(MultiCallBuilder.build(pool.add_all_liquidity_one_coin(int128(0), RAY / 2)));
-//         comparator.takeSnapshot("after_add_all_liquidity_one_coin", accountToSaveBalances);
-
-//         vm.prank(USER);
-//         creditFacade.multicall(MultiCallBuilder.build(pool.remove_all_liquidity_one_coin(int128(0), RAY / 2)));
-//         comparator.takeSnapshot("after_remove_all_liquidity_one_coin", accountToSaveBalances);
-
-//         vm.prank(USER);
-//         creditFacade.multicall(MultiCallBuilder.build(pool.exchange_all_underlying(int128(0), int128(1), RAY / 2)));
-//         comparator.takeSnapshot("after_exchange_all_underlying", accountToSaveBalances);
-//     } else {
-//         ICurvePool2Assets pool = ICurvePool2Assets(curvePoolAddr);
-
-//         vm.prank(USER);
-//         pool.exchange(int128(1), int128(0), 3000 * WAD, 2000 * WAD);
-//         comparator.takeSnapshot("after_exchange", accountToSaveBalances);
-
-//         vm.prank(USER);
-//         pool.exchange_underlying(int128(0), int128(2), 500 * WAD, 125 * (10 ** 6));
-//         comparator.takeSnapshot("after_exchange_underlying", accountToSaveBalances);
-
-//         uint256[2] memory amounts = [1500 * WAD, 1500 * WAD];
-
-//         vm.prank(USER);
-//         pool.add_liquidity(amounts, 0);
-//         comparator.takeSnapshot("after_add_liquidity", accountToSaveBalances);
-
-//         amounts = [uint256(0), 0];
-
-//         vm.prank(USER);
-//         pool.remove_liquidity(500 * WAD, amounts);
-//         comparator.takeSnapshot("after_remove_liquidity", accountToSaveBalances);
-
-//         vm.prank(USER);
-//         pool.remove_liquidity_one_coin(500 * WAD, int128(1), 0);
-//         comparator.takeSnapshot("after_remove_liquidity_one_coin", accountToSaveBalances);
-
-//         amounts = [100 * WAD, 500 * WAD];
-
-//         vm.prank(USER);
-//         pool.remove_liquidity_imbalance(amounts, type(uint256).max);
-//         comparator.takeSnapshot("after_remove_liquidity_imbalance", accountToSaveBalances);
-
-//         vm.prank(USER);
-//         pool.add_liquidity([0, 100 * WAD], 50 * WAD);
-//         comparator.takeSnapshot("after_add_liquidity_one_coin", accountToSaveBalances);
-
-//         uint256 balanceToSwap = tokenTestSuite.balanceOf(Tokens._3Crv, accountToSaveBalances) - 1;
-//         vm.prank(USER);
-//         pool.exchange(int128(1), int128(0), balanceToSwap, balanceToSwap / 2);
-//         comparator.takeSnapshot("after_exchange_all", accountToSaveBalances);
-
-//         Tokens tokenZero = tokenTestSuite.tokenIndexes(pool.coins(uint256(0)));
-//         balanceToSwap = tokenTestSuite.balanceOf(tokenZero, accountToSaveBalances) - 1;
-//         vm.prank(USER);
-//         pool.add_liquidity([balanceToSwap, 0], balanceToSwap / 2);
-//         comparator.takeSnapshot("after_add_all_liquidity_one_coin", accountToSaveBalances);
-
-//         Tokens lpToken = tokenTestSuite.tokenIndexes(address(pool));
-//         balanceToSwap = tokenTestSuite.balanceOf(lpToken, accountToSaveBalances) - 1;
-//         vm.prank(USER);
-//         pool.remove_liquidity_one_coin(balanceToSwap, int128(0), balanceToSwap / 2);
-//         comparator.takeSnapshot("after_remove_all_liquidity_one_coin", accountToSaveBalances);
-//         balanceToSwap = tokenTestSuite.balanceOf(tokenZero, accountToSaveBalances) - 1;
-//         vm.prank(USER);
-//         pool.exchange_underlying(int128(0), int128(1), balanceToSwap, balanceToSwap / 2);
-//         comparator.takeSnapshot("after_exchange_all_underlying", accountToSaveBalances);
-//     }
-// }
-
-// /// @dev Opens credit account for USER and make amount of desired token equal
-// /// amounts for USER and CA to be able to launch test for both
-// function openEquivalentCreditAccountWith3CRVAmount(uint256 amount) internal returns (address creditAccount) {
-//     ICreditFacadeV3 creditFacade = lts.creditFacades(Tokens.DAI);
-
-//     (uint256 minAmount,) = creditFacade.limits();
+        uint256 len = stages.length;
+        _stages = new string[](len);
+        unchecked {
+            for (uint256 i; i < len; ++i) {
+                _stages[i] = stages[i];
+            }
+        }
+    }
 
-//     tokenTestSuite.mint(Tokens.DAI, USER, 3 * minAmount);
+    // /// HELPER
 
-//     tokenTestSuite.mint(Tokens._3Crv, USER, 2 * amount);
+    function compareBehavior(address creditAccount, address curvePoolAddr, bool isAdapter, BalanceComparator comparator)
+        internal
+    {
+        if (isAdapter) {
+            CurveV1Multicaller pool = CurveV1Multicaller(curvePoolAddr);
 
-//     // Approve tokens
-//     tokenTestSuite.approve(Tokens.DAI, USER, address(lts.CreditManagerV3s(Tokens.DAI)));
+            vm.startPrank(USER);
 
-//     tokenTestSuite.approve(Tokens._3Crv, USER, address(lts.CreditManagerV3s(Tokens.DAI)));
+            creditFacade.multicall(
+                creditAccount, MultiCallBuilder.build(pool.exchange(int128(1), int128(0), 3000 * WAD, 2000 * WAD))
+            );
+            comparator.takeSnapshot("after_exchange", creditAccount);
 
-//     vm.startPrank(USER);
-//     creditFacade.openCreditAccountMulticall(
-//         minAmount,
-//         USER,
-//         MultiCallBuilder.build(
-//             CreditFacadeV3Multicaller(address(creditFacade)).addCollateral(
-//                 USER, tokenTestSuite.addressOf(Tokens.DAI), minAmount
-//             ),
-//             CreditFacadeV3Multicaller(address(creditFacade)).addCollateral(
-//                 USER, tokenTestSuite.addressOf(Tokens._3Crv), amount
-//             )
-//         ),
-//         0
-//     );
+            creditFacade.multicall(
+                creditAccount,
+                MultiCallBuilder.build(pool.exchange_underlying(int128(0), int128(2), 500 * WAD, 125 * (10 ** 6)))
+            );
+            comparator.takeSnapshot("after_exchange_underlying", creditAccount);
 
-//     vm.stopPrank();
+            uint256[2] memory amounts = [1500 * WAD, 1500 * WAD];
 
-//     creditAccount = lts.CreditManagerV3s(Tokens.DAI).getCreditAccountOrRevert(USER);
-// }
+            creditFacade.multicall(creditAccount, MultiCallBuilder.build(pool.add_liquidity(amounts, 0)));
+            comparator.takeSnapshot("after_add_liquidity", creditAccount);
 
-// /// @dev [L-CRVET-2]: FRAX3CRV adapter and normal account works identically
-// function test_live_CRVET_02_FRAX3CRV_adapter_and_normal_account_works_identically() public liveTest {
-//     Tokens[6] memory tokensToTrack =
-//         [Tokens.FRAX, Tokens._3Crv, Tokens.DAI, Tokens.USDC, Tokens.USDT, Tokens.FRAX3CRV];
+            amounts = [uint256(0), 0];
 
-//     uint256 len = tokensToTrack.length;
-//     Tokens[] memory _tokensToTrack = new Tokens[](len);
-//     unchecked {
-//         for (uint256 i; i < len; ++i) {
-//             _tokensToTrack[i] = tokensToTrack[i];
-//         }
-//     }
+            creditFacade.multicall(creditAccount, MultiCallBuilder.build(pool.remove_liquidity(500 * WAD, amounts)));
+            comparator.takeSnapshot("after_remove_liquidity", creditAccount);
 
-//     comparator = new BalanceComparator(
-//         _stages,
-//         _tokensToTrack,
-//         tokenTestSuite
-//     );
+            creditFacade.multicall(
+                creditAccount, MultiCallBuilder.build(pool.remove_liquidity_one_coin(500 * WAD, int128(1), 0))
+            );
+            comparator.takeSnapshot("after_remove_liquidity_one_coin", creditAccount);
 
-//     /// @notice Approves all tracked tokens for USER
-//     tokenTestSuite.approveMany(_tokensToTrack, USER, supportedContracts.addressOf(Contracts.CURVE_FRAX_POOL));
+            amounts = [100 * WAD, 500 * WAD];
 
-//     address creditAccount = openEquivalentCreditAccountWith3CRVAmount(5000 * WAD);
+            creditFacade.multicall(
+                creditAccount, MultiCallBuilder.build(pool.remove_liquidity_imbalance(amounts, type(uint256).max))
+            );
+            comparator.takeSnapshot("after_remove_liquidity_imbalance", creditAccount);
 
-//     uint256 snapshot = vm.snapshot();
+            creditFacade.multicall(
+                creditAccount, MultiCallBuilder.build(pool.add_liquidity_one_coin(100 * WAD, 1, 50 * WAD))
+            );
+            comparator.takeSnapshot("after_add_liquidity_one_coin", creditAccount);
 
-//     compareBehavior(supportedContracts.addressOf(Contracts.CURVE_FRAX_POOL), USER, false);
+            creditFacade.multicall(creditAccount, MultiCallBuilder.build(pool.exchange_diff(1, 0, 100 * WAD, RAY / 2)));
+            comparator.takeSnapshot("after_exchange_diff", creditAccount);
 
-//     /// Stores save balances in memory, because all state data would be reverted afer snapshot
-//     BalanceBackup[] memory savedBalanceSnapshots = comparator.exportSnapshots(USER);
+            creditFacade.multicall(
+                creditAccount, MultiCallBuilder.build(pool.add_diff_liquidity_one_coin(100 * WAD, 0, RAY / 2))
+            );
+            comparator.takeSnapshot("after_add_diff_liquidity_one_coin", creditAccount);
 
-//     vm.revertTo(snapshot);
+            creditFacade.multicall(
+                creditAccount, MultiCallBuilder.build(pool.remove_diff_liquidity_one_coin(100 * WAD, 0, RAY / 2))
+            );
+            comparator.takeSnapshot("after_remove_diff_liquidity_one_coin", creditAccount);
 
-//     compareBehavior(getAdapter(Tokens.DAI, Contracts.CURVE_FRAX_POOL), creditAccount, true);
+            creditFacade.multicall(
+                creditAccount, MultiCallBuilder.build(pool.exchange_diff_underlying(0, 1, 100 * WAD, RAY / 2))
+            );
+            comparator.takeSnapshot("after_exchange_diff_underlying", creditAccount);
 
-//     comparator.compareAllSnapshots(creditAccount, savedBalanceSnapshots);
-// }
+            vm.stopPrank();
+        } else {
+            ICurvePool2Assets pool = ICurvePool2Assets(curvePoolAddr);
 
-// /// @dev [L-CRVET-3]: LUSD3CRV adapter and normal account works identically
-// function test_live_CRVET_03_LUSD3CRV_adapter_and_normal_account_works_identically() public liveTest {
-//     Tokens[6] memory tokensToTrack =
-//         [Tokens.LUSD, Tokens._3Crv, Tokens.DAI, Tokens.USDC, Tokens.USDT, Tokens.LUSD3CRV];
+            vm.startPrank(creditAccount);
 
-//     uint256 len = tokensToTrack.length;
-//     Tokens[] memory _tokensToTrack = new Tokens[](len);
-//     unchecked {
-//         for (uint256 i; i < len; ++i) {
-//             _tokensToTrack[i] = tokensToTrack[i];
-//         }
-//     }
+            pool.exchange(int128(1), int128(0), 3000 * WAD, 2000 * WAD);
+            comparator.takeSnapshot("after_exchange", creditAccount);
 
-//     comparator = new BalanceComparator(
-//         _stages,
-//         _tokensToTrack,
-//         tokenTestSuite
-//     );
+            pool.exchange_underlying(int128(0), int128(2), 500 * WAD, 125 * (10 ** 6));
+            comparator.takeSnapshot("after_exchange_underlying", creditAccount);
 
-//     /// @notice Approves all tracked tokens for USER
-//     tokenTestSuite.approveMany(_tokensToTrack, USER, supportedContracts.addressOf(Contracts.CURVE_LUSD_POOL));
+            uint256[2] memory amounts = [1500 * WAD, 1500 * WAD];
 
-//     address creditAccount = openEquivalentCreditAccountWith3CRVAmount(5000 * WAD);
+            pool.add_liquidity(amounts, 0);
+            comparator.takeSnapshot("after_add_liquidity", creditAccount);
 
-//     uint256 snapshot = vm.snapshot();
+            amounts = [uint256(0), 0];
 
-//     compareBehavior(supportedContracts.addressOf(Contracts.CURVE_LUSD_POOL), USER, false);
+            pool.remove_liquidity(500 * WAD, amounts);
+            comparator.takeSnapshot("after_remove_liquidity", creditAccount);
 
-//     /// Stores save balances in memory, because all state data would be reverted afer snapshot
-//     BalanceBackup[] memory savedBalanceSnapshots = comparator.exportSnapshots(USER);
+            pool.remove_liquidity_one_coin(500 * WAD, int128(1), 0);
+            comparator.takeSnapshot("after_remove_liquidity_one_coin", creditAccount);
 
-//     vm.revertTo(snapshot);
+            amounts = [100 * WAD, 500 * WAD];
 
-//     compareBehavior(getAdapter(Tokens.DAI, Contracts.CURVE_LUSD_POOL), creditAccount, true);
+            pool.remove_liquidity_imbalance(amounts, type(uint256).max);
+            comparator.takeSnapshot("after_remove_liquidity_imbalance", creditAccount);
+
+            pool.add_liquidity([0, 100 * WAD], 50 * WAD);
+            comparator.takeSnapshot("after_add_liquidity_one_coin", creditAccount);
 
-//     comparator.compareAllSnapshots(creditAccount, savedBalanceSnapshots);
-// }
+            uint256 balanceToSwap = tokenTestSuite.balanceOf(Tokens._3Crv, creditAccount) - 100 * WAD;
+            pool.exchange(int128(1), int128(0), balanceToSwap, balanceToSwap / 2);
+            comparator.takeSnapshot("after_exchange_diff", creditAccount);
+
+            Tokens tokenZero = tokenTestSuite.tokenIndexes(pool.coins(uint256(0)));
+            uint8 tZeroDecimals = IERC20Metadata(tokenTestSuite.addressOf(tokenZero)).decimals();
+            balanceToSwap = tokenTestSuite.balanceOf(tokenZero, creditAccount) - 100 * 10 ** tZeroDecimals;
+            pool.add_liquidity([balanceToSwap, 0], balanceToSwap / 2);
+            comparator.takeSnapshot("after_add_diff_liquidity_one_coin", creditAccount);
+
+            Tokens lpToken = tokenTestSuite.tokenIndexes(address(pool));
+            balanceToSwap = tokenTestSuite.balanceOf(lpToken, creditAccount) - 100 * WAD;
+            pool.remove_liquidity_one_coin(balanceToSwap, int128(0), balanceToSwap / 2);
+            comparator.takeSnapshot("after_remove_diff_liquidity_one_coin", creditAccount);
+
+            balanceToSwap = tokenTestSuite.balanceOf(tokenZero, creditAccount) - 100 * 10 ** tZeroDecimals;
+            pool.exchange_underlying(int128(0), int128(1), balanceToSwap, balanceToSwap / 2);
+            comparator.takeSnapshot("after_exchange_diff_underlying", creditAccount);
+
+            vm.stopPrank();
+        }
+    }
+
+    /// @dev Opens credit account for USER and make amount of desired token equal
+    /// amounts for USER and CA to be able to launch test for both
+    function openCreditAccountWith3CRV(uint256 amount) internal returns (address creditAccount) {
+        vm.prank(USER);
+        creditAccount = creditFacade.openCreditAccount(USER, MultiCallBuilder.build(), 0);
+        tokenTestSuite.mint(Tokens._3Crv, creditAccount, amount);
+    }
+
+    function prepareComparator(address curveAdapter) internal returns (BalanceComparator comparator) {
+        address targetContract = ICurveV1Adapter(curveAdapter).targetContract();
+
+        Tokens[] memory tokensToTrack = new Tokens[](7);
+
+        tokensToTrack[0] = tokenTestSuite.tokenIndexes(ICurveV1Adapter(curveAdapter).token0());
+        tokensToTrack[1] = tokenTestSuite.tokenIndexes(ICurveV1Adapter(curveAdapter).token1());
+        tokensToTrack[2] = tokenTestSuite.tokenIndexes(ICurveV1Adapter(curveAdapter).underlying0());
+        tokensToTrack[3] = tokenTestSuite.tokenIndexes(ICurveV1Adapter(curveAdapter).underlying1());
+        tokensToTrack[4] = tokenTestSuite.tokenIndexes(ICurveV1Adapter(curveAdapter).underlying2());
+        tokensToTrack[5] = tokenTestSuite.tokenIndexes(ICurveV1Adapter(curveAdapter).underlying3());
+        tokensToTrack[6] = tokenTestSuite.tokenIndexes(ICurveV1Adapter(curveAdapter).token());
+
+        comparator = new BalanceComparator(_stages, tokensToTrack, tokenTestSuite);
+    }
+
+    /// @dev [L-CRVET-2]: Metapool adapters and normal accounts works identically
+    function test_live_CRVET_02_Metapool_adapter_and_normal_account_works_identically() public {
+        for (uint256 i = 0; i < curveMetapools.length; ++i) {
+            uint256 snapshot0 = vm.snapshot();
+
+            address curveAdapter = getAdapter(address(creditManager), curveMetapools[i]);
+
+            if (curveAdapter == address(0)) {
+                vm.revertTo(snapshot0);
+                continue;
+            }
+
+            address creditAccount = openCreditAccountWith3CRV(10000 * WAD);
+
+            tokenTestSuite.approve(
+                ICurveV1Adapter(curveAdapter).token0(), creditAccount, supportedContracts.addressOf(curveMetapools[i])
+            );
+
+            tokenTestSuite.approve(
+                ICurveV1Adapter(curveAdapter).token1(), creditAccount, supportedContracts.addressOf(curveMetapools[i])
+            );
+
+            tokenTestSuite.approve(
+                ICurveV1Adapter(curveAdapter).underlying0(),
+                creditAccount,
+                supportedContracts.addressOf(curveMetapools[i])
+            );
+
+            tokenTestSuite.approve(
+                ICurveV1Adapter(curveAdapter).underlying1(),
+                creditAccount,
+                supportedContracts.addressOf(curveMetapools[i])
+            );
+
+            tokenTestSuite.approve(
+                ICurveV1Adapter(curveAdapter).underlying2(),
+                creditAccount,
+                supportedContracts.addressOf(curveMetapools[i])
+            );
+
+            tokenTestSuite.approve(
+                ICurveV1Adapter(curveAdapter).underlying3(),
+                creditAccount,
+                supportedContracts.addressOf(curveMetapools[i])
+            );
+
+            tokenTestSuite.approve(
+                ICurveV1Adapter(curveAdapter).token(), creditAccount, supportedContracts.addressOf(curveMetapools[i])
+            );
+
+            uint256 snapshot1 = vm.snapshot();
+
+            BalanceComparator comparator = prepareComparator(curveAdapter);
+
+            compareBehavior(creditAccount, supportedContracts.addressOf(curveMetapools[i]), false, comparator);
+
+            BalanceBackup[] memory savedBalanceSnapshots = comparator.exportSnapshots(creditAccount);
+
+            vm.revertTo(snapshot1);
+
+            comparator = prepareComparator(curveAdapter);
+
+            compareBehavior(creditAccount, curveAdapter, true, comparator);
+
+            comparator.compareAllSnapshots(creditAccount, savedBalanceSnapshots);
+
+            vm.revertTo(snapshot0);
+        }
+    }
 }
