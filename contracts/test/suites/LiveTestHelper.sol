@@ -4,6 +4,7 @@
 pragma solidity ^0.8.10;
 
 import {ICreditManagerV3} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditManagerV3.sol";
+import {IVersion} from "@gearbox-protocol/core-v2/contracts/interfaces/IVersion.sol";
 
 import {Tokens} from "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
 import {SupportedContracts, Contracts} from "@gearbox-protocol/sdk-gov/contracts/SupportedContracts.sol";
@@ -60,18 +61,48 @@ contract LiveTestHelper is IntegrationTestHelper {
         }
     }
 
-    modifier attachOrSetupLiveCreditTest(string memory id) {
-        try vm.envAddress("ATTACH_ADDRESS_PROVIDER") returns (address val) {
+    modifier attachOrLiveTest() {
+        try vm.envAddress("ATTACH_ADDRESS_PROVIDER") returns (address) {
             _attachCore();
-            address[] memory cms = cr.getCreditManagers();
-            uint256 len = cms.length;
-            for (uint256 i = 0; i < len; ++i) {
-                _attachCreditManager(cms[i]);
+            supportedContracts = new SupportedContracts(chainId);
+
+            address creditManagerToAttach;
+
+            try vm.envAddress("ATTACH_CREDIT_MANAGER") returns (address val) {
+                creditManagerToAttach = val;
+            } catch {}
+
+            if (creditManagerToAttach != address(0)) {
+                _attachCreditManager(creditManagerToAttach);
                 _;
+                console.log("Successfully ran tests on attached CM: %s", address(creditManager));
+            } else {
+                address[] memory cms = cr.getCreditManagers();
+                uint256 len = cms.length;
+                for (uint256 i = 0; i < len; ++i) {
+                    if (IVersion(cms[i]).version() >= 3_00) {
+                        uint256 snapshot = vm.snapshot();
+                        _attachCreditManager(cms[i]);
+                        _;
+                        console.log("Successfully ran tests on attached CM: %s", address(creditManager));
+                        vm.revertTo(snapshot);
+                    }
+                }
             }
         } catch {
-            _setupLiveCreditTest(id);
-            _;
+            try vm.envString("LIVE_TEST_CONFIG") returns (string memory id) {
+                _setupLiveCreditTest(id);
+
+                vm.prank(address(gauge));
+                poolQuotaKeeper.updateRates();
+
+                for (uint256 i = 0; i < creditManagers.length; ++i) {
+                    _attachCreditManager(address(creditManagers[i]));
+                    _;
+                }
+            } catch {
+                revert("Neither attach AP nor live test config was defined.");
+            }
         }
     }
 
@@ -90,8 +121,9 @@ contract LiveTestHelper is IntegrationTestHelper {
 
         uint256 len = config.creditManagers().length;
         for (uint256 i = 0; i < len; i++) {
-            AdapterDeployer adapterDeployer =
-            new AdapterDeployer(address(creditManagers[i]), config.creditManagers()[i].contracts, tokenTestSuite, supportedContracts );
+            AdapterDeployer adapterDeployer = new AdapterDeployer(
+                address(creditManagers[i]), config.creditManagers()[i].contracts, tokenTestSuite, supportedContracts
+            );
 
             adapterDeployer.connectAdapters();
             _configureAdapters(address(creditManagers[i]), config.creditManagers()[i]);

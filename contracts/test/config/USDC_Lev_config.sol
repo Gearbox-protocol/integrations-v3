@@ -392,6 +392,7 @@ contract CONFIG_MAINNET_USDC_LEV_V3 is IPoolV3DeployConfig {
             cs.push(Contracts.CONVEX_FRAX_USDC_POOL);
             cs.push(Contracts.CONVEX_STECRV_POOL);
             cs.push(Contracts.CONVEX_BOOSTER);
+            cs.push(Contracts.LIDO_STETH_GATEWAY);
             cs.push(Contracts.LIDO_WSTETH);
             cs.push(Contracts.AAVE_V2_LENDING_POOL);
             cs.push(Contracts.COMPOUND_V2_LINK_POOL);

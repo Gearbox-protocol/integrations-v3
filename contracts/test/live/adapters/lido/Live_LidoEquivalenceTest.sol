@@ -3,140 +3,129 @@
 // (c) Gearbox Foundation, 2023.
 pragma solidity ^0.8.17;
 
-// import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-// import {ICreditFacadeV3} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacadeV3.sol";
-// import {ILidoV1Adapter} from "../../../../interfaces/lido/ILidoV1Adapter.sol";
-// import {LidoV1Gateway} from "../../../../gateways/lido/LidoV1_WETHGateway.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {ICreditFacadeV3} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacadeV3.sol";
+import {ICreditFacadeV3Multicall} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacadeV3Multicall.sol";
 
-// import {Tokens} from "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
-// import {Contracts} from "@gearbox-protocol/sdk-gov/contracts/SupportedContracts.sol";
+import {ILidoV1Adapter} from "../../../../interfaces/lido/ILidoV1Adapter.sol";
+import {LidoV1Gateway} from "../../../../helpers/lido/LidoV1_WETHGateway.sol";
+import {LidoV1_Calls, LidoV1_Multicaller} from "../../../multicall/lido/LidoV1_Calls.sol";
 
-// import {MultiCall} from "@gearbox-protocol/core-v2/contracts/libraries/MultiCall.sol";
-// import {MultiCallBuilder} from "@gearbox-protocol/core-v3/contracts/test/lib/MultiCallBuilder.sol";
-// // TEST
-// import "@gearbox-protocol/core-v3/contracts/test/lib/constants.sol";
+import {Tokens} from "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
+import {Contracts} from "@gearbox-protocol/sdk-gov/contracts/SupportedContracts.sol";
 
-// // SUITES
+import {MultiCall} from "@gearbox-protocol/core-v2/contracts/libraries/MultiCall.sol";
+import {MultiCallBuilder} from "@gearbox-protocol/core-v3/contracts/test/lib/MultiCallBuilder.sol";
+// TEST
+import "@gearbox-protocol/core-v3/contracts/test/lib/constants.sol";
+
+// SUITES
 
 import {LiveTestHelper} from "../../../suites/LiveTestHelper.sol";
-// import {BalanceComparator, BalanceBackup} from "../../../helpers/BalanceComparator.sol";
+import {BalanceComparator, BalanceBackup} from "../../../helpers/BalanceComparator.sol";
 
 contract Live_LidoEquivalenceTest is LiveTestHelper {
-// using CreditFacadeV3Calls for CreditFacadeV3Multicaller;
-// using LidoV1_Calls for LidoV1_Multicaller;
+    using LidoV1_Calls for LidoV1_Multicaller;
 
-// BalanceComparator comparator;
+    BalanceComparator comparator;
 
-// function setUp() public liveTest {
-//     _setUp();
+    function setUp() public attachOrLiveTest {
+        _setUp();
 
-//     Tokens[2] memory tokensToTrack = [Tokens.WETH, Tokens.STETH];
+        Tokens[2] memory tokensToTrack = [Tokens.WETH, Tokens.STETH];
 
-//     // STAGES
-//     string[2] memory stages = ["after_submit", "after_submitAll"];
+        // STAGES
+        string[2] memory stages = ["after_submit", "after_submitDiff"];
 
-//     /// @notice Sets comparator for this equivalence test
+        /// @notice Sets comparator for this equivalence test
 
-//     uint256 len = stages.length;
-//     string[] memory _stages = new string[](len);
-//     unchecked {
-//         for (uint256 i; i < len; ++i) {
-//             _stages[i] = stages[i];
-//         }
-//     }
+        uint256 len = stages.length;
+        string[] memory _stages = new string[](len);
+        unchecked {
+            for (uint256 i; i < len; ++i) {
+                _stages[i] = stages[i];
+            }
+        }
 
-//     len = tokensToTrack.length;
-//     Tokens[] memory _tokensToTrack = new Tokens[](len);
-//     unchecked {
-//         for (uint256 i; i < len; ++i) {
-//             _tokensToTrack[i] = tokensToTrack[i];
-//         }
-//     }
+        len = tokensToTrack.length;
+        Tokens[] memory _tokensToTrack = new Tokens[](len);
+        unchecked {
+            for (uint256 i; i < len; ++i) {
+                _tokensToTrack[i] = tokensToTrack[i];
+            }
+        }
 
-//     comparator = new BalanceComparator(
-//         _stages,
-//         _tokensToTrack,
-//         tokenTestSuite
-//     );
+        comparator = new BalanceComparator(_stages, _tokensToTrack, tokenTestSuite);
+    }
 
-//     /// @notice Approves all tracked tokens for USER
-//     tokenTestSuite.approveMany(_tokensToTrack, USER, supportedContracts.addressOf(Contracts.LIDO_STETH_GATEWAY));
-// }
+    /// HELPER
 
-// /// HELPER
+    function compareBehavior(address creditAccount, address lidoAddr, bool isAdapter) internal {
+        if (isAdapter) {
+            LidoV1_Multicaller lido = LidoV1_Multicaller(lidoAddr);
 
-// function compareBehavior(address lidoAddr, address accountToSaveBalances, bool isAdapter) internal {
-//     if (isAdapter) {
-//         ICreditFacadeV3 creditFacade = lts.creditFacades(Tokens.WETH);
-//         LidoV1_Multicaller lido = LidoV1_Multicaller(lidoAddr);
+            vm.startPrank(USER);
+            creditFacade.multicall(creditAccount, MultiCallBuilder.build(lido.submit(WAD)));
+            comparator.takeSnapshot("after_submit", creditAccount);
 
-//         vm.prank(USER);
-//         creditFacade.multicall(MultiCallBuilder.build(lido.submit(WAD)));
-//         comparator.takeSnapshot("after_submit", accountToSaveBalances);
+            creditFacade.multicall(creditAccount, MultiCallBuilder.build(lido.submitDiff(WAD)));
+            comparator.takeSnapshot("after_submitDiff", creditAccount);
 
-//         vm.prank(USER);
-//         creditFacade.multicall(MultiCallBuilder.build(lido.submitAll()));
-//         comparator.takeSnapshot("after_submitAll", accountToSaveBalances);
-//     } else {
-//         LidoV1Gateway lido = LidoV1Gateway(payable(lidoAddr));
+            vm.stopPrank();
+        } else {
+            LidoV1Gateway lido = LidoV1Gateway(payable(lidoAddr));
 
-//         vm.prank(USER);
-//         lido.submit(WAD, DUMB_ADDRESS);
-//         comparator.takeSnapshot("after_submit", accountToSaveBalances);
+            vm.startPrank(creditAccount);
+            lido.submit(WAD, DUMB_ADDRESS);
+            comparator.takeSnapshot("after_submit", creditAccount);
 
-//         uint256 balanceToSwap = tokenTestSuite.balanceOf(Tokens.WETH, accountToSaveBalances) - 1;
-//         vm.prank(USER);
-//         lido.submit(balanceToSwap, DUMB_ADDRESS);
-//         comparator.takeSnapshot("after_submitAll", accountToSaveBalances);
-//     }
-// }
+            uint256 remainingBalance = tokenTestSuite.balanceOf(Tokens.WETH, creditAccount);
+            lido.submit(remainingBalance - WAD, DUMB_ADDRESS);
+            comparator.takeSnapshot("after_submitDiff", creditAccount);
 
-// /// @dev Opens credit account for USER and make amount of desired token equal
-// /// amounts for USER and CA to be able to launch test for both
-// function openCreditAccountWithEqualAmount(uint256 amount) internal returns (address creditAccount) {
-//     ICreditFacadeV3 creditFacade = lts.creditFacades(Tokens.WETH);
+            vm.stopPrank();
+        }
+    }
 
-//     tokenTestSuite.mint(Tokens.WETH, USER, 3 * amount);
+    /// @dev Opens credit account for USER and make amount of desired token equal
+    /// amounts for USER and CA to be able to launch test for both
+    function openCreditAccountWithWeth(uint256 amount) internal returns (address creditAccount) {
+        vm.prank(USER);
+        creditAccount = creditFacade.openCreditAccount(USER, MultiCallBuilder.build(), 0);
 
-//     // Approve tokens
-//     tokenTestSuite.approve(Tokens.WETH, USER, address(lts.CreditManagerV3s(Tokens.WETH)));
+        tokenTestSuite.mint(Tokens.WETH, creditAccount, amount);
+    }
 
-//     vm.startPrank(USER);
-//     creditFacade.openCreditAccountMulticall(
-//         amount,
-//         USER,
-//         MultiCallBuilder.build(
-//             CreditFacadeV3Multicaller(address(creditFacade)).addCollateral(
-//                 USER, tokenTestSuite.addressOf(Tokens.WETH), amount
-//             )
-//         ),
-//         0
-//     );
+    /// @dev [L-LDOET-1]: Lido adapter and normal account works identically
+    function test_live_LDOET_01_Lido_adapter_and_normal_account_works_identically() public {
+        address creditAccount = openCreditAccountWithWeth(10 * 10 ** 18);
 
-//     vm.stopPrank();
+        address lidoGateway = supportedContracts.addressOf(Contracts.LIDO_STETH_GATEWAY);
+        address lidoAdapter = getAdapter(address(creditManager), Contracts.LIDO_STETH_GATEWAY);
 
-//     creditAccount = lts.CreditManagerV3s(Tokens.WETH).getCreditAccountOrRevert(USER);
-// }
+        if (lidoAdapter == address(0)) return;
 
-// /// @dev [L-LDOET-1]: Lido adapter and normal account works identically
-// function test_live_LDOET_01_Lido_adapter_and_normal_account_works_identically() public liveTest {
-//     ICreditFacadeV3 creditFacade = lts.creditFacades(Tokens.WETH);
+        tokenTestSuite.approve(
+            tokenTestSuite.addressOf(Tokens.WETH),
+            creditAccount,
+            supportedContracts.addressOf(Contracts.LIDO_STETH_GATEWAY)
+        );
+        tokenTestSuite.approve(
+            tokenTestSuite.addressOf(Tokens.STETH),
+            creditAccount,
+            supportedContracts.addressOf(Contracts.LIDO_STETH_GATEWAY)
+        );
 
-//     (uint256 minAmount,) = creditFacade.limits();
+        uint256 snapshot = vm.snapshot();
 
-//     address creditAccount = openCreditAccountWithEqualAmount(minAmount);
+        compareBehavior(creditAccount, lidoGateway, false);
 
-//     uint256 snapshot = vm.snapshot();
+        BalanceBackup[] memory savedBalanceSnapshots = comparator.exportSnapshots(creditAccount);
 
-//     compareBehavior(supportedContracts.addressOf(Contracts.LIDO_STETH_GATEWAY), USER, false);
+        vm.revertTo(snapshot);
 
-//     /// Stores save balances in memory, because all state data would be reverted afer snapshot
-//     BalanceBackup[] memory savedBalanceSnapshots = comparator.exportSnapshots(USER);
+        compareBehavior(creditAccount, lidoAdapter, true);
 
-//     vm.revertTo(snapshot);
-
-//     compareBehavior(getAdapter(Tokens.WETH, Contracts.LIDO_STETH_GATEWAY), creditAccount, true);
-
-//     comparator.compareAllSnapshots(creditAccount, savedBalanceSnapshots);
-// }
+        comparator.compareAllSnapshots(creditAccount, savedBalanceSnapshots);
+    }
 }
