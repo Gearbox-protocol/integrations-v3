@@ -8,7 +8,7 @@ import {
 const POOL_DECIMALS = BigInt(1e8);
 const POOL_DIVIDER = BigInt(37000);
 
-const mainUniV2Config: UniV2Config = {
+const tier1UniV2Config: UniV2Config = {
   contract: "UNISWAP_V2_ROUTER",
   allowed: [
     { token0: "WETH", token1: "USDT" },
@@ -20,7 +20,7 @@ const mainUniV2Config: UniV2Config = {
   ],
 };
 
-const mainUniV3Config: UniV3Config = {
+const tier1UniV3Config: UniV3Config = {
   contract: "UNISWAP_V3_ROUTER",
   allowed: [
     { token0: "USDC", token1: "WETH", fee: 500 },
@@ -41,7 +41,7 @@ const mainUniV3Config: UniV3Config = {
   ],
 };
 
-const mainSushiswapConfig: UniV2Config = {
+const tier1SushiswapConfig: UniV2Config = {
   contract: "SUSHISWAP_ROUTER",
   allowed: [
     { token0: "WBTC", token1: "WETH" },
@@ -51,8 +51,8 @@ const mainSushiswapConfig: UniV2Config = {
   ],
 };
 
-const mainCreditManager: CreditManagerV3DeployConfig = {
-  name: "Trade WBTC Main",
+const tier1CreditManager: CreditManagerV3DeployConfig = {
+  name: "Trade WBTC Tier 1",
   degenNft: false,
   expirationDate: undefined,
   minDebt: (BigInt(2e4) * POOL_DECIMALS) / POOL_DIVIDER,
@@ -97,9 +97,9 @@ const mainCreditManager: CreditManagerV3DeployConfig = {
     { token: "steCRV", lt: 0 },
   ],
   adapters: [
-    mainUniV2Config,
-    mainUniV3Config,
-    mainSushiswapConfig,
+    tier1UniV2Config,
+    tier1UniV3Config,
+    tier1SushiswapConfig,
     { contract: "CURVE_3CRV_POOL" },
     { contract: "CURVE_3CRYPTO_POOL" },
     { contract: "CURVE_STETH_GATEWAY" },
@@ -109,7 +109,7 @@ const mainCreditManager: CreditManagerV3DeployConfig = {
   ],
 };
 
-const bcUniV2Config: UniV2Config = {
+const tier2UniV2Config: UniV2Config = {
   contract: "UNISWAP_V2_ROUTER",
   allowed: [
     { token0: "WETH", token1: "USDT" },
@@ -124,7 +124,7 @@ const bcUniV2Config: UniV2Config = {
   ],
 };
 
-const bcUniV3Config: UniV3Config = {
+const tier2UniV3Config: UniV3Config = {
   contract: "UNISWAP_V3_ROUTER",
   allowed: [
     { token0: "USDC", token1: "WETH", fee: 500 },
@@ -150,7 +150,7 @@ const bcUniV3Config: UniV3Config = {
   ],
 };
 
-const bcSushiswapConfig: UniV2Config = {
+const tier2SushiswapConfig: UniV2Config = {
   contract: "SUSHISWAP_ROUTER",
   allowed: [
     { token0: "WETH", token1: "USDT" },
@@ -162,8 +162,8 @@ const bcSushiswapConfig: UniV2Config = {
   ],
 };
 
-const bcCreditManager: CreditManagerV3DeployConfig = {
-  name: "Trade WBTC Blue Chip",
+const tier2CreditManager: CreditManagerV3DeployConfig = {
+  name: "Trade WBTC Tier 2",
   degenNft: false,
   expirationDate: undefined,
   minDebt: (BigInt(2e4) * POOL_DECIMALS) / POOL_DIVIDER,
@@ -209,14 +209,14 @@ const bcCreditManager: CreditManagerV3DeployConfig = {
     },
   ],
   adapters: [
-    bcUniV2Config,
-    bcUniV3Config,
-    bcSushiswapConfig,
+    tier2UniV2Config,
+    tier2UniV3Config,
+    tier2SushiswapConfig,
     { contract: "CURVE_3CRYPTO_POOL" },
   ],
 };
 
-const riskUniV2Config: UniV2Config = {
+const tier3UniV2Config: UniV2Config = {
   contract: "UNISWAP_V2_ROUTER",
   allowed: [
     { token0: "WETH", token1: "USDT" },
@@ -230,7 +230,7 @@ const riskUniV2Config: UniV2Config = {
   ],
 };
 
-const riskUniV3Config: UniV3Config = {
+const tier3UniV3Config: UniV3Config = {
   contract: "UNISWAP_V3_ROUTER",
   allowed: [
     { token0: "USDC", token1: "WETH", fee: 500 },
@@ -259,7 +259,7 @@ const riskUniV3Config: UniV3Config = {
   ],
 };
 
-const riskSushiswapConfig: UniV2Config = {
+const tier3SushiswapConfig: UniV2Config = {
   contract: "SUSHISWAP_ROUTER",
   allowed: [
     { token0: "WETH", token1: "USDT" },
@@ -272,7 +272,7 @@ const riskSushiswapConfig: UniV2Config = {
   ],
 };
 
-const riskFraxswapConfig: UniV2Config = {
+const tier3FraxswapConfig: UniV2Config = {
   contract: "FRAXSWAP_ROUTER",
   allowed: [
     { token0: "FRAX", token1: "FXS" },
@@ -280,8 +280,8 @@ const riskFraxswapConfig: UniV2Config = {
   ],
 };
 
-const riskCreditManager: CreditManagerV3DeployConfig = {
-  name: "Trade WBTC Risk",
+const tier3CreditManager: CreditManagerV3DeployConfig = {
+  name: "Trade WBTC Tier 3",
   degenNft: false,
   expirationDate: undefined,
   minDebt: (BigInt(2e4) * POOL_DECIMALS) / POOL_DIVIDER,
@@ -331,10 +331,10 @@ const riskCreditManager: CreditManagerV3DeployConfig = {
     { token: "crvUSDTWBTCWETH", lt: 0 },
   ],
   adapters: [
-    riskUniV2Config,
-    riskUniV3Config,
-    riskSushiswapConfig,
-    riskFraxswapConfig,
+    tier3UniV2Config,
+    tier3UniV3Config,
+    tier3SushiswapConfig,
+    tier3FraxswapConfig,
     { contract: "CURVE_CVXETH_POOL" },
     { contract: "CURVE_TRI_CRV_POOL" },
     { contract: "CURVE_3CRYPTO_POOL" },
@@ -463,6 +463,6 @@ export const config: PoolV3DeployConfig = {
       limit: (BigInt(10e6) * POOL_DECIMALS) / POOL_DIVIDER,
     },
   },
-  creditManagers: [mainCreditManager, bcCreditManager, riskCreditManager],
+  creditManagers: [tier1CreditManager, tier2CreditManager, tier3CreditManager],
   supportsQuotas: true,
 };
