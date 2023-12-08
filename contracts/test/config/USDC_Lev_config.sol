@@ -101,68 +101,76 @@ contract CONFIG_MAINNET_USDC_LEV_V3 is IPoolV3DeployConfig {
         _gaugeRates.push(GaugeRate({token: Tokens.SNX, minRate: 1, maxRate: 30_00}));
         _gaugeRates.push(GaugeRate({token: Tokens.BAL, minRate: 1, maxRate: 30_00}));
         _gaugeRates.push(GaugeRate({token: Tokens.AURA, minRate: 1, maxRate: 30_00}));
-        _quotaLimits.push(PoolQuotaLimit({token: Tokens.WETH, quotaIncreaseFee: 0, limit: 10_000_000_000_000}));
-        _quotaLimits.push(PoolQuotaLimit({token: Tokens.STETH, quotaIncreaseFee: 0, limit: 10_000_000_000_000}));
-        _quotaLimits.push(PoolQuotaLimit({token: Tokens.wstETH, quotaIncreaseFee: 0, limit: 10_000_000_000_000}));
-        _quotaLimits.push(PoolQuotaLimit({token: Tokens.rETH, quotaIncreaseFee: 0, limit: 10_000_000_000_000}));
-        _quotaLimits.push(PoolQuotaLimit({token: Tokens.WBTC, quotaIncreaseFee: 0, limit: 10_000_000_000_000}));
-        _quotaLimits.push(PoolQuotaLimit({token: Tokens.LINK, quotaIncreaseFee: 0, limit: 10_000_000_000_000}));
-        _quotaLimits.push(PoolQuotaLimit({token: Tokens.aDAI, quotaIncreaseFee: 0, limit: 10_000_000_000_000}));
-        _quotaLimits.push(PoolQuotaLimit({token: Tokens.cLINK, quotaIncreaseFee: 0, limit: 10_000_000_000_000}));
-        _quotaLimits.push(PoolQuotaLimit({token: Tokens.sDAI, quotaIncreaseFee: 0, limit: 10_000_000_000_000}));
-        _quotaLimits.push(PoolQuotaLimit({token: Tokens.YieldETH, quotaIncreaseFee: 0, limit: 10_000_000_000_000}));
-        _quotaLimits.push(PoolQuotaLimit({token: Tokens.DAI, quotaIncreaseFee: 0, limit: 10_000_000_000_000}));
-        _quotaLimits.push(PoolQuotaLimit({token: Tokens.USDT, quotaIncreaseFee: 0, limit: 10_000_000_000_000}));
-        _quotaLimits.push(PoolQuotaLimit({token: Tokens.FRAX, quotaIncreaseFee: 0, limit: 10_000_000_000_000}));
-        _quotaLimits.push(PoolQuotaLimit({token: Tokens.GUSD, quotaIncreaseFee: 0, limit: 10_000_000_000_000}));
-        _quotaLimits.push(PoolQuotaLimit({token: Tokens.LUSD, quotaIncreaseFee: 0, limit: 10_000_000_000_000}));
-        _quotaLimits.push(PoolQuotaLimit({token: Tokens.rETH_f, quotaIncreaseFee: 0, limit: 10_000_000_000_000}));
-        _quotaLimits.push(PoolQuotaLimit({token: Tokens.steCRV, quotaIncreaseFee: 0, limit: 10_000_000_000_000}));
-        _quotaLimits.push(PoolQuotaLimit({token: Tokens.cvxsteCRV, quotaIncreaseFee: 0, limit: 10_000_000_000_000}));
-        _quotaLimits.push(PoolQuotaLimit({token: Tokens.stkcvxsteCRV, quotaIncreaseFee: 0, limit: 10_000_000_000_000}));
-        _quotaLimits.push(PoolQuotaLimit({token: Tokens._3Crv, quotaIncreaseFee: 0, limit: 10_000_000_000_000}));
-        _quotaLimits.push(PoolQuotaLimit({token: Tokens.cvx3Crv, quotaIncreaseFee: 0, limit: 10_000_000_000_000}));
-        _quotaLimits.push(PoolQuotaLimit({token: Tokens.stkcvx3Crv, quotaIncreaseFee: 0, limit: 10_000_000_000_000}));
-        _quotaLimits.push(PoolQuotaLimit({token: Tokens.FRAX3CRV, quotaIncreaseFee: 0, limit: 10_000_000_000_000}));
-        _quotaLimits.push(PoolQuotaLimit({token: Tokens.cvxFRAX3CRV, quotaIncreaseFee: 0, limit: 10_000_000_000_000}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.WETH, quotaIncreaseFee: 25, limit: 10_000_000_000_000}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.STETH, quotaIncreaseFee: 25, limit: 10_000_000_000_000}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.wstETH, quotaIncreaseFee: 25, limit: 10_000_000_000_000}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.rETH, quotaIncreaseFee: 25, limit: 10_000_000_000_000}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.WBTC, quotaIncreaseFee: 25, limit: 10_000_000_000_000}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.LINK, quotaIncreaseFee: 25, limit: 10_000_000_000_000}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.aDAI, quotaIncreaseFee: 25, limit: 10_000_000_000_000}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.cLINK, quotaIncreaseFee: 25, limit: 10_000_000_000_000}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.sDAI, quotaIncreaseFee: 25, limit: 10_000_000_000_000}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.YieldETH, quotaIncreaseFee: 25, limit: 10_000_000_000_000}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.DAI, quotaIncreaseFee: 25, limit: 10_000_000_000_000}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.USDT, quotaIncreaseFee: 25, limit: 10_000_000_000_000}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.FRAX, quotaIncreaseFee: 25, limit: 10_000_000_000_000}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.GUSD, quotaIncreaseFee: 25, limit: 10_000_000_000_000}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.LUSD, quotaIncreaseFee: 25, limit: 10_000_000_000_000}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.rETH_f, quotaIncreaseFee: 25, limit: 10_000_000_000_000}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.steCRV, quotaIncreaseFee: 25, limit: 10_000_000_000_000}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.cvxsteCRV, quotaIncreaseFee: 25, limit: 10_000_000_000_000}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.stkcvxsteCRV, quotaIncreaseFee: 25, limit: 10_000_000_000_000}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens._3Crv, quotaIncreaseFee: 25, limit: 10_000_000_000_000}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.cvx3Crv, quotaIncreaseFee: 25, limit: 10_000_000_000_000}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.stkcvx3Crv, quotaIncreaseFee: 25, limit: 10_000_000_000_000}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.FRAX3CRV, quotaIncreaseFee: 25, limit: 10_000_000_000_000}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.cvxFRAX3CRV, quotaIncreaseFee: 25, limit: 10_000_000_000_000}));
         _quotaLimits.push(
-            PoolQuotaLimit({token: Tokens.stkcvxFRAX3CRV, quotaIncreaseFee: 0, limit: 10_000_000_000_000})
+            PoolQuotaLimit({token: Tokens.stkcvxFRAX3CRV, quotaIncreaseFee: 25, limit: 10_000_000_000_000})
         );
-        _quotaLimits.push(PoolQuotaLimit({token: Tokens.LUSD3CRV, quotaIncreaseFee: 0, limit: 10_000_000_000_000}));
-        _quotaLimits.push(PoolQuotaLimit({token: Tokens.cvxLUSD3CRV, quotaIncreaseFee: 0, limit: 10_000_000_000_000}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.LUSD3CRV, quotaIncreaseFee: 25, limit: 10_000_000_000_000}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.cvxLUSD3CRV, quotaIncreaseFee: 25, limit: 10_000_000_000_000}));
         _quotaLimits.push(
-            PoolQuotaLimit({token: Tokens.stkcvxLUSD3CRV, quotaIncreaseFee: 0, limit: 10_000_000_000_000})
+            PoolQuotaLimit({token: Tokens.stkcvxLUSD3CRV, quotaIncreaseFee: 25, limit: 10_000_000_000_000})
         );
-        _quotaLimits.push(PoolQuotaLimit({token: Tokens.gusd3CRV, quotaIncreaseFee: 0, limit: 10_000_000_000_000}));
-        _quotaLimits.push(PoolQuotaLimit({token: Tokens.cvxgusd3CRV, quotaIncreaseFee: 0, limit: 10_000_000_000_000}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.gusd3CRV, quotaIncreaseFee: 25, limit: 10_000_000_000_000}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.cvxgusd3CRV, quotaIncreaseFee: 25, limit: 10_000_000_000_000}));
         _quotaLimits.push(
-            PoolQuotaLimit({token: Tokens.stkcvxgusd3CRV, quotaIncreaseFee: 0, limit: 10_000_000_000_000})
+            PoolQuotaLimit({token: Tokens.stkcvxgusd3CRV, quotaIncreaseFee: 25, limit: 10_000_000_000_000})
         );
-        _quotaLimits.push(PoolQuotaLimit({token: Tokens.crvFRAX, quotaIncreaseFee: 0, limit: 10_000_000_000_000}));
-        _quotaLimits.push(PoolQuotaLimit({token: Tokens.cvxcrvFRAX, quotaIncreaseFee: 0, limit: 10_000_000_000_000}));
-        _quotaLimits.push(PoolQuotaLimit({token: Tokens.stkcvxcrvFRAX, quotaIncreaseFee: 0, limit: 10_000_000_000_000}));
-        _quotaLimits.push(PoolQuotaLimit({token: Tokens.USDC_DAI_USDT, quotaIncreaseFee: 0, limit: 10_000_000_000_000}));
-        _quotaLimits.push(PoolQuotaLimit({token: Tokens.B_rETH_STABLE, quotaIncreaseFee: 0, limit: 10_000_000_000_000}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.crvFRAX, quotaIncreaseFee: 25, limit: 10_000_000_000_000}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.cvxcrvFRAX, quotaIncreaseFee: 25, limit: 10_000_000_000_000}));
         _quotaLimits.push(
-            PoolQuotaLimit({token: Tokens.auraB_rETH_STABLE, quotaIncreaseFee: 0, limit: 10_000_000_000_000})
+            PoolQuotaLimit({token: Tokens.stkcvxcrvFRAX, quotaIncreaseFee: 25, limit: 10_000_000_000_000})
         );
         _quotaLimits.push(
-            PoolQuotaLimit({token: Tokens.auraB_rETH_STABLE_vault, quotaIncreaseFee: 0, limit: 10_000_000_000_000})
+            PoolQuotaLimit({token: Tokens.USDC_DAI_USDT, quotaIncreaseFee: 25, limit: 10_000_000_000_000})
         );
-        _quotaLimits.push(PoolQuotaLimit({token: Tokens.yvDAI, quotaIncreaseFee: 0, limit: 10_000_000_000_000}));
-        _quotaLimits.push(PoolQuotaLimit({token: Tokens.yvUSDC, quotaIncreaseFee: 0, limit: 10_000_000_000_000}));
-        _quotaLimits.push(PoolQuotaLimit({token: Tokens.yvWETH, quotaIncreaseFee: 0, limit: 10_000_000_000_000}));
-        _quotaLimits.push(PoolQuotaLimit({token: Tokens.yvWBTC, quotaIncreaseFee: 0, limit: 10_000_000_000_000}));
-        _quotaLimits.push(PoolQuotaLimit({token: Tokens.yvCurve_stETH, quotaIncreaseFee: 0, limit: 10_000_000_000_000}));
-        _quotaLimits.push(PoolQuotaLimit({token: Tokens.yvCurve_FRAX, quotaIncreaseFee: 0, limit: 10_000_000_000_000}));
-        _quotaLimits.push(PoolQuotaLimit({token: Tokens.CVX, quotaIncreaseFee: 0, limit: 10_000_000_000_000}));
-        _quotaLimits.push(PoolQuotaLimit({token: Tokens.FXS, quotaIncreaseFee: 0, limit: 10_000_000_000_000}));
-        _quotaLimits.push(PoolQuotaLimit({token: Tokens.LQTY, quotaIncreaseFee: 0, limit: 10_000_000_000_000}));
-        _quotaLimits.push(PoolQuotaLimit({token: Tokens.CRV, quotaIncreaseFee: 0, limit: 10_000_000_000_000}));
-        _quotaLimits.push(PoolQuotaLimit({token: Tokens.LDO, quotaIncreaseFee: 0, limit: 10_000_000_000_000}));
-        _quotaLimits.push(PoolQuotaLimit({token: Tokens.SNX, quotaIncreaseFee: 0, limit: 10_000_000_000_000}));
-        _quotaLimits.push(PoolQuotaLimit({token: Tokens.BAL, quotaIncreaseFee: 0, limit: 10_000_000_000_000}));
-        _quotaLimits.push(PoolQuotaLimit({token: Tokens.AURA, quotaIncreaseFee: 0, limit: 10_000_000_000_000}));
+        _quotaLimits.push(
+            PoolQuotaLimit({token: Tokens.B_rETH_STABLE, quotaIncreaseFee: 25, limit: 10_000_000_000_000})
+        );
+        _quotaLimits.push(
+            PoolQuotaLimit({token: Tokens.auraB_rETH_STABLE, quotaIncreaseFee: 25, limit: 10_000_000_000_000})
+        );
+        _quotaLimits.push(
+            PoolQuotaLimit({token: Tokens.auraB_rETH_STABLE_vault, quotaIncreaseFee: 25, limit: 10_000_000_000_000})
+        );
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.yvDAI, quotaIncreaseFee: 25, limit: 10_000_000_000_000}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.yvUSDC, quotaIncreaseFee: 25, limit: 10_000_000_000_000}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.yvWETH, quotaIncreaseFee: 25, limit: 10_000_000_000_000}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.yvWBTC, quotaIncreaseFee: 25, limit: 10_000_000_000_000}));
+        _quotaLimits.push(
+            PoolQuotaLimit({token: Tokens.yvCurve_stETH, quotaIncreaseFee: 25, limit: 10_000_000_000_000})
+        );
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.yvCurve_FRAX, quotaIncreaseFee: 25, limit: 10_000_000_000_000}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.CVX, quotaIncreaseFee: 25, limit: 10_000_000_000_000}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.FXS, quotaIncreaseFee: 25, limit: 10_000_000_000_000}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.LQTY, quotaIncreaseFee: 25, limit: 10_000_000_000_000}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.CRV, quotaIncreaseFee: 25, limit: 10_000_000_000_000}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.LDO, quotaIncreaseFee: 25, limit: 10_000_000_000_000}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.SNX, quotaIncreaseFee: 25, limit: 10_000_000_000_000}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.BAL, quotaIncreaseFee: 25, limit: 10_000_000_000_000}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.AURA, quotaIncreaseFee: 25, limit: 10_000_000_000_000}));
 
         {
             /// CREDIT_MANAGER_0
