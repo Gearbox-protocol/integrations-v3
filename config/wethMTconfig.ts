@@ -322,9 +322,9 @@ export const config: PoolV3DeployConfig = {
     U1: 7000,
     U2: 9000,
     Rbase: 0,
-    Rslope1: 150,
-    Rslope2: 400,
-    Rslope3: 10000,
+    Rslope1: 200,
+    Rslope2: 250,
+    Rslope3: 6000,
     isBorrowingMoreU2Forbidden: true,
   },
   ratesAndLimits: {
