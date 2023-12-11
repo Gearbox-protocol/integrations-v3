@@ -37,8 +37,8 @@ contract CONFIG_MAINNET_USDC_MT_V3 is IPoolV3DeployConfig {
         U_1: 70_00,
         U_2: 90_00,
         R_base: 0,
-        R_slope1: 1_50,
-        R_slope2: 4_00,
+        R_slope1: 1_00,
+        R_slope2: 1_25,
         R_slope3: 100_00,
         _isBorrowingMoreU2Forbidden: true
     });

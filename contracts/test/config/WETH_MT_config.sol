@@ -38,9 +38,9 @@ contract CONFIG_MAINNET_WETH_MT_V3 is IPoolV3DeployConfig {
         U_1: 70_00,
         U_2: 90_00,
         R_base: 0,
-        R_slope1: 1_50,
-        R_slope2: 4_00,
-        R_slope3: 100_00,
+        R_slope1: 2_00,
+        R_slope2: 2_50,
+        R_slope3: 60_00,
         _isBorrowingMoreU2Forbidden: true
     });
 
