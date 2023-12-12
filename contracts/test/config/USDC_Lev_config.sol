@@ -31,7 +31,7 @@ contract CONFIG_MAINNET_USDC_LEV_V3 is IPoolV3DeployConfig {
     string public constant symbol = "dUSDC-lev-V3";
     string public constant name = "Farm USDC v3";
 
-    PoolV3DeployParams _poolParams = PoolV3DeployParams({withdrawalFee: 0, expectedLiquidityLimit: 10_000_000_000_000});
+    PoolV3DeployParams _poolParams = PoolV3DeployParams({withdrawalFee: 0, totalDebtLimit: 100_000_000_000_000});
 
     LinearIRMV3DeployParams _irm = LinearIRMV3DeployParams({
         U_1: 70_00,
@@ -178,6 +178,11 @@ contract CONFIG_MAINNET_USDC_LEV_V3 is IPoolV3DeployConfig {
 
             cp.minDebt = 10_000_000_000;
             cp.maxDebt = 1_000_000_000_000;
+            cp.feeInterest = 2500;
+            cp.feeLiquidation = 150;
+            cp.liquidationPremium = 400;
+            cp.feeLiquidationExpired = 100;
+            cp.liquidationPremiumExpired = 200;
             cp.whitelisted = false;
             cp.expirable = false;
             cp.skipInit = false;
