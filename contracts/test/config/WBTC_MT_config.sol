@@ -31,7 +31,7 @@ contract CONFIG_MAINNET_WBTC_MT_V3 is IPoolV3DeployConfig {
     string public constant symbol = "dWBTCV3";
     string public constant name = "Trade WBTC v3";
 
-    PoolV3DeployParams _poolParams = PoolV3DeployParams({withdrawalFee: 0, expectedLiquidityLimit: 270_270_270_270});
+    PoolV3DeployParams _poolParams = PoolV3DeployParams({withdrawalFee: 0, totalDebtLimit: 270_270_270_270});
 
     LinearIRMV3DeployParams _irm = LinearIRMV3DeployParams({
         U_1: 70_00,
@@ -90,6 +90,11 @@ contract CONFIG_MAINNET_WBTC_MT_V3 is IPoolV3DeployConfig {
 
             cp.minDebt = 54_054_054;
             cp.maxDebt = 2_702_702_702;
+            cp.feeInterest = 2500;
+            cp.feeLiquidation = 150;
+            cp.liquidationPremium = 400;
+            cp.feeLiquidationExpired = 100;
+            cp.liquidationPremiumExpired = 200;
             cp.whitelisted = false;
             cp.expirable = false;
             cp.skipInit = false;
@@ -174,6 +179,11 @@ contract CONFIG_MAINNET_WBTC_MT_V3 is IPoolV3DeployConfig {
 
             cp.minDebt = 54_054_054;
             cp.maxDebt = 1_351_351_351;
+            cp.feeInterest = 2500;
+            cp.feeLiquidation = 150;
+            cp.liquidationPremium = 400;
+            cp.feeLiquidationExpired = 100;
+            cp.liquidationPremiumExpired = 200;
             cp.whitelisted = false;
             cp.expirable = false;
             cp.skipInit = false;
@@ -261,6 +271,11 @@ contract CONFIG_MAINNET_WBTC_MT_V3 is IPoolV3DeployConfig {
 
             cp.minDebt = 54_054_054;
             cp.maxDebt = 540_540_540;
+            cp.feeInterest = 2500;
+            cp.feeLiquidation = 150;
+            cp.liquidationPremium = 400;
+            cp.feeLiquidationExpired = 100;
+            cp.liquidationPremiumExpired = 200;
             cp.whitelisted = false;
             cp.expirable = false;
             cp.skipInit = false;

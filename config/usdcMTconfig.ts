@@ -57,6 +57,11 @@ const tier1CreditManager: CreditManagerV3DeployConfig = {
   expirationDate: undefined,
   minDebt: (BigInt(2e4) * POOL_DECIMALS) / POOL_DIVIDER,
   maxDebt: (BigInt(1e6) * POOL_DECIMALS) / POOL_DIVIDER,
+  feeInterest: 2500,
+  feeLiquidation: 150,
+  liquidationPremium: 400,
+  feeLiquidationExpired: 100,
+  liquidationPremiumExpired: 200,
   poolLimit: (BigInt(3e6) * POOL_DECIMALS) / POOL_DIVIDER,
   collateralTokens: [
     {
@@ -157,6 +162,11 @@ const tier2CreditManager: CreditManagerV3DeployConfig = {
   expirationDate: undefined,
   minDebt: (BigInt(2e4) * POOL_DECIMALS) / POOL_DIVIDER,
   maxDebt: (BigInt(5e5) * POOL_DECIMALS) / POOL_DIVIDER,
+  feeInterest: 2500,
+  feeLiquidation: 150,
+  liquidationPremium: 400,
+  feeLiquidationExpired: 100,
+  liquidationPremiumExpired: 200,
   poolLimit: (BigInt(3e6) * POOL_DECIMALS) / POOL_DIVIDER,
   collateralTokens: [
     {
@@ -255,6 +265,11 @@ const tier3CreditManager: CreditManagerV3DeployConfig = {
   expirationDate: undefined,
   minDebt: (BigInt(2e4) * POOL_DECIMALS) / POOL_DIVIDER,
   maxDebt: (BigInt(2e5) * POOL_DECIMALS) / POOL_DIVIDER,
+  feeInterest: 2500,
+  feeLiquidation: 150,
+  liquidationPremium: 400,
+  feeLiquidationExpired: 100,
+  liquidationPremiumExpired: 200,
   poolLimit: (BigInt(3e6) * POOL_DECIMALS) / POOL_DIVIDER,
   collateralTokens: [
     {
@@ -312,7 +327,7 @@ export const config: PoolV3DeployConfig = {
   underlying: "USDC",
   accountAmount: BigInt(100_000) * POOL_DECIMALS,
   withdrawalFee: 0,
-  expectedLiquidityLimit: BigInt(100_000_000) * POOL_DECIMALS,
+  totalDebtLimit: BigInt(100_000_000) * POOL_DECIMALS,
   irm: {
     U1: 7000,
     U2: 9000,

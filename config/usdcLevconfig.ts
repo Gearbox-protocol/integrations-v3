@@ -116,7 +116,7 @@ export const config: PoolV3DeployConfig = {
   underlying: "USDC",
   accountAmount: BigInt(1_000_000) * POOL_DECIMALS,
   withdrawalFee: 0,
-  expectedLiquidityLimit: BigInt(10_000_000) * POOL_DECIMALS,
+  totalDebtLimit: BigInt(100_000_000) * POOL_DECIMALS,
   irm: {
     U1: 7000,
     U2: 9000,
@@ -452,6 +452,11 @@ export const config: PoolV3DeployConfig = {
       expirationDate: undefined,
       minDebt: (BigInt(1e4) * POOL_DECIMALS) / POOL_DIVIDER,
       maxDebt: (BigInt(1e6) * POOL_DECIMALS) / POOL_DIVIDER,
+      feeInterest: 2500,
+      feeLiquidation: 150,
+      liquidationPremium: 400,
+      feeLiquidationExpired: 100,
+      liquidationPremiumExpired: 200,
       poolLimit: (BigInt(20_000_000) * POOL_DECIMALS) / POOL_DIVIDER,
       collateralTokens: [
         { token: "WETH", lt: 85_00 }, // Token address is token from priceFeed map above
