@@ -29,9 +29,7 @@ contract LiveWstETHV1AdapterTest is LiveTestHelper {
 
     BalanceComparator comparator;
 
-    function setUp() public attachOrLiveTest {
-        _setUp();
-
+    function prepareComparator() internal {
         Tokens[2] memory tokensToTrack = [Tokens.wstETH, Tokens.STETH];
 
         // STAGES
@@ -110,7 +108,9 @@ contract LiveWstETHV1AdapterTest is LiveTestHelper {
     }
 
     /// @dev [L-WSEET-1]: wstETH adapter and normal account works identically
-    function test_live_WSEET_01_wstETH_adapter_and_normal_account_works_identically() public {
+    function test_live_WSEET_01_wstETH_adapter_and_normal_account_works_identically() public attachOrLiveTest {
+        prepareComparator();
+
         address creditAccount = openCreditAccountWithWstETH(10 * 10 ** 18);
 
         address wsteth = supportedContracts.addressOf(Contracts.LIDO_WSTETH);
