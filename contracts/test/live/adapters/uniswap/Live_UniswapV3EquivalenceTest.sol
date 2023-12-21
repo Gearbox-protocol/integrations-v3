@@ -171,6 +171,7 @@ contract Live_UniswapV3EquivalenceTest is LiveTestHelper {
                     sqrtPriceLimitX96: 0
                 })
             );
+
             comparator.takeSnapshot("after_exactInputSingle", creditAccount);
 
             uint256 balanceToSwap = tokenTestSuite.balanceOf(Tokens.WETH, creditAccount) - 20 * WAD;
@@ -256,6 +257,8 @@ contract Live_UniswapV3EquivalenceTest is LiveTestHelper {
 
     /// @dev [L-UV3ET-1]: UniswapV3 adapter and normal account works identically
     function test_live_UV3ET_01_UniswapV3_adapter_and_normal_account_works_identically() public attachOrLiveTest {
+        prepareComparator();
+
         address creditAccount = openCreditAccountWithWeth(30 * WAD);
 
         address routerAdapter = getAdapter(address(creditManager), Contracts.UNISWAP_V3_ROUTER);

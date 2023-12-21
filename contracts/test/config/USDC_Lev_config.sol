@@ -207,6 +207,8 @@ contract CONFIG_MAINNET_USDC_LEV_V3 is IPoolV3DeployConfig {
 
             cts.push(CollateralTokenHuman({token: Tokens.sDAI, lt: 92_00}));
 
+            cts.push(CollateralTokenHuman({token: Tokens.OHM, lt: 82_50}));
+
             cts.push(CollateralTokenHuman({token: Tokens.DAI, lt: 92_00}));
 
             cts.push(CollateralTokenHuman({token: Tokens.USDT, lt: 90_00}));

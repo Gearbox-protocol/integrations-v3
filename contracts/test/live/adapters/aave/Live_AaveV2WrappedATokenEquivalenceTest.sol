@@ -160,7 +160,7 @@ contract Live_AaveV2WrappedATokenEquivalenceTest is LiveTestHelper {
     }
 
     /// @dev [L-WAV2ET-1]: Wrapped AToken adapters and original contracts work identically
-    function test_live_WAV2ET_01_waToken_adapters_and_original_contracts_are_equivalent() public {
+    function test_live_WAV2ET_01_waToken_adapters_and_original_contracts_are_equivalent() public attachOrLiveTest {
         address[] memory adapters = creditConfigurator.allowedAdapters();
 
         for (uint256 i = 0; i < adapters.length; ++i) {

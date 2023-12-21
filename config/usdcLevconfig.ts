@@ -470,6 +470,8 @@ export const config: PoolV3DeployConfig = {
         { token: "cLINK", lt: 85_00 },
         { token: "sDAI", lt: 92_00 },
 
+        { token: "OHM", lt: 82_50 },
+
         { token: "DAI", lt: 92_00 }, // Token address is token from priceFeed map above
         { token: "USDT", lt: 90_00 }, // Token address is token from priceFeed map above
         { token: "FRAX", lt: 90_00 }, // Token address is token from priceFeed map above
