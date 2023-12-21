@@ -16,6 +16,8 @@ import {
     ConvexV1_BaseRewardPoolMulticaller
 } from "../../../multicall/convex/ConvexV1_BaseRewardPoolCalls.sol";
 import {ConvexV1_BoosterCalls, ConvexV1_BoosterMulticaller} from "../../../multicall/convex/ConvexV1_BoosterCalls.sol";
+import {IAdapter} from "@gearbox-protocol/core-v2/contracts/interfaces/IAdapter.sol";
+import {AdapterType} from "@gearbox-protocol/sdk-gov/contracts/AdapterType.sol";
 
 import {Tokens} from "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
 import {Contracts} from "@gearbox-protocol/sdk-gov/contracts/SupportedContracts.sol";
@@ -32,6 +34,7 @@ import "@gearbox-protocol/core-v3/contracts/test/lib/constants.sol";
 import {LiveTestHelper} from "../../../suites/LiveTestHelper.sol";
 import {BalanceComparator, BalanceBackup} from "../../../helpers/BalanceComparator.sol";
 
+/// @notice This also includes Aura pools
 contract Live_ConvexEquivalenceTest is LiveTestHelper {
     using AddressList for address[];
     using ConvexV1_BaseRewardPoolCalls for ConvexV1_BaseRewardPoolMulticaller;
@@ -53,18 +56,9 @@ contract Live_ConvexEquivalenceTest is LiveTestHelper {
         "after_basePool_withdrawDiffAndUnwrap"
     ];
 
-    Contracts[6] convexPools = [
-        Contracts.CONVEX_3CRV_POOL,
-        Contracts.CONVEX_GUSD_POOL,
-        Contracts.CONVEX_SUSD_POOL,
-        Contracts.CONVEX_STECRV_POOL,
-        Contracts.CONVEX_FRAX3CRV_POOL,
-        Contracts.CONVEX_LUSD3CRV_POOL
-    ];
-
     string[] _stages;
 
-    function setUp() public attachOrLiveTest {
+    function setUp() public {
         _setUp();
 
         /// @notice Sets comparator for this equivalence test
@@ -222,25 +216,20 @@ contract Live_ConvexEquivalenceTest is LiveTestHelper {
         tokenTestSuite.mint(token, creditAccount, amount);
     }
 
-    function prepareComparator(address basePoolAdapter) internal returns (BalanceComparator comparator) {
-        address targetContract = IConvexV1BaseRewardPoolAdapter(basePoolAdapter).targetContract();
-
+    function prepareComparator(address basePoolAdapter, address booster)
+        internal
+        returns (BalanceComparator comparator)
+    {
         address[] memory tokensToTrack = new address[](7);
 
         tokensToTrack[0] = IConvexV1BaseRewardPoolAdapter(basePoolAdapter).curveLPtoken();
         tokensToTrack[1] = IConvexV1BaseRewardPoolAdapter(basePoolAdapter).stakingToken();
         tokensToTrack[2] = IConvexV1BaseRewardPoolAdapter(basePoolAdapter).stakedPhantomToken();
-        tokensToTrack[3] = tokenTestSuite.addressOf(Tokens.CRV);
-        tokensToTrack[4] = tokenTestSuite.addressOf(Tokens.CVX);
+        tokensToTrack[3] = IBooster(booster).crv();
+        tokensToTrack[4] = IBooster(booster).minter();
+        tokensToTrack[5] = IConvexV1BaseRewardPoolAdapter(basePoolAdapter).extraReward1();
+        tokensToTrack[6] = IConvexV1BaseRewardPoolAdapter(basePoolAdapter).extraReward2();
 
-        uint256 extraRewardLength = IBaseRewardPool(targetContract).extraRewardsLength();
-        if (extraRewardLength >= 1) {
-            tokensToTrack[5] = IRewards(IBaseRewardPool(targetContract).extraRewards(0)).rewardToken();
-
-            if (extraRewardLength >= 2) {
-                tokensToTrack[6] = IRewards(IBaseRewardPool(targetContract).extraRewards(1)).rewardToken();
-            }
-        }
         tokensToTrack = tokensToTrack.trim();
 
         Tokens[] memory _tokensToTrack = new Tokens[](tokensToTrack.length);
@@ -252,59 +241,41 @@ contract Live_ConvexEquivalenceTest is LiveTestHelper {
         comparator = new BalanceComparator(_stages, _tokensToTrack, tokenTestSuite);
     }
 
-    /// @dev [L-CVXET-1]: convex adapters and original contracts work identically
-    function test_live_CVXET_01_Convex_adapters_and_original_contracts_are_equivalent() public {
-        for (uint256 i = 0; i < convexPools.length; ++i) {
+    /// @dev [L-CVXET-1]: Convex / Aura adapters and original contracts work identically
+    function test_live_CVXET_01_Convex_adapters_and_original_contracts_are_equivalent() public attachOrLiveTest {
+        address[] memory adapters = creditConfigurator.allowedAdapters();
+
+        for (uint256 i = 0; i < adapters.length; ++i) {
+            if (IAdapter(adapters[i])._gearboxAdapterType() != AdapterType.CONVEX_V1_BASE_REWARD_POOL) continue;
+
             uint256 snapshot0 = vm.snapshot();
 
-            address basePoolAdapter = getAdapter(address(creditManager), convexPools[i]);
+            address creditAccount =
+                openCreditAccountWithUnderlying(IConvexV1BaseRewardPoolAdapter(adapters[i]).curveLPtoken(), 3000 * WAD);
 
-            if (basePoolAdapter == address(0)) {
-                vm.revertTo(snapshot0);
-                continue;
-            }
+            address booster = IBaseRewardPool(IAdapter(adapters[i]).targetContract()).operator();
 
-            address creditAccount = openCreditAccountWithUnderlying(
-                IConvexV1BaseRewardPoolAdapter(basePoolAdapter).curveLPtoken(), 3000 * WAD
-            );
+            tokenTestSuite.approve(IConvexV1BaseRewardPoolAdapter(adapters[i]).curveLPtoken(), creditAccount, booster);
 
             tokenTestSuite.approve(
-                IConvexV1BaseRewardPoolAdapter(basePoolAdapter).curveLPtoken(),
+                IConvexV1BaseRewardPoolAdapter(adapters[i]).stakingToken(),
                 creditAccount,
-                supportedContracts.addressOf(Contracts.CONVEX_BOOSTER)
-            );
-
-            tokenTestSuite.approve(
-                IConvexV1BaseRewardPoolAdapter(basePoolAdapter).stakingToken(),
-                creditAccount,
-                supportedContracts.addressOf(convexPools[i])
+                IAdapter(adapters[i]).targetContract()
             );
 
             uint256 snapshot1 = vm.snapshot();
 
-            BalanceComparator comparator = prepareComparator(basePoolAdapter);
+            BalanceComparator comparator = prepareComparator(adapters[i], booster);
 
-            compareBehavior(
-                creditAccount,
-                supportedContracts.addressOf(Contracts.CONVEX_BOOSTER),
-                supportedContracts.addressOf(convexPools[i]),
-                false,
-                comparator
-            );
+            compareBehavior(creditAccount, booster, IAdapter(adapters[i]).targetContract(), false, comparator);
 
             BalanceBackup[] memory savedBalanceSnapshots = comparator.exportSnapshots(creditAccount);
 
             vm.revertTo(snapshot1);
 
-            comparator = prepareComparator(basePoolAdapter);
+            comparator = prepareComparator(adapters[i], booster);
 
-            compareBehavior(
-                creditAccount,
-                getAdapter(address(creditManager), Contracts.CONVEX_BOOSTER),
-                getAdapter(address(creditManager), convexPools[i]),
-                true,
-                comparator
-            );
+            compareBehavior(creditAccount, creditManager.contractToAdapter(booster), adapters[i], true, comparator);
 
             comparator.compareAllSnapshots(creditAccount, savedBalanceSnapshots);
 

@@ -29,9 +29,9 @@ contract Live_LidoEquivalenceTest is LiveTestHelper {
 
     BalanceComparator comparator;
 
-    function setUp() public attachOrLiveTest {
-        _setUp();
+    /// HELPER
 
+    function prepareComparator() internal {
         Tokens[2] memory tokensToTrack = [Tokens.WETH, Tokens.STETH];
 
         // STAGES
@@ -57,8 +57,6 @@ contract Live_LidoEquivalenceTest is LiveTestHelper {
 
         comparator = new BalanceComparator(_stages, _tokensToTrack, tokenTestSuite);
     }
-
-    /// HELPER
 
     function compareBehavior(address creditAccount, address lidoAddr, bool isAdapter) internal {
         if (isAdapter) {
@@ -97,7 +95,9 @@ contract Live_LidoEquivalenceTest is LiveTestHelper {
     }
 
     /// @dev [L-LDOET-1]: Lido adapter and normal account works identically
-    function test_live_LDOET_01_Lido_adapter_and_normal_account_works_identically() public {
+    function test_live_LDOET_01_Lido_adapter_and_normal_account_works_identically() public attachOrLiveTest {
+        prepareComparator();
+
         address creditAccount = openCreditAccountWithWeth(10 * 10 ** 18);
 
         address lidoGateway = supportedContracts.addressOf(Contracts.LIDO_STETH_GATEWAY);

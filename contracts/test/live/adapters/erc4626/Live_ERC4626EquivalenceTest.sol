@@ -8,11 +8,11 @@ import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IER
 import {ICreditFacadeV3} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacadeV3.sol";
 import {ICreditFacadeV3Multicall} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacadeV3Multicall.sol";
 
-import {IYVault} from "../../../../integrations/yearn/IYVault.sol";
-import {IYearnV2Adapter} from "../../../../interfaces/yearn/IYearnV2Adapter.sol";
-import {YearnV2_Calls, YearnV2_Multicaller} from "../../../multicall/yearn/YearnV2_Calls.sol";
 import {IAdapter} from "@gearbox-protocol/core-v2/contracts/interfaces/IAdapter.sol";
 import {AdapterType} from "@gearbox-protocol/sdk-gov/contracts/AdapterType.sol";
+import {IERC4626} from "@openzeppelin/contracts/interfaces/IERC4626.sol";
+import {IERC4626Adapter} from "../../../../interfaces/erc4626/IERC4626Adapter.sol";
+import {ERC4626_Calls, ERC4626_Multicaller} from "../../../multicall/erc4626/ERC4626_Calls.sol";
 
 import {Tokens} from "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
 import {Contracts} from "@gearbox-protocol/sdk-gov/contracts/SupportedContracts.sol";
@@ -27,27 +27,16 @@ import "@gearbox-protocol/core-v3/contracts/test/lib/constants.sol";
 import {LiveTestHelper} from "../../../suites/LiveTestHelper.sol";
 import {BalanceComparator, BalanceBackup} from "../../../helpers/BalanceComparator.sol";
 
-contract Live_YearnEquivalenceTest is LiveTestHelper {
-    using YearnV2_Calls for YearnV2_Multicaller;
+contract Live_ERC4626EquivalenceTest is LiveTestHelper {
+    using ERC4626_Calls for ERC4626_Multicaller;
     using AddressList for address[];
 
-    string[7] stages = [
-        "after_deposit_uint256_address",
-        "after_deposit_uint256",
-        "after_deposit_diff",
-        "after_withdraw_uint256_address_uint256",
-        "after_withdraw_uint256_address",
-        "after_withdraw_uint256",
-        "after_withdraw_diff"
-    ];
+    string[7] stages =
+        ["after_deposit", "after_depositDiff", "after_mint", "after_withdraw", "after_redeem", "after_redeemDiff"];
 
     string[] _stages;
 
     function setUp() public {
-        _setUp();
-
-        /// @notice Sets comparator for this equivalence test
-
         uint256 len = stages.length;
         _stages = new string[](len);
         unchecked {
@@ -66,65 +55,61 @@ contract Live_YearnEquivalenceTest is LiveTestHelper {
         bool isAdapter,
         BalanceComparator comparator
     ) internal {
-        address underlyingToken = IYearnV2Adapter(vaultAddress).token();
-        address vaultToken = isAdapter ? IYearnV2Adapter(vaultAddress).targetContract() : vaultAddress;
+        address underlyingToken = IERC4626Adapter(vaultAddress).asset();
+        address vaultToken = isAdapter ? IERC4626Adapter(vaultAddress).targetContract() : vaultAddress;
 
         if (isAdapter) {
-            YearnV2_Multicaller vault = YearnV2_Multicaller(vaultAddress);
+            ERC4626_Multicaller vault = ERC4626_Multicaller(vaultAddress);
 
             vm.startPrank(USER);
 
             creditFacade.multicall(creditAccount, MultiCallBuilder.build(vault.deposit(100 * baseUnit, creditAccount)));
-            comparator.takeSnapshot("after_deposit_uint256_address", creditAccount);
+            comparator.takeSnapshot("after_deposit", creditAccount);
 
-            creditFacade.multicall(creditAccount, MultiCallBuilder.build(vault.deposit(100 * baseUnit)));
-            comparator.takeSnapshot("after_deposit_uint256_address", creditAccount);
+            creditFacade.multicall(creditAccount, MultiCallBuilder.build(vault.depositDiff(1000 * baseUnit)));
+            comparator.takeSnapshot("after_depositDiff", creditAccount);
 
-            creditFacade.multicall(creditAccount, MultiCallBuilder.build(vault.depositDiff(100 * baseUnit)));
-            comparator.takeSnapshot("after_deposit_diff", creditAccount);
+            creditFacade.multicall(creditAccount, MultiCallBuilder.build(vault.mint(100 * baseUnit, creditAccount)));
+            comparator.takeSnapshot("after_mint", creditAccount);
 
             creditFacade.multicall(
-                creditAccount, MultiCallBuilder.build(vault.withdraw(50 * baseUnit, creditAccount, 10))
+                creditAccount, MultiCallBuilder.build(vault.withdraw(50 * baseUnit, creditAccount, creditAccount))
             );
-            comparator.takeSnapshot("after_withdraw_uint256_address_uint256", creditAccount);
+            comparator.takeSnapshot("after_withdraw", creditAccount);
 
-            creditFacade.multicall(creditAccount, MultiCallBuilder.build(vault.withdraw(10 * baseUnit, creditAccount)));
-            comparator.takeSnapshot("after_withdraw_uint256_address", creditAccount);
+            creditFacade.multicall(
+                creditAccount, MultiCallBuilder.build(vault.redeem(10 * baseUnit, creditAccount, creditAccount))
+            );
+            comparator.takeSnapshot("after_redeem", creditAccount);
 
-            creditFacade.multicall(creditAccount, MultiCallBuilder.build(vault.withdraw(10 * baseUnit)));
-            comparator.takeSnapshot("after_withdraw_uint256", creditAccount);
-
-            creditFacade.multicall(creditAccount, MultiCallBuilder.build(vault.withdrawDiff(10 * baseUnit)));
-            comparator.takeSnapshot("after_withdraw_diff", creditAccount);
+            creditFacade.multicall(creditAccount, MultiCallBuilder.build(vault.redeemDiff(10 * baseUnit)));
+            comparator.takeSnapshot("after_redeemDiff", creditAccount);
 
             vm.stopPrank();
         } else {
-            IYVault vault = IYVault(vaultAddress);
+            IERC4626 vault = IERC4626(vaultAddress);
 
             vm.startPrank(creditAccount);
 
             vault.deposit(100 * baseUnit, creditAccount);
-            comparator.takeSnapshot("after_deposit_uint256_address", creditAccount);
-
-            vault.deposit(100 * baseUnit);
-            comparator.takeSnapshot("after_deposit_uint256_address", creditAccount);
+            comparator.takeSnapshot("after_deposit", creditAccount);
 
             uint256 remainingBalance = IERC20(underlyingToken).balanceOf(creditAccount);
-            vault.deposit(remainingBalance - 100 * baseUnit);
-            comparator.takeSnapshot("after_deposit_diff", creditAccount);
+            vault.deposit(remainingBalance - 1000 * baseUnit, creditAccount);
+            comparator.takeSnapshot("after_depositDiff", creditAccount);
 
-            vault.withdraw(50 * baseUnit, creditAccount, 10);
-            comparator.takeSnapshot("after_withdraw_uint256_address_uint256", creditAccount);
+            vault.mint(100 * baseUnit, creditAccount);
+            comparator.takeSnapshot("after_mint", creditAccount);
 
-            vault.withdraw(10 * baseUnit, creditAccount);
-            comparator.takeSnapshot("after_withdraw_uint256_address", creditAccount);
+            vault.withdraw(50 * baseUnit, creditAccount, creditAccount);
+            comparator.takeSnapshot("after_withdraw", creditAccount);
 
-            vault.withdraw(10 * baseUnit);
-            comparator.takeSnapshot("after_withdraw_uint256", creditAccount);
+            vault.redeem(10 * baseUnit, creditAccount, creditAccount);
+            comparator.takeSnapshot("after_redeem", creditAccount);
 
             remainingBalance = IERC20(vaultToken).balanceOf(creditAccount);
-            vault.withdraw(remainingBalance - 10 * baseUnit);
-            comparator.takeSnapshot("after_withdraw_diff", creditAccount);
+            vault.redeem(remainingBalance - 10 * baseUnit, creditAccount, creditAccount);
+            comparator.takeSnapshot("after_redeemDiff", creditAccount);
 
             vm.stopPrank();
         }
@@ -140,8 +125,8 @@ contract Live_YearnEquivalenceTest is LiveTestHelper {
     function prepareComparator(address vaultAdapter) internal returns (BalanceComparator comparator) {
         address[] memory tokensToTrack = new address[](2);
 
-        tokensToTrack[0] = IYearnV2Adapter(vaultAdapter).token();
-        tokensToTrack[1] = IYearnV2Adapter(vaultAdapter).targetContract();
+        tokensToTrack[0] = IERC4626Adapter(vaultAdapter).asset();
+        tokensToTrack[1] = IERC4626Adapter(vaultAdapter).targetContract();
 
         Tokens[] memory _tokensToTrack = new Tokens[](tokensToTrack.length);
 
@@ -152,21 +137,21 @@ contract Live_YearnEquivalenceTest is LiveTestHelper {
         comparator = new BalanceComparator(_stages, _tokensToTrack, tokenTestSuite);
     }
 
-    /// @dev [L-YET-1]: yearn adapters and original contracts work identically
-    function test_live_YET_01_Yearn_adapters_and_original_contracts_are_equivalent() public attachOrLiveTest {
+    /// @dev [L-4626ET-1]: ERC4626 adapters and original contracts work identically
+    function test_live_4626ET_01_ERC4626_adapters_and_original_contracts_are_equivalent() public attachOrLiveTest {
         address[] memory adapters = creditConfigurator.allowedAdapters();
 
         for (uint256 i = 0; i < adapters.length; ++i) {
-            if (IAdapter(adapters[i])._gearboxAdapterType() != AdapterType.YEARN_V2) continue;
+            if (IAdapter(adapters[i])._gearboxAdapterType() != AdapterType.ERC4626_VAULT) continue;
 
             uint256 snapshot0 = vm.snapshot();
 
-            address token = IYearnV2Adapter(adapters[i]).token();
+            address asset = IERC4626Adapter(adapters[i]).asset();
 
             address creditAccount =
-                openCreditAccountWithUnderlying(token, 3000 * 10 ** IERC20Metadata(token).decimals());
+                openCreditAccountWithUnderlying(asset, 3000 * 10 ** IERC20Metadata(asset).decimals());
 
-            tokenTestSuite.approve(token, creditAccount, IAdapter(adapters[i]).targetContract());
+            tokenTestSuite.approve(asset, creditAccount, IAdapter(adapters[i]).targetContract());
 
             uint256 snapshot1 = vm.snapshot();
 
@@ -175,7 +160,7 @@ contract Live_YearnEquivalenceTest is LiveTestHelper {
             compareBehavior(
                 creditAccount,
                 IAdapter(adapters[i]).targetContract(),
-                10 ** IERC20Metadata(token).decimals(),
+                10 ** IERC20Metadata(asset).decimals(),
                 false,
                 comparator
             );
@@ -186,7 +171,7 @@ contract Live_YearnEquivalenceTest is LiveTestHelper {
 
             comparator = prepareComparator(adapters[i]);
 
-            compareBehavior(creditAccount, adapters[i], 10 ** IERC20Metadata(token).decimals(), true, comparator);
+            compareBehavior(creditAccount, adapters[i], 10 ** IERC20Metadata(asset).decimals(), true, comparator);
 
             comparator.compareAllSnapshots(creditAccount, savedBalanceSnapshots, 0);
 

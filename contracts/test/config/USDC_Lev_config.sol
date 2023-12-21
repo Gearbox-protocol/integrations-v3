@@ -207,17 +207,19 @@ contract CONFIG_MAINNET_USDC_LEV_V3 is IPoolV3DeployConfig {
 
             cts.push(CollateralTokenHuman({token: Tokens.sDAI, lt: 92_00}));
 
+            cts.push(CollateralTokenHuman({token: Tokens.OHM, lt: 82_50}));
+
             cts.push(CollateralTokenHuman({token: Tokens.DAI, lt: 92_00}));
 
             cts.push(CollateralTokenHuman({token: Tokens.USDT, lt: 90_00}));
 
             cts.push(CollateralTokenHuman({token: Tokens.FRAX, lt: 90_00}));
 
-            cts.push(CollateralTokenHuman({token: Tokens.GUSD, lt: 90_00}));
-
             cts.push(CollateralTokenHuman({token: Tokens.LUSD, lt: 90_00}));
 
             cts.push(CollateralTokenHuman({token: Tokens.rETH_f, lt: 82_50}));
+
+            cts.push(CollateralTokenHuman({token: Tokens.crvUSDTWBTCWETH, lt: 82_50}));
 
             cts.push(CollateralTokenHuman({token: Tokens.steCRV, lt: 82_50}));
 
@@ -390,8 +392,8 @@ contract CONFIG_MAINNET_USDC_LEV_V3 is IPoolV3DeployConfig {
             cs.push(Contracts.CURVE_STETH_GATEWAY);
             cs.push(Contracts.CURVE_FRAX_POOL);
             cs.push(Contracts.CURVE_LUSD_POOL);
-            cs.push(Contracts.CURVE_GUSD_POOL);
             cs.push(Contracts.CURVE_RETH_ETH_POOL);
+            cs.push(Contracts.CURVE_3CRYPTO_POOL);
             cs.push(Contracts.YEARN_DAI_VAULT);
             cs.push(Contracts.YEARN_USDC_VAULT);
             cs.push(Contracts.YEARN_WETH_VAULT);
@@ -400,7 +402,6 @@ contract CONFIG_MAINNET_USDC_LEV_V3 is IPoolV3DeployConfig {
             cs.push(Contracts.YEARN_CURVE_STETH_VAULT);
             cs.push(Contracts.CONVEX_FRAX3CRV_POOL);
             cs.push(Contracts.CONVEX_LUSD3CRV_POOL);
-            cs.push(Contracts.CONVEX_GUSD_POOL);
             cs.push(Contracts.CONVEX_3CRV_POOL);
             cs.push(Contracts.CONVEX_FRAX_USDC_POOL);
             cs.push(Contracts.CONVEX_STECRV_POOL);

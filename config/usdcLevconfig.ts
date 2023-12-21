@@ -470,13 +470,15 @@ export const config: PoolV3DeployConfig = {
         { token: "cLINK", lt: 85_00 },
         { token: "sDAI", lt: 92_00 },
 
+        { token: "OHM", lt: 82_50 },
+
         { token: "DAI", lt: 92_00 }, // Token address is token from priceFeed map above
         { token: "USDT", lt: 90_00 }, // Token address is token from priceFeed map above
         { token: "FRAX", lt: 90_00 }, // Token address is token from priceFeed map above
-        { token: "GUSD", lt: 90_00 }, // Token address is token from priceFeed map above
         { token: "LUSD", lt: 90_00 }, // Token address is token from priceFeed map above
 
         { token: "rETH_f", lt: 82_50 },
+        { token: "crvUSDTWBTCWETH", lt: 82_50 },
 
         { token: "steCRV", lt: 82_50 }, // Token address is token from priceFeed map above
         { token: "cvxsteCRV", lt: 82_50 }, // Token address is token from priceFeed map above
@@ -536,8 +538,8 @@ export const config: PoolV3DeployConfig = {
         { contract: "CURVE_STETH_GATEWAY" },
         { contract: "CURVE_FRAX_POOL" },
         { contract: "CURVE_LUSD_POOL" },
-        { contract: "CURVE_GUSD_POOL" },
         { contract: "CURVE_RETH_ETH_POOL" },
+        { contract: "CURVE_3CRYPTO_POOL" },
 
         // YEARN
         { contract: "YEARN_DAI_VAULT" },
@@ -550,7 +552,6 @@ export const config: PoolV3DeployConfig = {
         // CONVEX
         { contract: "CONVEX_FRAX3CRV_POOL" },
         { contract: "CONVEX_LUSD3CRV_POOL" },
-        { contract: "CONVEX_GUSD_POOL" },
         { contract: "CONVEX_3CRV_POOL" },
         { contract: "CONVEX_FRAX_USDC_POOL" },
         { contract: "CONVEX_STECRV_POOL" },
