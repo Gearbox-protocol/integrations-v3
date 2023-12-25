@@ -324,8 +324,86 @@ const tier3CreditManager: CreditManagerV3DeployConfig = {
   ],
 };
 
+const farmUniV3Config: UniV3Config = {
+  contract: "UNISWAP_V3_ROUTER",
+  allowed: [
+    { token0: "WETH", token1: "CRV", fee: 3000 },
+    { token0: "WETH", token1: "CRV", fee: 10000 },
+    { token0: "WETH", token1: "CVX", fee: 10000 },
+    { token0: "WBTC", token1: "WETH", fee: 3000 },
+    { token0: "WBTC", token1: "WETH", fee: 500 },
+  ],
+};
+
+const farmCreditManager: CreditManagerV3DeployConfig = {
+  name: "Farm WETH",
+  degenNft: true,
+  expirationDate: undefined,
+  minDebt: (BigInt(2e4) * POOL_DECIMALS) / POOL_DIVIDER,
+  maxDebt: (BigInt(1e6) * POOL_DECIMALS) / POOL_DIVIDER,
+  feeInterest: 2500,
+  feeLiquidation: 150,
+  liquidationPremium: 400,
+  feeLiquidationExpired: 100,
+  liquidationPremiumExpired: 200,
+  poolLimit: (BigInt(3e6) * POOL_DECIMALS) / POOL_DIVIDER,
+  collateralTokens: [
+    {
+      token: "CRV",
+      lt: 9000,
+    },
+    {
+      token: "WBTC",
+      lt: 9000,
+    },
+    {
+      token: "STETH",
+      lt: 9000,
+    },
+
+    // Yearn
+    { token: "yvWETH", lt: 9000 },
+
+    // Curve + Convex
+
+    { token: "crvUSDETHCRV", lt: 8500 },
+    { token: "cvxcrvUSDETHCRV", lt: 8500 },
+    { token: "stkcvxcrvUSDETHCRV", lt: 8500 },
+
+    { token: "crvUSDTWBTCWETH", lt: 8500 },
+    { token: "cvxcrvUSDTWBTCWETH", lt: 8500 },
+    { token: "stkcvxcrvUSDTWBTCWETH", lt: 8500 },
+
+    // Rewards
+    { token: "CRV", lt: 7250 },
+    { token: "CVX", lt: 7250 },
+
+    // Compatibility
+    { token: "crvUSD", lt: 0 },
+    { token: "crvCVXETH", lt: 0 },
+    { token: "steCRV", lt: 0 },
+  ],
+  adapters: [
+    // Swapping
+    farmUniV3Config,
+    { contract: "CURVE_CVXETH_POOL" },
+    { contract: "CURVE_STETH_GATEWAY" },
+
+    // Curve
+    { contract: "CURVE_TRI_CRV_POOL" },
+    { contract: "CURVE_3CRYPTO_POOL" },
+
+    // Convex
+    { contract: "CONVEX_TRI_CRV_POOL" },
+    { contract: "CONVEX_3CRYPTO_POOL" },
+
+    // Yearn
+    { contract: "YEARN_WETH_VAULT" },
+  ],
+};
+
 export const config: PoolV3DeployConfig = {
-  id: "mainnet-weth-mt-v3",
+  id: "mainnet-weth-v3",
   symbol: "dWETHV3",
   name: "Trade WETH v3",
   network: "Mainnet",
@@ -343,6 +421,8 @@ export const config: PoolV3DeployConfig = {
     isBorrowingMoreU2Forbidden: true,
   },
   ratesAndLimits: {
+    // TRADEABLE TOKENS
+
     WBTC: {
       minRate: 4,
       maxRate: 1200,
@@ -350,12 +430,6 @@ export const config: PoolV3DeployConfig = {
       limit: (BigInt(30e6) * POOL_DECIMALS) / POOL_DIVIDER,
     },
     USDC: {
-      minRate: 4,
-      maxRate: 1200,
-      quotaIncreaseFee: 1,
-      limit: (BigInt(30e6) * POOL_DECIMALS) / POOL_DIVIDER,
-    },
-    STETH: {
       minRate: 4,
       maxRate: 1200,
       quotaIncreaseFee: 1,
@@ -383,7 +457,7 @@ export const config: PoolV3DeployConfig = {
       minRate: 80,
       maxRate: 2400,
       quotaIncreaseFee: 1,
-      limit: (BigInt(5e6) * POOL_DECIMALS) / POOL_DIVIDER,
+      limit: (BigInt(3e6) * POOL_DECIMALS) / POOL_DIVIDER,
     },
     UNI: {
       minRate: 80,
@@ -401,7 +475,7 @@ export const config: PoolV3DeployConfig = {
       minRate: 80,
       maxRate: 2400,
       quotaIncreaseFee: 1,
-      limit: (BigInt(5e6) * POOL_DECIMALS) / POOL_DIVIDER,
+      limit: (BigInt(2.5e6) * POOL_DECIMALS) / POOL_DIVIDER,
     },
     CRV: {
       minRate: 240,
@@ -419,13 +493,13 @@ export const config: PoolV3DeployConfig = {
       minRate: 240,
       maxRate: 4000,
       quotaIncreaseFee: 1,
-      limit: (BigInt(2.5e6) * POOL_DECIMALS) / POOL_DIVIDER,
+      limit: (BigInt(2e6) * POOL_DECIMALS) / POOL_DIVIDER,
     },
     APE: {
       minRate: 240,
       maxRate: 4000,
       quotaIncreaseFee: 1,
-      limit: (BigInt(2.5e6) * POOL_DECIMALS) / POOL_DIVIDER,
+      limit: (BigInt(5e5) * POOL_DECIMALS) / POOL_DIVIDER,
     },
     yvUSDC: {
       minRate: 4,
@@ -445,7 +519,38 @@ export const config: PoolV3DeployConfig = {
       quotaIncreaseFee: 1,
       limit: (BigInt(10e6) * POOL_DECIMALS) / POOL_DIVIDER,
     },
+
+    // FARMS
+    STETH: {
+      minRate: 5,
+      maxRate: 220,
+      quotaIncreaseFee: 0,
+      limit: (BigInt(30e6) * POOL_DECIMALS) / POOL_DIVIDER,
+    },
+    yvWETH: {
+      minRate: 5,
+      maxRate: 190,
+      quotaIncreaseFee: 0,
+      limit: (BigInt(30e6) * POOL_DECIMALS) / POOL_DIVIDER,
+    },
+    stkcvxcrvUSDTWBTCWETH: {
+      minRate: 100,
+      maxRate: 600,
+      quotaIncreaseFee: 0,
+      limit: (BigInt(15.5e6) * POOL_DECIMALS) / POOL_DIVIDER,
+    },
+    stkcvxcrvUSDETHCRV: {
+      minRate: 100,
+      maxRate: 1470,
+      quotaIncreaseFee: 0,
+      limit: (BigInt(5.4e6) * POOL_DECIMALS) / POOL_DIVIDER,
+    },
   },
-  creditManagers: [tier1CreditManager, tier2CreditManager, tier3CreditManager],
+  creditManagers: [
+    tier1CreditManager,
+    tier2CreditManager,
+    tier3CreditManager,
+    farmCreditManager,
+  ],
   supportsQuotas: true,
 };

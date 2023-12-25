@@ -20,11 +20,11 @@ import {PriceFeedDeployer} from "@gearbox-protocol/oracles-v3/contracts/test/sui
 import {IntegrationTestHelper} from "@gearbox-protocol/core-v3/contracts/test/helpers/IntegrationTestHelper.sol";
 import {AdapterDeployer} from "./AdapterDeployer.sol";
 
-import {CONFIG_MAINNET_USDC_MT_V3} from "../config/USDC_MT_config.sol";
-import {CONFIG_MAINNET_WBTC_MT_V3} from "../config/WBTC_MT_config.sol";
-import {CONFIG_MAINNET_WETH_MT_V3} from "../config/WETH_MT_config.sol";
+import {CONFIG_MAINNET_USDC_V3} from "../config/USDC_Mainnet_config.sol";
+import {CONFIG_MAINNET_WBTC_V3} from "../config/WBTC_Mainnet_config.sol";
+import {CONFIG_MAINNET_WETH_V3} from "../config/WETH_Mainnet_config.sol";
 
-import {CONFIG_MAINNET_USDC_LEV_V3} from "../config/USDC_Lev_config.sol";
+import {CONFIG_MAINNET_USDC_TEST_V3} from "../config/TEST_USDC_Mainnet_config.sol";
 
 import {IConvexV1BoosterAdapter} from "../../interfaces/convex/IConvexV1BoosterAdapter.sol";
 import {BalancerV2VaultAdapter} from "../../adapters/balancer/BalancerV2VaultAdapter.sol";
@@ -40,10 +40,10 @@ import "forge-std/console.sol";
 
 contract LiveTestHelper is IntegrationTestHelper {
     constructor() {
-        addDeployConfig(new CONFIG_MAINNET_USDC_MT_V3());
-        addDeployConfig(new CONFIG_MAINNET_WBTC_MT_V3());
-        addDeployConfig(new CONFIG_MAINNET_WETH_MT_V3());
-        addDeployConfig(new CONFIG_MAINNET_USDC_LEV_V3());
+        addDeployConfig(new CONFIG_MAINNET_USDC_V3());
+        addDeployConfig(new CONFIG_MAINNET_WBTC_V3());
+        addDeployConfig(new CONFIG_MAINNET_WETH_V3());
+        addDeployConfig(new CONFIG_MAINNET_USDC_TEST_V3());
     }
 
     SupportedContracts public supportedContracts;

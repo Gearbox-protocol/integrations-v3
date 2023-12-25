@@ -5,8 +5,8 @@ import {
   UniV3Config,
 } from "@gearbox-protocol/sdk-gov";
 
-const POOL_DECIMALS = BigInt(1e8);
-const POOL_DIVIDER = BigInt(37000);
+const POOL_DECIMALS = BigInt(1e6);
+const POOL_DIVIDER = BigInt(1);
 
 const tier1UniV2Config: UniV2Config = {
   contract: "UNISWAP_V2_ROUTER",
@@ -52,7 +52,7 @@ const tier1SushiswapConfig: UniV2Config = {
 };
 
 const tier1CreditManager: CreditManagerV3DeployConfig = {
-  name: "Trade WBTC Tier 1",
+  name: "Trade USDC Tier 1",
   degenNft: false,
   expirationDate: undefined,
   minDebt: (BigInt(2e4) * POOL_DECIMALS) / POOL_DIVIDER,
@@ -69,11 +69,7 @@ const tier1CreditManager: CreditManagerV3DeployConfig = {
       lt: 9000,
     },
     {
-      token: "USDC",
-      lt: 9000,
-    },
-    {
-      token: "USDT",
+      token: "WBTC",
       lt: 9000,
     },
     {
@@ -85,15 +81,15 @@ const tier1CreditManager: CreditManagerV3DeployConfig = {
       lt: 9000,
     },
     {
+      token: "USDT",
+      lt: 9000,
+    },
+    {
       token: "yvWETH",
       lt: 8700,
     },
     {
-      token: "sDAI",
-      lt: 8700,
-    },
-    {
-      token: "yvUSDC",
+      token: "yvWBTC",
       lt: 8700,
     },
     // COMPATIBILITY
@@ -109,8 +105,7 @@ const tier1CreditManager: CreditManagerV3DeployConfig = {
     { contract: "CURVE_3CRYPTO_POOL" },
     { contract: "CURVE_STETH_GATEWAY" },
     { contract: "YEARN_WETH_VAULT" },
-    { contract: "YEARN_USDC_VAULT" },
-    { contract: "MAKER_DSR_VAULT" },
+    { contract: "YEARN_WBTC_VAULT" },
   ],
 };
 
@@ -125,7 +120,6 @@ const tier2UniV2Config: UniV2Config = {
     { token0: "DAI", token1: "MKR" },
     { token0: "MKR", token1: "WETH" },
     { token0: "LINK", token1: "WETH" },
-    { token0: "WBTC", token1: "WETH" },
   ],
 };
 
@@ -148,10 +142,6 @@ const tier2UniV3Config: UniV3Config = {
     { token0: "DAI", token1: "WETH", fee: 500 },
     { token0: "LDO", token1: "WETH", fee: 3000 },
     { token0: "USDC", token1: "WETH", fee: 10000 },
-    { token0: "WBTC", token1: "WETH", fee: 3000 },
-    { token0: "WBTC", token1: "WETH", fee: 500 },
-    { token0: "WBTC", token1: "USDC", fee: 3000 },
-    { token0: "WBTC", token1: "USDT", fee: 3000 },
   ],
 };
 
@@ -163,12 +153,11 @@ const tier2SushiswapConfig: UniV2Config = {
     { token0: "DAI", token1: "WETH" },
     { token0: "LDO", token1: "WETH" },
     { token0: "LINK", token1: "WETH" },
-    { token0: "WBTC", token1: "WETH" },
   ],
 };
 
 const tier2CreditManager: CreditManagerV3DeployConfig = {
-  name: "Trade WBTC Tier 2",
+  name: "Trade USDC Tier 2",
   degenNft: false,
   expirationDate: undefined,
   minDebt: (BigInt(2e4) * POOL_DECIMALS) / POOL_DIVIDER,
@@ -180,10 +169,6 @@ const tier2CreditManager: CreditManagerV3DeployConfig = {
   liquidationPremiumExpired: 200,
   poolLimit: (BigInt(3e6) * POOL_DECIMALS) / POOL_DIVIDER,
   collateralTokens: [
-    {
-      token: "USDC",
-      lt: 9000,
-    },
     {
       token: "WETH",
       lt: 9000,
@@ -212,18 +197,8 @@ const tier2CreditManager: CreditManagerV3DeployConfig = {
       token: "LDO",
       lt: 8250,
     },
-    // compatibility
-    {
-      token: "crvUSDTWBTCWETH",
-      lt: 0,
-    },
   ],
-  adapters: [
-    tier2UniV2Config,
-    tier2UniV3Config,
-    tier2SushiswapConfig,
-    { contract: "CURVE_3CRYPTO_POOL" },
-  ],
+  adapters: [tier2UniV2Config, tier2UniV3Config, tier2SushiswapConfig],
 };
 
 const tier3UniV2Config: UniV2Config = {
@@ -236,7 +211,6 @@ const tier3UniV2Config: UniV2Config = {
     { token0: "DAI", token1: "WETH" },
     { token0: "FXS", token1: "FRAX" },
     { token0: "SNX", token1: "WETH" },
-    { token0: "WBTC", token1: "WETH" },
   ],
 };
 
@@ -262,10 +236,6 @@ const tier3UniV3Config: UniV3Config = {
     { token0: "WETH", token1: "CVX", fee: 10000 },
     { token0: "FXS", token1: "FRAX", fee: 10000 },
     { token0: "FXS", token1: "FRAX", fee: 10000 },
-    { token0: "WBTC", token1: "WETH", fee: 3000 },
-    { token0: "WBTC", token1: "WETH", fee: 500 },
-    { token0: "WBTC", token1: "USDC", fee: 3000 },
-    { token0: "WBTC", token1: "USDT", fee: 3000 },
   ],
 };
 
@@ -278,7 +248,6 @@ const tier3SushiswapConfig: UniV2Config = {
     { token0: "WETH", token1: "FXS" },
     { token0: "CVX", token1: "WETH" },
     { token0: "CRV", token1: "WETH" },
-    { token0: "WBTC", token1: "WETH" },
   ],
 };
 
@@ -291,7 +260,7 @@ const tier3FraxswapConfig: UniV2Config = {
 };
 
 const tier3CreditManager: CreditManagerV3DeployConfig = {
-  name: "Trade WBTC Tier 3",
+  name: "Trade USDC Tier 3",
   degenNft: false,
   expirationDate: undefined,
   minDebt: (BigInt(2e4) * POOL_DECIMALS) / POOL_DIVIDER,
@@ -303,10 +272,6 @@ const tier3CreditManager: CreditManagerV3DeployConfig = {
   liquidationPremiumExpired: 200,
   poolLimit: (BigInt(3e6) * POOL_DECIMALS) / POOL_DIVIDER,
   collateralTokens: [
-    {
-      token: "USDC",
-      lt: 9000,
-    },
     {
       token: "WETH",
       lt: 9000,
@@ -343,7 +308,6 @@ const tier3CreditManager: CreditManagerV3DeployConfig = {
     { token: "crvCVXETH", lt: 0 },
     { token: "crvUSDETHCRV", lt: 0 },
     { token: "crvUSD", lt: 0 },
-    { token: "crvUSDTWBTCWETH", lt: 0 },
   ],
   adapters: [
     tier3UniV2Config,
@@ -352,30 +316,158 @@ const tier3CreditManager: CreditManagerV3DeployConfig = {
     tier3FraxswapConfig,
     { contract: "CURVE_CVXETH_POOL" },
     { contract: "CURVE_TRI_CRV_POOL" },
-    { contract: "CURVE_3CRYPTO_POOL" },
+  ],
+};
+
+const farmUniV3Config: UniV3Config = {
+  contract: "UNISWAP_V3_ROUTER",
+  allowed: [
+    { token0: "USDC", token1: "WETH", fee: 500 },
+    { token0: "DAI", token1: "USDC", fee: 100 },
+    { token0: "FRAX", token1: "USDC", fee: 500 },
+    { token0: "USDC", token1: "WETH", fee: 3000 },
+    { token0: "WETH", token1: "USDT", fee: 3000 },
+    { token0: "DAI", token1: "USDC", fee: 500 },
+    { token0: "WETH", token1: "USDT", fee: 500 },
+    { token0: "USDC", token1: "USDT", fee: 100 },
+    { token0: "DAI", token1: "FRAX", fee: 500 },
+    { token0: "DAI", token1: "WETH", fee: 3000 },
+    { token0: "USDC", token1: "USDT", fee: 500 },
+    { token0: "DAI", token1: "WETH", fee: 500 },
+    { token0: "USDC", token1: "WETH", fee: 10000 },
+    { token0: "WETH", token1: "CRV", fee: 3000 },
+    { token0: "WETH", token1: "CRV", fee: 10000 },
+    { token0: "WETH", token1: "CVX", fee: 10000 },
+  ],
+};
+
+const farmCreditManager: CreditManagerV3DeployConfig = {
+  name: "Farm USDC",
+  degenNft: true,
+  expirationDate: undefined,
+  minDebt: (BigInt(2e4) * POOL_DECIMALS) / POOL_DIVIDER,
+  maxDebt: (BigInt(1e6) * POOL_DECIMALS) / POOL_DIVIDER,
+  feeInterest: 2500,
+  feeLiquidation: 150,
+  liquidationPremium: 400,
+  feeLiquidationExpired: 100,
+  liquidationPremiumExpired: 200,
+  poolLimit: (BigInt(3e6) * POOL_DECIMALS) / POOL_DIVIDER,
+  collateralTokens: [
+    {
+      token: "WETH",
+      lt: 9000,
+    },
+    {
+      token: "DAI",
+      lt: 9000,
+    },
+    {
+      token: "USDT",
+      lt: 9000,
+    },
+    {
+      token: "FRAX",
+      lt: 9000,
+    },
+    {
+      token: "crvUSD",
+      lt: 9000,
+    },
+    {
+      token: "MIM",
+      lt: 9000,
+    },
+    // ERC4626
+    { token: "sDAI", lt: 9000 },
+
+    // Yearn
+    { token: "yvUSDC", lt: 9000 },
+    { token: "yvDAI", lt: 9000 },
+
+    // Curve + Convex
+    { token: "crvUSDUSDC", lt: 8700 },
+    { token: "cvxcrvUSDUSDC", lt: 8700 },
+    { token: "stkcvxcrvUSDUSDC", lt: 8700 },
+
+    { token: "crvUSDUSDT", lt: 8700 },
+    { token: "cvxcrvUSDUSDT", lt: 8700 },
+    { token: "stkcvxcrvUSDUSDT", lt: 8700 },
+
+    { token: "crvUSDFRAX", lt: 8700 },
+    { token: "cvxcrvUSDFRAX", lt: 8700 },
+    { token: "stkcvxcrvUSDFRAX", lt: 8700 },
+
+    { token: "MIM_3LP3CRV", lt: 8700 },
+    { token: "cvxMIM_3LP3CRV", lt: 8700 },
+    { token: "stkcvxMIM_3LP3CRV", lt: 8700 },
+
+    { token: "crvFRAX", lt: 8700 },
+    { token: "cvxcrvFRAX", lt: 8700 },
+    { token: "stkcvxcrvFRAX", lt: 8700 },
+
+    // Rewards
+    { token: "CRV", lt: 7250 },
+    { token: "CVX", lt: 7250 },
+
+    // Compatibility
+    { token: "3Crv", lt: 8700 },
+    { token: "crvCVXETH", lt: 0 },
+    { token: "crvUSDETHCRV", lt: 0 },
+    { token: "SPELL", lt: 0 },
+  ],
+  adapters: [
+    // Swapping
+    farmUniV3Config,
+    { contract: "CURVE_CVXETH_POOL" },
+    { contract: "CURVE_TRI_CRV_POOL" },
+
+    // Curve
+    { contract: "CURVE_3CRV_POOL" },
+    { contract: "CURVE_FRAX_USDC_POOL" },
+    { contract: "CURVE_CRVUSD_USDC_POOL" },
+    { contract: "CURVE_CRVUSD_USDT_POOL" },
+    { contract: "CURVE_CRVUSD_FRAX_POOL" },
+    { contract: "CURVE_MIM_POOL" },
+
+    // Convex
+    { contract: "CONVEX_FRAX_USDC_POOL" },
+    { contract: "CONVEX_CRVUSD_USDC_POOL" },
+    { contract: "CONVEX_CRVUSD_USDT_POOL" },
+    { contract: "CONVEX_CRVUSD_FRAX_POOL" },
+    { contract: "CONVEX_MIM3CRV_POOL" },
+
+    // Yearn
+    { contract: "YEARN_USDC_VAULT" },
+    { contract: "YEARN_DAI_VAULT" },
+
+    // ERC4626
+    { contract: "MAKER_DSR_VAULT" },
   ],
 };
 
 export const config: PoolV3DeployConfig = {
-  id: "mainnet-wbtc-mt-v3",
-  symbol: "dWBTCV3",
-  name: "Trade WBTC v3",
+  id: "mainnet-usdc-v3",
+  symbol: "dUSDCV3",
+  name: "Trade USDC v3",
   network: "Mainnet",
-  underlying: "WBTC",
-  accountAmount: (BigInt(100_000) * POOL_DECIMALS) / POOL_DIVIDER,
+  underlying: "USDC",
+  accountAmount: BigInt(100_000) * POOL_DECIMALS,
   withdrawalFee: 0,
-  totalDebtLimit: (BigInt(100_000_000) * POOL_DECIMALS) / POOL_DIVIDER,
+  totalDebtLimit: BigInt(100_000_000) * POOL_DECIMALS,
   irm: {
     U1: 7000,
     U2: 9000,
     Rbase: 0,
-    Rslope1: 200,
-    Rslope2: 250,
-    Rslope3: 6000,
+    Rslope1: 100,
+    Rslope2: 125,
+    Rslope3: 10000,
     isBorrowingMoreU2Forbidden: true,
   },
   ratesAndLimits: {
-    USDC: {
+    // TRADEABLE TOKENS
+
+    WBTC: {
       minRate: 4,
       maxRate: 1200,
       quotaIncreaseFee: 1,
@@ -395,27 +487,33 @@ export const config: PoolV3DeployConfig = {
     },
     DAI: {
       minRate: 4,
-      maxRate: 1200,
-      quotaIncreaseFee: 1,
+      maxRate: 40,
+      quotaIncreaseFee: 0,
       limit: (BigInt(30e6) * POOL_DECIMALS) / POOL_DIVIDER,
     },
     FRAX: {
       minRate: 4,
-      maxRate: 1200,
-      quotaIncreaseFee: 1,
+      maxRate: 40,
+      quotaIncreaseFee: 0,
       limit: (BigInt(30e6) * POOL_DECIMALS) / POOL_DIVIDER,
     },
     USDT: {
       minRate: 4,
-      maxRate: 1200,
-      quotaIncreaseFee: 1,
+      maxRate: 40,
+      quotaIncreaseFee: 0,
       limit: (BigInt(30e6) * POOL_DECIMALS) / POOL_DIVIDER,
+    },
+    MIM: {
+      minRate: 4,
+      maxRate: 40,
+      quotaIncreaseFee: 0,
+      limit: (BigInt(4e6) * POOL_DECIMALS) / POOL_DIVIDER,
     },
     MKR: {
       minRate: 80,
       maxRate: 2400,
       quotaIncreaseFee: 1,
-      limit: (BigInt(5e6) * POOL_DECIMALS) / POOL_DIVIDER,
+      limit: (BigInt(3e6) * POOL_DECIMALS) / POOL_DIVIDER,
     },
     UNI: {
       minRate: 80,
@@ -433,7 +531,7 @@ export const config: PoolV3DeployConfig = {
       minRate: 80,
       maxRate: 2400,
       quotaIncreaseFee: 1,
-      limit: (BigInt(5e6) * POOL_DECIMALS) / POOL_DIVIDER,
+      limit: (BigInt(2.5e6) * POOL_DECIMALS) / POOL_DIVIDER,
     },
     CRV: {
       minRate: 240,
@@ -451,13 +549,13 @@ export const config: PoolV3DeployConfig = {
       minRate: 240,
       maxRate: 4000,
       quotaIncreaseFee: 1,
-      limit: (BigInt(2.5e6) * POOL_DECIMALS) / POOL_DIVIDER,
+      limit: (BigInt(2e6) * POOL_DECIMALS) / POOL_DIVIDER,
     },
     APE: {
       minRate: 240,
       maxRate: 4000,
       quotaIncreaseFee: 1,
-      limit: (BigInt(2.5e6) * POOL_DECIMALS) / POOL_DIVIDER,
+      limit: (BigInt(5e5) * POOL_DECIMALS) / POOL_DIVIDER,
     },
     yvWETH: {
       minRate: 4,
@@ -465,19 +563,69 @@ export const config: PoolV3DeployConfig = {
       quotaIncreaseFee: 1,
       limit: (BigInt(10e6) * POOL_DECIMALS) / POOL_DIVIDER,
     },
-    yvUSDC: {
+    yvWBTC: {
       minRate: 4,
       maxRate: 1200,
       quotaIncreaseFee: 1,
       limit: (BigInt(10e6) * POOL_DECIMALS) / POOL_DIVIDER,
     },
+
+    // FARMS
+
     sDAI: {
-      minRate: 4,
-      maxRate: 1200,
-      quotaIncreaseFee: 1,
-      limit: (BigInt(10e6) * POOL_DECIMALS) / POOL_DIVIDER,
+      minRate: 5,
+      maxRate: 300,
+      quotaIncreaseFee: 0,
+      limit: (BigInt(30e6) * POOL_DECIMALS) / POOL_DIVIDER,
+    },
+    yvUSDC: {
+      minRate: 50,
+      maxRate: 270,
+      quotaIncreaseFee: 0,
+      limit: (BigInt(4.6e6) * POOL_DECIMALS) / POOL_DIVIDER,
+    },
+    yvDAI: {
+      minRate: 50,
+      maxRate: 300,
+      quotaIncreaseFee: 0,
+      limit: (BigInt(7.6e6) * POOL_DECIMALS) / POOL_DIVIDER,
+    },
+    stkcvxcrvUSDUSDC: {
+      minRate: 100,
+      maxRate: 520,
+      quotaIncreaseFee: 0,
+      limit: (BigInt(9.6e6) * POOL_DECIMALS) / POOL_DIVIDER,
+    },
+    stkcvxcrvUSDUSDT: {
+      minRate: 100,
+      maxRate: 700,
+      quotaIncreaseFee: 0,
+      limit: (BigInt(7.8e6) * POOL_DECIMALS) / POOL_DIVIDER,
+    },
+    stkcvxMIM_3LP3CRV: {
+      minRate: 100,
+      maxRate: 870,
+      quotaIncreaseFee: 0,
+      limit: (BigInt(6.5e6) * POOL_DECIMALS) / POOL_DIVIDER,
+    },
+    stkcvxcrvUSDFRAX: {
+      minRate: 100,
+      maxRate: 750,
+      quotaIncreaseFee: 0,
+      limit: (BigInt(4.5e6) * POOL_DECIMALS) / POOL_DIVIDER,
+    },
+    stkcvxcrvFRAX: {
+      minRate: 100,
+      maxRate: 240,
+      quotaIncreaseFee: 0,
+      limit: (BigInt(20.4e6) * POOL_DECIMALS) / POOL_DIVIDER,
     },
   },
-  creditManagers: [tier1CreditManager, tier2CreditManager, tier3CreditManager],
+  creditManagers: [
+    tier1CreditManager,
+    tier2CreditManager,
+    tier3CreditManager,
+    farmCreditManager,
+  ],
   supportsQuotas: true,
 };

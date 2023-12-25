@@ -1,6 +1,6 @@
 import { PoolV3CoreConfigurator } from "@gearbox-protocol/sdk-gov";
 
-import { config } from "../wbtcTconfig";
+import { config } from "../wbtcConfigMainnet";
 
 const poolCfg = PoolV3CoreConfigurator.new(config);
 console.error(poolCfg.toString());

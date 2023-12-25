@@ -109,9 +109,9 @@ const levBalancerConfig: BalancerVaultConfig = {
 };
 
 export const config: PoolV3DeployConfig = {
-  id: "mainnet-usdc-lev-v3",
-  symbol: "dUSDC-lev-V3",
-  name: "Farm USDC v3",
+  id: "mainnet-usdc-test-v3",
+  symbol: "dUSDC-test-V3",
+  name: "Test USDC v3",
   network: "Mainnet",
   underlying: "USDC",
   accountAmount: BigInt(1_000_000) * POOL_DECIMALS,
