@@ -6,7 +6,7 @@ import {
 } from "@gearbox-protocol/sdk-gov";
 
 const POOL_DECIMALS = BigInt(1e8);
-const POOL_DIVIDER = BigInt(37000);
+const POOL_DIVIDER = BigInt(40000);
 
 const tier1UniV2Config: UniV2Config = {
   contract: "UNISWAP_V2_ROUTER",
@@ -96,6 +96,11 @@ const tier1CreditManager: CreditManagerV3DeployConfig = {
       token: "yvUSDC",
       lt: 8700,
     },
+    // FARMS
+    {
+      token: "yvWBTC",
+      lt: 9000,
+    },
     // COMPATIBILITY
     { token: "3Crv", lt: 0 },
     { token: "crvUSDTWBTCWETH", lt: 0 },
@@ -110,6 +115,7 @@ const tier1CreditManager: CreditManagerV3DeployConfig = {
     { contract: "CURVE_STETH_GATEWAY" },
     { contract: "YEARN_WETH_VAULT" },
     { contract: "YEARN_USDC_VAULT" },
+    { contract: "YEARN_WBTC_VAULT" },
     { contract: "MAKER_DSR_VAULT" },
   ],
 };
@@ -460,22 +466,29 @@ export const config: PoolV3DeployConfig = {
       limit: (BigInt(5e5) * POOL_DECIMALS) / POOL_DIVIDER,
     },
     yvWETH: {
-      minRate: 4,
-      maxRate: 1200,
+      minRate: 1,
+      maxRate: 1500,
       quotaIncreaseFee: 1,
-      limit: (BigInt(10e6) * POOL_DECIMALS) / POOL_DIVIDER,
+      limit: (BigInt(30e6) * POOL_DECIMALS) / POOL_DIVIDER,
     },
     yvUSDC: {
-      minRate: 4,
-      maxRate: 1200,
+      minRate: 1,
+      maxRate: 1500,
       quotaIncreaseFee: 1,
-      limit: (BigInt(10e6) * POOL_DECIMALS) / POOL_DIVIDER,
+      limit: (BigInt(4e6) * POOL_DECIMALS) / POOL_DIVIDER,
     },
     sDAI: {
-      minRate: 4,
-      maxRate: 1200,
+      minRate: 1,
+      maxRate: 1500,
       quotaIncreaseFee: 1,
-      limit: (BigInt(10e6) * POOL_DECIMALS) / POOL_DIVIDER,
+      limit: (BigInt(30e6) * POOL_DECIMALS) / POOL_DIVIDER,
+    },
+    // FARMS
+    yvWBTC: {
+      minRate: 1,
+      maxRate: 1500,
+      quotaIncreaseFee: 0,
+      limit: (BigInt(1e6) * POOL_DECIMALS) / POOL_DIVIDER,
     },
   },
   creditManagers: [tier1CreditManager, tier2CreditManager, tier3CreditManager],

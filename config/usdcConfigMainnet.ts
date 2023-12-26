@@ -575,16 +575,16 @@ export const config: PoolV3DeployConfig = {
       limit: (BigInt(5e5) * POOL_DECIMALS) / POOL_DIVIDER,
     },
     yvWETH: {
-      minRate: 4,
-      maxRate: 1200,
+      minRate: 1,
+      maxRate: 1500,
       quotaIncreaseFee: 1,
-      limit: (BigInt(10e6) * POOL_DECIMALS) / POOL_DIVIDER,
+      limit: (BigInt(30e6) * POOL_DECIMALS) / POOL_DIVIDER,
     },
     yvWBTC: {
-      minRate: 4,
-      maxRate: 1200,
+      minRate: 1,
+      maxRate: 1500,
       quotaIncreaseFee: 1,
-      limit: (BigInt(10e6) * POOL_DECIMALS) / POOL_DIVIDER,
+      limit: (BigInt(1e6) * POOL_DECIMALS) / POOL_DIVIDER,
     },
 
     // FARMS
