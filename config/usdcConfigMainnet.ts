@@ -92,6 +92,19 @@ const tier1CreditManager: CreditManagerV3DeployConfig = {
       token: "yvWBTC",
       lt: 8700,
     },
+    // FARMS
+    {
+      token: "yvUSDC",
+      lt: 9000,
+    },
+    {
+      token: "yvDAI",
+      lt: 9000,
+    },
+    {
+      token: "sDAI",
+      lt: 9000,
+    },
     // COMPATIBILITY
     { token: "3Crv", lt: 0 },
     { token: "crvUSDTWBTCWETH", lt: 0 },
@@ -106,6 +119,9 @@ const tier1CreditManager: CreditManagerV3DeployConfig = {
     { contract: "CURVE_STETH_GATEWAY" },
     { contract: "YEARN_WETH_VAULT" },
     { contract: "YEARN_WBTC_VAULT" },
+    { contract: "YEARN_USDC_VAULT" },
+    { contract: "YEARN_DAI_VAULT" },
+    { contract: "MAKER_DSR_VAULT" },
   ],
 };
 
@@ -575,21 +591,21 @@ export const config: PoolV3DeployConfig = {
 
     sDAI: {
       minRate: 5,
-      maxRate: 300,
+      maxRate: 500,
       quotaIncreaseFee: 0,
       limit: (BigInt(30e6) * POOL_DECIMALS) / POOL_DIVIDER,
     },
     yvUSDC: {
       minRate: 50,
-      maxRate: 270,
+      maxRate: 500,
       quotaIncreaseFee: 0,
-      limit: (BigInt(4.6e6) * POOL_DECIMALS) / POOL_DIVIDER,
+      limit: (BigInt(4e6) * POOL_DECIMALS) / POOL_DIVIDER,
     },
     yvDAI: {
       minRate: 50,
-      maxRate: 300,
+      maxRate: 500,
       quotaIncreaseFee: 0,
-      limit: (BigInt(7.6e6) * POOL_DECIMALS) / POOL_DIVIDER,
+      limit: (BigInt(7e6) * POOL_DECIMALS) / POOL_DIVIDER,
     },
     stkcvxcrvUSDUSDC: {
       minRate: 100,

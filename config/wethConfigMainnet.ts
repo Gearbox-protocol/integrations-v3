@@ -73,10 +73,6 @@ const tier1CreditManager: CreditManagerV3DeployConfig = {
       lt: 9000,
     },
     {
-      token: "STETH",
-      lt: 9000,
-    },
-    {
       token: "DAI",
       lt: 9000,
     },
@@ -96,6 +92,15 @@ const tier1CreditManager: CreditManagerV3DeployConfig = {
       token: "sDAI",
       lt: 8700,
     },
+    // FARMS
+    {
+      token: "yvWETH",
+      lt: 9000,
+    },
+    {
+      token: "STETH",
+      lt: 9000,
+    },
     // COMPATIBILITY
     { token: "3Crv", lt: 0 },
     { token: "crvUSDTWBTCWETH", lt: 0 },
@@ -110,6 +115,7 @@ const tier1CreditManager: CreditManagerV3DeployConfig = {
     { contract: "CURVE_STETH_GATEWAY" },
     { contract: "YEARN_USDC_VAULT" },
     { contract: "YEARN_WBTC_VAULT" },
+    { contract: "YEARN_WETH_VAULT" },
     { contract: "MAKER_DSR_VAULT" },
   ],
 };
@@ -523,13 +529,13 @@ export const config: PoolV3DeployConfig = {
     // FARMS
     STETH: {
       minRate: 5,
-      maxRate: 220,
+      maxRate: 350,
       quotaIncreaseFee: 0,
       limit: (BigInt(30e6) * POOL_DECIMALS) / POOL_DIVIDER,
     },
     yvWETH: {
-      minRate: 5,
-      maxRate: 190,
+      minRate: 50,
+      maxRate: 500,
       quotaIncreaseFee: 0,
       limit: (BigInt(30e6) * POOL_DECIMALS) / POOL_DIVIDER,
     },

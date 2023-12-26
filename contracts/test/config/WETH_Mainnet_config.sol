@@ -66,8 +66,8 @@ contract CONFIG_MAINNET_WETH_V3 is IPoolV3DeployConfig {
         _gaugeRates.push(GaugeRate({token: Tokens.yvUSDC, minRate: 4, maxRate: 12_00}));
         _gaugeRates.push(GaugeRate({token: Tokens.yvWBTC, minRate: 1, maxRate: 15_00}));
         _gaugeRates.push(GaugeRate({token: Tokens.sDAI, minRate: 1, maxRate: 15_00}));
-        _gaugeRates.push(GaugeRate({token: Tokens.STETH, minRate: 5, maxRate: 2_20}));
-        _gaugeRates.push(GaugeRate({token: Tokens.yvWETH, minRate: 5, maxRate: 1_90}));
+        _gaugeRates.push(GaugeRate({token: Tokens.STETH, minRate: 5, maxRate: 3_50}));
+        _gaugeRates.push(GaugeRate({token: Tokens.yvWETH, minRate: 50, maxRate: 5_00}));
         _gaugeRates.push(GaugeRate({token: Tokens.stkcvxcrvUSDTWBTCWETH, minRate: 1_00, maxRate: 6_00}));
         _gaugeRates.push(GaugeRate({token: Tokens.stkcvxcrvUSDETHCRV, minRate: 1_00, maxRate: 14_70}));
         _quotaLimits.push(
@@ -154,8 +154,6 @@ contract CONFIG_MAINNET_WETH_V3 is IPoolV3DeployConfig {
 
             cts.push(CollateralTokenHuman({token: Tokens.WBTC, lt: 90_00}));
 
-            cts.push(CollateralTokenHuman({token: Tokens.STETH, lt: 90_00}));
-
             cts.push(CollateralTokenHuman({token: Tokens.DAI, lt: 90_00}));
 
             cts.push(CollateralTokenHuman({token: Tokens.USDT, lt: 90_00}));
@@ -165,6 +163,10 @@ contract CONFIG_MAINNET_WETH_V3 is IPoolV3DeployConfig {
             cts.push(CollateralTokenHuman({token: Tokens.yvWBTC, lt: 87_00}));
 
             cts.push(CollateralTokenHuman({token: Tokens.sDAI, lt: 87_00}));
+
+            cts.push(CollateralTokenHuman({token: Tokens.yvWETH, lt: 90_00}));
+
+            cts.push(CollateralTokenHuman({token: Tokens.STETH, lt: 90_00}));
 
             cts.push(CollateralTokenHuman({token: Tokens._3Crv, lt: 0}));
 
@@ -220,6 +222,7 @@ contract CONFIG_MAINNET_WETH_V3 is IPoolV3DeployConfig {
             cs.push(Contracts.CURVE_STETH_GATEWAY);
             cs.push(Contracts.YEARN_USDC_VAULT);
             cs.push(Contracts.YEARN_WBTC_VAULT);
+            cs.push(Contracts.YEARN_WETH_VAULT);
             cs.push(Contracts.MAKER_DSR_VAULT);
         }
         {
