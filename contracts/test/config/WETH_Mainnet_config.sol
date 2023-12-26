@@ -414,11 +414,11 @@ contract CONFIG_MAINNET_WETH_V3 is IPoolV3DeployConfig {
             cp.poolLimit = 1_500_000_000_000_000_000_000;
 
             CollateralTokenHuman[] storage cts = cp.collateralTokens;
-            cts.push(CollateralTokenHuman({token: Tokens.CRV, lt: 90_00}));
-
             cts.push(CollateralTokenHuman({token: Tokens.WBTC, lt: 90_00}));
 
             cts.push(CollateralTokenHuman({token: Tokens.STETH, lt: 90_00}));
+
+            cts.push(CollateralTokenHuman({token: Tokens.USDT, lt: 90_00}));
 
             cts.push(CollateralTokenHuman({token: Tokens.yvWETH, lt: 90_00}));
 
@@ -455,6 +455,7 @@ contract CONFIG_MAINNET_WETH_V3 is IPoolV3DeployConfig {
             cs.push(Contracts.CURVE_STETH_GATEWAY);
             cs.push(Contracts.CURVE_TRI_CRV_POOL);
             cs.push(Contracts.CURVE_3CRYPTO_POOL);
+            cs.push(Contracts.CONVEX_BOOSTER);
             cs.push(Contracts.CONVEX_TRI_CRV_POOL);
             cs.push(Contracts.CONVEX_3CRYPTO_POOL);
             cs.push(Contracts.YEARN_WETH_VAULT);

@@ -472,6 +472,7 @@ contract CONFIG_MAINNET_USDC_V3 is IPoolV3DeployConfig {
             cs.push(Contracts.CURVE_CRVUSD_USDT_POOL);
             cs.push(Contracts.CURVE_CRVUSD_FRAX_POOL);
             cs.push(Contracts.CURVE_MIM_POOL);
+            cs.push(Contracts.CONVEX_BOOSTER);
             cs.push(Contracts.CONVEX_FRAX_USDC_POOL);
             cs.push(Contracts.CONVEX_CRVUSD_USDC_POOL);
             cs.push(Contracts.CONVEX_CRVUSD_USDT_POOL);

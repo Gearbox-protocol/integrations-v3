@@ -349,10 +349,6 @@ const farmCreditManager: CreditManagerV3DeployConfig = {
   poolLimit: (BigInt(3e6) * POOL_DECIMALS) / POOL_DIVIDER,
   collateralTokens: [
     {
-      token: "CRV",
-      lt: 9000,
-    },
-    {
       token: "WBTC",
       lt: 9000,
     },
@@ -360,7 +356,10 @@ const farmCreditManager: CreditManagerV3DeployConfig = {
       token: "STETH",
       lt: 9000,
     },
-
+    {
+      token: "USDT",
+      lt: 9000,
+    },
     // Yearn
     { token: "yvWETH", lt: 9000 },
 
@@ -394,6 +393,7 @@ const farmCreditManager: CreditManagerV3DeployConfig = {
     { contract: "CURVE_3CRYPTO_POOL" },
 
     // Convex
+    { contract: "CONVEX_BOOSTER" },
     { contract: "CONVEX_TRI_CRV_POOL" },
     { contract: "CONVEX_3CRYPTO_POOL" },
 

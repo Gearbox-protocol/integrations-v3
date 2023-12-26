@@ -431,6 +431,7 @@ const farmCreditManager: CreditManagerV3DeployConfig = {
     { contract: "CURVE_MIM_POOL" },
 
     // Convex
+    { contract: "CONVEX_BOOSTER" },
     { contract: "CONVEX_FRAX_USDC_POOL" },
     { contract: "CONVEX_CRVUSD_USDC_POOL" },
     { contract: "CONVEX_CRVUSD_USDT_POOL" },

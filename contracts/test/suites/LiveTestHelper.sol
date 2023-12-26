@@ -4,7 +4,9 @@
 pragma solidity ^0.8.10;
 
 import {ICreditManagerV3} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditManagerV3.sol";
+import {ICreditFacadeV3} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacadeV3.sol";
 import {IVersion} from "@gearbox-protocol/core-v2/contracts/interfaces/IVersion.sol";
+import {DegenNFTV2} from "@gearbox-protocol/core-v2/contracts/tokens/DegenNFTV2.sol";
 
 import {Tokens} from "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
 import {SupportedContracts, Contracts} from "@gearbox-protocol/sdk-gov/contracts/SupportedContracts.sol";
@@ -127,6 +129,15 @@ contract LiveTestHelper is IntegrationTestHelper {
 
             adapterDeployer.connectAdapters();
             _configureAdapters(address(creditManagers[i]), config.creditManagers()[i]);
+
+            address degenNFT = ICreditFacadeV3(ICreditManagerV3(creditManagers[i]).creditFacade()).degenNFT();
+
+            if (degenNFT != address(0)) {
+                address minter = DegenNFTV2(degenNFT).minter();
+
+                vm.prank(minter);
+                DegenNFTV2(degenNFT).mint(USER, 1000);
+            }
         }
     }
 
