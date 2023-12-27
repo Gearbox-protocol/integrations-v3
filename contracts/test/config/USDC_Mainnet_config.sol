@@ -55,6 +55,7 @@ contract CONFIG_MAINNET_USDC_V3 is IPoolV3DeployConfig {
         _gaugeRates.push(GaugeRate({token: Tokens.DAI, minRate: 4, maxRate: 40}));
         _gaugeRates.push(GaugeRate({token: Tokens.FRAX, minRate: 4, maxRate: 40}));
         _gaugeRates.push(GaugeRate({token: Tokens.USDT, minRate: 4, maxRate: 40}));
+        _gaugeRates.push(GaugeRate({token: Tokens.crvUSD, minRate: 4, maxRate: 40}));
         _gaugeRates.push(GaugeRate({token: Tokens.MIM, minRate: 4, maxRate: 40}));
         _gaugeRates.push(GaugeRate({token: Tokens.MKR, minRate: 80, maxRate: 24_00}));
         _gaugeRates.push(GaugeRate({token: Tokens.UNI, minRate: 80, maxRate: 24_00}));
@@ -64,8 +65,8 @@ contract CONFIG_MAINNET_USDC_V3 is IPoolV3DeployConfig {
         _gaugeRates.push(GaugeRate({token: Tokens.CVX, minRate: 2_40, maxRate: 40_00}));
         _gaugeRates.push(GaugeRate({token: Tokens.FXS, minRate: 2_40, maxRate: 40_00}));
         _gaugeRates.push(GaugeRate({token: Tokens.APE, minRate: 2_40, maxRate: 40_00}));
-        _gaugeRates.push(GaugeRate({token: Tokens.yvWETH, minRate: 4, maxRate: 12_00}));
-        _gaugeRates.push(GaugeRate({token: Tokens.yvWBTC, minRate: 4, maxRate: 12_00}));
+        _gaugeRates.push(GaugeRate({token: Tokens.yvWETH, minRate: 1, maxRate: 15_00}));
+        _gaugeRates.push(GaugeRate({token: Tokens.yvWBTC, minRate: 1, maxRate: 15_00}));
         _gaugeRates.push(GaugeRate({token: Tokens.sDAI, minRate: 5, maxRate: 5_00}));
         _gaugeRates.push(GaugeRate({token: Tokens.yvUSDC, minRate: 50, maxRate: 5_00}));
         _gaugeRates.push(GaugeRate({token: Tokens.yvDAI, minRate: 50, maxRate: 5_00}));
@@ -80,6 +81,7 @@ contract CONFIG_MAINNET_USDC_V3 is IPoolV3DeployConfig {
         _quotaLimits.push(PoolQuotaLimit({token: Tokens.DAI, quotaIncreaseFee: 0, limit: 30_000_000_000_000}));
         _quotaLimits.push(PoolQuotaLimit({token: Tokens.FRAX, quotaIncreaseFee: 0, limit: 30_000_000_000_000}));
         _quotaLimits.push(PoolQuotaLimit({token: Tokens.USDT, quotaIncreaseFee: 0, limit: 30_000_000_000_000}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.crvUSD, quotaIncreaseFee: 0, limit: 30_000_000_000_000}));
         _quotaLimits.push(PoolQuotaLimit({token: Tokens.MIM, quotaIncreaseFee: 0, limit: 4_000_000_000_000}));
         _quotaLimits.push(PoolQuotaLimit({token: Tokens.MKR, quotaIncreaseFee: 1, limit: 3_000_000_000_000}));
         _quotaLimits.push(PoolQuotaLimit({token: Tokens.UNI, quotaIncreaseFee: 1, limit: 5_000_000_000_000}));
@@ -89,8 +91,8 @@ contract CONFIG_MAINNET_USDC_V3 is IPoolV3DeployConfig {
         _quotaLimits.push(PoolQuotaLimit({token: Tokens.CVX, quotaIncreaseFee: 1, limit: 2_500_000_000_000}));
         _quotaLimits.push(PoolQuotaLimit({token: Tokens.FXS, quotaIncreaseFee: 1, limit: 2_000_000_000_000}));
         _quotaLimits.push(PoolQuotaLimit({token: Tokens.APE, quotaIncreaseFee: 1, limit: 500_000_000_000}));
-        _quotaLimits.push(PoolQuotaLimit({token: Tokens.yvWETH, quotaIncreaseFee: 1, limit: 10_000_000_000_000}));
-        _quotaLimits.push(PoolQuotaLimit({token: Tokens.yvWBTC, quotaIncreaseFee: 1, limit: 10_000_000_000_000}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.yvWETH, quotaIncreaseFee: 1, limit: 30_000_000_000_000}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.yvWBTC, quotaIncreaseFee: 1, limit: 1_000_000_000_000}));
         _quotaLimits.push(PoolQuotaLimit({token: Tokens.sDAI, quotaIncreaseFee: 0, limit: 30_000_000_000_000}));
         _quotaLimits.push(PoolQuotaLimit({token: Tokens.yvUSDC, quotaIncreaseFee: 0, limit: 4_000_000_000_000}));
         _quotaLimits.push(PoolQuotaLimit({token: Tokens.yvDAI, quotaIncreaseFee: 0, limit: 7_000_000_000_000}));
@@ -413,33 +415,13 @@ contract CONFIG_MAINNET_USDC_V3 is IPoolV3DeployConfig {
 
             cts.push(CollateralTokenHuman({token: Tokens.yvDAI, lt: 90_00}));
 
-            cts.push(CollateralTokenHuman({token: Tokens.crvUSDUSDC, lt: 87_00}));
-
-            cts.push(CollateralTokenHuman({token: Tokens.cvxcrvUSDUSDC, lt: 87_00}));
-
             cts.push(CollateralTokenHuman({token: Tokens.stkcvxcrvUSDUSDC, lt: 87_00}));
-
-            cts.push(CollateralTokenHuman({token: Tokens.crvUSDUSDT, lt: 87_00}));
-
-            cts.push(CollateralTokenHuman({token: Tokens.cvxcrvUSDUSDT, lt: 87_00}));
 
             cts.push(CollateralTokenHuman({token: Tokens.stkcvxcrvUSDUSDT, lt: 87_00}));
 
-            cts.push(CollateralTokenHuman({token: Tokens.crvUSDFRAX, lt: 87_00}));
-
-            cts.push(CollateralTokenHuman({token: Tokens.cvxcrvUSDFRAX, lt: 87_00}));
-
             cts.push(CollateralTokenHuman({token: Tokens.stkcvxcrvUSDFRAX, lt: 87_00}));
 
-            cts.push(CollateralTokenHuman({token: Tokens.MIM_3LP3CRV, lt: 87_00}));
-
-            cts.push(CollateralTokenHuman({token: Tokens.cvxMIM_3LP3CRV, lt: 87_00}));
-
             cts.push(CollateralTokenHuman({token: Tokens.stkcvxMIM_3LP3CRV, lt: 87_00}));
-
-            cts.push(CollateralTokenHuman({token: Tokens.crvFRAX, lt: 87_00}));
-
-            cts.push(CollateralTokenHuman({token: Tokens.cvxcrvFRAX, lt: 87_00}));
 
             cts.push(CollateralTokenHuman({token: Tokens.stkcvxcrvFRAX, lt: 87_00}));
 
@@ -447,7 +429,27 @@ contract CONFIG_MAINNET_USDC_V3 is IPoolV3DeployConfig {
 
             cts.push(CollateralTokenHuman({token: Tokens.CVX, lt: 72_50}));
 
-            cts.push(CollateralTokenHuman({token: Tokens._3Crv, lt: 87_00}));
+            cts.push(CollateralTokenHuman({token: Tokens.crvUSDUSDC, lt: 0}));
+
+            cts.push(CollateralTokenHuman({token: Tokens.cvxcrvUSDUSDC, lt: 0}));
+
+            cts.push(CollateralTokenHuman({token: Tokens.crvUSDUSDT, lt: 0}));
+
+            cts.push(CollateralTokenHuman({token: Tokens.cvxcrvUSDUSDT, lt: 0}));
+
+            cts.push(CollateralTokenHuman({token: Tokens.crvUSDFRAX, lt: 0}));
+
+            cts.push(CollateralTokenHuman({token: Tokens.cvxcrvUSDFRAX, lt: 0}));
+
+            cts.push(CollateralTokenHuman({token: Tokens.MIM_3LP3CRV, lt: 0}));
+
+            cts.push(CollateralTokenHuman({token: Tokens.cvxMIM_3LP3CRV, lt: 0}));
+
+            cts.push(CollateralTokenHuman({token: Tokens.crvFRAX, lt: 0}));
+
+            cts.push(CollateralTokenHuman({token: Tokens.cvxcrvFRAX, lt: 0}));
+
+            cts.push(CollateralTokenHuman({token: Tokens._3Crv, lt: 0}));
 
             cts.push(CollateralTokenHuman({token: Tokens.crvCVXETH, lt: 0}));
 

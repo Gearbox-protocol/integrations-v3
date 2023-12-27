@@ -401,25 +401,11 @@ const farmCreditManager: CreditManagerV3DeployConfig = {
     { token: "yvUSDC", lt: 9000 },
     { token: "yvDAI", lt: 9000 },
 
-    // Curve + Convex
-    { token: "crvUSDUSDC", lt: 8700 },
-    { token: "cvxcrvUSDUSDC", lt: 8700 },
+    // Convex
     { token: "stkcvxcrvUSDUSDC", lt: 8700 },
-
-    { token: "crvUSDUSDT", lt: 8700 },
-    { token: "cvxcrvUSDUSDT", lt: 8700 },
     { token: "stkcvxcrvUSDUSDT", lt: 8700 },
-
-    { token: "crvUSDFRAX", lt: 8700 },
-    { token: "cvxcrvUSDFRAX", lt: 8700 },
     { token: "stkcvxcrvUSDFRAX", lt: 8700 },
-
-    { token: "MIM_3LP3CRV", lt: 8700 },
-    { token: "cvxMIM_3LP3CRV", lt: 8700 },
     { token: "stkcvxMIM_3LP3CRV", lt: 8700 },
-
-    { token: "crvFRAX", lt: 8700 },
-    { token: "cvxcrvFRAX", lt: 8700 },
     { token: "stkcvxcrvFRAX", lt: 8700 },
 
     // Rewards
@@ -427,7 +413,22 @@ const farmCreditManager: CreditManagerV3DeployConfig = {
     { token: "CVX", lt: 7250 },
 
     // Compatibility
-    { token: "3Crv", lt: 8700 },
+    { token: "crvUSDUSDC", lt: 0 },
+    { token: "cvxcrvUSDUSDC", lt: 0 },
+
+    { token: "crvUSDUSDT", lt: 0 },
+    { token: "cvxcrvUSDUSDT", lt: 0 },
+
+    { token: "crvUSDFRAX", lt: 0 },
+    { token: "cvxcrvUSDFRAX", lt: 0 },
+
+    { token: "MIM_3LP3CRV", lt: 0 },
+    { token: "cvxMIM_3LP3CRV", lt: 0 },
+
+    { token: "crvFRAX", lt: 0 },
+    { token: "cvxcrvFRAX", lt: 0 },
+
+    { token: "3Crv", lt: 0 },
     { token: "crvCVXETH", lt: 0 },
     { token: "crvUSDETHCRV", lt: 0 },
     { token: "SPELL", lt: 0 },
@@ -515,6 +516,12 @@ export const config: PoolV3DeployConfig = {
       limit: (BigInt(30e6) * POOL_DECIMALS) / POOL_DIVIDER,
     },
     USDT: {
+      minRate: 4,
+      maxRate: 40,
+      quotaIncreaseFee: 0,
+      limit: (BigInt(30e6) * POOL_DECIMALS) / POOL_DIVIDER,
+    },
+    crvUSD: {
       minRate: 4,
       maxRate: 40,
       quotaIncreaseFee: 0,

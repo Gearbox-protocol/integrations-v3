@@ -369,14 +369,8 @@ const farmCreditManager: CreditManagerV3DeployConfig = {
     // Yearn
     { token: "yvWETH", lt: 9000 },
 
-    // Curve + Convex
-
-    { token: "crvUSDETHCRV", lt: 8500 },
-    { token: "cvxcrvUSDETHCRV", lt: 8500 },
+    // Convex
     { token: "stkcvxcrvUSDETHCRV", lt: 8500 },
-
-    { token: "crvUSDTWBTCWETH", lt: 8500 },
-    { token: "cvxcrvUSDTWBTCWETH", lt: 8500 },
     { token: "stkcvxcrvUSDTWBTCWETH", lt: 8500 },
 
     // Rewards
@@ -384,6 +378,12 @@ const farmCreditManager: CreditManagerV3DeployConfig = {
     { token: "CVX", lt: 7250 },
 
     // Compatibility
+    { token: "crvUSDETHCRV", lt: 0 },
+    { token: "cvxcrvUSDETHCRV", lt: 0 },
+
+    { token: "crvUSDTWBTCWETH", lt: 0 },
+    { token: "cvxcrvUSDTWBTCWETH", lt: 0 },
+
     { token: "crvUSD", lt: 0 },
     { token: "crvCVXETH", lt: 0 },
     { token: "steCRV", lt: 0 },
@@ -454,6 +454,12 @@ export const config: PoolV3DeployConfig = {
       limit: (BigInt(30e6) * POOL_DECIMALS) / POOL_DIVIDER,
     },
     USDT: {
+      minRate: 4,
+      maxRate: 1200,
+      quotaIncreaseFee: 1,
+      limit: (BigInt(30e6) * POOL_DECIMALS) / POOL_DIVIDER,
+    },
+    crvUSD: {
       minRate: 4,
       maxRate: 1200,
       quotaIncreaseFee: 1,
