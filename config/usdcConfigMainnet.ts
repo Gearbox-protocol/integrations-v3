@@ -92,6 +92,19 @@ const tier1CreditManager: CreditManagerV3DeployConfig = {
       token: "yvWBTC",
       lt: 8700,
     },
+    // FARMS
+    {
+      token: "yvUSDC",
+      lt: 9000,
+    },
+    {
+      token: "yvDAI",
+      lt: 9000,
+    },
+    {
+      token: "sDAI",
+      lt: 9000,
+    },
     // COMPATIBILITY
     { token: "3Crv", lt: 0 },
     { token: "crvUSDTWBTCWETH", lt: 0 },
@@ -106,6 +119,9 @@ const tier1CreditManager: CreditManagerV3DeployConfig = {
     { contract: "CURVE_STETH_GATEWAY" },
     { contract: "YEARN_WETH_VAULT" },
     { contract: "YEARN_WBTC_VAULT" },
+    { contract: "YEARN_USDC_VAULT" },
+    { contract: "YEARN_DAI_VAULT" },
+    { contract: "MAKER_DSR_VAULT" },
   ],
 };
 
@@ -319,8 +335,137 @@ const tier3CreditManager: CreditManagerV3DeployConfig = {
   ],
 };
 
+const farmUniV3Config: UniV3Config = {
+  contract: "UNISWAP_V3_ROUTER",
+  allowed: [
+    { token0: "USDC", token1: "WETH", fee: 500 },
+    { token0: "DAI", token1: "USDC", fee: 100 },
+    { token0: "FRAX", token1: "USDC", fee: 500 },
+    { token0: "USDC", token1: "WETH", fee: 3000 },
+    { token0: "WETH", token1: "USDT", fee: 3000 },
+    { token0: "DAI", token1: "USDC", fee: 500 },
+    { token0: "WETH", token1: "USDT", fee: 500 },
+    { token0: "USDC", token1: "USDT", fee: 100 },
+    { token0: "DAI", token1: "FRAX", fee: 500 },
+    { token0: "DAI", token1: "WETH", fee: 3000 },
+    { token0: "USDC", token1: "USDT", fee: 500 },
+    { token0: "DAI", token1: "WETH", fee: 500 },
+    { token0: "USDC", token1: "WETH", fee: 10000 },
+    { token0: "WETH", token1: "CRV", fee: 3000 },
+    { token0: "WETH", token1: "CRV", fee: 10000 },
+    { token0: "WETH", token1: "CVX", fee: 10000 },
+  ],
+};
+
+const farmCreditManager: CreditManagerV3DeployConfig = {
+  name: "Farm USDC",
+  degenNft: true,
+  expirationDate: undefined,
+  minDebt: (BigInt(2e4) * POOL_DECIMALS) / POOL_DIVIDER,
+  maxDebt: (BigInt(1e6) * POOL_DECIMALS) / POOL_DIVIDER,
+  feeInterest: 2500,
+  feeLiquidation: 150,
+  liquidationPremium: 400,
+  feeLiquidationExpired: 100,
+  liquidationPremiumExpired: 200,
+  poolLimit: (BigInt(3e6) * POOL_DECIMALS) / POOL_DIVIDER,
+  collateralTokens: [
+    {
+      token: "WETH",
+      lt: 9000,
+    },
+    {
+      token: "DAI",
+      lt: 9000,
+    },
+    {
+      token: "USDT",
+      lt: 9000,
+    },
+    {
+      token: "FRAX",
+      lt: 9000,
+    },
+    {
+      token: "crvUSD",
+      lt: 9000,
+    },
+    {
+      token: "MIM",
+      lt: 9000,
+    },
+    // ERC4626
+    { token: "sDAI", lt: 9000 },
+
+    // Yearn
+    { token: "yvUSDC", lt: 9000 },
+    { token: "yvDAI", lt: 9000 },
+
+    // Convex
+    { token: "stkcvxcrvUSDUSDC", lt: 8700 },
+    { token: "stkcvxcrvUSDUSDT", lt: 8700 },
+    { token: "stkcvxcrvUSDFRAX", lt: 8700 },
+    { token: "stkcvxMIM_3LP3CRV", lt: 8700 },
+    { token: "stkcvxcrvFRAX", lt: 8700 },
+
+    // Rewards
+    { token: "CRV", lt: 7250 },
+    { token: "CVX", lt: 7250 },
+
+    // Compatibility
+    { token: "crvUSDUSDC", lt: 0 },
+    { token: "cvxcrvUSDUSDC", lt: 0 },
+
+    { token: "crvUSDUSDT", lt: 0 },
+    { token: "cvxcrvUSDUSDT", lt: 0 },
+
+    { token: "crvUSDFRAX", lt: 0 },
+    { token: "cvxcrvUSDFRAX", lt: 0 },
+
+    { token: "MIM_3LP3CRV", lt: 0 },
+    { token: "cvxMIM_3LP3CRV", lt: 0 },
+
+    { token: "crvFRAX", lt: 0 },
+    { token: "cvxcrvFRAX", lt: 0 },
+
+    { token: "3Crv", lt: 0 },
+    { token: "crvCVXETH", lt: 0 },
+    { token: "crvUSDETHCRV", lt: 0 },
+    { token: "SPELL", lt: 0 },
+  ],
+  adapters: [
+    // Swapping
+    farmUniV3Config,
+    { contract: "CURVE_CVXETH_POOL" },
+    { contract: "CURVE_TRI_CRV_POOL" },
+
+    // Curve
+    { contract: "CURVE_3CRV_POOL" },
+    { contract: "CURVE_FRAX_USDC_POOL" },
+    { contract: "CURVE_CRVUSD_USDC_POOL" },
+    { contract: "CURVE_CRVUSD_USDT_POOL" },
+    { contract: "CURVE_CRVUSD_FRAX_POOL" },
+    { contract: "CURVE_MIM_POOL" },
+
+    // Convex
+    { contract: "CONVEX_BOOSTER" },
+    { contract: "CONVEX_FRAX_USDC_POOL" },
+    { contract: "CONVEX_CRVUSD_USDC_POOL" },
+    { contract: "CONVEX_CRVUSD_USDT_POOL" },
+    { contract: "CONVEX_CRVUSD_FRAX_POOL" },
+    { contract: "CONVEX_MIM3CRV_POOL" },
+
+    // Yearn
+    { contract: "YEARN_USDC_VAULT" },
+    { contract: "YEARN_DAI_VAULT" },
+
+    // ERC4626
+    { contract: "MAKER_DSR_VAULT" },
+  ],
+};
+
 export const config: PoolV3DeployConfig = {
-  id: "mainnet-usdc-mt-v3",
+  id: "mainnet-usdc-v3",
   symbol: "dUSDCV3",
   name: "Trade USDC v3",
   network: "Mainnet",
@@ -338,6 +483,8 @@ export const config: PoolV3DeployConfig = {
     isBorrowingMoreU2Forbidden: true,
   },
   ratesAndLimits: {
+    // TRADEABLE TOKENS
+
     WBTC: {
       minRate: 4,
       maxRate: 1200,
@@ -374,11 +521,23 @@ export const config: PoolV3DeployConfig = {
       quotaIncreaseFee: 1,
       limit: (BigInt(30e6) * POOL_DECIMALS) / POOL_DIVIDER,
     },
+    crvUSD: {
+      minRate: 4,
+      maxRate: 1200,
+      quotaIncreaseFee: 1,
+      limit: (BigInt(30e6) * POOL_DECIMALS) / POOL_DIVIDER,
+    },
+    MIM: {
+      minRate: 4,
+      maxRate: 1200,
+      quotaIncreaseFee: 1,
+      limit: (BigInt(4e6) * POOL_DECIMALS) / POOL_DIVIDER,
+    },
     MKR: {
       minRate: 80,
       maxRate: 2400,
       quotaIncreaseFee: 1,
-      limit: (BigInt(5e6) * POOL_DECIMALS) / POOL_DIVIDER,
+      limit: (BigInt(3e6) * POOL_DECIMALS) / POOL_DIVIDER,
     },
     UNI: {
       minRate: 80,
@@ -396,7 +555,7 @@ export const config: PoolV3DeployConfig = {
       minRate: 80,
       maxRate: 2400,
       quotaIncreaseFee: 1,
-      limit: (BigInt(5e6) * POOL_DECIMALS) / POOL_DIVIDER,
+      limit: (BigInt(2.5e6) * POOL_DECIMALS) / POOL_DIVIDER,
     },
     CRV: {
       minRate: 240,
@@ -414,27 +573,83 @@ export const config: PoolV3DeployConfig = {
       minRate: 240,
       maxRate: 4000,
       quotaIncreaseFee: 1,
-      limit: (BigInt(2.5e6) * POOL_DECIMALS) / POOL_DIVIDER,
+      limit: (BigInt(2e6) * POOL_DECIMALS) / POOL_DIVIDER,
     },
     APE: {
       minRate: 240,
       maxRate: 4000,
       quotaIncreaseFee: 1,
-      limit: (BigInt(2.5e6) * POOL_DECIMALS) / POOL_DIVIDER,
+      limit: (BigInt(5e5) * POOL_DECIMALS) / POOL_DIVIDER,
     },
     yvWETH: {
-      minRate: 4,
-      maxRate: 1200,
+      minRate: 1,
+      maxRate: 1500,
       quotaIncreaseFee: 1,
-      limit: (BigInt(10e6) * POOL_DECIMALS) / POOL_DIVIDER,
+      limit: (BigInt(30e6) * POOL_DECIMALS) / POOL_DIVIDER,
     },
     yvWBTC: {
-      minRate: 4,
-      maxRate: 1200,
+      minRate: 1,
+      maxRate: 1500,
       quotaIncreaseFee: 1,
-      limit: (BigInt(10e6) * POOL_DECIMALS) / POOL_DIVIDER,
+      limit: (BigInt(1e6) * POOL_DECIMALS) / POOL_DIVIDER,
+    },
+
+    // FARMS
+
+    sDAI: {
+      minRate: 5,
+      maxRate: 500,
+      quotaIncreaseFee: 0,
+      limit: (BigInt(30e6) * POOL_DECIMALS) / POOL_DIVIDER,
+    },
+    yvUSDC: {
+      minRate: 50,
+      maxRate: 500,
+      quotaIncreaseFee: 0,
+      limit: (BigInt(4e6) * POOL_DECIMALS) / POOL_DIVIDER,
+    },
+    yvDAI: {
+      minRate: 50,
+      maxRate: 500,
+      quotaIncreaseFee: 0,
+      limit: (BigInt(7e6) * POOL_DECIMALS) / POOL_DIVIDER,
+    },
+    stkcvxcrvUSDUSDC: {
+      minRate: 100,
+      maxRate: 520,
+      quotaIncreaseFee: 0,
+      limit: (BigInt(9.6e6) * POOL_DECIMALS) / POOL_DIVIDER,
+    },
+    stkcvxcrvUSDUSDT: {
+      minRate: 100,
+      maxRate: 700,
+      quotaIncreaseFee: 0,
+      limit: (BigInt(7.8e6) * POOL_DECIMALS) / POOL_DIVIDER,
+    },
+    stkcvxMIM_3LP3CRV: {
+      minRate: 100,
+      maxRate: 870,
+      quotaIncreaseFee: 0,
+      limit: (BigInt(6.5e6) * POOL_DECIMALS) / POOL_DIVIDER,
+    },
+    stkcvxcrvUSDFRAX: {
+      minRate: 100,
+      maxRate: 750,
+      quotaIncreaseFee: 0,
+      limit: (BigInt(4.5e6) * POOL_DECIMALS) / POOL_DIVIDER,
+    },
+    stkcvxcrvFRAX: {
+      minRate: 100,
+      maxRate: 240,
+      quotaIncreaseFee: 0,
+      limit: (BigInt(20.4e6) * POOL_DECIMALS) / POOL_DIVIDER,
     },
   },
-  creditManagers: [tier1CreditManager, tier2CreditManager, tier3CreditManager],
+  creditManagers: [
+    tier1CreditManager,
+    tier2CreditManager,
+    tier3CreditManager,
+    farmCreditManager,
+  ],
   supportsQuotas: true,
 };

@@ -19,8 +19,8 @@ import {
     BalancerPool
 } from "@gearbox-protocol/core-v3/contracts/test/interfaces/ICreditConfig.sol";
 
-contract CONFIG_MAINNET_USDC_LEV_V3 is IPoolV3DeployConfig {
-    string public constant id = "mainnet-usdc-lev-v3";
+contract CONFIG_MAINNET_USDC_TEST_V3 is IPoolV3DeployConfig {
+    string public constant id = "mainnet-usdc-test-v3";
     uint256 public constant chainId = 1;
     Tokens public constant underlying = Tokens.USDC;
     bool public constant supportsQuotas = true;
@@ -28,8 +28,8 @@ contract CONFIG_MAINNET_USDC_LEV_V3 is IPoolV3DeployConfig {
 
     // POOL
 
-    string public constant symbol = "dUSDC-lev-V3";
-    string public constant name = "Farm USDC v3";
+    string public constant symbol = "dUSDC-test-V3";
+    string public constant name = "Test USDC v3";
 
     PoolV3DeployParams _poolParams = PoolV3DeployParams({withdrawalFee: 0, totalDebtLimit: 100_000_000_000_000});
 
