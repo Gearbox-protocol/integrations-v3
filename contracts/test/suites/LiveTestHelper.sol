@@ -26,6 +26,8 @@ import {CONFIG_MAINNET_USDC_V3} from "../config/USDC_Mainnet_config.sol";
 import {CONFIG_MAINNET_WBTC_V3} from "../config/WBTC_Mainnet_config.sol";
 import {CONFIG_MAINNET_WETH_V3} from "../config/WETH_Mainnet_config.sol";
 
+import {CONFIG_OPTIMISM_USDC_V3} from "../config/USDC_Optimism_config.sol";
+
 import {CONFIG_MAINNET_USDC_TEST_V3} from "../config/TEST_USDC_Mainnet_config.sol";
 
 import {IConvexV1BoosterAdapter} from "../../interfaces/convex/IConvexV1BoosterAdapter.sol";
@@ -45,6 +47,7 @@ contract LiveTestHelper is IntegrationTestHelper {
         addDeployConfig(new CONFIG_MAINNET_USDC_V3());
         addDeployConfig(new CONFIG_MAINNET_WBTC_V3());
         addDeployConfig(new CONFIG_MAINNET_WETH_V3());
+        addDeployConfig(new CONFIG_OPTIMISM_USDC_V3());
         addDeployConfig(new CONFIG_MAINNET_USDC_TEST_V3());
     }
 

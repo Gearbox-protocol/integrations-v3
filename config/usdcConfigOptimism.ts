@@ -85,12 +85,12 @@ const tier1CreditManager: CreditManagerV3DeployConfig = {
       lt: 9400,
     },
     // COMPATIBILITY
-    { token: "wstETHCRV", lt: 0 },
+    // { token: "wstETHCRV", lt: 0 },
   ],
   adapters: [
     tier1UniV3Config,
     tier1BalancerConfig,
-    { contract: "CURVE_ETH_WSTETH_GATEWAY" },
+    // { contract: "CURVE_ETH_WSTETH_GATEWAY" }, THIS NEEDS TO BE DEPLOYED !!
     { contract: "YEARN_WETH_VAULT" },
     { contract: "YEARN_OP_VAULT" },
   ],
@@ -164,11 +164,11 @@ const farmCreditManager: CreditManagerV3DeployConfig = {
   collateralTokens: [
     {
       token: "DAI",
-      lt: 9000,
+      lt: 9800,
     },
     {
       token: "USDT",
-      lt: 9000,
+      lt: 9800,
     },
 
     // Yearn
@@ -190,10 +190,10 @@ const farmCreditManager: CreditManagerV3DeployConfig = {
 };
 
 export const config: PoolV3DeployConfig = {
-  id: "mainnet-usdc-v3",
+  id: "optimism-usdc-v3",
   symbol: "dUSDCV3",
   name: "Trade USDC v3",
-  network: "Mainnet",
+  network: "Optimism",
   underlying: "USDC",
   accountAmount: BigInt(10_000) * POOL_DECIMALS,
   withdrawalFee: 0,

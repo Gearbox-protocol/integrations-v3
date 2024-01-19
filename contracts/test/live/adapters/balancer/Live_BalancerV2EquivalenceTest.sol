@@ -563,7 +563,7 @@ contract Live_BalancerV2EquivalenceTest is LiveTestHelper {
 
         if (balancerVaultAdapter == address(0)) return;
 
-        for (uint256 i = 0; i < tokenTestSuite.tokenCount(); ++i) {
+        for (uint256 i = 0; i < uint256(type(Tokens).max); ++i) {
             if (tokenTestSuite.tokenTypes(Tokens(i)) != TokenType.BALANCER_LP_TOKEN) continue;
 
             address pool = tokenTestSuite.addressOf(Tokens(i));
