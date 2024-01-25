@@ -16,7 +16,8 @@ import {
     CollateralTokenHuman,
     UniswapV2Pair,
     UniswapV3Pair,
-    BalancerPool
+    BalancerPool,
+    VelodromeV2Pool
 } from "@gearbox-protocol/core-v3/contracts/test/interfaces/ICreditConfig.sol";
 
 contract CONFIG_OPTIMISM_USDC_V3 is IPoolV3DeployConfig {
@@ -131,6 +132,16 @@ contract CONFIG_OPTIMISM_USDC_V3 is IPoolV3DeployConfig {
 
             bp.push(
                 BalancerPool({poolId: 0x39965c9dab5448482cf7e002f583c812ceb53046000100000000000000000003, status: 2})
+            );
+            cs.push(Contracts.VELODROME_V2_ROUTER);
+            VelodromeV2Pool[] storage vv2p = cp.velodromeV2Pools;
+            vv2p.push(
+                VelodromeV2Pool({
+                    token0: Tokens.OP,
+                    token1: Tokens.USDC,
+                    stable: false,
+                    factory: 0xF1046053aa5682b4F9a81b5481394DA16BE5FF5a
+                })
             );
             cs.push(Contracts.YEARN_WETH_VAULT);
             cs.push(Contracts.YEARN_OP_VAULT);
