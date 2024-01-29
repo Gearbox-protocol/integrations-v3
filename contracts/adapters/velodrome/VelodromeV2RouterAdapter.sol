@@ -27,7 +27,9 @@ contract VelodromeV2RouterAdapter is AbstractAdapter, IVelodromeV2RouterAdapter 
     /// @notice Constructor
     /// @param _creditManager Credit manager address
     /// @param _router Velodrome V2 Router address
-    constructor(address _creditManager, address _router) AbstractAdapter(_creditManager, _router) {}
+    constructor(address _creditManager, address _router)
+        AbstractAdapter(_creditManager, _router) // U: [VELO2-01]
+    {}
 
     /// @notice Swap given amount of input token to output token
     /// @param amountIn Amount of input token to spend
@@ -44,12 +46,12 @@ contract VelodromeV2RouterAdapter is AbstractAdapter, IVelodromeV2RouterAdapter 
     )
         external
         override
-        creditFacadeOnly // U:[UNI2-2]
+        creditFacadeOnly // U: [VELO2-02]
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
         address creditAccount = _creditAccount();
 
-        (bool valid, address tokenIn, address tokenOut) = _validatePath(routes);
+        (bool valid, address tokenIn, address tokenOut) = _validatePath(routes); // U: [VELO2-06]
         if (!valid) revert InvalidPathException();
 
         // calling `_executeSwap` because we need to check if output token is registered as collateral token in the CM
@@ -60,7 +62,7 @@ contract VelodromeV2RouterAdapter is AbstractAdapter, IVelodromeV2RouterAdapter 
                 IVelodromeV2Router.swapExactTokensForTokens, (amountIn, amountOutMin, routes, creditAccount, deadline)
             ),
             false
-        );
+        ); // U: [VELO2-03]
     }
 
     /// @notice Swap the entire balance of input token to output token, except the specified amount
@@ -73,7 +75,12 @@ contract VelodromeV2RouterAdapter is AbstractAdapter, IVelodromeV2RouterAdapter 
         uint256 rateMinRAY,
         Route[] calldata routes,
         uint256 deadline
-    ) external override creditFacadeOnly returns (uint256 tokensToEnable, uint256 tokensToDisable) {
+    )
+        external
+        override
+        creditFacadeOnly // U: [VELO2-02]
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+    {
         address creditAccount = _creditAccount();
 
         address tokenIn;
@@ -81,7 +88,7 @@ contract VelodromeV2RouterAdapter is AbstractAdapter, IVelodromeV2RouterAdapter 
 
         {
             bool valid;
-            (valid, tokenIn, tokenOut) = _validatePath(routes);
+            (valid, tokenIn, tokenOut) = _validatePath(routes); // U: [VELO2-06]
             if (!valid) revert InvalidPathException();
         }
 
@@ -89,7 +96,7 @@ contract VelodromeV2RouterAdapter is AbstractAdapter, IVelodromeV2RouterAdapter 
         if (amount <= leftoverAmount) return (0, 0);
 
         unchecked {
-            amount -= leftoverAmount;
+            amount -= leftoverAmount; // U: [VELO2-04]
         }
 
         // calling `_executeSwap` because we need to check if output token is registered as collateral token in the CM
@@ -101,7 +108,7 @@ contract VelodromeV2RouterAdapter is AbstractAdapter, IVelodromeV2RouterAdapter 
                 (amount, (amount * rateMinRAY) / RAY, routes, creditAccount, deadline)
             ),
             leftoverAmount <= 1
-        );
+        ); // U: [VELO2-04]
     }
 
     // ------------- //
@@ -126,8 +133,8 @@ contract VelodromeV2RouterAdapter is AbstractAdapter, IVelodromeV2RouterAdapter 
         unchecked {
             for (uint256 i; i < len; ++i) {
                 (address token0, address token1) = _sortTokens(pools[i].token0, pools[i].token1);
-                _poolStatus[token0][token1][pools[i].stable][pools[i].factory] = pools[i].allowed;
-                emit SetPoolStatus(token0, token1, pools[i].stable, pools[i].factory, pools[i].allowed);
+                _poolStatus[token0][token1][pools[i].stable][pools[i].factory] = pools[i].allowed; // U: [VELO2-05]
+                emit SetPoolStatus(token0, token1, pools[i].stable, pools[i].factory, pools[i].allowed); // U: [VELO2-05]
             }
         }
     }
