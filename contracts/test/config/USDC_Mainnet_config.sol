@@ -16,7 +16,8 @@ import {
     CollateralTokenHuman,
     UniswapV2Pair,
     UniswapV3Pair,
-    BalancerPool
+    BalancerPool,
+    VelodromeV2Pool
 } from "@gearbox-protocol/core-v3/contracts/test/interfaces/ICreditConfig.sol";
 
 contract CONFIG_MAINNET_USDC_V3 is IPoolV3DeployConfig {
@@ -56,7 +57,6 @@ contract CONFIG_MAINNET_USDC_V3 is IPoolV3DeployConfig {
         _gaugeRates.push(GaugeRate({token: Tokens.FRAX, minRate: 4, maxRate: 12_00}));
         _gaugeRates.push(GaugeRate({token: Tokens.USDT, minRate: 4, maxRate: 12_00}));
         _gaugeRates.push(GaugeRate({token: Tokens.crvUSD, minRate: 4, maxRate: 12_00}));
-        _gaugeRates.push(GaugeRate({token: Tokens.MIM, minRate: 4, maxRate: 12_00}));
         _gaugeRates.push(GaugeRate({token: Tokens.MKR, minRate: 80, maxRate: 24_00}));
         _gaugeRates.push(GaugeRate({token: Tokens.UNI, minRate: 80, maxRate: 24_00}));
         _gaugeRates.push(GaugeRate({token: Tokens.LINK, minRate: 80, maxRate: 24_00}));
@@ -72,7 +72,6 @@ contract CONFIG_MAINNET_USDC_V3 is IPoolV3DeployConfig {
         _gaugeRates.push(GaugeRate({token: Tokens.yvDAI, minRate: 50, maxRate: 5_00}));
         _gaugeRates.push(GaugeRate({token: Tokens.stkcvxcrvUSDUSDC, minRate: 1_00, maxRate: 5_20}));
         _gaugeRates.push(GaugeRate({token: Tokens.stkcvxcrvUSDUSDT, minRate: 1_00, maxRate: 7_00}));
-        _gaugeRates.push(GaugeRate({token: Tokens.stkcvxMIM_3LP3CRV, minRate: 1_00, maxRate: 8_70}));
         _gaugeRates.push(GaugeRate({token: Tokens.stkcvxcrvUSDFRAX, minRate: 1_00, maxRate: 7_50}));
         _gaugeRates.push(GaugeRate({token: Tokens.stkcvxcrvFRAX, minRate: 1_00, maxRate: 2_40}));
         _quotaLimits.push(PoolQuotaLimit({token: Tokens.WBTC, quotaIncreaseFee: 1, limit: 30_000_000_000_000}));
@@ -82,7 +81,6 @@ contract CONFIG_MAINNET_USDC_V3 is IPoolV3DeployConfig {
         _quotaLimits.push(PoolQuotaLimit({token: Tokens.FRAX, quotaIncreaseFee: 1, limit: 30_000_000_000_000}));
         _quotaLimits.push(PoolQuotaLimit({token: Tokens.USDT, quotaIncreaseFee: 1, limit: 30_000_000_000_000}));
         _quotaLimits.push(PoolQuotaLimit({token: Tokens.crvUSD, quotaIncreaseFee: 1, limit: 30_000_000_000_000}));
-        _quotaLimits.push(PoolQuotaLimit({token: Tokens.MIM, quotaIncreaseFee: 1, limit: 4_000_000_000_000}));
         _quotaLimits.push(PoolQuotaLimit({token: Tokens.MKR, quotaIncreaseFee: 1, limit: 3_000_000_000_000}));
         _quotaLimits.push(PoolQuotaLimit({token: Tokens.UNI, quotaIncreaseFee: 1, limit: 5_000_000_000_000}));
         _quotaLimits.push(PoolQuotaLimit({token: Tokens.LINK, quotaIncreaseFee: 1, limit: 5_000_000_000_000}));
@@ -101,9 +99,6 @@ contract CONFIG_MAINNET_USDC_V3 is IPoolV3DeployConfig {
         );
         _quotaLimits.push(
             PoolQuotaLimit({token: Tokens.stkcvxcrvUSDUSDT, quotaIncreaseFee: 0, limit: 7_800_000_000_000})
-        );
-        _quotaLimits.push(
-            PoolQuotaLimit({token: Tokens.stkcvxMIM_3LP3CRV, quotaIncreaseFee: 0, limit: 6_500_000_000_000})
         );
         _quotaLimits.push(
             PoolQuotaLimit({token: Tokens.stkcvxcrvUSDFRAX, quotaIncreaseFee: 0, limit: 4_500_000_000_000})
@@ -407,8 +402,6 @@ contract CONFIG_MAINNET_USDC_V3 is IPoolV3DeployConfig {
 
             cts.push(CollateralTokenHuman({token: Tokens.crvUSD, lt: 90_00}));
 
-            cts.push(CollateralTokenHuman({token: Tokens.MIM, lt: 90_00}));
-
             cts.push(CollateralTokenHuman({token: Tokens.sDAI, lt: 90_00}));
 
             cts.push(CollateralTokenHuman({token: Tokens.yvUSDC, lt: 90_00}));
@@ -420,8 +413,6 @@ contract CONFIG_MAINNET_USDC_V3 is IPoolV3DeployConfig {
             cts.push(CollateralTokenHuman({token: Tokens.stkcvxcrvUSDUSDT, lt: 87_00}));
 
             cts.push(CollateralTokenHuman({token: Tokens.stkcvxcrvUSDFRAX, lt: 87_00}));
-
-            cts.push(CollateralTokenHuman({token: Tokens.stkcvxMIM_3LP3CRV, lt: 87_00}));
 
             cts.push(CollateralTokenHuman({token: Tokens.stkcvxcrvFRAX, lt: 87_00}));
 
@@ -440,10 +431,6 @@ contract CONFIG_MAINNET_USDC_V3 is IPoolV3DeployConfig {
             cts.push(CollateralTokenHuman({token: Tokens.crvUSDFRAX, lt: 0}));
 
             cts.push(CollateralTokenHuman({token: Tokens.cvxcrvUSDFRAX, lt: 0}));
-
-            cts.push(CollateralTokenHuman({token: Tokens.MIM_3LP3CRV, lt: 0}));
-
-            cts.push(CollateralTokenHuman({token: Tokens.cvxMIM_3LP3CRV, lt: 0}));
 
             cts.push(CollateralTokenHuman({token: Tokens.crvFRAX, lt: 0}));
 
@@ -482,13 +469,11 @@ contract CONFIG_MAINNET_USDC_V3 is IPoolV3DeployConfig {
             cs.push(Contracts.CURVE_CRVUSD_USDC_POOL);
             cs.push(Contracts.CURVE_CRVUSD_USDT_POOL);
             cs.push(Contracts.CURVE_CRVUSD_FRAX_POOL);
-            cs.push(Contracts.CURVE_MIM_POOL);
             cs.push(Contracts.CONVEX_BOOSTER);
             cs.push(Contracts.CONVEX_FRAX_USDC_POOL);
             cs.push(Contracts.CONVEX_CRVUSD_USDC_POOL);
             cs.push(Contracts.CONVEX_CRVUSD_USDT_POOL);
             cs.push(Contracts.CONVEX_CRVUSD_FRAX_POOL);
-            cs.push(Contracts.CONVEX_MIM3CRV_POOL);
             cs.push(Contracts.YEARN_USDC_VAULT);
             cs.push(Contracts.YEARN_DAI_VAULT);
             cs.push(Contracts.MAKER_DSR_VAULT);

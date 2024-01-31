@@ -390,10 +390,6 @@ const farmCreditManager: CreditManagerV3DeployConfig = {
       token: "crvUSD",
       lt: 9000,
     },
-    {
-      token: "MIM",
-      lt: 9000,
-    },
     // ERC4626
     { token: "sDAI", lt: 9000 },
 
@@ -405,7 +401,6 @@ const farmCreditManager: CreditManagerV3DeployConfig = {
     { token: "stkcvxcrvUSDUSDC", lt: 8700 },
     { token: "stkcvxcrvUSDUSDT", lt: 8700 },
     { token: "stkcvxcrvUSDFRAX", lt: 8700 },
-    { token: "stkcvxMIM_3LP3CRV", lt: 8700 },
     { token: "stkcvxcrvFRAX", lt: 8700 },
 
     // Rewards
@@ -421,9 +416,6 @@ const farmCreditManager: CreditManagerV3DeployConfig = {
 
     { token: "crvUSDFRAX", lt: 0 },
     { token: "cvxcrvUSDFRAX", lt: 0 },
-
-    { token: "MIM_3LP3CRV", lt: 0 },
-    { token: "cvxMIM_3LP3CRV", lt: 0 },
 
     { token: "crvFRAX", lt: 0 },
     { token: "cvxcrvFRAX", lt: 0 },
@@ -445,7 +437,6 @@ const farmCreditManager: CreditManagerV3DeployConfig = {
     { contract: "CURVE_CRVUSD_USDC_POOL" },
     { contract: "CURVE_CRVUSD_USDT_POOL" },
     { contract: "CURVE_CRVUSD_FRAX_POOL" },
-    { contract: "CURVE_MIM_POOL" },
 
     // Convex
     { contract: "CONVEX_BOOSTER" },
@@ -453,7 +444,6 @@ const farmCreditManager: CreditManagerV3DeployConfig = {
     { contract: "CONVEX_CRVUSD_USDC_POOL" },
     { contract: "CONVEX_CRVUSD_USDT_POOL" },
     { contract: "CONVEX_CRVUSD_FRAX_POOL" },
-    { contract: "CONVEX_MIM3CRV_POOL" },
 
     // Yearn
     { contract: "YEARN_USDC_VAULT" },
@@ -526,12 +516,6 @@ export const config: PoolV3DeployConfig = {
       maxRate: 1200,
       quotaIncreaseFee: 1,
       limit: (BigInt(30e6) * POOL_DECIMALS) / POOL_DIVIDER,
-    },
-    MIM: {
-      minRate: 4,
-      maxRate: 1200,
-      quotaIncreaseFee: 1,
-      limit: (BigInt(4e6) * POOL_DECIMALS) / POOL_DIVIDER,
     },
     MKR: {
       minRate: 80,
@@ -625,12 +609,6 @@ export const config: PoolV3DeployConfig = {
       maxRate: 700,
       quotaIncreaseFee: 0,
       limit: (BigInt(7.8e6) * POOL_DECIMALS) / POOL_DIVIDER,
-    },
-    stkcvxMIM_3LP3CRV: {
-      minRate: 100,
-      maxRate: 870,
-      quotaIncreaseFee: 0,
-      limit: (BigInt(6.5e6) * POOL_DECIMALS) / POOL_DIVIDER,
     },
     stkcvxcrvUSDFRAX: {
       minRate: 100,
