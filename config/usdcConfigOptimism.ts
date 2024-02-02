@@ -4,10 +4,14 @@ import {
   PoolV3DeployConfig,
   UniV2Config,
   UniV3Config,
+  VelodromeV2Config,
 } from "@gearbox-protocol/sdk-gov";
 
 const POOL_DECIMALS = BigInt(1e6);
 const POOL_DIVIDER = BigInt(1);
+
+const VELODROME_V2_DEFAULT_FACTORY =
+  "0xF1046053aa5682b4F9a81b5481394DA16BE5FF5a";
 
 const tier1UniV3Config: UniV3Config = {
   contract: "UNISWAP_V3_ROUTER",
@@ -38,6 +42,18 @@ const tier1BalancerConfig: BalancerVaultConfig = {
     {
       pool: "BPT_ROAD",
       status: 2,
+    },
+  ],
+};
+
+const tier1VelodromeConfig: VelodromeV2Config = {
+  contract: "VELODROME_V2_ROUTER",
+  allowed: [
+    {
+      token0: "OP",
+      token1: "USDC",
+      stable: false,
+      factory: VELODROME_V2_DEFAULT_FACTORY,
     },
   ],
 };
@@ -90,6 +106,7 @@ const tier1CreditManager: CreditManagerV3DeployConfig = {
   adapters: [
     tier1UniV3Config,
     tier1BalancerConfig,
+    tier1VelodromeConfig,
     // { contract: "CURVE_ETH_WSTETH_GATEWAY" }, THIS NEEDS TO BE DEPLOYED !!
     { contract: "YEARN_WETH_VAULT" },
     { contract: "YEARN_OP_VAULT" },

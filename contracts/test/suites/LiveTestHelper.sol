@@ -15,7 +15,8 @@ import {
     CreditManagerV3DeployParams,
     BalancerPool,
     UniswapV3Pair,
-    UniswapV2Pair
+    UniswapV2Pair,
+    VelodromeV2Pool
 } from "@gearbox-protocol/core-v3/contracts/test/interfaces/ICreditConfig.sol";
 
 import {PriceFeedDeployer} from "@gearbox-protocol/oracles-v3/contracts/test/suites/PriceFeedDeployer.sol";
@@ -34,9 +35,11 @@ import {IConvexV1BoosterAdapter} from "../../interfaces/convex/IConvexV1BoosterA
 import {BalancerV2VaultAdapter} from "../../adapters/balancer/BalancerV2VaultAdapter.sol";
 import {UniswapV2Adapter} from "../../adapters/uniswap/UniswapV2.sol";
 import {UniswapV3Adapter} from "../../adapters/uniswap/UniswapV3.sol";
+import {VelodromeV2RouterAdapter} from "../../adapters/velodrome/VelodromeV2RouterAdapter.sol";
 import {PoolStatus} from "../../interfaces/balancer/IBalancerV2VaultAdapter.sol";
 import {UniswapV2PairStatus} from "../../interfaces/uniswap/IUniswapV2Adapter.sol";
 import {UniswapV3PoolStatus} from "../../interfaces/uniswap/IUniswapV3Adapter.sol";
+import {VelodromeV2PoolStatus} from "../../interfaces/velodrome/IVelodromeV2RouterAdapter.sol";
 
 import "@gearbox-protocol/core-v3/contracts/test/lib/constants.sol";
 
@@ -67,46 +70,48 @@ contract LiveTestHelper is IntegrationTestHelper {
     }
 
     modifier attachOrLiveTest() {
-        try vm.envAddress("ATTACH_ADDRESS_PROVIDER") returns (address) {
-            _attachCore();
-            supportedContracts = new SupportedContracts(chainId);
+        if (chainId != 1337 && chainId != 31337) {
+            try vm.envAddress("ATTACH_ADDRESS_PROVIDER") returns (address) {
+                _attachCore();
+                supportedContracts = new SupportedContracts(chainId);
 
-            address creditManagerToAttach;
+                address creditManagerToAttach;
 
-            try vm.envAddress("ATTACH_CREDIT_MANAGER") returns (address val) {
-                creditManagerToAttach = val;
-            } catch {}
+                try vm.envAddress("ATTACH_CREDIT_MANAGER") returns (address val) {
+                    creditManagerToAttach = val;
+                } catch {}
 
-            if (creditManagerToAttach != address(0)) {
-                _attachCreditManager(creditManagerToAttach);
-                _;
-                console.log("Successfully ran tests on attached CM: %s", address(creditManager));
-            } else {
-                address[] memory cms = cr.getCreditManagers();
-                uint256 len = cms.length;
-                for (uint256 i = 0; i < len; ++i) {
-                    if (IVersion(cms[i]).version() >= 3_00) {
-                        uint256 snapshot = vm.snapshot();
-                        _attachCreditManager(cms[i]);
-                        _;
-                        console.log("Successfully ran tests on attached CM: %s", address(creditManager));
-                        vm.revertTo(snapshot);
+                if (creditManagerToAttach != address(0)) {
+                    _attachCreditManager(creditManagerToAttach);
+                    _;
+                    console.log("Successfully ran tests on attached CM: %s", address(creditManager));
+                } else {
+                    address[] memory cms = cr.getCreditManagers();
+                    uint256 len = cms.length;
+                    for (uint256 i = 0; i < len; ++i) {
+                        if (IVersion(cms[i]).version() >= 3_00) {
+                            uint256 snapshot = vm.snapshot();
+                            _attachCreditManager(cms[i]);
+                            _;
+                            console.log("Successfully ran tests on attached CM: %s", address(creditManager));
+                            vm.revertTo(snapshot);
+                        }
                     }
                 }
-            }
-        } catch {
-            try vm.envString("LIVE_TEST_CONFIG") returns (string memory id) {
-                _setupLiveCreditTest(id);
-
-                vm.prank(address(gauge));
-                poolQuotaKeeper.updateRates();
-
-                for (uint256 i = 0; i < creditManagers.length; ++i) {
-                    _attachCreditManager(address(creditManagers[i]));
-                    _;
-                }
             } catch {
-                revert("Neither attach AP nor live test config was defined.");
+                try vm.envString("LIVE_TEST_CONFIG") returns (string memory id) {
+                    _setupLiveCreditTest(id);
+
+                    vm.prank(address(gauge));
+                    poolQuotaKeeper.updateRates();
+
+                    for (uint256 i = 0; i < creditManagers.length; ++i) {
+                        _attachCreditManager(address(creditManagers[i]));
+                        _;
+                    }
+                } catch {
+                    revert("Neither attach AP nor live test config was defined.");
+                }
             }
         }
     }
@@ -250,6 +255,27 @@ contract LiveTestHelper is IntegrationTestHelper {
                 vm.prank(CONFIGURATOR);
                 UniswapV2Adapter(fraxAdapter).setPairStatusBatch(pairs);
             }
+        }
+        // VELODROME V2
+        VelodromeV2Pool[] memory velodromeV2Pools = creditManagerParams.velodromeV2Pools;
+
+        if (velodromeV2Pools.length != 0) {
+            VelodromeV2PoolStatus[] memory pools = new VelodromeV2PoolStatus[](velodromeV2Pools.length);
+
+            for (uint256 i = 0; i < velodromeV2Pools.length; ++i) {
+                pools[i] = VelodromeV2PoolStatus({
+                    token0: tokenTestSuite.addressOf(velodromeV2Pools[i].token0),
+                    token1: tokenTestSuite.addressOf(velodromeV2Pools[i].token1),
+                    stable: velodromeV2Pools[i].stable,
+                    factory: velodromeV2Pools[i].factory,
+                    allowed: true
+                });
+            }
+
+            address velodromeV2Adapter = getAdapter(creditManager, Contracts.VELODROME_V2_ROUTER);
+
+            vm.prank(CONFIGURATOR);
+            VelodromeV2RouterAdapter(velodromeV2Adapter).setPoolStatusBatch(pools);
         }
     }
 
