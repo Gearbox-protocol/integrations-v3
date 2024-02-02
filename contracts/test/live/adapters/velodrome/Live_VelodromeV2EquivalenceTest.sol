@@ -129,8 +129,6 @@ contract Live_VelodromeV2EquivalenceTest is LiveTestHelper {
     function test_live_VELO2ET_01_VelodromeV2_adapter_and_normal_account_works_identically() public attachOrLiveTest {
         prepareComparator();
 
-        address creditAccount = openCreditAccountWithOP(100 * WAD);
-
         address routerAdapter = getAdapter(address(creditManager), Contracts.VELODROME_V2_ROUTER);
 
         if (
@@ -144,6 +142,8 @@ contract Live_VelodromeV2EquivalenceTest is LiveTestHelper {
         ) {
             return;
         }
+
+        address creditAccount = openCreditAccountWithOP(100 * WAD);
 
         tokenTestSuite.approve(
             tokenTestSuite.addressOf(Tokens.OP),
