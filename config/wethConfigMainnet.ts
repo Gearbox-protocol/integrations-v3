@@ -363,6 +363,10 @@ const farmCreditManager: CreditManagerV3DeployConfig = {
       lt: 9000,
     },
     {
+      token: "rETH",
+      lt: 9000,
+    },
+    {
       token: "USDT",
       lt: 9000,
     },
@@ -370,6 +374,7 @@ const farmCreditManager: CreditManagerV3DeployConfig = {
     { token: "yvWETH", lt: 9000 },
 
     // Convex
+    { token: "stkcvxsteCRV", lt: 8500 },
     { token: "stkcvxcrvUSDETHCRV", lt: 8500 },
     { token: "stkcvxcrvUSDTWBTCWETH", lt: 8500 },
 
@@ -384,15 +389,19 @@ const farmCreditManager: CreditManagerV3DeployConfig = {
     { token: "crvUSDTWBTCWETH", lt: 0 },
     { token: "cvxcrvUSDTWBTCWETH", lt: 0 },
 
+    { token: "steCRV", lt: 0 },
+    { token: "cvxsteCRV", lt: 0 },
+
     { token: "crvUSD", lt: 0 },
     { token: "crvCVXETH", lt: 0 },
-    { token: "steCRV", lt: 0 },
+    { token: "rETH_f", lt: 0 },
   ],
   adapters: [
     // Swapping
     farmUniV3Config,
     { contract: "CURVE_CVXETH_POOL" },
     { contract: "CURVE_STETH_GATEWAY" },
+    { contract: "CURVE_RETH_ETH_POOL" },
 
     // Curve
     { contract: "CURVE_TRI_CRV_POOL" },

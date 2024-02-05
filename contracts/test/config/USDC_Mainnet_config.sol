@@ -441,8 +441,6 @@ contract CONFIG_MAINNET_USDC_V3 is IPoolV3DeployConfig {
             cts.push(CollateralTokenHuman({token: Tokens.crvCVXETH, lt: 0}));
 
             cts.push(CollateralTokenHuman({token: Tokens.crvUSDETHCRV, lt: 0}));
-
-            cts.push(CollateralTokenHuman({token: Tokens.SPELL, lt: 0}));
             Contracts[] storage cs = cp.contracts;
             cs.push(Contracts.UNISWAP_V3_ROUTER);
             UniswapV3Pair[] storage uv3p = cp.uniswapV3Pairs;
