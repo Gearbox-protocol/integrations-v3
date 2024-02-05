@@ -368,7 +368,7 @@ const farmCreditManager: CreditManagerV3DeployConfig = {
   liquidationPremium: 400,
   feeLiquidationExpired: 100,
   liquidationPremiumExpired: 200,
-  poolLimit: (BigInt(3e6) * POOL_DECIMALS) / POOL_DIVIDER,
+  poolLimit: (BigInt(5e6) * POOL_DECIMALS) / POOL_DIVIDER,
   collateralTokens: [
     {
       token: "WETH",

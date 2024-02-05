@@ -389,7 +389,7 @@ contract CONFIG_MAINNET_USDC_V3 is IPoolV3DeployConfig {
             cp.whitelisted = true;
             cp.expirable = false;
             cp.skipInit = false;
-            cp.poolLimit = 3_000_000_000_000;
+            cp.poolLimit = 5_000_000_000_000;
 
             CollateralTokenHuman[] storage cts = cp.collateralTokens;
             cts.push(CollateralTokenHuman({token: Tokens.WETH, lt: 90_00}));

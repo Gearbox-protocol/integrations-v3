@@ -352,7 +352,7 @@ const farmCreditManager: CreditManagerV3DeployConfig = {
   liquidationPremium: 400,
   feeLiquidationExpired: 100,
   liquidationPremiumExpired: 200,
-  poolLimit: (BigInt(3e6) * POOL_DECIMALS) / POOL_DIVIDER,
+  poolLimit: (BigInt(5e6) * POOL_DECIMALS) / POOL_DIVIDER,
   collateralTokens: [
     {
       token: "WBTC",
@@ -374,7 +374,6 @@ const farmCreditManager: CreditManagerV3DeployConfig = {
     { token: "yvWETH", lt: 9000 },
 
     // Convex
-    { token: "stkcvxsteCRV", lt: 8500 },
     { token: "stkcvxcrvUSDETHCRV", lt: 8500 },
     { token: "stkcvxcrvUSDTWBTCWETH", lt: 8500 },
 
@@ -390,8 +389,6 @@ const farmCreditManager: CreditManagerV3DeployConfig = {
     { token: "cvxcrvUSDTWBTCWETH", lt: 0 },
 
     { token: "steCRV", lt: 0 },
-    { token: "cvxsteCRV", lt: 0 },
-
     { token: "crvUSD", lt: 0 },
     { token: "crvCVXETH", lt: 0 },
     { token: "rETH_f", lt: 0 },
@@ -545,6 +542,12 @@ export const config: PoolV3DeployConfig = {
     STETH: {
       minRate: 5,
       maxRate: 350,
+      quotaIncreaseFee: 0,
+      limit: (BigInt(30e6) * POOL_DECIMALS) / POOL_DIVIDER,
+    },
+    rETH: {
+      minRate: 5,
+      maxRate: 316,
       quotaIncreaseFee: 0,
       limit: (BigInt(30e6) * POOL_DECIMALS) / POOL_DIVIDER,
     },

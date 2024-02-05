@@ -69,6 +69,7 @@ contract CONFIG_MAINNET_WETH_V3 is IPoolV3DeployConfig {
         _gaugeRates.push(GaugeRate({token: Tokens.yvWBTC, minRate: 1, maxRate: 15_00}));
         _gaugeRates.push(GaugeRate({token: Tokens.sDAI, minRate: 1, maxRate: 15_00}));
         _gaugeRates.push(GaugeRate({token: Tokens.STETH, minRate: 5, maxRate: 3_50}));
+        _gaugeRates.push(GaugeRate({token: Tokens.rETH, minRate: 5, maxRate: 3_16}));
         _gaugeRates.push(GaugeRate({token: Tokens.yvWETH, minRate: 50, maxRate: 5_00}));
         _gaugeRates.push(GaugeRate({token: Tokens.stkcvxcrvUSDTWBTCWETH, minRate: 1_00, maxRate: 6_00}));
         _gaugeRates.push(GaugeRate({token: Tokens.stkcvxcrvUSDETHCRV, minRate: 1_00, maxRate: 14_70}));
@@ -123,6 +124,9 @@ contract CONFIG_MAINNET_WETH_V3 is IPoolV3DeployConfig {
         );
         _quotaLimits.push(
             PoolQuotaLimit({token: Tokens.STETH, quotaIncreaseFee: 0, limit: 15_000_000_000_000_000_000_000})
+        );
+        _quotaLimits.push(
+            PoolQuotaLimit({token: Tokens.rETH, quotaIncreaseFee: 0, limit: 15_000_000_000_000_000_000_000})
         );
         _quotaLimits.push(
             PoolQuotaLimit({token: Tokens.yvWETH, quotaIncreaseFee: 0, limit: 15_000_000_000_000_000_000_000})
@@ -419,7 +423,7 @@ contract CONFIG_MAINNET_WETH_V3 is IPoolV3DeployConfig {
             cp.whitelisted = true;
             cp.expirable = false;
             cp.skipInit = false;
-            cp.poolLimit = 1_500_000_000_000_000_000_000;
+            cp.poolLimit = 2_500_000_000_000_000_000_000;
 
             CollateralTokenHuman[] storage cts = cp.collateralTokens;
             cts.push(CollateralTokenHuman({token: Tokens.WBTC, lt: 90_00}));
@@ -431,8 +435,6 @@ contract CONFIG_MAINNET_WETH_V3 is IPoolV3DeployConfig {
             cts.push(CollateralTokenHuman({token: Tokens.USDT, lt: 90_00}));
 
             cts.push(CollateralTokenHuman({token: Tokens.yvWETH, lt: 90_00}));
-
-            cts.push(CollateralTokenHuman({token: Tokens.stkcvxsteCRV, lt: 85_00}));
 
             cts.push(CollateralTokenHuman({token: Tokens.stkcvxcrvUSDETHCRV, lt: 85_00}));
 
@@ -451,8 +453,6 @@ contract CONFIG_MAINNET_WETH_V3 is IPoolV3DeployConfig {
             cts.push(CollateralTokenHuman({token: Tokens.cvxcrvUSDTWBTCWETH, lt: 0}));
 
             cts.push(CollateralTokenHuman({token: Tokens.steCRV, lt: 0}));
-
-            cts.push(CollateralTokenHuman({token: Tokens.cvxsteCRV, lt: 0}));
 
             cts.push(CollateralTokenHuman({token: Tokens.crvUSD, lt: 0}));
 
