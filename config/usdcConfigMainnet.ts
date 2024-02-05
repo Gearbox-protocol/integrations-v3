@@ -423,7 +423,6 @@ const farmCreditManager: CreditManagerV3DeployConfig = {
     { token: "3Crv", lt: 0 },
     { token: "crvCVXETH", lt: 0 },
     { token: "crvUSDETHCRV", lt: 0 },
-    { token: "SPELL", lt: 0 },
   ],
   adapters: [
     // Swapping
