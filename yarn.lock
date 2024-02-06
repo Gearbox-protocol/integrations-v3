@@ -1367,10 +1367,10 @@
   resolved "https://registry.yarnpkg.com/@gearbox-protocol/core-v2/-/core-v2-1.19.0-base.10.tgz#a21bce9eac4ca1783f5fcb4322b1c1257158d2de"
   integrity sha512-S9reS5zGt+cKxEdQppVCU0cZEmnSqx8DaoloY6KXqCsAedVJvwNUoCHnLjh9s/oWyOHa37qExN1QohntNQyB2Q==
 
-"@gearbox-protocol/core-v3@^1.47.0":
-  version "1.47.0"
-  resolved "https://registry.yarnpkg.com/@gearbox-protocol/core-v3/-/core-v3-1.47.0.tgz#6eb39368cae9d446dc12268ac68ac4549f7a83de"
-  integrity sha512-LYMPDcE2BtvYAGXanzRXC0X5b7Q85TedwvVf0HkQyguwxLg4jIeiljUUeDY+MfLs2nExPAAzQCKJOb+iQCCLNg==
+"@gearbox-protocol/core-v3@^1.47.1":
+  version "1.47.1"
+  resolved "https://registry.yarnpkg.com/@gearbox-protocol/core-v3/-/core-v3-1.47.1.tgz#9b6583441a722c9237b1e68984a63b0a9342e682"
+  integrity sha512-vSFvsUmUVRP/yHj85RPV/5RVhn5/cq02pQ5l2S3zeULh5NaiWO/o6d3Jrm4LdGOX/PnkTM5UW3LKqjwyzk8RaQ==
 
 "@gearbox-protocol/eslint-config@^1.6.1":
   version "1.6.1"
@@ -1387,10 +1387,10 @@
     eslint-plugin-simple-import-sort "^7.0.0"
     eslint-plugin-unused-imports "^2.0.0"
 
-"@gearbox-protocol/oracles-v3@^1.8.1":
-  version "1.8.1"
-  resolved "https://registry.yarnpkg.com/@gearbox-protocol/oracles-v3/-/oracles-v3-1.8.1.tgz#ef92b2abbfa61b8807775cb849a25080d7cb13c6"
-  integrity sha512-4sCGNJAzyu26RCILym4dUJB+o5lP5yH1xvtc+mTNP+KuJwmJS4rX7tkP4Cis4S6lGRKJHweU6069vQgbSTr5wg==
+"@gearbox-protocol/oracles-v3@^1.9.1":
+  version "1.9.1"
+  resolved "https://registry.yarnpkg.com/@gearbox-protocol/oracles-v3/-/oracles-v3-1.9.1.tgz#5df64760955de94db20faf7d87e0f65ea3d7070e"
+  integrity sha512-OsMKxjaUT1mtOPeSJZ4X/457//XZtNIrD8txFPmzMT8Q80euvLWVkOh8oFHXnDxXaOGe56ajHJ68MFHR5negcg==
   dependencies:
     redstone-protocol "^1.0.5"
 
@@ -1399,10 +1399,10 @@
   resolved "https://registry.yarnpkg.com/@gearbox-protocol/prettier-config/-/prettier-config-1.5.0.tgz#4df8e9fd2305fee6ab8c1417a02e31343836932a"
   integrity sha512-FUoprSsBdZyBjgxXCKL6mTkbeUJytaLzPJqIOoQpDmBRTX0seCc2o5I9PI9tySoRIlNnd/XXnKCXq1xHDEGbxw==
 
-"@gearbox-protocol/sdk-gov@^1.27.0":
-  version "1.27.0"
-  resolved "https://registry.yarnpkg.com/@gearbox-protocol/sdk-gov/-/sdk-gov-1.27.0.tgz#00567078fc15d63d6764f24a6ef498cc7269cbb1"
-  integrity sha512-DTFKSG+q3Pj10AD5dU12H4pT+M+IpzPkhy9RULWVtvJ0NCrXQMKrYjQ7aGr+QvrspSrQvfZcw5VeDH5FNDDBuQ==
+"@gearbox-protocol/sdk-gov@^1.28.0":
+  version "1.28.0"
+  resolved "https://registry.yarnpkg.com/@gearbox-protocol/sdk-gov/-/sdk-gov-1.28.0.tgz#8368b8f76c208b27551eca2d8833617a4fe367c7"
+  integrity sha512-J2mblU86hUVp/R6e0ebhwbzifPNxjbTTdDZL5GeRHW5t5HEamQpUaxOod1bSBNXmW/KweaKbzeJxiPXqssHfgA==
   dependencies:
     "@types/yaml" "^1.9.7"
     add "^2.0.6"

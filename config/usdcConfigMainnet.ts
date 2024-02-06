@@ -617,7 +617,7 @@ export const config: PoolV3DeployConfig = {
     },
     stkcvxcrvFRAX: {
       minRate: 100,
-      maxRate: 240,
+      maxRate: 350,
       quotaIncreaseFee: 0,
       limit: (BigInt(20.4e6) * POOL_DECIMALS) / POOL_DIVIDER,
     },

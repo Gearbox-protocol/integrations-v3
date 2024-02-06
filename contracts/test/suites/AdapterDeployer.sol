@@ -179,16 +179,19 @@ contract AdapterDeployer is AdapterData, Test {
                 }
             }
 
-            if (cnt == curveStEthAdapter.curveETHGateway) {
-                targetContract = supportedContracts.addressOf(cnt);
-                adapter = address(
-                    new CurveV1AdapterStETH(
-                        address(creditManager),
-                        supportedContracts.addressOf(curveStEthAdapter.curveETHGateway),
-                        tokenTestSuite.addressOf(curveStEthAdapter.lpToken)
-                    )
-                );
-                return adapter;
+            len = curveStEthAdapters.length;
+            for (uint256 i; i < len; ++i) {
+                if (cnt == curveStEthAdapters[i].curveETHGateway) {
+                    targetContract = supportedContracts.addressOf(cnt);
+                    adapter = address(
+                        new CurveV1AdapterStETH(
+                            address(creditManager),
+                            supportedContracts.addressOf(curveStEthAdapters[i].curveETHGateway),
+                            tokenTestSuite.addressOf(curveStEthAdapters[i].lpToken)
+                        )
+                    );
+                    return adapter;
+                }
             }
 
             len = curveWrappers.length;
