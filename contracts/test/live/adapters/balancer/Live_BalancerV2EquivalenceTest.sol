@@ -557,6 +557,31 @@ contract Live_BalancerV2EquivalenceTest is LiveTestHelper {
         comparator = new BalanceComparator(_stages, _tokensToTrack, tokenTestSuite);
     }
 
+    function _getSwappableTokens(address balancerVaultAdapter, bytes32 poolId)
+        internal
+        view
+        returns (address token0, address token1, uint256 baseUnit0)
+    {
+        (IERC20[] memory tokens,,) =
+            IBalancerV2Vault(IAdapter(balancerVaultAdapter).targetContract()).getPoolTokens(poolId);
+
+        (address pool,) = IBalancerV2Vault(IAdapter(balancerVaultAdapter).targetContract()).getPool(poolId);
+
+        for (uint256 i = 0; i < tokens.length; ++i) {
+            if (token0 == address(0)) {
+                if (address(tokens[i]) != pool) {
+                    token0 = address(tokens[i]);
+                    baseUnit0 = 10 ** IERC20Metadata(address(token0)).decimals();
+                }
+            } else if (token1 == address(0)) {
+                if (address(tokens[i]) != pool) {
+                    token1 = address(tokens[i]);
+                    break;
+                }
+            }
+        }
+    }
+
     /// @dev [L-BALET-1]: Balancer adapters and original contracts work identically
     function test_live_BALET_01_Balancer_adapters_and_original_contracts_are_equivalent() public attachOrLiveTest {
         address balancerVaultAdapter = getAdapter(address(creditManager), Contracts.BALANCER_VAULT);
@@ -579,11 +604,13 @@ contract Live_BalancerV2EquivalenceTest is LiveTestHelper {
             BalancerPoolParams memory params = BalancerPoolParams({
                 poolToken: pool,
                 poolId: poolId,
-                token0: address(tokens[0]),
-                token1: address(tokens[1]),
-                baseUnit0: 10 ** IERC20Metadata(address(tokens[0])).decimals(),
+                token0: address(0),
+                token1: address(0),
+                baseUnit0: 0,
                 isSwapOnly: IBalancerV2VaultAdapter(balancerVaultAdapter).poolStatus(poolId) == PoolStatus.SWAP_ONLY
             });
+
+            (params.token0, params.token1, params.baseUnit0) = _getSwappableTokens(balancerVaultAdapter, poolId);
 
             address creditAccount = openCreditAccountWithToken0(params.token0, 100 * params.baseUnit0);
 

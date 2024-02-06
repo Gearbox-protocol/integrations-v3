@@ -368,7 +368,7 @@ const farmCreditManager: CreditManagerV3DeployConfig = {
   liquidationPremium: 400,
   feeLiquidationExpired: 100,
   liquidationPremiumExpired: 200,
-  poolLimit: (BigInt(3e6) * POOL_DECIMALS) / POOL_DIVIDER,
+  poolLimit: (BigInt(5e6) * POOL_DECIMALS) / POOL_DIVIDER,
   collateralTokens: [
     {
       token: "WETH",
@@ -423,7 +423,6 @@ const farmCreditManager: CreditManagerV3DeployConfig = {
     { token: "3Crv", lt: 0 },
     { token: "crvCVXETH", lt: 0 },
     { token: "crvUSDETHCRV", lt: 0 },
-    { token: "SPELL", lt: 0 },
   ],
   adapters: [
     // Swapping
@@ -618,7 +617,7 @@ export const config: PoolV3DeployConfig = {
     },
     stkcvxcrvFRAX: {
       minRate: 100,
-      maxRate: 240,
+      maxRate: 350,
       quotaIncreaseFee: 0,
       limit: (BigInt(20.4e6) * POOL_DECIMALS) / POOL_DIVIDER,
     },

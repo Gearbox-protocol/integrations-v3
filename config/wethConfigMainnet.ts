@@ -1,4 +1,6 @@
 import {
+  BalancerPoolConfig,
+  BalancerVaultConfig,
   CreditManagerV3DeployConfig,
   PoolV3DeployConfig,
   UniV2Config,
@@ -341,6 +343,24 @@ const farmUniV3Config: UniV3Config = {
   ],
 };
 
+const farmBalancerConfig: BalancerVaultConfig = {
+  contract: "BALANCER_VAULT",
+  allowed: [
+    {
+      pool: "weETH_rETH",
+      status: 2,
+    },
+    {
+      pool: "osETH_wETH_BPT",
+      status: 2,
+    },
+    {
+      pool: "B_rETH_STABLE",
+      status: 2,
+    },
+  ],
+};
+
 const farmCreditManager: CreditManagerV3DeployConfig = {
   name: "Farm WETH",
   degenNft: true,
@@ -352,18 +372,31 @@ const farmCreditManager: CreditManagerV3DeployConfig = {
   liquidationPremium: 400,
   feeLiquidationExpired: 100,
   liquidationPremiumExpired: 200,
-  poolLimit: (BigInt(3e6) * POOL_DECIMALS) / POOL_DIVIDER,
+  poolLimit: (BigInt(5e6) * POOL_DECIMALS) / POOL_DIVIDER,
   collateralTokens: [
     {
       token: "WBTC",
       lt: 9000,
     },
     {
+      token: "USDT",
+      lt: 9000,
+    },
+    // LSD
+    {
       token: "STETH",
       lt: 9000,
     },
     {
-      token: "USDT",
+      token: "rETH",
+      lt: 9000,
+    },
+    {
+      token: "weETH",
+      lt: 9000,
+    },
+    {
+      token: "osETH",
       lt: 9000,
     },
     // Yearn
@@ -384,15 +417,18 @@ const farmCreditManager: CreditManagerV3DeployConfig = {
     { token: "crvUSDTWBTCWETH", lt: 0 },
     { token: "cvxcrvUSDTWBTCWETH", lt: 0 },
 
+    { token: "steCRV", lt: 0 },
     { token: "crvUSD", lt: 0 },
     { token: "crvCVXETH", lt: 0 },
-    { token: "steCRV", lt: 0 },
+    { token: "rETH_f", lt: 0 },
   ],
   adapters: [
     // Swapping
     farmUniV3Config,
+    farmBalancerConfig,
     { contract: "CURVE_CVXETH_POOL" },
     { contract: "CURVE_STETH_GATEWAY" },
+    { contract: "CURVE_RETH_ETH_POOL" },
 
     // Curve
     { contract: "CURVE_TRI_CRV_POOL" },
@@ -539,6 +575,24 @@ export const config: PoolV3DeployConfig = {
       quotaIncreaseFee: 0,
       limit: (BigInt(30e6) * POOL_DECIMALS) / POOL_DIVIDER,
     },
+    rETH: {
+      minRate: 5,
+      maxRate: 316,
+      quotaIncreaseFee: 0,
+      limit: (BigInt(30e6) * POOL_DECIMALS) / POOL_DIVIDER,
+    },
+    weETH: {
+      minRate: 5,
+      maxRate: 316,
+      quotaIncreaseFee: 0,
+      limit: (BigInt(5e6) * POOL_DECIMALS) / POOL_DIVIDER,
+    },
+    osETH: {
+      minRate: 5,
+      maxRate: 316,
+      quotaIncreaseFee: 0,
+      limit: (BigInt(30e6) * POOL_DECIMALS) / POOL_DIVIDER,
+    },
     yvWETH: {
       minRate: 50,
       maxRate: 500,
@@ -547,7 +601,7 @@ export const config: PoolV3DeployConfig = {
     },
     stkcvxcrvUSDTWBTCWETH: {
       minRate: 100,
-      maxRate: 600,
+      maxRate: 700,
       quotaIncreaseFee: 0,
       limit: (BigInt(15.5e6) * POOL_DECIMALS) / POOL_DIVIDER,
     },

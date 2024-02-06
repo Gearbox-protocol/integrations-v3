@@ -16,7 +16,8 @@ import {
     CollateralTokenHuman,
     UniswapV2Pair,
     UniswapV3Pair,
-    BalancerPool
+    BalancerPool,
+    VelodromeV2Pool
 } from "@gearbox-protocol/core-v3/contracts/test/interfaces/ICreditConfig.sol";
 
 contract CONFIG_MAINNET_WETH_V3 is IPoolV3DeployConfig {
@@ -68,8 +69,11 @@ contract CONFIG_MAINNET_WETH_V3 is IPoolV3DeployConfig {
         _gaugeRates.push(GaugeRate({token: Tokens.yvWBTC, minRate: 1, maxRate: 15_00}));
         _gaugeRates.push(GaugeRate({token: Tokens.sDAI, minRate: 1, maxRate: 15_00}));
         _gaugeRates.push(GaugeRate({token: Tokens.STETH, minRate: 5, maxRate: 3_50}));
+        _gaugeRates.push(GaugeRate({token: Tokens.rETH, minRate: 5, maxRate: 3_16}));
+        _gaugeRates.push(GaugeRate({token: Tokens.weETH, minRate: 5, maxRate: 3_16}));
+        _gaugeRates.push(GaugeRate({token: Tokens.osETH, minRate: 5, maxRate: 3_16}));
         _gaugeRates.push(GaugeRate({token: Tokens.yvWETH, minRate: 50, maxRate: 5_00}));
-        _gaugeRates.push(GaugeRate({token: Tokens.stkcvxcrvUSDTWBTCWETH, minRate: 1_00, maxRate: 6_00}));
+        _gaugeRates.push(GaugeRate({token: Tokens.stkcvxcrvUSDTWBTCWETH, minRate: 1_00, maxRate: 7_00}));
         _gaugeRates.push(GaugeRate({token: Tokens.stkcvxcrvUSDETHCRV, minRate: 1_00, maxRate: 14_70}));
         _quotaLimits.push(
             PoolQuotaLimit({token: Tokens.WBTC, quotaIncreaseFee: 1, limit: 15_000_000_000_000_000_000_000})
@@ -122,6 +126,15 @@ contract CONFIG_MAINNET_WETH_V3 is IPoolV3DeployConfig {
         );
         _quotaLimits.push(
             PoolQuotaLimit({token: Tokens.STETH, quotaIncreaseFee: 0, limit: 15_000_000_000_000_000_000_000})
+        );
+        _quotaLimits.push(
+            PoolQuotaLimit({token: Tokens.rETH, quotaIncreaseFee: 0, limit: 15_000_000_000_000_000_000_000})
+        );
+        _quotaLimits.push(
+            PoolQuotaLimit({token: Tokens.weETH, quotaIncreaseFee: 0, limit: 2_500_000_000_000_000_000_000})
+        );
+        _quotaLimits.push(
+            PoolQuotaLimit({token: Tokens.osETH, quotaIncreaseFee: 0, limit: 15_000_000_000_000_000_000_000})
         );
         _quotaLimits.push(
             PoolQuotaLimit({token: Tokens.yvWETH, quotaIncreaseFee: 0, limit: 15_000_000_000_000_000_000_000})
@@ -418,14 +431,20 @@ contract CONFIG_MAINNET_WETH_V3 is IPoolV3DeployConfig {
             cp.whitelisted = true;
             cp.expirable = false;
             cp.skipInit = false;
-            cp.poolLimit = 1_500_000_000_000_000_000_000;
+            cp.poolLimit = 2_500_000_000_000_000_000_000;
 
             CollateralTokenHuman[] storage cts = cp.collateralTokens;
             cts.push(CollateralTokenHuman({token: Tokens.WBTC, lt: 90_00}));
 
+            cts.push(CollateralTokenHuman({token: Tokens.USDT, lt: 90_00}));
+
             cts.push(CollateralTokenHuman({token: Tokens.STETH, lt: 90_00}));
 
-            cts.push(CollateralTokenHuman({token: Tokens.USDT, lt: 90_00}));
+            cts.push(CollateralTokenHuman({token: Tokens.rETH, lt: 90_00}));
+
+            cts.push(CollateralTokenHuman({token: Tokens.weETH, lt: 90_00}));
+
+            cts.push(CollateralTokenHuman({token: Tokens.osETH, lt: 90_00}));
 
             cts.push(CollateralTokenHuman({token: Tokens.yvWETH, lt: 90_00}));
 
@@ -445,11 +464,13 @@ contract CONFIG_MAINNET_WETH_V3 is IPoolV3DeployConfig {
 
             cts.push(CollateralTokenHuman({token: Tokens.cvxcrvUSDTWBTCWETH, lt: 0}));
 
+            cts.push(CollateralTokenHuman({token: Tokens.steCRV, lt: 0}));
+
             cts.push(CollateralTokenHuman({token: Tokens.crvUSD, lt: 0}));
 
             cts.push(CollateralTokenHuman({token: Tokens.crvCVXETH, lt: 0}));
 
-            cts.push(CollateralTokenHuman({token: Tokens.steCRV, lt: 0}));
+            cts.push(CollateralTokenHuman({token: Tokens.rETH_f, lt: 0}));
             Contracts[] storage cs = cp.contracts;
             cs.push(Contracts.UNISWAP_V3_ROUTER);
             UniswapV3Pair[] storage uv3p = cp.uniswapV3Pairs;
@@ -458,8 +479,23 @@ contract CONFIG_MAINNET_WETH_V3 is IPoolV3DeployConfig {
             uv3p.push(UniswapV3Pair({token0: Tokens.WETH, token1: Tokens.CVX, fee: 10000}));
             uv3p.push(UniswapV3Pair({token0: Tokens.WBTC, token1: Tokens.WETH, fee: 3000}));
             uv3p.push(UniswapV3Pair({token0: Tokens.WBTC, token1: Tokens.WETH, fee: 500}));
+            cs.push(Contracts.BALANCER_VAULT);
+            BalancerPool[] storage bp = cp.balancerPools;
+
+            bp.push(
+                BalancerPool({poolId: 0x05ff47afada98a98982113758878f9a8b9fdda0a000000000000000000000645, status: 2})
+            );
+
+            bp.push(
+                BalancerPool({poolId: 0xdacf5fa19b1f720111609043ac67a9818262850c000000000000000000000635, status: 2})
+            );
+
+            bp.push(
+                BalancerPool({poolId: 0x1e19cf2d73a72ef1332c882f20534b6519be0276000200000000000000000112, status: 2})
+            );
             cs.push(Contracts.CURVE_CVXETH_POOL);
             cs.push(Contracts.CURVE_STETH_GATEWAY);
+            cs.push(Contracts.CURVE_RETH_ETH_POOL);
             cs.push(Contracts.CURVE_TRI_CRV_POOL);
             cs.push(Contracts.CURVE_3CRYPTO_POOL);
             cs.push(Contracts.CONVEX_BOOSTER);

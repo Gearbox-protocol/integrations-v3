@@ -7,8 +7,8 @@ import {
   VelodromeV2Config,
 } from "@gearbox-protocol/sdk-gov";
 
-const POOL_DECIMALS = BigInt(1e6);
-const POOL_DIVIDER = BigInt(1);
+const POOL_DECIMALS = BigInt(1e18);
+const POOL_DIVIDER = BigInt(2000);
 
 const VELODROME_V2_DEFAULT_FACTORY =
   "0xF1046053aa5682b4F9a81b5481394DA16BE5FF5a";
@@ -20,29 +20,15 @@ const tier1UniV3Config: UniV3Config = {
     { token0: "WETH", token1: "USDC", fee: 500 },
     { token0: "WETH", token1: "USDC", fee: 3000 },
     { token0: "WETH", token1: "WBTC", fee: 3000 },
-    { token0: "wstETH", token1: "WETH", fee: 100 },
     { token0: "WETH", token1: "WBTC", fee: 500 },
     { token0: "OP", token1: "USDC", fee: 3000 },
     { token0: "WETH", token1: "OP", fee: 500 },
-    { token0: "WETH", token1: "rETH", fee: 500 },
   ],
 };
 
 const tier1BalancerConfig: BalancerVaultConfig = {
   contract: "BALANCER_VAULT",
   allowed: [
-    {
-      pool: "BPT_rETH_ETH",
-      status: 2,
-    },
-    {
-      pool: "ECLP_wstETH_WETH",
-      status: 2,
-    },
-    {
-      pool: "BPT_WSTETH_ETH",
-      status: 2,
-    },
     {
       pool: "BPT_ROAD",
       status: 2,
@@ -53,12 +39,6 @@ const tier1BalancerConfig: BalancerVaultConfig = {
 const tier1VelodromeConfig: VelodromeV2Config = {
   contract: "VELODROME_V2_ROUTER",
   allowed: [
-    {
-      token0: "wstETH",
-      token1: "WETH",
-      stable: false,
-      factory: VELODROME_V2_DEFAULT_FACTORY,
-    },
     {
       token0: "WETH",
       token1: "OP",
@@ -77,17 +57,11 @@ const tier1VelodromeConfig: VelodromeV2Config = {
       stable: false,
       factory: VELODROME_V2_DEFAULT_FACTORY,
     },
-    {
-      token0: "wstETH",
-      token1: "OP",
-      stable: false,
-      factory: VELODROME_V2_DEFAULT_FACTORY,
-    },
   ],
 };
 
 const tier1CreditManager: CreditManagerV3DeployConfig = {
-  name: "Trade USDC Tier 1 Optimism",
+  name: "Trade WETH Tier 1 Optimism",
   degenNft: false,
   expirationDate: undefined,
   minDebt: (BigInt(1e3) * POOL_DECIMALS) / POOL_DIVIDER,
@@ -100,7 +74,7 @@ const tier1CreditManager: CreditManagerV3DeployConfig = {
   poolLimit: (BigInt(2e6) * POOL_DECIMALS) / POOL_DIVIDER,
   collateralTokens: [
     {
-      token: "WETH",
+      token: "USDC",
       lt: 9600,
     },
     {
@@ -113,15 +87,7 @@ const tier1CreditManager: CreditManagerV3DeployConfig = {
     },
     // BOOSTED
     {
-      token: "yvWETH",
-      lt: 9400,
-    },
-    {
-      token: "wstETH",
-      lt: 9400,
-    },
-    {
-      token: "rETH",
+      token: "yvUSDC",
       lt: 9400,
     },
     {
@@ -133,7 +99,7 @@ const tier1CreditManager: CreditManagerV3DeployConfig = {
     tier1UniV3Config,
     tier1BalancerConfig,
     tier1VelodromeConfig,
-    { contract: "YEARN_WETH_VAULT" },
+    { contract: "YEARN_USDC_VAULT" },
     { contract: "YEARN_OP_VAULT" },
   ],
 };
@@ -168,7 +134,7 @@ const tier2VelodromeConfig: VelodromeV2Config = {
 };
 
 const tier2CreditManager: CreditManagerV3DeployConfig = {
-  name: "Trade USDC Tier 2 Optimism",
+  name: "Trade WETH Tier 2 Optimism",
   degenNft: false,
   expirationDate: undefined,
   minDebt: (BigInt(1e3) * POOL_DECIMALS) / POOL_DIVIDER,
@@ -181,7 +147,7 @@ const tier2CreditManager: CreditManagerV3DeployConfig = {
   poolLimit: (BigInt(5e5) * POOL_DECIMALS) / POOL_DIVIDER,
   collateralTokens: [
     {
-      token: "WETH",
+      token: "USDC",
       lt: 9500,
     },
     {
@@ -203,9 +169,26 @@ const tier2CreditManager: CreditManagerV3DeployConfig = {
 const farmUniV3Config: UniV3Config = {
   contract: "UNISWAP_V3_ROUTER",
   allowed: [
-    { token0: "USDC", token1: "USDT", fee: 100 },
-    { token0: "DAI", token1: "USDC", fee: 100 },
-    { token0: "USDT", token1: "DAI", fee: 100 },
+    { token0: "WETH", token1: "wstETH", fee: 100 },
+    { token0: "WETH", token1: "rETH", fee: 100 },
+  ],
+};
+
+const farmBalancerConfig: BalancerVaultConfig = {
+  contract: "BALANCER_VAULT",
+  allowed: [
+    {
+      pool: "BPT_rETH_ETH",
+      status: 2,
+    },
+    {
+      pool: "ECLP_wstETH_WETH",
+      status: 2,
+    },
+    {
+      pool: "BPT_WSTETH_ETH",
+      status: 2,
+    },
   ],
 };
 
@@ -213,22 +196,16 @@ const farmVelodromeConfig: VelodromeV2Config = {
   contract: "VELODROME_V2_ROUTER",
   allowed: [
     {
-      token0: "USDC",
-      token1: "DAI",
-      stable: true,
-      factory: VELODROME_V2_DEFAULT_FACTORY,
-    },
-    {
-      token0: "USDC",
-      token1: "USDT",
-      stable: true,
+      token0: "wstETH",
+      token1: "WETH",
+      stable: false,
       factory: VELODROME_V2_DEFAULT_FACTORY,
     },
   ],
 };
 
 const farmCreditManager: CreditManagerV3DeployConfig = {
-  name: "Farm USDC",
+  name: "Farm WETH",
   degenNft: true,
   expirationDate: undefined,
   minDebt: (BigInt(1e4) * POOL_DECIMALS) / POOL_DIVIDER,
@@ -238,44 +215,38 @@ const farmCreditManager: CreditManagerV3DeployConfig = {
   liquidationPremium: 100,
   feeLiquidationExpired: 50,
   liquidationPremiumExpired: 100,
-  poolLimit: (BigInt(1e6) * POOL_DECIMALS) / POOL_DIVIDER,
+  poolLimit: (BigInt(3e6) * POOL_DECIMALS) / POOL_DIVIDER,
   collateralTokens: [
     {
-      token: "DAI",
+      token: "wstETH",
       lt: 9800,
     },
     {
-      token: "USDT",
+      token: "rETH",
       lt: 9800,
     },
 
     // Yearn
-    { token: "yvUSDC", lt: 9600 },
-    { token: "yvDAI", lt: 9600 },
-    { token: "yvUSDT", lt: 9600 },
-
-    // Compatibility
-    { token: "3Crv", lt: 0 },
+    { token: "yvWETH", lt: 9600 },
   ],
   adapters: [
     // Swapping
     farmUniV3Config,
-    { contract: "CURVE_3CRV_POOL" },
-    { contract: "YEARN_DAI_VAULT" },
-    { contract: "YEARN_USDC_VAULT" },
-    { contract: "YEARN_USDT_VAULT" },
+    farmBalancerConfig,
+    farmVelodromeConfig,
+    { contract: "YEARN_WETH_VAULT" },
   ],
 };
 
 export const config: PoolV3DeployConfig = {
-  id: "optimism-usdc-v3",
-  symbol: "dUSDCV3",
-  name: "USDC v3",
+  id: "optimism-weth-v3",
+  symbol: "dWETHV3",
+  name: "WETH v3",
   network: "Optimism",
-  underlying: "USDC",
-  accountAmount: BigInt(10_000) * POOL_DECIMALS,
+  underlying: "WETH",
+  accountAmount: (BigInt(10_000) * POOL_DECIMALS) / POOL_DIVIDER,
   withdrawalFee: 0,
-  totalDebtLimit: BigInt(100_000_000) * POOL_DECIMALS,
+  totalDebtLimit: (BigInt(100_000_000) * POOL_DECIMALS) / POOL_DIVIDER,
   irm: {
     U1: 7000,
     U2: 9000,
@@ -292,9 +263,9 @@ export const config: PoolV3DeployConfig = {
       minRate: 4,
       maxRate: 1200,
       quotaIncreaseFee: 1,
-      limit: (BigInt(5e5) * POOL_DECIMALS) / POOL_DIVIDER,
+      limit: (BigInt(6e5) * POOL_DECIMALS) / POOL_DIVIDER,
     },
-    WETH: {
+    USDC: {
       minRate: 4,
       maxRate: 1200,
       quotaIncreaseFee: 1,
@@ -304,13 +275,13 @@ export const config: PoolV3DeployConfig = {
       minRate: 4,
       maxRate: 1200,
       quotaIncreaseFee: 1,
-      limit: (BigInt(1.3e6) * POOL_DECIMALS) / POOL_DIVIDER,
+      limit: (BigInt(1.8e6) * POOL_DECIMALS) / POOL_DIVIDER,
     },
     WLD: {
       minRate: 80,
       maxRate: 2400,
       quotaIncreaseFee: 5,
-      limit: (BigInt(6e5) * POOL_DECIMALS) / POOL_DIVIDER,
+      limit: (BigInt(1e5) * POOL_DECIMALS) / POOL_DIVIDER,
     },
     LINK: {
       minRate: 80,
@@ -322,21 +293,28 @@ export const config: PoolV3DeployConfig = {
       minRate: 80,
       maxRate: 2400,
       quotaIncreaseFee: 5,
-      limit: (BigInt(4e5) * POOL_DECIMALS) / POOL_DIVIDER,
+      limit: (BigInt(1e6) * POOL_DECIMALS) / POOL_DIVIDER,
     },
-
     // BOOSTED
-    yvWETH: {
-      minRate: 4,
-      maxRate: 1500,
-      quotaIncreaseFee: 1,
-      limit: (BigInt(4e5) * POOL_DECIMALS) / POOL_DIVIDER,
-    },
     yvOP: {
       minRate: 4,
       maxRate: 1500,
       quotaIncreaseFee: 1,
       limit: (BigInt(5.5e5) * POOL_DECIMALS) / POOL_DIVIDER,
+    },
+    yvUSDC: {
+      minRate: 5,
+      maxRate: 700,
+      quotaIncreaseFee: 0,
+      limit: (BigInt(3.3e5) * POOL_DECIMALS) / POOL_DIVIDER,
+    },
+
+    // FARMS
+    yvWETH: {
+      minRate: 4,
+      maxRate: 1500,
+      quotaIncreaseFee: 1,
+      limit: (BigInt(4e5) * POOL_DECIMALS) / POOL_DIVIDER,
     },
     wstETH: {
       minRate: 4,
@@ -349,26 +327,6 @@ export const config: PoolV3DeployConfig = {
       maxRate: 1500,
       quotaIncreaseFee: 1,
       limit: (BigInt(3e6) * POOL_DECIMALS) / POOL_DIVIDER,
-    },
-
-    // FARMS
-    yvDAI: {
-      minRate: 5,
-      maxRate: 850,
-      quotaIncreaseFee: 0,
-      limit: (BigInt(2.3e5) * POOL_DECIMALS) / POOL_DIVIDER,
-    },
-    yvUSDC: {
-      minRate: 5,
-      maxRate: 700,
-      quotaIncreaseFee: 0,
-      limit: (BigInt(3.3e5) * POOL_DECIMALS) / POOL_DIVIDER,
-    },
-    yvUSDT: {
-      minRate: 5,
-      maxRate: 900,
-      quotaIncreaseFee: 0,
-      limit: (BigInt(3e5) * POOL_DECIMALS) / POOL_DIVIDER,
     },
   },
   creditManagers: [tier1CreditManager, tier2CreditManager, farmCreditManager],
