@@ -50,6 +50,8 @@ contract CONFIG_OPTIMISM_USDC_V3 is IPoolV3DeployConfig {
     CreditManagerV3DeployParams[] _creditManagers;
 
     constructor() {
+        _gaugeRates.push(GaugeRate({token: Tokens.DAI, minRate: 4, maxRate: 12_00}));
+        _gaugeRates.push(GaugeRate({token: Tokens.USDT, minRate: 4, maxRate: 12_00}));
         _gaugeRates.push(GaugeRate({token: Tokens.WBTC, minRate: 4, maxRate: 12_00}));
         _gaugeRates.push(GaugeRate({token: Tokens.WETH, minRate: 4, maxRate: 12_00}));
         _gaugeRates.push(GaugeRate({token: Tokens.OP, minRate: 4, maxRate: 12_00}));
@@ -63,6 +65,8 @@ contract CONFIG_OPTIMISM_USDC_V3 is IPoolV3DeployConfig {
         _gaugeRates.push(GaugeRate({token: Tokens.yvDAI, minRate: 5, maxRate: 8_50}));
         _gaugeRates.push(GaugeRate({token: Tokens.yvUSDC, minRate: 5, maxRate: 7_00}));
         _gaugeRates.push(GaugeRate({token: Tokens.yvUSDT, minRate: 5, maxRate: 9_00}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.DAI, quotaIncreaseFee: 1, limit: 3_000_000_000_000}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.USDT, quotaIncreaseFee: 1, limit: 1_500_000_000_000}));
         _quotaLimits.push(PoolQuotaLimit({token: Tokens.WBTC, quotaIncreaseFee: 1, limit: 500_000_000_000}));
         _quotaLimits.push(PoolQuotaLimit({token: Tokens.WETH, quotaIncreaseFee: 1, limit: 3_000_000_000_000}));
         _quotaLimits.push(PoolQuotaLimit({token: Tokens.OP, quotaIncreaseFee: 1, limit: 1_300_000_000_000}));
