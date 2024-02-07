@@ -287,7 +287,18 @@ export const config: PoolV3DeployConfig = {
   },
   ratesAndLimits: {
     // TRADEABLE TOKENS
-
+    DAI: {
+      minRate: 4,
+      maxRate: 1200,
+      quotaIncreaseFee: 1,
+      limit: (BigInt(3e6) * POOL_DECIMALS) / POOL_DIVIDER,
+    },
+    USDT: {
+      minRate: 4,
+      maxRate: 1200,
+      quotaIncreaseFee: 1,
+      limit: (BigInt(1.5e6) * POOL_DECIMALS) / POOL_DIVIDER,
+    },
     WBTC: {
       minRate: 4,
       maxRate: 1200,
