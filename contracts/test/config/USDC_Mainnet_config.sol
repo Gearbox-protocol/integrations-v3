@@ -379,7 +379,7 @@ contract CONFIG_MAINNET_USDC_V3 is IPoolV3DeployConfig {
             /// CREDIT_MANAGER_3
             CreditManagerV3DeployParams storage cp = _creditManagers.push();
 
-            cp.minDebt = 20_000_000_000;
+            cp.minDebt = 50_000_000_000;
             cp.maxDebt = 1_000_000_000_000;
             cp.feeInterest = 2500;
             cp.feeLiquidation = 150;
