@@ -349,11 +349,11 @@ const farmBalancerConfig: BalancerVaultConfig = {
   allowed: [
     {
       pool: "weETH_rETH",
-      status: 1,
+      status: 2,
     },
     {
       pool: "osETH_wETH_BPT",
-      status: 1,
+      status: 2,
     },
     {
       pool: "B_rETH_STABLE",
@@ -417,8 +417,6 @@ const farmCreditManager: CreditManagerV3DeployConfig = {
 
     // Aura
     { token: "auraB_rETH_STABLE_vault", lt: 8700 },
-    { token: "auraosETH_wETH_BPT_vault", lt: 8700 },
-    { token: "auraweETH_rETH_vault", lt: 8700 },
 
     // Rewards
     { token: "CRV", lt: 7250 },
@@ -436,12 +434,6 @@ const farmCreditManager: CreditManagerV3DeployConfig = {
 
     { token: "B_rETH_STABLE", lt: 0 },
     { token: "auraB_rETH_STABLE", lt: 0 },
-
-    { token: "osETH_wETH_BPT", lt: 0 },
-    { token: "auraosETH_wETH_BPT", lt: 0 },
-
-    { token: "weETH_rETH", lt: 0 },
-    { token: "auraweETH_rETH", lt: 0 },
 
     { token: "steCRV", lt: 0 },
     { token: "crvUSD", lt: 0 },
@@ -468,8 +460,6 @@ const farmCreditManager: CreditManagerV3DeployConfig = {
     // Aura
     { contract: "AURA_BOOSTER" },
     { contract: "AURA_B_RETH_STABLE_POOL" },
-    { contract: "AURA_OSETH_WETH_POOL" },
-    { contract: "AURA_WEETH_RETH_POOL" },
 
     // Yearn
     { contract: "YEARN_WETH_VAULT" },
@@ -648,18 +638,6 @@ export const config: PoolV3DeployConfig = {
       maxRate: 550,
       quotaIncreaseFee: 0,
       limit: (BigInt(20e6) * POOL_DECIMALS) / POOL_DIVIDER,
-    },
-    auraosETH_wETH_BPT_vault: {
-      minRate: 100,
-      maxRate: 950,
-      quotaIncreaseFee: 0,
-      limit: (BigInt(3.5e6) * POOL_DECIMALS) / POOL_DIVIDER,
-    },
-    auraweETH_rETH_vault: {
-      minRate: 100,
-      maxRate: 3000,
-      quotaIncreaseFee: 0,
-      limit: (BigInt(1e6) * POOL_DECIMALS) / POOL_DIVIDER,
     },
   },
   creditManagers: [

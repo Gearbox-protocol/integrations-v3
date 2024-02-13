@@ -76,8 +76,6 @@ contract CONFIG_MAINNET_WETH_V3 is IPoolV3DeployConfig {
         _gaugeRates.push(GaugeRate({token: Tokens.stkcvxcrvUSDTWBTCWETH, minRate: 1_00, maxRate: 7_00}));
         _gaugeRates.push(GaugeRate({token: Tokens.stkcvxcrvUSDETHCRV, minRate: 1_00, maxRate: 14_70}));
         _gaugeRates.push(GaugeRate({token: Tokens.auraB_rETH_STABLE_vault, minRate: 1_00, maxRate: 5_50}));
-        _gaugeRates.push(GaugeRate({token: Tokens.auraosETH_wETH_BPT_vault, minRate: 1_00, maxRate: 9_50}));
-        _gaugeRates.push(GaugeRate({token: Tokens.auraweETH_rETH_vault, minRate: 1_00, maxRate: 30_00}));
         _quotaLimits.push(
             PoolQuotaLimit({token: Tokens.WBTC, quotaIncreaseFee: 1, limit: 15_000_000_000_000_000_000_000})
         );
@@ -158,16 +156,6 @@ contract CONFIG_MAINNET_WETH_V3 is IPoolV3DeployConfig {
                 quotaIncreaseFee: 0,
                 limit: 10_000_000_000_000_000_000_000
             })
-        );
-        _quotaLimits.push(
-            PoolQuotaLimit({
-                token: Tokens.auraosETH_wETH_BPT_vault,
-                quotaIncreaseFee: 0,
-                limit: 1_750_000_000_000_000_000_000
-            })
-        );
-        _quotaLimits.push(
-            PoolQuotaLimit({token: Tokens.auraweETH_rETH_vault, quotaIncreaseFee: 0, limit: 500_000_000_000_000_000_000})
         );
 
         {
@@ -474,10 +462,6 @@ contract CONFIG_MAINNET_WETH_V3 is IPoolV3DeployConfig {
 
             cts.push(CollateralTokenHuman({token: Tokens.auraB_rETH_STABLE_vault, lt: 87_00}));
 
-            cts.push(CollateralTokenHuman({token: Tokens.auraosETH_wETH_BPT_vault, lt: 87_00}));
-
-            cts.push(CollateralTokenHuman({token: Tokens.auraweETH_rETH_vault, lt: 87_00}));
-
             cts.push(CollateralTokenHuman({token: Tokens.CRV, lt: 72_50}));
 
             cts.push(CollateralTokenHuman({token: Tokens.CVX, lt: 72_50}));
@@ -500,14 +484,6 @@ contract CONFIG_MAINNET_WETH_V3 is IPoolV3DeployConfig {
 
             cts.push(CollateralTokenHuman({token: Tokens.auraB_rETH_STABLE, lt: 0}));
 
-            cts.push(CollateralTokenHuman({token: Tokens.osETH_wETH_BPT, lt: 0}));
-
-            cts.push(CollateralTokenHuman({token: Tokens.auraosETH_wETH_BPT, lt: 0}));
-
-            cts.push(CollateralTokenHuman({token: Tokens.weETH_rETH, lt: 0}));
-
-            cts.push(CollateralTokenHuman({token: Tokens.auraweETH_rETH, lt: 0}));
-
             cts.push(CollateralTokenHuman({token: Tokens.steCRV, lt: 0}));
 
             cts.push(CollateralTokenHuman({token: Tokens.crvUSD, lt: 0}));
@@ -528,11 +504,11 @@ contract CONFIG_MAINNET_WETH_V3 is IPoolV3DeployConfig {
             BalancerPool[] storage bp = cp.balancerPools;
 
             bp.push(
-                BalancerPool({poolId: 0x05ff47afada98a98982113758878f9a8b9fdda0a000000000000000000000645, status: 1})
+                BalancerPool({poolId: 0x05ff47afada98a98982113758878f9a8b9fdda0a000000000000000000000645, status: 2})
             );
 
             bp.push(
-                BalancerPool({poolId: 0xdacf5fa19b1f720111609043ac67a9818262850c000000000000000000000635, status: 1})
+                BalancerPool({poolId: 0xdacf5fa19b1f720111609043ac67a9818262850c000000000000000000000635, status: 2})
             );
 
             bp.push(
@@ -556,8 +532,6 @@ contract CONFIG_MAINNET_WETH_V3 is IPoolV3DeployConfig {
             cs.push(Contracts.CONVEX_3CRYPTO_POOL);
             cs.push(Contracts.AURA_BOOSTER);
             cs.push(Contracts.AURA_B_RETH_STABLE_POOL);
-            cs.push(Contracts.AURA_OSETH_WETH_POOL);
-            cs.push(Contracts.AURA_WEETH_RETH_POOL);
             cs.push(Contracts.YEARN_WETH_VAULT);
         }
     }
