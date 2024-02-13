@@ -361,7 +361,7 @@ const farmCreditManager: CreditManagerV3DeployConfig = {
   name: "Farm USDC",
   degenNft: true,
   expirationDate: undefined,
-  minDebt: (BigInt(2e4) * POOL_DECIMALS) / POOL_DIVIDER,
+  minDebt: (BigInt(5e4) * POOL_DECIMALS) / POOL_DIVIDER,
   maxDebt: (BigInt(1e6) * POOL_DECIMALS) / POOL_DIVIDER,
   feeInterest: 2500,
   feeLiquidation: 150,

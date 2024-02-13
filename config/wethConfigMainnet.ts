@@ -340,6 +340,7 @@ const farmUniV3Config: UniV3Config = {
     { token0: "WETH", token1: "CVX", fee: 10000 },
     { token0: "WBTC", token1: "WETH", fee: 3000 },
     { token0: "WBTC", token1: "WETH", fee: 500 },
+    { token0: "WETH", token1: "SWISE", fee: 3000 },
   ],
 };
 
@@ -348,14 +349,22 @@ const farmBalancerConfig: BalancerVaultConfig = {
   allowed: [
     {
       pool: "weETH_rETH",
-      status: 2,
+      status: 1,
     },
     {
       pool: "osETH_wETH_BPT",
-      status: 2,
+      status: 1,
     },
     {
       pool: "B_rETH_STABLE",
+      status: 1,
+    },
+    {
+      pool: "B_80BAL_20WETH",
+      status: 2,
+    },
+    {
+      pool: "50WETH_50AURA",
       status: 2,
     },
   ],
@@ -365,7 +374,7 @@ const farmCreditManager: CreditManagerV3DeployConfig = {
   name: "Farm WETH",
   degenNft: true,
   expirationDate: undefined,
-  minDebt: (BigInt(2e4) * POOL_DECIMALS) / POOL_DIVIDER,
+  minDebt: (BigInt(5e4) * POOL_DECIMALS) / POOL_DIVIDER,
   maxDebt: (BigInt(1e6) * POOL_DECIMALS) / POOL_DIVIDER,
   feeInterest: 2500,
   feeLiquidation: 150,
@@ -406,9 +415,17 @@ const farmCreditManager: CreditManagerV3DeployConfig = {
     { token: "stkcvxcrvUSDETHCRV", lt: 8500 },
     { token: "stkcvxcrvUSDTWBTCWETH", lt: 8500 },
 
+    // Aura
+    { token: "auraB_rETH_STABLE_vault", lt: 8700 },
+    { token: "auraosETH_wETH_BPT_vault", lt: 8700 },
+    { token: "auraweETH_rETH_vault", lt: 8700 },
+
     // Rewards
     { token: "CRV", lt: 7250 },
     { token: "CVX", lt: 7250 },
+    { token: "BAL", lt: 0 },
+    { token: "AURA", lt: 0 },
+    { token: "SWISE", lt: 0 },
 
     // Compatibility
     { token: "crvUSDETHCRV", lt: 0 },
@@ -416,6 +433,15 @@ const farmCreditManager: CreditManagerV3DeployConfig = {
 
     { token: "crvUSDTWBTCWETH", lt: 0 },
     { token: "cvxcrvUSDTWBTCWETH", lt: 0 },
+
+    { token: "B_rETH_STABLE", lt: 0 },
+    { token: "auraB_rETH_STABLE", lt: 0 },
+
+    { token: "osETH_wETH_BPT", lt: 0 },
+    { token: "auraosETH_wETH_BPT", lt: 0 },
+
+    { token: "weETH_rETH", lt: 0 },
+    { token: "auraweETH_rETH", lt: 0 },
 
     { token: "steCRV", lt: 0 },
     { token: "crvUSD", lt: 0 },
@@ -438,6 +464,12 @@ const farmCreditManager: CreditManagerV3DeployConfig = {
     { contract: "CONVEX_BOOSTER" },
     { contract: "CONVEX_TRI_CRV_POOL" },
     { contract: "CONVEX_3CRYPTO_POOL" },
+
+    // Aura
+    { contract: "AURA_BOOSTER" },
+    { contract: "AURA_B_RETH_STABLE_POOL" },
+    { contract: "AURA_OSETH_WETH_POOL" },
+    { contract: "AURA_WEETH_RETH_POOL" },
 
     // Yearn
     { contract: "YEARN_WETH_VAULT" },
@@ -610,6 +642,24 @@ export const config: PoolV3DeployConfig = {
       maxRate: 1470,
       quotaIncreaseFee: 0,
       limit: (BigInt(5.4e6) * POOL_DECIMALS) / POOL_DIVIDER,
+    },
+    auraB_rETH_STABLE_vault: {
+      minRate: 100,
+      maxRate: 550,
+      quotaIncreaseFee: 0,
+      limit: (BigInt(20e6) * POOL_DECIMALS) / POOL_DIVIDER,
+    },
+    auraosETH_wETH_BPT_vault: {
+      minRate: 100,
+      maxRate: 950,
+      quotaIncreaseFee: 0,
+      limit: (BigInt(3.5e6) * POOL_DECIMALS) / POOL_DIVIDER,
+    },
+    auraweETH_rETH_vault: {
+      minRate: 100,
+      maxRate: 3000,
+      quotaIncreaseFee: 0,
+      limit: (BigInt(1e6) * POOL_DECIMALS) / POOL_DIVIDER,
     },
   },
   creditManagers: [
