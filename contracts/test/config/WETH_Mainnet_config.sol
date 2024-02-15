@@ -56,7 +56,6 @@ contract CONFIG_MAINNET_WETH_V3 is IPoolV3DeployConfig {
         _gaugeRates.push(GaugeRate({token: Tokens.DAI, minRate: 4, maxRate: 12_00}));
         _gaugeRates.push(GaugeRate({token: Tokens.FRAX, minRate: 4, maxRate: 12_00}));
         _gaugeRates.push(GaugeRate({token: Tokens.USDT, minRate: 4, maxRate: 12_00}));
-        _gaugeRates.push(GaugeRate({token: Tokens.crvUSD, minRate: 4, maxRate: 12_00}));
         _gaugeRates.push(GaugeRate({token: Tokens.MKR, minRate: 80, maxRate: 24_00}));
         _gaugeRates.push(GaugeRate({token: Tokens.UNI, minRate: 80, maxRate: 24_00}));
         _gaugeRates.push(GaugeRate({token: Tokens.LINK, minRate: 80, maxRate: 24_00}));
@@ -70,7 +69,7 @@ contract CONFIG_MAINNET_WETH_V3 is IPoolV3DeployConfig {
         _gaugeRates.push(GaugeRate({token: Tokens.sDAI, minRate: 1, maxRate: 15_00}));
         _gaugeRates.push(GaugeRate({token: Tokens.STETH, minRate: 5, maxRate: 3_50}));
         _gaugeRates.push(GaugeRate({token: Tokens.rETH, minRate: 5, maxRate: 3_16}));
-        _gaugeRates.push(GaugeRate({token: Tokens.weETH, minRate: 5, maxRate: 3_16}));
+        _gaugeRates.push(GaugeRate({token: Tokens.weETH, minRate: 5, maxRate: 30_00}));
         _gaugeRates.push(GaugeRate({token: Tokens.osETH, minRate: 5, maxRate: 3_16}));
         _gaugeRates.push(GaugeRate({token: Tokens.yvWETH, minRate: 50, maxRate: 5_00}));
         _gaugeRates.push(GaugeRate({token: Tokens.stkcvxcrvUSDTWBTCWETH, minRate: 1_00, maxRate: 7_00}));
@@ -90,9 +89,6 @@ contract CONFIG_MAINNET_WETH_V3 is IPoolV3DeployConfig {
         );
         _quotaLimits.push(
             PoolQuotaLimit({token: Tokens.USDT, quotaIncreaseFee: 1, limit: 15_000_000_000_000_000_000_000})
-        );
-        _quotaLimits.push(
-            PoolQuotaLimit({token: Tokens.crvUSD, quotaIncreaseFee: 1, limit: 15_000_000_000_000_000_000_000})
         );
         _quotaLimits.push(
             PoolQuotaLimit({token: Tokens.MKR, quotaIncreaseFee: 1, limit: 1_500_000_000_000_000_000_000})
