@@ -517,12 +517,6 @@ export const config: PoolV3DeployConfig = {
       quotaIncreaseFee: 1,
       limit: (BigInt(30e6) * POOL_DECIMALS) / POOL_DIVIDER,
     },
-    crvUSD: {
-      minRate: 4,
-      maxRate: 1200,
-      quotaIncreaseFee: 1,
-      limit: (BigInt(30e6) * POOL_DECIMALS) / POOL_DIVIDER,
-    },
     MKR: {
       minRate: 80,
       maxRate: 2400,
@@ -605,7 +599,7 @@ export const config: PoolV3DeployConfig = {
     },
     weETH: {
       minRate: 5,
-      maxRate: 316,
+      maxRate: 3000,
       quotaIncreaseFee: 0,
       limit: (BigInt(5e6) * POOL_DECIMALS) / POOL_DIVIDER,
     },
