@@ -56,7 +56,6 @@ contract CONFIG_MAINNET_USDC_V3 is IPoolV3DeployConfig {
         _gaugeRates.push(GaugeRate({token: Tokens.DAI, minRate: 4, maxRate: 12_00}));
         _gaugeRates.push(GaugeRate({token: Tokens.FRAX, minRate: 4, maxRate: 12_00}));
         _gaugeRates.push(GaugeRate({token: Tokens.USDT, minRate: 4, maxRate: 12_00}));
-        _gaugeRates.push(GaugeRate({token: Tokens.crvUSD, minRate: 4, maxRate: 12_00}));
         _gaugeRates.push(GaugeRate({token: Tokens.MKR, minRate: 80, maxRate: 24_00}));
         _gaugeRates.push(GaugeRate({token: Tokens.UNI, minRate: 80, maxRate: 24_00}));
         _gaugeRates.push(GaugeRate({token: Tokens.LINK, minRate: 80, maxRate: 24_00}));
@@ -80,7 +79,6 @@ contract CONFIG_MAINNET_USDC_V3 is IPoolV3DeployConfig {
         _quotaLimits.push(PoolQuotaLimit({token: Tokens.DAI, quotaIncreaseFee: 1, limit: 30_000_000_000_000}));
         _quotaLimits.push(PoolQuotaLimit({token: Tokens.FRAX, quotaIncreaseFee: 1, limit: 30_000_000_000_000}));
         _quotaLimits.push(PoolQuotaLimit({token: Tokens.USDT, quotaIncreaseFee: 1, limit: 30_000_000_000_000}));
-        _quotaLimits.push(PoolQuotaLimit({token: Tokens.crvUSD, quotaIncreaseFee: 1, limit: 30_000_000_000_000}));
         _quotaLimits.push(PoolQuotaLimit({token: Tokens.MKR, quotaIncreaseFee: 1, limit: 3_000_000_000_000}));
         _quotaLimits.push(PoolQuotaLimit({token: Tokens.UNI, quotaIncreaseFee: 1, limit: 5_000_000_000_000}));
         _quotaLimits.push(PoolQuotaLimit({token: Tokens.LINK, quotaIncreaseFee: 1, limit: 5_000_000_000_000}));
@@ -400,8 +398,6 @@ contract CONFIG_MAINNET_USDC_V3 is IPoolV3DeployConfig {
 
             cts.push(CollateralTokenHuman({token: Tokens.FRAX, lt: 90_00}));
 
-            cts.push(CollateralTokenHuman({token: Tokens.crvUSD, lt: 90_00}));
-
             cts.push(CollateralTokenHuman({token: Tokens.sDAI, lt: 90_00}));
 
             cts.push(CollateralTokenHuman({token: Tokens.yvUSDC, lt: 90_00}));
@@ -441,6 +437,8 @@ contract CONFIG_MAINNET_USDC_V3 is IPoolV3DeployConfig {
             cts.push(CollateralTokenHuman({token: Tokens.crvCVXETH, lt: 0}));
 
             cts.push(CollateralTokenHuman({token: Tokens.crvUSDETHCRV, lt: 0}));
+
+            cts.push(CollateralTokenHuman({token: Tokens.crvUSD, lt: 0}));
             Contracts[] storage cs = cp.contracts;
             cs.push(Contracts.UNISWAP_V3_ROUTER);
             UniswapV3Pair[] storage uv3p = cp.uniswapV3Pairs;

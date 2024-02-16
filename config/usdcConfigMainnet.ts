@@ -386,10 +386,6 @@ const farmCreditManager: CreditManagerV3DeployConfig = {
       token: "FRAX",
       lt: 9000,
     },
-    {
-      token: "crvUSD",
-      lt: 9000,
-    },
     // ERC4626
     { token: "sDAI", lt: 9000 },
 
@@ -423,6 +419,7 @@ const farmCreditManager: CreditManagerV3DeployConfig = {
     { token: "3Crv", lt: 0 },
     { token: "crvCVXETH", lt: 0 },
     { token: "crvUSDETHCRV", lt: 0 },
+    { token: "crvUSD", lt: 0 },
   ],
   adapters: [
     // Swapping
@@ -505,12 +502,6 @@ export const config: PoolV3DeployConfig = {
       limit: (BigInt(30e6) * POOL_DECIMALS) / POOL_DIVIDER,
     },
     USDT: {
-      minRate: 4,
-      maxRate: 1200,
-      quotaIncreaseFee: 1,
-      limit: (BigInt(30e6) * POOL_DECIMALS) / POOL_DIVIDER,
-    },
-    crvUSD: {
       minRate: 4,
       maxRate: 1200,
       quotaIncreaseFee: 1,
