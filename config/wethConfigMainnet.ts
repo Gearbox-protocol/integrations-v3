@@ -500,23 +500,23 @@ const restakingCreditManager: CreditManagerV3DeployConfig = {
   name: "Restaking WETH",
   degenNft: false,
   expirationDate: undefined,
-  minDebt: (BigInt(5e4) * POOL_DECIMALS) / POOL_DIVIDER,
-  maxDebt: (BigInt(1e6) * POOL_DECIMALS) / POOL_DIVIDER,
-  feeInterest: 2500,
-  feeLiquidation: 100,
-  liquidationPremium: 300,
-  feeLiquidationExpired: 100,
-  liquidationPremiumExpired: 200,
-  poolLimit: BigInt(30000) * POOL_DECIMALS,
+  minDebt: BigInt(25) * POOL_DECIMALS,
+  maxDebt: BigInt(500) * POOL_DECIMALS,
+  feeInterest: 25_00,
+  feeLiquidation: 1_00,
+  liquidationPremium: 3_00,
+  feeLiquidationExpired: 1_00,
+  liquidationPremiumExpired: 2_00,
+  poolLimit: BigInt(30_000) * POOL_DECIMALS,
   collateralTokens: [
     // LRT
     {
       token: "weETH",
-      lt: 9150,
+      lt: 91_50,
     },
     {
       token: "ezETH",
-      lt: 9150,
+      lt: 91_50,
     },
     // Compatibility
     {
@@ -699,15 +699,15 @@ export const config: PoolV3DeployConfig = {
     // LRT
     weETH: {
       minRate: 5,
-      maxRate: 3000,
+      maxRate: 30_00,
       quotaIncreaseFee: 0,
-      limit: BigInt(15000) * POOL_DECIMALS,
+      limit: BigInt(15_000) * POOL_DECIMALS,
     },
     ezETH: {
       minRate: 5,
-      maxRate: 3000,
+      maxRate: 30_00,
       quotaIncreaseFee: 0,
-      limit: BigInt(15000) * POOL_DECIMALS,
+      limit: BigInt(15_000) * POOL_DECIMALS,
     },
   },
   creditManagers: [
