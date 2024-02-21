@@ -466,6 +466,75 @@ const farmCreditManager: CreditManagerV3DeployConfig = {
   ],
 };
 
+const restakingUniswapV3Config: UniV3Config = {
+  contract: "UNISWAP_V3_ROUTER",
+  allowed: [
+    { token0: "rETH", token1: "WETH", fee: 500 },
+    { token0: "rETH", token1: "WETH", fee: 100 },
+  ],
+};
+
+const restakingBalancerConfig: BalancerVaultConfig = {
+  contract: "BALANCER_VAULT",
+  allowed: [
+    {
+      pool: "weETH_rETH",
+      status: 2,
+    },
+    {
+      pool: "ezETH_WETH_BPT",
+      status: 2,
+    },
+    {
+      pool: "B_rETH_STABLE",
+      status: 2,
+    },
+    {
+      pool: "weETH_ezETH_rswETH",
+      status: 2,
+    },
+  ],
+};
+
+const restakingCreditManager: CreditManagerV3DeployConfig = {
+  name: "Restaking WETH",
+  degenNft: false,
+  expirationDate: undefined,
+  minDebt: (BigInt(5e4) * POOL_DECIMALS) / POOL_DIVIDER,
+  maxDebt: (BigInt(1e6) * POOL_DECIMALS) / POOL_DIVIDER,
+  feeInterest: 2500,
+  feeLiquidation: 100,
+  liquidationPremium: 300,
+  feeLiquidationExpired: 100,
+  liquidationPremiumExpired: 200,
+  poolLimit: BigInt(30000) * POOL_DECIMALS,
+  collateralTokens: [
+    // LRT
+    {
+      token: "weETH",
+      lt: 9150,
+    },
+    {
+      token: "ezETH",
+      lt: 9150,
+    },
+    // Compatibility
+    {
+      token: "rETH",
+      lt: 0,
+    },
+    {
+      token: "rETH_f",
+      lt: 0,
+    },
+  ],
+  adapters: [
+    restakingUniswapV3Config,
+    restakingBalancerConfig,
+    { contract: "CURVE_RETH_ETH_POOL" },
+  ],
+};
+
 export const config: PoolV3DeployConfig = {
   id: "mainnet-weth-v3",
   symbol: "dWETHV3",
@@ -597,12 +666,6 @@ export const config: PoolV3DeployConfig = {
       quotaIncreaseFee: 0,
       limit: (BigInt(30e6) * POOL_DECIMALS) / POOL_DIVIDER,
     },
-    weETH: {
-      minRate: 5,
-      maxRate: 3000,
-      quotaIncreaseFee: 0,
-      limit: (BigInt(5e6) * POOL_DECIMALS) / POOL_DIVIDER,
-    },
     osETH: {
       minRate: 5,
       maxRate: 316,
@@ -633,12 +696,26 @@ export const config: PoolV3DeployConfig = {
       quotaIncreaseFee: 0,
       limit: (BigInt(20e6) * POOL_DECIMALS) / POOL_DIVIDER,
     },
+    // LRT
+    weETH: {
+      minRate: 5,
+      maxRate: 3000,
+      quotaIncreaseFee: 0,
+      limit: BigInt(15000) * POOL_DECIMALS,
+    },
+    ezETH: {
+      minRate: 5,
+      maxRate: 3000,
+      quotaIncreaseFee: 0,
+      limit: BigInt(15000) * POOL_DECIMALS,
+    },
   },
   creditManagers: [
     tier1CreditManager,
     tier2CreditManager,
     tier3CreditManager,
     farmCreditManager,
+    restakingCreditManager,
   ],
   supportsQuotas: true,
 };
