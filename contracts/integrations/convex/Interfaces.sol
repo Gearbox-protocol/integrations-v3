@@ -221,3 +221,9 @@ interface IExtraRewardWrapper {
 
     function baseToken() external view returns (address);
 }
+
+interface IAuraL2Coordinator {
+    function auraOFT() external view returns (address);
+
+    function mintRate() external view returns (uint256);
+}

@@ -12,7 +12,7 @@ import {BitMask} from "@gearbox-protocol/core-v3/contracts/libraries/BitMask.sol
 
 import {IBooster} from "../../integrations/convex/IBooster.sol";
 import {IBaseRewardPool} from "../../integrations/convex/IBaseRewardPool.sol";
-import {IRewards, IExtraRewardWrapper} from "../../integrations/convex/Interfaces.sol";
+import {IRewards, IExtraRewardWrapper, IAuraL2Coordinator} from "../../integrations/convex/Interfaces.sol";
 import {IConvexV1BaseRewardPoolAdapter} from "../../interfaces/convex/IConvexV1BaseRewardPoolAdapter.sol";
 
 /// @title Convex V1 BaseRewardPool adapter interface
@@ -73,8 +73,7 @@ contract ConvexV1BaseRewardPoolAdapter is AbstractAdapter, IConvexV1BaseRewardPo
         address rewardToken = address(IBaseRewardPool(_baseRewardPool).rewardToken());
         _rewardTokensMask = _rewardTokensMask.enable(_getMaskOrRevert(rewardToken)); // U:[CVX1R-1]
 
-        address cvx = IBooster(booster).minter();
-        _rewardTokensMask = _rewardTokensMask.enable(_getMaskOrRevert(cvx)); // U:[CVX1R-1]
+        _rewardTokensMask = _rewardTokensMask.enable(_getSecondaryRewardMask(booster)); // U:[CVX1R-1]
 
         address _extraReward1;
         address _extraReward2;
@@ -111,6 +110,20 @@ contract ConvexV1BaseRewardPoolAdapter is AbstractAdapter, IConvexV1BaseRewardPo
                 extraReward = IExtraRewardWrapper(extraReward).baseToken();
             }
             extraRewardMask = _getMaskOrRevert(extraReward);
+        }
+    }
+
+    /// @dev Aura on L2 networks can have a different contract instead of the secondary reward token
+    ///      in IBooster.minter(). If the minter is not recognized as collateral in CM, we assume that
+    ///      it is not the secondary reward and handle the situation
+    function _getSecondaryRewardMask(address booster) internal view returns (uint256 rewardMask) {
+        address reward = IBooster(booster).minter();
+
+        try ICreditManagerV3(creditManager).getTokenMaskOrRevert(reward) returns (uint256 mask) {
+            rewardMask = mask;
+        } catch {
+            reward = IAuraL2Coordinator(reward).auraOFT();
+            rewardMask = _getMaskOrRevert(reward);
         }
     }
 
