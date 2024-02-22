@@ -62,9 +62,6 @@ contract CONFIG_ARBITRUM_WETH_V3 is IPoolV3DeployConfig {
         _gaugeRates.push(GaugeRate({token: Tokens.rETH, minRate: 1, maxRate: 3_50}));
         _gaugeRates.push(GaugeRate({token: Tokens.cbETH, minRate: 1, maxRate: 3_50}));
         _gaugeRates.push(GaugeRate({token: Tokens.sfrxETH, minRate: 1, maxRate: 3_50}));
-        _gaugeRates.push(GaugeRate({token: Tokens.aurawstETH_WETH_BPT_vault, minRate: 1_00, maxRate: 6_00}));
-        _gaugeRates.push(GaugeRate({token: Tokens.aurarETH_WETH_BPT_vault, minRate: 1_00, maxRate: 6_00}));
-        _gaugeRates.push(GaugeRate({token: Tokens.aurawstETH_rETH_cbETH_vault, minRate: 1_00, maxRate: 6_00}));
         _quotaLimits.push(
             PoolQuotaLimit({token: Tokens.USDC_e, quotaIncreaseFee: 1, limit: 1_500_000_000_000_000_000_000})
         );
@@ -93,27 +90,6 @@ contract CONFIG_ARBITRUM_WETH_V3 is IPoolV3DeployConfig {
         );
         _quotaLimits.push(
             PoolQuotaLimit({token: Tokens.sfrxETH, quotaIncreaseFee: 0, limit: 2_500_000_000_000_000_000_000})
-        );
-        _quotaLimits.push(
-            PoolQuotaLimit({
-                token: Tokens.aurawstETH_WETH_BPT_vault,
-                quotaIncreaseFee: 0,
-                limit: 750_000_000_000_000_000_000
-            })
-        );
-        _quotaLimits.push(
-            PoolQuotaLimit({
-                token: Tokens.aurarETH_WETH_BPT_vault,
-                quotaIncreaseFee: 0,
-                limit: 1_000_000_000_000_000_000_000
-            })
-        );
-        _quotaLimits.push(
-            PoolQuotaLimit({
-                token: Tokens.aurawstETH_rETH_cbETH_vault,
-                quotaIncreaseFee: 0,
-                limit: 1_000_000_000_000_000_000_000
-            })
         );
 
         {
@@ -206,30 +182,6 @@ contract CONFIG_ARBITRUM_WETH_V3 is IPoolV3DeployConfig {
             cts.push(CollateralTokenHuman({token: Tokens.cbETH, lt: 98_00}));
 
             cts.push(CollateralTokenHuman({token: Tokens.sfrxETH, lt: 98_00}));
-
-            cts.push(CollateralTokenHuman({token: Tokens.aurawstETH_WETH_BPT_vault, lt: 94_00}));
-
-            cts.push(CollateralTokenHuman({token: Tokens.aurarETH_WETH_BPT_vault, lt: 94_00}));
-
-            cts.push(CollateralTokenHuman({token: Tokens.aurawstETH_rETH_cbETH_vault, lt: 94_00}));
-
-            cts.push(CollateralTokenHuman({token: Tokens.BAL, lt: 0}));
-
-            cts.push(CollateralTokenHuman({token: Tokens.AURA, lt: 0}));
-
-            cts.push(CollateralTokenHuman({token: Tokens.ARB, lt: 0}));
-
-            cts.push(CollateralTokenHuman({token: Tokens.wstETH_WETH_BPT, lt: 0}));
-
-            cts.push(CollateralTokenHuman({token: Tokens.aurawstETH_WETH_BPT, lt: 0}));
-
-            cts.push(CollateralTokenHuman({token: Tokens.rETH_WETH_BPT, lt: 0}));
-
-            cts.push(CollateralTokenHuman({token: Tokens.aurarETH_WETH_BPT, lt: 0}));
-
-            cts.push(CollateralTokenHuman({token: Tokens.wstETH_rETH_cbETH, lt: 0}));
-
-            cts.push(CollateralTokenHuman({token: Tokens.aurawstETH_rETH_cbETH, lt: 0}));
             Contracts[] storage cs = cp.contracts;
             cs.push(Contracts.UNISWAP_V3_ROUTER);
             UniswapV3Pair[] storage uv3p = cp.uniswapV3Pairs;
@@ -254,10 +206,6 @@ contract CONFIG_ARBITRUM_WETH_V3 is IPoolV3DeployConfig {
             bp.push(
                 BalancerPool({poolId: 0xbcaa6c053cab3dd73a2e898d89a4f84a180ae1ca000100000000000000000458, status: 2})
             );
-            cs.push(Contracts.AURA_BOOSTER);
-            cs.push(Contracts.AURA_RETH_WETH_POOL_ARB);
-            cs.push(Contracts.AURA_WSTETH_RETH_CBETH_POOL_ARB);
-            cs.push(Contracts.AURA_WSTETH_WETH_POOL_ARB);
         }
     }
 
