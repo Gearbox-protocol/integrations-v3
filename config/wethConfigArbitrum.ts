@@ -128,7 +128,7 @@ const tier2CreditManager: CreditManagerV3DeployConfig = {
 export const config: PoolV3DeployConfig = {
   id: "arbitrum-weth-v3",
   symbol: "dWETHV3",
-  name: "WETH v3 Main",
+  name: "Main WETH v3",
   network: "Arbitrum",
   underlying: "WETH",
   accountAmount: BigInt(10) * POOL_DECIMALS,
