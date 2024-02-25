@@ -30,7 +30,7 @@ contract CONFIG_ARBITRUM_USDC_V3 is IPoolV3DeployConfig {
     // POOL
 
     string public constant symbol = "dUSDCV3";
-    string public constant name = "USDC v3";
+    string public constant name = "USDC.e v3 Main";
 
     PoolV3DeployParams _poolParams = PoolV3DeployParams({withdrawalFee: 0, totalDebtLimit: 100_000_000_000_000});
 

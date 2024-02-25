@@ -30,7 +30,7 @@ contract CONFIG_ARBITRUM_WETH_V3 is IPoolV3DeployConfig {
     // POOL
 
     string public constant symbol = "dWETHV3";
-    string public constant name = "WETH v3";
+    string public constant name = "WETH v3 Main";
 
     PoolV3DeployParams _poolParams =
         PoolV3DeployParams({withdrawalFee: 0, totalDebtLimit: 150_000_000_000_000_000_000_000});
@@ -96,7 +96,7 @@ contract CONFIG_ARBITRUM_WETH_V3 is IPoolV3DeployConfig {
             /// CREDIT_MANAGER_0
             CreditManagerV3DeployParams storage cp = _creditManagers.push();
 
-            cp.minDebt = 1_000_000_000_000_000_000;
+            cp.minDebt = 350_000_000_000_000_000;
             cp.maxDebt = 150_000_000_000_000_000_000;
             cp.feeInterest = 2500;
             cp.feeLiquidation = 50;
@@ -152,7 +152,7 @@ contract CONFIG_ARBITRUM_WETH_V3 is IPoolV3DeployConfig {
             /// CREDIT_MANAGER_1
             CreditManagerV3DeployParams storage cp = _creditManagers.push();
 
-            cp.minDebt = 1_000_000_000_000_000_000;
+            cp.minDebt = 350_000_000_000_000_000;
             cp.maxDebt = 35_000_000_000_000_000_000;
             cp.feeInterest = 2500;
             cp.feeLiquidation = 100;
