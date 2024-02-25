@@ -60,15 +60,15 @@ const tier1CreditManager: CreditManagerV3DeployConfig = {
   collateralTokens: [
     {
       token: "WETH",
-      lt: 9600,
+      lt: 9400,
     },
     {
       token: "WBTC",
-      lt: 9600,
+      lt: 9400,
     },
     {
       token: "ARB",
-      lt: 9600,
+      lt: 9000,
     },
     // BOOSTED
     {
@@ -112,19 +112,19 @@ const tier2CreditManager: CreditManagerV3DeployConfig = {
   collateralTokens: [
     {
       token: "WETH",
-      lt: 9500,
+      lt: 9400,
     },
     {
       token: "GMX",
-      lt: 9200,
+      lt: 8350,
     },
     {
       token: "LINK",
-      lt: 9200,
+      lt: 9000,
     },
     {
       token: "PENDLE",
-      lt: 9200,
+      lt: 8000,
     },
   ],
   adapters: [tier2UniV3Config],
@@ -163,28 +163,28 @@ export const config: PoolV3DeployConfig = {
       limit: (BigInt(7e6) * POOL_DECIMALS) / POOL_DIVIDER,
     },
     ARB: {
-      minRate: 4,
-      maxRate: 1200,
-      quotaIncreaseFee: 1,
+      minRate: 80,
+      maxRate: 2400,
+      quotaIncreaseFee: 5,
       limit: (BigInt(3e6) * POOL_DECIMALS) / POOL_DIVIDER,
     },
     GMX: {
       minRate: 80,
       maxRate: 2400,
       quotaIncreaseFee: 5,
-      limit: (BigInt(1e6) * POOL_DECIMALS) / POOL_DIVIDER,
+      limit: (BigInt(5e5) * POOL_DECIMALS) / POOL_DIVIDER,
     },
     LINK: {
       minRate: 80,
       maxRate: 2400,
       quotaIncreaseFee: 5,
-      limit: (BigInt(8e5) * POOL_DECIMALS) / POOL_DIVIDER,
+      limit: (BigInt(5e5) * POOL_DECIMALS) / POOL_DIVIDER,
     },
     PENDLE: {
       minRate: 80,
       maxRate: 2400,
       quotaIncreaseFee: 5,
-      limit: (BigInt(1e6) * POOL_DECIMALS) / POOL_DIVIDER,
+      limit: (BigInt(5e5) * POOL_DECIMALS) / POOL_DIVIDER,
     },
     // BOOSTED
     wstETH: {

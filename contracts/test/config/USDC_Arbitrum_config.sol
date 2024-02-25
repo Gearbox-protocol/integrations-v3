@@ -52,7 +52,7 @@ contract CONFIG_ARBITRUM_USDC_V3 is IPoolV3DeployConfig {
     constructor() {
         _gaugeRates.push(GaugeRate({token: Tokens.WBTC, minRate: 4, maxRate: 12_00}));
         _gaugeRates.push(GaugeRate({token: Tokens.WETH, minRate: 4, maxRate: 12_00}));
-        _gaugeRates.push(GaugeRate({token: Tokens.ARB, minRate: 4, maxRate: 12_00}));
+        _gaugeRates.push(GaugeRate({token: Tokens.ARB, minRate: 80, maxRate: 24_00}));
         _gaugeRates.push(GaugeRate({token: Tokens.GMX, minRate: 80, maxRate: 24_00}));
         _gaugeRates.push(GaugeRate({token: Tokens.LINK, minRate: 80, maxRate: 24_00}));
         _gaugeRates.push(GaugeRate({token: Tokens.PENDLE, minRate: 80, maxRate: 24_00}));
@@ -61,10 +61,10 @@ contract CONFIG_ARBITRUM_USDC_V3 is IPoolV3DeployConfig {
         _gaugeRates.push(GaugeRate({token: Tokens.cbETH, minRate: 4, maxRate: 15_00}));
         _quotaLimits.push(PoolQuotaLimit({token: Tokens.WBTC, quotaIncreaseFee: 1, limit: 4_500_000_000_000}));
         _quotaLimits.push(PoolQuotaLimit({token: Tokens.WETH, quotaIncreaseFee: 1, limit: 7_000_000_000_000}));
-        _quotaLimits.push(PoolQuotaLimit({token: Tokens.ARB, quotaIncreaseFee: 1, limit: 3_000_000_000_000}));
-        _quotaLimits.push(PoolQuotaLimit({token: Tokens.GMX, quotaIncreaseFee: 5, limit: 1_000_000_000_000}));
-        _quotaLimits.push(PoolQuotaLimit({token: Tokens.LINK, quotaIncreaseFee: 5, limit: 800_000_000_000}));
-        _quotaLimits.push(PoolQuotaLimit({token: Tokens.PENDLE, quotaIncreaseFee: 5, limit: 1_000_000_000_000}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.ARB, quotaIncreaseFee: 5, limit: 3_000_000_000_000}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.GMX, quotaIncreaseFee: 5, limit: 500_000_000_000}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.LINK, quotaIncreaseFee: 5, limit: 500_000_000_000}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.PENDLE, quotaIncreaseFee: 5, limit: 500_000_000_000}));
         _quotaLimits.push(PoolQuotaLimit({token: Tokens.wstETH, quotaIncreaseFee: 1, limit: 7_000_000_000_000}));
         _quotaLimits.push(PoolQuotaLimit({token: Tokens.rETH, quotaIncreaseFee: 1, limit: 7_000_000_000_000}));
         _quotaLimits.push(PoolQuotaLimit({token: Tokens.cbETH, quotaIncreaseFee: 1, limit: 7_000_000_000_000}));
@@ -86,11 +86,11 @@ contract CONFIG_ARBITRUM_USDC_V3 is IPoolV3DeployConfig {
             cp.poolLimit = 4_000_000_000_000;
 
             CollateralTokenHuman[] storage cts = cp.collateralTokens;
-            cts.push(CollateralTokenHuman({token: Tokens.WETH, lt: 96_00}));
+            cts.push(CollateralTokenHuman({token: Tokens.WETH, lt: 94_00}));
 
-            cts.push(CollateralTokenHuman({token: Tokens.WBTC, lt: 96_00}));
+            cts.push(CollateralTokenHuman({token: Tokens.WBTC, lt: 94_00}));
 
-            cts.push(CollateralTokenHuman({token: Tokens.ARB, lt: 96_00}));
+            cts.push(CollateralTokenHuman({token: Tokens.ARB, lt: 90_00}));
 
             cts.push(CollateralTokenHuman({token: Tokens.wstETH, lt: 94_00}));
 
@@ -143,13 +143,13 @@ contract CONFIG_ARBITRUM_USDC_V3 is IPoolV3DeployConfig {
             cp.poolLimit = 2_000_000_000_000;
 
             CollateralTokenHuman[] storage cts = cp.collateralTokens;
-            cts.push(CollateralTokenHuman({token: Tokens.WETH, lt: 95_00}));
+            cts.push(CollateralTokenHuman({token: Tokens.WETH, lt: 94_00}));
 
-            cts.push(CollateralTokenHuman({token: Tokens.GMX, lt: 92_00}));
+            cts.push(CollateralTokenHuman({token: Tokens.GMX, lt: 83_50}));
 
-            cts.push(CollateralTokenHuman({token: Tokens.LINK, lt: 92_00}));
+            cts.push(CollateralTokenHuman({token: Tokens.LINK, lt: 90_00}));
 
-            cts.push(CollateralTokenHuman({token: Tokens.PENDLE, lt: 92_00}));
+            cts.push(CollateralTokenHuman({token: Tokens.PENDLE, lt: 80_00}));
             Contracts[] storage cs = cp.contracts;
             cs.push(Contracts.UNISWAP_V3_ROUTER);
             UniswapV3Pair[] storage uv3p = cp.uniswapV3Pairs;

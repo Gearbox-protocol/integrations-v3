@@ -23,6 +23,24 @@ const tier1UniV3Config: UniV3Config = {
   ],
 };
 
+const tier1BalancerConfig: BalancerVaultConfig = {
+  contract: "BALANCER_VAULT",
+  allowed: [
+    {
+      pool: "wstETH_WETH_BPT",
+      status: 2,
+    },
+    {
+      pool: "rETH_WETH_BPT",
+      status: 2,
+    },
+    {
+      pool: "wstETH_rETH_cbETH",
+      status: 2,
+    },
+  ],
+};
+
 const tier1CreditManager: CreditManagerV3DeployConfig = {
   name: "Trade WETH Tier 1 Arbitrum",
   degenNft: false,
@@ -46,20 +64,32 @@ const tier1CreditManager: CreditManagerV3DeployConfig = {
     },
     {
       token: "WBTC",
-      lt: 9600,
+      lt: 9400,
     },
     {
       token: "ARB",
+      lt: 9000,
+    },
+    // FARMS
+    {
+      token: "wstETH",
+      lt: 9600,
+    },
+    {
+      token: "rETH",
+      lt: 9600,
+    },
+    {
+      token: "cbETH",
       lt: 9600,
     },
   ],
-  adapters: [tier1UniV3Config],
+  adapters: [tier1UniV3Config, tier1BalancerConfig],
 };
 
 const tier2UniV3Config: UniV3Config = {
   contract: "UNISWAP_V3_ROUTER",
   allowed: [
-    { token0: "WETH", token1: "USDC_e", fee: 500 },
     { token0: "PENDLE", token1: "WETH", fee: 3000 },
     { token0: "GMX", token1: "WETH", fee: 3000 },
     { token0: "LINK", token1: "WETH", fee: 3000 },
@@ -81,129 +111,18 @@ const tier2CreditManager: CreditManagerV3DeployConfig = {
   collateralTokens: [
     {
       token: "PENDLE",
-      lt: 9200,
+      lt: 8000,
     },
     {
       token: "GMX",
-      lt: 9200,
+      lt: 8350,
     },
     {
       token: "LINK",
-      lt: 9200,
+      lt: 9000,
     },
   ],
   adapters: [tier2UniV3Config],
-};
-
-const farmUniV3Config: UniV3Config = {
-  contract: "UNISWAP_V3_ROUTER",
-  allowed: [
-    { token0: "wstETH", token1: "WETH", fee: 100 },
-    { token0: "WETH", token1: "ARB", fee: 500 },
-    { token0: "WETH", token1: "ARB", fee: 3000 },
-  ],
-};
-
-const farmBalancerConfig: BalancerVaultConfig = {
-  contract: "BALANCER_VAULT",
-  allowed: [
-    {
-      pool: "wstETH_WETH_BPT",
-      status: 1,
-    },
-    {
-      pool: "rETH_WETH_BPT",
-      status: 1,
-    },
-    // {
-    //   pool: "wstETH_rETH_sfrxETH",
-    //   status: 1,
-    // },
-    {
-      pool: "wstETH_rETH_cbETH",
-      status: 1,
-    },
-    {
-      pool: "33AURA_33ARB_33BAL",
-      status: 2,
-    },
-  ],
-};
-
-const farmCreditManager: CreditManagerV3DeployConfig = {
-  name: "Farm WETH Arbitrum",
-  degenNft: true,
-  expirationDate: undefined,
-  minDebt: BigInt(5) * POOL_DECIMALS,
-  maxDebt: BigInt(300) * POOL_DECIMALS,
-  feeInterest: 2500,
-  feeLiquidation: 50,
-  liquidationPremium: 100,
-  feeLiquidationExpired: 50,
-  liquidationPremiumExpired: 100,
-  poolLimit: BigInt(1500) * POOL_DECIMALS,
-  collateralTokens: [
-    {
-      token: "wstETH",
-      lt: 9800,
-    },
-    {
-      token: "rETH",
-      lt: 9800,
-    },
-    {
-      token: "cbETH",
-      lt: 9800,
-    },
-    {
-      token: "sfrxETH",
-      lt: 9800,
-    },
-
-    // Aura
-    // {
-    //   token: "aurawstETH_WETH_BPT_vault",
-    //   lt: 9400
-    // },
-    // {
-    //   token: "aurarETH_WETH_BPT_vault",
-    //   lt: 9400
-    // },
-    // {
-    //   token: "aurawstETH_rETH_cbETH_vault",
-    //   lt: 9400
-    // },
-    // {
-    //   token: "aurawstETH_rETH_sfrxETH_vault",
-    //   lt: 9400
-    // },
-    // Rewards
-    // { token: "BAL", lt: 0 },
-    // { token: "AURA", lt: 0 },
-    // { token: "ARB", lt: 0 },
-
-    // Compatibility
-    // { token: "wstETH_WETH_BPT", lt: 0 },
-    // { token: "aurawstETH_WETH_BPT", lt: 0},
-
-    // { token: "rETH_WETH_BPT", lt: 0 },
-    // { token: "aurarETH_WETH_BPT", lt: 0 },
-
-    // { token: "wstETH_rETH_cbETH", lt: 0 },
-    // { token: "aurawstETH_rETH_cbETH", lt: 0 },
-
-    // { token: "wstETH_rETH_sfrxETH", lt: 0 },
-    // { token: "aurawstETH_rETH_sfrxETH", lt: 0 }
-  ],
-  adapters: [
-    farmUniV3Config,
-    farmBalancerConfig,
-    // { contract: "AURA_BOOSTER" },
-    // { contract: "AURA_RETH_WETH_POOL_ARB"},
-    // { contract: "AURA_WSTETH_RETH_CBETH_POOL_ARB"},
-    // { contract: "AURA_WSTETH_RETH_SFRXETH_POOL_ARB"},
-    // { contract: "AURA_WSTETH_WETH_POOL_ARB"}
-  ],
 };
 
 export const config: PoolV3DeployConfig = {
@@ -246,27 +165,27 @@ export const config: PoolV3DeployConfig = {
     },
     ARB: {
       minRate: 4,
-      maxRate: 1200,
-      quotaIncreaseFee: 1,
-      limit: BigInt(13001) * POOL_DECIMALS,
+      maxRate: 2400,
+      quotaIncreaseFee: 5,
+      limit: BigInt(1300) * POOL_DECIMALS,
     },
     PENDLE: {
       minRate: 80,
       maxRate: 2400,
       quotaIncreaseFee: 5,
-      limit: BigInt(400) * POOL_DECIMALS,
+      limit: BigInt(150) * POOL_DECIMALS,
     },
     GMX: {
       minRate: 80,
       maxRate: 2400,
       quotaIncreaseFee: 5,
-      limit: BigInt(500) * POOL_DECIMALS,
+      limit: BigInt(150) * POOL_DECIMALS,
     },
     LINK: {
       minRate: 80,
       maxRate: 2400,
       quotaIncreaseFee: 5,
-      limit: BigInt(300) * POOL_DECIMALS,
+      limit: BigInt(150) * POOL_DECIMALS,
     },
     // FARMS
     wstETH: {
@@ -293,31 +212,7 @@ export const config: PoolV3DeployConfig = {
       quotaIncreaseFee: 0,
       limit: BigInt(2500) * POOL_DECIMALS,
     },
-    // aurawstETH_WETH_BPT_vault: {
-    //   minRate: 100,
-    //   maxRate: 600,
-    //   quotaIncreaseFee: 0,
-    //   limit: BigInt(750) * POOL_DECIMALS
-    // },
-    // aurarETH_WETH_BPT_vault: {
-    //   minRate: 100,
-    //   maxRate: 600,
-    //   quotaIncreaseFee: 0,
-    //   limit: BigInt(1000) * POOL_DECIMALS
-    // },
-    // aurawstETH_rETH_cbETH_vault: {
-    //   minRate: 100,
-    //   maxRate: 600,
-    //   quotaIncreaseFee: 0,
-    //   limit: BigInt(1000) * POOL_DECIMALS
-    // },
-    // aurawstETH_rETH_sfrxETH_vault: {
-    //   minRate: 100,
-    //   maxRate: 600,
-    //   quotaIncreaseFee: 0,
-    //   limit: BigInt(400) * POOL_DECIMALS
-    // },
   },
-  creditManagers: [tier1CreditManager, tier2CreditManager, farmCreditManager],
+  creditManagers: [tier1CreditManager, tier2CreditManager],
   supportsQuotas: true,
 };
