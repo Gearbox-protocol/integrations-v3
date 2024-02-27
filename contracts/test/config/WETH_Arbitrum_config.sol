@@ -109,9 +109,9 @@ contract CONFIG_ARBITRUM_WETH_V3 is IPoolV3DeployConfig {
             cp.poolLimit = 1_000_000_000_000_000_000_000;
 
             CollateralTokenHuman[] storage cts = cp.collateralTokens;
-            cts.push(CollateralTokenHuman({token: Tokens.USDC_e, lt: 96_00}));
+            cts.push(CollateralTokenHuman({token: Tokens.USDC_e, lt: 94_00}));
 
-            cts.push(CollateralTokenHuman({token: Tokens.USDC, lt: 96_00}));
+            cts.push(CollateralTokenHuman({token: Tokens.USDC, lt: 94_00}));
 
             cts.push(CollateralTokenHuman({token: Tokens.WBTC, lt: 94_00}));
 

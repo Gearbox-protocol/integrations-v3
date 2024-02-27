@@ -56,11 +56,11 @@ const tier1CreditManager: CreditManagerV3DeployConfig = {
   collateralTokens: [
     {
       token: "USDC_e",
-      lt: 9600,
+      lt: 9400,
     },
     {
       token: "USDC",
-      lt: 9600,
+      lt: 9400,
     },
     {
       token: "WBTC",
