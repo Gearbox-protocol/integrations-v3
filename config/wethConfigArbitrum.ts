@@ -2,9 +2,7 @@ import {
   BalancerVaultConfig,
   CreditManagerV3DeployConfig,
   PoolV3DeployConfig,
-  UniV2Config,
   UniV3Config,
-  VelodromeV2Config,
 } from "@gearbox-protocol/sdk-gov";
 
 const POOL_DECIMALS = BigInt(1e18);

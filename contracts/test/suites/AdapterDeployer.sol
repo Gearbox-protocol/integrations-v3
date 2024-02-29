@@ -25,6 +25,7 @@ import {WstETHV1Adapter} from "../../adapters/lido/WstETHV1.sol";
 import {CurveV1Adapter2Assets} from "../../adapters/curve/CurveV1_2.sol";
 import {CurveV1Adapter3Assets} from "../../adapters/curve/CurveV1_3.sol";
 import {CurveV1Adapter4Assets} from "../../adapters/curve/CurveV1_4.sol";
+import {CurveV1AdapterStableNG} from "../../adapters/curve/CurveV1_StableNG.sol";
 
 import {CurveV1AdapterStETH} from "../../adapters/curve/CurveV1_stETH.sol";
 import {CurveV1AdapterDeposit} from "../../adapters/curve/CurveV1_DepositZap.sol";
@@ -41,6 +42,7 @@ import {ERC4626Adapter} from "../../adapters/erc4626/ERC4626Adapter.sol";
 
 import {BalancerV2VaultAdapter} from "../../adapters/balancer/BalancerV2VaultAdapter.sol";
 import {VelodromeV2RouterAdapter} from "../../adapters/velodrome/VelodromeV2RouterAdapter.sol";
+import {CamelotV3Adapter} from "../../adapters/camelot/CamelotV3Adapter.sol";
 
 import {TokensTestSuite} from "@gearbox-protocol/core-v3/contracts/test/suites/TokensTestSuite.sol";
 import {Test} from "forge-std/Test.sol";
@@ -135,6 +137,8 @@ contract AdapterDeployer is AdapterData, Test {
                         adapter = address(new BalancerV2VaultAdapter(address(creditManager), targetContract));
                     } else if (at == AdapterType.VELODROME_V2_ROUTER) {
                         adapter = address(new VelodromeV2RouterAdapter(address(creditManager), targetContract));
+                    } else if (at == AdapterType.CAMELOT_V3_ROUTER) {
+                        adapter = address(new CamelotV3Adapter(address(creditManager), targetContract));
                     }
 
                     return adapter;
@@ -168,6 +172,15 @@ contract AdapterDeployer is AdapterData, Test {
                     } else if (at == AdapterType.CURVE_V1_4ASSETS) {
                         adapter = address(
                             new CurveV1Adapter4Assets(
+                                address(creditManager),
+                                targetContract,
+                                tokenTestSuite.addressOf(curveAdapters[i].lpToken),
+                                address(0)
+                            )
+                        );
+                    } else if (at == AdapterType.CURVE_STABLE_NG) {
+                        adapter = address(
+                            new CurveV1AdapterStableNG(
                                 address(creditManager),
                                 targetContract,
                                 tokenTestSuite.addressOf(curveAdapters[i].lpToken),

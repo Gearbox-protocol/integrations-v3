@@ -10,10 +10,12 @@ import {ICurvePool} from "../../../../integrations/curve/ICurvePool.sol";
 import {ICurvePool2Assets} from "../../../../integrations/curve/ICurvePool_2.sol";
 import {ICurvePool3Assets} from "../../../../integrations/curve/ICurvePool_3.sol";
 import {ICurvePool4Assets} from "../../../../integrations/curve/ICurvePool_4.sol";
+import {ICurvePoolStableNG} from "../../../../integrations/curve/ICurvePool_StableNG.sol";
 import {ICurveV1Adapter} from "../../../../interfaces/curve/ICurveV1Adapter.sol";
 import {ICurveV1_2AssetsAdapter} from "../../../../interfaces/curve/ICurveV1_2AssetsAdapter.sol";
 import {ICurveV1_3AssetsAdapter} from "../../../../interfaces/curve/ICurveV1_3AssetsAdapter.sol";
 import {ICurveV1_4AssetsAdapter} from "../../../../interfaces/curve/ICurveV1_4AssetsAdapter.sol";
+import {ICurveV1_StableNGAdapter} from "../../../../interfaces/curve/ICurveV1_StableNGAdapter.sol";
 import {IAdapter} from "@gearbox-protocol/core-v2/contracts/interfaces/IAdapter.sol";
 import {AdapterType} from "@gearbox-protocol/sdk-gov/contracts/AdapterType.sol";
 import {AddressList} from "@gearbox-protocol/core-v3/contracts/test/lib/AddressList.sol";
@@ -36,6 +38,7 @@ import {BalanceComparator, BalanceBackup} from "../../../helpers/BalanceComparat
 struct CurvePoolParams {
     bool use256;
     bool hasUnderlying;
+    bool isNGPool;
     uint256 nCoins;
     address lpToken;
     address coin0;
@@ -250,7 +253,12 @@ contract Live_CurveEquivalenceTest is LiveTestHelper {
         if (isAdapter) {
             CurveV1Multicaller pool = CurveV1Multicaller(curvePoolAddr);
 
-            if (params.nCoins == 2) {
+            if (params.isNGPool) {
+                uint256[] memory amounts = new uint256[](params.nCoins);
+                amounts[0] = 5 * params.coin0BaseUnit;
+
+                creditFacade.multicall(creditAccount, MultiCallBuilder.build(pool.add_liquidity(amounts, 0)));
+            } else if (params.nCoins == 2) {
                 uint256[2] memory amounts = [5 * params.coin0BaseUnit, 0];
 
                 creditFacade.multicall(creditAccount, MultiCallBuilder.build(pool.add_liquidity(amounts, 0)));
@@ -264,7 +272,13 @@ contract Live_CurveEquivalenceTest is LiveTestHelper {
                 creditFacade.multicall(creditAccount, MultiCallBuilder.build(pool.add_liquidity(amounts, 0)));
             }
         } else {
-            if (params.nCoins == 2) {
+            if (params.isNGPool) {
+                ICurvePoolStableNG pool = ICurvePoolStableNG(curvePoolAddr);
+                uint256[] memory amounts = new uint256[](params.nCoins);
+                amounts[0] = 5 * params.coin0BaseUnit;
+
+                pool.add_liquidity(amounts, 0);
+            } else if (params.nCoins == 2) {
                 ICurvePool2Assets pool = ICurvePool2Assets(curvePoolAddr);
                 uint256[2] memory amounts = [5 * params.coin0BaseUnit, 0];
 
@@ -296,7 +310,11 @@ contract Live_CurveEquivalenceTest is LiveTestHelper {
         if (isAdapter) {
             CurveV1Multicaller pool = CurveV1Multicaller(curvePoolAddr);
 
-            if (params.nCoins == 2) {
+            if (params.isNGPool) {
+                uint256[] memory amounts = new uint256[](params.nCoins);
+
+                creditFacade.multicall(creditAccount, MultiCallBuilder.build(pool.remove_liquidity(amount, amounts)));
+            } else if (params.nCoins == 2) {
                 uint256[2] memory amounts = [uint256(0), 0];
 
                 creditFacade.multicall(creditAccount, MultiCallBuilder.build(pool.remove_liquidity(amount, amounts)));
@@ -310,7 +328,12 @@ contract Live_CurveEquivalenceTest is LiveTestHelper {
                 creditFacade.multicall(creditAccount, MultiCallBuilder.build(pool.remove_liquidity(amount, amounts)));
             }
         } else {
-            if (params.nCoins == 2) {
+            if (params.isNGPool) {
+                ICurvePoolStableNG pool = ICurvePoolStableNG(curvePoolAddr);
+                uint256[] memory amounts = new uint256[](params.nCoins);
+
+                pool.remove_liquidity(amount, amounts);
+            } else if (params.nCoins == 2) {
                 ICurvePool2Assets pool = ICurvePool2Assets(curvePoolAddr);
                 uint256[2] memory amounts = [uint256(0), 0];
 
@@ -342,7 +365,14 @@ contract Live_CurveEquivalenceTest is LiveTestHelper {
         if (isAdapter) {
             CurveV1Multicaller pool = CurveV1Multicaller(curvePoolAddr);
 
-            if (params.nCoins == 2) {
+            if (params.isNGPool) {
+                uint256[] memory amounts = new uint256[](params.nCoins);
+                amounts[0] = params.coin0BaseUnit;
+
+                creditFacade.multicall(
+                    creditAccount, MultiCallBuilder.build(pool.remove_liquidity_imbalance(amounts, maxAmount))
+                );
+            } else if (params.nCoins == 2) {
                 uint256[2] memory amounts = [params.coin0BaseUnit, 0];
 
                 creditFacade.multicall(
@@ -362,7 +392,13 @@ contract Live_CurveEquivalenceTest is LiveTestHelper {
                 );
             }
         } else {
-            if (params.nCoins == 2) {
+            if (params.isNGPool) {
+                ICurvePoolStableNG pool = ICurvePoolStableNG(curvePoolAddr);
+                uint256[] memory amounts = new uint256[](params.nCoins);
+                amounts[0] = params.coin0BaseUnit;
+
+                pool.remove_liquidity_imbalance(amounts, maxAmount);
+            } else if (params.nCoins == 2) {
                 ICurvePool2Assets pool = ICurvePool2Assets(curvePoolAddr);
                 uint256[2] memory amounts = [params.coin0BaseUnit, 0];
 
@@ -396,7 +432,13 @@ contract Live_CurveEquivalenceTest is LiveTestHelper {
                 MultiCallBuilder.build(pool.add_liquidity_one_coin(2 * params.coin0BaseUnit, uint256(0), 0))
             );
         } else {
-            if (params.nCoins == 2) {
+            if (params.isNGPool) {
+                ICurvePoolStableNG pool = ICurvePoolStableNG(curvePoolAddr);
+                uint256[] memory amounts = new uint256[](params.nCoins);
+                amounts[0] = 2 * params.coin0BaseUnit;
+
+                pool.add_liquidity(amounts, 0);
+            } else if (params.nCoins == 2) {
                 ICurvePool2Assets pool = ICurvePool2Assets(curvePoolAddr);
                 uint256[2] memory amounts = [2 * params.coin0BaseUnit, 0];
 
@@ -432,7 +474,13 @@ contract Live_CurveEquivalenceTest is LiveTestHelper {
         } else {
             uint256 amountToSwap = IERC20(params.coin0).balanceOf(creditAccount) - 70 * params.coin0BaseUnit;
 
-            if (params.nCoins == 2) {
+            if (params.isNGPool) {
+                ICurvePoolStableNG pool = ICurvePoolStableNG(curvePoolAddr);
+                uint256[] memory amounts = new uint256[](params.nCoins);
+                amounts[0] = amountToSwap;
+
+                pool.add_liquidity(amounts, 0);
+            } else if (params.nCoins == 2) {
                 ICurvePool2Assets pool = ICurvePool2Assets(curvePoolAddr);
                 uint256[2] memory amounts = [amountToSwap, 0];
 
@@ -562,7 +610,8 @@ contract Live_CurveEquivalenceTest is LiveTestHelper {
 
     function isCurveAdapter(AdapterType aType) internal pure returns (bool) {
         return aType == AdapterType.CURVE_V1_2ASSETS || aType == AdapterType.CURVE_V1_3ASSETS
-            || aType == AdapterType.CURVE_V1_4ASSETS || aType == AdapterType.CURVE_V1_STECRV_POOL;
+            || aType == AdapterType.CURVE_V1_4ASSETS || aType == AdapterType.CURVE_V1_STECRV_POOL
+            || aType == AdapterType.CURVE_STABLE_NG;
     }
 
     /// @dev [L-CRVET-1]: Curve adapter and normal account works identically
@@ -584,6 +633,7 @@ contract Live_CurveEquivalenceTest is LiveTestHelper {
             CurvePoolParams memory cpp = CurvePoolParams({
                 use256: ICurveV1Adapter(adapters[i]).use256(),
                 hasUnderlying: ICurveV1Adapter(adapters[i]).underlying0() != address(0),
+                isNGPool: IAdapter(adapters[i])._gearboxAdapterType() == AdapterType.CURVE_STABLE_NG,
                 nCoins: ICurveV1Adapter(adapters[i]).nCoins(),
                 lpToken: ICurveV1Adapter(adapters[i]).token(),
                 coin0: coin0,

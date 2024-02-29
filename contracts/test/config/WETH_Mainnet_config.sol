@@ -11,10 +11,9 @@ import {
     CreditManagerV3DeployParams,
     GaugeRate,
     PoolQuotaLimit,
-    CollateralToken,
     IPoolV3DeployConfig,
     CollateralTokenHuman,
-    UniswapV2Pair,
+    GenericSwapPair,
     UniswapV3Pair,
     BalancerPool,
     VelodromeV2Pool
@@ -201,20 +200,24 @@ contract CONFIG_MAINNET_WETH_V3 is IPoolV3DeployConfig {
             Contracts[] storage cs = cp.contracts;
             cs.push(Contracts.UNISWAP_V2_ROUTER);
             {
-                UniswapV2Pair[] storage uv2p = cp.uniswapV2Pairs;
-                uv2p.push(
-                    UniswapV2Pair({router: Contracts.UNISWAP_V2_ROUTER, token0: Tokens.WETH, token1: Tokens.USDT})
+                GenericSwapPair[] storage gsp = cp.genericSwapPairs;
+                gsp.push(
+                    GenericSwapPair({router: Contracts.UNISWAP_V2_ROUTER, token0: Tokens.WETH, token1: Tokens.USDT})
                 );
-                uv2p.push(
-                    UniswapV2Pair({router: Contracts.UNISWAP_V2_ROUTER, token0: Tokens.USDC, token1: Tokens.WETH})
+                gsp.push(
+                    GenericSwapPair({router: Contracts.UNISWAP_V2_ROUTER, token0: Tokens.USDC, token1: Tokens.WETH})
                 );
-                uv2p.push(
-                    UniswapV2Pair({router: Contracts.UNISWAP_V2_ROUTER, token0: Tokens.USDC, token1: Tokens.USDT})
+                gsp.push(
+                    GenericSwapPair({router: Contracts.UNISWAP_V2_ROUTER, token0: Tokens.USDC, token1: Tokens.USDT})
                 );
-                uv2p.push(UniswapV2Pair({router: Contracts.UNISWAP_V2_ROUTER, token0: Tokens.DAI, token1: Tokens.USDC}));
-                uv2p.push(UniswapV2Pair({router: Contracts.UNISWAP_V2_ROUTER, token0: Tokens.DAI, token1: Tokens.WETH}));
-                uv2p.push(
-                    UniswapV2Pair({router: Contracts.UNISWAP_V2_ROUTER, token0: Tokens.WBTC, token1: Tokens.WETH})
+                gsp.push(
+                    GenericSwapPair({router: Contracts.UNISWAP_V2_ROUTER, token0: Tokens.DAI, token1: Tokens.USDC})
+                );
+                gsp.push(
+                    GenericSwapPair({router: Contracts.UNISWAP_V2_ROUTER, token0: Tokens.DAI, token1: Tokens.WETH})
+                );
+                gsp.push(
+                    GenericSwapPair({router: Contracts.UNISWAP_V2_ROUTER, token0: Tokens.WBTC, token1: Tokens.WETH})
                 );
             }
             cs.push(Contracts.UNISWAP_V3_ROUTER);
@@ -236,11 +239,17 @@ contract CONFIG_MAINNET_WETH_V3 is IPoolV3DeployConfig {
             uv3p.push(UniswapV3Pair({token0: Tokens.USDC, token1: Tokens.WETH, fee: 10000}));
             cs.push(Contracts.SUSHISWAP_ROUTER);
             {
-                UniswapV2Pair[] storage uv2p = cp.uniswapV2Pairs;
-                uv2p.push(UniswapV2Pair({router: Contracts.SUSHISWAP_ROUTER, token0: Tokens.WBTC, token1: Tokens.WETH}));
-                uv2p.push(UniswapV2Pair({router: Contracts.SUSHISWAP_ROUTER, token0: Tokens.WETH, token1: Tokens.USDT}));
-                uv2p.push(UniswapV2Pair({router: Contracts.SUSHISWAP_ROUTER, token0: Tokens.USDC, token1: Tokens.WETH}));
-                uv2p.push(UniswapV2Pair({router: Contracts.SUSHISWAP_ROUTER, token0: Tokens.DAI, token1: Tokens.WETH}));
+                GenericSwapPair[] storage gsp = cp.genericSwapPairs;
+                gsp.push(
+                    GenericSwapPair({router: Contracts.SUSHISWAP_ROUTER, token0: Tokens.WBTC, token1: Tokens.WETH})
+                );
+                gsp.push(
+                    GenericSwapPair({router: Contracts.SUSHISWAP_ROUTER, token0: Tokens.WETH, token1: Tokens.USDT})
+                );
+                gsp.push(
+                    GenericSwapPair({router: Contracts.SUSHISWAP_ROUTER, token0: Tokens.USDC, token1: Tokens.WETH})
+                );
+                gsp.push(GenericSwapPair({router: Contracts.SUSHISWAP_ROUTER, token0: Tokens.DAI, token1: Tokens.WETH}));
             }
             cs.push(Contracts.CURVE_3CRV_POOL);
             cs.push(Contracts.CURVE_3CRYPTO_POOL);
@@ -283,22 +292,28 @@ contract CONFIG_MAINNET_WETH_V3 is IPoolV3DeployConfig {
             Contracts[] storage cs = cp.contracts;
             cs.push(Contracts.UNISWAP_V2_ROUTER);
             {
-                UniswapV2Pair[] storage uv2p = cp.uniswapV2Pairs;
-                uv2p.push(
-                    UniswapV2Pair({router: Contracts.UNISWAP_V2_ROUTER, token0: Tokens.WETH, token1: Tokens.USDT})
+                GenericSwapPair[] storage gsp = cp.genericSwapPairs;
+                gsp.push(
+                    GenericSwapPair({router: Contracts.UNISWAP_V2_ROUTER, token0: Tokens.WETH, token1: Tokens.USDT})
                 );
-                uv2p.push(
-                    UniswapV2Pair({router: Contracts.UNISWAP_V2_ROUTER, token0: Tokens.USDC, token1: Tokens.WETH})
+                gsp.push(
+                    GenericSwapPair({router: Contracts.UNISWAP_V2_ROUTER, token0: Tokens.USDC, token1: Tokens.WETH})
                 );
-                uv2p.push(
-                    UniswapV2Pair({router: Contracts.UNISWAP_V2_ROUTER, token0: Tokens.USDC, token1: Tokens.USDT})
+                gsp.push(
+                    GenericSwapPair({router: Contracts.UNISWAP_V2_ROUTER, token0: Tokens.USDC, token1: Tokens.USDT})
                 );
-                uv2p.push(UniswapV2Pair({router: Contracts.UNISWAP_V2_ROUTER, token0: Tokens.DAI, token1: Tokens.USDC}));
-                uv2p.push(UniswapV2Pair({router: Contracts.UNISWAP_V2_ROUTER, token0: Tokens.DAI, token1: Tokens.WETH}));
-                uv2p.push(UniswapV2Pair({router: Contracts.UNISWAP_V2_ROUTER, token0: Tokens.DAI, token1: Tokens.MKR}));
-                uv2p.push(UniswapV2Pair({router: Contracts.UNISWAP_V2_ROUTER, token0: Tokens.MKR, token1: Tokens.WETH}));
-                uv2p.push(
-                    UniswapV2Pair({router: Contracts.UNISWAP_V2_ROUTER, token0: Tokens.LINK, token1: Tokens.WETH})
+                gsp.push(
+                    GenericSwapPair({router: Contracts.UNISWAP_V2_ROUTER, token0: Tokens.DAI, token1: Tokens.USDC})
+                );
+                gsp.push(
+                    GenericSwapPair({router: Contracts.UNISWAP_V2_ROUTER, token0: Tokens.DAI, token1: Tokens.WETH})
+                );
+                gsp.push(GenericSwapPair({router: Contracts.UNISWAP_V2_ROUTER, token0: Tokens.DAI, token1: Tokens.MKR}));
+                gsp.push(
+                    GenericSwapPair({router: Contracts.UNISWAP_V2_ROUTER, token0: Tokens.MKR, token1: Tokens.WETH})
+                );
+                gsp.push(
+                    GenericSwapPair({router: Contracts.UNISWAP_V2_ROUTER, token0: Tokens.LINK, token1: Tokens.WETH})
                 );
             }
             cs.push(Contracts.UNISWAP_V3_ROUTER);
@@ -321,12 +336,18 @@ contract CONFIG_MAINNET_WETH_V3 is IPoolV3DeployConfig {
             uv3p.push(UniswapV3Pair({token0: Tokens.USDC, token1: Tokens.WETH, fee: 10000}));
             cs.push(Contracts.SUSHISWAP_ROUTER);
             {
-                UniswapV2Pair[] storage uv2p = cp.uniswapV2Pairs;
-                uv2p.push(UniswapV2Pair({router: Contracts.SUSHISWAP_ROUTER, token0: Tokens.WETH, token1: Tokens.USDT}));
-                uv2p.push(UniswapV2Pair({router: Contracts.SUSHISWAP_ROUTER, token0: Tokens.USDC, token1: Tokens.WETH}));
-                uv2p.push(UniswapV2Pair({router: Contracts.SUSHISWAP_ROUTER, token0: Tokens.DAI, token1: Tokens.WETH}));
-                uv2p.push(UniswapV2Pair({router: Contracts.SUSHISWAP_ROUTER, token0: Tokens.LDO, token1: Tokens.WETH}));
-                uv2p.push(UniswapV2Pair({router: Contracts.SUSHISWAP_ROUTER, token0: Tokens.LINK, token1: Tokens.WETH}));
+                GenericSwapPair[] storage gsp = cp.genericSwapPairs;
+                gsp.push(
+                    GenericSwapPair({router: Contracts.SUSHISWAP_ROUTER, token0: Tokens.WETH, token1: Tokens.USDT})
+                );
+                gsp.push(
+                    GenericSwapPair({router: Contracts.SUSHISWAP_ROUTER, token0: Tokens.USDC, token1: Tokens.WETH})
+                );
+                gsp.push(GenericSwapPair({router: Contracts.SUSHISWAP_ROUTER, token0: Tokens.DAI, token1: Tokens.WETH}));
+                gsp.push(GenericSwapPair({router: Contracts.SUSHISWAP_ROUTER, token0: Tokens.LDO, token1: Tokens.WETH}));
+                gsp.push(
+                    GenericSwapPair({router: Contracts.SUSHISWAP_ROUTER, token0: Tokens.LINK, token1: Tokens.WETH})
+                );
             }
         }
         {
@@ -370,20 +391,28 @@ contract CONFIG_MAINNET_WETH_V3 is IPoolV3DeployConfig {
             Contracts[] storage cs = cp.contracts;
             cs.push(Contracts.UNISWAP_V2_ROUTER);
             {
-                UniswapV2Pair[] storage uv2p = cp.uniswapV2Pairs;
-                uv2p.push(
-                    UniswapV2Pair({router: Contracts.UNISWAP_V2_ROUTER, token0: Tokens.WETH, token1: Tokens.USDT})
+                GenericSwapPair[] storage gsp = cp.genericSwapPairs;
+                gsp.push(
+                    GenericSwapPair({router: Contracts.UNISWAP_V2_ROUTER, token0: Tokens.WETH, token1: Tokens.USDT})
                 );
-                uv2p.push(
-                    UniswapV2Pair({router: Contracts.UNISWAP_V2_ROUTER, token0: Tokens.USDC, token1: Tokens.WETH})
+                gsp.push(
+                    GenericSwapPair({router: Contracts.UNISWAP_V2_ROUTER, token0: Tokens.USDC, token1: Tokens.WETH})
                 );
-                uv2p.push(
-                    UniswapV2Pair({router: Contracts.UNISWAP_V2_ROUTER, token0: Tokens.USDC, token1: Tokens.USDT})
+                gsp.push(
+                    GenericSwapPair({router: Contracts.UNISWAP_V2_ROUTER, token0: Tokens.USDC, token1: Tokens.USDT})
                 );
-                uv2p.push(UniswapV2Pair({router: Contracts.UNISWAP_V2_ROUTER, token0: Tokens.DAI, token1: Tokens.USDC}));
-                uv2p.push(UniswapV2Pair({router: Contracts.UNISWAP_V2_ROUTER, token0: Tokens.DAI, token1: Tokens.WETH}));
-                uv2p.push(UniswapV2Pair({router: Contracts.UNISWAP_V2_ROUTER, token0: Tokens.FXS, token1: Tokens.FRAX}));
-                uv2p.push(UniswapV2Pair({router: Contracts.UNISWAP_V2_ROUTER, token0: Tokens.SNX, token1: Tokens.WETH}));
+                gsp.push(
+                    GenericSwapPair({router: Contracts.UNISWAP_V2_ROUTER, token0: Tokens.DAI, token1: Tokens.USDC})
+                );
+                gsp.push(
+                    GenericSwapPair({router: Contracts.UNISWAP_V2_ROUTER, token0: Tokens.DAI, token1: Tokens.WETH})
+                );
+                gsp.push(
+                    GenericSwapPair({router: Contracts.UNISWAP_V2_ROUTER, token0: Tokens.FXS, token1: Tokens.FRAX})
+                );
+                gsp.push(
+                    GenericSwapPair({router: Contracts.UNISWAP_V2_ROUTER, token0: Tokens.SNX, token1: Tokens.WETH})
+                );
             }
             cs.push(Contracts.UNISWAP_V3_ROUTER);
             UniswapV3Pair[] storage uv3p = cp.uniswapV3Pairs;
@@ -408,19 +437,23 @@ contract CONFIG_MAINNET_WETH_V3 is IPoolV3DeployConfig {
             uv3p.push(UniswapV3Pair({token0: Tokens.FXS, token1: Tokens.FRAX, fee: 10000}));
             cs.push(Contracts.SUSHISWAP_ROUTER);
             {
-                UniswapV2Pair[] storage uv2p = cp.uniswapV2Pairs;
-                uv2p.push(UniswapV2Pair({router: Contracts.SUSHISWAP_ROUTER, token0: Tokens.WETH, token1: Tokens.USDT}));
-                uv2p.push(UniswapV2Pair({router: Contracts.SUSHISWAP_ROUTER, token0: Tokens.USDC, token1: Tokens.WETH}));
-                uv2p.push(UniswapV2Pair({router: Contracts.SUSHISWAP_ROUTER, token0: Tokens.DAI, token1: Tokens.WETH}));
-                uv2p.push(UniswapV2Pair({router: Contracts.SUSHISWAP_ROUTER, token0: Tokens.WETH, token1: Tokens.FXS}));
-                uv2p.push(UniswapV2Pair({router: Contracts.SUSHISWAP_ROUTER, token0: Tokens.CVX, token1: Tokens.WETH}));
-                uv2p.push(UniswapV2Pair({router: Contracts.SUSHISWAP_ROUTER, token0: Tokens.CRV, token1: Tokens.WETH}));
+                GenericSwapPair[] storage gsp = cp.genericSwapPairs;
+                gsp.push(
+                    GenericSwapPair({router: Contracts.SUSHISWAP_ROUTER, token0: Tokens.WETH, token1: Tokens.USDT})
+                );
+                gsp.push(
+                    GenericSwapPair({router: Contracts.SUSHISWAP_ROUTER, token0: Tokens.USDC, token1: Tokens.WETH})
+                );
+                gsp.push(GenericSwapPair({router: Contracts.SUSHISWAP_ROUTER, token0: Tokens.DAI, token1: Tokens.WETH}));
+                gsp.push(GenericSwapPair({router: Contracts.SUSHISWAP_ROUTER, token0: Tokens.WETH, token1: Tokens.FXS}));
+                gsp.push(GenericSwapPair({router: Contracts.SUSHISWAP_ROUTER, token0: Tokens.CVX, token1: Tokens.WETH}));
+                gsp.push(GenericSwapPair({router: Contracts.SUSHISWAP_ROUTER, token0: Tokens.CRV, token1: Tokens.WETH}));
             }
             cs.push(Contracts.FRAXSWAP_ROUTER);
             {
-                UniswapV2Pair[] storage uv2p = cp.uniswapV2Pairs;
-                uv2p.push(UniswapV2Pair({router: Contracts.FRAXSWAP_ROUTER, token0: Tokens.FRAX, token1: Tokens.FXS}));
-                uv2p.push(UniswapV2Pair({router: Contracts.FRAXSWAP_ROUTER, token0: Tokens.FRAX, token1: Tokens.WETH}));
+                GenericSwapPair[] storage gsp = cp.genericSwapPairs;
+                gsp.push(GenericSwapPair({router: Contracts.FRAXSWAP_ROUTER, token0: Tokens.FRAX, token1: Tokens.FXS}));
+                gsp.push(GenericSwapPair({router: Contracts.FRAXSWAP_ROUTER, token0: Tokens.FRAX, token1: Tokens.WETH}));
             }
             cs.push(Contracts.CURVE_CVXETH_POOL);
             cs.push(Contracts.CURVE_TRI_CRV_POOL);

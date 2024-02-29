@@ -2,15 +2,15 @@ import {
   BalancerPoolConfig,
   BalancerVaultConfig,
   CreditManagerV3DeployConfig,
+  GenericSwapConfig,
   PoolV3DeployConfig,
-  UniV2Config,
   UniV3Config,
 } from "@gearbox-protocol/sdk-gov";
 
 const POOL_DECIMALS = BigInt(1e18);
 const POOL_DIVIDER = BigInt(2000);
 
-const tier1UniV2Config: UniV2Config = {
+const tier1UniV2Config: GenericSwapConfig = {
   contract: "UNISWAP_V2_ROUTER",
   allowed: [
     { token0: "WETH", token1: "USDT" },
@@ -43,7 +43,7 @@ const tier1UniV3Config: UniV3Config = {
   ],
 };
 
-const tier1SushiswapConfig: UniV2Config = {
+const tier1SushiswapConfig: GenericSwapConfig = {
   contract: "SUSHISWAP_ROUTER",
   allowed: [
     { token0: "WBTC", token1: "WETH" },
@@ -122,7 +122,7 @@ const tier1CreditManager: CreditManagerV3DeployConfig = {
   ],
 };
 
-const tier2UniV2Config: UniV2Config = {
+const tier2UniV2Config: GenericSwapConfig = {
   contract: "UNISWAP_V2_ROUTER",
   allowed: [
     { token0: "WETH", token1: "USDT" },
@@ -158,7 +158,7 @@ const tier2UniV3Config: UniV3Config = {
   ],
 };
 
-const tier2SushiswapConfig: UniV2Config = {
+const tier2SushiswapConfig: GenericSwapConfig = {
   contract: "SUSHISWAP_ROUTER",
   allowed: [
     { token0: "WETH", token1: "USDT" },
@@ -214,7 +214,7 @@ const tier2CreditManager: CreditManagerV3DeployConfig = {
   adapters: [tier2UniV2Config, tier2UniV3Config, tier2SushiswapConfig],
 };
 
-const tier3UniV2Config: UniV2Config = {
+const tier3UniV2Config: GenericSwapConfig = {
   contract: "UNISWAP_V2_ROUTER",
   allowed: [
     { token0: "WETH", token1: "USDT" },
@@ -252,7 +252,7 @@ const tier3UniV3Config: UniV3Config = {
   ],
 };
 
-const tier3SushiswapConfig: UniV2Config = {
+const tier3SushiswapConfig: GenericSwapConfig = {
   contract: "SUSHISWAP_ROUTER",
   allowed: [
     { token0: "WETH", token1: "USDT" },
@@ -264,7 +264,7 @@ const tier3SushiswapConfig: UniV2Config = {
   ],
 };
 
-const tier3FraxswapConfig: UniV2Config = {
+const tier3FraxswapConfig: GenericSwapConfig = {
   contract: "FRAXSWAP_ROUTER",
   allowed: [
     { token0: "FRAX", token1: "FXS" },

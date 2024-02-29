@@ -15,7 +15,7 @@ import {
     CreditManagerV3DeployParams,
     BalancerPool,
     UniswapV3Pair,
-    UniswapV2Pair,
+    GenericSwapPair,
     VelodromeV2Pool
 } from "@gearbox-protocol/core-v3/contracts/test/interfaces/ICreditConfig.sol";
 
@@ -34,16 +34,19 @@ import {CONFIG_ARBITRUM_USDC_V3} from "../config/USDC_Arbitrum_config.sol";
 import {CONFIG_ARBITRUM_WETH_V3} from "../config/WETH_Arbitrum_config.sol";
 
 import {CONFIG_MAINNET_USDC_TEST_V3} from "../config/TEST_USDC_Mainnet_config.sol";
+import {CONFIG_ARBITRUM_WETH_TEST_V3} from "../config/TEST_WETH_Arbitrum_config.sol";
 
 import {IConvexV1BoosterAdapter} from "../../interfaces/convex/IConvexV1BoosterAdapter.sol";
 import {BalancerV2VaultAdapter} from "../../adapters/balancer/BalancerV2VaultAdapter.sol";
 import {UniswapV2Adapter} from "../../adapters/uniswap/UniswapV2.sol";
 import {UniswapV3Adapter} from "../../adapters/uniswap/UniswapV3.sol";
 import {VelodromeV2RouterAdapter} from "../../adapters/velodrome/VelodromeV2RouterAdapter.sol";
+import {CamelotV3Adapter} from "../../adapters/camelot/CamelotV3Adapter.sol";
 import {PoolStatus} from "../../interfaces/balancer/IBalancerV2VaultAdapter.sol";
 import {UniswapV2PairStatus} from "../../interfaces/uniswap/IUniswapV2Adapter.sol";
 import {UniswapV3PoolStatus} from "../../interfaces/uniswap/IUniswapV3Adapter.sol";
 import {VelodromeV2PoolStatus} from "../../interfaces/velodrome/IVelodromeV2RouterAdapter.sol";
+import {CamelotV3PoolStatus} from "../../interfaces/camelot/ICamelotV3Adapter.sol";
 
 import "@gearbox-protocol/core-v3/contracts/test/lib/constants.sol";
 
@@ -59,6 +62,7 @@ contract LiveTestHelper is IntegrationTestHelper {
         addDeployConfig(new CONFIG_ARBITRUM_USDC_V3());
         addDeployConfig(new CONFIG_ARBITRUM_WETH_V3());
         addDeployConfig(new CONFIG_MAINNET_USDC_TEST_V3());
+        addDeployConfig(new CONFIG_ARBITRUM_WETH_TEST_V3());
     }
 
     SupportedContracts public supportedContracts;
@@ -205,17 +209,17 @@ contract LiveTestHelper is IntegrationTestHelper {
             vm.prank(CONFIGURATOR);
             UniswapV3Adapter(uniV3Adapter).setPoolStatusBatch(pools);
         }
-        // UNISWAP V2 AND SUSHISWAP
-        UniswapV2Pair[] memory uniV2Pairs = creditManagerParams.uniswapV2Pairs;
+        // SIMPLE INTERFACE SWAPPERS
+        GenericSwapPair[] memory genericPairs = creditManagerParams.genericSwapPairs;
 
-        if (uniV2Pairs.length != 0) {
-            UniswapV2PairStatus[] memory pairs = new UniswapV2PairStatus[](uniV2Pairs.length);
+        if (genericPairs.length != 0) {
+            UniswapV2PairStatus[] memory pairs = new UniswapV2PairStatus[](genericPairs.length);
 
-            for (uint256 i = 0; i < uniV2Pairs.length; ++i) {
-                if (uniV2Pairs[i].router != Contracts.UNISWAP_V2_ROUTER) continue;
+            for (uint256 i = 0; i < genericPairs.length; ++i) {
+                if (genericPairs[i].router != Contracts.UNISWAP_V2_ROUTER) continue;
                 pairs[i] = UniswapV2PairStatus({
-                    token0: tokenTestSuite.addressOf(uniV2Pairs[i].token0),
-                    token1: tokenTestSuite.addressOf(uniV2Pairs[i].token1),
+                    token0: tokenTestSuite.addressOf(genericPairs[i].token0),
+                    token1: tokenTestSuite.addressOf(genericPairs[i].token1),
                     allowed: true
                 });
             }
@@ -227,13 +231,13 @@ contract LiveTestHelper is IntegrationTestHelper {
                 UniswapV2Adapter(uniV2Adapter).setPairStatusBatch(pairs);
             }
 
-            pairs = new UniswapV2PairStatus[](uniV2Pairs.length);
+            pairs = new UniswapV2PairStatus[](genericPairs.length);
 
-            for (uint256 i = 0; i < uniV2Pairs.length; ++i) {
-                if (uniV2Pairs[i].router != Contracts.SUSHISWAP_ROUTER) continue;
+            for (uint256 i = 0; i < genericPairs.length; ++i) {
+                if (genericPairs[i].router != Contracts.SUSHISWAP_ROUTER) continue;
                 pairs[i] = UniswapV2PairStatus({
-                    token0: tokenTestSuite.addressOf(uniV2Pairs[i].token0),
-                    token1: tokenTestSuite.addressOf(uniV2Pairs[i].token1),
+                    token0: tokenTestSuite.addressOf(genericPairs[i].token0),
+                    token1: tokenTestSuite.addressOf(genericPairs[i].token1),
                     allowed: true
                 });
             }
@@ -245,13 +249,13 @@ contract LiveTestHelper is IntegrationTestHelper {
                 UniswapV2Adapter(sushiAdapter).setPairStatusBatch(pairs);
             }
 
-            pairs = new UniswapV2PairStatus[](uniV2Pairs.length);
+            pairs = new UniswapV2PairStatus[](genericPairs.length);
 
-            for (uint256 i = 0; i < uniV2Pairs.length; ++i) {
-                if (uniV2Pairs[i].router != Contracts.FRAXSWAP_ROUTER) continue;
+            for (uint256 i = 0; i < genericPairs.length; ++i) {
+                if (genericPairs[i].router != Contracts.FRAXSWAP_ROUTER) continue;
                 pairs[i] = UniswapV2PairStatus({
-                    token0: tokenTestSuite.addressOf(uniV2Pairs[i].token0),
-                    token1: tokenTestSuite.addressOf(uniV2Pairs[i].token1),
+                    token0: tokenTestSuite.addressOf(genericPairs[i].token0),
+                    token1: tokenTestSuite.addressOf(genericPairs[i].token1),
                     allowed: true
                 });
             }
@@ -261,6 +265,24 @@ contract LiveTestHelper is IntegrationTestHelper {
             if (fraxAdapter != address(0)) {
                 vm.prank(CONFIGURATOR);
                 UniswapV2Adapter(fraxAdapter).setPairStatusBatch(pairs);
+            }
+
+            CamelotV3PoolStatus[] memory camelotPools = new CamelotV3PoolStatus[](genericPairs.length);
+
+            for (uint256 i = 0; i < genericPairs.length; ++i) {
+                if (genericPairs[i].router != Contracts.CAMELOT_V3_ROUTER) continue;
+                camelotPools[i] = CamelotV3PoolStatus({
+                    token0: tokenTestSuite.addressOf(genericPairs[i].token0),
+                    token1: tokenTestSuite.addressOf(genericPairs[i].token1),
+                    allowed: true
+                });
+            }
+
+            address camelotV3Adapter = getAdapter(creditManager, Contracts.CAMELOT_V3_ROUTER);
+
+            if (camelotV3Adapter != address(0)) {
+                vm.prank(CONFIGURATOR);
+                CamelotV3Adapter(camelotV3Adapter).setPoolStatusBatch(camelotPools);
             }
         }
         // VELODROME V2
