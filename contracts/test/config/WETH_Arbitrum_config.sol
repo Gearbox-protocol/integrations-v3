@@ -11,10 +11,9 @@ import {
     CreditManagerV3DeployParams,
     GaugeRate,
     PoolQuotaLimit,
-    CollateralToken,
     IPoolV3DeployConfig,
     CollateralTokenHuman,
-    UniswapV2Pair,
+    GenericSwapPair,
     UniswapV3Pair,
     BalancerPool,
     VelodromeV2Pool
@@ -30,7 +29,7 @@ contract CONFIG_ARBITRUM_WETH_V3 is IPoolV3DeployConfig {
     // POOL
 
     string public constant symbol = "dWETHV3";
-    string public constant name = "WETH v3 Main";
+    string public constant name = "Main WETH v3";
 
     PoolV3DeployParams _poolParams =
         PoolV3DeployParams({withdrawalFee: 0, totalDebtLimit: 150_000_000_000_000_000_000_000});
@@ -109,9 +108,9 @@ contract CONFIG_ARBITRUM_WETH_V3 is IPoolV3DeployConfig {
             cp.poolLimit = 1_000_000_000_000_000_000_000;
 
             CollateralTokenHuman[] storage cts = cp.collateralTokens;
-            cts.push(CollateralTokenHuman({token: Tokens.USDC_e, lt: 96_00}));
+            cts.push(CollateralTokenHuman({token: Tokens.USDC_e, lt: 94_00}));
 
-            cts.push(CollateralTokenHuman({token: Tokens.USDC, lt: 96_00}));
+            cts.push(CollateralTokenHuman({token: Tokens.USDC, lt: 94_00}));
 
             cts.push(CollateralTokenHuman({token: Tokens.WBTC, lt: 94_00}));
 

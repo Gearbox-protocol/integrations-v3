@@ -9,6 +9,7 @@ import {ICurveV1Adapter} from "../../../interfaces/curve/ICurveV1Adapter.sol";
 import {ICurveV1_2AssetsAdapter} from "../../../interfaces/curve/ICurveV1_2AssetsAdapter.sol";
 import {ICurveV1_3AssetsAdapter} from "../../../interfaces/curve/ICurveV1_3AssetsAdapter.sol";
 import {ICurveV1_4AssetsAdapter} from "../../../interfaces/curve/ICurveV1_4AssetsAdapter.sol";
+import {ICurveV1_StableNGAdapter} from "../../../interfaces/curve/ICurveV1_StableNGAdapter.sol";
 
 interface CurveV1Multicaller {}
 
@@ -118,6 +119,17 @@ library CurveV1Calls {
         });
     }
 
+    function add_liquidity(CurveV1Multicaller c, uint256[] memory amounts, uint256 min_mint_amount)
+        internal
+        pure
+        returns (MultiCall memory)
+    {
+        return MultiCall({
+            target: address(c),
+            callData: abi.encodeCall(ICurveV1_StableNGAdapter.add_liquidity, (amounts, min_mint_amount))
+        });
+    }
+
     function add_liquidity_one_coin(CurveV1Multicaller c, uint256 amount, uint256 i, uint256 minAmount)
         internal
         pure
@@ -172,6 +184,17 @@ library CurveV1Calls {
         return MultiCall({
             target: address(c),
             callData: abi.encodeCall(ICurveV1_4AssetsAdapter.remove_liquidity, (amount, min_amounts))
+        });
+    }
+
+    function remove_liquidity(CurveV1Multicaller c, uint256 amount, uint256[] memory min_amounts)
+        internal
+        pure
+        returns (MultiCall memory)
+    {
+        return MultiCall({
+            target: address(c),
+            callData: abi.encodeCall(ICurveV1_StableNGAdapter.remove_liquidity, (amount, min_amounts))
         });
     }
 
@@ -244,6 +267,17 @@ library CurveV1Calls {
         return MultiCall({
             target: address(c),
             callData: abi.encodeCall(ICurveV1_4AssetsAdapter.remove_liquidity_imbalance, (amounts, max_burn_amount))
+        });
+    }
+
+    function remove_liquidity_imbalance(CurveV1Multicaller c, uint256[] memory amounts, uint256 max_burn_amount)
+        internal
+        pure
+        returns (MultiCall memory)
+    {
+        return MultiCall({
+            target: address(c),
+            callData: abi.encodeCall(ICurveV1_StableNGAdapter.remove_liquidity_imbalance, (amounts, max_burn_amount))
         });
     }
 }

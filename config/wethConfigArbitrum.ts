@@ -2,9 +2,7 @@ import {
   BalancerVaultConfig,
   CreditManagerV3DeployConfig,
   PoolV3DeployConfig,
-  UniV2Config,
   UniV3Config,
-  VelodromeV2Config,
 } from "@gearbox-protocol/sdk-gov";
 
 const POOL_DECIMALS = BigInt(1e18);
@@ -56,11 +54,11 @@ const tier1CreditManager: CreditManagerV3DeployConfig = {
   collateralTokens: [
     {
       token: "USDC_e",
-      lt: 9600,
+      lt: 9400,
     },
     {
       token: "USDC",
-      lt: 9600,
+      lt: 9400,
     },
     {
       token: "WBTC",

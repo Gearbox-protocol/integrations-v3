@@ -27,4 +27,8 @@ contract PoolMock {
         if (poolType == PoolType.Stable) revert("Not a crypto pool");
         return 0;
     }
+
+    function N_COINS() external view returns (uint256) {
+        return coins.length;
+    }
 }

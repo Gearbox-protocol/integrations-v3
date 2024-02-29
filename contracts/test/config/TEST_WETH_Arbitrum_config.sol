@@ -19,27 +19,28 @@ import {
     VelodromeV2Pool
 } from "@gearbox-protocol/core-v3/contracts/test/interfaces/ICreditConfig.sol";
 
-contract CONFIG_MAINNET_USDC_TEST_V3 is IPoolV3DeployConfig {
-    string public constant id = "mainnet-usdc-test-v3";
-    uint256 public constant chainId = 1;
-    Tokens public constant underlying = Tokens.USDC;
+contract CONFIG_ARBITRUM_WETH_TEST_V3 is IPoolV3DeployConfig {
+    string public constant id = "arbitrum-weth-test-v3";
+    uint256 public constant chainId = 42161;
+    Tokens public constant underlying = Tokens.WETH;
     bool public constant supportsQuotas = true;
-    uint256 public constant getAccountAmount = 100_000_000_000;
+    uint256 public constant getAccountAmount = 10_000_000_000_000_000_000;
 
     // POOL
 
-    string public constant symbol = "dUSDC-test-V3";
-    string public constant name = "Test USDC v3";
+    string public constant symbol = "dWETH-test-V3";
+    string public constant name = "Test WETH v3";
 
-    PoolV3DeployParams _poolParams = PoolV3DeployParams({withdrawalFee: 0, totalDebtLimit: 100_000_000_000_000});
+    PoolV3DeployParams _poolParams =
+        PoolV3DeployParams({withdrawalFee: 0, totalDebtLimit: 150_000_000_000_000_000_000_000});
 
     LinearIRMV3DeployParams _irm = LinearIRMV3DeployParams({
         U_1: 70_00,
         U_2: 90_00,
         R_base: 0,
-        R_slope1: 1_00,
-        R_slope2: 1_25,
-        R_slope3: 100_00,
+        R_slope1: 2_00,
+        R_slope2: 2_50,
+        R_slope3: 60_00,
         _isBorrowingMoreU2Forbidden: true
     });
 
@@ -49,31 +50,37 @@ contract CONFIG_MAINNET_USDC_TEST_V3 is IPoolV3DeployConfig {
     CreditManagerV3DeployParams[] _creditManagers;
 
     constructor() {
-        _gaugeRates.push(GaugeRate({token: Tokens.USDe, minRate: 4, maxRate: 15_00}));
-        _quotaLimits.push(PoolQuotaLimit({token: Tokens.USDe, quotaIncreaseFee: 1, limit: 10_000_000_000_000}));
+        _gaugeRates.push(GaugeRate({token: Tokens.USDC, minRate: 4, maxRate: 12_00}));
+        _quotaLimits.push(
+            PoolQuotaLimit({token: Tokens.USDC, quotaIncreaseFee: 1, limit: 2_000_000_000_000_000_000_000})
+        );
 
         {
             /// CREDIT_MANAGER_0
             CreditManagerV3DeployParams storage cp = _creditManagers.push();
 
-            cp.minDebt = 50_000_000_000;
-            cp.maxDebt = 1_000_000_000_000;
+            cp.minDebt = 350_000_000_000_000_000;
+            cp.maxDebt = 150_000_000_000_000_000_000;
             cp.feeInterest = 2500;
-            cp.feeLiquidation = 150;
-            cp.liquidationPremium = 400;
-            cp.feeLiquidationExpired = 100;
-            cp.liquidationPremiumExpired = 200;
+            cp.feeLiquidation = 50;
+            cp.liquidationPremium = 100;
+            cp.feeLiquidationExpired = 50;
+            cp.liquidationPremiumExpired = 100;
             cp.whitelisted = false;
             cp.expirable = false;
             cp.skipInit = false;
-            cp.poolLimit = 5_000_000_000_000;
+            cp.poolLimit = 1_000_000_000_000_000_000_000;
 
             CollateralTokenHuman[] storage cts = cp.collateralTokens;
-            cts.push(CollateralTokenHuman({token: Tokens.USDe, lt: 90_00}));
-
-            cts.push(CollateralTokenHuman({token: Tokens.USDeUSDC, lt: 0}));
+            cts.push(CollateralTokenHuman({token: Tokens.USDC, lt: 94_00}));
             Contracts[] storage cs = cp.contracts;
-            cs.push(Contracts.CURVE_USDE_USDC_POOL);
+            cs.push(Contracts.CAMELOT_V3_ROUTER);
+            {
+                GenericSwapPair[] storage gsp = cp.genericSwapPairs;
+                gsp.push(
+                    GenericSwapPair({router: Contracts.CAMELOT_V3_ROUTER, token0: Tokens.WETH, token1: Tokens.USDC})
+                );
+            }
         }
     }
 

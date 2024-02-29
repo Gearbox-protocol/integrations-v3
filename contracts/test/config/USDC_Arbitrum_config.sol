@@ -11,10 +11,9 @@ import {
     CreditManagerV3DeployParams,
     GaugeRate,
     PoolQuotaLimit,
-    CollateralToken,
     IPoolV3DeployConfig,
     CollateralTokenHuman,
-    UniswapV2Pair,
+    GenericSwapPair,
     UniswapV3Pair,
     BalancerPool,
     VelodromeV2Pool
@@ -30,7 +29,7 @@ contract CONFIG_ARBITRUM_USDC_V3 is IPoolV3DeployConfig {
     // POOL
 
     string public constant symbol = "dUSDCV3";
-    string public constant name = "USDC.e v3 Main";
+    string public constant name = "Main USDC.e v3";
 
     PoolV3DeployParams _poolParams = PoolV3DeployParams({withdrawalFee: 0, totalDebtLimit: 100_000_000_000_000});
 
