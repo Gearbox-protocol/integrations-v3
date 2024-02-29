@@ -14,7 +14,7 @@ import {Contracts} from "@gearbox-protocol/sdk-gov/contracts/SupportedContracts.
 import {MultiCall} from "@gearbox-protocol/core-v2/contracts/libraries/MultiCall.sol";
 import {MultiCallBuilder} from "@gearbox-protocol/core-v3/contracts/test/lib/MultiCallBuilder.sol";
 
-import {CamelotV3_Calls, CamelotV3_Multicaller} from "../../../multicall/Camelot/CamelotV3_Calls.sol";
+import {CamelotV3_Calls, CamelotV3_Multicaller} from "../../../multicall/camelot/CamelotV3_Calls.sol";
 // TEST
 import "@gearbox-protocol/core-v3/contracts/test/lib/constants.sol";
 

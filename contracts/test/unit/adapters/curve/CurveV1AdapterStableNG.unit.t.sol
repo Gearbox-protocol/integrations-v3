@@ -97,7 +97,7 @@ contract CurveV1AdapterStablNGUnitTest is AdapterUnitTestHelper {
         vm.prank(creditFacade);
         (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.remove_liquidity(500, amounts);
 
-        assertEq(tokensToEnable, token0Mask | token1Mask, "Incorrect tokensToEnable");
+        assertEq(tokensToEnable, token0Mask | token1Mask | token2Mask, "Incorrect tokensToEnable");
         assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
     }
 
@@ -105,7 +105,7 @@ contract CurveV1AdapterStablNGUnitTest is AdapterUnitTestHelper {
     function test_U_CRVNG_04_remove_liquidity_imbalance_works_as_expected() public {
         uint256[] memory amounts = new uint256[](3);
         amounts[0] = 750;
-        amounts[1] = 250;
+        amounts[1] = 0;
         amounts[2] = 125;
 
         _executesCall({
@@ -117,7 +117,7 @@ contract CurveV1AdapterStablNGUnitTest is AdapterUnitTestHelper {
         vm.prank(creditFacade);
         (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.remove_liquidity_imbalance(amounts, 500);
 
-        assertEq(tokensToEnable, token1Mask, "Incorrect tokensToEnable");
+        assertEq(tokensToEnable, token0Mask | token2Mask, "Incorrect tokensToEnable");
         assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
     }
 }
