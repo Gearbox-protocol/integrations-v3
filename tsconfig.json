@@ -66,6 +66,6 @@
     "resolveJsonModule": true,
     "outDir": "./dist"
   },
-  "include": ["config"],
+  "include": ["config_scripts"],
   "exclude": ["node_modules", "lib", "npm-root"]
 }
