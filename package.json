@@ -39,7 +39,7 @@
     "@gearbox-protocol/eslint-config": "^1.6.1",
     "@gearbox-protocol/oracles-v3": "^1.10.3",
     "@gearbox-protocol/prettier-config": "^1.5.0",
-    "@gearbox-protocol/sdk-gov": "^1.40.0",
+    "@gearbox-protocol/sdk-gov": "^1.42.0",
     "@openzeppelin/contracts": "4.9.3",
     "@redstone-finance/evm-connector": "0.2.5",
     "@typechain/ethers-v5": "^10.1.0",

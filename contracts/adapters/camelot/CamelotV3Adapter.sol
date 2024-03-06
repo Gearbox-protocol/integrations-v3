@@ -43,7 +43,7 @@ contract CamelotV3Adapter is AbstractAdapter, ICamelotV3Adapter {
     /// @notice Constructor
     /// @param _creditManager Credit manager address
     /// @param _router Camelot V3 Router address
-    constructor(address _creditManager, address _router) AbstractAdapter(_creditManager, _router) {}
+    constructor(address _creditManager, address _router) AbstractAdapter(_creditManager, _router) {} // U: [CAMV3-1]
 
     /// @notice Swaps given amount of input token for output token through a single pool
     /// @param params Swap params, see `ICamelotV3Router.ExactInputSingleParams` for details
@@ -51,10 +51,10 @@ contract CamelotV3Adapter is AbstractAdapter, ICamelotV3Adapter {
     function exactInputSingle(ICamelotV3Router.ExactInputSingleParams calldata params)
         external
         override
-        creditFacadeOnly
+        creditFacadeOnly // U: [CAMV3-2]
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        (tokensToEnable, tokensToDisable) = _exactInputSingleInternal(params, false);
+        (tokensToEnable, tokensToDisable) = _exactInputSingleInternal(params, false); // U: [CAMV3-3]
     }
 
     /// @notice Swaps given amount of input token for output token through a single pool, supporting fee on transfer tokens
@@ -63,10 +63,10 @@ contract CamelotV3Adapter is AbstractAdapter, ICamelotV3Adapter {
     function exactInputSingleSupportingFeeOnTransferTokens(ICamelotV3Router.ExactInputSingleParams calldata params)
         external
         override
-        creditFacadeOnly
+        creditFacadeOnly // U: [CAMV3-2]
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        (tokensToEnable, tokensToDisable) = _exactInputSingleInternal(params, true);
+        (tokensToEnable, tokensToDisable) = _exactInputSingleInternal(params, true); // U: [CAMV3-3A]
     }
 
     /// @dev Internal logic for `exactInputSingle` and `exactInputSingleSupportingFeeOnTransferTokens`
@@ -92,10 +92,10 @@ contract CamelotV3Adapter is AbstractAdapter, ICamelotV3Adapter {
     function exactDiffInputSingle(ExactDiffInputSingleParams calldata params)
         external
         override
-        creditFacadeOnly
+        creditFacadeOnly // U: [CAMV3-2]
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        (tokensToEnable, tokensToDisable) = _exactDiffInputSingleInternal(params, false);
+        (tokensToEnable, tokensToDisable) = _exactDiffInputSingleInternal(params, false); // U: [CAMV3-4]
     }
 
     /// @notice Swaps all balance of input token for output token through a single pool, except the specified amount
@@ -106,7 +106,7 @@ contract CamelotV3Adapter is AbstractAdapter, ICamelotV3Adapter {
         creditFacadeOnly
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        (tokensToEnable, tokensToDisable) = _exactDiffInputSingleInternal(params, true);
+        (tokensToEnable, tokensToDisable) = _exactDiffInputSingleInternal(params, true); // U: [CAMV3-4A]
     }
 
     /// @dev Internal logic for `exactDiffInputSingle` and `exactDiffInputSingleSupportingFeeOnTransferTokens`
@@ -148,7 +148,7 @@ contract CamelotV3Adapter is AbstractAdapter, ICamelotV3Adapter {
     function exactInput(ICamelotV3Router.ExactInputParams calldata params)
         external
         override
-        creditFacadeOnly
+        creditFacadeOnly // U: [CAMV3-2]
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
         address creditAccount = _creditAccount();
@@ -162,7 +162,7 @@ contract CamelotV3Adapter is AbstractAdapter, ICamelotV3Adapter {
         // calling `_executeSwap` because we need to check if output token is registered as collateral token in the CM
         (tokensToEnable, tokensToDisable,) = _executeSwapSafeApprove(
             tokenIn, tokenOut, abi.encodeCall(ICamelotV3Router.exactInput, (paramsUpdate)), false
-        );
+        ); // U: [CAMV3-5]
     }
 
     /// @notice Swaps all balance of input token for output token through multiple pools, except the specified amount
@@ -171,7 +171,7 @@ contract CamelotV3Adapter is AbstractAdapter, ICamelotV3Adapter {
     function exactDiffInput(ExactDiffInputParams calldata params)
         external
         override
-        creditFacadeOnly
+        creditFacadeOnly // U: [CAMV3-2]
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
         address creditAccount = _creditAccount();
@@ -196,7 +196,7 @@ contract CamelotV3Adapter is AbstractAdapter, ICamelotV3Adapter {
         // calling `_executeSwap` because we need to check if output token is registered as collateral token in the CM
         (tokensToEnable, tokensToDisable,) = _executeSwapSafeApprove(
             tokenIn, tokenOut, abi.encodeCall(ICamelotV3Router.exactInput, (paramsUpdate)), params.leftoverAmount <= 1
-        );
+        ); // U: [CAMV3-6]
     }
 
     /// @notice Swaps input token for given amount of output token through a single pool
@@ -205,7 +205,7 @@ contract CamelotV3Adapter is AbstractAdapter, ICamelotV3Adapter {
     function exactOutputSingle(ICamelotV3Router.ExactOutputSingleParams calldata params)
         external
         override
-        creditFacadeOnly
+        creditFacadeOnly // U: [CAMV3-2]
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
         address creditAccount = _creditAccount();
@@ -216,7 +216,7 @@ contract CamelotV3Adapter is AbstractAdapter, ICamelotV3Adapter {
         // calling `_executeSwap` because we need to check if output token is registered as collateral token in the CM
         (tokensToEnable, tokensToDisable,) = _executeSwapSafeApprove(
             params.tokenIn, params.tokenOut, abi.encodeCall(ICamelotV3Router.exactOutputSingle, (paramsUpdate)), false
-        );
+        ); // U: [CAMV3-7]
     }
 
     /// @notice Swaps input token for given amount of output token through multiple pools
@@ -226,7 +226,7 @@ contract CamelotV3Adapter is AbstractAdapter, ICamelotV3Adapter {
     function exactOutput(ICamelotV3Router.ExactOutputParams calldata params)
         external
         override
-        creditFacadeOnly
+        creditFacadeOnly // U: [CAMV3-2]
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
         address creditAccount = _creditAccount();
@@ -240,7 +240,7 @@ contract CamelotV3Adapter is AbstractAdapter, ICamelotV3Adapter {
         // calling `_executeSwap` because we need to check if output token is registered as collateral token in the CM
         (tokensToEnable, tokensToDisable,) = _executeSwapSafeApprove(
             tokenIn, tokenOut, abi.encodeCall(ICamelotV3Router.exactOutput, (paramsUpdate)), false
-        );
+        ); // U: [CAMV3-8]
     }
 
     // ------------- //
@@ -260,8 +260,8 @@ contract CamelotV3Adapter is AbstractAdapter, ICamelotV3Adapter {
         unchecked {
             for (uint256 i; i < len; ++i) {
                 (address token0, address token1) = _sortTokens(pools[i].token0, pools[i].token1);
-                _poolStatus[token0][token1] = pools[i].allowed;
-                emit SetPoolStatus(token0, token1, pools[i].allowed);
+                _poolStatus[token0][token1] = pools[i].allowed; // U: [CAMV3-9]
+                emit SetPoolStatus(token0, token1, pools[i].allowed); // U: [CAMV3-9]
             }
         }
     }
@@ -275,21 +275,21 @@ contract CamelotV3Adapter is AbstractAdapter, ICamelotV3Adapter {
     ///      - Each swap must be through an allowed pool
     function _validatePath(bytes memory path) internal view returns (bool valid, address tokenIn, address tokenOut) {
         uint256 len = path.length;
-        if (len != PATH_2_LENGTH && len != PATH_3_LENGTH && len != PATH_4_LENGTH) return (false, tokenIn, tokenOut);
+        if (len != PATH_2_LENGTH && len != PATH_3_LENGTH && len != PATH_4_LENGTH) return (false, tokenIn, tokenOut); // U: [CAMV3-10]
 
         tokenIn = path.toAddress(0);
         tokenOut = path.toAddress(NEXT_OFFSET);
-        valid = isPoolAllowed(tokenIn, tokenOut);
+        valid = isPoolAllowed(tokenIn, tokenOut); // U: [CAMV3-10]
 
         if (valid && len > PATH_2_LENGTH) {
             address tokenMid = tokenOut;
             tokenOut = path.toAddress(2 * NEXT_OFFSET);
-            valid = isPoolAllowed(tokenMid, tokenOut);
+            valid = isPoolAllowed(tokenMid, tokenOut); // U: [CAMV3-10]
 
             if (valid && len > PATH_3_LENGTH) {
                 tokenMid = tokenOut;
                 tokenOut = path.toAddress(3 * NEXT_OFFSET);
-                valid = isPoolAllowed(tokenMid, tokenOut);
+                valid = isPoolAllowed(tokenMid, tokenOut); // U: [CAMV3-10]
             }
         }
     }
