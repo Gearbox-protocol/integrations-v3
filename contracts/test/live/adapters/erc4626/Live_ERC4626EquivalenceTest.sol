@@ -31,6 +31,8 @@ contract Live_ERC4626EquivalenceTest is LiveTestHelper {
     using ERC4626_Calls for ERC4626_Multicaller;
     using AddressList for address[];
 
+    Contracts[1] withdrawalExceptions = [Contracts.STAKED_USDE_VAULT];
+
     string[7] stages =
         ["after_deposit", "after_depositDiff", "after_mint", "after_withdraw", "after_redeem", "after_redeemDiff"];
 
@@ -57,6 +59,7 @@ contract Live_ERC4626EquivalenceTest is LiveTestHelper {
     ) internal {
         address underlyingToken = IERC4626Adapter(vaultAddress).asset();
         address vaultToken = isAdapter ? IERC4626Adapter(vaultAddress).targetContract() : vaultAddress;
+        bool checkWithdrawals = !isWithdrawalException(vaultToken);
 
         if (isAdapter) {
             ERC4626_Multicaller vault = ERC4626_Multicaller(vaultAddress);
@@ -72,18 +75,20 @@ contract Live_ERC4626EquivalenceTest is LiveTestHelper {
             creditFacade.multicall(creditAccount, MultiCallBuilder.build(vault.mint(100 * baseUnit, creditAccount)));
             comparator.takeSnapshot("after_mint", creditAccount);
 
-            creditFacade.multicall(
-                creditAccount, MultiCallBuilder.build(vault.withdraw(50 * baseUnit, creditAccount, creditAccount))
-            );
-            comparator.takeSnapshot("after_withdraw", creditAccount);
+            if (checkWithdrawals) {
+                creditFacade.multicall(
+                    creditAccount, MultiCallBuilder.build(vault.withdraw(50 * baseUnit, creditAccount, creditAccount))
+                );
+                comparator.takeSnapshot("after_withdraw", creditAccount);
 
-            creditFacade.multicall(
-                creditAccount, MultiCallBuilder.build(vault.redeem(10 * baseUnit, creditAccount, creditAccount))
-            );
-            comparator.takeSnapshot("after_redeem", creditAccount);
+                creditFacade.multicall(
+                    creditAccount, MultiCallBuilder.build(vault.redeem(10 * baseUnit, creditAccount, creditAccount))
+                );
+                comparator.takeSnapshot("after_redeem", creditAccount);
 
-            creditFacade.multicall(creditAccount, MultiCallBuilder.build(vault.redeemDiff(10 * baseUnit)));
-            comparator.takeSnapshot("after_redeemDiff", creditAccount);
+                creditFacade.multicall(creditAccount, MultiCallBuilder.build(vault.redeemDiff(10 * baseUnit)));
+                comparator.takeSnapshot("after_redeemDiff", creditAccount);
+            }
 
             vm.stopPrank();
         } else {
@@ -101,18 +106,28 @@ contract Live_ERC4626EquivalenceTest is LiveTestHelper {
             vault.mint(100 * baseUnit, creditAccount);
             comparator.takeSnapshot("after_mint", creditAccount);
 
-            vault.withdraw(50 * baseUnit, creditAccount, creditAccount);
-            comparator.takeSnapshot("after_withdraw", creditAccount);
+            if (checkWithdrawals) {
+                vault.withdraw(50 * baseUnit, creditAccount, creditAccount);
+                comparator.takeSnapshot("after_withdraw", creditAccount);
 
-            vault.redeem(10 * baseUnit, creditAccount, creditAccount);
-            comparator.takeSnapshot("after_redeem", creditAccount);
+                vault.redeem(10 * baseUnit, creditAccount, creditAccount);
+                comparator.takeSnapshot("after_redeem", creditAccount);
 
-            remainingBalance = IERC20(vaultToken).balanceOf(creditAccount);
-            vault.redeem(remainingBalance - 10 * baseUnit, creditAccount, creditAccount);
-            comparator.takeSnapshot("after_redeemDiff", creditAccount);
+                remainingBalance = IERC20(vaultToken).balanceOf(creditAccount);
+                vault.redeem(remainingBalance - 10 * baseUnit, creditAccount, creditAccount);
+                comparator.takeSnapshot("after_redeemDiff", creditAccount);
+            }
 
             vm.stopPrank();
         }
+    }
+
+    function isWithdrawalException(address vault) internal view returns (bool) {
+        for (uint256 i; i < withdrawalExceptions.length; ++i) {
+            if (vault == supportedContracts.addressOf(withdrawalExceptions[i])) return true;
+        }
+
+        return false;
     }
 
     function openCreditAccountWithUnderlying(address token, uint256 amount) internal returns (address creditAccount) {
