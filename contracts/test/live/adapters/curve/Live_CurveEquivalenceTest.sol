@@ -41,6 +41,7 @@ struct CurvePoolParams {
     bool isNGPool;
     uint256 nCoins;
     address lpToken;
+    bool lpSupported;
     address coin0;
     address underlying0;
     uint256 coin0BaseUnit;
@@ -575,19 +576,21 @@ contract Live_CurveEquivalenceTest is LiveTestHelper {
 
         compareExchangeDiffUnderlying(creditAccount, curvePoolAddr, params, isAdapter);
 
-        compareAddLiquidity(creditAccount, curvePoolAddr, params, isAdapter);
+        if (params.lpSupported) {
+            compareAddLiquidity(creditAccount, curvePoolAddr, params, isAdapter);
 
-        compareRemoveLiquidity(creditAccount, curvePoolAddr, params, isAdapter);
+            compareRemoveLiquidity(creditAccount, curvePoolAddr, params, isAdapter);
 
-        compareRemoveLiquidityImbalance(creditAccount, curvePoolAddr, params, isAdapter);
+            compareRemoveLiquidityImbalance(creditAccount, curvePoolAddr, params, isAdapter);
 
-        compareAddLiquidityOneCoin(creditAccount, curvePoolAddr, params, isAdapter);
+            compareAddLiquidityOneCoin(creditAccount, curvePoolAddr, params, isAdapter);
 
-        compareAddDiffLiquidityOneCoin(creditAccount, curvePoolAddr, params, isAdapter);
+            compareAddDiffLiquidityOneCoin(creditAccount, curvePoolAddr, params, isAdapter);
 
-        compareRemoveLiquidityOneCoin(creditAccount, curvePoolAddr, params, isAdapter);
+            compareRemoveLiquidityOneCoin(creditAccount, curvePoolAddr, params, isAdapter);
 
-        compareRemoveDiffLiquidityOneCoin(creditAccount, curvePoolAddr, params, isAdapter);
+            compareRemoveDiffLiquidityOneCoin(creditAccount, curvePoolAddr, params, isAdapter);
+        }
 
         vm.stopPrank();
     }
@@ -636,6 +639,7 @@ contract Live_CurveEquivalenceTest is LiveTestHelper {
                 isNGPool: IAdapter(adapters[i])._gearboxAdapterType() == AdapterType.CURVE_STABLE_NG,
                 nCoins: ICurveV1Adapter(adapters[i]).nCoins(),
                 lpToken: ICurveV1Adapter(adapters[i]).token(),
+                lpSupported: creditManager.liquidationThresholds(ICurveV1Adapter(adapters[i]).token()) != 0,
                 coin0: coin0,
                 underlying0: underlying0,
                 coin0BaseUnit: coin0BaseUnit,
