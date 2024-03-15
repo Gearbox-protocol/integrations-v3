@@ -61,6 +61,7 @@ contract CONFIG_ARBITRUM_WETH_V3 is IPoolV3DeployConfig {
         _gaugeRates.push(GaugeRate({token: Tokens.rETH, minRate: 1, maxRate: 3_50}));
         _gaugeRates.push(GaugeRate({token: Tokens.cbETH, minRate: 1, maxRate: 3_50}));
         _gaugeRates.push(GaugeRate({token: Tokens.sfrxETH, minRate: 1, maxRate: 3_50}));
+        _gaugeRates.push(GaugeRate({token: Tokens.ezETH, minRate: 5, maxRate: 30_00}));
         _quotaLimits.push(
             PoolQuotaLimit({token: Tokens.USDC_e, quotaIncreaseFee: 1, limit: 1_500_000_000_000_000_000_000})
         );
@@ -90,6 +91,7 @@ contract CONFIG_ARBITRUM_WETH_V3 is IPoolV3DeployConfig {
         _quotaLimits.push(
             PoolQuotaLimit({token: Tokens.sfrxETH, quotaIncreaseFee: 0, limit: 2_500_000_000_000_000_000_000})
         );
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.ezETH, quotaIncreaseFee: 0, limit: 0}));
 
         {
             /// CREDIT_MANAGER_0
@@ -121,6 +123,8 @@ contract CONFIG_ARBITRUM_WETH_V3 is IPoolV3DeployConfig {
             cts.push(CollateralTokenHuman({token: Tokens.rETH, lt: 96_00}));
 
             cts.push(CollateralTokenHuman({token: Tokens.cbETH, lt: 96_00}));
+
+            cts.push(CollateralTokenHuman({token: Tokens.ezETH, lt: 96_00}));
             Contracts[] storage cs = cp.contracts;
             cs.push(Contracts.UNISWAP_V3_ROUTER);
             UniswapV3Pair[] storage uv3p = cp.uniswapV3Pairs;
