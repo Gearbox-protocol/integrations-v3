@@ -16,13 +16,13 @@ interface IConvexV1BoosterAdapter is IAdapter, IConvexV1BoosterAdapterEvents {
         external
         returns (uint256 tokensToEnable, uint256 tokensToDisable);
 
-    function depositDiff(uint256 leftoverAmount, uint256 _pid, bool _stake)
+    function depositDiff(uint256 _pid, uint256 leftoverAmount, bool _stake)
         external
         returns (uint256 tokensToEnable, uint256 tokensToDisable);
 
     function withdraw(uint256 _pid, uint256) external returns (uint256 tokensToEnable, uint256 tokensToDisable);
 
-    function withdrawDiff(uint256 leftoverAmount, uint256 _pid)
+    function withdrawDiff(uint256 _pid, uint256 leftoverAmount)
         external
         returns (uint256 tokensToEnable, uint256 tokensToDisable);
 
