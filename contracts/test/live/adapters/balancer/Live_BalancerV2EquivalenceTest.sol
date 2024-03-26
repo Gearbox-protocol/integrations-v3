@@ -570,13 +570,17 @@ contract Live_BalancerV2EquivalenceTest is LiveTestHelper {
         for (uint256 i = 0; i < tokens.length; ++i) {
             if (token0 == address(0)) {
                 if (address(tokens[i]) != pool) {
-                    token0 = address(tokens[i]);
-                    baseUnit0 = 10 ** IERC20Metadata(address(token0)).decimals();
+                    try creditManager.getTokenMaskOrRevert(address(tokens[i])) returns (uint256) {
+                        token0 = address(tokens[i]);
+                        baseUnit0 = 10 ** IERC20Metadata(address(token0)).decimals();
+                    } catch {}
                 }
             } else if (token1 == address(0)) {
                 if (address(tokens[i]) != pool) {
-                    token1 = address(tokens[i]);
-                    break;
+                    try creditManager.getTokenMaskOrRevert(address(tokens[i])) returns (uint256) {
+                        token1 = address(tokens[i]);
+                        break;
+                    } catch {}
                 }
             }
         }
