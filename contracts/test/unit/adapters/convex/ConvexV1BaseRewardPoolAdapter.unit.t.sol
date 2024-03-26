@@ -20,6 +20,8 @@ contract ConvexV1BaseRewardPoolAdapterUnitTest is AdapterUnitTestHelper {
 
     RewardsMock extraReward1;
     RewardsMock extraReward2;
+    RewardsMock extraReward3;
+    RewardsMock extraReward4;
 
     address curveLPToken;
     address convexStakingToken;
@@ -41,16 +43,16 @@ contract ConvexV1BaseRewardPoolAdapterUnitTest is AdapterUnitTestHelper {
 
         extraReward1 = new RewardsMock(tokens[5]);
         extraReward2 = new RewardsMock(address(new ExtraRewardWrapperMock(tokens[6])));
+        extraReward3 = new RewardsMock(tokens[7]);
+        extraReward4 = new RewardsMock(tokens[8]);
 
         baseRewardPool = new BaseRewardPoolMock(42, address(booster), convexStakingToken, crv);
         baseRewardPool.setExtraReward(0, address(extraReward1));
         baseRewardPool.setExtraReward(1, address(extraReward2));
+        baseRewardPool.setExtraReward(2, address(extraReward3));
+        baseRewardPool.setExtraReward(3, address(extraReward4));
 
-        adapter = new ConvexV1BaseRewardPoolAdapter(
-            address(creditManager),
-            address(baseRewardPool),
-            stakedPhantomToken
-        );
+        adapter = new ConvexV1BaseRewardPoolAdapter(address(creditManager), address(baseRewardPool), stakedPhantomToken);
     }
 
     /// @notice U:[CVX1R-1]: Constructor works as expected
@@ -60,11 +62,7 @@ contract ConvexV1BaseRewardPoolAdapterUnitTest is AdapterUnitTestHelper {
         _readsTokenMask(stakedPhantomToken);
         _readsTokenMask(crv);
         _readsTokenMask(cvx);
-        adapter = new ConvexV1BaseRewardPoolAdapter(
-            address(creditManager),
-            address(baseRewardPool),
-            stakedPhantomToken
-        );
+        adapter = new ConvexV1BaseRewardPoolAdapter(address(creditManager), address(baseRewardPool), stakedPhantomToken);
 
         assertEq(adapter.creditManager(), address(creditManager), "Incorrect creditManager");
         assertEq(adapter.addressProvider(), address(addressProvider), "Incorrect addressProvider");
@@ -74,6 +72,8 @@ contract ConvexV1BaseRewardPoolAdapterUnitTest is AdapterUnitTestHelper {
         assertEq(adapter.stakedPhantomToken(), stakedPhantomToken, "Incorrect stakedPhantomToken");
         assertEq(adapter.extraReward1(), address(0), "Incorrect extraReward1");
         assertEq(adapter.extraReward2(), address(0), "Incorrect extraReward2");
+        assertEq(adapter.extraReward3(), address(0), "Incorrect extraReward3");
+        assertEq(adapter.extraReward4(), address(0), "Incorrect extraReward4");
         assertEq(adapter.curveLPTokenMask(), 1, "Incorrect curveLPTokenMask");
         assertEq(adapter.stakingTokenMask(), 2, "Incorrect stakingTokenMask");
         assertEq(adapter.stakedTokenMask(), 4, "Incorrect stakedTokenMask");
@@ -84,11 +84,7 @@ contract ConvexV1BaseRewardPoolAdapterUnitTest is AdapterUnitTestHelper {
     function test_U_CVX1R_02_extra_rewards_are_handled_correctly() public {
         baseRewardPool.setNumExtraRewards(1);
         _readsTokenMask(tokens[5]);
-        adapter = new ConvexV1BaseRewardPoolAdapter(
-            address(creditManager),
-            address(baseRewardPool),
-            stakedPhantomToken
-        );
+        adapter = new ConvexV1BaseRewardPoolAdapter(address(creditManager), address(baseRewardPool), stakedPhantomToken);
         assertEq(adapter.extraReward1(), tokens[5], "Incorrect extraReward1");
         assertEq(adapter.extraReward2(), address(0), "Incorrect extraReward1");
         assertEq(adapter.rewardTokensMask(), 8 + 16 + 32, "Incorrect rewardTokensMask");
@@ -96,14 +92,32 @@ contract ConvexV1BaseRewardPoolAdapterUnitTest is AdapterUnitTestHelper {
         baseRewardPool.setNumExtraRewards(2);
         _readsTokenMask(tokens[5]);
         _readsTokenMask(tokens[6]);
-        adapter = new ConvexV1BaseRewardPoolAdapter(
-            address(creditManager),
-            address(baseRewardPool),
-            stakedPhantomToken
-        );
+        adapter = new ConvexV1BaseRewardPoolAdapter(address(creditManager), address(baseRewardPool), stakedPhantomToken);
         assertEq(adapter.extraReward1(), tokens[5], "Incorrect extraReward1");
-        assertEq(adapter.extraReward2(), tokens[6], "Incorrect extraReward1");
+        assertEq(adapter.extraReward2(), tokens[6], "Incorrect extraReward2");
         assertEq(adapter.rewardTokensMask(), 8 + 16 + 32 + 64, "Incorrect rewardTokensMask");
+
+        baseRewardPool.setNumExtraRewards(3);
+        _readsTokenMask(tokens[5]);
+        _readsTokenMask(tokens[6]);
+        _readsTokenMask(tokens[7]);
+        adapter = new ConvexV1BaseRewardPoolAdapter(address(creditManager), address(baseRewardPool), stakedPhantomToken);
+        assertEq(adapter.extraReward1(), tokens[5], "Incorrect extraReward1");
+        assertEq(adapter.extraReward2(), tokens[6], "Incorrect extraReward2");
+        assertEq(adapter.extraReward3(), tokens[7], "Incorrect extraReward3");
+        assertEq(adapter.rewardTokensMask(), 8 + 16 + 32 + 64 + 128, "Incorrect rewardTokensMask");
+
+        baseRewardPool.setNumExtraRewards(4);
+        _readsTokenMask(tokens[5]);
+        _readsTokenMask(tokens[6]);
+        _readsTokenMask(tokens[7]);
+        _readsTokenMask(tokens[8]);
+        adapter = new ConvexV1BaseRewardPoolAdapter(address(creditManager), address(baseRewardPool), stakedPhantomToken);
+        assertEq(adapter.extraReward1(), tokens[5], "Incorrect extraReward1");
+        assertEq(adapter.extraReward2(), tokens[6], "Incorrect extraReward2");
+        assertEq(adapter.extraReward3(), tokens[7], "Incorrect extraReward3");
+        assertEq(adapter.extraReward4(), tokens[8], "Incorrect extraReward4");
+        assertEq(adapter.rewardTokensMask(), 8 + 16 + 32 + 64 + 128 + 256, "Incorrect rewardTokensMask");
     }
 
     /// @notice U:[CVX1R-3]: Wrapper functions revert on wrong caller
