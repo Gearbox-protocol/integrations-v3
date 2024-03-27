@@ -3,6 +3,8 @@
 // (c) Gearbox Foundation, 2023.
 pragma solidity ^0.8.10;
 
+import {Pausable} from "@openzeppelin/contracts/security/Pausable.sol";
+
 import {ICreditManagerV3} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditManagerV3.sol";
 import {ICreditFacadeV3} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacadeV3.sol";
 import {IVersion} from "@gearbox-protocol/core-v2/contracts/interfaces/IVersion.sol";
@@ -99,18 +101,26 @@ contract LiveTestHelper is IntegrationTestHelper {
                 } catch {}
 
                 if (creditManagerToAttach != address(0)) {
-                    _attachCreditManager(creditManagerToAttach);
-                    _;
-                    console.log("Successfully ran tests on attached CM: %s", address(creditManager));
+                    if (_checkFunctionalSuite(creditManagerToAttach)) {
+                        _attachCreditManager(creditManagerToAttach);
+                        _;
+                        console.log("Successfully ran tests on attached CM: %s", creditManagerToAttach);
+                    } else {
+                        console.log("Pool or facade for attached CM paused, skipping: %s", creditManagerToAttach);
+                    }
                 } else {
                     address[] memory cms = cr.getCreditManagers();
                     uint256 len = cms.length;
                     for (uint256 i = 0; i < len; ++i) {
                         if (IVersion(cms[i]).version() >= 3_00) {
                             uint256 snapshot = vm.snapshot();
-                            _attachCreditManager(cms[i]);
-                            _;
-                            console.log("Successfully ran tests on attached CM: %s", address(creditManager));
+                            if (_checkFunctionalSuite(cms[i])) {
+                                _attachCreditManager(cms[i]);
+                                _;
+                                console.log("Successfully ran tests on attached CM: %s", cms[i]);
+                            } else {
+                                console.log("Pool or facade for attached CM paused, skipping: %s", cms[i]);
+                            }
                             vm.revertTo(snapshot);
                         }
                     }
@@ -312,6 +322,13 @@ contract LiveTestHelper is IntegrationTestHelper {
             vm.prank(CONFIGURATOR);
             VelodromeV2RouterAdapter(velodromeV2Adapter).setPoolStatusBatch(pools);
         }
+    }
+
+    function _checkFunctionalSuite(address creditManager) internal view returns (bool) {
+        address pool = ICreditManagerV3(creditManager).pool();
+        address creditFacade = ICreditManagerV3(creditManager).creditFacade();
+
+        return !Pausable(pool).paused() && !Pausable(creditFacade).paused();
     }
 
     function _setUp() public virtual liveTest {
