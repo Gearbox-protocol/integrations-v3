@@ -165,6 +165,28 @@ contract VelodtomeV2AdapterUnitTest is
         }
     }
 
+    /// @notice U:[VELO2-7]: `_validatePath` works as expected
+    function test_U_VELO2_07_validatePath_filters_disjunct_paths() public {
+        bool isValid;
+        address tokenIn;
+        address tokenOut;
+        Route[] memory routes;
+
+        VelodromeV2PoolStatus[] memory pools = new VelodromeV2PoolStatus[](2);
+        pools[0] = VelodromeV2PoolStatus(tokens[0], tokens[1], false, address(42), true);
+        pools[1] = VelodromeV2PoolStatus(tokens[2], tokens[3], false, address(42), true);
+        vm.prank(configurator);
+        adapter.setPoolStatusBatch(pools);
+
+        routes = new Route[](2);
+        routes[0] = Route({from: tokens[0], to: tokens[1], stable: false, factory: address(42)});
+        routes[1] = Route({from: tokens[2], to: tokens[3], stable: false, factory: address(42)});
+
+        (isValid, tokenIn, tokenOut) = adapter.validatePath(routes);
+
+        assertFalse(isValid, "Path incorrectly valid");
+    }
+
     // ------- //
     // HELPERS //
     // ------- //

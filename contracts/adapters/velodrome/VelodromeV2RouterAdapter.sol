@@ -158,9 +158,11 @@ contract VelodromeV2RouterAdapter is AbstractAdapter, IVelodromeV2RouterAdapter 
         tokenOut = routes[len - 1].to;
         valid = isPoolAllowed(routes[0].from, routes[0].to, routes[0].stable, routes[0].factory);
         if (valid && len > 1) {
-            valid = isPoolAllowed(routes[1].from, routes[1].to, routes[1].stable, routes[1].factory);
+            valid = isPoolAllowed(routes[1].from, routes[1].to, routes[1].stable, routes[1].factory)
+                && (routes[0].to == routes[1].from);
             if (valid && len > 2) {
-                valid = isPoolAllowed(routes[2].from, routes[2].to, routes[2].stable, routes[2].factory);
+                valid = isPoolAllowed(routes[2].from, routes[2].to, routes[2].stable, routes[2].factory)
+                    && (routes[1].to == routes[2].from);
             }
         }
     }
