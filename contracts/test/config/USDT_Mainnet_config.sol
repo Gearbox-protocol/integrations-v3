@@ -29,7 +29,7 @@ contract CONFIG_MAINNET_USDT_V3 is IPoolV3DeployConfig {
     // POOL
 
     string public constant symbol = "dUSDTV3";
-    string public constant name = "USDT v3";
+    string public constant name = "Universal USDT v3";
 
     PoolV3DeployParams _poolParams = PoolV3DeployParams({withdrawalFee: 0, totalDebtLimit: 100_000_000_000_000});
 
@@ -52,13 +52,13 @@ contract CONFIG_MAINNET_USDT_V3 is IPoolV3DeployConfig {
         _gaugeRates.push(GaugeRate({token: Tokens.DAI, minRate: 4, maxRate: 12_00}));
         _gaugeRates.push(GaugeRate({token: Tokens.USDC, minRate: 4, maxRate: 12_00}));
         _gaugeRates.push(GaugeRate({token: Tokens.sDAI, minRate: 5, maxRate: 15_00}));
-        _gaugeRates.push(GaugeRate({token: Tokens.USDe, minRate: 5, maxRate: 30_00}));
-        _gaugeRates.push(GaugeRate({token: Tokens.sUSDe, minRate: 5, maxRate: 30_00}));
+        _gaugeRates.push(GaugeRate({token: Tokens.USDe, minRate: 5, maxRate: 50_00}));
+        _gaugeRates.push(GaugeRate({token: Tokens.sUSDe, minRate: 5, maxRate: 50_00}));
         _quotaLimits.push(PoolQuotaLimit({token: Tokens.DAI, quotaIncreaseFee: 1, limit: 30_000_000_000_000}));
         _quotaLimits.push(PoolQuotaLimit({token: Tokens.USDC, quotaIncreaseFee: 1, limit: 30_000_000_000_000}));
         _quotaLimits.push(PoolQuotaLimit({token: Tokens.sDAI, quotaIncreaseFee: 0, limit: 30_000_000_000_000}));
-        _quotaLimits.push(PoolQuotaLimit({token: Tokens.USDe, quotaIncreaseFee: 0, limit: 3_000_000_000_000}));
-        _quotaLimits.push(PoolQuotaLimit({token: Tokens.sUSDe, quotaIncreaseFee: 0, limit: 3_000_000_000_000}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.USDe, quotaIncreaseFee: 0, limit: 5_000_000_000_000}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.sUSDe, quotaIncreaseFee: 0, limit: 0}));
 
         {
             /// CREDIT_MANAGER_0

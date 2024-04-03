@@ -24,7 +24,7 @@ contract AdapterUnitTestHelper is Test, CreditManagerV3MockEvents {
     CreditManagerV3Mock creditManager;
     AddressProviderV3ACLMock addressProvider;
 
-    address[8] tokens;
+    address[10] tokens;
 
     uint256 diffMintedAmount = 1001;
     uint256 diffLeftoverAmount;

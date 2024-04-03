@@ -10,7 +10,7 @@ contract BaseRewardPoolMock {
     address public rewardToken;
 
     uint256 numExtraRewards;
-    address[2] public extraRewards;
+    address[4] public extraRewards;
 
     constructor(uint256 _pid, address _operator, address _stakingToken, address _rewardToken) {
         pid = _pid;

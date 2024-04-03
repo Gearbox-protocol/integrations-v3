@@ -22,14 +22,14 @@ import {
 contract CONFIG_OPTIMISM_USDC_V3 is IPoolV3DeployConfig {
     string public constant id = "optimism-usdc-v3";
     uint256 public constant chainId = 10;
-    Tokens public constant underlying = Tokens.USDC;
+    Tokens public constant underlying = Tokens.USDC_e;
     bool public constant supportsQuotas = true;
     uint256 public constant getAccountAmount = 10_000_000_000;
 
     // POOL
 
     string public constant symbol = "dUSDCV3";
-    string public constant name = "USDC v3";
+    string public constant name = "Main USDC.e v3";
 
     PoolV3DeployParams _poolParams = PoolV3DeployParams({withdrawalFee: 0, totalDebtLimit: 100_000_000_000_000});
 
@@ -51,34 +51,30 @@ contract CONFIG_OPTIMISM_USDC_V3 is IPoolV3DeployConfig {
     constructor() {
         _gaugeRates.push(GaugeRate({token: Tokens.DAI, minRate: 4, maxRate: 12_00}));
         _gaugeRates.push(GaugeRate({token: Tokens.USDT, minRate: 4, maxRate: 12_00}));
-        _gaugeRates.push(GaugeRate({token: Tokens.WBTC, minRate: 4, maxRate: 12_00}));
-        _gaugeRates.push(GaugeRate({token: Tokens.WETH, minRate: 4, maxRate: 12_00}));
-        _gaugeRates.push(GaugeRate({token: Tokens.OP, minRate: 4, maxRate: 12_00}));
-        _gaugeRates.push(GaugeRate({token: Tokens.WLD, minRate: 80, maxRate: 24_00}));
-        _gaugeRates.push(GaugeRate({token: Tokens.LINK, minRate: 80, maxRate: 24_00}));
-        _gaugeRates.push(GaugeRate({token: Tokens.SNX, minRate: 80, maxRate: 24_00}));
-        _gaugeRates.push(GaugeRate({token: Tokens.yvWETH, minRate: 4, maxRate: 15_00}));
-        _gaugeRates.push(GaugeRate({token: Tokens.yvOP, minRate: 4, maxRate: 15_00}));
-        _gaugeRates.push(GaugeRate({token: Tokens.wstETH, minRate: 4, maxRate: 15_00}));
-        _gaugeRates.push(GaugeRate({token: Tokens.rETH, minRate: 4, maxRate: 15_00}));
-        _gaugeRates.push(GaugeRate({token: Tokens.yvDAI, minRate: 5, maxRate: 8_50}));
-        _gaugeRates.push(GaugeRate({token: Tokens.yvUSDC, minRate: 5, maxRate: 7_00}));
-        _gaugeRates.push(GaugeRate({token: Tokens.yvUSDT, minRate: 5, maxRate: 9_00}));
+        _gaugeRates.push(GaugeRate({token: Tokens.WBTC, minRate: 4, maxRate: 40_00}));
+        _gaugeRates.push(GaugeRate({token: Tokens.WETH, minRate: 4, maxRate: 40_00}));
+        _gaugeRates.push(GaugeRate({token: Tokens.OP, minRate: 4, maxRate: 40_00}));
+        _gaugeRates.push(GaugeRate({token: Tokens.WLD, minRate: 80, maxRate: 50_00}));
+        _gaugeRates.push(GaugeRate({token: Tokens.SNX, minRate: 80, maxRate: 50_00}));
+        _gaugeRates.push(GaugeRate({token: Tokens.yvWETH, minRate: 4, maxRate: 40_00}));
+        _gaugeRates.push(GaugeRate({token: Tokens.wstETH, minRate: 4, maxRate: 40_00}));
+        _gaugeRates.push(GaugeRate({token: Tokens.rETH, minRate: 4, maxRate: 40_00}));
+        _gaugeRates.push(GaugeRate({token: Tokens.yvDAI, minRate: 5, maxRate: 15_00}));
+        _gaugeRates.push(GaugeRate({token: Tokens.yvUSDC_e, minRate: 5, maxRate: 15_00}));
+        _gaugeRates.push(GaugeRate({token: Tokens.yvUSDT, minRate: 5, maxRate: 15_00}));
         _quotaLimits.push(PoolQuotaLimit({token: Tokens.DAI, quotaIncreaseFee: 1, limit: 3_000_000_000_000}));
         _quotaLimits.push(PoolQuotaLimit({token: Tokens.USDT, quotaIncreaseFee: 1, limit: 1_500_000_000_000}));
-        _quotaLimits.push(PoolQuotaLimit({token: Tokens.WBTC, quotaIncreaseFee: 1, limit: 500_000_000_000}));
-        _quotaLimits.push(PoolQuotaLimit({token: Tokens.WETH, quotaIncreaseFee: 1, limit: 3_000_000_000_000}));
-        _quotaLimits.push(PoolQuotaLimit({token: Tokens.OP, quotaIncreaseFee: 1, limit: 1_300_000_000_000}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.WBTC, quotaIncreaseFee: 1, limit: 300_000_000_000}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.WETH, quotaIncreaseFee: 1, limit: 1_500_000_000_000}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.OP, quotaIncreaseFee: 1, limit: 1_000_000_000_000}));
         _quotaLimits.push(PoolQuotaLimit({token: Tokens.WLD, quotaIncreaseFee: 5, limit: 600_000_000_000}));
-        _quotaLimits.push(PoolQuotaLimit({token: Tokens.LINK, quotaIncreaseFee: 5, limit: 50_000_000_000}));
-        _quotaLimits.push(PoolQuotaLimit({token: Tokens.SNX, quotaIncreaseFee: 5, limit: 400_000_000_000}));
-        _quotaLimits.push(PoolQuotaLimit({token: Tokens.yvWETH, quotaIncreaseFee: 1, limit: 400_000_000_000}));
-        _quotaLimits.push(PoolQuotaLimit({token: Tokens.yvOP, quotaIncreaseFee: 1, limit: 550_000_000_000}));
-        _quotaLimits.push(PoolQuotaLimit({token: Tokens.wstETH, quotaIncreaseFee: 1, limit: 3_000_000_000_000}));
-        _quotaLimits.push(PoolQuotaLimit({token: Tokens.rETH, quotaIncreaseFee: 1, limit: 3_000_000_000_000}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.SNX, quotaIncreaseFee: 5, limit: 300_000_000_000}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.yvWETH, quotaIncreaseFee: 1, limit: 500_000_000_000}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.wstETH, quotaIncreaseFee: 1, limit: 1_000_000_000_000}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.rETH, quotaIncreaseFee: 1, limit: 800_000_000_000}));
         _quotaLimits.push(PoolQuotaLimit({token: Tokens.yvDAI, quotaIncreaseFee: 0, limit: 230_000_000_000}));
-        _quotaLimits.push(PoolQuotaLimit({token: Tokens.yvUSDC, quotaIncreaseFee: 0, limit: 330_000_000_000}));
-        _quotaLimits.push(PoolQuotaLimit({token: Tokens.yvUSDT, quotaIncreaseFee: 0, limit: 300_000_000_000}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.yvUSDC_e, quotaIncreaseFee: 0, limit: 330_000_000_000}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.yvUSDT, quotaIncreaseFee: 0, limit: 230_000_000_000}));
 
         {
             /// CREDIT_MANAGER_0
@@ -87,21 +83,25 @@ contract CONFIG_OPTIMISM_USDC_V3 is IPoolV3DeployConfig {
             cp.minDebt = 1_000_000_000;
             cp.maxDebt = 200_000_000_000;
             cp.feeInterest = 2500;
-            cp.feeLiquidation = 50;
-            cp.liquidationPremium = 100;
-            cp.feeLiquidationExpired = 50;
-            cp.liquidationPremiumExpired = 100;
+            cp.feeLiquidation = 100;
+            cp.liquidationPremium = 200;
+            cp.feeLiquidationExpired = 100;
+            cp.liquidationPremiumExpired = 200;
             cp.whitelisted = false;
             cp.expirable = false;
             cp.skipInit = false;
             cp.poolLimit = 2_000_000_000_000;
 
             CollateralTokenHuman[] storage cts = cp.collateralTokens;
-            cts.push(CollateralTokenHuman({token: Tokens.WETH, lt: 96_00}));
+            cts.push(CollateralTokenHuman({token: Tokens.DAI, lt: 96_00}));
 
-            cts.push(CollateralTokenHuman({token: Tokens.WBTC, lt: 96_00}));
+            cts.push(CollateralTokenHuman({token: Tokens.USDT, lt: 96_00}));
 
-            cts.push(CollateralTokenHuman({token: Tokens.OP, lt: 96_00}));
+            cts.push(CollateralTokenHuman({token: Tokens.WETH, lt: 94_00}));
+
+            cts.push(CollateralTokenHuman({token: Tokens.WBTC, lt: 94_00}));
+
+            cts.push(CollateralTokenHuman({token: Tokens.OP, lt: 90_00}));
 
             cts.push(CollateralTokenHuman({token: Tokens.yvWETH, lt: 94_00}));
 
@@ -109,19 +109,25 @@ contract CONFIG_OPTIMISM_USDC_V3 is IPoolV3DeployConfig {
 
             cts.push(CollateralTokenHuman({token: Tokens.rETH, lt: 94_00}));
 
-            cts.push(CollateralTokenHuman({token: Tokens.yvOP, lt: 94_00}));
+            cts.push(CollateralTokenHuman({token: Tokens.yvUSDC_e, lt: 94_00}));
+
+            cts.push(CollateralTokenHuman({token: Tokens.yvDAI, lt: 94_00}));
+
+            cts.push(CollateralTokenHuman({token: Tokens.yvUSDT, lt: 94_00}));
+
+            cts.push(CollateralTokenHuman({token: Tokens._3CRV, lt: 0}));
             Contracts[] storage cs = cp.contracts;
             cs.push(Contracts.UNISWAP_V3_ROUTER);
             UniswapV3Pair[] storage uv3p = cp.uniswapV3Pairs;
             uv3p.push(UniswapV3Pair({token0: Tokens.WETH, token1: Tokens.OP, fee: 3000}));
-            uv3p.push(UniswapV3Pair({token0: Tokens.WETH, token1: Tokens.USDC, fee: 500}));
-            uv3p.push(UniswapV3Pair({token0: Tokens.WETH, token1: Tokens.USDC, fee: 3000}));
+            uv3p.push(UniswapV3Pair({token0: Tokens.WETH, token1: Tokens.USDC_e, fee: 500}));
+            uv3p.push(UniswapV3Pair({token0: Tokens.WETH, token1: Tokens.USDC_e, fee: 3000}));
             uv3p.push(UniswapV3Pair({token0: Tokens.WETH, token1: Tokens.WBTC, fee: 3000}));
             uv3p.push(UniswapV3Pair({token0: Tokens.wstETH, token1: Tokens.WETH, fee: 100}));
             uv3p.push(UniswapV3Pair({token0: Tokens.WETH, token1: Tokens.WBTC, fee: 500}));
-            uv3p.push(UniswapV3Pair({token0: Tokens.OP, token1: Tokens.USDC, fee: 3000}));
+            uv3p.push(UniswapV3Pair({token0: Tokens.OP, token1: Tokens.USDC_e, fee: 3000}));
             uv3p.push(UniswapV3Pair({token0: Tokens.WETH, token1: Tokens.OP, fee: 500}));
-            uv3p.push(UniswapV3Pair({token0: Tokens.WETH, token1: Tokens.rETH, fee: 500}));
+            uv3p.push(UniswapV3Pair({token0: Tokens.USDC_e, token1: Tokens.USDT, fee: 100}));
             cs.push(Contracts.BALANCER_VAULT);
             BalancerPool[] storage bp = cp.balancerPools;
 
@@ -131,10 +137,6 @@ contract CONFIG_OPTIMISM_USDC_V3 is IPoolV3DeployConfig {
 
             bp.push(
                 BalancerPool({poolId: 0x7ca75bdea9dede97f8b13c6641b768650cb837820002000000000000000000d5, status: 2})
-            );
-
-            bp.push(
-                BalancerPool({poolId: 0x7b50775383d3d6f0215a8f290f2c9e2eebbeceb200020000000000000000008b, status: 2})
             );
 
             bp.push(
@@ -161,7 +163,7 @@ contract CONFIG_OPTIMISM_USDC_V3 is IPoolV3DeployConfig {
             vv2p.push(
                 VelodromeV2Pool({
                     token0: Tokens.OP,
-                    token1: Tokens.USDC,
+                    token1: Tokens.USDC_e,
                     stable: false,
                     factory: 0xF1046053aa5682b4F9a81b5481394DA16BE5FF5a
                 })
@@ -169,7 +171,7 @@ contract CONFIG_OPTIMISM_USDC_V3 is IPoolV3DeployConfig {
             vv2p.push(
                 VelodromeV2Pool({
                     token0: Tokens.WETH,
-                    token1: Tokens.USDC,
+                    token1: Tokens.USDC_e,
                     stable: false,
                     factory: 0xF1046053aa5682b4F9a81b5481394DA16BE5FF5a
                 })
@@ -182,8 +184,27 @@ contract CONFIG_OPTIMISM_USDC_V3 is IPoolV3DeployConfig {
                     factory: 0xF1046053aa5682b4F9a81b5481394DA16BE5FF5a
                 })
             );
+            vv2p.push(
+                VelodromeV2Pool({
+                    token0: Tokens.USDC_e,
+                    token1: Tokens.DAI,
+                    stable: true,
+                    factory: 0xF1046053aa5682b4F9a81b5481394DA16BE5FF5a
+                })
+            );
+            vv2p.push(
+                VelodromeV2Pool({
+                    token0: Tokens.USDC_e,
+                    token1: Tokens.USDT,
+                    stable: true,
+                    factory: 0xF1046053aa5682b4F9a81b5481394DA16BE5FF5a
+                })
+            );
+            cs.push(Contracts.CURVE_3CRV_POOL_OP);
             cs.push(Contracts.YEARN_WETH_VAULT);
-            cs.push(Contracts.YEARN_OP_VAULT);
+            cs.push(Contracts.YEARN_DAI_VAULT);
+            cs.push(Contracts.YEARN_USDC_E_VAULT);
+            cs.push(Contracts.YEARN_USDT_VAULT);
         }
         {
             /// CREDIT_MANAGER_1
@@ -202,78 +223,37 @@ contract CONFIG_OPTIMISM_USDC_V3 is IPoolV3DeployConfig {
             cp.poolLimit = 500_000_000_000;
 
             CollateralTokenHuman[] storage cts = cp.collateralTokens;
-            cts.push(CollateralTokenHuman({token: Tokens.WETH, lt: 95_00}));
+            cts.push(CollateralTokenHuman({token: Tokens.WETH, lt: 94_00}));
 
-            cts.push(CollateralTokenHuman({token: Tokens.WLD, lt: 92_00}));
+            cts.push(CollateralTokenHuman({token: Tokens.WLD, lt: 85_00}));
 
-            cts.push(CollateralTokenHuman({token: Tokens.LINK, lt: 92_00}));
-
-            cts.push(CollateralTokenHuman({token: Tokens.SNX, lt: 92_00}));
+            cts.push(CollateralTokenHuman({token: Tokens.SNX, lt: 85_00}));
             Contracts[] storage cs = cp.contracts;
             cs.push(Contracts.UNISWAP_V3_ROUTER);
             UniswapV3Pair[] storage uv3p = cp.uniswapV3Pairs;
-            uv3p.push(UniswapV3Pair({token0: Tokens.WETH, token1: Tokens.USDC, fee: 500}));
-            uv3p.push(UniswapV3Pair({token0: Tokens.WETH, token1: Tokens.USDC, fee: 3000}));
-            uv3p.push(UniswapV3Pair({token0: Tokens.USDC, token1: Tokens.WLD, fee: 10000}));
-            uv3p.push(UniswapV3Pair({token0: Tokens.WETH, token1: Tokens.LINK, fee: 3000}));
+            uv3p.push(UniswapV3Pair({token0: Tokens.WETH, token1: Tokens.USDC_e, fee: 500}));
+            uv3p.push(UniswapV3Pair({token0: Tokens.WETH, token1: Tokens.USDC_e, fee: 3000}));
+            uv3p.push(UniswapV3Pair({token0: Tokens.USDC_e, token1: Tokens.WLD, fee: 10000}));
+            uv3p.push(UniswapV3Pair({token0: Tokens.WETH, token1: Tokens.WLD, fee: 3000}));
             uv3p.push(UniswapV3Pair({token0: Tokens.WETH, token1: Tokens.SNX, fee: 3000}));
             cs.push(Contracts.VELODROME_V2_ROUTER);
             VelodromeV2Pool[] storage vv2p = cp.velodromeV2Pools;
             vv2p.push(
                 VelodromeV2Pool({
                     token0: Tokens.WETH,
-                    token1: Tokens.USDC,
+                    token1: Tokens.USDC_e,
                     stable: false,
                     factory: 0xF1046053aa5682b4F9a81b5481394DA16BE5FF5a
                 })
             );
             vv2p.push(
                 VelodromeV2Pool({
-                    token0: Tokens.USDC,
+                    token0: Tokens.USDC_e,
                     token1: Tokens.SNX,
                     stable: false,
                     factory: 0xF1046053aa5682b4F9a81b5481394DA16BE5FF5a
                 })
             );
-        }
-        {
-            /// CREDIT_MANAGER_2
-            CreditManagerV3DeployParams storage cp = _creditManagers.push();
-
-            cp.minDebt = 10_000_000_000;
-            cp.maxDebt = 100_000_000_000;
-            cp.feeInterest = 2500;
-            cp.feeLiquidation = 50;
-            cp.liquidationPremium = 100;
-            cp.feeLiquidationExpired = 50;
-            cp.liquidationPremiumExpired = 100;
-            cp.whitelisted = true;
-            cp.expirable = false;
-            cp.skipInit = false;
-            cp.poolLimit = 1_000_000_000_000;
-
-            CollateralTokenHuman[] storage cts = cp.collateralTokens;
-            cts.push(CollateralTokenHuman({token: Tokens.DAI, lt: 98_00}));
-
-            cts.push(CollateralTokenHuman({token: Tokens.USDT, lt: 98_00}));
-
-            cts.push(CollateralTokenHuman({token: Tokens.yvUSDC, lt: 96_00}));
-
-            cts.push(CollateralTokenHuman({token: Tokens.yvDAI, lt: 96_00}));
-
-            cts.push(CollateralTokenHuman({token: Tokens.yvUSDT, lt: 96_00}));
-
-            cts.push(CollateralTokenHuman({token: Tokens._3Crv, lt: 0}));
-            Contracts[] storage cs = cp.contracts;
-            cs.push(Contracts.UNISWAP_V3_ROUTER);
-            UniswapV3Pair[] storage uv3p = cp.uniswapV3Pairs;
-            uv3p.push(UniswapV3Pair({token0: Tokens.USDC, token1: Tokens.USDT, fee: 100}));
-            uv3p.push(UniswapV3Pair({token0: Tokens.DAI, token1: Tokens.USDC, fee: 100}));
-            uv3p.push(UniswapV3Pair({token0: Tokens.USDT, token1: Tokens.DAI, fee: 100}));
-            cs.push(Contracts.CURVE_3CRV_POOL);
-            cs.push(Contracts.YEARN_DAI_VAULT);
-            cs.push(Contracts.YEARN_USDC_VAULT);
-            cs.push(Contracts.YEARN_USDT_VAULT);
         }
     }
 

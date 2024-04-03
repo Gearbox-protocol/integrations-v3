@@ -6,6 +6,9 @@ pragma solidity ^0.8.17;
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {ICreditFacadeV3} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacadeV3.sol";
+import {
+    CollateralDebtData, CollateralCalcTask
+} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditManagerV3.sol";
 import {IAaveV2_LendingPoolAdapter} from "../../../../interfaces/aave/IAaveV2_LendingPoolAdapter.sol";
 import {ILendingPool} from "../../../../integrations/aave/ILendingPool.sol";
 import {IAToken} from "../../../../integrations/aave/IAToken.sol";
@@ -158,5 +161,25 @@ contract Live_AaveV2LendingPoolEquivalenceTest is LiveTestHelper {
 
             comparator.compareAllSnapshots(creditAccount, savedBalanceSnapshots);
         }
+    }
+
+    function test_diag_profits() public attachOrLiveTest {
+        uint256 cmProfit = 0;
+
+        address[] memory creditAccounts = creditManager.creditAccounts();
+
+        for (uint256 j = 0; j < creditAccounts.length; ++j) {
+            CollateralDebtData memory cdd =
+                creditManager.calcDebtAndCollateral(creditAccounts[j], CollateralCalcTask.DEBT_ONLY);
+
+            cmProfit += cdd.accruedFees;
+        }
+
+        emit log_address(address(creditManager));
+        emit log_uint(cmProfit);
+    }
+
+    function test_diag_pf() public attachOrLiveTest {
+        emit log_uint(priceOracle.getPrice(tokenTestSuite.addressOf(Tokens.ezETH)));
     }
 }

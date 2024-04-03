@@ -38,6 +38,12 @@ contract ConvexV1BaseRewardPoolAdapter is AbstractAdapter, IConvexV1BaseRewardPo
     /// @notice Address of a reward token of the second extra reward pool, if any
     address public immutable override extraReward2;
 
+    /// @notice Address of a reward token of the third extra reward pool, if any
+    address public immutable override extraReward3;
+
+    /// @notice Address of a reward token of the fourth extra reward pool, if any
+    address public immutable override extraReward4;
+
     /// @notice Collateral token mask of a Curve LP token in the credit manager
     uint256 public immutable override curveLPTokenMask;
 
@@ -77,6 +83,8 @@ contract ConvexV1BaseRewardPoolAdapter is AbstractAdapter, IConvexV1BaseRewardPo
 
         address _extraReward1;
         address _extraReward2;
+        address _extraReward3;
+        address _extraReward4;
         uint256 extraRewardLength = IBaseRewardPool(_baseRewardPool).extraRewardsLength();
 
         if (extraRewardLength >= 1) {
@@ -87,11 +95,23 @@ contract ConvexV1BaseRewardPoolAdapter is AbstractAdapter, IConvexV1BaseRewardPo
             if (extraRewardLength >= 2) {
                 (_extraReward2, _extraRewardMask) = _getExtraReward(1);
                 _rewardTokensMask = _rewardTokensMask.enable(_extraRewardMask);
+
+                if (extraRewardLength >= 3) {
+                    (_extraReward3, _extraRewardMask) = _getExtraReward(2);
+                    _rewardTokensMask = _rewardTokensMask.enable(_extraRewardMask);
+
+                    if (extraRewardLength >= 4) {
+                        (_extraReward4, _extraRewardMask) = _getExtraReward(3);
+                        _rewardTokensMask = _rewardTokensMask.enable(_extraRewardMask);
+                    }
+                }
             }
         }
 
         extraReward1 = _extraReward1; // U:[CVX1R-2]
         extraReward2 = _extraReward2; // U:[CVX1R-2]
+        extraReward3 = _extraReward3;
+        extraReward4 = _extraReward4;
         rewardTokensMask = _rewardTokensMask; // U:[CVX1R-2]
     }
 
