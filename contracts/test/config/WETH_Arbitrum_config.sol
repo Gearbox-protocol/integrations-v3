@@ -124,7 +124,7 @@ contract CONFIG_ARBITRUM_WETH_V3 is IPoolV3DeployConfig {
 
             cts.push(CollateralTokenHuman({token: Tokens.cbETH, lt: 96_00}));
 
-            cts.push(CollateralTokenHuman({token: Tokens.ezETH, lt: 96_00}));
+            cts.push(CollateralTokenHuman({token: Tokens.ezETH, lt: 90_00}));
             Contracts[] storage cs = cp.contracts;
             cs.push(Contracts.UNISWAP_V3_ROUTER);
             UniswapV3Pair[] storage uv3p = cp.uniswapV3Pairs;

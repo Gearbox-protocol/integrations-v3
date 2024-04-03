@@ -49,50 +49,50 @@ contract CONFIG_MAINNET_USDC_V3 is IPoolV3DeployConfig {
     CreditManagerV3DeployParams[] _creditManagers;
 
     constructor() {
-        _gaugeRates.push(GaugeRate({token: Tokens.WBTC, minRate: 4, maxRate: 12_00}));
-        _gaugeRates.push(GaugeRate({token: Tokens.WETH, minRate: 4, maxRate: 12_00}));
+        _gaugeRates.push(GaugeRate({token: Tokens.WBTC, minRate: 4, maxRate: 40_00}));
+        _gaugeRates.push(GaugeRate({token: Tokens.WETH, minRate: 4, maxRate: 40_00}));
         _gaugeRates.push(GaugeRate({token: Tokens.DAI, minRate: 4, maxRate: 12_00}));
         _gaugeRates.push(GaugeRate({token: Tokens.FRAX, minRate: 4, maxRate: 12_00}));
         _gaugeRates.push(GaugeRate({token: Tokens.crvUSD, minRate: 4, maxRate: 12_00}));
         _gaugeRates.push(GaugeRate({token: Tokens.USDT, minRate: 4, maxRate: 12_00}));
-        _gaugeRates.push(GaugeRate({token: Tokens.MKR, minRate: 80, maxRate: 24_00}));
-        _gaugeRates.push(GaugeRate({token: Tokens.UNI, minRate: 80, maxRate: 24_00}));
-        _gaugeRates.push(GaugeRate({token: Tokens.LINK, minRate: 80, maxRate: 24_00}));
-        _gaugeRates.push(GaugeRate({token: Tokens.LDO, minRate: 80, maxRate: 24_00}));
-        _gaugeRates.push(GaugeRate({token: Tokens.CRV, minRate: 2_40, maxRate: 40_00}));
-        _gaugeRates.push(GaugeRate({token: Tokens.CVX, minRate: 2_40, maxRate: 40_00}));
+        _gaugeRates.push(GaugeRate({token: Tokens.MKR, minRate: 80, maxRate: 50_00}));
+        _gaugeRates.push(GaugeRate({token: Tokens.UNI, minRate: 80, maxRate: 50_00}));
+        _gaugeRates.push(GaugeRate({token: Tokens.LINK, minRate: 80, maxRate: 50_00}));
+        _gaugeRates.push(GaugeRate({token: Tokens.LDO, minRate: 80, maxRate: 50_00}));
+        _gaugeRates.push(GaugeRate({token: Tokens.CRV, minRate: 2_40, maxRate: 50_00}));
+        _gaugeRates.push(GaugeRate({token: Tokens.CVX, minRate: 2_40, maxRate: 50_00}));
         _gaugeRates.push(GaugeRate({token: Tokens.FXS, minRate: 2_40, maxRate: 40_00}));
         _gaugeRates.push(GaugeRate({token: Tokens.APE, minRate: 2_40, maxRate: 40_00}));
-        _gaugeRates.push(GaugeRate({token: Tokens.sDAI, minRate: 5, maxRate: 5_00}));
-        _gaugeRates.push(GaugeRate({token: Tokens.yvUSDC, minRate: 50, maxRate: 5_00}));
-        _gaugeRates.push(GaugeRate({token: Tokens.yvDAI, minRate: 50, maxRate: 5_00}));
-        _gaugeRates.push(GaugeRate({token: Tokens.stkcvxcrvUSDUSDC, minRate: 1_00, maxRate: 5_20}));
-        _gaugeRates.push(GaugeRate({token: Tokens.stkcvxcrvUSDUSDT, minRate: 1_00, maxRate: 7_00}));
-        _gaugeRates.push(GaugeRate({token: Tokens.stkcvxcrvUSDFRAX, minRate: 1_00, maxRate: 7_50}));
+        _gaugeRates.push(GaugeRate({token: Tokens.sDAI, minRate: 5, maxRate: 15_00}));
+        _gaugeRates.push(GaugeRate({token: Tokens.yvUSDC, minRate: 50, maxRate: 15_00}));
+        _gaugeRates.push(GaugeRate({token: Tokens.yvDAI, minRate: 50, maxRate: 15_00}));
+        _gaugeRates.push(GaugeRate({token: Tokens.stkcvxcrvUSDUSDC, minRate: 1_00, maxRate: 15_00}));
+        _gaugeRates.push(GaugeRate({token: Tokens.stkcvxcrvUSDUSDT, minRate: 1_00, maxRate: 15_00}));
+        _gaugeRates.push(GaugeRate({token: Tokens.stkcvxcrvUSDFRAX, minRate: 1_00, maxRate: 15_00}));
         _gaugeRates.push(GaugeRate({token: Tokens.stkcvxcrvFRAX, minRate: 1_00, maxRate: 3_50}));
-        _gaugeRates.push(GaugeRate({token: Tokens.yvWETH, minRate: 1, maxRate: 15_00}));
-        _gaugeRates.push(GaugeRate({token: Tokens.yvWBTC, minRate: 1, maxRate: 15_00}));
-        _gaugeRates.push(GaugeRate({token: Tokens.STETH, minRate: 4, maxRate: 12_00}));
-        _gaugeRates.push(GaugeRate({token: Tokens.ezETH, minRate: 5, maxRate: 30_00}));
-        _gaugeRates.push(GaugeRate({token: Tokens.USDe, minRate: 5, maxRate: 30_00}));
-        _gaugeRates.push(GaugeRate({token: Tokens.sUSDe, minRate: 5, maxRate: 30_00}));
+        _gaugeRates.push(GaugeRate({token: Tokens.yvWETH, minRate: 1, maxRate: 40_00}));
+        _gaugeRates.push(GaugeRate({token: Tokens.yvWBTC, minRate: 1, maxRate: 40_00}));
+        _gaugeRates.push(GaugeRate({token: Tokens.STETH, minRate: 4, maxRate: 40_00}));
+        _gaugeRates.push(GaugeRate({token: Tokens.ezETH, minRate: 5, maxRate: 40_00}));
+        _gaugeRates.push(GaugeRate({token: Tokens.USDe, minRate: 5, maxRate: 50_00}));
+        _gaugeRates.push(GaugeRate({token: Tokens.sUSDe, minRate: 5, maxRate: 50_00}));
         _quotaLimits.push(PoolQuotaLimit({token: Tokens.WBTC, quotaIncreaseFee: 1, limit: 30_000_000_000_000}));
         _quotaLimits.push(PoolQuotaLimit({token: Tokens.WETH, quotaIncreaseFee: 1, limit: 30_000_000_000_000}));
         _quotaLimits.push(PoolQuotaLimit({token: Tokens.DAI, quotaIncreaseFee: 1, limit: 30_000_000_000_000}));
         _quotaLimits.push(PoolQuotaLimit({token: Tokens.FRAX, quotaIncreaseFee: 1, limit: 30_000_000_000_000}));
         _quotaLimits.push(PoolQuotaLimit({token: Tokens.crvUSD, quotaIncreaseFee: 1, limit: 30_000_000_000_000}));
         _quotaLimits.push(PoolQuotaLimit({token: Tokens.USDT, quotaIncreaseFee: 1, limit: 30_000_000_000_000}));
-        _quotaLimits.push(PoolQuotaLimit({token: Tokens.MKR, quotaIncreaseFee: 1, limit: 3_000_000_000_000}));
-        _quotaLimits.push(PoolQuotaLimit({token: Tokens.UNI, quotaIncreaseFee: 1, limit: 5_000_000_000_000}));
-        _quotaLimits.push(PoolQuotaLimit({token: Tokens.LINK, quotaIncreaseFee: 1, limit: 5_000_000_000_000}));
-        _quotaLimits.push(PoolQuotaLimit({token: Tokens.LDO, quotaIncreaseFee: 1, limit: 2_500_000_000_000}));
-        _quotaLimits.push(PoolQuotaLimit({token: Tokens.CRV, quotaIncreaseFee: 1, limit: 2_500_000_000_000}));
-        _quotaLimits.push(PoolQuotaLimit({token: Tokens.CVX, quotaIncreaseFee: 1, limit: 2_500_000_000_000}));
-        _quotaLimits.push(PoolQuotaLimit({token: Tokens.FXS, quotaIncreaseFee: 1, limit: 2_000_000_000_000}));
-        _quotaLimits.push(PoolQuotaLimit({token: Tokens.APE, quotaIncreaseFee: 1, limit: 500_000_000_000}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.MKR, quotaIncreaseFee: 1, limit: 500_000_000_000}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.UNI, quotaIncreaseFee: 1, limit: 500_000_000_000}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.LINK, quotaIncreaseFee: 1, limit: 500_000_000_000}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.LDO, quotaIncreaseFee: 1, limit: 500_000_000_000}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.CRV, quotaIncreaseFee: 1, limit: 200_000_000_000}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.CVX, quotaIncreaseFee: 1, limit: 200_000_000_000}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.FXS, quotaIncreaseFee: 1, limit: 0}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.APE, quotaIncreaseFee: 1, limit: 0}));
         _quotaLimits.push(PoolQuotaLimit({token: Tokens.sDAI, quotaIncreaseFee: 0, limit: 30_000_000_000_000}));
-        _quotaLimits.push(PoolQuotaLimit({token: Tokens.yvUSDC, quotaIncreaseFee: 0, limit: 4_000_000_000_000}));
-        _quotaLimits.push(PoolQuotaLimit({token: Tokens.yvDAI, quotaIncreaseFee: 0, limit: 7_000_000_000_000}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.yvUSDC, quotaIncreaseFee: 0, limit: 0}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.yvDAI, quotaIncreaseFee: 0, limit: 0}));
         _quotaLimits.push(
             PoolQuotaLimit({token: Tokens.stkcvxcrvUSDUSDC, quotaIncreaseFee: 0, limit: 9_600_000_000_000})
         );
@@ -102,13 +102,13 @@ contract CONFIG_MAINNET_USDC_V3 is IPoolV3DeployConfig {
         _quotaLimits.push(
             PoolQuotaLimit({token: Tokens.stkcvxcrvUSDFRAX, quotaIncreaseFee: 0, limit: 4_500_000_000_000})
         );
-        _quotaLimits.push(PoolQuotaLimit({token: Tokens.stkcvxcrvFRAX, quotaIncreaseFee: 0, limit: 20_400_000_000_000}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.stkcvxcrvFRAX, quotaIncreaseFee: 0, limit: 0}));
         _quotaLimits.push(PoolQuotaLimit({token: Tokens.yvWETH, quotaIncreaseFee: 1, limit: 30_000_000_000_000}));
         _quotaLimits.push(PoolQuotaLimit({token: Tokens.yvWBTC, quotaIncreaseFee: 1, limit: 1_000_000_000_000}));
         _quotaLimits.push(PoolQuotaLimit({token: Tokens.STETH, quotaIncreaseFee: 1, limit: 30_000_000_000_000}));
         _quotaLimits.push(PoolQuotaLimit({token: Tokens.ezETH, quotaIncreaseFee: 0, limit: 3_000_000_000_000}));
-        _quotaLimits.push(PoolQuotaLimit({token: Tokens.USDe, quotaIncreaseFee: 0, limit: 3_000_000_000_000}));
-        _quotaLimits.push(PoolQuotaLimit({token: Tokens.sUSDe, quotaIncreaseFee: 0, limit: 3_000_000_000_000}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.USDe, quotaIncreaseFee: 0, limit: 40_000_000_000_000}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.sUSDe, quotaIncreaseFee: 0, limit: 10_000_000_000_000}));
 
         {
             /// CREDIT_MANAGER_0
