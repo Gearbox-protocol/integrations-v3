@@ -63,9 +63,9 @@ contract CONFIG_MAINNET_WETH_V3 is IPoolV3DeployConfig {
         _gaugeRates.push(GaugeRate({token: Tokens.CVX, minRate: 2_40, maxRate: 40_00}));
         _gaugeRates.push(GaugeRate({token: Tokens.FXS, minRate: 2_40, maxRate: 40_00}));
         _gaugeRates.push(GaugeRate({token: Tokens.APE, minRate: 2_40, maxRate: 40_00}));
-        _gaugeRates.push(GaugeRate({token: Tokens.yvUSDC, minRate: 1, maxRate: 15_00}));
+        _gaugeRates.push(GaugeRate({token: Tokens.yvUSDC, minRate: 1, maxRate: 27_00}));
         _gaugeRates.push(GaugeRate({token: Tokens.yvWBTC, minRate: 1, maxRate: 15_00}));
-        _gaugeRates.push(GaugeRate({token: Tokens.sDAI, minRate: 1, maxRate: 15_00}));
+        _gaugeRates.push(GaugeRate({token: Tokens.sDAI, minRate: 1, maxRate: 27_00}));
         _gaugeRates.push(GaugeRate({token: Tokens.STETH, minRate: 5, maxRate: 3_50}));
         _gaugeRates.push(GaugeRate({token: Tokens.rETH, minRate: 5, maxRate: 3_16}));
         _gaugeRates.push(GaugeRate({token: Tokens.osETH, minRate: 5, maxRate: 3_16}));
@@ -75,6 +75,7 @@ contract CONFIG_MAINNET_WETH_V3 is IPoolV3DeployConfig {
         _gaugeRates.push(GaugeRate({token: Tokens.auraB_rETH_STABLE_vault, minRate: 1_00, maxRate: 5_50}));
         _gaugeRates.push(GaugeRate({token: Tokens.weETH, minRate: 5, maxRate: 30_00}));
         _gaugeRates.push(GaugeRate({token: Tokens.ezETH, minRate: 5, maxRate: 30_00}));
+        _gaugeRates.push(GaugeRate({token: Tokens.rsETH, minRate: 5, maxRate: 30_00}));
         _quotaLimits.push(
             PoolQuotaLimit({token: Tokens.WBTC, quotaIncreaseFee: 1, limit: 15_000_000_000_000_000_000_000})
         );
@@ -90,28 +91,14 @@ contract CONFIG_MAINNET_WETH_V3 is IPoolV3DeployConfig {
         _quotaLimits.push(
             PoolQuotaLimit({token: Tokens.USDT, quotaIncreaseFee: 1, limit: 15_000_000_000_000_000_000_000})
         );
-        _quotaLimits.push(
-            PoolQuotaLimit({token: Tokens.MKR, quotaIncreaseFee: 1, limit: 1_500_000_000_000_000_000_000})
-        );
-        _quotaLimits.push(
-            PoolQuotaLimit({token: Tokens.UNI, quotaIncreaseFee: 1, limit: 2_500_000_000_000_000_000_000})
-        );
-        _quotaLimits.push(
-            PoolQuotaLimit({token: Tokens.LINK, quotaIncreaseFee: 1, limit: 2_500_000_000_000_000_000_000})
-        );
-        _quotaLimits.push(
-            PoolQuotaLimit({token: Tokens.LDO, quotaIncreaseFee: 1, limit: 1_250_000_000_000_000_000_000})
-        );
-        _quotaLimits.push(
-            PoolQuotaLimit({token: Tokens.CRV, quotaIncreaseFee: 1, limit: 1_250_000_000_000_000_000_000})
-        );
-        _quotaLimits.push(
-            PoolQuotaLimit({token: Tokens.CVX, quotaIncreaseFee: 1, limit: 1_250_000_000_000_000_000_000})
-        );
-        _quotaLimits.push(
-            PoolQuotaLimit({token: Tokens.FXS, quotaIncreaseFee: 1, limit: 1_000_000_000_000_000_000_000})
-        );
-        _quotaLimits.push(PoolQuotaLimit({token: Tokens.APE, quotaIncreaseFee: 1, limit: 250_000_000_000_000_000_000}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.MKR, quotaIncreaseFee: 1, limit: 135_000_000_000_000_000_000}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.UNI, quotaIncreaseFee: 1, limit: 135_000_000_000_000_000_000}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.LINK, quotaIncreaseFee: 1, limit: 135_000_000_000_000_000_000}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.LDO, quotaIncreaseFee: 1, limit: 135_000_000_000_000_000_000}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.CRV, quotaIncreaseFee: 1, limit: 55_000_000_000_000_000_000}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.CVX, quotaIncreaseFee: 1, limit: 55_000_000_000_000_000_000}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.FXS, quotaIncreaseFee: 1, limit: 0}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.APE, quotaIncreaseFee: 1, limit: 0}));
         _quotaLimits.push(
             PoolQuotaLimit({token: Tokens.yvUSDC, quotaIncreaseFee: 1, limit: 15_000_000_000_000_000_000_000})
         );
@@ -133,28 +120,17 @@ contract CONFIG_MAINNET_WETH_V3 is IPoolV3DeployConfig {
         _quotaLimits.push(
             PoolQuotaLimit({token: Tokens.yvWETH, quotaIncreaseFee: 0, limit: 15_000_000_000_000_000_000_000})
         );
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.stkcvxcrvUSDTWBTCWETH, quotaIncreaseFee: 0, limit: 0}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.stkcvxcrvUSDETHCRV, quotaIncreaseFee: 0, limit: 0}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.auraB_rETH_STABLE_vault, quotaIncreaseFee: 0, limit: 0}));
         _quotaLimits.push(
-            PoolQuotaLimit({
-                token: Tokens.stkcvxcrvUSDTWBTCWETH,
-                quotaIncreaseFee: 0,
-                limit: 7_750_000_000_000_000_000_000
-            })
+            PoolQuotaLimit({token: Tokens.weETH, quotaIncreaseFee: 0, limit: 20_000_000_000_000_000_000_000})
         );
         _quotaLimits.push(
-            PoolQuotaLimit({token: Tokens.stkcvxcrvUSDETHCRV, quotaIncreaseFee: 0, limit: 2_700_000_000_000_000_000_000})
+            PoolQuotaLimit({token: Tokens.ezETH, quotaIncreaseFee: 0, limit: 30_000_000_000_000_000_000_000})
         );
         _quotaLimits.push(
-            PoolQuotaLimit({
-                token: Tokens.auraB_rETH_STABLE_vault,
-                quotaIncreaseFee: 0,
-                limit: 10_000_000_000_000_000_000_000
-            })
-        );
-        _quotaLimits.push(
-            PoolQuotaLimit({token: Tokens.weETH, quotaIncreaseFee: 0, limit: 15_000_000_000_000_000_000_000})
-        );
-        _quotaLimits.push(
-            PoolQuotaLimit({token: Tokens.ezETH, quotaIncreaseFee: 0, limit: 15_000_000_000_000_000_000_000})
+            PoolQuotaLimit({token: Tokens.rsETH, quotaIncreaseFee: 0, limit: 2_000_000_000_000_000_000_000})
         );
 
         {
@@ -588,6 +564,8 @@ contract CONFIG_MAINNET_WETH_V3 is IPoolV3DeployConfig {
 
             cts.push(CollateralTokenHuman({token: Tokens.ezETH, lt: 91_50}));
 
+            cts.push(CollateralTokenHuman({token: Tokens.rsETH, lt: 91_50}));
+
             cts.push(CollateralTokenHuman({token: Tokens.rETH, lt: 0}));
 
             cts.push(CollateralTokenHuman({token: Tokens.rETH_f, lt: 0}));
@@ -613,6 +591,10 @@ contract CONFIG_MAINNET_WETH_V3 is IPoolV3DeployConfig {
 
             bp.push(
                 BalancerPool({poolId: 0x848a5564158d84b8a8fb68ab5d004fae11619a5400000000000000000000066a, status: 2})
+            );
+
+            bp.push(
+                BalancerPool({poolId: 0x58aadfb1afac0ad7fca1148f3cde6aedf5236b6d00000000000000000000067f, status: 2})
             );
             cs.push(Contracts.CURVE_RETH_ETH_POOL);
         }

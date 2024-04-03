@@ -51,17 +51,15 @@ contract CONFIG_MAINNET_DAI_V3 is IPoolV3DeployConfig {
 
     constructor() {
         _gaugeRates.push(GaugeRate({token: Tokens.sDAI, minRate: 5, maxRate: 15_00}));
-        _gaugeRates.push(GaugeRate({token: Tokens.USDe, minRate: 5, maxRate: 30_00}));
-        _gaugeRates.push(GaugeRate({token: Tokens.sUSDe, minRate: 5, maxRate: 30_00}));
+        _gaugeRates.push(GaugeRate({token: Tokens.USDe, minRate: 5, maxRate: 50_00}));
+        _gaugeRates.push(GaugeRate({token: Tokens.sUSDe, minRate: 5, maxRate: 50_00}));
         _quotaLimits.push(
             PoolQuotaLimit({token: Tokens.sDAI, quotaIncreaseFee: 0, limit: 30_000_000_000_000_000_000_000_000})
         );
         _quotaLimits.push(
-            PoolQuotaLimit({token: Tokens.USDe, quotaIncreaseFee: 0, limit: 3_000_000_000_000_000_000_000_000})
+            PoolQuotaLimit({token: Tokens.USDe, quotaIncreaseFee: 0, limit: 5_000_000_000_000_000_000_000_000})
         );
-        _quotaLimits.push(
-            PoolQuotaLimit({token: Tokens.sUSDe, quotaIncreaseFee: 0, limit: 3_000_000_000_000_000_000_000_000})
-        );
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.sUSDe, quotaIncreaseFee: 0, limit: 0}));
 
         {
             /// CREDIT_MANAGER_0

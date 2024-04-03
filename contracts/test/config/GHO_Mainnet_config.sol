@@ -50,11 +50,15 @@ contract CONFIG_MAINNET_GHO_V3 is IPoolV3DeployConfig {
     CreditManagerV3DeployParams[] _creditManagers;
 
     constructor() {
+        _gaugeRates.push(GaugeRate({token: Tokens.USDC, minRate: 4, maxRate: 12_00}));
         _gaugeRates.push(GaugeRate({token: Tokens.DAI, minRate: 4, maxRate: 12_00}));
         _gaugeRates.push(GaugeRate({token: Tokens.USDT, minRate: 4, maxRate: 12_00}));
         _gaugeRates.push(GaugeRate({token: Tokens.sDAI, minRate: 5, maxRate: 15_00}));
-        _gaugeRates.push(GaugeRate({token: Tokens.USDe, minRate: 5, maxRate: 30_00}));
-        _gaugeRates.push(GaugeRate({token: Tokens.sUSDe, minRate: 5, maxRate: 30_00}));
+        _gaugeRates.push(GaugeRate({token: Tokens.USDe, minRate: 5, maxRate: 50_00}));
+        _gaugeRates.push(GaugeRate({token: Tokens.sUSDe, minRate: 5, maxRate: 50_00}));
+        _quotaLimits.push(
+            PoolQuotaLimit({token: Tokens.USDC, quotaIncreaseFee: 1, limit: 30_000_000_000_000_000_000_000_000})
+        );
         _quotaLimits.push(
             PoolQuotaLimit({token: Tokens.DAI, quotaIncreaseFee: 1, limit: 30_000_000_000_000_000_000_000_000})
         );
@@ -67,9 +71,7 @@ contract CONFIG_MAINNET_GHO_V3 is IPoolV3DeployConfig {
         _quotaLimits.push(
             PoolQuotaLimit({token: Tokens.USDe, quotaIncreaseFee: 0, limit: 3_000_000_000_000_000_000_000_000})
         );
-        _quotaLimits.push(
-            PoolQuotaLimit({token: Tokens.sUSDe, quotaIncreaseFee: 0, limit: 3_000_000_000_000_000_000_000_000})
-        );
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.sUSDe, quotaIncreaseFee: 0, limit: 0}));
 
         {
             /// CREDIT_MANAGER_0
