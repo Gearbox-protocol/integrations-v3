@@ -12,6 +12,8 @@ import {BitMask} from "@gearbox-protocol/core-v3/contracts/libraries/BitMask.sol
 
 import {IBooster_L2} from "../../integrations/convex/IBooster_L2.sol";
 import {IConvexRewardPool_L2} from "../../integrations/convex/IConvexRewardPool_L2.sol";
+import {IConvexRewardHook_L2} from "../../integrations/convex/IConvexRewardHook_L2.sol";
+import {IRewards} from "../../integrations/convex/Interfaces.sol";
 import {IConvexL2RewardPoolAdapter} from "../../interfaces/convex/IConvexL2RewardPoolAdapter.sol";
 
 /// @title Convex L2 ConvexRewardPool adapter interface
@@ -65,42 +67,44 @@ contract ConvexL2RewardPoolAdapter is AbstractAdapter, IConvexL2RewardPoolAdapte
         uint256 _rewardTokensMask;
 
         uint256 rewardsLength = IConvexRewardPool_L2(_convexRewardPool).rewardLength();
+        uint256 extraRewardsLength = IConvexRewardHook_L2(IConvexRewardPool_L2(_convexRewardPool).rewardHook())
+            .poolRewardLength(_convexRewardPool);
 
         reward0 = IConvexRewardPool_L2(_convexRewardPool).rewards(0).reward_token;
         reward1 = IConvexRewardPool_L2(_convexRewardPool).rewards(1).reward_token;
 
         _rewardTokensMask = _rewardTokensMask.enable(_getMaskOrRevert(reward0)).enable(_getMaskOrRevert(reward1));
 
-        address _reward2;
-        address _reward3;
-        address _reward4;
-        address _reward5;
+        reward2 = _getRewardAddress(_convexRewardPool, 2, rewardsLength, extraRewardsLength);
+        if (reward2 != address(0)) _rewardTokensMask = _rewardTokensMask.enable(_getMaskOrRevert(reward2));
 
-        if (rewardsLength >= 3) {
-            _reward2 = IConvexRewardPool_L2(_convexRewardPool).rewards(2).reward_token;
-            _rewardTokensMask = _rewardTokensMask.enable(_getMaskOrRevert(_reward2));
+        reward3 = _getRewardAddress(_convexRewardPool, 3, rewardsLength, extraRewardsLength);
+        if (reward3 != address(0)) _rewardTokensMask = _rewardTokensMask.enable(_getMaskOrRevert(reward3));
 
-            if (rewardsLength >= 4) {
-                _reward3 = IConvexRewardPool_L2(_convexRewardPool).rewards(3).reward_token;
-                _rewardTokensMask = _rewardTokensMask.enable(_getMaskOrRevert(_reward3));
+        reward4 = _getRewardAddress(_convexRewardPool, 4, rewardsLength, extraRewardsLength);
+        if (reward4 != address(0)) _rewardTokensMask = _rewardTokensMask.enable(_getMaskOrRevert(reward4));
 
-                if (rewardsLength >= 5) {
-                    _reward4 = IConvexRewardPool_L2(_convexRewardPool).rewards(4).reward_token;
-                    _rewardTokensMask = _rewardTokensMask.enable(_getMaskOrRevert(_reward4));
+        reward5 = _getRewardAddress(_convexRewardPool, 5, rewardsLength, extraRewardsLength);
+        if (reward5 != address(0)) _rewardTokensMask = _rewardTokensMask.enable(_getMaskOrRevert(reward5));
 
-                    if (rewardsLength >= 6) {
-                        _reward5 = IConvexRewardPool_L2(_convexRewardPool).rewards(5).reward_token;
-                        _rewardTokensMask = _rewardTokensMask.enable(_getMaskOrRevert(_reward4));
-                    }
-                }
-            }
-        }
-
-        reward2 = _reward2;
-        reward3 = _reward3;
-        reward4 = _reward4;
-        reward5 = _reward5;
         rewardTokensMask = _rewardTokensMask;
+    }
+
+    function _getRewardAddress(
+        address _convexRewardPool,
+        uint256 rewardIndex,
+        uint256 rewardsLength,
+        uint256 extraRewardsLength
+    ) internal view returns (address) {
+        if (rewardIndex < rewardsLength) {
+            return IConvexRewardPool_L2(_convexRewardPool).rewards(rewardIndex).reward_token;
+        } else if (rewardIndex < rewardsLength + extraRewardsLength) {
+            address extraRewardPool = IConvexRewardHook_L2(IConvexRewardPool_L2(_convexRewardPool).rewardHook())
+                .poolRewardList(_convexRewardPool, rewardIndex - rewardsLength);
+            return IRewards(extraRewardPool).rewardToken();
+        } else {
+            return address(0);
+        }
     }
 
     // ----- //
