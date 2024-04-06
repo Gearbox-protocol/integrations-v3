@@ -10,6 +10,16 @@ interface IERC20ZapperDeposits {
         external
         returns (uint256 tokenOutAmount);
 
+    function depositWithPermitAllowed(
+        uint256 tokenInAmount,
+        address receiver,
+        uint256 nonce,
+        uint256 expiry,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) external returns (uint256 tokenOutAmount);
+
     function depositWithReferral(uint256 tokenInAmount, address receiver, uint256 referralCode)
         external
         returns (uint256 tokenOutAmount);
@@ -19,6 +29,17 @@ interface IERC20ZapperDeposits {
         address receiver,
         uint256 referralCode,
         uint256 deadline,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) external returns (uint256 tokenOutAmount);
+
+    function depositWithReferralAndPermitAllowed(
+        uint256 tokenInAmount,
+        address receiver,
+        uint256 referralCode,
+        uint256 nonce,
+        uint256 expiry,
         uint8 v,
         bytes32 r,
         bytes32 s
