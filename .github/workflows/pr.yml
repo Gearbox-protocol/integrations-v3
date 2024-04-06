@@ -7,6 +7,7 @@ on:
 env:
   HUSKY: 0
   CI: true
+  ATTACH_ADDRESS_PROVIDER: "0x9ea7b04Da02a5373317D745c1571c84aaD03321D"
 
 jobs:
   checks:
