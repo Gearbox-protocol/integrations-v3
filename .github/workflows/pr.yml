@@ -38,10 +38,10 @@ jobs:
         run: forge install
 
       - name: Run forge unit tests
-        run: forge test --match-test test_U
+        run: forge test --match-test test_U -vv
 
       - name: Run forge integration tests
-        run: forge test --match-test _live_ --fork-url ${{ secrets.MAINNET_TESTS_FORK }} --chain-id 1337
+        run: forge test --match-test _live_ --fork-url ${{ secrets.MAINNET_TESTS_FORK }} --chain-id 1337 -vv
 
       - name: Perform checks
         run: |
