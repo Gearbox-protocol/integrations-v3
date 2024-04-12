@@ -18,7 +18,6 @@ import {AdapterType} from "@gearbox-protocol/sdk-gov/contracts/AdapterType.sol";
 import {UniswapV2Adapter} from "../../adapters/uniswap/UniswapV2.sol";
 import {UniswapV3Adapter} from "../../adapters/uniswap/UniswapV3.sol";
 import {YearnV2Adapter} from "../../adapters/yearn/YearnV2.sol";
-import {ConvexV1BoosterAdapter} from "../../adapters/convex/ConvexV1_Booster.sol";
 import {LidoV1Adapter} from "../../adapters/lido/LidoV1.sol";
 import {WstETHV1Adapter} from "../../adapters/lido/WstETHV1.sol";
 
@@ -31,6 +30,10 @@ import {CurveV1AdapterStETH} from "../../adapters/curve/CurveV1_stETH.sol";
 import {CurveV1AdapterDeposit} from "../../adapters/curve/CurveV1_DepositZap.sol";
 
 import {ConvexV1BaseRewardPoolAdapter} from "../../adapters/convex/ConvexV1_BaseRewardPool.sol";
+import {ConvexL2RewardPoolAdapter} from "../../adapters/convex/ConvexL2_RewardPool.sol";
+
+import {ConvexV1BoosterAdapter} from "../../adapters/convex/ConvexV1_Booster.sol";
+import {ConvexL2BoosterAdapter} from "../../adapters/convex/ConvexL2_Booster.sol";
 
 import {CompoundV2_CErc20Adapter} from "../../adapters/compound/CompoundV2_CErc20Adapter.sol";
 import {CompoundV2_CEtherAdapter} from "../../adapters/compound/CompoundV2_CEtherAdapter.sol";
@@ -139,6 +142,10 @@ contract AdapterDeployer is AdapterData, Test {
                         adapter = address(new VelodromeV2RouterAdapter(address(creditManager), targetContract));
                     } else if (at == AdapterType.CAMELOT_V3_ROUTER) {
                         adapter = address(new CamelotV3Adapter(address(creditManager), targetContract));
+                    } else if (at == AdapterType.CONVEX_L2_BOOSTER) {
+                        adapter = address(new ConvexL2BoosterAdapter(address(creditManager), targetContract));
+                    } else if (at == AdapterType.CONVEX_L2_REWARD_POOL) {
+                        adapter = address(new ConvexL2RewardPoolAdapter(address(creditManager), targetContract));
                     }
 
                     return adapter;

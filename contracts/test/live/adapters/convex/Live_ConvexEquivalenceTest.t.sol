@@ -220,7 +220,7 @@ contract Live_ConvexEquivalenceTest is LiveTestHelper {
         internal
         returns (BalanceComparator comparator)
     {
-        address[] memory tokensToTrack = new address[](7);
+        address[] memory tokensToTrack = new address[](9);
 
         tokensToTrack[0] = IConvexV1BaseRewardPoolAdapter(basePoolAdapter).curveLPtoken();
         tokensToTrack[1] = IConvexV1BaseRewardPoolAdapter(basePoolAdapter).stakingToken();
@@ -229,6 +229,8 @@ contract Live_ConvexEquivalenceTest is LiveTestHelper {
         tokensToTrack[4] = IBooster(booster).minter();
         tokensToTrack[5] = IConvexV1BaseRewardPoolAdapter(basePoolAdapter).extraReward1();
         tokensToTrack[6] = IConvexV1BaseRewardPoolAdapter(basePoolAdapter).extraReward2();
+        tokensToTrack[7] = IConvexV1BaseRewardPoolAdapter(basePoolAdapter).extraReward3();
+        tokensToTrack[8] = IConvexV1BaseRewardPoolAdapter(basePoolAdapter).extraReward4();
 
         tokensToTrack = tokensToTrack.trim();
 

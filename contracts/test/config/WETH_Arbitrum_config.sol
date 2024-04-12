@@ -91,7 +91,9 @@ contract CONFIG_ARBITRUM_WETH_V3 is IPoolV3DeployConfig {
         _quotaLimits.push(
             PoolQuotaLimit({token: Tokens.sfrxETH, quotaIncreaseFee: 0, limit: 2_500_000_000_000_000_000_000})
         );
-        _quotaLimits.push(PoolQuotaLimit({token: Tokens.ezETH, quotaIncreaseFee: 0, limit: 0}));
+        _quotaLimits.push(
+            PoolQuotaLimit({token: Tokens.ezETH, quotaIncreaseFee: 0, limit: 500_000_000_000_000_000_000})
+        );
 
         {
             /// CREDIT_MANAGER_0
@@ -150,6 +152,17 @@ contract CONFIG_ARBITRUM_WETH_V3 is IPoolV3DeployConfig {
             bp.push(
                 BalancerPool({poolId: 0x4a2f6ae7f3e5d715689530873ec35593dc28951b000000000000000000000481, status: 2})
             );
+
+            bp.push(
+                BalancerPool({poolId: 0xb61371ab661b1acec81c699854d2f911070c059e000000000000000000000516, status: 2})
+            );
+            cs.push(Contracts.CAMELOT_V3_ROUTER);
+            {
+                GenericSwapPair[] storage gsp = cp.genericSwapPairs;
+                gsp.push(
+                    GenericSwapPair({router: Contracts.CAMELOT_V3_ROUTER, token0: Tokens.ezETH, token1: Tokens.WETH})
+                );
+            }
         }
         {
             /// CREDIT_MANAGER_1
