@@ -223,8 +223,10 @@ contract LiveTestHelper is IntegrationTestHelper {
 
             address uniV3Adapter = getAdapter(creditManager, Contracts.UNISWAP_V3_ROUTER);
 
-            vm.prank(CONFIGURATOR);
-            UniswapV3Adapter(uniV3Adapter).setPoolStatusBatch(pools);
+            if (uniV3Adapter != address(0)) {
+                vm.prank(CONFIGURATOR);
+                UniswapV3Adapter(uniV3Adapter).setPoolStatusBatch(pools);
+            }
 
             pools = new UniswapV3PoolStatus[](uniV3Pools.length);
 
@@ -240,8 +242,10 @@ contract LiveTestHelper is IntegrationTestHelper {
 
             address pancakeswapV3Adapter = getAdapter(creditManager, Contracts.PANCAKESWAP_V3_ROUTER);
 
-            vm.prank(CONFIGURATOR);
-            UniswapV3Adapter(pancakeswapV3Adapter).setPoolStatusBatch(pools);
+            if (pancakeswapV3Adapter != address(0)) {
+                vm.prank(CONFIGURATOR);
+                UniswapV3Adapter(pancakeswapV3Adapter).setPoolStatusBatch(pools);
+            }
         }
         // SIMPLE INTERFACE SWAPPERS
         GenericSwapPair[] memory genericPairs = creditManagerParams.genericSwapPairs;
