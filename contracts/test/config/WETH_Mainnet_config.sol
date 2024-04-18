@@ -76,6 +76,8 @@ contract CONFIG_MAINNET_WETH_V3 is IPoolV3DeployConfig {
         _gaugeRates.push(GaugeRate({token: Tokens.weETH, minRate: 5, maxRate: 30_00}));
         _gaugeRates.push(GaugeRate({token: Tokens.ezETH, minRate: 5, maxRate: 30_00}));
         _gaugeRates.push(GaugeRate({token: Tokens.rsETH, minRate: 5, maxRate: 30_00}));
+        _gaugeRates.push(GaugeRate({token: Tokens.pufETH, minRate: 5, maxRate: 30_00}));
+        _gaugeRates.push(GaugeRate({token: Tokens.rswETH, minRate: 5, maxRate: 30_00}));
         _quotaLimits.push(
             PoolQuotaLimit({token: Tokens.WBTC, quotaIncreaseFee: 1, limit: 15_000_000_000_000_000_000_000})
         );
@@ -127,10 +129,16 @@ contract CONFIG_MAINNET_WETH_V3 is IPoolV3DeployConfig {
             PoolQuotaLimit({token: Tokens.weETH, quotaIncreaseFee: 0, limit: 20_000_000_000_000_000_000_000})
         );
         _quotaLimits.push(
-            PoolQuotaLimit({token: Tokens.ezETH, quotaIncreaseFee: 0, limit: 30_000_000_000_000_000_000_000})
+            PoolQuotaLimit({token: Tokens.ezETH, quotaIncreaseFee: 0, limit: 40_000_000_000_000_000_000_000})
         );
         _quotaLimits.push(
-            PoolQuotaLimit({token: Tokens.rsETH, quotaIncreaseFee: 0, limit: 2_000_000_000_000_000_000_000})
+            PoolQuotaLimit({token: Tokens.rsETH, quotaIncreaseFee: 0, limit: 10_000_000_000_000_000_000_000})
+        );
+        _quotaLimits.push(
+            PoolQuotaLimit({token: Tokens.pufETH, quotaIncreaseFee: 0, limit: 10_000_000_000_000_000_000_000})
+        );
+        _quotaLimits.push(
+            PoolQuotaLimit({token: Tokens.rswETH, quotaIncreaseFee: 0, limit: 10_000_000_000_000_000_000_000})
         );
 
         {
@@ -197,22 +205,129 @@ contract CONFIG_MAINNET_WETH_V3 is IPoolV3DeployConfig {
                 );
             }
             cs.push(Contracts.UNISWAP_V3_ROUTER);
-            UniswapV3Pair[] storage uv3p = cp.uniswapV3Pairs;
-            uv3p.push(UniswapV3Pair({token0: Tokens.USDC, token1: Tokens.WETH, fee: 500}));
-            uv3p.push(UniswapV3Pair({token0: Tokens.WBTC, token1: Tokens.WETH, fee: 3000}));
-            uv3p.push(UniswapV3Pair({token0: Tokens.DAI, token1: Tokens.USDC, fee: 100}));
-            uv3p.push(UniswapV3Pair({token0: Tokens.WBTC, token1: Tokens.WETH, fee: 500}));
-            uv3p.push(UniswapV3Pair({token0: Tokens.USDC, token1: Tokens.WETH, fee: 3000}));
-            uv3p.push(UniswapV3Pair({token0: Tokens.WETH, token1: Tokens.USDT, fee: 3000}));
-            uv3p.push(UniswapV3Pair({token0: Tokens.DAI, token1: Tokens.USDC, fee: 500}));
-            uv3p.push(UniswapV3Pair({token0: Tokens.WBTC, token1: Tokens.USDC, fee: 3000}));
-            uv3p.push(UniswapV3Pair({token0: Tokens.WETH, token1: Tokens.USDT, fee: 500}));
-            uv3p.push(UniswapV3Pair({token0: Tokens.USDC, token1: Tokens.USDT, fee: 100}));
-            uv3p.push(UniswapV3Pair({token0: Tokens.DAI, token1: Tokens.WETH, fee: 3000}));
-            uv3p.push(UniswapV3Pair({token0: Tokens.USDC, token1: Tokens.USDT, fee: 500}));
-            uv3p.push(UniswapV3Pair({token0: Tokens.DAI, token1: Tokens.WETH, fee: 500}));
-            uv3p.push(UniswapV3Pair({token0: Tokens.WBTC, token1: Tokens.USDT, fee: 3000}));
-            uv3p.push(UniswapV3Pair({token0: Tokens.USDC, token1: Tokens.WETH, fee: 10000}));
+            {
+                UniswapV3Pair[] storage uv3p = cp.uniswapV3Pairs;
+                uv3p.push(
+                    UniswapV3Pair({
+                        router: Contracts.UNISWAP_V3_ROUTER,
+                        token0: Tokens.USDC,
+                        token1: Tokens.WETH,
+                        fee: 500
+                    })
+                );
+                uv3p.push(
+                    UniswapV3Pair({
+                        router: Contracts.UNISWAP_V3_ROUTER,
+                        token0: Tokens.WBTC,
+                        token1: Tokens.WETH,
+                        fee: 3000
+                    })
+                );
+                uv3p.push(
+                    UniswapV3Pair({
+                        router: Contracts.UNISWAP_V3_ROUTER,
+                        token0: Tokens.DAI,
+                        token1: Tokens.USDC,
+                        fee: 100
+                    })
+                );
+                uv3p.push(
+                    UniswapV3Pair({
+                        router: Contracts.UNISWAP_V3_ROUTER,
+                        token0: Tokens.WBTC,
+                        token1: Tokens.WETH,
+                        fee: 500
+                    })
+                );
+                uv3p.push(
+                    UniswapV3Pair({
+                        router: Contracts.UNISWAP_V3_ROUTER,
+                        token0: Tokens.USDC,
+                        token1: Tokens.WETH,
+                        fee: 3000
+                    })
+                );
+                uv3p.push(
+                    UniswapV3Pair({
+                        router: Contracts.UNISWAP_V3_ROUTER,
+                        token0: Tokens.WETH,
+                        token1: Tokens.USDT,
+                        fee: 3000
+                    })
+                );
+                uv3p.push(
+                    UniswapV3Pair({
+                        router: Contracts.UNISWAP_V3_ROUTER,
+                        token0: Tokens.DAI,
+                        token1: Tokens.USDC,
+                        fee: 500
+                    })
+                );
+                uv3p.push(
+                    UniswapV3Pair({
+                        router: Contracts.UNISWAP_V3_ROUTER,
+                        token0: Tokens.WBTC,
+                        token1: Tokens.USDC,
+                        fee: 3000
+                    })
+                );
+                uv3p.push(
+                    UniswapV3Pair({
+                        router: Contracts.UNISWAP_V3_ROUTER,
+                        token0: Tokens.WETH,
+                        token1: Tokens.USDT,
+                        fee: 500
+                    })
+                );
+                uv3p.push(
+                    UniswapV3Pair({
+                        router: Contracts.UNISWAP_V3_ROUTER,
+                        token0: Tokens.USDC,
+                        token1: Tokens.USDT,
+                        fee: 100
+                    })
+                );
+                uv3p.push(
+                    UniswapV3Pair({
+                        router: Contracts.UNISWAP_V3_ROUTER,
+                        token0: Tokens.DAI,
+                        token1: Tokens.WETH,
+                        fee: 3000
+                    })
+                );
+                uv3p.push(
+                    UniswapV3Pair({
+                        router: Contracts.UNISWAP_V3_ROUTER,
+                        token0: Tokens.USDC,
+                        token1: Tokens.USDT,
+                        fee: 500
+                    })
+                );
+                uv3p.push(
+                    UniswapV3Pair({
+                        router: Contracts.UNISWAP_V3_ROUTER,
+                        token0: Tokens.DAI,
+                        token1: Tokens.WETH,
+                        fee: 500
+                    })
+                );
+                uv3p.push(
+                    UniswapV3Pair({
+                        router: Contracts.UNISWAP_V3_ROUTER,
+                        token0: Tokens.WBTC,
+                        token1: Tokens.USDT,
+                        fee: 3000
+                    })
+                );
+                uv3p.push(
+                    UniswapV3Pair({
+                        router: Contracts.UNISWAP_V3_ROUTER,
+                        token0: Tokens.USDC,
+                        token1: Tokens.WETH,
+                        fee: 10000
+                    })
+                );
+            }
             cs.push(Contracts.SUSHISWAP_ROUTER);
             {
                 GenericSwapPair[] storage gsp = cp.genericSwapPairs;
@@ -293,23 +408,137 @@ contract CONFIG_MAINNET_WETH_V3 is IPoolV3DeployConfig {
                 );
             }
             cs.push(Contracts.UNISWAP_V3_ROUTER);
-            UniswapV3Pair[] storage uv3p = cp.uniswapV3Pairs;
-            uv3p.push(UniswapV3Pair({token0: Tokens.USDC, token1: Tokens.WETH, fee: 500}));
-            uv3p.push(UniswapV3Pair({token0: Tokens.DAI, token1: Tokens.USDC, fee: 100}));
-            uv3p.push(UniswapV3Pair({token0: Tokens.USDC, token1: Tokens.WETH, fee: 3000}));
-            uv3p.push(UniswapV3Pair({token0: Tokens.WETH, token1: Tokens.USDT, fee: 3000}));
-            uv3p.push(UniswapV3Pair({token0: Tokens.DAI, token1: Tokens.USDC, fee: 500}));
-            uv3p.push(UniswapV3Pair({token0: Tokens.WETH, token1: Tokens.USDT, fee: 500}));
-            uv3p.push(UniswapV3Pair({token0: Tokens.UNI, token1: Tokens.WETH, fee: 3000}));
-            uv3p.push(UniswapV3Pair({token0: Tokens.USDC, token1: Tokens.USDT, fee: 100}));
-            uv3p.push(UniswapV3Pair({token0: Tokens.MKR, token1: Tokens.WETH, fee: 3000}));
-            uv3p.push(UniswapV3Pair({token0: Tokens.LINK, token1: Tokens.WETH, fee: 3000}));
-            uv3p.push(UniswapV3Pair({token0: Tokens.MKR, token1: Tokens.WETH, fee: 10000}));
-            uv3p.push(UniswapV3Pair({token0: Tokens.DAI, token1: Tokens.WETH, fee: 3000}));
-            uv3p.push(UniswapV3Pair({token0: Tokens.USDC, token1: Tokens.USDT, fee: 500}));
-            uv3p.push(UniswapV3Pair({token0: Tokens.DAI, token1: Tokens.WETH, fee: 500}));
-            uv3p.push(UniswapV3Pair({token0: Tokens.LDO, token1: Tokens.WETH, fee: 3000}));
-            uv3p.push(UniswapV3Pair({token0: Tokens.USDC, token1: Tokens.WETH, fee: 10000}));
+            {
+                UniswapV3Pair[] storage uv3p = cp.uniswapV3Pairs;
+                uv3p.push(
+                    UniswapV3Pair({
+                        router: Contracts.UNISWAP_V3_ROUTER,
+                        token0: Tokens.USDC,
+                        token1: Tokens.WETH,
+                        fee: 500
+                    })
+                );
+                uv3p.push(
+                    UniswapV3Pair({
+                        router: Contracts.UNISWAP_V3_ROUTER,
+                        token0: Tokens.DAI,
+                        token1: Tokens.USDC,
+                        fee: 100
+                    })
+                );
+                uv3p.push(
+                    UniswapV3Pair({
+                        router: Contracts.UNISWAP_V3_ROUTER,
+                        token0: Tokens.USDC,
+                        token1: Tokens.WETH,
+                        fee: 3000
+                    })
+                );
+                uv3p.push(
+                    UniswapV3Pair({
+                        router: Contracts.UNISWAP_V3_ROUTER,
+                        token0: Tokens.WETH,
+                        token1: Tokens.USDT,
+                        fee: 3000
+                    })
+                );
+                uv3p.push(
+                    UniswapV3Pair({
+                        router: Contracts.UNISWAP_V3_ROUTER,
+                        token0: Tokens.DAI,
+                        token1: Tokens.USDC,
+                        fee: 500
+                    })
+                );
+                uv3p.push(
+                    UniswapV3Pair({
+                        router: Contracts.UNISWAP_V3_ROUTER,
+                        token0: Tokens.WETH,
+                        token1: Tokens.USDT,
+                        fee: 500
+                    })
+                );
+                uv3p.push(
+                    UniswapV3Pair({
+                        router: Contracts.UNISWAP_V3_ROUTER,
+                        token0: Tokens.UNI,
+                        token1: Tokens.WETH,
+                        fee: 3000
+                    })
+                );
+                uv3p.push(
+                    UniswapV3Pair({
+                        router: Contracts.UNISWAP_V3_ROUTER,
+                        token0: Tokens.USDC,
+                        token1: Tokens.USDT,
+                        fee: 100
+                    })
+                );
+                uv3p.push(
+                    UniswapV3Pair({
+                        router: Contracts.UNISWAP_V3_ROUTER,
+                        token0: Tokens.MKR,
+                        token1: Tokens.WETH,
+                        fee: 3000
+                    })
+                );
+                uv3p.push(
+                    UniswapV3Pair({
+                        router: Contracts.UNISWAP_V3_ROUTER,
+                        token0: Tokens.LINK,
+                        token1: Tokens.WETH,
+                        fee: 3000
+                    })
+                );
+                uv3p.push(
+                    UniswapV3Pair({
+                        router: Contracts.UNISWAP_V3_ROUTER,
+                        token0: Tokens.MKR,
+                        token1: Tokens.WETH,
+                        fee: 10000
+                    })
+                );
+                uv3p.push(
+                    UniswapV3Pair({
+                        router: Contracts.UNISWAP_V3_ROUTER,
+                        token0: Tokens.DAI,
+                        token1: Tokens.WETH,
+                        fee: 3000
+                    })
+                );
+                uv3p.push(
+                    UniswapV3Pair({
+                        router: Contracts.UNISWAP_V3_ROUTER,
+                        token0: Tokens.USDC,
+                        token1: Tokens.USDT,
+                        fee: 500
+                    })
+                );
+                uv3p.push(
+                    UniswapV3Pair({
+                        router: Contracts.UNISWAP_V3_ROUTER,
+                        token0: Tokens.DAI,
+                        token1: Tokens.WETH,
+                        fee: 500
+                    })
+                );
+                uv3p.push(
+                    UniswapV3Pair({
+                        router: Contracts.UNISWAP_V3_ROUTER,
+                        token0: Tokens.LDO,
+                        token1: Tokens.WETH,
+                        fee: 3000
+                    })
+                );
+                uv3p.push(
+                    UniswapV3Pair({
+                        router: Contracts.UNISWAP_V3_ROUTER,
+                        token0: Tokens.USDC,
+                        token1: Tokens.WETH,
+                        fee: 10000
+                    })
+                );
+            }
             cs.push(Contracts.SUSHISWAP_ROUTER);
             {
                 GenericSwapPair[] storage gsp = cp.genericSwapPairs;
@@ -391,26 +620,161 @@ contract CONFIG_MAINNET_WETH_V3 is IPoolV3DeployConfig {
                 );
             }
             cs.push(Contracts.UNISWAP_V3_ROUTER);
-            UniswapV3Pair[] storage uv3p = cp.uniswapV3Pairs;
-            uv3p.push(UniswapV3Pair({token0: Tokens.USDC, token1: Tokens.WETH, fee: 500}));
-            uv3p.push(UniswapV3Pair({token0: Tokens.DAI, token1: Tokens.USDC, fee: 100}));
-            uv3p.push(UniswapV3Pair({token0: Tokens.FRAX, token1: Tokens.USDC, fee: 500}));
-            uv3p.push(UniswapV3Pair({token0: Tokens.USDC, token1: Tokens.WETH, fee: 3000}));
-            uv3p.push(UniswapV3Pair({token0: Tokens.WETH, token1: Tokens.USDT, fee: 3000}));
-            uv3p.push(UniswapV3Pair({token0: Tokens.DAI, token1: Tokens.USDC, fee: 500}));
-            uv3p.push(UniswapV3Pair({token0: Tokens.WETH, token1: Tokens.USDT, fee: 500}));
-            uv3p.push(UniswapV3Pair({token0: Tokens.USDC, token1: Tokens.USDT, fee: 100}));
-            uv3p.push(UniswapV3Pair({token0: Tokens.DAI, token1: Tokens.FRAX, fee: 500}));
-            uv3p.push(UniswapV3Pair({token0: Tokens.DAI, token1: Tokens.WETH, fee: 3000}));
-            uv3p.push(UniswapV3Pair({token0: Tokens.USDC, token1: Tokens.USDT, fee: 500}));
-            uv3p.push(UniswapV3Pair({token0: Tokens.DAI, token1: Tokens.WETH, fee: 500}));
-            uv3p.push(UniswapV3Pair({token0: Tokens.USDC, token1: Tokens.WETH, fee: 10000}));
-            uv3p.push(UniswapV3Pair({token0: Tokens.APE, token1: Tokens.WETH, fee: 3000}));
-            uv3p.push(UniswapV3Pair({token0: Tokens.WETH, token1: Tokens.CRV, fee: 3000}));
-            uv3p.push(UniswapV3Pair({token0: Tokens.WETH, token1: Tokens.CRV, fee: 10000}));
-            uv3p.push(UniswapV3Pair({token0: Tokens.WETH, token1: Tokens.CVX, fee: 10000}));
-            uv3p.push(UniswapV3Pair({token0: Tokens.FXS, token1: Tokens.FRAX, fee: 10000}));
-            uv3p.push(UniswapV3Pair({token0: Tokens.FXS, token1: Tokens.FRAX, fee: 10000}));
+            {
+                UniswapV3Pair[] storage uv3p = cp.uniswapV3Pairs;
+                uv3p.push(
+                    UniswapV3Pair({
+                        router: Contracts.UNISWAP_V3_ROUTER,
+                        token0: Tokens.USDC,
+                        token1: Tokens.WETH,
+                        fee: 500
+                    })
+                );
+                uv3p.push(
+                    UniswapV3Pair({
+                        router: Contracts.UNISWAP_V3_ROUTER,
+                        token0: Tokens.DAI,
+                        token1: Tokens.USDC,
+                        fee: 100
+                    })
+                );
+                uv3p.push(
+                    UniswapV3Pair({
+                        router: Contracts.UNISWAP_V3_ROUTER,
+                        token0: Tokens.FRAX,
+                        token1: Tokens.USDC,
+                        fee: 500
+                    })
+                );
+                uv3p.push(
+                    UniswapV3Pair({
+                        router: Contracts.UNISWAP_V3_ROUTER,
+                        token0: Tokens.USDC,
+                        token1: Tokens.WETH,
+                        fee: 3000
+                    })
+                );
+                uv3p.push(
+                    UniswapV3Pair({
+                        router: Contracts.UNISWAP_V3_ROUTER,
+                        token0: Tokens.WETH,
+                        token1: Tokens.USDT,
+                        fee: 3000
+                    })
+                );
+                uv3p.push(
+                    UniswapV3Pair({
+                        router: Contracts.UNISWAP_V3_ROUTER,
+                        token0: Tokens.DAI,
+                        token1: Tokens.USDC,
+                        fee: 500
+                    })
+                );
+                uv3p.push(
+                    UniswapV3Pair({
+                        router: Contracts.UNISWAP_V3_ROUTER,
+                        token0: Tokens.WETH,
+                        token1: Tokens.USDT,
+                        fee: 500
+                    })
+                );
+                uv3p.push(
+                    UniswapV3Pair({
+                        router: Contracts.UNISWAP_V3_ROUTER,
+                        token0: Tokens.USDC,
+                        token1: Tokens.USDT,
+                        fee: 100
+                    })
+                );
+                uv3p.push(
+                    UniswapV3Pair({
+                        router: Contracts.UNISWAP_V3_ROUTER,
+                        token0: Tokens.DAI,
+                        token1: Tokens.FRAX,
+                        fee: 500
+                    })
+                );
+                uv3p.push(
+                    UniswapV3Pair({
+                        router: Contracts.UNISWAP_V3_ROUTER,
+                        token0: Tokens.DAI,
+                        token1: Tokens.WETH,
+                        fee: 3000
+                    })
+                );
+                uv3p.push(
+                    UniswapV3Pair({
+                        router: Contracts.UNISWAP_V3_ROUTER,
+                        token0: Tokens.USDC,
+                        token1: Tokens.USDT,
+                        fee: 500
+                    })
+                );
+                uv3p.push(
+                    UniswapV3Pair({
+                        router: Contracts.UNISWAP_V3_ROUTER,
+                        token0: Tokens.DAI,
+                        token1: Tokens.WETH,
+                        fee: 500
+                    })
+                );
+                uv3p.push(
+                    UniswapV3Pair({
+                        router: Contracts.UNISWAP_V3_ROUTER,
+                        token0: Tokens.USDC,
+                        token1: Tokens.WETH,
+                        fee: 10000
+                    })
+                );
+                uv3p.push(
+                    UniswapV3Pair({
+                        router: Contracts.UNISWAP_V3_ROUTER,
+                        token0: Tokens.APE,
+                        token1: Tokens.WETH,
+                        fee: 3000
+                    })
+                );
+                uv3p.push(
+                    UniswapV3Pair({
+                        router: Contracts.UNISWAP_V3_ROUTER,
+                        token0: Tokens.WETH,
+                        token1: Tokens.CRV,
+                        fee: 3000
+                    })
+                );
+                uv3p.push(
+                    UniswapV3Pair({
+                        router: Contracts.UNISWAP_V3_ROUTER,
+                        token0: Tokens.WETH,
+                        token1: Tokens.CRV,
+                        fee: 10000
+                    })
+                );
+                uv3p.push(
+                    UniswapV3Pair({
+                        router: Contracts.UNISWAP_V3_ROUTER,
+                        token0: Tokens.WETH,
+                        token1: Tokens.CVX,
+                        fee: 10000
+                    })
+                );
+                uv3p.push(
+                    UniswapV3Pair({
+                        router: Contracts.UNISWAP_V3_ROUTER,
+                        token0: Tokens.FXS,
+                        token1: Tokens.FRAX,
+                        fee: 10000
+                    })
+                );
+                uv3p.push(
+                    UniswapV3Pair({
+                        router: Contracts.UNISWAP_V3_ROUTER,
+                        token0: Tokens.FXS,
+                        token1: Tokens.FRAX,
+                        fee: 10000
+                    })
+                );
+            }
             cs.push(Contracts.SUSHISWAP_ROUTER);
             {
                 GenericSwapPair[] storage gsp = cp.genericSwapPairs;
@@ -502,13 +866,57 @@ contract CONFIG_MAINNET_WETH_V3 is IPoolV3DeployConfig {
             cts.push(CollateralTokenHuman({token: Tokens.rETH_f, lt: 0}));
             Contracts[] storage cs = cp.contracts;
             cs.push(Contracts.UNISWAP_V3_ROUTER);
-            UniswapV3Pair[] storage uv3p = cp.uniswapV3Pairs;
-            uv3p.push(UniswapV3Pair({token0: Tokens.WETH, token1: Tokens.CRV, fee: 3000}));
-            uv3p.push(UniswapV3Pair({token0: Tokens.WETH, token1: Tokens.CRV, fee: 10000}));
-            uv3p.push(UniswapV3Pair({token0: Tokens.WETH, token1: Tokens.CVX, fee: 10000}));
-            uv3p.push(UniswapV3Pair({token0: Tokens.WBTC, token1: Tokens.WETH, fee: 3000}));
-            uv3p.push(UniswapV3Pair({token0: Tokens.WBTC, token1: Tokens.WETH, fee: 500}));
-            uv3p.push(UniswapV3Pair({token0: Tokens.WETH, token1: Tokens.SWISE, fee: 3000}));
+            {
+                UniswapV3Pair[] storage uv3p = cp.uniswapV3Pairs;
+                uv3p.push(
+                    UniswapV3Pair({
+                        router: Contracts.UNISWAP_V3_ROUTER,
+                        token0: Tokens.WETH,
+                        token1: Tokens.CRV,
+                        fee: 3000
+                    })
+                );
+                uv3p.push(
+                    UniswapV3Pair({
+                        router: Contracts.UNISWAP_V3_ROUTER,
+                        token0: Tokens.WETH,
+                        token1: Tokens.CRV,
+                        fee: 10000
+                    })
+                );
+                uv3p.push(
+                    UniswapV3Pair({
+                        router: Contracts.UNISWAP_V3_ROUTER,
+                        token0: Tokens.WETH,
+                        token1: Tokens.CVX,
+                        fee: 10000
+                    })
+                );
+                uv3p.push(
+                    UniswapV3Pair({
+                        router: Contracts.UNISWAP_V3_ROUTER,
+                        token0: Tokens.WBTC,
+                        token1: Tokens.WETH,
+                        fee: 3000
+                    })
+                );
+                uv3p.push(
+                    UniswapV3Pair({
+                        router: Contracts.UNISWAP_V3_ROUTER,
+                        token0: Tokens.WBTC,
+                        token1: Tokens.WETH,
+                        fee: 500
+                    })
+                );
+                uv3p.push(
+                    UniswapV3Pair({
+                        router: Contracts.UNISWAP_V3_ROUTER,
+                        token0: Tokens.WETH,
+                        token1: Tokens.SWISE,
+                        fee: 3000
+                    })
+                );
+            }
             cs.push(Contracts.BALANCER_VAULT);
             BalancerPool[] storage bp = cp.balancerPools;
 
@@ -564,16 +972,72 @@ contract CONFIG_MAINNET_WETH_V3 is IPoolV3DeployConfig {
 
             cts.push(CollateralTokenHuman({token: Tokens.ezETH, lt: 91_50}));
 
-            cts.push(CollateralTokenHuman({token: Tokens.rsETH, lt: 91_50}));
+            cts.push(CollateralTokenHuman({token: Tokens.rsETH, lt: 90_00}));
+
+            cts.push(CollateralTokenHuman({token: Tokens.pufETH, lt: 90_00}));
+
+            cts.push(CollateralTokenHuman({token: Tokens.rswETH, lt: 90_00}));
+
+            cts.push(CollateralTokenHuman({token: Tokens.STETH, lt: 0}));
+
+            cts.push(CollateralTokenHuman({token: Tokens.wstETH, lt: 0}));
 
             cts.push(CollateralTokenHuman({token: Tokens.rETH, lt: 0}));
 
             cts.push(CollateralTokenHuman({token: Tokens.rETH_f, lt: 0}));
+
+            cts.push(CollateralTokenHuman({token: Tokens.steCRV, lt: 0}));
+
+            cts.push(CollateralTokenHuman({token: Tokens.pufETHwstE, lt: 0}));
             Contracts[] storage cs = cp.contracts;
             cs.push(Contracts.UNISWAP_V3_ROUTER);
-            UniswapV3Pair[] storage uv3p = cp.uniswapV3Pairs;
-            uv3p.push(UniswapV3Pair({token0: Tokens.rETH, token1: Tokens.WETH, fee: 500}));
-            uv3p.push(UniswapV3Pair({token0: Tokens.rETH, token1: Tokens.WETH, fee: 100}));
+            {
+                UniswapV3Pair[] storage uv3p = cp.uniswapV3Pairs;
+                uv3p.push(
+                    UniswapV3Pair({
+                        router: Contracts.UNISWAP_V3_ROUTER,
+                        token0: Tokens.pufETH,
+                        token1: Tokens.WETH,
+                        fee: 3000
+                    })
+                );
+                uv3p.push(
+                    UniswapV3Pair({
+                        router: Contracts.UNISWAP_V3_ROUTER,
+                        token0: Tokens.weETH,
+                        token1: Tokens.WETH,
+                        fee: 500
+                    })
+                );
+                uv3p.push(
+                    UniswapV3Pair({
+                        router: Contracts.UNISWAP_V3_ROUTER,
+                        token0: Tokens.rETH,
+                        token1: Tokens.WETH,
+                        fee: 500
+                    })
+                );
+                uv3p.push(
+                    UniswapV3Pair({
+                        router: Contracts.UNISWAP_V3_ROUTER,
+                        token0: Tokens.rETH,
+                        token1: Tokens.WETH,
+                        fee: 100
+                    })
+                );
+            }
+            cs.push(Contracts.PANCAKESWAP_V3_ROUTER);
+            {
+                UniswapV3Pair[] storage uv3p = cp.uniswapV3Pairs;
+                uv3p.push(
+                    UniswapV3Pair({
+                        router: Contracts.PANCAKESWAP_V3_ROUTER,
+                        token0: Tokens.rswETH,
+                        token1: Tokens.WETH,
+                        fee: 500
+                    })
+                );
+            }
             cs.push(Contracts.BALANCER_VAULT);
             BalancerPool[] storage bp = cp.balancerPools;
 
@@ -597,6 +1061,9 @@ contract CONFIG_MAINNET_WETH_V3 is IPoolV3DeployConfig {
                 BalancerPool({poolId: 0x58aadfb1afac0ad7fca1148f3cde6aedf5236b6d00000000000000000000067f, status: 2})
             );
             cs.push(Contracts.CURVE_RETH_ETH_POOL);
+            cs.push(Contracts.CURVE_PUFETH_WSTETH_POOL);
+            cs.push(Contracts.CURVE_STETH_GATEWAY);
+            cs.push(Contracts.LIDO_WSTETH);
         }
     }
 
