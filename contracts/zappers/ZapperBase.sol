@@ -7,6 +7,7 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IERC20Permit} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Permit.sol";
 import {SafeERC20} from "@1inch/solidity-utils/contracts/libraries/SafeERC20.sol";
 import {IPoolV3} from "@gearbox-protocol/core-v3/contracts/interfaces/IPoolV3.sol";
+import {IERC20PermitAllowed} from "../integrations/external/IERC20PermitAllowed.sol";
 import {IZapper} from "../interfaces/zappers/IZapper.sol";
 
 /// @title Zapper base
@@ -87,7 +88,25 @@ abstract contract ZapperBase is IZapper {
         external
         returns (uint256 tokenInAmount)
     {
-        try IERC20Permit(tokenOut()).permit(msg.sender, address(this), tokenOutAmount, deadline, v, r, s) {} catch {} // U:[ZB-5]
+        _permit(tokenOut(), tokenOutAmount, deadline, v, r, s); // U:[ZB-5]
+        tokenInAmount = _redeem(tokenOutAmount, receiver, msg.sender);
+    }
+
+    /// @notice Performs redeem zap using signed DAI-like permit message for zapper's output token:
+    ///         - receives `tokenOut` from `msg.sender` and converts it to `pool`'s shares
+    ///         - redeems `pool`'s shares for `underlying`
+    ///         - converts `underlying` to `tokenIn` and sends it to `receiver`
+    /// @dev `v`, `r`, `s` must be a valid signature of the permit message from `msg.sender` for `tokenOut` to this contract
+    function redeemWithPermitAllowed(
+        uint256 tokenOutAmount,
+        address receiver,
+        uint256 nonce,
+        uint256 expiry,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) external returns (uint256 tokenInAmount) {
+        _permitAllowed(tokenOut(), nonce, expiry, v, r, s); // U:[ZB-5]
         tokenInAmount = _redeem(tokenOutAmount, receiver, msg.sender);
     }
 
@@ -144,5 +163,15 @@ abstract contract ZapperBase is IZapper {
     /// @dev Gives `spender` max allowance for this contract's `token`
     function _resetAllowance(address token, address spender) internal {
         IERC20(token).forceApprove(spender, type(uint256).max);
+    }
+
+    /// @dev Executes EIP-2612 permit for `token` from `msg.sender` to this contract
+    function _permit(address token, uint256 amount, uint256 deadline, uint8 v, bytes32 r, bytes32 s) internal {
+        try IERC20Permit(token).permit(msg.sender, address(this), amount, deadline, v, r, s) {} catch {}
+    }
+
+    /// @dev Executes DAI-like permit for `token` from `msg.sender` to this contract
+    function _permitAllowed(address token, uint256 nonce, uint256 expiry, uint8 v, bytes32 r, bytes32 s) internal {
+        try IERC20PermitAllowed(token).permit(msg.sender, address(this), nonce, expiry, true, v, r, s) {} catch {}
     }
 }

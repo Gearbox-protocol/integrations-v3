@@ -6,6 +6,7 @@ pragma solidity ^0.8.23;
 import {Test} from "forge-std/Test.sol";
 import {IERC20Permit} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Permit.sol";
 import {ERC20Mock} from "@gearbox-protocol/core-v3/contracts/test/mocks/token/ERC20Mock.sol";
+import {IERC20PermitAllowed} from "../../../integrations/external/IERC20PermitAllowed.sol";
 import {PoolV3Mock} from "../../mocks/pool/PoolV3Mock.sol";
 import {ZapperBaseHarness} from "./ZapperBase.harness.sol";
 
@@ -299,6 +300,12 @@ contract ZapperBaseUnitTest is Test {
         address expectedAssetsReceiver;
     }
 
+    enum PermitType {
+        No,
+        EIP2612,
+        DAILike
+    }
+
     /// @notice U:[ZB-5]: `redeem` works as expected
     function test_U_ZB_05_redeem_works_as_expected() public {
         RedeemTestCase[4] memory cases = [
@@ -358,8 +365,8 @@ contract ZapperBaseUnitTest is Test {
             zapper.hackTokenInExchangeRate(cases[i].tokenInExchangeRate);
             zapper.hackTokenOutExchangeRate(cases[i].tokenOutExchangeRate);
 
-            for (uint256 j; j < 2; ++j) {
-                bool withPermit = j == 1;
+            for (uint256 j; j < 3; ++j) {
+                PermitType permitType = PermitType(j);
 
                 if (cases[i].tokenOut != address(pool)) {
                     vm.expectEmit(false, false, false, true);
@@ -379,7 +386,7 @@ contract ZapperBaseUnitTest is Test {
                     emit ConvertUnderlyingToTokenIn(cases[i].expectedAssets, cases[i].expectedTokenInAmount, receiver);
                 }
 
-                if (withPermit) {
+                if (permitType == PermitType.EIP2612) {
                     vm.mockCall(
                         cases[i].tokenOut,
                         abi.encodeCall(
@@ -395,17 +402,39 @@ contract ZapperBaseUnitTest is Test {
                             (owner, address(zapper), cases[i].tokenOutAmount, 0, 0, bytes32(0), bytes32(0))
                         )
                     );
+                } else if (permitType == PermitType.DAILike) {
+                    vm.mockCall(
+                        cases[i].tokenOut,
+                        abi.encodeCall(
+                            IERC20PermitAllowed.permit, (owner, address(zapper), 0, 0, true, 0, bytes32(0), bytes32(0))
+                        ),
+                        bytes("")
+                    );
+                    vm.expectCall(
+                        cases[i].tokenOut,
+                        abi.encodeCall(
+                            IERC20PermitAllowed.permit, (owner, address(zapper), 0, 0, true, 0, bytes32(0), bytes32(0))
+                        )
+                    );
                 }
 
                 vm.prank(owner);
-                uint256 tokenInAmount = withPermit
+                uint256 tokenInAmount = permitType == PermitType.EIP2612
                     ? zapper.redeemWithPermit(cases[i].tokenOutAmount, receiver, 0, 0, bytes32(0), bytes32(0))
-                    : zapper.redeem(cases[i].tokenOutAmount, receiver);
+                    : permitType == PermitType.DAILike
+                        ? zapper.redeemWithPermitAllowed(cases[i].tokenOutAmount, receiver, 0, 0, 0, bytes32(0), bytes32(0))
+                        : zapper.redeem(cases[i].tokenOutAmount, receiver);
 
                 assertEq(
                     tokenInAmount,
                     cases[i].expectedTokenInAmount,
-                    string.concat("case #", vm.toString(i), withPermit ? " (with permit)" : "")
+                    string.concat(
+                        "case #",
+                        vm.toString(i),
+                        permitType == PermitType.EIP2612
+                            ? " (with permit)"
+                            : permitType == PermitType.DAILike ? " (with DAI permit)" : ""
+                    )
                 );
             }
         }
