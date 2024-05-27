@@ -1367,10 +1367,10 @@
   resolved "https://registry.yarnpkg.com/@gearbox-protocol/core-v2/-/core-v2-1.19.0-base.10.tgz#a21bce9eac4ca1783f5fcb4322b1c1257158d2de"
   integrity sha512-S9reS5zGt+cKxEdQppVCU0cZEmnSqx8DaoloY6KXqCsAedVJvwNUoCHnLjh9s/oWyOHa37qExN1QohntNQyB2Q==
 
-"@gearbox-protocol/core-v3@^1.49.4":
-  version "1.49.4"
-  resolved "https://registry.yarnpkg.com/@gearbox-protocol/core-v3/-/core-v3-1.49.4.tgz#96995f350755939dcc0556b3d492bdc1aa1d5251"
-  integrity sha512-qU0EZ3RvToGxY35Q2Llg1Rm2L0p7TWqU/CB5G6bynHW4mbWo3ROrprXizGkTRvQIbC4+oW3+aBXnPA6vcR6fCQ==
+"@gearbox-protocol/core-v3@^1.49.7":
+  version "1.49.7"
+  resolved "https://registry.yarnpkg.com/@gearbox-protocol/core-v3/-/core-v3-1.49.7.tgz#2e1743355649733f53486063703f7160a61ef454"
+  integrity sha512-Ovl5FNv6eL8CdsvFcjABFELBij/uP8HpPnn8gCW/BxFPK4TRhufnIoOM4RjhmN4pA2AxYbwpXyXC51Jynv5Cxg==
 
 "@gearbox-protocol/eslint-config@^1.6.1":
   version "1.6.1"
@@ -1399,10 +1399,10 @@
   resolved "https://registry.yarnpkg.com/@gearbox-protocol/prettier-config/-/prettier-config-1.5.0.tgz#4df8e9fd2305fee6ab8c1417a02e31343836932a"
   integrity sha512-FUoprSsBdZyBjgxXCKL6mTkbeUJytaLzPJqIOoQpDmBRTX0seCc2o5I9PI9tySoRIlNnd/XXnKCXq1xHDEGbxw==
 
-"@gearbox-protocol/sdk-gov@^1.57.0":
-  version "1.57.0"
-  resolved "https://registry.yarnpkg.com/@gearbox-protocol/sdk-gov/-/sdk-gov-1.57.0.tgz#024611df70f2be62abe01b86407992daf1c7e7d8"
-  integrity sha512-srvjr0Njjo+e86i+ltpzR4HM1oL2gOdZRpHHyKF5jtiT8ZN4KxImBSUXJY34WRj1VndueIWD6oivphp4R/924Q==
+"@gearbox-protocol/sdk-gov@^1.64.2":
+  version "1.64.2"
+  resolved "https://registry.yarnpkg.com/@gearbox-protocol/sdk-gov/-/sdk-gov-1.64.2.tgz#c0d70d8b6911c1515500076f85f052952b621b11"
+  integrity sha512-bhLQji3Fshgqk0Zh+QGfI8e7v7p8BK8B/hZkAr4PqZcQPEMifcdnNMNq7TFYVlQ8sAReYe4IX2SjFb55ko6t7A==
   dependencies:
     "@types/yaml" "^1.9.7"
     add "^2.0.6"
