@@ -7,6 +7,7 @@ on:
 env:
   HUSKY: 0
   CI: true
+  ATTACH_ADDRESS_PROVIDER: "0x9ea7b04Da02a5373317D745c1571c84aaD03321D"
 
 jobs:
   checks:
@@ -37,10 +38,10 @@ jobs:
         run: forge install
 
       - name: Run forge unit tests
-        run: forge test --match-test test_U
+        run: forge test --match-test test_U -vv
 
       - name: Run forge integration tests
-        run: forge test --match-test _live_ --fork-url ${{ secrets.MAINNET_TESTS_FORK }} --chain-id 1337
+        run: forge test --match-test _live_ --fork-url ${{ secrets.MAINNET_TESTS_FORK }} --chain-id 1337 -vv
 
       - name: Perform checks
         run: |
