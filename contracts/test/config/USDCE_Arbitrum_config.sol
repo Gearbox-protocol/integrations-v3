@@ -19,17 +19,17 @@ import {
     VelodromeV2Pool
 } from "@gearbox-protocol/core-v3/contracts/test/interfaces/ICreditConfig.sol";
 
-contract CONFIG_ARBITRUM_USDC_V3 is IPoolV3DeployConfig {
-    string public constant id = "arbitrum-usdc-v3";
+contract CONFIG_ARBITRUM_USDCE_V3 is IPoolV3DeployConfig {
+    string public constant id = "arbitrum-usdce-v3";
     uint256 public constant chainId = 42161;
-    Tokens public constant underlying = Tokens.USDC;
+    Tokens public constant underlying = Tokens.USDC_e;
     bool public constant supportsQuotas = true;
-    uint256 public constant getAccountAmount = 20_000_000_000;
+    uint256 public constant getAccountAmount = 10_000_000_000;
 
     // POOL
 
     string public constant symbol = "dUSDCV3";
-    string public constant name = "Main USDC v3";
+    string public constant name = "Main USDC.e v3";
 
     PoolV3DeployParams _poolParams = PoolV3DeployParams({withdrawalFee: 0, totalDebtLimit: 100_000_000_000_000});
 
@@ -52,50 +52,50 @@ contract CONFIG_ARBITRUM_USDC_V3 is IPoolV3DeployConfig {
         _gaugeRates.push(GaugeRate({token: Tokens.WBTC, minRate: 4, maxRate: 1_200}));
         _gaugeRates.push(GaugeRate({token: Tokens.WETH, minRate: 4, maxRate: 1_200}));
         _gaugeRates.push(GaugeRate({token: Tokens.ARB, minRate: 80, maxRate: 2_400}));
+        _gaugeRates.push(GaugeRate({token: Tokens.GMX, minRate: 80, maxRate: 2_400}));
+        _gaugeRates.push(GaugeRate({token: Tokens.LINK, minRate: 80, maxRate: 2_400}));
         _gaugeRates.push(GaugeRate({token: Tokens.PENDLE, minRate: 80, maxRate: 2_400}));
-        _gaugeRates.push(GaugeRate({token: Tokens.wstETH, minRate: 4, maxRate: 1_200}));
-        _gaugeRates.push(GaugeRate({token: Tokens.rETH, minRate: 4, maxRate: 1_200}));
-        _gaugeRates.push(GaugeRate({token: Tokens.cbETH, minRate: 4, maxRate: 1_200}));
-        _gaugeRates.push(GaugeRate({token: Tokens.USDe, minRate: 50, maxRate: 5_000}));
-        _quotaLimits.push(PoolQuotaLimit({token: Tokens.WBTC, quotaIncreaseFee: 1, limit: 2_500_000_000_000}));
+        _gaugeRates.push(GaugeRate({token: Tokens.wstETH, minRate: 4, maxRate: 1_500}));
+        _gaugeRates.push(GaugeRate({token: Tokens.rETH, minRate: 4, maxRate: 1_500}));
+        _gaugeRates.push(GaugeRate({token: Tokens.cbETH, minRate: 4, maxRate: 1_500}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.WBTC, quotaIncreaseFee: 1, limit: 4_500_000_000_000}));
         _quotaLimits.push(PoolQuotaLimit({token: Tokens.WETH, quotaIncreaseFee: 1, limit: 7_000_000_000_000}));
-        _quotaLimits.push(PoolQuotaLimit({token: Tokens.ARB, quotaIncreaseFee: 5, limit: 1_500_000_000_000}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.ARB, quotaIncreaseFee: 5, limit: 3_000_000_000_000}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.GMX, quotaIncreaseFee: 5, limit: 500_000_000_000}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.LINK, quotaIncreaseFee: 5, limit: 500_000_000_000}));
         _quotaLimits.push(PoolQuotaLimit({token: Tokens.PENDLE, quotaIncreaseFee: 5, limit: 500_000_000_000}));
-        _quotaLimits.push(PoolQuotaLimit({token: Tokens.wstETH, quotaIncreaseFee: 1, limit: 5_500_000_000_000}));
-        _quotaLimits.push(PoolQuotaLimit({token: Tokens.rETH, quotaIncreaseFee: 1, limit: 3_000_000_000_000}));
-        _quotaLimits.push(PoolQuotaLimit({token: Tokens.cbETH, quotaIncreaseFee: 1, limit: 2_000_000_000_000}));
-        _quotaLimits.push(PoolQuotaLimit({token: Tokens.USDe, quotaIncreaseFee: 0, limit: 5_000_000_000_000}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.wstETH, quotaIncreaseFee: 1, limit: 7_000_000_000_000}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.rETH, quotaIncreaseFee: 1, limit: 7_000_000_000_000}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.cbETH, quotaIncreaseFee: 1, limit: 7_000_000_000_000}));
 
         {
             /// CREDIT_MANAGER_0
             CreditManagerV3DeployParams storage cp = _creditManagers.push();
 
-            cp.minDebt = 20_000_000_000;
+            cp.minDebt = 1_000_000_000;
             cp.maxDebt = 400_000_000_000;
             cp.feeInterest = 2500;
             cp.feeLiquidation = 50;
-            cp.liquidationPremium = 500;
+            cp.liquidationPremium = 100;
             cp.feeLiquidationExpired = 50;
-            cp.liquidationPremiumExpired = 500;
+            cp.liquidationPremiumExpired = 100;
             cp.whitelisted = false;
             cp.expirable = false;
             cp.skipInit = false;
             cp.poolLimit = 4_000_000_000_000;
 
             CollateralTokenHuman[] storage cts = cp.collateralTokens;
-            cts.push(CollateralTokenHuman({token: Tokens.USDe, lt: 9_000}));
+            cts.push(CollateralTokenHuman({token: Tokens.WETH, lt: 9_400}));
 
-            cts.push(CollateralTokenHuman({token: Tokens.WETH, lt: 8_700}));
+            cts.push(CollateralTokenHuman({token: Tokens.WBTC, lt: 9_400}));
 
-            cts.push(CollateralTokenHuman({token: Tokens.WBTC, lt: 8_700}));
+            cts.push(CollateralTokenHuman({token: Tokens.ARB, lt: 9_000}));
 
-            cts.push(CollateralTokenHuman({token: Tokens.wstETH, lt: 8_700}));
+            cts.push(CollateralTokenHuman({token: Tokens.wstETH, lt: 9_400}));
 
-            cts.push(CollateralTokenHuman({token: Tokens.rETH, lt: 8_700}));
+            cts.push(CollateralTokenHuman({token: Tokens.rETH, lt: 9_400}));
 
-            cts.push(CollateralTokenHuman({token: Tokens.cbETH, lt: 8_700}));
-
-            cts.push(CollateralTokenHuman({token: Tokens.USDEUSDC, lt: 0}));
+            cts.push(CollateralTokenHuman({token: Tokens.cbETH, lt: 9_400}));
             Contracts[] storage cs = cp.contracts;
             cs.push(Contracts.UNISWAP_V3_ROUTER);
             {
@@ -104,7 +104,7 @@ contract CONFIG_ARBITRUM_USDC_V3 is IPoolV3DeployConfig {
                     UniswapV3Pair({
                         router: Contracts.UNISWAP_V3_ROUTER,
                         token0: Tokens.WETH,
-                        token1: Tokens.USDC,
+                        token1: Tokens.USDC_e,
                         fee: 500
                     })
                 );
@@ -119,6 +119,22 @@ contract CONFIG_ARBITRUM_USDC_V3 is IPoolV3DeployConfig {
                 uv3p.push(
                     UniswapV3Pair({
                         router: Contracts.UNISWAP_V3_ROUTER,
+                        token0: Tokens.WETH,
+                        token1: Tokens.ARB,
+                        fee: 500
+                    })
+                );
+                uv3p.push(
+                    UniswapV3Pair({
+                        router: Contracts.UNISWAP_V3_ROUTER,
+                        token0: Tokens.WETH,
+                        token1: Tokens.ARB,
+                        fee: 3000
+                    })
+                );
+                uv3p.push(
+                    UniswapV3Pair({
+                        router: Contracts.UNISWAP_V3_ROUTER,
                         token0: Tokens.wstETH,
                         token1: Tokens.WETH,
                         fee: 100
@@ -127,25 +143,17 @@ contract CONFIG_ARBITRUM_USDC_V3 is IPoolV3DeployConfig {
                 uv3p.push(
                     UniswapV3Pair({
                         router: Contracts.UNISWAP_V3_ROUTER,
+                        token0: Tokens.ARB,
+                        token1: Tokens.USDC_e,
+                        fee: 500
+                    })
+                );
+                uv3p.push(
+                    UniswapV3Pair({
+                        router: Contracts.UNISWAP_V3_ROUTER,
                         token0: Tokens.WBTC,
                         token1: Tokens.WETH,
                         fee: 3000
-                    })
-                );
-                uv3p.push(
-                    UniswapV3Pair({
-                        router: Contracts.UNISWAP_V3_ROUTER,
-                        token0: Tokens.WBTC,
-                        token1: Tokens.USDC,
-                        fee: 500
-                    })
-                );
-                uv3p.push(
-                    UniswapV3Pair({
-                        router: Contracts.UNISWAP_V3_ROUTER,
-                        token0: Tokens.wstETH,
-                        token1: Tokens.USDC,
-                        fee: 500
                     })
                 );
             }
@@ -161,51 +169,37 @@ contract CONFIG_ARBITRUM_USDC_V3 is IPoolV3DeployConfig {
             );
 
             bp.push(
+                BalancerPool({poolId: 0x0c8972437a38b389ec83d1e666b69b8a4fcf8bfd00000000000000000000049e, status: 2})
+            );
+
+            bp.push(
                 BalancerPool({poolId: 0x2d6ced12420a9af5a83765a8c48be2afcd1a8feb000000000000000000000500, status: 2})
             );
-            cs.push(Contracts.CAMELOT_V3_ROUTER);
-            {
-                GenericSwapPair[] storage gsp = cp.genericSwapPairs;
-                gsp.push(
-                    GenericSwapPair({router: Contracts.CAMELOT_V3_ROUTER, token0: Tokens.USDe, token1: Tokens.USDC})
-                );
-            }
-            cs.push(Contracts.CURVE_USDE_USDC_POOL_ARB);
         }
         {
             /// CREDIT_MANAGER_1
             CreditManagerV3DeployParams storage cp = _creditManagers.push();
 
             cp.minDebt = 1_000_000_000;
-            cp.maxDebt = 20_000_000_000;
+            cp.maxDebt = 100_000_000_000;
             cp.feeInterest = 2500;
-            cp.feeLiquidation = 50;
-            cp.liquidationPremium = 500;
-            cp.feeLiquidationExpired = 50;
-            cp.liquidationPremiumExpired = 500;
+            cp.feeLiquidation = 100;
+            cp.liquidationPremium = 200;
+            cp.feeLiquidationExpired = 100;
+            cp.liquidationPremiumExpired = 200;
             cp.whitelisted = false;
             cp.expirable = false;
             cp.skipInit = false;
             cp.poolLimit = 2_000_000_000_000;
 
             CollateralTokenHuman[] storage cts = cp.collateralTokens;
-            cts.push(CollateralTokenHuman({token: Tokens.USDe, lt: 9_000}));
+            cts.push(CollateralTokenHuman({token: Tokens.WETH, lt: 9_400}));
 
-            cts.push(CollateralTokenHuman({token: Tokens.WETH, lt: 8_700}));
+            cts.push(CollateralTokenHuman({token: Tokens.GMX, lt: 8_350}));
 
-            cts.push(CollateralTokenHuman({token: Tokens.WBTC, lt: 8_700}));
+            cts.push(CollateralTokenHuman({token: Tokens.LINK, lt: 9_000}));
 
-            cts.push(CollateralTokenHuman({token: Tokens.ARB, lt: 8_000}));
-
-            cts.push(CollateralTokenHuman({token: Tokens.PENDLE, lt: 7_000}));
-
-            cts.push(CollateralTokenHuman({token: Tokens.wstETH, lt: 8_700}));
-
-            cts.push(CollateralTokenHuman({token: Tokens.rETH, lt: 8_700}));
-
-            cts.push(CollateralTokenHuman({token: Tokens.cbETH, lt: 8_700}));
-
-            cts.push(CollateralTokenHuman({token: Tokens.USDEUSDC, lt: 0}));
+            cts.push(CollateralTokenHuman({token: Tokens.PENDLE, lt: 8_000}));
             Contracts[] storage cs = cp.contracts;
             cs.push(Contracts.UNISWAP_V3_ROUTER);
             {
@@ -214,47 +208,7 @@ contract CONFIG_ARBITRUM_USDC_V3 is IPoolV3DeployConfig {
                     UniswapV3Pair({
                         router: Contracts.UNISWAP_V3_ROUTER,
                         token0: Tokens.WETH,
-                        token1: Tokens.USDC,
-                        fee: 500
-                    })
-                );
-                uv3p.push(
-                    UniswapV3Pair({
-                        router: Contracts.UNISWAP_V3_ROUTER,
-                        token0: Tokens.WETH,
-                        token1: Tokens.WBTC,
-                        fee: 500
-                    })
-                );
-                uv3p.push(
-                    UniswapV3Pair({
-                        router: Contracts.UNISWAP_V3_ROUTER,
-                        token0: Tokens.wstETH,
-                        token1: Tokens.WETH,
-                        fee: 100
-                    })
-                );
-                uv3p.push(
-                    UniswapV3Pair({
-                        router: Contracts.UNISWAP_V3_ROUTER,
-                        token0: Tokens.WBTC,
-                        token1: Tokens.WETH,
-                        fee: 3000
-                    })
-                );
-                uv3p.push(
-                    UniswapV3Pair({
-                        router: Contracts.UNISWAP_V3_ROUTER,
-                        token0: Tokens.WBTC,
-                        token1: Tokens.USDC,
-                        fee: 500
-                    })
-                );
-                uv3p.push(
-                    UniswapV3Pair({
-                        router: Contracts.UNISWAP_V3_ROUTER,
-                        token0: Tokens.wstETH,
-                        token1: Tokens.USDC,
+                        token1: Tokens.USDC_e,
                         fee: 500
                     })
                 );
@@ -269,50 +223,20 @@ contract CONFIG_ARBITRUM_USDC_V3 is IPoolV3DeployConfig {
                 uv3p.push(
                     UniswapV3Pair({
                         router: Contracts.UNISWAP_V3_ROUTER,
-                        token0: Tokens.WETH,
-                        token1: Tokens.ARB,
-                        fee: 500
-                    })
-                );
-                uv3p.push(
-                    UniswapV3Pair({
-                        router: Contracts.UNISWAP_V3_ROUTER,
-                        token0: Tokens.WETH,
-                        token1: Tokens.ARB,
+                        token0: Tokens.GMX,
+                        token1: Tokens.WETH,
                         fee: 3000
                     })
                 );
                 uv3p.push(
                     UniswapV3Pair({
                         router: Contracts.UNISWAP_V3_ROUTER,
-                        token0: Tokens.ARB,
-                        token1: Tokens.USDC,
-                        fee: 500
+                        token0: Tokens.LINK,
+                        token1: Tokens.WETH,
+                        fee: 3000
                     })
                 );
             }
-            cs.push(Contracts.BALANCER_VAULT);
-            BalancerPool[] storage bp = cp.balancerPools;
-
-            bp.push(
-                BalancerPool({poolId: 0x9791d590788598535278552eecd4b211bfc790cb000000000000000000000498, status: 2})
-            );
-
-            bp.push(
-                BalancerPool({poolId: 0xd0ec47c54ca5e20aaae4616c25c825c7f48d40690000000000000000000004ef, status: 2})
-            );
-
-            bp.push(
-                BalancerPool({poolId: 0x2d6ced12420a9af5a83765a8c48be2afcd1a8feb000000000000000000000500, status: 2})
-            );
-            cs.push(Contracts.CAMELOT_V3_ROUTER);
-            {
-                GenericSwapPair[] storage gsp = cp.genericSwapPairs;
-                gsp.push(
-                    GenericSwapPair({router: Contracts.CAMELOT_V3_ROUTER, token0: Tokens.USDe, token1: Tokens.USDC})
-                );
-            }
-            cs.push(Contracts.CURVE_USDE_USDC_POOL_ARB);
         }
     }
 

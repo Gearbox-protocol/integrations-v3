@@ -970,13 +970,13 @@ contract CONFIG_MAINNET_WETH_V3 is IPoolV3DeployConfig {
             CollateralTokenHuman[] storage cts = cp.collateralTokens;
             cts.push(CollateralTokenHuman({token: Tokens.weETH, lt: 91_50}));
 
-            cts.push(CollateralTokenHuman({token: Tokens.ezETH, lt: 91_50}));
+            cts.push(CollateralTokenHuman({token: Tokens.ezETH, lt: 87_00}));
 
             cts.push(CollateralTokenHuman({token: Tokens.rsETH, lt: 90_00}));
 
-            cts.push(CollateralTokenHuman({token: Tokens.pufETH, lt: 90_00}));
+            cts.push(CollateralTokenHuman({token: Tokens.pufETH, lt: 87_00}));
 
-            cts.push(CollateralTokenHuman({token: Tokens.rswETH, lt: 90_00}));
+            cts.push(CollateralTokenHuman({token: Tokens.rswETH, lt: 87_00}));
 
             cts.push(CollateralTokenHuman({token: Tokens.STETH, lt: 0}));
 

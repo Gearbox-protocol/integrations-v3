@@ -31,11 +31,13 @@ import {CONFIG_MAINNET_WETH_V3} from "../config/WETH_Mainnet_config.sol";
 import {CONFIG_MAINNET_GHO_V3} from "../config/GHO_Mainnet_config.sol";
 import {CONFIG_MAINNET_DAI_V3} from "../config/DAI_Mainnet_config.sol";
 import {CONFIG_MAINNET_USDT_V3} from "../config/USDT_Mainnet_config.sol";
+import {CONFIG_MAINNET_CRVUSD_V3} from "../config/CRVUSD_Mainnet_config.sol";
 
 import {CONFIG_OPTIMISM_USDC_V3} from "../config/USDC_Optimism_config.sol";
 import {CONFIG_OPTIMISM_WETH_V3} from "../config/WETH_Optimism_config.sol";
 
 import {CONFIG_ARBITRUM_USDC_V3} from "../config/USDC_Arbitrum_config.sol";
+import {CONFIG_ARBITRUM_USDCE_V3} from "../config/USDCE_Arbitrum_config.sol";
 import {CONFIG_ARBITRUM_WETH_V3} from "../config/WETH_Arbitrum_config.sol";
 
 import {CONFIG_MAINNET_USDC_TEST_V3} from "../config/TEST_USDC_Mainnet_config.sol";
@@ -71,6 +73,8 @@ contract LiveTestHelper is IntegrationTestHelper {
         addDeployConfig(new CONFIG_MAINNET_GHO_V3());
         addDeployConfig(new CONFIG_MAINNET_DAI_V3());
         addDeployConfig(new CONFIG_MAINNET_USDT_V3());
+        addDeployConfig(new CONFIG_MAINNET_CRVUSD_V3());
+        addDeployConfig(new CONFIG_ARBITRUM_USDCE_V3());
     }
 
     SupportedContracts public supportedContracts;
