@@ -7,7 +7,7 @@ import {Test} from "forge-std/Test.sol";
 
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 
-import {IWETH} from "@gearbox-protocol/core-v2/contracts/interfaces/external/IWETH.sol";
+import {IWETH} from "@gearbox-protocol/core-v3/contracts/interfaces/external/IWETH.sol";
 import {ZeroAddressException} from "@gearbox-protocol/core-v3/contracts/interfaces/IExceptions.sol";
 import {TokensTestSuite, Tokens} from "@gearbox-protocol/core-v3/contracts/test/suites/TokensTestSuite.sol";
 

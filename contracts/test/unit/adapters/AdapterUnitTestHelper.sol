@@ -21,8 +21,9 @@ contract AdapterUnitTestHelper is Test, CreditManagerV3MockEvents {
     address creditFacade;
     address creditAccount;
     address creditConfigurator;
+    address pool;
+    address acl;
     CreditManagerV3Mock creditManager;
-    AddressProviderV3ACLMock addressProvider;
 
     address[10] tokens;
 
@@ -36,11 +37,14 @@ contract AdapterUnitTestHelper is Test, CreditManagerV3MockEvents {
         creditFacade = makeAddr("CREDIT_FACADE");
         creditAccount = makeAddr("CREDIT_ACCOUNT");
         creditConfigurator = makeAddr("CREDIT_CONFIGURATOR");
+        pool = makeAddr("POOL");
 
         vm.prank(configurator);
-        addressProvider = new AddressProviderV3ACLMock();
+        acl = address(new AddressProviderV3ACLMock());
 
-        creditManager = new CreditManagerV3Mock(address(addressProvider), creditFacade, creditConfigurator);
+        vm.mockCall(pool, abi.encodeWithSignature("acl()"), abi.encode(acl));
+
+        creditManager = new CreditManagerV3Mock(pool, creditFacade, creditConfigurator);
 
         for (uint256 i; i < tokens.length; ++i) {
             string memory name = string.concat("Test Token ", vm.toString(i));

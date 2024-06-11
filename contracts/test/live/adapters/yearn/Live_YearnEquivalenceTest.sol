@@ -11,13 +11,13 @@ import {ICreditFacadeV3Multicall} from "@gearbox-protocol/core-v3/contracts/inte
 import {IYVault} from "../../../../integrations/yearn/IYVault.sol";
 import {IYearnV2Adapter} from "../../../../interfaces/yearn/IYearnV2Adapter.sol";
 import {YearnV2_Calls, YearnV2_Multicaller} from "../../../multicall/yearn/YearnV2_Calls.sol";
-import {IAdapter} from "@gearbox-protocol/core-v2/contracts/interfaces/IAdapter.sol";
+import {IAdapter} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IAdapter.sol";
 import {AdapterType} from "@gearbox-protocol/sdk-gov/contracts/AdapterType.sol";
 
 import {Tokens} from "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
 import {Contracts} from "@gearbox-protocol/sdk-gov/contracts/SupportedContracts.sol";
 
-import {MultiCall} from "@gearbox-protocol/core-v2/contracts/libraries/MultiCall.sol";
+import {MultiCall} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacadeV3.sol";
 import {MultiCallBuilder} from "@gearbox-protocol/core-v3/contracts/test/lib/MultiCallBuilder.sol";
 import {AddressList} from "@gearbox-protocol/core-v3/contracts/test/lib/AddressList.sol";
 // TEST

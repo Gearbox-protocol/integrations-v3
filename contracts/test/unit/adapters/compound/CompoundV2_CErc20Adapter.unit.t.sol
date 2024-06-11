@@ -38,7 +38,6 @@ contract CompoundV2_CErc20AdapterUnitTest is AdapterUnitTestHelper, ICompoundV2_
         adapter = new CompoundV2_CErc20Adapter(address(creditManager), cToken);
 
         assertEq(adapter.creditManager(), address(creditManager), "Incorrect creditManager");
-        assertEq(adapter.addressProvider(), address(addressProvider), "Incorrect addressProvider");
         assertEq(adapter.targetContract(), cToken, "Incorrect targetContract");
         assertEq(adapter.cToken(), cToken, "Incorrect cToken");
         assertEq(adapter.underlying(), token, "Incorrect underlying");

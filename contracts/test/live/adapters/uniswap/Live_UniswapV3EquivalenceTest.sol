@@ -11,7 +11,7 @@ import {IUniswapV3Adapter, IUniswapV3AdapterTypes} from "../../../../interfaces/
 import {Tokens} from "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
 import {Contracts} from "@gearbox-protocol/sdk-gov/contracts/SupportedContracts.sol";
 
-import {MultiCall} from "@gearbox-protocol/core-v2/contracts/libraries/MultiCall.sol";
+import {MultiCall} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacadeV3.sol";
 import {MultiCallBuilder} from "@gearbox-protocol/core-v3/contracts/test/lib/MultiCallBuilder.sol";
 
 import {UniswapV3_Calls, UniswapV3_Multicaller} from "../../../multicall/uniswap/UniswapV3_Calls.sol";
@@ -105,7 +105,7 @@ contract Live_UniswapV3EquivalenceTest is LiveTestHelper {
             ISwapRouter.ExactInputParams memory exactInputParams = ISwapRouter.ExactInputParams({
                 path: abi.encodePacked(
                     tokenTestSuite.addressOf(Tokens.WETH), uint24(500), tokenTestSuite.addressOf(Tokens.USDC)
-                    ),
+                ),
                 recipient: creditAccount,
                 deadline: block.timestamp + 3600,
                 amountIn: WAD,
@@ -118,7 +118,7 @@ contract Live_UniswapV3EquivalenceTest is LiveTestHelper {
                 .ExactDiffInputParams({
                 path: abi.encodePacked(
                     tokenTestSuite.addressOf(Tokens.WETH), uint24(500), tokenTestSuite.addressOf(Tokens.USDC)
-                    ),
+                ),
                 deadline: block.timestamp + 3600,
                 leftoverAmount: 10 * WAD,
                 rateMinRAY: 0
@@ -144,7 +144,7 @@ contract Live_UniswapV3EquivalenceTest is LiveTestHelper {
             ISwapRouter.ExactOutputParams memory exactOutputParams = ISwapRouter.ExactOutputParams({
                 path: abi.encodePacked(
                     tokenTestSuite.addressOf(Tokens.WETH), uint24(500), tokenTestSuite.addressOf(Tokens.USDC)
-                    ),
+                ),
                 recipient: creditAccount,
                 deadline: block.timestamp + 3600,
                 amountOut: 100 * 10 ** 6,
@@ -193,7 +193,7 @@ contract Live_UniswapV3EquivalenceTest is LiveTestHelper {
                 ISwapRouter.ExactInputParams({
                     path: abi.encodePacked(
                         tokenTestSuite.addressOf(Tokens.WETH), uint24(500), tokenTestSuite.addressOf(Tokens.USDC)
-                        ),
+                    ),
                     recipient: creditAccount,
                     deadline: block.timestamp + 3600,
                     amountIn: WAD,
@@ -207,7 +207,7 @@ contract Live_UniswapV3EquivalenceTest is LiveTestHelper {
                 ISwapRouter.ExactInputParams({
                     path: abi.encodePacked(
                         tokenTestSuite.addressOf(Tokens.WETH), uint24(500), tokenTestSuite.addressOf(Tokens.USDC)
-                        ),
+                    ),
                     recipient: creditAccount,
                     deadline: block.timestamp + 3600,
                     amountIn: balanceToSwap,
@@ -234,7 +234,7 @@ contract Live_UniswapV3EquivalenceTest is LiveTestHelper {
                 ISwapRouter.ExactOutputParams({
                     path: abi.encodePacked(
                         tokenTestSuite.addressOf(Tokens.WETH), uint24(500), tokenTestSuite.addressOf(Tokens.USDC)
-                        ),
+                    ),
                     recipient: creditAccount,
                     deadline: block.timestamp + 3600,
                     amountOut: 100 * 10 ** 6,

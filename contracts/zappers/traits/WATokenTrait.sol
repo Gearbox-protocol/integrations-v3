@@ -5,7 +5,7 @@ pragma solidity ^0.8.17;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@1inch/solidity-utils/contracts/libraries/SafeERC20.sol";
-import {WAD} from "@gearbox-protocol/core-v2/contracts/libraries/Constants.sol";
+import {WAD} from "@gearbox-protocol/core-v3/contracts/libraries/Constants.sol";
 import {WrappedAToken} from "../../helpers/aave/AaveV2_WrappedAToken.sol";
 import {ERC20ZapperBase} from "../ERC20ZapperBase.sol";
 import {ZapperBase} from "../ZapperBase.sol";

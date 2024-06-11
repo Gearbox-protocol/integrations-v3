@@ -87,9 +87,7 @@ contract CONFIG_ARBITRUM_WETH_V3 is IPoolV3DeployConfig {
             PoolQuotaLimit({token: Tokens.cbETH, quotaIncreaseFee: 0, limit: 500_000_000_000_000_000_000})
         );
         _quotaLimits.push(PoolQuotaLimit({token: Tokens.sfrxETH, quotaIncreaseFee: 0, limit: 0}));
-        _quotaLimits.push(
-            PoolQuotaLimit({token: Tokens.ezETH, quotaIncreaseFee: 0, limit: 500_000_000_000_000_000_000})
-        );
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.ezETH, quotaIncreaseFee: 0, limit: 0}));
 
         {
             /// CREDIT_MANAGER_0
@@ -235,6 +233,20 @@ contract CONFIG_ARBITRUM_WETH_V3 is IPoolV3DeployConfig {
             cp.poolLimit = 500_000_000_000_000_000_000;
 
             CollateralTokenHuman[] storage cts = cp.collateralTokens;
+            cts.push(CollateralTokenHuman({token: Tokens.USDC_e, lt: 9_400}));
+
+            cts.push(CollateralTokenHuman({token: Tokens.USDC, lt: 9_400}));
+
+            cts.push(CollateralTokenHuman({token: Tokens.WBTC, lt: 9_400}));
+
+            cts.push(CollateralTokenHuman({token: Tokens.ARB, lt: 9_000}));
+
+            cts.push(CollateralTokenHuman({token: Tokens.wstETH, lt: 9_600}));
+
+            cts.push(CollateralTokenHuman({token: Tokens.rETH, lt: 9_600}));
+
+            cts.push(CollateralTokenHuman({token: Tokens.cbETH, lt: 9_600}));
+
             cts.push(CollateralTokenHuman({token: Tokens.PENDLE, lt: 8_000}));
 
             cts.push(CollateralTokenHuman({token: Tokens.GMX, lt: 8_350}));
@@ -244,6 +256,78 @@ contract CONFIG_ARBITRUM_WETH_V3 is IPoolV3DeployConfig {
             cs.push(Contracts.UNISWAP_V3_ROUTER);
             {
                 UniswapV3Pair[] storage uv3p = cp.uniswapV3Pairs;
+                uv3p.push(
+                    UniswapV3Pair({
+                        router: Contracts.UNISWAP_V3_ROUTER,
+                        token0: Tokens.WETH,
+                        token1: Tokens.USDC_e,
+                        fee: 500
+                    })
+                );
+                uv3p.push(
+                    UniswapV3Pair({
+                        router: Contracts.UNISWAP_V3_ROUTER,
+                        token0: Tokens.WETH,
+                        token1: Tokens.USDC,
+                        fee: 500
+                    })
+                );
+                uv3p.push(
+                    UniswapV3Pair({
+                        router: Contracts.UNISWAP_V3_ROUTER,
+                        token0: Tokens.WETH,
+                        token1: Tokens.WBTC,
+                        fee: 500
+                    })
+                );
+                uv3p.push(
+                    UniswapV3Pair({
+                        router: Contracts.UNISWAP_V3_ROUTER,
+                        token0: Tokens.WETH,
+                        token1: Tokens.ARB,
+                        fee: 500
+                    })
+                );
+                uv3p.push(
+                    UniswapV3Pair({
+                        router: Contracts.UNISWAP_V3_ROUTER,
+                        token0: Tokens.WETH,
+                        token1: Tokens.ARB,
+                        fee: 3000
+                    })
+                );
+                uv3p.push(
+                    UniswapV3Pair({
+                        router: Contracts.UNISWAP_V3_ROUTER,
+                        token0: Tokens.wstETH,
+                        token1: Tokens.WETH,
+                        fee: 100
+                    })
+                );
+                uv3p.push(
+                    UniswapV3Pair({
+                        router: Contracts.UNISWAP_V3_ROUTER,
+                        token0: Tokens.ARB,
+                        token1: Tokens.USDC_e,
+                        fee: 500
+                    })
+                );
+                uv3p.push(
+                    UniswapV3Pair({
+                        router: Contracts.UNISWAP_V3_ROUTER,
+                        token0: Tokens.ARB,
+                        token1: Tokens.USDC,
+                        fee: 500
+                    })
+                );
+                uv3p.push(
+                    UniswapV3Pair({
+                        router: Contracts.UNISWAP_V3_ROUTER,
+                        token0: Tokens.WBTC,
+                        token1: Tokens.WETH,
+                        fee: 3000
+                    })
+                );
                 uv3p.push(
                     UniswapV3Pair({
                         router: Contracts.UNISWAP_V3_ROUTER,
@@ -269,6 +353,20 @@ contract CONFIG_ARBITRUM_WETH_V3 is IPoolV3DeployConfig {
                     })
                 );
             }
+            cs.push(Contracts.BALANCER_VAULT);
+            BalancerPool[] storage bp = cp.balancerPools;
+
+            bp.push(
+                BalancerPool({poolId: 0x9791d590788598535278552eecd4b211bfc790cb000000000000000000000498, status: 2})
+            );
+
+            bp.push(
+                BalancerPool({poolId: 0xd0ec47c54ca5e20aaae4616c25c825c7f48d40690000000000000000000004ef, status: 2})
+            );
+
+            bp.push(
+                BalancerPool({poolId: 0x2d6ced12420a9af5a83765a8c48be2afcd1a8feb000000000000000000000500, status: 2})
+            );
         }
     }
 

@@ -12,7 +12,7 @@ import {AdapterUnitTestHelper} from "../AdapterUnitTestHelper.sol";
 /// @notice U:[CRV3]: Unit tests for Curve 3 coins pool adapter
 contract CurveV1Adapter3AssetsUnitTest is AdapterUnitTestHelper {
     CurveV1Adapter3Assets adapter;
-    PoolMock pool;
+    PoolMock curvePool;
 
     address token0;
     address token1;
@@ -36,9 +36,9 @@ contract CurveV1Adapter3AssetsUnitTest is AdapterUnitTestHelper {
         coins[0] = token0;
         coins[1] = token1;
         coins[2] = token2;
-        pool = new PoolMock(PoolType.Stable, coins, new address[](0));
+        curvePool = new PoolMock(PoolType.Stable, coins, new address[](0));
 
-        adapter = new CurveV1Adapter3Assets(address(creditManager), address(pool), lpToken, address(0));
+        adapter = new CurveV1Adapter3Assets(address(creditManager), address(curvePool), lpToken, address(0));
 
         assertEq(adapter.nCoins(), 3, "Incorrect nCoins");
     }

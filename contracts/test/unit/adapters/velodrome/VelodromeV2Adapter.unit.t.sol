@@ -35,7 +35,6 @@ contract VelodtomeV2AdapterUnitTest is
     /// @notice U:[VELO2-1]: Constructor works as expected
     function test_U_VELO2_01_constructor_works_as_expected() public {
         assertEq(adapter.creditManager(), address(creditManager), "Incorrect creditManager");
-        assertEq(adapter.addressProvider(), address(addressProvider), "Incorrect addressProvider");
         assertEq(adapter.targetContract(), router, "Incorrect targetContract");
     }
 
@@ -92,7 +91,7 @@ contract VelodtomeV2AdapterUnitTest is
             callData: abi.encodeCall(
                 IVelodromeV2Router.swapExactTokensForTokens,
                 (diffInputAmount, diffInputAmount / 2, routes, creditAccount, 789)
-                ),
+            ),
             requiresApproval: true,
             validatesTokens: true
         });

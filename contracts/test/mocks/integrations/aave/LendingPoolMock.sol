@@ -6,7 +6,7 @@ pragma solidity ^0.8.17;
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-import {RAY} from "@gearbox-protocol/core-v2/contracts/libraries/Constants.sol";
+import {RAY} from "@gearbox-protocol/core-v3/contracts/libraries/Constants.sol";
 
 import {IAToken} from "../../../../integrations/aave/IAToken.sol";
 import {DataTypes} from "../../../../integrations/aave/DataTypes.sol";

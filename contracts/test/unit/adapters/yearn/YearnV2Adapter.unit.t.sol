@@ -35,7 +35,6 @@ contract YearnV2AdapterUnitTest is AdapterUnitTestHelper {
         adapter = new YearnV2Adapter(address(creditManager), yToken);
 
         assertEq(adapter.creditManager(), address(creditManager), "Incorrect creditManager");
-        assertEq(adapter.addressProvider(), address(addressProvider), "Incorrect addressProvider");
         assertEq(adapter.targetContract(), yToken, "Incorrect targetContract");
         assertEq(adapter.token(), token, "Incorrect token");
         assertEq(adapter.tokenMask(), tokenMask, "Incorrect tokenMask");

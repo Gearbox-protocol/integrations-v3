@@ -43,7 +43,6 @@ contract CompoundV2_CEtherAdapterUnitTest is AdapterUnitTestHelper, ICompoundV2_
         adapter = new CompoundV2_CEtherAdapter(address(creditManager), gateway);
 
         assertEq(adapter.creditManager(), address(creditManager), "Incorrect creditManager");
-        assertEq(adapter.addressProvider(), address(addressProvider), "Incorrect addressProvider");
         assertEq(adapter.targetContract(), gateway, "Incorrect targetContract");
         assertEq(adapter.cToken(), cToken, "Incorrect cToken");
         assertEq(adapter.underlying(), token, "Incorrect underlying");

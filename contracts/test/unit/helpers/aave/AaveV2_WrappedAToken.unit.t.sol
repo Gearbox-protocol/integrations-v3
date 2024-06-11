@@ -5,7 +5,7 @@ pragma solidity ^0.8.17;
 
 import {Test} from "forge-std/Test.sol";
 
-import {WAD} from "@gearbox-protocol/core-v2/contracts/libraries/Constants.sol";
+import {WAD} from "@gearbox-protocol/core-v3/contracts/libraries/Constants.sol";
 import {ZeroAddressException} from "@gearbox-protocol/core-v3/contracts/interfaces/IExceptions.sol";
 
 import {IWrappedATokenEvents, WrappedAToken} from "../../../../helpers/aave/AaveV2_WrappedAToken.sol";

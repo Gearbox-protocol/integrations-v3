@@ -3,7 +3,7 @@
 // (c) Gearbox Foundation, 2023
 pragma solidity ^0.8.17;
 
-import {MultiCall} from "@gearbox-protocol/core-v2/contracts/libraries/MultiCall.sol";
+import {MultiCall} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacadeV3.sol";
 
 import {ICurveV1Adapter} from "../../../interfaces/curve/ICurveV1Adapter.sol";
 import {ICurveV1_2AssetsAdapter} from "../../../interfaces/curve/ICurveV1_2AssetsAdapter.sol";
@@ -45,7 +45,7 @@ library CurveV1Calls {
             target: address(c),
             callData: abi.encodeWithSignature(
                 "exchange_diff(uint256,uint256,uint256,uint256)", i, j, leftoverAmount, rateMinRAY
-                )
+            )
         });
     }
 
@@ -82,7 +82,7 @@ library CurveV1Calls {
             target: address(c),
             callData: abi.encodeWithSignature(
                 "exchange_diff_underlying(uint256,uint256,uint256,uint256)", i, j, leftoverAmount, rateMinRAY
-                )
+            )
         });
     }
 
@@ -150,7 +150,7 @@ library CurveV1Calls {
             target: address(c),
             callData: abi.encodeWithSignature(
                 "add_diff_liquidity_one_coin(uint256,uint256,uint256)", leftoverAmount, i, rateMinRAY
-                )
+            )
         });
     }
 
@@ -207,7 +207,7 @@ library CurveV1Calls {
             target: address(c),
             callData: abi.encodeWithSignature(
                 "remove_liquidity_one_coin(uint256,int128,uint256)", token_amount, i, min_amount
-                )
+            )
         });
     }
 
@@ -220,7 +220,7 @@ library CurveV1Calls {
             target: address(c),
             callData: abi.encodeWithSignature(
                 "remove_liquidity_one_coin(uint256,uint256,uint256)", token_amount, i, min_amount
-                )
+            )
         });
     }
 
@@ -233,7 +233,7 @@ library CurveV1Calls {
             target: address(c),
             callData: abi.encodeWithSignature(
                 "remove_diff_liquidity_one_coin(uint256,uint256,uint256)", leftoverAmount, i, rateMinRAY
-                )
+            )
         });
     }
 

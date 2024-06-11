@@ -29,7 +29,6 @@ contract AaveV2_LendingPoolAdapterUnitTest is AdapterUnitTestHelper {
     /// @notice U:[AAVE2-1]: Constructor works as expected
     function test_U_AAVE2_01_constructor_works_as_expected() public {
         assertEq(adapter.creditManager(), address(creditManager), "Incorrect creditManager");
-        assertEq(adapter.addressProvider(), address(addressProvider), "Incorrect addressProvider");
         assertEq(adapter.targetContract(), lendingPool, "Incorrect targetContract");
     }
 

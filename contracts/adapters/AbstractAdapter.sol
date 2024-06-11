@@ -3,8 +3,9 @@
 // (c) Gearbox Foundation, 2023.
 pragma solidity ^0.8.17;
 
-import {IAdapter} from "@gearbox-protocol/core-v2/contracts/interfaces/IAdapter.sol";
+import {IAdapter} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IAdapter.sol";
 import {ICreditManagerV3} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditManagerV3.sol";
+import {PoolV3} from "@gearbox-protocol/core-v3/contracts/pool/PoolV3.sol";
 import {CallerNotCreditFacadeException} from "@gearbox-protocol/core-v3/contracts/interfaces/IExceptions.sol";
 import {ACLTrait} from "@gearbox-protocol/core-v3/contracts/traits/ACLTrait.sol";
 
@@ -14,9 +15,6 @@ abstract contract AbstractAdapter is IAdapter, ACLTrait {
     /// @notice Credit manager the adapter is connected to
     address public immutable override creditManager;
 
-    /// @notice Address provider contract
-    address public immutable override addressProvider;
-
     /// @notice Address of the contract the adapter is interacting with
     address public immutable override targetContract;
 
@@ -24,11 +22,10 @@ abstract contract AbstractAdapter is IAdapter, ACLTrait {
     /// @param _creditManager Credit manager to connect the adapter to
     /// @param _targetContract Address of the adapted contract
     constructor(address _creditManager, address _targetContract)
-        ACLTrait(ICreditManagerV3(_creditManager).addressProvider())
+        ACLTrait(PoolV3(ICreditManagerV3(_creditManager).pool()).acl())
         nonZeroAddress(_targetContract)
     {
         creditManager = _creditManager;
-        addressProvider = ICreditManagerV3(_creditManager).addressProvider();
         targetContract = _targetContract;
     }
 

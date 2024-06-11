@@ -10,12 +10,12 @@ import {IAaveV2_WrappedATokenAdapter} from "../../../../interfaces/aave/IAaveV2_
 import {WrappedAToken} from "../../../../helpers/aave/AaveV2_WrappedAToken.sol";
 import {IAToken} from "../../../../integrations/aave/IAToken.sol";
 import {AdapterType} from "@gearbox-protocol/sdk-gov/contracts/AdapterType.sol";
-import {IAdapter} from "@gearbox-protocol/core-v2/contracts/interfaces/IAdapter.sol";
+import {IAdapter} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IAdapter.sol";
 
 import {Tokens} from "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
 import {Contracts} from "@gearbox-protocol/sdk-gov/contracts/SupportedContracts.sol";
 
-import {MultiCall} from "@gearbox-protocol/core-v2/contracts/libraries/MultiCall.sol";
+import {MultiCall} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacadeV3.sol";
 import {MultiCallBuilder} from "@gearbox-protocol/core-v3/contracts/test/lib/MultiCallBuilder.sol";
 
 import {TokenType} from "@gearbox-protocol/sdk-gov/contracts/TokensData.sol";

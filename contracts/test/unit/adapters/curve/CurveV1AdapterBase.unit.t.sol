@@ -17,7 +17,7 @@ import {CurveV1AdapterBaseHarness} from "./CurveV1AdapterBase.harness.sol";
 contract CurveV1AdapterBaseUnitTest is AdapterUnitTestHelper {
     CurveV1AdapterBaseHarness adapter;
     PoolMock basePool;
-    PoolMock pool;
+    PoolMock curvePool;
 
     address token0;
     address token1;
@@ -73,9 +73,10 @@ contract CurveV1AdapterBaseUnitTest is AdapterUnitTestHelper {
         address[] memory coins = new address[](2);
         coins[0] = token0;
         coins[1] = token1;
-        pool = new PoolMock(poolType, coins, new address[](0));
+        curvePool = new PoolMock(poolType, coins, new address[](0));
 
-        adapter = new CurveV1AdapterBaseHarness(address(creditManager), address(pool), lpToken, address(basePool), 2);
+        adapter =
+            new CurveV1AdapterBaseHarness(address(creditManager), address(curvePool), lpToken, address(basePool), 2);
 
         assertEq(adapter.use256(), poolType == PoolType.Crypto, "Incorrect use256");
     }
@@ -86,30 +87,29 @@ contract CurveV1AdapterBaseUnitTest is AdapterUnitTestHelper {
 
     /// @notice U:[CRVB-1]: Constructor works as expected
     function test_U_CRVB_01_constructor_works_as_expected() public {
-        pool = new PoolMock(PoolType.Stable, new address[](0), new address[](0));
+        curvePool = new PoolMock(PoolType.Stable, new address[](0), new address[](0));
 
         // reverts on zero LP token
         vm.expectRevert(ZeroAddressException.selector);
-        new CurveV1AdapterBaseHarness(address(creditManager), address(pool), address(0), address(0), 2);
+        new CurveV1AdapterBaseHarness(address(creditManager), address(curvePool), address(0), address(0), 2);
 
         // reverts when pool has fewer coins than needed
         vm.expectRevert(IncorrectParameterException.selector);
-        new CurveV1AdapterBaseHarness(address(creditManager), address(pool), lpToken, address(0), 2);
+        new CurveV1AdapterBaseHarness(address(creditManager), address(curvePool), lpToken, address(0), 2);
 
         // plain pool
         address[] memory coins = new address[](2);
         coins[0] = token0;
         coins[1] = token1;
-        pool = new PoolMock(PoolType.Stable, coins, new address[](0));
+        curvePool = new PoolMock(PoolType.Stable, coins, new address[](0));
 
         _readsTokenMask(token0);
         _readsTokenMask(token1);
         _readsTokenMask(lpToken);
-        adapter = new CurveV1AdapterBaseHarness(address(creditManager), address(pool), lpToken, address(0), 2);
+        adapter = new CurveV1AdapterBaseHarness(address(creditManager), address(curvePool), lpToken, address(0), 2);
 
         assertEq(adapter.creditManager(), address(creditManager), "Incorrect creditManager");
-        assertEq(adapter.addressProvider(), address(addressProvider), "Incorrect addressProvider");
-        assertEq(adapter.targetContract(), address(pool), "Incorrect targetContract");
+        assertEq(adapter.targetContract(), address(curvePool), "Incorrect targetContract");
 
         assertEq(adapter.token(), lpToken, "Incorrect token");
         assertEq(adapter.lp_token(), lpToken, "Incorrect token");
@@ -132,7 +132,8 @@ contract CurveV1AdapterBaseUnitTest is AdapterUnitTestHelper {
         _readsTokenMask(underlying0);
         _readsTokenMask(underlying1);
         _readsTokenMask(lpToken);
-        adapter = new CurveV1AdapterBaseHarness(address(creditManager), address(pool), lpToken, address(basePool), 2);
+        adapter =
+            new CurveV1AdapterBaseHarness(address(creditManager), address(curvePool), lpToken, address(basePool), 2);
 
         assertEq(adapter.metapoolBase(), address(basePool), "Incorrect metapoolBase");
         assertEq(adapter.underlying0(), token0, "Incorrect underlying0");
@@ -143,14 +144,14 @@ contract CurveV1AdapterBaseUnitTest is AdapterUnitTestHelper {
         assertEq(adapter.underlying2Mask(), underlying1Mask, "Incorrect underlying2Mask");
 
         // lending pool
-        pool = new PoolMock(PoolType.Stable, coins, underlyings);
+        curvePool = new PoolMock(PoolType.Stable, coins, underlyings);
 
         _readsTokenMask(token0);
         _readsTokenMask(token1);
         _readsTokenMask(underlying0);
         _readsTokenMask(underlying1);
         _readsTokenMask(lpToken);
-        adapter = new CurveV1AdapterBaseHarness(address(creditManager), address(pool), lpToken, address(0), 2);
+        adapter = new CurveV1AdapterBaseHarness(address(creditManager), address(curvePool), lpToken, address(0), 2);
         assertEq(adapter.metapoolBase(), address(0), "Incorrect metapoolBase");
         assertEq(adapter.underlying0(), underlying0, "Incorrect underlying0");
         assertEq(adapter.underlying1(), underlying1, "Incorrect underlying1");
@@ -207,14 +208,14 @@ contract CurveV1AdapterBaseUnitTest is AdapterUnitTestHelper {
                 tokenIn: token0,
                 tokenOut: token1,
                 callData: abi.encodeWithSignature(
-                    pool.isCrypto()
+                    curvePool.isCrypto()
                         ? "exchange(uint256,uint256,uint256,uint256)"
                         : "exchange(int128,int128,uint256,uint256)",
                     0,
                     1,
                     1000,
                     500
-                    ),
+                ),
                 requiresApproval: true,
                 validatesTokens: false
             });
@@ -238,12 +239,14 @@ contract CurveV1AdapterBaseUnitTest is AdapterUnitTestHelper {
             tokenIn: token0,
             tokenOut: token1,
             callData: abi.encodeWithSignature(
-                pool.isCrypto() ? "exchange(uint256,uint256,uint256,uint256)" : "exchange(int128,int128,uint256,uint256)",
+                curvePool.isCrypto()
+                    ? "exchange(uint256,uint256,uint256,uint256)"
+                    : "exchange(int128,int128,uint256,uint256)",
                 0,
                 1,
                 diffInputAmount,
                 diffInputAmount / 2
-                ),
+            ),
             requiresApproval: true,
             validatesTokens: false
         });
@@ -265,14 +268,14 @@ contract CurveV1AdapterBaseUnitTest is AdapterUnitTestHelper {
                 tokenIn: token0,
                 tokenOut: underlying0,
                 callData: abi.encodeWithSignature(
-                    pool.isCrypto()
+                    curvePool.isCrypto()
                         ? "exchange_underlying(uint256,uint256,uint256,uint256)"
                         : "exchange_underlying(int128,int128,uint256,uint256)",
                     0,
                     1,
                     1000,
                     500
-                    ),
+                ),
                 requiresApproval: true,
                 validatesTokens: false
             });
@@ -300,14 +303,14 @@ contract CurveV1AdapterBaseUnitTest is AdapterUnitTestHelper {
             tokenIn: token0,
             tokenOut: underlying0,
             callData: abi.encodeWithSignature(
-                pool.isCrypto()
+                curvePool.isCrypto()
                     ? "exchange_underlying(uint256,uint256,uint256,uint256)"
                     : "exchange_underlying(int128,int128,uint256,uint256)",
                 0,
                 1,
                 diffInputAmount,
                 diffInputAmount / 2
-                ),
+            ),
             requiresApproval: true,
             validatesTokens: false
         });
@@ -374,13 +377,13 @@ contract CurveV1AdapterBaseUnitTest is AdapterUnitTestHelper {
                 tokenIn: lpToken,
                 tokenOut: token0,
                 callData: abi.encodeWithSignature(
-                    pool.isCrypto()
+                    curvePool.isCrypto()
                         ? "remove_liquidity_one_coin(uint256,uint256,uint256)"
                         : "remove_liquidity_one_coin(uint256,int128,uint256)",
                     1000,
                     0,
                     500
-                    ),
+                ),
                 requiresApproval: false,
                 validatesTokens: false
             });
@@ -408,13 +411,13 @@ contract CurveV1AdapterBaseUnitTest is AdapterUnitTestHelper {
             tokenIn: lpToken,
             tokenOut: token0,
             callData: abi.encodeWithSignature(
-                pool.isCrypto()
+                curvePool.isCrypto()
                     ? "remove_liquidity_one_coin(uint256,uint256,uint256)"
                     : "remove_liquidity_one_coin(uint256,int128,uint256)",
                 diffInputAmount,
                 0,
                 diffInputAmount / 2
-                ),
+            ),
             requiresApproval: false,
             validatesTokens: false
         });

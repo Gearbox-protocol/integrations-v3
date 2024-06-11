@@ -31,7 +31,6 @@ contract UniswapV2AdapterUnitTest is AdapterUnitTestHelper, IUniswapV2AdapterEve
     /// @notice U:[UNI2-1]: Constructor works as expected
     function test_U_UNI2_01_constructor_works_as_expected() public {
         assertEq(adapter.creditManager(), address(creditManager), "Incorrect creditManager");
-        assertEq(adapter.addressProvider(), address(addressProvider), "Incorrect addressProvider");
         assertEq(adapter.targetContract(), router, "Incorrect targetContract");
     }
 
@@ -116,7 +115,7 @@ contract UniswapV2AdapterUnitTest is AdapterUnitTestHelper, IUniswapV2AdapterEve
             callData: abi.encodeCall(
                 IUniswapV2Router01.swapExactTokensForTokens,
                 (diffInputAmount, diffInputAmount / 2, path, creditAccount, 789)
-                ),
+            ),
             requiresApproval: true,
             validatesTokens: true
         });

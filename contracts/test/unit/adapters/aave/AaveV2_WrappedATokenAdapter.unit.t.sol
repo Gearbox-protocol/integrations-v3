@@ -42,7 +42,6 @@ contract AaveV2_WrappedATokenAdapterUnitTest is AdapterUnitTestHelper {
         adapter = new AaveV2_WrappedATokenAdapter(address(creditManager), waToken);
 
         assertEq(adapter.creditManager(), address(creditManager), "Incorrect creditManager");
-        assertEq(adapter.addressProvider(), address(addressProvider), "Incorrect addressProvider");
         assertEq(adapter.targetContract(), waToken, "Incorrect targetContract");
         assertEq(adapter.underlying(), token, "Incorrect underlying");
         assertEq(adapter.aToken(), aToken, "Incorrect aToken");

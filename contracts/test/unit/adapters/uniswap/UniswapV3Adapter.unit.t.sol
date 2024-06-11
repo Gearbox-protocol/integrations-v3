@@ -37,7 +37,6 @@ contract UniswapV3AdapterUnitTest is
     /// @notice U:[UNI3-1]: Constructor works as expected
     function test_U_UNI3_01_constructor_works_as_expected() public {
         assertEq(adapter.creditManager(), address(creditManager), "Incorrect creditManager");
-        assertEq(adapter.addressProvider(), address(addressProvider), "Incorrect addressProvider");
         assertEq(adapter.targetContract(), router, "Incorrect targetContract");
     }
 
@@ -120,7 +119,7 @@ contract UniswapV3AdapterUnitTest is
                         sqrtPriceLimitX96: 0
                     })
                 )
-                ),
+            ),
             requiresApproval: true,
             validatesTokens: true
         });
@@ -203,7 +202,7 @@ contract UniswapV3AdapterUnitTest is
                         recipient: creditAccount
                     })
                 )
-                ),
+            ),
             requiresApproval: true,
             validatesTokens: true
         });

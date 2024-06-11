@@ -26,6 +26,6 @@ contract CreditFacadeTestHelper is IntegrationTestHelper {
         address priceFeed = address(new PriceFeedMock(int256(price), 8));
 
         vm.prank(CONFIGURATOR);
-        priceOracle.setPriceFeed(token, priceFeed, 48 hours, false);
+        priceOracle.setPriceFeed(token, priceFeed, 48 hours);
     }
 }

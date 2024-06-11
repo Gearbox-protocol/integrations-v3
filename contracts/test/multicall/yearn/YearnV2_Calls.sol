@@ -3,7 +3,7 @@
 // (c) Gearbox Foundation, 2023
 pragma solidity ^0.8.17;
 
-import {MultiCall} from "@gearbox-protocol/core-v2/contracts/libraries/MultiCall.sol";
+import {MultiCall} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacadeV3.sol";
 
 interface YearnV2_Multicaller {}
 

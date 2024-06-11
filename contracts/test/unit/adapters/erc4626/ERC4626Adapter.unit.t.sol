@@ -35,7 +35,6 @@ contract ERC4626AdapterUnitTest is AdapterUnitTestHelper {
         adapter = new ERC4626Adapter(address(creditManager), vault);
 
         assertEq(adapter.creditManager(), address(creditManager), "Incorrect creditManager");
-        assertEq(adapter.addressProvider(), address(addressProvider), "Incorrect addressProvider");
         assertEq(adapter.targetContract(), vault, "Incorrect targetContract");
         assertEq(adapter.asset(), asset, "Incorrect asset");
         assertEq(adapter.assetMask(), assetMask, "Incorrect assetMask");

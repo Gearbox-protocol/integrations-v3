@@ -11,7 +11,7 @@ import {IUniswapV2Adapter} from "../../../../interfaces/uniswap/IUniswapV2Adapte
 import {Tokens} from "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
 import {Contracts} from "@gearbox-protocol/sdk-gov/contracts/SupportedContracts.sol";
 
-import {MultiCall} from "@gearbox-protocol/core-v2/contracts/libraries/MultiCall.sol";
+import {MultiCall} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacadeV3.sol";
 import {MultiCallBuilder} from "@gearbox-protocol/core-v3/contracts/test/lib/MultiCallBuilder.sol";
 
 import {UniswapV2_Calls, UniswapV2_Multicaller} from "../../../multicall/uniswap/UniswapV2_Calls.sol";

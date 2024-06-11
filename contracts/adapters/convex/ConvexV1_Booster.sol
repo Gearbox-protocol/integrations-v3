@@ -10,7 +10,7 @@ import {ICreditConfiguratorV3} from "@gearbox-protocol/core-v3/contracts/interfa
 
 import {AbstractAdapter} from "../AbstractAdapter.sol";
 import {AdapterType} from "@gearbox-protocol/sdk-gov/contracts/AdapterType.sol";
-import {IAdapter} from "@gearbox-protocol/core-v2/contracts/interfaces/IAdapter.sol";
+import {IAdapter} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IAdapter.sol";
 
 import {IBooster} from "../../integrations/convex/IBooster.sol";
 import {IBaseRewardPool} from "../../integrations/convex/IBaseRewardPool.sol";

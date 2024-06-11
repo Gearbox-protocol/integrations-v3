@@ -7,8 +7,8 @@ import {Pausable} from "@openzeppelin/contracts/security/Pausable.sol";
 
 import {ICreditManagerV3} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditManagerV3.sol";
 import {ICreditFacadeV3} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacadeV3.sol";
-import {IVersion} from "@gearbox-protocol/core-v2/contracts/interfaces/IVersion.sol";
-import {DegenNFTV2} from "@gearbox-protocol/core-v2/contracts/tokens/DegenNFTV2.sol";
+import {IVersion} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IVersion.sol";
+import {IDegenNFT} from "@gearbox-protocol/core-v3/contracts/interfaces/IDegenNFT.sol";
 
 import {Tokens} from "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
 import {SupportedContracts, Contracts} from "@gearbox-protocol/sdk-gov/contracts/SupportedContracts.sol";
@@ -152,7 +152,7 @@ contract LiveTestHelper is IntegrationTestHelper {
         supportedContracts = new SupportedContracts(chainId);
 
         PriceFeedDeployer priceFeedDeployer =
-            new PriceFeedDeployer(chainId, address(addressProvider), tokenTestSuite, supportedContracts);
+            new PriceFeedDeployer(chainId, address(acl), address(priceOracle), tokenTestSuite, supportedContracts);
 
         priceFeedDeployer.addPriceFeeds(address(priceOracle));
 
@@ -172,10 +172,10 @@ contract LiveTestHelper is IntegrationTestHelper {
             address degenNFT = ICreditFacadeV3(ICreditManagerV3(creditManagers[i]).creditFacade()).degenNFT();
 
             if (degenNFT != address(0)) {
-                address minter = DegenNFTV2(degenNFT).minter();
+                address minter = IDegenNFT(degenNFT).minter();
 
                 vm.prank(minter);
-                DegenNFTV2(degenNFT).mint(USER, 1000);
+                IDegenNFT(degenNFT).mint(USER, 1000);
             }
         }
     }

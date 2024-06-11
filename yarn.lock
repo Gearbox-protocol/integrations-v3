@@ -1051,11 +1051,13 @@
     eslint-plugin-simple-import-sort "^7.0.0"
     eslint-plugin-unused-imports "^2.0.0"
 
-"@gearbox-protocol/oracles-v3@^1.10.3":
-  version "1.10.3"
-  resolved "https://registry.yarnpkg.com/@gearbox-protocol/oracles-v3/-/oracles-v3-1.10.3.tgz#27a9c7ab89536ef79cfc9315b2a3114f1b700159"
-  integrity sha512-6K8ahmik2sFqK0cTDHadq5WXBN/mCeBef7yx7k9j+O4g7gXLf3bYdnQdNTVh3QPwF1hCKQ1dtvi4T9/M5oAWcw==
+"@gearbox-protocol/oracles-v3@^1.11.0-next.3":
+  version "1.11.0-next.3"
+  resolved "https://registry.yarnpkg.com/@gearbox-protocol/oracles-v3/-/oracles-v3-1.11.0-next.3.tgz#1f9e58cce2c1b3996ceb40a3dc6da9027d74bfdb"
+  integrity sha512-cTgavGf7Vl/qUL3XDMSmvUbmK/vKZWYZ2ZI7NpkNGb/sawQR7wBwtFQDSXfvmTnmb1Fb+tPjg6OvDHsAs7JG1Q==
   dependencies:
+    "@pythnetwork/pyth-sdk-solidity" "^3.1.0"
+    axios "^1.6.8"
     redstone-protocol "^1.0.5"
 
 "@gearbox-protocol/prettier-config@^1.5.0":
@@ -1242,6 +1244,11 @@
   version "4.3.3"
   resolved "https://registry.yarnpkg.com/@openzeppelin/contracts/-/contracts-4.3.3.tgz#ff6ee919fc2a1abaf72b22814bfb72ed129ec137"
   integrity sha512-tDBopO1c98Yk7Cv/PZlHqrvtVjlgK5R4J6jxLwoO7qxK4xqOiZG+zSkIvGFpPZ0ikc3QOED3plgdqjgNTnBc7g==
+
+"@pythnetwork/pyth-sdk-solidity@^3.1.0":
+  version "3.1.0"
+  resolved "https://registry.yarnpkg.com/@pythnetwork/pyth-sdk-solidity/-/pyth-sdk-solidity-3.1.0.tgz#2de5bc2bbaadd5c5c2702f31116378fb7c9da3ec"
+  integrity sha512-NgtEPUTL9r0qqMpIOEtSdUVjrF08fHK6wa7eM8hdjhjzMOti4o053B9oFqpm4lkzJW6eELXuP4sRJOABGmNTUg==
 
 "@redstone-finance/evm-connector@0.2.5":
   version "0.2.5"
@@ -1747,6 +1754,15 @@ axios@^1.5.0:
   integrity sha512-D4DdjDo5CY50Qms0qGQTTw6Q44jl7zRwY7bthds06pUGfChBCTcQs+N743eFWGEd6pRTMd6A+I87aWyFV5wiZQ==
   dependencies:
     follow-redirects "^1.15.0"
+    form-data "^4.0.0"
+    proxy-from-env "^1.1.0"
+
+axios@^1.6.8:
+  version "1.7.2"
+  resolved "https://registry.yarnpkg.com/axios/-/axios-1.7.2.tgz#b625db8a7051fbea61c35a3cbb3a1daa7b9c7621"
+  integrity sha512-2A8QhOMrbomlDuiLeK9XibIBzuHeRcqqNOHp0Cyp5EoJ1IFDh+XZH3A6BkXtv0K4gFGCI0Y4BM7B1wOEi0Rmgw==
+  dependencies:
+    follow-redirects "^1.15.6"
     form-data "^4.0.0"
     proxy-from-env "^1.1.0"
 
@@ -2886,6 +2902,11 @@ follow-redirects@^1.14.9, follow-redirects@^1.15.0:
   version "1.15.2"
   resolved "https://registry.yarnpkg.com/follow-redirects/-/follow-redirects-1.15.2.tgz#b460864144ba63f2681096f274c4e57026da2c13"
   integrity sha512-VQLG33o04KaQ8uYi2tVNbdrWp1QWxNNea+nmIB4EVM28v0hmP17z7aG1+wAkNzVq4KeXTq3221ye5qTJP91JwA==
+
+follow-redirects@^1.15.6:
+  version "1.15.6"
+  resolved "https://registry.yarnpkg.com/follow-redirects/-/follow-redirects-1.15.6.tgz#7f815c0cda4249c74ff09e95ef97c23b5fd0399b"
+  integrity sha512-wWN62YITEaOpSK584EZXJafH1AGpO8RVgElfkuXbTOrPX4fIfOyEpW/CsiNd8JdYrAoOvafRTOEnvsO++qCqFA==
 
 for-each@^0.3.3:
   version "0.3.3"

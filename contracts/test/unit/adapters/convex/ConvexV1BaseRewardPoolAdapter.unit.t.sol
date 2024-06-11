@@ -65,7 +65,6 @@ contract ConvexV1BaseRewardPoolAdapterUnitTest is AdapterUnitTestHelper {
         adapter = new ConvexV1BaseRewardPoolAdapter(address(creditManager), address(baseRewardPool), stakedPhantomToken);
 
         assertEq(adapter.creditManager(), address(creditManager), "Incorrect creditManager");
-        assertEq(adapter.addressProvider(), address(addressProvider), "Incorrect addressProvider");
         assertEq(adapter.targetContract(), address(baseRewardPool), "Incorrect targetContract");
         assertEq(adapter.curveLPtoken(), curveLPToken, "Incorrect curveLPtoken");
         assertEq(adapter.stakingToken(), convexStakingToken, "Incorrect stakingToken");

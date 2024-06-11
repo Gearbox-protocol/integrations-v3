@@ -3,7 +3,7 @@
 // (c) Gearbox Foundation, 2023
 pragma solidity ^0.8.17;
 
-import {MultiCall} from "@gearbox-protocol/core-v2/contracts/libraries/MultiCall.sol";
+import {MultiCall} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacadeV3.sol";
 
 import {
     IAsset,
@@ -97,7 +97,7 @@ library BalancerV2_Calls {
             target: address(c),
             callData: abi.encodeCall(
                 IBalancerV2VaultAdapter.joinPoolSingleAssetDiff, (poolId, assetIn, leftoverAmount, minRateRAY)
-                )
+            )
         });
     }
 
@@ -125,7 +125,7 @@ library BalancerV2_Calls {
             target: address(c),
             callData: abi.encodeCall(
                 IBalancerV2VaultAdapter.exitPoolSingleAsset, (poolId, assetOut, amountIn, minAmountOut)
-                )
+            )
         });
     }
 
@@ -140,7 +140,7 @@ library BalancerV2_Calls {
             target: address(c),
             callData: abi.encodeCall(
                 IBalancerV2VaultAdapter.exitPoolSingleAssetDiff, (poolId, assetOut, leftoverAmount, minRateRAY)
-                )
+            )
         });
     }
 }

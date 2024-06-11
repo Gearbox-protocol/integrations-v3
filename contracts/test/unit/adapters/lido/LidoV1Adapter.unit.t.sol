@@ -3,7 +3,6 @@
 // (c) Gearbox Foundation, 2023.
 pragma solidity ^0.8.17;
 
-import {AP_TREASURY} from "@gearbox-protocol/core-v3/contracts/interfaces/IAddressProviderV3.sol";
 import {LidoV1Adapter} from "../../../../adapters/lido/LidoV1.sol";
 import {LidoV1Gateway} from "../../../../helpers/lido/LidoV1_WETHGateway.sol";
 import {AdapterUnitTestHelper} from "../AdapterUnitTestHelper.sol";
@@ -27,9 +26,10 @@ contract LidoV1AdapterUnitTest is AdapterUnitTestHelper {
 
         gateway = makeAddr("LIDO_GATEWAY");
         treasury = makeAddr("TREASURY");
+        address pool = makeAddr("POOL");
 
-        vm.prank(configurator);
-        addressProvider.setAddress(AP_TREASURY, treasury, false);
+        vm.mockCall(address(creditManager), abi.encodeWithSignature("pool()"), abi.encode(pool));
+        vm.mockCall(pool, abi.encodeWithSignature("treasury()"), abi.encode(treasury));
 
         (weth, wethMask) = (tokens[0], 1);
         (stETH, stETHMask) = (tokens[1], 2);
@@ -47,7 +47,6 @@ contract LidoV1AdapterUnitTest is AdapterUnitTestHelper {
         adapter = new LidoV1Adapter(address(creditManager), gateway);
 
         assertEq(adapter.creditManager(), address(creditManager), "Incorrect creditManager");
-        assertEq(adapter.addressProvider(), address(addressProvider), "Incorrect addressProvider");
         assertEq(adapter.targetContract(), gateway, "Incorrect targetContract");
         assertEq(adapter.weth(), weth, "Incorrect weth");
         assertEq(adapter.stETH(), stETH, "Incorrect stETH");

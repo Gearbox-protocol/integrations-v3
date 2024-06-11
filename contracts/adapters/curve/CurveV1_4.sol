@@ -4,7 +4,6 @@
 pragma solidity ^0.8.17;
 
 import {AdapterType} from "@gearbox-protocol/sdk-gov/contracts/AdapterType.sol";
-import {IAdapter} from "@gearbox-protocol/core-v2/contracts/interfaces/IAdapter.sol";
 
 import {ICurvePool4Assets, N_COINS} from "../../integrations/curve/ICurvePool_4.sol";
 import {ICurveV1_4AssetsAdapter} from "../../interfaces/curve/ICurveV1_4AssetsAdapter.sol";

@@ -37,7 +37,6 @@ contract CamelotV3AdapterUnitTest is
     /// @notice U:[CAMV3-1]: Constructor works as expected
     function test_U_CAMV3_01_constructor_works_as_expected() public {
         assertEq(adapter.creditManager(), address(creditManager), "Incorrect creditManager");
-        assertEq(adapter.addressProvider(), address(addressProvider), "Incorrect addressProvider");
         assertEq(adapter.targetContract(), router, "Incorrect targetContract");
     }
 
@@ -148,7 +147,7 @@ contract CamelotV3AdapterUnitTest is
                         limitSqrtPrice: 0
                     })
                 )
-                ),
+            ),
             requiresApproval: true,
             validatesTokens: true
         });
@@ -193,7 +192,7 @@ contract CamelotV3AdapterUnitTest is
                         limitSqrtPrice: 0
                     })
                 )
-                ),
+            ),
             requiresApproval: true,
             validatesTokens: true
         });
@@ -275,7 +274,7 @@ contract CamelotV3AdapterUnitTest is
                         recipient: creditAccount
                     })
                 )
-                ),
+            ),
             requiresApproval: true,
             validatesTokens: true
         });

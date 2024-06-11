@@ -4,7 +4,6 @@
 pragma solidity ^0.8.17;
 
 import {AdapterType} from "@gearbox-protocol/sdk-gov/contracts/AdapterType.sol";
-import {IAdapter} from "@gearbox-protocol/core-v2/contracts/interfaces/IAdapter.sol";
 
 import {ICurvePoolStableNG} from "../../integrations/curve/ICurvePool_StableNG.sol";
 import {ICurveV1_StableNGAdapter} from "../../interfaces/curve/ICurveV1_StableNGAdapter.sol";

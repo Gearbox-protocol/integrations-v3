@@ -5,11 +5,8 @@ pragma solidity ^0.8.17;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-import {
-    AP_TREASURY,
-    IAddressProviderV3,
-    NO_VERSION_CONTROL
-} from "@gearbox-protocol/core-v3/contracts/interfaces/IAddressProviderV3.sol";
+import {ICreditManagerV3} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditManagerV3.sol";
+import {IPoolV3} from "@gearbox-protocol/core-v3/contracts/interfaces/IPoolV3.sol";
 
 import {AbstractAdapter} from "../AbstractAdapter.sol";
 import {AdapterType} from "@gearbox-protocol/sdk-gov/contracts/AdapterType.sol";
@@ -51,7 +48,7 @@ contract LidoV1Adapter is AbstractAdapter, ILidoV1Adapter {
         weth = LidoV1Gateway(payable(_lidoGateway)).weth(); // U:[LDO1-1]
         wethTokenMask = _getMaskOrRevert(weth); // U:[LDO1-1]
 
-        treasury = IAddressProviderV3(addressProvider).getAddressOrRevert(AP_TREASURY, NO_VERSION_CONTROL); // U:[LDO1-1]
+        treasury = IPoolV3(ICreditManagerV3(creditManager).pool()).treasury(); // U:[LDO1-1]
     }
 
     /// @notice Stakes given amount of WETH in Lido via Gateway

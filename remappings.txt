@@ -5,4 +5,4 @@ forge-std/=lib/forge-std/src/
 @chainlink/=node_modules/@chainlink/
 @gearbox-protocol=node_modules/@gearbox-protocol/
 @redstone-finance=node_modules/@redstone-finance/
-
+@pythnetwork=node_modules/@pythnetwork

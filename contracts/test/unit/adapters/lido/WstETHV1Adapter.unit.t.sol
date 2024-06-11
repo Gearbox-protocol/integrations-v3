@@ -35,7 +35,6 @@ contract WstETHV1AdapterUnitTest is AdapterUnitTestHelper {
         adapter = new WstETHV1Adapter(address(creditManager), wstETH);
 
         assertEq(adapter.creditManager(), address(creditManager), "Incorrect creditManager");
-        assertEq(adapter.addressProvider(), address(addressProvider), "Incorrect addressProvider");
         assertEq(adapter.targetContract(), wstETH, "Incorrect targetContract");
         assertEq(adapter.stETH(), stETH, "Incorrect stETH");
         assertEq(adapter.stETHTokenMask(), stETHMask, "Incorrect stETHMask");
