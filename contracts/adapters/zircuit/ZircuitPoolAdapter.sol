@@ -109,7 +109,7 @@ contract ZircuitPoolAdapter is AbstractAdapter, IZircuitPoolAdapter {
         internal
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        (tokensToEnable, tokensToDisable,) = _executeSwapSafeApprove(
+        (tokensToEnable, tokensToDisable,) = _executeSwapNoApprove(
             phantomToken, token, abi.encodeCall(IZircuitPool.withdraw, (token, amount)), disableToken
         );
     }
@@ -122,13 +122,13 @@ contract ZircuitPoolAdapter is AbstractAdapter, IZircuitPoolAdapter {
         unchecked {
             for (uint256 i = 0; i < len; ++i) {
                 address token = cm.getTokenByMask(1 << i);
-                PhantomTokenType ptType = IPhantomToken(token)._gearboxPhantomTokenType();
-
-                if (ptType == PhantomTokenType.ZIRCUIT_PHANTOM_TOKEN) {
-                    address depositedToken = ZircuitPhantomToken(token).underlying();
-                    tokenToPhantomToken[depositedToken] = token;
-                    emit SetTokenToPhantomToken(depositedToken, token);
-                }
+                try IPhantomToken(token)._gearboxPhantomTokenType() returns (PhantomTokenType ptType) {
+                    if (ptType == PhantomTokenType.ZIRCUIT_PHANTOM_TOKEN) {
+                        address depositedToken = ZircuitPhantomToken(token).underlying();
+                        tokenToPhantomToken[depositedToken] = token;
+                        emit SetTokenToPhantomToken(depositedToken, token);
+                    }
+                } catch {}
             }
         }
     }

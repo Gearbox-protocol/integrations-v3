@@ -10,6 +10,11 @@ import {IBaseRewardPool} from "../../../../integrations/convex/IBaseRewardPool.s
 import {IRewards} from "../../../../integrations/convex/IRewards.sol";
 import {IBooster} from "../../../../integrations/convex/IBooster.sol";
 import {IConvexV1BaseRewardPoolAdapter} from "../../../../interfaces/convex/IConvexV1BaseRewardPoolAdapter.sol";
+import {ConvexStakedPositionToken} from "../../../../helpers/convex/ConvexV1_StakedPositionToken.sol";
+import {IPhantomToken} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IPhantomToken.sol";
+import {PhantomTokenType} from "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
+import {PriceFeedParams} from "@gearbox-protocol/core-v3/contracts/interfaces/IPriceOracleV3.sol";
+import {IPriceFeed} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IPriceFeed.sol";
 
 import {
     ConvexV1_BaseRewardPoolCalls,
@@ -280,6 +285,61 @@ contract Live_ConvexEquivalenceTest is LiveTestHelper {
             comparator.compareAllSnapshots(creditAccount, savedBalanceSnapshots);
 
             vm.revertTo(snapshot0);
+        }
+    }
+
+    /// @dev [L-CVXET-2]: Withdrawals for Convex phantom tokens work correctly
+    function test_live_CVXET_02_Convex_phantom_token_withdrawals_work_correctly() public attachOrLiveTest {
+        uint256 collateralTokensCount = creditManager.collateralTokensCount();
+
+        for (uint256 i = 0; i < collateralTokensCount; ++i) {
+            uint256 snapshot = vm.snapshot();
+
+            address token = creditManager.getTokenByMask(1 << i);
+
+            try IPhantomToken(token)._gearboxPhantomTokenType() returns (PhantomTokenType ptType) {
+                if (ptType != PhantomTokenType.CONVEX_PHANTOM_TOKEN) continue;
+            } catch {
+                continue;
+            }
+
+            address boosterAdapter = creditManager.contractToAdapter(ConvexStakedPositionToken(token).booster());
+            address pool = ConvexStakedPositionToken(token).pool();
+
+            uint256 pid = IBaseRewardPool(pool).pid();
+
+            if (priceOracle.reservePriceFeeds(token) == address(0)) {
+                PriceFeedParams memory pfParams = priceOracle.priceFeedParams(token);
+                vm.prank(acl.owner());
+                priceOracle.setReservePriceFeed(token, pfParams.priceFeed, pfParams.stalenessPeriod);
+            }
+
+            address curveToken = ConvexStakedPositionToken(token).curveToken();
+
+            uint256 snapshot0 = vm.snapshot();
+
+            address creditAccount = openCreditAccountWithUnderlying(curveToken, 100 * WAD);
+
+            vm.prank(USER);
+            creditFacade.multicall(
+                creditAccount,
+                MultiCallBuilder.build(ConvexV1_BoosterMulticaller(boosterAdapter).deposit(pid, WAD, true))
+            );
+
+            address poolAdapter = creditManager.contractToAdapter(pool);
+
+            vm.expectCall(poolAdapter, abi.encodeCall(IConvexV1BaseRewardPoolAdapter.withdrawAndUnwrap, (WAD, false)));
+            vm.prank(USER);
+            MultiCall memory call = MultiCall({
+                target: address(creditFacade),
+                callData: abi.encodeCall(ICreditFacadeV3Multicall.withdrawCollateral, (token, WAD, USER))
+            });
+
+            creditFacade.multicall(creditAccount, MultiCallBuilder.build(call));
+
+            assertEq(IERC20(curveToken).balanceOf(USER), WAD);
+
+            vm.revertTo(snapshot);
         }
     }
 }

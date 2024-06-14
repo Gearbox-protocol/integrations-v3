@@ -47,6 +47,7 @@ import {IConvexV1BoosterAdapter} from "../../interfaces/convex/IConvexV1BoosterA
 import {BalancerV2VaultAdapter} from "../../adapters/balancer/BalancerV2VaultAdapter.sol";
 import {UniswapV2Adapter} from "../../adapters/uniswap/UniswapV2.sol";
 import {UniswapV3Adapter} from "../../adapters/uniswap/UniswapV3.sol";
+import {ZircuitPoolAdapter} from "../../adapters/zircuit/ZircuitPoolAdapter.sol";
 import {VelodromeV2RouterAdapter} from "../../adapters/velodrome/VelodromeV2RouterAdapter.sol";
 import {CamelotV3Adapter} from "../../adapters/camelot/CamelotV3Adapter.sol";
 import {PoolStatus} from "../../interfaces/balancer/IBalancerV2VaultAdapter.sol";
@@ -196,6 +197,15 @@ contract LiveTestHelper is IntegrationTestHelper {
         if (boosterAdapter != address(0)) {
             vm.prank(CONFIGURATOR);
             IConvexV1BoosterAdapter(boosterAdapter).updateStakedPhantomTokensMap();
+        }
+
+        // ZIRCUIT POOL
+
+        address zircuitAdapter = getAdapter(creditManager, Contracts.ZIRCUIT_POOL);
+
+        if (zircuitAdapter != address(0)) {
+            vm.prank(CONFIGURATOR);
+            ZircuitPoolAdapter(zircuitAdapter).updatePhantomTokensMap();
         }
 
         // BALANCER VAULT

@@ -11,10 +11,10 @@ import {IPhantomToken} from "@gearbox-protocol/core-v3/contracts/interfaces/base
 import {PhantomTokenType} from "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
 import {MultiCall} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacadeV3.sol";
 
-/// @title Convex staked position token
-/// @notice Phantom ERC-20 token that represents the balance of the staking position in Convex pools
+/// @title Zircuit staked position token
+/// @notice Phantom ERC-20 token that represents the balance of the staking position in a Zircuit pool
 contract ZircuitPhantomToken is PhantomERC20, IPhantomToken {
-    PhantomTokenType public constant override _gearboxPhantomTokenType = PhantomTokenType.CONVEX_PHANTOM_TOKEN;
+    PhantomTokenType public constant override _gearboxPhantomTokenType = PhantomTokenType.ZIRCUIT_PHANTOM_TOKEN;
 
     address public immutable zircuitPool;
 
@@ -43,7 +43,7 @@ contract ZircuitPhantomToken is PhantomERC20, IPhantomToken {
         return IERC20(underlying).balanceOf(zircuitPool);
     }
 
-    /// @notice Returns the calls required to unwrap a Convex position into Curve LP before withdrawing from Gearbox
+    /// @notice Returns the calls required to unwrap a Zircuit position into underlying before withdrawing from Gearbox
     function getWithdrawalMultiCall(address creditAccount, uint256 amount)
         external
         view

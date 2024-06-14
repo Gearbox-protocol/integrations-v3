@@ -28,6 +28,12 @@ interface IZircuitPoolAdapter is IAdapter, IZircuitPoolAdapterEvents {
         external
         returns (uint256 tokensToEnable, uint256 tokensToDisable);
 
+    // --------//
+    // GETTERS //
+    // --------//
+
+    function tokenToPhantomToken(address token) external view returns (address phantomToken);
+
     // ------------- //
     // CONFIGURATION //
     // ------------- //

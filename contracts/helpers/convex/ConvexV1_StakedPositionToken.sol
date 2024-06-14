@@ -19,6 +19,7 @@ contract ConvexStakedPositionToken is PhantomERC20, IPhantomToken {
 
     address public immutable pool;
     address public immutable booster;
+    address public immutable curveToken;
 
     /// @notice Constructor
     /// @param _pool The Convex pool where the balance is tracked
@@ -34,6 +35,11 @@ contract ConvexStakedPositionToken is PhantomERC20, IPhantomToken {
     {
         pool = _pool;
         booster = _booster;
+
+        uint256 pid = IBaseRewardPool(pool).pid();
+        IBooster.PoolInfo memory pInfo = IBooster(booster).poolInfo(pid);
+
+        curveToken = pInfo.lptoken;
     }
 
     /// @notice Returns the amount of Convex LP tokens staked in the pool
@@ -48,10 +54,7 @@ contract ConvexStakedPositionToken is PhantomERC20, IPhantomToken {
         view
         returns (address tokenOut, uint256 amountOut, address targetContract, bytes memory callData)
     {
-        uint256 pid = IBaseRewardPool(pool).pid();
-        IBooster.PoolInfo memory pInfo = IBooster(booster).poolInfo(pid);
-
-        tokenOut = pInfo.lptoken;
+        tokenOut = curveToken;
         amountOut = amount;
         targetContract = pool;
         callData = abi.encodeCall(IBaseRewardPool.withdrawAndUnwrap, (amount, false));
