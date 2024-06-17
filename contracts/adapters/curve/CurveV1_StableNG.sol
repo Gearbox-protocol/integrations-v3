@@ -12,7 +12,7 @@ import {CurveV1AdapterBase} from "./CurveV1_Base.sol";
 /// @title Curve Stable NG adapter
 /// @notice Implements logic allowing to interact with Curve StableNG pools
 contract CurveV1AdapterStableNG is CurveV1AdapterBase, ICurveV1_StableNGAdapter {
-    function _gearboxAdapterType() external pure virtual override returns (AdapterType) {
+    function _gearboxAdapterType() public pure virtual override returns (AdapterType) {
         return AdapterType.CURVE_STABLE_NG;
     }
 
@@ -91,5 +91,36 @@ contract CurveV1AdapterStableNG is CurveV1AdapterBase, ICurveV1_StableNGAdapter 
         (tokensToEnable, tokensToDisable) = _remove_liquidity_imbalance(
             amounts[0] > 1, amounts[1] > 1, len > 2 && amounts[2] > 1, len > 3 && amounts[3] > 1
         );
+    }
+
+    /// @notice Returns all adapter parameters serialized into a bytes array,
+    ///         as well as adapter type and version, to properly deserialize
+    function serialize() external view override returns (AdapterType, uint16, bytes[] memory) {
+        bytes[] memory serializedData = new bytes[](24);
+        serializedData[0] = abi.encode(creditManager);
+        serializedData[1] = abi.encode(targetContract);
+        serializedData[2] = abi.encode(token);
+        serializedData[3] = abi.encode(lp_token);
+        serializedData[4] = abi.encode(lpTokenMask);
+        serializedData[5] = abi.encode(metapoolBase);
+        serializedData[6] = abi.encode(nCoins);
+        serializedData[7] = abi.encode(use256);
+        serializedData[8] = abi.encode(token0);
+        serializedData[9] = abi.encode(token1);
+        serializedData[10] = abi.encode(token2);
+        serializedData[11] = abi.encode(token3);
+        serializedData[12] = abi.encode(token0Mask);
+        serializedData[13] = abi.encode(token1Mask);
+        serializedData[14] = abi.encode(token2Mask);
+        serializedData[15] = abi.encode(token3Mask);
+        serializedData[16] = abi.encode(underlying0);
+        serializedData[17] = abi.encode(underlying1);
+        serializedData[18] = abi.encode(underlying2);
+        serializedData[19] = abi.encode(underlying3);
+        serializedData[20] = abi.encode(underlying0Mask);
+        serializedData[21] = abi.encode(underlying1Mask);
+        serializedData[22] = abi.encode(underlying2Mask);
+        serializedData[23] = abi.encode(underlying3Mask);
+        return (_gearboxAdapterType(), _gearboxAdapterVersion, serializedData);
     }
 }

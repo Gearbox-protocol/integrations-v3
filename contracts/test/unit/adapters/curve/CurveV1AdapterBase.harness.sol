@@ -15,7 +15,7 @@ contract CurveV1AdapterBaseHarness is CurveV1AdapterBase {
         CurveV1AdapterBase(_creditManager, _curvePool, _lp_token, _metapoolBase, _nCoins)
     {}
 
-    function _gearboxAdapterType() external view override returns (AdapterType) {
+    function _gearboxAdapterType() public view override returns (AdapterType) {
         return nCoins == 2
             ? AdapterType.CURVE_V1_2ASSETS
             : (nCoins == 3 ? AdapterType.CURVE_V1_3ASSETS : AdapterType.CURVE_V1_4ASSETS);
@@ -70,5 +70,14 @@ contract CurveV1AdapterBaseHarness is CurveV1AdapterBase {
                 abi.encodeWithSignature("calc_token_amount(uint256[4])", amounts)
             );
         }
+    }
+
+    /// @notice Returns all adapter parameters serialized into a bytes array,
+    ///         as well as adapter type and version, to properly deserialize
+    function serialize() external view returns (AdapterType, uint16, bytes[] memory) {
+        bytes[] memory serializedData = new bytes[](2);
+        serializedData[0] = abi.encode(creditManager);
+        serializedData[1] = abi.encode(targetContract);
+        return (_gearboxAdapterType(), _gearboxAdapterVersion, serializedData);
     }
 }

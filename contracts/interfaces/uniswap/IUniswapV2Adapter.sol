@@ -5,6 +5,11 @@ pragma solidity ^0.8.17;
 
 import {IAdapter} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IAdapter.sol";
 
+struct UniswapV2Pair {
+    address token0;
+    address token1;
+}
+
 struct UniswapV2PairStatus {
     address token0;
     address token1;

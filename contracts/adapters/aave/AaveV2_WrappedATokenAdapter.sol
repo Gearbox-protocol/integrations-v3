@@ -15,7 +15,7 @@ import {IAaveV2_WrappedATokenAdapter} from "../../interfaces/aave/IAaveV2_Wrappe
 /// @notice Implements logic allowing CAs to convert between waTokens, aTokens and underlying tokens
 contract AaveV2_WrappedATokenAdapter is AbstractAdapter, IAaveV2_WrappedATokenAdapter {
     AdapterType public constant override _gearboxAdapterType = AdapterType.AAVE_V2_WRAPPED_ATOKEN;
-    uint16 public constant override _gearboxAdapterVersion = 3_00;
+    uint16 public constant override _gearboxAdapterVersion = 3_10;
 
     /// @notice Underlying aToken
     address public immutable override aToken;
@@ -226,5 +226,19 @@ contract AaveV2_WrappedATokenAdapter is AbstractAdapter, IAaveV2_WrappedATokenAd
         callData = toUnderlying
             ? abi.encodeCall(WrappedAToken.withdrawUnderlying, (shares))
             : abi.encodeCall(WrappedAToken.withdraw, (shares));
+    }
+
+    /// @notice Returns all adapter parameters serialized into a bytes array,
+    ///         as well as adapter type and version, to properly deserialize
+    function serialize() external view returns (AdapterType, uint16, bytes[] memory) {
+        bytes[] memory serializedData = new bytes[](7);
+        serializedData[0] = abi.encode(creditManager);
+        serializedData[1] = abi.encode(targetContract);
+        serializedData[2] = abi.encode(aToken);
+        serializedData[3] = abi.encode(underlying);
+        serializedData[4] = abi.encode(waTokenMask);
+        serializedData[5] = abi.encode(aTokenMask);
+        serializedData[6] = abi.encode(tokenMask);
+        return (_gearboxAdapterType, _gearboxAdapterVersion, serializedData);
     }
 }

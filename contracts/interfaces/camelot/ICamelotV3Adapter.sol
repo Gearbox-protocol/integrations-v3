@@ -7,6 +7,11 @@ import {IAdapter} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IAda
 
 import {ICamelotV3Router} from "../../integrations/camelot/ICamelotV3Router.sol";
 
+struct CamelotV3Pool {
+    address token0;
+    address token1;
+}
+
 struct CamelotV3PoolStatus {
     address token0;
     address token1;

@@ -4,6 +4,7 @@
 pragma solidity ^0.8.17;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 import {AbstractAdapter} from "../AbstractAdapter.sol";
 import {AdapterType} from "@gearbox-protocol/sdk-gov/contracts/AdapterType.sol";
@@ -16,9 +17,15 @@ import {IPhantomToken} from "@gearbox-protocol/core-v3/contracts/interfaces/base
 import {IZircuitPool} from "../../integrations/zircuit/IZircuitPool.sol";
 
 contract ZircuitPoolAdapter is AbstractAdapter, IZircuitPoolAdapter {
+    using EnumerableSet for EnumerableSet.AddressSet;
+
     AdapterType public constant override _gearboxAdapterType = AdapterType.ZIRCUIT_POOL;
     uint16 public constant override _gearboxAdapterVersion = 3_1;
 
+    /// @dev Set of all underlyings that have corresponding phantom tokens
+    EnumerableSet.AddressSet internal _supportedUnderlyings;
+
+    /// @notice Map from Zircuit underlying to their respective phantom tokens
     mapping(address => address) public tokenToPhantomToken;
 
     /// @notice Constructor
@@ -114,6 +121,41 @@ contract ZircuitPoolAdapter is AbstractAdapter, IZircuitPoolAdapter {
         );
     }
 
+    // ---- //
+    // DATA //
+    // ---- //
+
+    /// @notice Returns underlyings supported by this adapter (i.e., positions that have corresponding phantom tokens)
+    function getSupportedUnderlyings() public view returns (address[] memory) {
+        return _supportedUnderlyings.values();
+    }
+
+    /// @notice Returns all adapter parameters serialized into a bytes array,
+    ///         as well as adapter type and version, to properly deserialize
+    function serialize() external view returns (AdapterType, uint16, bytes[] memory) {
+        address[] memory supportedUnderlyings = getSupportedUnderlyings();
+        address[] memory supportedPhantomTokens = new address[](supportedUnderlyings.length);
+
+        uint256 len = supportedUnderlyings.length;
+
+        for (uint256 i = 0; i < supportedUnderlyings.length; ++i) {
+            supportedPhantomTokens[i] = tokenToPhantomToken[supportedUnderlyings[i]];
+        }
+
+        bytes[] memory serializedData = new bytes[](4);
+        serializedData[0] = abi.encode(creditManager);
+        serializedData[1] = abi.encode(targetContract);
+        serializedData[2] = abi.encode(supportedUnderlyings);
+        serializedData[3] = abi.encode(supportedPhantomTokens);
+
+        return (_gearboxAdapterType, _gearboxAdapterVersion, serializedData);
+    }
+
+    // ------------- //
+    // CONFIGURATION //
+    // ------------- //
+
+    /// @notice Updates the map of underlyings to phantom tokens
     function updatePhantomTokensMap() external configuratorOnly {
         ICreditManagerV3 cm = ICreditManagerV3(creditManager);
 
@@ -126,6 +168,7 @@ contract ZircuitPoolAdapter is AbstractAdapter, IZircuitPoolAdapter {
                     if (ptType == PhantomTokenType.ZIRCUIT_PHANTOM_TOKEN) {
                         address depositedToken = ZircuitPhantomToken(token).underlying();
                         tokenToPhantomToken[depositedToken] = token;
+                        _supportedUnderlyings.add(depositedToken);
                         emit SetTokenToPhantomToken(depositedToken, token);
                     }
                 } catch {}

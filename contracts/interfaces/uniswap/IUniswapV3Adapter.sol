@@ -7,6 +7,12 @@ import {IAdapter} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IAda
 
 import {ISwapRouter} from "../../integrations/uniswap/IUniswapV3.sol";
 
+struct UniswapV3Pool {
+    address token0;
+    address token1;
+    uint24 fee;
+}
+
 struct UniswapV3PoolStatus {
     address token0;
     address token1;

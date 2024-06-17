@@ -14,7 +14,7 @@ import {ICompoundV2_CTokenAdapter} from "../../interfaces/compound/ICompoundV2_C
 /// @title Compound V2 CErc20 adapter
 contract CompoundV2_CErc20Adapter is CompoundV2_CTokenAdapter {
     AdapterType public constant override _gearboxAdapterType = AdapterType.COMPOUND_V2_CERC20;
-    uint16 public constant override _gearboxAdapterVersion = 3_00;
+    uint16 public constant override _gearboxAdapterVersion = 3_10;
 
     /// @notice cToken's underlying token
     address public immutable override underlying;
@@ -125,5 +125,17 @@ contract CompoundV2_CErc20Adapter is CompoundV2_CTokenAdapter {
     {
         error = abi.decode(_execute(_encodeRedeemUnderlying(amount)), (uint256)); // U:[COMP2T-8]
         (tokensToEnable, tokensToDisable) = (tokenMask, 0);
+    }
+
+    /// @notice Returns all adapter parameters serialized into a bytes array,
+    ///         as well as adapter type and version, to properly deserialize
+    function serialize() external view returns (AdapterType, uint16, bytes[] memory) {
+        bytes[] memory serializedData = new bytes[](5);
+        serializedData[0] = abi.encode(creditManager);
+        serializedData[1] = abi.encode(targetContract);
+        serializedData[2] = abi.encode(underlying);
+        serializedData[3] = abi.encode(tokenMask);
+        serializedData[4] = abi.encode(cTokenMask);
+        return (_gearboxAdapterType, _gearboxAdapterVersion, serializedData);
     }
 }

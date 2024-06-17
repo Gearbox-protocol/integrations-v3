@@ -4,6 +4,7 @@
 pragma solidity ^0.8.17;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 import {RAY} from "@gearbox-protocol/core-v3/contracts/libraries/Constants.sol";
 
@@ -12,11 +13,12 @@ import {AdapterType} from "@gearbox-protocol/sdk-gov/contracts/AdapterType.sol";
 
 import {ISwapRouter} from "../../integrations/uniswap/IUniswapV3.sol";
 import {BytesLib} from "../../integrations/uniswap/BytesLib.sol";
-import {IUniswapV3Adapter, UniswapV3PoolStatus} from "../../interfaces/uniswap/IUniswapV3Adapter.sol";
+import {IUniswapV3Adapter, UniswapV3PoolStatus, UniswapV3Pool} from "../../interfaces/uniswap/IUniswapV3Adapter.sol";
 
 /// @title Uniswap V3 Router adapter
 /// @notice Implements logic allowing CAs to perform swaps via Uniswap V3
 contract UniswapV3Adapter is AbstractAdapter, IUniswapV3Adapter {
+    using EnumerableSet for EnumerableSet.Bytes32Set;
     using BytesLib for bytes;
 
     AdapterType public constant override _gearboxAdapterType = AdapterType.UNISWAP_V3_ROUTER;
@@ -40,8 +42,11 @@ contract UniswapV3Adapter is AbstractAdapter, IUniswapV3Adapter {
     /// @dev The length of the path with 3 hops
     uint256 private constant PATH_4_LENGTH = 4 * ADDR_SIZE + 3 * FEE_SIZE;
 
-    /// @dev Mapping from (token0, token1, fee) to whether the pool can be traded through the adapter
-    mapping(address => mapping(address => mapping(uint24 => bool))) internal _poolStatus;
+    /// @dev Mapping from hash(token0, token1, fee) to respective tuple
+    mapping(bytes32 => UniswapV3Pool) internal _hashToPool;
+
+    /// @dev Set of hashes of (token0, token1, fee) for all supported pools
+    EnumerableSet.Bytes32Set internal _supportedPoolHashes;
 
     /// @notice Constructor
     /// @param _creditManager Credit manager address
@@ -206,6 +211,34 @@ contract UniswapV3Adapter is AbstractAdapter, IUniswapV3Adapter {
             _executeSwapSafeApprove(tokenIn, tokenOut, abi.encodeCall(ISwapRouter.exactOutput, (paramsUpdate)), false); // U:[UNI3-8]
     }
 
+    // ---- //
+    // DATA //
+    // ---- //
+
+    function supportedPools() public view returns (UniswapV3Pool[] memory pools) {
+        bytes32[] memory poolHashes = _supportedPoolHashes.values();
+        uint256 len = poolHashes.length;
+
+        pools = new UniswapV3Pool[](len);
+
+        for (uint256 i = 0; i < len; ++i) {
+            pools[i] = _hashToPool[poolHashes[i]];
+        }
+    }
+
+    /// @notice Returns all adapter parameters serialized into a bytes array,
+    ///         as well as adapter type and version, to properly deserialize
+    function serialize() external view returns (AdapterType, uint16, bytes[] memory) {
+        UniswapV3Pool[] memory pools = supportedPools();
+
+        bytes[] memory serializedData = new bytes[](3);
+        serializedData[0] = abi.encode(creditManager);
+        serializedData[1] = abi.encode(targetContract);
+        serializedData[2] = abi.encode(pools);
+
+        return (_gearboxAdapterType, _gearboxAdapterVersion, serializedData);
+    }
+
     // ------------- //
     // CONFIGURATION //
     // ------------- //
@@ -213,7 +246,7 @@ contract UniswapV3Adapter is AbstractAdapter, IUniswapV3Adapter {
     /// @notice Returns whether the (token0, token1, fee) pool is allowed to be traded through the adapter
     function isPoolAllowed(address token0, address token1, uint24 fee) public view override returns (bool) {
         (token0, token1) = _sortTokens(token0, token1);
-        return _poolStatus[token0][token1][fee];
+        return _supportedPoolHashes.contains(keccak256(abi.encode(token0, token1, fee)));
     }
 
     /// @notice Sets status for a batch of pools
@@ -227,7 +260,14 @@ contract UniswapV3Adapter is AbstractAdapter, IUniswapV3Adapter {
         unchecked {
             for (uint256 i; i < len; ++i) {
                 (address token0, address token1) = _sortTokens(pools[i].token0, pools[i].token1);
-                _poolStatus[token0][token1][pools[i].fee] = pools[i].allowed; // U:[UNI3-9]
+                bytes32 poolHash = keccak256(abi.encode(token0, token1, pools[i].fee));
+                if (pools[i].allowed) {
+                    _supportedPoolHashes.add(poolHash);
+                    _hashToPool[poolHash] = UniswapV3Pool({token0: token0, token1: token1, fee: pools[i].fee});
+                } else {
+                    _supportedPoolHashes.remove(poolHash);
+                    delete _hashToPool[poolHash];
+                }
                 emit SetPoolStatus(token0, token1, pools[i].fee, pools[i].allowed); // U:[UNI3-9]
             }
         }
