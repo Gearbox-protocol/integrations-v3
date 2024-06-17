@@ -4,6 +4,7 @@
 pragma solidity ^0.8.17;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 import {RAY} from "@gearbox-protocol/core-v3/contracts/libraries/Constants.sol";
 
@@ -12,17 +13,24 @@ import {AdapterType} from "@gearbox-protocol/sdk-gov/contracts/AdapterType.sol";
 
 import {IVelodromeV2Router, Route} from "../../integrations/velodrome/IVelodromeV2Router.sol";
 import {
-    IVelodromeV2RouterAdapter, VelodromeV2PoolStatus
+    IVelodromeV2RouterAdapter,
+    VelodromeV2PoolStatus,
+    VelodromeV2Pool
 } from "../../interfaces/velodrome/IVelodromeV2RouterAdapter.sol";
 
 /// @title Velodrome V2 Router adapter
 /// @notice Implements logic allowing CAs to perform swaps via Velodrome V2
 contract VelodromeV2RouterAdapter is AbstractAdapter, IVelodromeV2RouterAdapter {
+    using EnumerableSet for EnumerableSet.Bytes32Set;
+
     AdapterType public constant override _gearboxAdapterType = AdapterType.VELODROME_V2_ROUTER;
     uint16 public constant override _gearboxAdapterVersion = 3_00;
 
-    /// @dev Mapping from (token0, token1, stable, factory) to whether the pool can be traded through the adapter
-    mapping(address => mapping(address => mapping(bool => mapping(address => bool)))) internal _poolStatus;
+    /// @dev Mapping from hash(token0, token1, stable, factory) to respective tuple
+    mapping(bytes32 => VelodromeV2Pool) internal _hashToPool;
+
+    /// @dev Set of hashes of (token0, token1, stable, factory) for all supported pools
+    EnumerableSet.Bytes32Set internal _supportedPoolHashes;
 
     /// @notice Constructor
     /// @param _creditManager Credit manager address
@@ -111,6 +119,34 @@ contract VelodromeV2RouterAdapter is AbstractAdapter, IVelodromeV2RouterAdapter 
         ); // U: [VELO2-04]
     }
 
+    // ---- //
+    // DATA //
+    // ---- //
+
+    function supportedPools() public view returns (VelodromeV2Pool[] memory pools) {
+        bytes32[] memory poolHashes = _supportedPoolHashes.values();
+        uint256 len = poolHashes.length;
+
+        pools = new VelodromeV2Pool[](len);
+
+        for (uint256 i = 0; i < len; ++i) {
+            pools[i] = _hashToPool[poolHashes[i]];
+        }
+    }
+
+    /// @notice Returns all adapter parameters serialized into a bytes array,
+    ///         as well as adapter type and version, to properly deserialize
+    function serialize() external view returns (AdapterType, uint16, bytes[] memory) {
+        VelodromeV2Pool[] memory pools = supportedPools();
+
+        bytes[] memory serializedData = new bytes[](3);
+        serializedData[0] = abi.encode(creditManager);
+        serializedData[1] = abi.encode(targetContract);
+        serializedData[2] = abi.encode(pools);
+
+        return (_gearboxAdapterType, _gearboxAdapterVersion, serializedData);
+    }
+
     // ------------- //
     // CONFIGURATION //
     // ------------- //
@@ -123,7 +159,7 @@ contract VelodromeV2RouterAdapter is AbstractAdapter, IVelodromeV2RouterAdapter 
         returns (bool)
     {
         (token0, token1) = _sortTokens(token0, token1);
-        return _poolStatus[token0][token1][stable][factory];
+        return _supportedPoolHashes.contains(keccak256(abi.encode(token0, token1, stable, factory)));
     }
 
     /// @notice Sets status for a batch of pools
@@ -133,7 +169,19 @@ contract VelodromeV2RouterAdapter is AbstractAdapter, IVelodromeV2RouterAdapter 
         unchecked {
             for (uint256 i; i < len; ++i) {
                 (address token0, address token1) = _sortTokens(pools[i].token0, pools[i].token1);
-                _poolStatus[token0][token1][pools[i].stable][pools[i].factory] = pools[i].allowed; // U: [VELO2-05]
+                bytes32 poolHash = keccak256(abi.encode(token0, token1, pools[i].stable, pools[i].factory));
+                if (pools[i].allowed) {
+                    _supportedPoolHashes.add(poolHash);
+                    _hashToPool[poolHash] = VelodromeV2Pool({
+                        token0: token0,
+                        token1: token1,
+                        stable: pools[i].stable,
+                        factory: pools[i].factory
+                    });
+                } else {
+                    _supportedPoolHashes.remove(poolHash);
+                    delete _hashToPool[poolHash];
+                }
                 emit SetPoolStatus(token0, token1, pools[i].stable, pools[i].factory, pools[i].allowed); // U: [VELO2-05]
             }
         }

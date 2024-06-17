@@ -177,4 +177,16 @@ contract YearnV2Adapter is AbstractAdapter, IYearnV2Adapter {
         _execute(abi.encodeWithSignature("withdraw(uint256,address,uint256)", maxShares, creditAccount, maxLoss)); // U:[YFI2-9]
         (tokensToEnable, tokensToDisable) = (tokenMask, 0);
     }
+
+    /// @notice Returns all adapter parameters serialized into a bytes array,
+    ///         as well as adapter type and version, to properly deserialize
+    function serialize() external view returns (AdapterType, uint16, bytes[] memory) {
+        bytes[] memory serializedData = new bytes[](5);
+        serializedData[0] = abi.encode(creditManager);
+        serializedData[1] = abi.encode(targetContract);
+        serializedData[2] = abi.encode(token);
+        serializedData[3] = abi.encode(tokenMask);
+        serializedData[4] = abi.encode(yTokenMask);
+        return (_gearboxAdapterType, _gearboxAdapterVersion, serializedData);
+    }
 }

@@ -15,7 +15,7 @@ import {IERC4626Adapter} from "../../interfaces/erc4626/IERC4626Adapter.sol";
 /// @notice Implements logic allowing CAs to interact with any standard-compliant ERC4626 vault
 contract ERC4626Adapter is AbstractAdapter, IERC4626Adapter {
     AdapterType public constant override _gearboxAdapterType = AdapterType.ERC4626_VAULT;
-    uint16 public constant override _gearboxAdapterVersion = 3_00;
+    uint16 public constant override _gearboxAdapterVersion = 3_10;
 
     /// @notice Address of the underlying asset of the vault
     address public immutable override asset;
@@ -168,5 +168,17 @@ contract ERC4626Adapter is AbstractAdapter, IERC4626Adapter {
         _execute(callData); // U:[TV-6,7,8]
         tokensToEnable = assetMask;
         tokensToDisable = disableShares ? sharesMask : 0;
+    }
+
+    /// @notice Returns all adapter parameters serialized into a bytes array,
+    ///         as well as adapter type and version, to properly deserialize
+    function serialize() external view returns (AdapterType, uint16, bytes[] memory) {
+        bytes[] memory serializedData = new bytes[](5);
+        serializedData[0] = abi.encode(creditManager);
+        serializedData[1] = abi.encode(targetContract);
+        serializedData[2] = abi.encode(asset);
+        serializedData[3] = abi.encode(assetMask);
+        serializedData[4] = abi.encode(sharesMask);
+        return (_gearboxAdapterType, _gearboxAdapterVersion, serializedData);
     }
 }

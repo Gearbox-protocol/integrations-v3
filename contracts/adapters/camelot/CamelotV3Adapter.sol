@@ -4,6 +4,7 @@
 pragma solidity ^0.8.17;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 import {RAY} from "@gearbox-protocol/core-v3/contracts/libraries/Constants.sol";
 
@@ -12,15 +13,16 @@ import {AdapterType} from "@gearbox-protocol/sdk-gov/contracts/AdapterType.sol";
 
 import {ICamelotV3Router} from "../../integrations/camelot/ICamelotV3Router.sol";
 import {BytesLib} from "../../integrations/uniswap/BytesLib.sol";
-import {ICamelotV3Adapter, CamelotV3PoolStatus} from "../../interfaces/camelot/ICamelotV3Adapter.sol";
+import {ICamelotV3Adapter, CamelotV3PoolStatus, CamelotV3Pool} from "../../interfaces/camelot/ICamelotV3Adapter.sol";
 
 /// @title Camelot V3 Router adapter
 /// @notice Implements logic allowing CAs to perform swaps via Camelot V3
 contract CamelotV3Adapter is AbstractAdapter, ICamelotV3Adapter {
+    using EnumerableSet for EnumerableSet.Bytes32Set;
     using BytesLib for bytes;
 
     AdapterType public constant override _gearboxAdapterType = AdapterType.CAMELOT_V3_ROUTER;
-    uint16 public constant override _gearboxAdapterVersion = 3_00;
+    uint16 public constant override _gearboxAdapterVersion = 3_10;
 
     /// @dev The length of the bytes encoded address
     uint256 private constant ADDR_SIZE = 20;
@@ -37,8 +39,11 @@ contract CamelotV3Adapter is AbstractAdapter, ICamelotV3Adapter {
     /// @dev The length of the path with 3 hops
     uint256 private constant PATH_4_LENGTH = 4 * ADDR_SIZE;
 
-    /// @dev Mapping from (token0, token1) to whether the pool can be traded through the adapter
-    mapping(address => mapping(address => bool)) internal _poolStatus;
+    /// @dev Mapping from hash(token0, token1) to respective tuple
+    mapping(bytes32 => CamelotV3Pool) internal _hashToPool;
+
+    /// @dev Set of hashes of (token0, token1) for all supported pools
+    EnumerableSet.Bytes32Set internal _supportedPoolHashes;
 
     /// @notice Constructor
     /// @param _creditManager Credit manager address
@@ -243,6 +248,34 @@ contract CamelotV3Adapter is AbstractAdapter, ICamelotV3Adapter {
         ); // U: [CAMV3-8]
     }
 
+    // ---- //
+    // DATA //
+    // ---- //
+
+    function supportedPools() public view returns (CamelotV3Pool[] memory pools) {
+        bytes32[] memory poolHashes = _supportedPoolHashes.values();
+        uint256 len = poolHashes.length;
+
+        pools = new CamelotV3Pool[](len);
+
+        for (uint256 i = 0; i < len; ++i) {
+            pools[i] = _hashToPool[poolHashes[i]];
+        }
+    }
+
+    /// @notice Returns all adapter parameters serialized into a bytes array,
+    ///         as well as adapter type and version, to properly deserialize
+    function serialize() external view returns (AdapterType, uint16, bytes[] memory) {
+        CamelotV3Pool[] memory pools = supportedPools();
+
+        bytes[] memory serializedData = new bytes[](3);
+        serializedData[0] = abi.encode(creditManager);
+        serializedData[1] = abi.encode(targetContract);
+        serializedData[2] = abi.encode(pools);
+
+        return (_gearboxAdapterType, _gearboxAdapterVersion, serializedData);
+    }
+
     // ------------- //
     // CONFIGURATION //
     // ------------- //
@@ -250,7 +283,7 @@ contract CamelotV3Adapter is AbstractAdapter, ICamelotV3Adapter {
     /// @notice Returns whether the (token0, token1, fee) pool is allowed to be traded through the adapter
     function isPoolAllowed(address token0, address token1) public view override returns (bool) {
         (token0, token1) = _sortTokens(token0, token1);
-        return _poolStatus[token0][token1];
+        return _supportedPoolHashes.contains(keccak256(abi.encode(token0, token1)));
     }
 
     /// @notice Sets status for a batch of pools
@@ -260,7 +293,14 @@ contract CamelotV3Adapter is AbstractAdapter, ICamelotV3Adapter {
         unchecked {
             for (uint256 i; i < len; ++i) {
                 (address token0, address token1) = _sortTokens(pools[i].token0, pools[i].token1);
-                _poolStatus[token0][token1] = pools[i].allowed; // U: [CAMV3-9]
+                bytes32 poolHash = keccak256(abi.encode(token0, token1));
+                if (pools[i].allowed) {
+                    _supportedPoolHashes.add(poolHash);
+                    _hashToPool[poolHash] = CamelotV3Pool({token0: token0, token1: token1});
+                } else {
+                    _supportedPoolHashes.remove(poolHash);
+                    delete _hashToPool[poolHash];
+                }
                 emit SetPoolStatus(token0, token1, pools[i].allowed); // U: [CAMV3-9]
             }
         }

@@ -6,6 +6,13 @@ pragma solidity ^0.8.17;
 import {IAdapter} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IAdapter.sol";
 import {Route} from "../../integrations/velodrome/IVelodromeV2Router.sol";
 
+struct VelodromeV2Pool {
+    address token0;
+    address token1;
+    bool stable;
+    address factory;
+}
+
 struct VelodromeV2PoolStatus {
     address token0;
     address token1;

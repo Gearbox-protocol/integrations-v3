@@ -94,7 +94,7 @@ contract ZircuitPoolAdapterUnitTest is AdapterUnitTestHelper {
             tokenIn: phantomToken,
             tokenOut: depositToken,
             callData: abi.encodeCall(IZircuitPool.withdraw, (depositToken, 1000)),
-            requiresApproval: true,
+            requiresApproval: false,
             validatesTokens: false
         });
 
@@ -113,7 +113,7 @@ contract ZircuitPoolAdapterUnitTest is AdapterUnitTestHelper {
             tokenIn: phantomToken,
             tokenOut: depositToken,
             callData: abi.encodeCall(IZircuitPool.withdraw, (depositToken, 9000)),
-            requiresApproval: true,
+            requiresApproval: false,
             validatesTokens: false
         });
 

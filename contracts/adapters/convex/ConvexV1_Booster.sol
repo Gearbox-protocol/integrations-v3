@@ -4,6 +4,7 @@
 pragma solidity ^0.8.17;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 import {ICreditManagerV3} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditManagerV3.sol";
 import {ICreditConfiguratorV3} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditConfiguratorV3.sol";
@@ -20,8 +21,13 @@ import {IConvexV1BaseRewardPoolAdapter} from "../../interfaces/convex/IConvexV1B
 /// @title Convex V1 Booster adapter interface
 /// @notice Implements logic allowing CAs to interact with Convex Booster
 contract ConvexV1BoosterAdapter is AbstractAdapter, IConvexV1BoosterAdapter {
+    using EnumerableSet for EnumerableSet.UintSet;
+
     AdapterType public constant override _gearboxAdapterType = AdapterType.CONVEX_V1_BOOSTER;
-    uint16 public constant override _gearboxAdapterVersion = 3_00;
+    uint16 public constant override _gearboxAdapterVersion = 3_10;
+
+    /// @dev Set of all pids that have corresponding phantom tokens
+    EnumerableSet.UintSet internal _supportedPids;
 
     /// @notice Maps pool ID to phantom token representing staked position
     mapping(uint256 => address) public override pidToPhantomToken;
@@ -160,6 +166,35 @@ contract ConvexV1BoosterAdapter is AbstractAdapter, IConvexV1BoosterAdapter {
         (tokensToEnable, tokensToDisable,) = _executeSwapNoApprove(tokenIn, tokenOut, callData, disableConvexLP); // U:[CVX1B-5,6]
     }
 
+    // ---- //
+    // DATA //
+    // ---- //
+
+    function getSupportedPids() public view returns (uint256[] memory) {
+        return _supportedPids.values();
+    }
+
+    /// @notice Returns all adapter parameters serialized into a bytes array,
+    ///         as well as adapter type and version, to properly deserialize
+    function serialize() external view returns (AdapterType, uint16, bytes[] memory) {
+        uint256[] memory supportedPids = getSupportedPids();
+        address[] memory supportedPhantomTokens = new address[](supportedPids.length);
+
+        uint256 len = supportedPids.length;
+
+        for (uint256 i = 0; i < supportedPids.length; ++i) {
+            supportedPhantomTokens[i] = pidToPhantomToken[supportedPids[i]];
+        }
+
+        bytes[] memory serializedData = new bytes[](4);
+        serializedData[0] = abi.encode(creditManager);
+        serializedData[1] = abi.encode(targetContract);
+        serializedData[2] = abi.encode(supportedPids);
+        serializedData[3] = abi.encode(supportedPhantomTokens);
+
+        return (_gearboxAdapterType, _gearboxAdapterVersion, serializedData);
+    }
+
     // ------------- //
     // CONFIGURATION //
     // ------------- //
@@ -188,6 +223,7 @@ contract ConvexV1BoosterAdapter is AbstractAdapter, IConvexV1BoosterAdapter {
                     uint256 pid = IBaseRewardPool(poolTargetContract).pid();
                     address phantomToken = IConvexV1BaseRewardPoolAdapter(adapter).stakedPhantomToken();
                     pidToPhantomToken[pid] = phantomToken;
+                    _supportedPids.add(pid);
                     emit SetPidToPhantomToken(pid, phantomToken);
                 }
             }

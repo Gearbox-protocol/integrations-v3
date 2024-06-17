@@ -15,7 +15,7 @@ import {IwstETHV1Adapter} from "../../interfaces/lido/IwstETHV1Adapter.sol";
 /// @notice Implements logic for wrapping / unwrapping stETH
 contract WstETHV1Adapter is AbstractAdapter, IwstETHV1Adapter {
     AdapterType public constant override _gearboxAdapterType = AdapterType.LIDO_WSTETH_V1;
-    uint16 public constant override _gearboxAdapterVersion = 3_00;
+    uint16 public constant override _gearboxAdapterVersion = 3_10;
 
     /// @notice Address of the stETH token
     address public immutable override stETH;
@@ -127,5 +127,17 @@ contract WstETHV1Adapter is AbstractAdapter, IwstETHV1Adapter {
     {
         _execute(abi.encodeCall(IwstETH.unwrap, (amount))); // U:[LDO1W-5,6]
         (tokensToEnable, tokensToDisable) = (stETHTokenMask, disableWstETH ? wstETHTokenMask : 0);
+    }
+
+    /// @notice Returns all adapter parameters serialized into a bytes array,
+    ///         as well as adapter type and version, to properly deserialize
+    function serialize() external view returns (AdapterType, uint16, bytes[] memory) {
+        bytes[] memory serializedData = new bytes[](5);
+        serializedData[0] = abi.encode(creditManager);
+        serializedData[1] = abi.encode(targetContract);
+        serializedData[2] = abi.encode(stETH);
+        serializedData[3] = abi.encode(stETHTokenMask);
+        serializedData[4] = abi.encode(wstETHTokenMask);
+        return (_gearboxAdapterType, _gearboxAdapterVersion, serializedData);
     }
 }

@@ -15,7 +15,7 @@ import {IAaveV2_LendingPoolAdapter} from "../../interfaces/aave/IAaveV2_LendingP
 /// @notice Implements logic allowing CAs to interact with Aave's lending pool
 contract AaveV2_LendingPoolAdapter is AbstractAdapter, IAaveV2_LendingPoolAdapter {
     AdapterType public constant override _gearboxAdapterType = AdapterType.AAVE_V2_LENDING_POOL;
-    uint16 public constant override _gearboxAdapterVersion = 3_00;
+    uint16 public constant override _gearboxAdapterVersion = 3_10;
 
     /// @notice Constructor
     /// @param _creditManager Credit manager address
@@ -161,5 +161,14 @@ contract AaveV2_LendingPoolAdapter is AbstractAdapter, IAaveV2_LendingPoolAdapte
         returns (bytes memory callData)
     {
         callData = abi.encodeCall(ILendingPool.withdraw, (asset, amount, creditAccount));
+    }
+
+    /// @notice Returns all adapter parameters serialized into a bytes array,
+    ///         as well as adapter type and version, to properly deserialize
+    function serialize() external view returns (AdapterType, uint16, bytes[] memory) {
+        bytes[] memory serializedData = new bytes[](2);
+        serializedData[0] = abi.encode(creditManager);
+        serializedData[1] = abi.encode(targetContract);
+        return (_gearboxAdapterType, _gearboxAdapterVersion, serializedData);
     }
 }

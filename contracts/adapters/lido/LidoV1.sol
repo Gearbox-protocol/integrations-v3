@@ -19,7 +19,7 @@ import {LidoV1Gateway} from "../../helpers/lido/LidoV1_WETHGateway.sol";
 /// @notice Implements logic for interacting with the Lido contract through the gateway
 contract LidoV1Adapter is AbstractAdapter, ILidoV1Adapter {
     AdapterType public constant override _gearboxAdapterType = AdapterType.LIDO_V1;
-    uint16 public constant override _gearboxAdapterVersion = 3_00;
+    uint16 public constant override _gearboxAdapterVersion = 3_10;
 
     /// @notice stETH token
     address public immutable override stETH;
@@ -93,5 +93,19 @@ contract LidoV1Adapter is AbstractAdapter, ILidoV1Adapter {
         _execute(abi.encodeCall(LidoV1Gateway.submit, (amount, treasury))); // U:[LDO1-3,4]
         _approveToken(weth, 1); // U:[LDO1-3,4]
         (tokensToEnable, tokensToDisable) = (stETHTokenMask, disableWETH ? wethTokenMask : 0);
+    }
+
+    /// @notice Returns all adapter parameters serialized into a bytes array,
+    ///         as well as adapter type and version, to properly deserialize
+    function serialize() external view returns (AdapterType, uint16, bytes[] memory) {
+        bytes[] memory serializedData = new bytes[](7);
+        serializedData[0] = abi.encode(creditManager);
+        serializedData[1] = abi.encode(targetContract);
+        serializedData[2] = abi.encode(stETH);
+        serializedData[3] = abi.encode(weth);
+        serializedData[4] = abi.encode(wethTokenMask);
+        serializedData[5] = abi.encode(stETHTokenMask);
+        serializedData[6] = abi.encode(treasury);
+        return (_gearboxAdapterType, _gearboxAdapterVersion, serializedData);
     }
 }

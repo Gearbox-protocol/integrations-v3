@@ -4,6 +4,7 @@
 pragma solidity ^0.8.17;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 import {RAY} from "@gearbox-protocol/core-v3/contracts/libraries/Constants.sol";
 import {BitMask} from "@gearbox-protocol/core-v3/contracts/libraries/BitMask.sol";
@@ -28,13 +29,17 @@ import {
 /// @title Balancer V2 Vault adapter
 /// @notice Implements logic allowing CAs to swap through and LP in Balancer vaults
 contract BalancerV2VaultAdapter is AbstractAdapter, IBalancerV2VaultAdapter {
+    using EnumerableSet for EnumerableSet.Bytes32Set;
     using BitMask for uint256;
 
     AdapterType public constant override _gearboxAdapterType = AdapterType.BALANCER_VAULT;
-    uint16 public constant override _gearboxAdapterVersion = 3_00;
+    uint16 public constant override _gearboxAdapterVersion = 3_10;
 
     /// @notice Mapping from poolId to status of the pool: whether it is not supported, fully supported or swap-only
     mapping(bytes32 => PoolStatus) public override poolStatus;
+
+    /// @dev Set of pool ids with "ALLOW" and "SWAP_ONLY" status
+    EnumerableSet.Bytes32Set internal _supportedPoolIds;
 
     /// @notice Constructor
     /// @param _creditManager Credit manager address
@@ -477,6 +482,34 @@ contract BalancerV2VaultAdapter is AbstractAdapter, IBalancerV2VaultAdapter {
         request.userData = abi.encode(uint256(0), amountIn, tokenIndex);
     }
 
+    // ---- //
+    // DATA //
+    // ---- //
+
+    /// @notice Returns the set of all supported pool IDs
+    function supportedPoolIds() public view returns (bytes32[] memory poolIds) {
+        return _supportedPoolIds.values();
+    }
+
+    /// @notice Returns all adapter parameters serialized into a bytes array,
+    ///         as well as adapter type and version, to properly deserialize
+    function serialize() external view returns (AdapterType, uint16, bytes[] memory) {
+        bytes32[] memory supportedIDs = supportedPoolIds();
+        PoolStatus[] memory supportedPoolStatus = new PoolStatus[](supportedIDs.length);
+
+        for (uint256 i = 0; i < supportedIDs.length; ++i) {
+            supportedPoolStatus[i] = poolStatus[supportedIDs[i]];
+        }
+
+        bytes[] memory serializedData = new bytes[](4);
+        serializedData[0] = abi.encode(creditManager);
+        serializedData[1] = abi.encode(targetContract);
+        serializedData[2] = abi.encode(supportedIDs);
+        serializedData[3] = abi.encode(supportedPoolStatus);
+
+        return (_gearboxAdapterType, _gearboxAdapterVersion, serializedData);
+    }
+
     // ------- //
     // HELPERS //
     // ------- //
@@ -582,6 +615,12 @@ contract BalancerV2VaultAdapter is AbstractAdapter, IBalancerV2VaultAdapter {
         configuratorOnly // U:[BAL2-12]
     {
         if (poolStatus[poolId] != newStatus) {
+            if (newStatus == PoolStatus.ALLOWED || newStatus == PoolStatus.SWAP_ONLY) {
+                _supportedPoolIds.add(poolId);
+            } else {
+                _supportedPoolIds.remove(poolId);
+            }
+
             poolStatus[poolId] = newStatus; // U:[BAL2-12]
             emit SetPoolStatus(poolId, newStatus); // U:[BAL2-12]
         }
