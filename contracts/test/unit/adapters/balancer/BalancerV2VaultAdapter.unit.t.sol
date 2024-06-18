@@ -449,6 +449,12 @@ contract BalancerV2VaultAdapterUnitTest is
         vm.prank(configurator);
         adapter.setPoolStatus(poolId, PoolStatus.ALLOWED);
         assertEq(uint256(adapter.poolStatus(poolId)), uint256(PoolStatus.ALLOWED));
+
+        bytes32[] memory poolIds = adapter.supportedPoolIds();
+
+        assertEq(poolIds.length, 1, "Pool ID set length incorrect");
+
+        assertEq(poolIds[0], poolId, "Pool ID #0 incorrect");
     }
 
     // ------- //

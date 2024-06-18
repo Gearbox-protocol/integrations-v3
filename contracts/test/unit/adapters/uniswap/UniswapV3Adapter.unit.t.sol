@@ -8,7 +8,8 @@ import {
     IUniswapV3AdapterEvents,
     IUniswapV3AdapterExceptions,
     IUniswapV3AdapterTypes,
-    UniswapV3PoolStatus
+    UniswapV3PoolStatus,
+    UniswapV3Pool
 } from "../../../../interfaces/uniswap/IUniswapV3Adapter.sol";
 import {AdapterUnitTestHelper} from "../AdapterUnitTestHelper.sol";
 import {UniswapV3AdapterHarness} from "./UniswapV3Adapter.harness.sol";
@@ -277,6 +278,8 @@ contract UniswapV3AdapterUnitTest is
 
     /// @notice U:[UNI3-9]: `setPoolStatusBatch` works as expected
     function test_U_UNI3_09_setPoolStatusBatch_works_as_expected() public {
+        _setPoolsStatus(3, 0);
+
         UniswapV3PoolStatus[] memory pairs;
 
         _revertsOnNonConfiguratorCaller();
@@ -297,6 +300,16 @@ contract UniswapV3AdapterUnitTest is
 
         assertFalse(adapter.isPoolAllowed(tokens[0], tokens[1], 500), "First pool incorrectly allowed");
         assertTrue(adapter.isPoolAllowed(tokens[1], tokens[2], 3000), "Second pool incorrectly not allowed");
+
+        UniswapV3Pool[] memory allowedPools = adapter.supportedPools();
+
+        assertEq(allowedPools.length, 1, "Incorrect allowed pairs length");
+
+        assertEq(allowedPools[0].token0, _min(tokens[1], tokens[2]), "Incorrect allowed pool token 0");
+
+        assertEq(allowedPools[0].token1, _max(tokens[1], tokens[2]), "Incorrect allowed pool token 1");
+
+        assertEq(allowedPools[0].fee, 3000, "Incorrect allowed pool fee");
     }
 
     /// @notice U:[UNI3-10]: `_validatePath` works as expected

@@ -8,7 +8,8 @@ import {
     ICamelotV3AdapterEvents,
     ICamelotV3AdapterExceptions,
     ICamelotV3AdapterTypes,
-    CamelotV3PoolStatus
+    CamelotV3PoolStatus,
+    CamelotV3Pool
 } from "../../../../interfaces/camelot/ICamelotV3Adapter.sol";
 import {AdapterUnitTestHelper} from "../AdapterUnitTestHelper.sol";
 import {CamelotV3AdapterHarness} from "./CamelotV3Adapter.harness.sol";
@@ -349,6 +350,7 @@ contract CamelotV3AdapterUnitTest is
 
     /// @notice U:[CAMV3-9]: `setPoolStatusBatch` works as expected
     function test_U_CAMV3_09_setPoolStatusBatch_works_as_expected() public {
+        _setPoolsStatus(3, 0);
         CamelotV3PoolStatus[] memory pairs;
 
         _revertsOnNonConfiguratorCaller();
@@ -369,6 +371,14 @@ contract CamelotV3AdapterUnitTest is
 
         assertFalse(adapter.isPoolAllowed(tokens[0], tokens[1]), "First pool incorrectly allowed");
         assertTrue(adapter.isPoolAllowed(tokens[1], tokens[2]), "Second pool incorrectly not allowed");
+
+        CamelotV3Pool[] memory allowedPools = adapter.supportedPools();
+
+        assertEq(allowedPools.length, 1, "Incorrect allowed pairs length");
+
+        assertEq(allowedPools[0].token0, _min(tokens[1], tokens[2]), "Incorrect allowed pool token 0");
+
+        assertEq(allowedPools[0].token1, _max(tokens[1], tokens[2]), "Incorrect allowed pool token 1");
     }
 
     /// @notice U:[CAMV3-10]: `_validatePath` works as expected

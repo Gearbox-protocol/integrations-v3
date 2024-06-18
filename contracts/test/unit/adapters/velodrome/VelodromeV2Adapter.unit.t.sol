@@ -7,7 +7,8 @@ import {IVelodromeV2Router, Route} from "../../../../integrations/velodrome/IVel
 import {
     IVelodromeV2AdapterEvents,
     IVelodromeV2AdapterExceptions,
-    VelodromeV2PoolStatus
+    VelodromeV2PoolStatus,
+    VelodromeV2Pool
 } from "../../../../interfaces/velodrome/IVelodromeV2RouterAdapter.sol";
 import {AdapterUnitTestHelper} from "../AdapterUnitTestHelper.sol";
 import {VelodromeV2AdapterHarness} from "./VelodromeV2Adapter.harness.sol";
@@ -105,7 +106,8 @@ contract VelodtomeV2AdapterUnitTest is
     }
 
     /// @notice U:[VELO2-5]: `setPoolStatusBatch` works as expected
-    function test_U_VELO2_05_setPoolStatusBatch_oolworks_as_expected() public {
+    function test_U_VELO2_05_setPoolStatusBatch_works_as_expected() public {
+        _setPoolsStatus(3, 0);
         VelodromeV2PoolStatus[] memory pools;
 
         _revertsOnNonConfiguratorCaller();
@@ -128,6 +130,18 @@ contract VelodtomeV2AdapterUnitTest is
         assertTrue(
             adapter.isPoolAllowed(tokens[1], tokens[2], true, address(32)), "Second pair incorrectly not allowed"
         );
+
+        VelodromeV2Pool[] memory allowedPools = adapter.supportedPools();
+
+        assertEq(allowedPools.length, 1, "Incorrect allowed pairs length");
+
+        assertEq(allowedPools[0].token0, _min(tokens[1], tokens[2]), "Incorrect allowed pool token 0");
+
+        assertEq(allowedPools[0].token1, _max(tokens[1], tokens[2]), "Incorrect allowed pool token 1");
+
+        assertTrue(allowedPools[0].stable, "Incorrect allowed pools stable status");
+
+        assertEq(allowedPools[0].factory, address(32), "Incorrect allowed pool factory");
     }
 
     /// @notice U:[VELO2-6]: `_validatePath` works as expected

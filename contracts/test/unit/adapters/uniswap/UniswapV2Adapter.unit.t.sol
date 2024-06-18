@@ -7,7 +7,8 @@ import {IUniswapV2Router01} from "../../../../integrations/uniswap/IUniswapV2Rou
 import {
     IUniswapV2AdapterEvents,
     IUniswapV2AdapterExceptions,
-    UniswapV2PairStatus
+    UniswapV2PairStatus,
+    UniswapV2Pair
 } from "../../../../interfaces/uniswap/IUniswapV2Adapter.sol";
 import {AdapterUnitTestHelper} from "../AdapterUnitTestHelper.sol";
 import {UniswapV2AdapterHarness} from "./UniswapV2Adapter.harness.sol";
@@ -130,6 +131,7 @@ contract UniswapV2AdapterUnitTest is AdapterUnitTestHelper, IUniswapV2AdapterEve
 
     /// @notice U:[UNI2-6]: `setPairStatusBatch` works as expected
     function test_U_UNI2_06_setPairStatusBatch_works_as_expected() public {
+        _setPairsStatus(3, 0);
         UniswapV2PairStatus[] memory pairs;
 
         _revertsOnNonConfiguratorCaller();
@@ -150,6 +152,14 @@ contract UniswapV2AdapterUnitTest is AdapterUnitTestHelper, IUniswapV2AdapterEve
 
         assertFalse(adapter.isPairAllowed(tokens[0], tokens[1]), "First pair incorrectly allowed");
         assertTrue(adapter.isPairAllowed(tokens[1], tokens[2]), "Second pair incorrectly not allowed");
+
+        UniswapV2Pair[] memory allowedPairs = adapter.supportedPairs();
+
+        assertEq(allowedPairs.length, 1, "Incorrect allowed pairs length");
+
+        assertEq(allowedPairs[0].token0, _min(tokens[1], tokens[2]), "Incorrect allowed pair token 0");
+
+        assertEq(allowedPairs[0].token1, _max(tokens[1], tokens[2]), "Incorrect allowed pair token 1");
     }
 
     /// @notice U:[UNI2-7]: `_validatePath` works as expected
