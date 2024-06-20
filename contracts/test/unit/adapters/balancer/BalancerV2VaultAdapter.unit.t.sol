@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 // Gearbox Protocol. Generalized leverage for DeFi protocols
 // (c) Gearbox Foundation, 2023.
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.23;
 
 import {BalancerV2VaultAdapter} from "../../../../adapters/balancer/BalancerV2VaultAdapter.sol";
 import {
@@ -168,7 +168,7 @@ contract BalancerV2VaultAdapterUnitTest is
             tokenOut: tokens[2],
             callData: abi.encodeCall(
                 IBalancerV2Vault.swap, (singleSwap, _getFundManagement(creditAccount), diffInputAmount / 2, 456)
-            ),
+                ),
             requiresApproval: true,
             validatesTokens: true
         });
@@ -215,7 +215,7 @@ contract BalancerV2VaultAdapterUnitTest is
             callData: abi.encodeCall(
                 IBalancerV2Vault.batchSwap,
                 (SwapKind.GIVEN_IN, swaps, assets, _getFundManagement(creditAccount), limits, 456)
-            )
+                )
         });
 
         vm.prank(creditFacade);

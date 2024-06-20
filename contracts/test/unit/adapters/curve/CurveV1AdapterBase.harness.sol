@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 // Gearbox Protocol. Generalized leverage for DeFi protocols
 // (c) Gearbox Foundation, 2023.
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.23;
 
 import {AdapterType} from "@gearbox-protocol/sdk-gov/contracts/AdapterType.sol";
 
@@ -15,10 +15,12 @@ contract CurveV1AdapterBaseHarness is CurveV1AdapterBase {
         CurveV1AdapterBase(_creditManager, _curvePool, _lp_token, _metapoolBase, _nCoins)
     {}
 
-    function _gearboxAdapterType() public view override returns (AdapterType) {
-        return nCoins == 2
-            ? AdapterType.CURVE_V1_2ASSETS
-            : (nCoins == 3 ? AdapterType.CURVE_V1_3ASSETS : AdapterType.CURVE_V1_4ASSETS);
+    function adapterType() public view override returns (uint256) {
+        return uint256(
+            nCoins == 2
+                ? AdapterType.CURVE_V1_2ASSETS
+                : (nCoins == 3 ? AdapterType.CURVE_V1_3ASSETS : AdapterType.CURVE_V1_4ASSETS)
+        );
     }
 
     function _getAddLiquidityOneCoinCallData(uint256 i, uint256 amount, uint256 minAmount)
@@ -74,10 +76,7 @@ contract CurveV1AdapterBaseHarness is CurveV1AdapterBase {
 
     /// @notice Returns all adapter parameters serialized into a bytes array,
     ///         as well as adapter type and version, to properly deserialize
-    function serialize() external view returns (AdapterType, uint16, bytes[] memory) {
-        bytes[] memory serializedData = new bytes[](2);
-        serializedData[0] = abi.encode(creditManager);
-        serializedData[1] = abi.encode(targetContract);
-        return (_gearboxAdapterType(), _gearboxAdapterVersion, serializedData);
+    function serialize() external view returns (bytes memory serializedData) {
+        serializedData = abi.encode(creditManager, targetContract);
     }
 }

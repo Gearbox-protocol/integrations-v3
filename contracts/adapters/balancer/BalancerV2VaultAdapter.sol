@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Gearbox Protocol. Generalized leverage for DeFi protocols
 // (c) Gearbox Foundation, 2023.
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.23;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
@@ -32,8 +32,8 @@ contract BalancerV2VaultAdapter is AbstractAdapter, IBalancerV2VaultAdapter {
     using EnumerableSet for EnumerableSet.Bytes32Set;
     using BitMask for uint256;
 
-    AdapterType public constant override _gearboxAdapterType = AdapterType.BALANCER_VAULT;
-    uint16 public constant override _gearboxAdapterVersion = 3_10;
+    uint256 public constant override adapterType = uint256(AdapterType.BALANCER_VAULT);
+    uint256 public constant override version = 3_10;
 
     /// @notice Mapping from poolId to status of the pool: whether it is not supported, fully supported or swap-only
     mapping(bytes32 => PoolStatus) public override poolStatus;
@@ -174,11 +174,9 @@ contract BalancerV2VaultAdapter is AbstractAdapter, IBalancerV2VaultAdapter {
         creditFacadeOnly // U:[BAL2-2]
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        unchecked {
-            for (uint256 i; i < swaps.length; ++i) {
-                if (poolStatus[swaps[i].poolId] == PoolStatus.NOT_ALLOWED) {
-                    revert PoolNotSupportedException(); // U:[BAL2-5]
-                }
+        for (uint256 i; i < swaps.length; ++i) {
+            if (poolStatus[swaps[i].poolId] == PoolStatus.NOT_ALLOWED) {
+                revert PoolNotSupportedException(); // U:[BAL2-5]
             }
         }
 
@@ -329,17 +327,15 @@ contract BalancerV2VaultAdapter is AbstractAdapter, IBalancerV2VaultAdapter {
         request.maxAmountsIn = new uint256[](tokens.length);
         uint256 bptIndex = tokens.length;
 
-        unchecked {
-            for (uint256 i; i < len; ++i) {
-                request.assets[i] = IAsset(address(tokens[i]));
+        for (uint256 i; i < len; ++i) {
+            request.assets[i] = IAsset(address(tokens[i]));
 
-                if (request.assets[i] == assetIn) {
-                    request.maxAmountsIn[i] = amountIn; // U:[BAL2-7,8]
-                }
+            if (request.assets[i] == assetIn) {
+                request.maxAmountsIn[i] = amountIn; // U:[BAL2-7,8]
+            }
 
-                if (address(request.assets[i]) == bpt) {
-                    bptIndex = i;
-                }
+            if (address(request.assets[i]) == bpt) {
+                bptIndex = i;
             }
         }
 
@@ -462,18 +458,16 @@ contract BalancerV2VaultAdapter is AbstractAdapter, IBalancerV2VaultAdapter {
         uint256 tokenIndex = tokens.length;
         uint256 bptIndex = tokens.length;
 
-        unchecked {
-            for (uint256 i; i < len; ++i) {
-                request.assets[i] = IAsset(address(tokens[i]));
+        for (uint256 i; i < len; ++i) {
+            request.assets[i] = IAsset(address(tokens[i]));
 
-                if (request.assets[i] == assetOut) {
-                    request.minAmountsOut[i] = minAmountOut; // U:[BAL2-10,11]
-                    tokenIndex = i;
-                }
+            if (request.assets[i] == assetOut) {
+                request.minAmountsOut[i] = minAmountOut; // U:[BAL2-10,11]
+                tokenIndex = i;
+            }
 
-                if (address(request.assets[i]) == bpt) {
-                    bptIndex = i;
-                }
+            if (address(request.assets[i]) == bpt) {
+                bptIndex = i;
             }
         }
 
@@ -493,7 +487,7 @@ contract BalancerV2VaultAdapter is AbstractAdapter, IBalancerV2VaultAdapter {
 
     /// @notice Returns all adapter parameters serialized into a bytes array,
     ///         as well as adapter type and version, to properly deserialize
-    function serialize() external view returns (AdapterType, uint16, bytes[] memory) {
+    function serialize() external view override returns (bytes memory serializedData) {
         bytes32[] memory supportedIDs = supportedPoolIds();
         PoolStatus[] memory supportedPoolStatus = new PoolStatus[](supportedIDs.length);
 
@@ -501,13 +495,7 @@ contract BalancerV2VaultAdapter is AbstractAdapter, IBalancerV2VaultAdapter {
             supportedPoolStatus[i] = poolStatus[supportedIDs[i]];
         }
 
-        bytes[] memory serializedData = new bytes[](4);
-        serializedData[0] = abi.encode(creditManager);
-        serializedData[1] = abi.encode(targetContract);
-        serializedData[2] = abi.encode(supportedIDs);
-        serializedData[3] = abi.encode(supportedPoolStatus);
-
-        return (_gearboxAdapterType, _gearboxAdapterVersion, serializedData);
+        serializedData = abi.encode(creditManager, targetContract, supportedIDs, supportedPoolStatus);
     }
 
     // ------- //
@@ -518,10 +506,8 @@ contract BalancerV2VaultAdapter is AbstractAdapter, IBalancerV2VaultAdapter {
     function _approveAssets(IAsset[] memory assets, int256[] memory filter, uint256 amount) internal {
         uint256 len = assets.length;
 
-        unchecked {
-            for (uint256 i; i < len; ++i) {
-                if (filter[i] > 1) _approveToken(address(assets[i]), amount);
-            }
+        for (uint256 i; i < len; ++i) {
+            if (filter[i] > 1) _approveToken(address(assets[i]), amount);
         }
     }
 
@@ -558,14 +544,10 @@ contract BalancerV2VaultAdapter is AbstractAdapter, IBalancerV2VaultAdapter {
         returns (int256[] memory filter)
     {
         uint256 len = assets.length;
-
         filter = new int256[](len);
 
-        for (uint256 i = 0; i < len;) {
+        for (uint256 i; i < len; ++i) {
             filter[i] = -int256(IERC20(address(assets[i])).balanceOf(creditAccount));
-            unchecked {
-                ++i;
-            }
         }
     }
 
@@ -587,19 +569,15 @@ contract BalancerV2VaultAdapter is AbstractAdapter, IBalancerV2VaultAdapter {
             return array;
         }
 
-        len = len - 1;
+        len--;
 
         res = new uint256[](len);
 
-        for (uint256 i = 0; i < len;) {
+        for (uint256 i = 0; i < len; ++i) {
             if (i < index) {
                 res[i] = array[i];
             } else {
                 res[i] = array[i + 1];
-            }
-
-            unchecked {
-                ++i;
             }
         }
     }

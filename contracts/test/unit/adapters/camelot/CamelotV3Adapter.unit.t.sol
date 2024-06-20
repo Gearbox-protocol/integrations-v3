@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 // Gearbox Protocol. Generalized leverage for DeFi protocols
 // (c) Gearbox Foundation, 2023.
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.23;
 
 import {ICamelotV3Router} from "../../../../integrations/camelot/ICamelotV3Router.sol";
 import {
@@ -148,7 +148,7 @@ contract CamelotV3AdapterUnitTest is
                         limitSqrtPrice: 0
                     })
                 )
-            ),
+                ),
             requiresApproval: true,
             validatesTokens: true
         });
@@ -193,7 +193,7 @@ contract CamelotV3AdapterUnitTest is
                         limitSqrtPrice: 0
                     })
                 )
-            ),
+                ),
             requiresApproval: true,
             validatesTokens: true
         });
@@ -275,7 +275,7 @@ contract CamelotV3AdapterUnitTest is
                         recipient: creditAccount
                     })
                 )
-            ),
+                ),
             requiresApproval: true,
             validatesTokens: true
         });

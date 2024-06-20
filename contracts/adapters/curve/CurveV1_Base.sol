@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Gearbox Protocol. Generalized leverage for DeFi protocols
 // (c) Gearbox Foundation, 2023.
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.23;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
@@ -19,7 +19,7 @@ import {AbstractAdapter} from "../AbstractAdapter.sol";
 abstract contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
     using BitMask for uint256;
 
-    uint16 public constant override _gearboxAdapterVersion = 3_10;
+    uint256 public constant override version = 3_10;
 
     /// @notice Pool LP token address (added for backward compatibility)
     address public immutable override token;

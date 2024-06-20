@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 // Gearbox Protocol. Generalized leverage for DeFi protocols
 // (c) Gearbox Foundation, 2023.
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.23;
 
 import {IUniswapV2Router01} from "../../../../integrations/uniswap/IUniswapV2Router01.sol";
 import {
@@ -116,7 +116,7 @@ contract UniswapV2AdapterUnitTest is AdapterUnitTestHelper, IUniswapV2AdapterEve
             callData: abi.encodeCall(
                 IUniswapV2Router01.swapExactTokensForTokens,
                 (diffInputAmount, diffInputAmount / 2, path, creditAccount, 789)
-            ),
+                ),
             requiresApproval: true,
             validatesTokens: true
         });

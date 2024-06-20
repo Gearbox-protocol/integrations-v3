@@ -14,5 +14,5 @@
   "solidity.formatter": "forge",
   "solidity.packageDefaultDependenciesContractsDirectory": "contracts",
   "solidity.packageDefaultDependenciesDirectory": "node_modules",
-  "solidity.compileUsingRemoteVersion": "v0.8.17"
+  "solidity.compileUsingRemoteVersion": "v0.8.23"
 }
