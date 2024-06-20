@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Gearbox Protocol. Generalized leverage for DeFi protocols
 // (c) Gearbox Foundation, 2023.
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.23;
 
-import {IAdapter} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IAdapter.sol";
+import {IAdapter} from "../interfaces/IAdapter.sol";
+import {IStateSerializer} from "../interfaces/IStateSerializer.sol";
 import {ICreditManagerV3} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditManagerV3.sol";
 import {PoolV3} from "@gearbox-protocol/core-v3/contracts/pool/PoolV3.sol";
 import {CallerNotCreditFacadeException} from "@gearbox-protocol/core-v3/contracts/interfaces/IExceptions.sol";
@@ -11,7 +12,7 @@ import {ACLTrait} from "@gearbox-protocol/core-v3/contracts/traits/ACLTrait.sol"
 
 /// @title Abstract adapter
 /// @dev Inheriting adapters MUST use provided internal functions to perform all operations with credit accounts
-abstract contract AbstractAdapter is IAdapter, ACLTrait {
+abstract contract AbstractAdapter is IAdapter, IStateSerializer, ACLTrait {
     /// @notice Credit manager the adapter is connected to
     address public immutable override creditManager;
 

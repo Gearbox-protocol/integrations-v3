@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Gearbox Protocol. Generalized leverage for DeFi protocols
 // (c) Gearbox Foundation, 2023.
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.23;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
@@ -21,8 +21,8 @@ contract CamelotV3Adapter is AbstractAdapter, ICamelotV3Adapter {
     using EnumerableSet for EnumerableSet.Bytes32Set;
     using BytesLib for bytes;
 
-    AdapterType public constant override _gearboxAdapterType = AdapterType.CAMELOT_V3_ROUTER;
-    uint16 public constant override _gearboxAdapterVersion = 3_10;
+    uint256 public constant override adapterType = uint256(AdapterType.CAMELOT_V3_ROUTER);
+    uint256 public constant override version = 3_10;
 
     /// @dev The length of the bytes encoded address
     uint256 private constant ADDR_SIZE = 20;
@@ -265,15 +265,10 @@ contract CamelotV3Adapter is AbstractAdapter, ICamelotV3Adapter {
 
     /// @notice Returns all adapter parameters serialized into a bytes array,
     ///         as well as adapter type and version, to properly deserialize
-    function serialize() external view returns (AdapterType, uint16, bytes[] memory) {
+    function serialize() external view override returns (bytes memory serializedData) {
         CamelotV3Pool[] memory pools = supportedPools();
 
-        bytes[] memory serializedData = new bytes[](3);
-        serializedData[0] = abi.encode(creditManager);
-        serializedData[1] = abi.encode(targetContract);
-        serializedData[2] = abi.encode(pools);
-
-        return (_gearboxAdapterType, _gearboxAdapterVersion, serializedData);
+        serializedData = abi.encode(creditManager, targetContract, pools);
     }
 
     // ------------- //

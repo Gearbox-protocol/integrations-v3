@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Gearbox Protocol. Generalized leverage for DeFi protocols
 // (c) Gearbox Foundation, 2023.
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.23;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
@@ -11,7 +11,7 @@ import {ICreditConfiguratorV3} from "@gearbox-protocol/core-v3/contracts/interfa
 
 import {AbstractAdapter} from "../AbstractAdapter.sol";
 import {AdapterType} from "@gearbox-protocol/sdk-gov/contracts/AdapterType.sol";
-import {IAdapter} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IAdapter.sol";
+import {IAdapter} from "../../interfaces/IAdapter.sol";
 
 import {IBooster} from "../../integrations/convex/IBooster.sol";
 import {IBaseRewardPool} from "../../integrations/convex/IBaseRewardPool.sol";
@@ -23,8 +23,8 @@ import {IConvexV1BaseRewardPoolAdapter} from "../../interfaces/convex/IConvexV1B
 contract ConvexV1BoosterAdapter is AbstractAdapter, IConvexV1BoosterAdapter {
     using EnumerableSet for EnumerableSet.UintSet;
 
-    AdapterType public constant override _gearboxAdapterType = AdapterType.CONVEX_V1_BOOSTER;
-    uint16 public constant override _gearboxAdapterVersion = 3_10;
+    uint256 public constant override adapterType = uint256(AdapterType.CONVEX_V1_BOOSTER);
+    uint256 public constant override version = 3_10;
 
     /// @dev Set of all pids that have corresponding phantom tokens
     EnumerableSet.UintSet internal _supportedPids;
@@ -176,7 +176,7 @@ contract ConvexV1BoosterAdapter is AbstractAdapter, IConvexV1BoosterAdapter {
 
     /// @notice Returns all adapter parameters serialized into a bytes array,
     ///         as well as adapter type and version, to properly deserialize
-    function serialize() external view returns (AdapterType, uint16, bytes[] memory) {
+    function serialize() external view override returns (bytes memory serializedData) {
         uint256[] memory supportedPids = getSupportedPids();
         address[] memory supportedPhantomTokens = new address[](supportedPids.length);
 
@@ -186,13 +186,7 @@ contract ConvexV1BoosterAdapter is AbstractAdapter, IConvexV1BoosterAdapter {
             supportedPhantomTokens[i] = pidToPhantomToken[supportedPids[i]];
         }
 
-        bytes[] memory serializedData = new bytes[](4);
-        serializedData[0] = abi.encode(creditManager);
-        serializedData[1] = abi.encode(targetContract);
-        serializedData[2] = abi.encode(supportedPids);
-        serializedData[3] = abi.encode(supportedPhantomTokens);
-
-        return (_gearboxAdapterType, _gearboxAdapterVersion, serializedData);
+        serializedData = abi.encode(creditManager, targetContract, supportedPids, supportedPhantomTokens);
     }
 
     // ------------- //
@@ -214,7 +208,7 @@ contract ConvexV1BoosterAdapter is AbstractAdapter, IConvexV1BoosterAdapter {
             for (uint256 i = 0; i < len; ++i) {
                 address adapter = allowedAdapters[i];
                 address poolTargetContract = IAdapter(adapter).targetContract();
-                AdapterType aType = IAdapter(adapter)._gearboxAdapterType();
+                AdapterType aType = AdapterType(uint8(IAdapter(adapter).adapterType()));
 
                 if (
                     aType == AdapterType.CONVEX_V1_BASE_REWARD_POOL

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 // Gearbox Protocol. Generalized leverage for DeFi protocols
 // (c) Gearbox Foundation, 2023.
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.23;
 
 import {CurveV1AdapterStableNG} from "../../../../adapters/curve/CurveV1_StableNG.sol";
 import {ICurvePoolStableNG} from "../../../../integrations/curve/ICurvePool_StableNG.sol";

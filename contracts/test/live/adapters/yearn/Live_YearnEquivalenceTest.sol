@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 // Gearbox Protocol. Generalized leverage for DeFi protocols
 // (c) Gearbox Foundation, 2023.
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.23;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
@@ -11,7 +11,7 @@ import {ICreditFacadeV3Multicall} from "@gearbox-protocol/core-v3/contracts/inte
 import {IYVault} from "../../../../integrations/yearn/IYVault.sol";
 import {IYearnV2Adapter} from "../../../../interfaces/yearn/IYearnV2Adapter.sol";
 import {YearnV2_Calls, YearnV2_Multicaller} from "../../../multicall/yearn/YearnV2_Calls.sol";
-import {IAdapter} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IAdapter.sol";
+import {IAdapter} from "../../../../interfaces/IAdapter.sol";
 import {AdapterType} from "@gearbox-protocol/sdk-gov/contracts/AdapterType.sol";
 
 import {Tokens} from "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
@@ -157,7 +157,7 @@ contract Live_YearnEquivalenceTest is LiveTestHelper {
         address[] memory adapters = creditConfigurator.allowedAdapters();
 
         for (uint256 i = 0; i < adapters.length; ++i) {
-            if (IAdapter(adapters[i])._gearboxAdapterType() != AdapterType.YEARN_V2) continue;
+            if (IAdapter(adapters[i]).adapterType() != uint256(AdapterType.YEARN_V2)) continue;
 
             uint256 snapshot0 = vm.snapshot();
 

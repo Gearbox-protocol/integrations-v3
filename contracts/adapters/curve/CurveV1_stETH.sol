@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Gearbox Protocol. Generalized leverage for DeFi protocols
 // (c) Gearbox Foundation, 2023.
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.23;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
@@ -17,9 +17,7 @@ import {CurveV1Adapter2Assets} from "./CurveV1_2.sol";
 /// @title Curve V1 stETH adapter
 /// @notice Same as `CurveV1Adapter2Assets` but uses stETH gateway and needs to approve LP token
 contract CurveV1AdapterStETH is CurveV1Adapter2Assets {
-    function _gearboxAdapterType() public pure virtual override returns (AdapterType) {
-        return AdapterType.CURVE_V1_STECRV_POOL;
-    }
+    uint256 public constant override adapterType = uint256(AdapterType.CURVE_V1_STECRV_POOL);
 
     /// @notice Sets allowance for the pool LP token to max before the operation and to 1 after
     modifier withLPTokenApproval() {
@@ -98,20 +96,18 @@ contract CurveV1AdapterStETH is CurveV1Adapter2Assets {
 
     /// @notice Returns all adapter parameters serialized into a bytes array,
     ///         as well as adapter type and version, to properly deserialize
-    function serialize() external view override returns (AdapterType, uint16, bytes[] memory) {
-        bytes[] memory serializedData = new bytes[](12);
-        serializedData[0] = abi.encode(creditManager);
-        serializedData[1] = abi.encode(targetContract);
-        serializedData[2] = abi.encode(token);
-        serializedData[3] = abi.encode(lp_token);
-        serializedData[4] = abi.encode(lpTokenMask);
-        serializedData[5] = abi.encode(metapoolBase);
-        serializedData[6] = abi.encode(nCoins);
-        serializedData[7] = abi.encode(use256);
-        serializedData[8] = abi.encode(token0);
-        serializedData[9] = abi.encode(token1);
-        serializedData[10] = abi.encode(token0Mask);
-        serializedData[11] = abi.encode(token1Mask);
-        return (_gearboxAdapterType(), _gearboxAdapterVersion, serializedData);
+    function serialize() external view override returns (bytes memory serializedData) {
+        serializedData = abi.encode(
+            creditManager,
+            targetContract,
+            token,
+            lp_token,
+            lpTokenMask,
+            metapoolBase,
+            nCoins,
+            use256,
+            [token0, token1],
+            [token0Mask, token1Mask]
+        );
     }
 }

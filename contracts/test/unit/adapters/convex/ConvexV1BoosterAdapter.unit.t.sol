@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 // Gearbox Protocol. Generalized leverage for DeFi protocols
 // (c) Gearbox Foundation, 2023.
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.23;
 
 import {BoosterMock} from "../../../mocks/integrations/convex/BoosterMock.sol";
 import {AdapterUnitTestHelper} from "../AdapterUnitTestHelper.sol";

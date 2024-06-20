@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Gearbox Protocol. Generalized leverage for DeFi protocols
 // (c) Gearbox Foundation, 2023.
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.23;
 
 import {N_COINS} from "../../integrations/curve/ICurvePool_3.sol";
 import {ICurveV1Adapter} from "./ICurveV1Adapter.sol";

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 // Gearbox Protocol. Generalized leverage for DeFi protocols
 // (c) Gearbox Foundation, 2023.
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.23;
 
 import {YearnV2Adapter} from "../../../../adapters/yearn/YearnV2.sol";
 import {IYVault} from "../../../../integrations/yearn/IYVault.sol";

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 // Gearbox Protocol. Generalized leverage for DeFi protocols
 // (c) Gearbox Foundation, 2023.
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.23;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {ICreditFacadeV3} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacadeV3.sol";
@@ -21,7 +21,7 @@ import {
     ConvexV1_BaseRewardPoolMulticaller
 } from "../../../multicall/convex/ConvexV1_BaseRewardPoolCalls.sol";
 import {ConvexV1_BoosterCalls, ConvexV1_BoosterMulticaller} from "../../../multicall/convex/ConvexV1_BoosterCalls.sol";
-import {IAdapter} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IAdapter.sol";
+import {IAdapter} from "../../../../interfaces/IAdapter.sol";
 import {AdapterType} from "@gearbox-protocol/sdk-gov/contracts/AdapterType.sol";
 
 import {Tokens} from "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
@@ -251,7 +251,7 @@ contract Live_ConvexEquivalenceTest is LiveTestHelper {
         address[] memory adapters = creditConfigurator.allowedAdapters();
 
         for (uint256 i = 0; i < adapters.length; ++i) {
-            if (IAdapter(adapters[i])._gearboxAdapterType() != AdapterType.CONVEX_V1_BASE_REWARD_POOL) continue;
+            if (IAdapter(adapters[i]).adapterType() != uint256(AdapterType.CONVEX_V1_BASE_REWARD_POOL)) continue;
 
             uint256 snapshot0 = vm.snapshot();
 
