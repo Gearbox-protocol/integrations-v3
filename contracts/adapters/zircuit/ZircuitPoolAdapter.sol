@@ -87,7 +87,6 @@ contract ZircuitPoolAdapter is AbstractAdapter, IZircuitPoolAdapter {
         creditFacadeOnly
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
-        address creditAccount = _creditAccount();
         address phantomToken = tokenToPhantomToken[_token];
         (tokensToEnable, tokensToDisable) = _withdraw(_token, phantomToken, _amount, false);
     }

@@ -44,7 +44,7 @@ contract ZircuitPhantomToken is PhantomERC20, IPhantomToken {
     }
 
     /// @notice Returns the calls required to unwrap a Zircuit position into underlying before withdrawing from Gearbox
-    function getWithdrawalMultiCall(address creditAccount, uint256 amount)
+    function getWithdrawalMultiCall(address, uint256 amount)
         external
         view
         returns (address tokenOut, uint256 amountOut, address targetContract, bytes memory callData)
