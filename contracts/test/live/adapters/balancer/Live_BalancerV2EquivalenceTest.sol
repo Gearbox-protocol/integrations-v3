@@ -84,7 +84,7 @@ contract Live_BalancerV2EquivalenceTest is LiveTestHelper {
 
     /// HELPER
 
-    function _getDefaultFundManagement(address creditAccount) internal returns (FundManagement memory) {
+    function _getDefaultFundManagement(address creditAccount) internal pure returns (FundManagement memory) {
         return FundManagement({
             sender: creditAccount,
             fromInternalBalance: false,
@@ -207,8 +207,6 @@ contract Live_BalancerV2EquivalenceTest is LiveTestHelper {
         }
 
         if (isAdapter) {
-            BalancerV2_Multicaller vault = BalancerV2_Multicaller(balancerVaultAddress);
-
             creditFacade.multicall(
                 creditAccount, MultiCallBuilder.build(MultiCall({target: balancerVaultAddress, callData: callData}))
             );
@@ -601,9 +599,6 @@ contract Live_BalancerV2EquivalenceTest is LiveTestHelper {
             if (IBalancerV2VaultAdapter(balancerVaultAdapter).poolStatus(poolId) == PoolStatus.NOT_ALLOWED) continue;
 
             uint256 snapshot0 = vm.snapshot();
-
-            (IERC20[] memory tokens,,) =
-                IBalancerV2Vault(IAdapter(balancerVaultAdapter).targetContract()).getPoolTokens(poolId);
 
             BalancerPoolParams memory params = BalancerPoolParams({
                 poolToken: pool,

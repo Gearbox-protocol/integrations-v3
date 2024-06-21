@@ -316,8 +316,6 @@ contract Live_ConvexEquivalenceTest is LiveTestHelper {
 
             address curveToken = ConvexStakedPositionToken(token).curveToken();
 
-            uint256 snapshot0 = vm.snapshot();
-
             address creditAccount = openCreditAccountWithUnderlying(curveToken, 100 * WAD);
 
             vm.prank(USER);

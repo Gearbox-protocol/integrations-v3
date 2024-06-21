@@ -182,7 +182,7 @@ contract ConvexV1BoosterAdapter is AbstractAdapter, IConvexV1BoosterAdapter {
 
         uint256 len = supportedPids.length;
 
-        for (uint256 i = 0; i < supportedPids.length; ++i) {
+        for (uint256 i = 0; i < len; ++i) {
             supportedPhantomTokens[i] = pidToPhantomToken[supportedPids[i]];
         }
 

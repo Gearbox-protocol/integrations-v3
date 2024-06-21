@@ -192,8 +192,6 @@ contract Live_ZircuitEquivalenceTest is LiveTestHelper {
 
         if (zircuitAdapter == address(0)) return;
 
-        address zircuitPool = IAdapter(zircuitAdapter).targetContract();
-
         for (uint256 i = 0; i < collateralTokensCount; ++i) {
             uint256 snapshot = vm.snapshot();
 
@@ -212,8 +210,6 @@ contract Live_ZircuitEquivalenceTest is LiveTestHelper {
             }
 
             address depositedToken = ZircuitPhantomToken(token).underlying();
-
-            uint256 snapshot0 = vm.snapshot();
 
             address creditAccount = openCreditAccountWithUnderlying(depositedToken, 100 * WAD);
 
