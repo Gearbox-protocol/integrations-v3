@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 // Gearbox Protocol. Generalized leverage for DeFi protocols
 // (c) Gearbox Foundation, 2023.
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.23;
 
 import {
     IncorrectParameterException,
@@ -215,7 +215,7 @@ contract CurveV1AdapterBaseUnitTest is AdapterUnitTestHelper {
                     1,
                     1000,
                     500
-                ),
+                    ),
                 requiresApproval: true,
                 validatesTokens: false
             });
@@ -246,7 +246,7 @@ contract CurveV1AdapterBaseUnitTest is AdapterUnitTestHelper {
                 1,
                 diffInputAmount,
                 diffInputAmount / 2
-            ),
+                ),
             requiresApproval: true,
             validatesTokens: false
         });
@@ -275,7 +275,7 @@ contract CurveV1AdapterBaseUnitTest is AdapterUnitTestHelper {
                     1,
                     1000,
                     500
-                ),
+                    ),
                 requiresApproval: true,
                 validatesTokens: false
             });
@@ -310,7 +310,7 @@ contract CurveV1AdapterBaseUnitTest is AdapterUnitTestHelper {
                 1,
                 diffInputAmount,
                 diffInputAmount / 2
-            ),
+                ),
             requiresApproval: true,
             validatesTokens: false
         });
@@ -383,7 +383,7 @@ contract CurveV1AdapterBaseUnitTest is AdapterUnitTestHelper {
                     1000,
                     0,
                     500
-                ),
+                    ),
                 requiresApproval: false,
                 validatesTokens: false
             });
@@ -417,7 +417,7 @@ contract CurveV1AdapterBaseUnitTest is AdapterUnitTestHelper {
                 diffInputAmount,
                 0,
                 diffInputAmount / 2
-            ),
+                ),
             requiresApproval: false,
             validatesTokens: false
         });

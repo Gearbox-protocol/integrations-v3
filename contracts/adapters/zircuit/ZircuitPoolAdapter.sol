@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Gearbox Protocol. Generalized leverage for DeFi protocols
 // (c) Gearbox Foundation, 2023.
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.23;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
@@ -19,8 +19,8 @@ import {IZircuitPool} from "../../integrations/zircuit/IZircuitPool.sol";
 contract ZircuitPoolAdapter is AbstractAdapter, IZircuitPoolAdapter {
     using EnumerableSet for EnumerableSet.AddressSet;
 
-    AdapterType public constant override _gearboxAdapterType = AdapterType.ZIRCUIT_POOL;
-    uint16 public constant override _gearboxAdapterVersion = 3_1;
+    uint256 public constant override adapterType = uint256(AdapterType.ZIRCUIT_POOL);
+    uint256 public constant override version = 3_1;
 
     /// @dev Set of all underlyings that have corresponding phantom tokens
     EnumerableSet.AddressSet internal _supportedUnderlyings;
@@ -131,7 +131,7 @@ contract ZircuitPoolAdapter is AbstractAdapter, IZircuitPoolAdapter {
 
     /// @notice Returns all adapter parameters serialized into a bytes array,
     ///         as well as adapter type and version, to properly deserialize
-    function serialize() external view returns (AdapterType, uint16, bytes[] memory) {
+    function serialize() external view override returns (bytes memory serializedData) {
         address[] memory supportedUnderlyings = getSupportedUnderlyings();
         address[] memory supportedPhantomTokens = new address[](supportedUnderlyings.length);
 
@@ -141,13 +141,7 @@ contract ZircuitPoolAdapter is AbstractAdapter, IZircuitPoolAdapter {
             supportedPhantomTokens[i] = tokenToPhantomToken[supportedUnderlyings[i]];
         }
 
-        bytes[] memory serializedData = new bytes[](4);
-        serializedData[0] = abi.encode(creditManager);
-        serializedData[1] = abi.encode(targetContract);
-        serializedData[2] = abi.encode(supportedUnderlyings);
-        serializedData[3] = abi.encode(supportedPhantomTokens);
-
-        return (_gearboxAdapterType, _gearboxAdapterVersion, serializedData);
+        serializedData = abi.encode(creditManager, targetContract, supportedUnderlyings, supportedPhantomTokens);
     }
 
     // ------------- //

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Gearbox Protocol. Generalized leverage for DeFi protocols
 // (c) Gearbox Foundation, 2023.
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.23;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
@@ -14,8 +14,8 @@ import {IwstETHV1Adapter} from "../../interfaces/lido/IwstETHV1Adapter.sol";
 /// @title wstETH adapter
 /// @notice Implements logic for wrapping / unwrapping stETH
 contract WstETHV1Adapter is AbstractAdapter, IwstETHV1Adapter {
-    AdapterType public constant override _gearboxAdapterType = AdapterType.LIDO_WSTETH_V1;
-    uint16 public constant override _gearboxAdapterVersion = 3_10;
+    uint256 public constant override adapterType = uint256(AdapterType.LIDO_WSTETH_V1);
+    uint256 public constant override version = 3_10;
 
     /// @notice Address of the stETH token
     address public immutable override stETH;
@@ -131,13 +131,7 @@ contract WstETHV1Adapter is AbstractAdapter, IwstETHV1Adapter {
 
     /// @notice Returns all adapter parameters serialized into a bytes array,
     ///         as well as adapter type and version, to properly deserialize
-    function serialize() external view returns (AdapterType, uint16, bytes[] memory) {
-        bytes[] memory serializedData = new bytes[](5);
-        serializedData[0] = abi.encode(creditManager);
-        serializedData[1] = abi.encode(targetContract);
-        serializedData[2] = abi.encode(stETH);
-        serializedData[3] = abi.encode(stETHTokenMask);
-        serializedData[4] = abi.encode(wstETHTokenMask);
-        return (_gearboxAdapterType, _gearboxAdapterVersion, serializedData);
+    function serialize() external view override returns (bytes memory serializedData) {
+        serializedData = abi.encode(creditManager, targetContract, stETH, stETHTokenMask, wstETHTokenMask);
     }
 }

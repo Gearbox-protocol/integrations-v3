@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Gearbox Protocol. Generalized leverage for DeFi protocols
 // (c) Gearbox Foundation, 2023.
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.23;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
@@ -19,8 +19,8 @@ import {IUniswapV2Adapter, UniswapV2PairStatus, UniswapV2Pair} from "../../inter
 contract UniswapV2Adapter is AbstractAdapter, IUniswapV2Adapter {
     using EnumerableSet for EnumerableSet.Bytes32Set;
 
-    AdapterType public constant override _gearboxAdapterType = AdapterType.UNISWAP_V2_ROUTER;
-    uint16 public constant override _gearboxAdapterVersion = 3_00;
+    uint256 public constant override adapterType = uint256(AdapterType.UNISWAP_V2_ROUTER);
+    uint256 public constant override version = 3_00;
 
     /// @dev Mapping from hash(token0, token1) to respective tuple
     mapping(bytes32 => UniswapV2Pair) internal _hashToPair;
@@ -169,15 +169,8 @@ contract UniswapV2Adapter is AbstractAdapter, IUniswapV2Adapter {
 
     /// @notice Returns all adapter parameters serialized into a bytes array,
     ///         as well as adapter type and version, to properly deserialize
-    function serialize() external view returns (AdapterType, uint16, bytes[] memory) {
-        UniswapV2Pair[] memory pairs = supportedPairs();
-
-        bytes[] memory serializedData = new bytes[](3);
-        serializedData[0] = abi.encode(creditManager);
-        serializedData[1] = abi.encode(targetContract);
-        serializedData[2] = abi.encode(pairs);
-
-        return (_gearboxAdapterType, _gearboxAdapterVersion, serializedData);
+    function serialize() external view override returns (bytes memory serializedData) {
+        serializedData = abi.encode(creditManager, targetContract, supportedPairs());
     }
 
     // ------------- //

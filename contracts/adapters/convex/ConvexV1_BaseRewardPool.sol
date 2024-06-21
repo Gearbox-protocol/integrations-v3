@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Gearbox Protocol. Generalized leverage for DeFi protocols
 // (c) Gearbox Foundation, 2023.
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.23;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
@@ -20,8 +20,8 @@ import {IConvexV1BaseRewardPoolAdapter} from "../../interfaces/convex/IConvexV1B
 contract ConvexV1BaseRewardPoolAdapter is AbstractAdapter, IConvexV1BaseRewardPoolAdapter {
     using BitMask for uint256;
 
-    AdapterType public constant override _gearboxAdapterType = AdapterType.CONVEX_V1_BASE_REWARD_POOL;
-    uint16 public constant override _gearboxAdapterVersion = 3_10;
+    uint256 public constant override adapterType = uint256(AdapterType.CONVEX_V1_BASE_REWARD_POOL);
+    uint256 public constant override version = 3_01;
 
     /// @notice Address of a Curve LP token deposited into the Convex pool
     address public immutable override curveLPtoken;
@@ -320,21 +320,18 @@ contract ConvexV1BaseRewardPoolAdapter is AbstractAdapter, IConvexV1BaseRewardPo
 
     /// @notice Returns all adapter parameters serialized into a bytes array,
     ///         as well as adapter type and version, to properly deserialize
-    function serialize() external view returns (AdapterType, uint16, bytes[] memory) {
-        bytes[] memory serializedData = new bytes[](13);
-        serializedData[0] = abi.encode(creditManager);
-        serializedData[1] = abi.encode(targetContract);
-        serializedData[2] = abi.encode(curveLPtoken);
-        serializedData[3] = abi.encode(stakingToken);
-        serializedData[4] = abi.encode(stakedPhantomToken);
-        serializedData[5] = abi.encode(extraReward1);
-        serializedData[6] = abi.encode(extraReward2);
-        serializedData[7] = abi.encode(extraReward3);
-        serializedData[8] = abi.encode(extraReward4);
-        serializedData[9] = abi.encode(curveLPTokenMask);
-        serializedData[10] = abi.encode(stakingTokenMask);
-        serializedData[11] = abi.encode(stakedTokenMask);
-        serializedData[12] = abi.encode(rewardTokensMask);
-        return (_gearboxAdapterType, _gearboxAdapterVersion, serializedData);
+    function serialize() external view override returns (bytes memory serializedData) {
+        serializedData = abi.encode(
+            creditManager,
+            targetContract,
+            curveLPtoken,
+            stakingToken,
+            stakedPhantomToken,
+            [extraReward1, extraReward2, extraReward3, extraReward4],
+            curveLPTokenMask,
+            stakingTokenMask,
+            stakedTokenMask,
+            rewardTokensMask
+        );
     }
 }

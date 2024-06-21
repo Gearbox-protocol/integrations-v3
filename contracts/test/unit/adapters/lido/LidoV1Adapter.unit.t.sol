@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 // Gearbox Protocol. Generalized leverage for DeFi protocols
 // (c) Gearbox Foundation, 2023.
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.23;
 
 import {LidoV1Adapter} from "../../../../adapters/lido/LidoV1.sol";
 import {LidoV1Gateway} from "../../../../helpers/lido/LidoV1_WETHGateway.sol";

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Gearbox Protocol. Generalized leverage for DeFi protocols
 // (c) Gearbox Foundation, 2023.
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.23;
 
 import {AdapterType} from "@gearbox-protocol/sdk-gov/contracts/AdapterType.sol";
 
@@ -12,8 +12,8 @@ import {CurveV1AdapterBase} from "./CurveV1_Base.sol";
 /// @title Curve V1 2 assets adapter
 /// @notice Implements logic allowing to interact with Curve pools with 2 assets
 contract CurveV1Adapter2Assets is CurveV1AdapterBase, ICurveV1_2AssetsAdapter {
-    function _gearboxAdapterType() public pure virtual override returns (AdapterType) {
-        return AdapterType.CURVE_V1_2ASSETS;
+    function adapterType() external pure virtual override returns (uint256) {
+        return uint256(AdapterType.CURVE_V1_2ASSETS);
     }
 
     /// @notice Constructor
@@ -90,27 +90,18 @@ contract CurveV1Adapter2Assets is CurveV1AdapterBase, ICurveV1_2AssetsAdapter {
 
     /// @notice Returns all adapter parameters serialized into a bytes array,
     ///         as well as adapter type and version, to properly deserialize
-    function serialize() external view virtual override returns (AdapterType, uint16, bytes[] memory) {
-        bytes[] memory serializedData = new bytes[](19);
-        serializedData[0] = abi.encode(creditManager);
-        serializedData[1] = abi.encode(targetContract);
-        serializedData[2] = abi.encode(token);
-        serializedData[3] = abi.encode(lp_token);
-        serializedData[4] = abi.encode(lpTokenMask);
-        serializedData[5] = abi.encode(metapoolBase);
-        serializedData[6] = abi.encode(use256);
-        serializedData[7] = abi.encode(token0);
-        serializedData[8] = abi.encode(token1);
-        serializedData[9] = abi.encode(token0Mask);
-        serializedData[10] = abi.encode(token1Mask);
-        serializedData[11] = abi.encode(underlying0);
-        serializedData[12] = abi.encode(underlying1);
-        serializedData[13] = abi.encode(underlying2);
-        serializedData[14] = abi.encode(underlying3);
-        serializedData[15] = abi.encode(underlying0Mask);
-        serializedData[16] = abi.encode(underlying1Mask);
-        serializedData[17] = abi.encode(underlying2Mask);
-        serializedData[18] = abi.encode(underlying3Mask);
-        return (_gearboxAdapterType(), _gearboxAdapterVersion, serializedData);
+    function serialize() external view virtual override returns (bytes memory serializedData) {
+        serializedData = abi.encode(creditManager, targetContract, token, lp_token, lpTokenMask, metapoolBase);
+
+        serializedData = bytes.concat(
+            serializedData,
+            abi.encode(
+                use256,
+                [token0, token1],
+                [token0Mask, token1Mask],
+                [underlying0, underlying1, underlying2, underlying3],
+                [underlying0Mask, underlying1Mask, underlying2Mask, underlying3Mask]
+            )
+        );
     }
 }

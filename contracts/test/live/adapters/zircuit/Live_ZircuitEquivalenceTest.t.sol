@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 // Gearbox Protocol. Generalized leverage for DeFi protocols
 // (c) Gearbox Foundation, 2023.
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.23;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {ICreditFacadeV3} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacadeV3.sol";
@@ -17,7 +17,7 @@ import {IPriceFeed} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IP
 
 import {ZircuitPoolCalls, ZircuitPoolMulticaller} from "../../../multicall/zircuit/ZircuitPool_Calls.sol";
 
-import {IAdapter} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IAdapter.sol";
+import {IAdapter} from "../../../../interfaces/IAdapter.sol";
 import {AdapterType} from "@gearbox-protocol/sdk-gov/contracts/AdapterType.sol";
 
 import {Tokens} from "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
@@ -51,10 +51,9 @@ contract Live_ZircuitEquivalenceTest is LiveTestHelper {
 
         uint256 len = stages.length;
         _stages = new string[](len);
-        unchecked {
-            for (uint256 i; i < len; ++i) {
-                _stages[i] = stages[i];
-            }
+
+        for (uint256 i; i < len; ++i) {
+            _stages[i] = stages[i];
         }
     }
 
