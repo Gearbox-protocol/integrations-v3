@@ -18,7 +18,8 @@ import {
 enum PoolStatus {
     NOT_ALLOWED,
     ALLOWED,
-    SWAP_ONLY
+    SWAP_ONLY,
+    WITHDRAWAL_ONLY
 }
 
 struct SingleSwapDiff {
@@ -47,11 +48,11 @@ interface IBalancerV2VaultAdapter is IAdapter, IBalancerV2VaultAdapterEvents, IB
 
     function swap(SingleSwap memory singleSwap, FundManagement memory, uint256 limit, uint256 deadline)
         external
-        returns (uint256 tokensToEnable, uint256 tokensToDisable);
+        returns (bool useSafePrices);
 
     function swapDiff(SingleSwapDiff memory singleSwapDiff, uint256 limitRateRAY, uint256 deadline)
         external
-        returns (uint256 tokensToEnable, uint256 tokensToDisable);
+        returns (bool useSafePrices);
 
     function batchSwap(
         SwapKind kind,
@@ -60,7 +61,7 @@ interface IBalancerV2VaultAdapter is IAdapter, IBalancerV2VaultAdapterEvents, IB
         FundManagement memory,
         int256[] memory limits,
         uint256 deadline
-    ) external returns (uint256 tokensToEnable, uint256 tokensToDisable);
+    ) external returns (bool useSafePrices);
 
     // --------- //
     // JOIN POOL //
@@ -68,15 +69,15 @@ interface IBalancerV2VaultAdapter is IAdapter, IBalancerV2VaultAdapterEvents, IB
 
     function joinPool(bytes32 poolId, address, address, JoinPoolRequest memory request)
         external
-        returns (uint256 tokensToEnable, uint256 tokensToDisable);
+        returns (bool useSafePrices);
 
     function joinPoolSingleAsset(bytes32 poolId, IAsset assetIn, uint256 amountIn, uint256 minAmountOut)
         external
-        returns (uint256 tokensToEnable, uint256 tokensToDisable);
+        returns (bool useSafePrices);
 
     function joinPoolSingleAssetDiff(bytes32 poolId, IAsset assetIn, uint256 leftoverAmount, uint256 minRateRAY)
         external
-        returns (uint256 tokensToEnable, uint256 tokensToDisable);
+        returns (bool useSafePrices);
 
     // --------- //
     // EXIT POOL //
@@ -84,15 +85,15 @@ interface IBalancerV2VaultAdapter is IAdapter, IBalancerV2VaultAdapterEvents, IB
 
     function exitPool(bytes32 poolId, address, address payable, ExitPoolRequest memory request)
         external
-        returns (uint256 tokensToEnable, uint256 tokensToDisable);
+        returns (bool useSafePrices);
 
     function exitPoolSingleAsset(bytes32 poolId, IAsset assetOut, uint256 amountIn, uint256 minAmountOut)
         external
-        returns (uint256 tokensToEnable, uint256 tokensToDisable);
+        returns (bool useSafePrices);
 
     function exitPoolSingleAssetDiff(bytes32 poolId, IAsset assetOut, uint256 leftoverAmount, uint256 minRateRAY)
         external
-        returns (uint256 tokensToEnable, uint256 tokensToDisable);
+        returns (bool useSafePrices);
 
     // ------------- //
     // CONFIGURATION //

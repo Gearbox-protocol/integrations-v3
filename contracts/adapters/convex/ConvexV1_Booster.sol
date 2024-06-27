@@ -29,6 +29,12 @@ contract ConvexV1BoosterAdapter is AbstractAdapter, IConvexV1BoosterAdapter {
     /// @dev Set of all pids that have corresponding phantom tokens
     EnumerableSet.UintSet internal _supportedPids;
 
+    /// @notice Maps pool ID to Curve token being deposited
+    mapping(uint256 => address) public override pidToCurveToken;
+
+    /// @notice Maps pool ID to pool's Convex staking token
+    mapping(uint256 => address) public override pidToConvexToken;
+
     /// @notice Maps pool ID to phantom token representing staked position
     mapping(uint256 => address) public override pidToPhantomToken;
 
@@ -39,21 +45,31 @@ contract ConvexV1BoosterAdapter is AbstractAdapter, IConvexV1BoosterAdapter {
         AbstractAdapter(_creditManager, _booster) // U:[CVX1B-1]
     {}
 
+    /// @dev Reverts if the passed pid is not recognized by the adapter
+    modifier supportedPidsOnly(uint256 pid) {
+        // Checking for a supported pid is required both during deposits and withdrawals,
+        // as adding pools to Convex is permissionless and not sanitizing the pid would
+        // allow users to potentially run arbitrary code mid-execution
+        if (!_supportedPids.contains(pid)) revert UnsupportedPidException();
+        _;
+    }
+
     // ------- //
     // DEPOSIT //
     // ------- //
 
     /// @notice Deposits Curve LP tokens into Booster
     /// @param _pid ID of the pool to deposit to
-    /// @param _stake Whether to stake Convex LP tokens in the rewards pool
-    /// @dev `_amount` parameter is ignored since calldata is passed directly to the target contract
-    function deposit(uint256 _pid, uint256, bool _stake)
+    /// @dev `_amount` and `_stake` parameters are ignored since calldata is passed directly to the target contract
+    function deposit(uint256 _pid, uint256, bool)
         external
         override
         creditFacadeOnly // U:[CVX1B-2]
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+        supportedPidsOnly(_pid) // U:[CVX1B-2A]
+        returns (bool)
     {
-        (tokensToEnable, tokensToDisable) = _deposit(_pid, _stake, msg.data, false); // U:[CVX1B-3]
+        _executeSwapSafeApprove(pidToCurveToken[_pid], msg.data); // U:[CVX1B-3]
+        return false;
     }
 
     /// @notice Deposits the entire balance of Curve LP tokens into Booster, except the specified amount
@@ -64,44 +80,24 @@ contract ConvexV1BoosterAdapter is AbstractAdapter, IConvexV1BoosterAdapter {
         external
         override
         creditFacadeOnly // U:[CVX1B-2]
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+        supportedPidsOnly(_pid) // U:[CVX1B-2A]
+        returns (bool)
     {
         address creditAccount = _creditAccount(); // U:[CVX1B-4]
 
-        IBooster.PoolInfo memory pool = IBooster(targetContract).poolInfo(_pid);
-
-        address tokenIn = pool.lptoken; // U:[CVX1B-4]
-        address tokenOut = _stake ? pidToPhantomToken[_pid] : pool.token; // U:[CVX1B-4]
+        address tokenIn = pidToCurveToken[_pid]; // U:[CVX1B-4]
 
         uint256 balance = IERC20(tokenIn).balanceOf(creditAccount); // U:[CVX1B-4]
 
         if (balance > leftoverAmount) {
             unchecked {
-                (tokensToEnable, tokensToDisable,) = _executeSwapSafeApprove(
-                    tokenIn,
-                    tokenOut,
-                    abi.encodeCall(IBooster.deposit, (_pid, balance - leftoverAmount, _stake)),
-                    leftoverAmount <= 1
+                _executeSwapSafeApprove(
+                    tokenIn, abi.encodeCall(IBooster.deposit, (_pid, balance - leftoverAmount, _stake))
                 ); // U:[CVX1B-4]
             }
         }
-    }
 
-    /// @dev Internal implementation of `deposit` and `depositDiff`
-    ///      - Curve LP token is approved before the call
-    ///      - Convex LP token (or staked phantom token, if `_stake` is true) is enabled after the call
-    ///      - Curve LP token is only disabled when depositing the entire balance
-    function _deposit(uint256 _pid, bool _stake, bytes memory callData, bool disableCurveLP)
-        internal
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
-    {
-        IBooster.PoolInfo memory pool = IBooster(targetContract).poolInfo(_pid);
-
-        address tokenIn = pool.lptoken; // U:[CVX1B-3,4]
-        address tokenOut = _stake ? pidToPhantomToken[_pid] : pool.token; // U:[CVX1B-3,4]
-
-        // using `_executeSwap` because tokens are not known in advance and need to check if they are registered
-        (tokensToEnable, tokensToDisable,) = _executeSwapSafeApprove(tokenIn, tokenOut, callData, disableCurveLP); // U:[CVX1B-3,4]
+        return false;
     }
 
     // -------- //
@@ -115,9 +111,11 @@ contract ConvexV1BoosterAdapter is AbstractAdapter, IConvexV1BoosterAdapter {
         external
         override
         creditFacadeOnly // U:[CVX1B-2]
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+        supportedPidsOnly(_pid) // U:[CVX1B-2A]
+        returns (bool)
     {
-        (tokensToEnable, tokensToDisable) = _withdraw(_pid, msg.data, false); // U:[CVX1B-5]
+        _execute(msg.data); // U:[CVX1B-5]
+        return false;
     }
 
     /// @notice Withdraws all Curve LP tokens from Booster, except the specified amount
@@ -127,43 +125,22 @@ contract ConvexV1BoosterAdapter is AbstractAdapter, IConvexV1BoosterAdapter {
         external
         override
         creditFacadeOnly // U:[CVX1B-2]
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+        supportedPidsOnly(_pid) // U:[CVX1B-2A]
+        returns (bool)
     {
         address creditAccount = _creditAccount(); // U:[CVX1B-6]
 
-        IBooster.PoolInfo memory pool = IBooster(targetContract).poolInfo(_pid);
-
-        address tokenIn = pool.token; // U:[CVX1B-6]
-        address tokenOut = pool.lptoken; // U:[CVX1B-6]
+        address tokenIn = pidToConvexToken[_pid]; // U:[CVX1B-6]
 
         uint256 balance = IERC20(tokenIn).balanceOf(creditAccount); // U:[CVX1B-6]
 
         if (balance > leftoverAmount) {
             unchecked {
-                (tokensToEnable, tokensToDisable,) = _executeSwapNoApprove(
-                    tokenIn,
-                    tokenOut,
-                    abi.encodeCall(IBooster.withdraw, (_pid, balance - leftoverAmount)),
-                    leftoverAmount <= 1
-                ); // U:[CVX1B-6]
+                _execute(abi.encodeCall(IBooster.withdraw, (_pid, balance - leftoverAmount))); // U:[CVX1B-6]
             }
         }
-    }
 
-    /// @dev Internal implementation of `withdraw` and `withdrawDiff`
-    ///      - Curve LP token is enabled after the call
-    ///      - Convex LP token is only disabled when withdrawing the entire stake
-    function _withdraw(uint256 _pid, bytes memory callData, bool disableConvexLP)
-        internal
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
-    {
-        IBooster.PoolInfo memory pool = IBooster(targetContract).poolInfo(_pid);
-
-        address tokenIn = pool.token; // U:[CVX1B-5,6]
-        address tokenOut = pool.lptoken; // U:[CVX1B-5,6]
-
-        // using `_executeSwap` because tokens are not known in advance and need to check if they are registered
-        (tokensToEnable, tokensToDisable,) = _executeSwapNoApprove(tokenIn, tokenOut, callData, disableConvexLP); // U:[CVX1B-5,6]
+        return false;
     }
 
     // ---- //
@@ -193,8 +170,8 @@ contract ConvexV1BoosterAdapter is AbstractAdapter, IConvexV1BoosterAdapter {
     // CONFIGURATION //
     // ------------- //
 
-    /// @notice Updates the mapping of pool IDs to phantom staked token addresses
-    function updateStakedPhantomTokensMap()
+    /// @notice Updates the set of supported pids and related token mappings
+    function updateSupportedPids()
         external
         override
         configuratorOnly // U:[CVX1B-7]
@@ -216,9 +193,16 @@ contract ConvexV1BoosterAdapter is AbstractAdapter, IConvexV1BoosterAdapter {
                 ) {
                     uint256 pid = IBaseRewardPool(poolTargetContract).pid();
                     address phantomToken = IConvexV1BaseRewardPoolAdapter(adapter).stakedPhantomToken();
+
+                    /// No sanity checks on pool-related tokens (Curve token, Convex token, phantom token) being collateral
+                    /// need to be performed, as they were already done while deploying the pool adapter itself
+
                     pidToPhantomToken[pid] = phantomToken;
+                    pidToCurveToken[pid] = IConvexV1BaseRewardPoolAdapter(adapter).curveLPtoken();
+                    pidToConvexToken[pid] = IConvexV1BaseRewardPoolAdapter(adapter).stakingToken();
+
                     _supportedPids.add(pid);
-                    emit SetPidToPhantomToken(pid, phantomToken);
+                    emit AddSupportedPid(pid);
                 }
             }
         }

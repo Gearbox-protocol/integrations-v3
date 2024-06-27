@@ -4,12 +4,13 @@
 pragma solidity ^0.8.23;
 
 import {ZircuitPoolAdapterHarness} from "./ZircuitPoolAdapter.harness.sol";
+import {IZircuitPoolAdapterExceptions} from "../../../../interfaces/zircuit/IZircuitPoolAdapter.sol";
 import {IZircuitPool} from "../../../../integrations/zircuit/IZircuitPool.sol";
 import {GeneralMock} from "@gearbox-protocol/core-v3/contracts/test/mocks/GeneralMock.sol";
 import {AdapterUnitTestHelper} from "../AdapterUnitTestHelper.sol";
 
 /// @title Zircuit adapter unit test
-contract ZircuitPoolAdapterUnitTest is AdapterUnitTestHelper {
+contract ZircuitPoolAdapterUnitTest is AdapterUnitTestHelper, IZircuitPoolAdapterExceptions {
     ZircuitPoolAdapterHarness adapter;
     GeneralMock zircuitMock;
 
@@ -32,6 +33,7 @@ contract ZircuitPoolAdapterUnitTest is AdapterUnitTestHelper {
         adapter = new ZircuitPoolAdapterHarness(address(creditManager), address(zircuitMock));
 
         adapter.hackTokenToPhantomToken(depositToken, phantomToken);
+        adapter.hackSupportedUnderlyings(depositToken);
     }
 
     /// @notice U:[ZIR-1]: functions revert on wrong caller
@@ -49,24 +51,39 @@ contract ZircuitPoolAdapterUnitTest is AdapterUnitTestHelper {
         adapter.withdrawDiff(address(1), 1);
 
         _revertsOnNonConfiguratorCaller();
-        adapter.updatePhantomTokensMap();
+        adapter.updateSupportedUnderlyings();
+    }
+
+    /// @notice U:[ZIR-1A]: functions revert on unsupported token
+    function test_U_ZIR_01A_functions_revert_on_unsupported_token() public {
+        vm.expectRevert(UnsupportedUnderlyingException.selector);
+        vm.prank(creditFacade);
+        adapter.depositFor(address(1), address(1), 1);
+
+        vm.expectRevert(UnsupportedUnderlyingException.selector);
+        vm.prank(creditFacade);
+        adapter.depositDiff(address(1), 1);
+
+        vm.expectRevert(UnsupportedUnderlyingException.selector);
+        vm.prank(creditFacade);
+        adapter.withdraw(address(1), 1);
+
+        vm.expectRevert(UnsupportedUnderlyingException.selector);
+        vm.prank(creditFacade);
+        adapter.withdrawDiff(address(1), 1);
     }
 
     /// @notice U:[ZIR-2]: depositFor works correctly
     function test_U_ZIR_02_depositFor_works_correctly() public {
         _executesSwap({
             tokenIn: depositToken,
-            tokenOut: phantomToken,
             callData: abi.encodeCall(IZircuitPool.depositFor, (depositToken, creditAccount, 1000)),
-            requiresApproval: true,
-            validatesTokens: false
+            requiresApproval: true
         });
 
         vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.depositFor(depositToken, address(1), 1000);
-
-        assertEq(tokensToEnable, token1Mask, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
+        bool useSafePrices = adapter.depositFor(depositToken, address(1), 1000);
+        assertFalse(useSafePrices);
     }
 
     /// @notice U:[ZIR-3]: depositDiff works correctly
@@ -75,34 +92,26 @@ contract ZircuitPoolAdapterUnitTest is AdapterUnitTestHelper {
 
         _executesSwap({
             tokenIn: depositToken,
-            tokenOut: phantomToken,
             callData: abi.encodeCall(IZircuitPool.depositFor, (depositToken, creditAccount, 9000)),
-            requiresApproval: true,
-            validatesTokens: false
+            requiresApproval: true
         });
 
         vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.depositDiff(depositToken, 1000);
-
-        assertEq(tokensToEnable, token1Mask, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
+        bool useSafePrices = adapter.depositDiff(depositToken, 1000);
+        assertFalse(useSafePrices);
     }
 
     /// @notice U:[ZIR-4]: withdraw works correctly
     function test_U_ZIR_04_withdraw_works_correctly() public {
         _executesSwap({
             tokenIn: phantomToken,
-            tokenOut: depositToken,
             callData: abi.encodeCall(IZircuitPool.withdraw, (depositToken, 1000)),
-            requiresApproval: false,
-            validatesTokens: false
+            requiresApproval: false
         });
 
         vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.withdraw(depositToken, 1000);
-
-        assertEq(tokensToEnable, token0Mask, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
+        bool useSafePrices = adapter.withdraw(depositToken, 1000);
+        assertFalse(useSafePrices);
     }
 
     /// @notice U:[ZIR-5]: withdrawDiff works correctly
@@ -111,16 +120,12 @@ contract ZircuitPoolAdapterUnitTest is AdapterUnitTestHelper {
 
         _executesSwap({
             tokenIn: phantomToken,
-            tokenOut: depositToken,
             callData: abi.encodeCall(IZircuitPool.withdraw, (depositToken, 9000)),
-            requiresApproval: false,
-            validatesTokens: false
+            requiresApproval: false
         });
 
         vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.withdrawDiff(depositToken, 1000);
-
-        assertEq(tokensToEnable, token0Mask, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
+        bool useSafePrices = adapter.withdrawDiff(depositToken, 1000);
+        assertFalse(useSafePrices);
     }
 }
