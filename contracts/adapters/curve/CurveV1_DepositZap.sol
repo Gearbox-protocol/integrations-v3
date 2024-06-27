@@ -40,9 +40,10 @@ contract CurveV1AdapterDeposit is CurveV1AdapterBase {
         override
         creditFacadeOnly
         withLPTokenApproval
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+        returns (bool)
     {
-        (tokensToEnable, tokensToDisable) = _remove_liquidity_one_coin(amount, i, minAmount);
+        _remove_liquidity_one_coin(amount, i, minAmount);
+        return true;
     }
 
     /// @inheritdoc CurveV1AdapterBase
@@ -53,9 +54,10 @@ contract CurveV1AdapterDeposit is CurveV1AdapterBase {
         override
         creditFacadeOnly
         withLPTokenApproval
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+        returns (bool)
     {
-        (tokensToEnable, tokensToDisable) = _remove_liquidity_one_coin(amount, _toU256(i), minAmount);
+        _remove_liquidity_one_coin(amount, _toU256(i), minAmount);
+        return true;
     }
 
     /// @inheritdoc CurveV1AdapterBase
@@ -66,9 +68,10 @@ contract CurveV1AdapterDeposit is CurveV1AdapterBase {
         override
         creditFacadeOnly
         withLPTokenApproval
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+        returns (bool)
     {
-        (tokensToEnable, tokensToDisable) = _remove_diff_liquidity_one_coin(i, leftoverAmount, rateMinRAY);
+        _remove_diff_liquidity_one_coin(i, leftoverAmount, rateMinRAY);
+        return true;
     }
 
     /// @dev Does nothing since this adapter should not be used to add liquidity
@@ -95,14 +98,11 @@ contract CurveV1AdapterDeposit is CurveV1AdapterBase {
             targetContract,
             token,
             lp_token,
-            lpTokenMask,
             metapoolBase,
             nCoins,
             use256,
             [token0, token1, token2, token3],
-            [token0Mask, token1Mask, token2Mask, token3Mask],
-            [underlying0, underlying1, underlying2, underlying3],
-            [underlying0Mask, underlying1Mask, underlying2Mask, underlying3Mask]
+            [underlying0, underlying1, underlying2, underlying3]
         );
     }
 }

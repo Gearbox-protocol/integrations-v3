@@ -41,21 +41,23 @@ contract CurveV1AdapterStETH is CurveV1Adapter2Assets {
         override
         creditFacadeOnly
         withLPTokenApproval
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+        returns (bool)
     {
-        (tokensToEnable, tokensToDisable) = _remove_liquidity();
+        _execute(msg.data);
+        return true;
     }
 
     /// @inheritdoc CurveV1Adapter2Assets
     /// @dev Unlike other adapters, approves the LP token to the target
-    function remove_liquidity_imbalance(uint256[N_COINS] calldata amounts, uint256)
+    function remove_liquidity_imbalance(uint256[N_COINS] calldata, uint256)
         external
         override
         creditFacadeOnly
         withLPTokenApproval
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+        returns (bool)
     {
-        (tokensToEnable, tokensToDisable) = _remove_liquidity_imbalance(amounts[0] > 1, amounts[1] > 1, false, false);
+        _execute(msg.data);
+        return true;
     }
 
     /// @inheritdoc CurveV1AdapterBase
@@ -65,9 +67,10 @@ contract CurveV1AdapterStETH is CurveV1Adapter2Assets {
         override(CurveV1AdapterBase, ICurveV1Adapter)
         creditFacadeOnly
         withLPTokenApproval
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+        returns (bool)
     {
-        (tokensToEnable, tokensToDisable) = _remove_liquidity_one_coin(amount, i, minAmount);
+        _remove_liquidity_one_coin(amount, i, minAmount);
+        return true;
     }
 
     /// @inheritdoc CurveV1AdapterBase
@@ -77,9 +80,10 @@ contract CurveV1AdapterStETH is CurveV1Adapter2Assets {
         override(CurveV1AdapterBase, ICurveV1Adapter)
         creditFacadeOnly
         withLPTokenApproval
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+        returns (bool)
     {
-        (tokensToEnable, tokensToDisable) = _remove_liquidity_one_coin(amount, _toU256(i), minAmount);
+        _remove_liquidity_one_coin(amount, _toU256(i), minAmount);
+        return true;
     }
 
     /// @inheritdoc CurveV1AdapterBase
@@ -89,25 +93,16 @@ contract CurveV1AdapterStETH is CurveV1Adapter2Assets {
         override(CurveV1AdapterBase, ICurveV1Adapter)
         creditFacadeOnly
         withLPTokenApproval
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+        returns (bool)
     {
-        (tokensToEnable, tokensToDisable) = _remove_diff_liquidity_one_coin(i, leftoverAmount, rateMinRAY);
+        _remove_diff_liquidity_one_coin(i, leftoverAmount, rateMinRAY);
+        return true;
     }
 
     /// @notice Returns all adapter parameters serialized into a bytes array,
     ///         as well as adapter type and version, to properly deserialize
     function serialize() external view override returns (bytes memory serializedData) {
-        serializedData = abi.encode(
-            creditManager,
-            targetContract,
-            token,
-            lp_token,
-            lpTokenMask,
-            metapoolBase,
-            nCoins,
-            use256,
-            [token0, token1],
-            [token0Mask, token1Mask]
-        );
+        serializedData =
+            abi.encode(creditManager, targetContract, token, lp_token, metapoolBase, nCoins, use256, [token0, token1]);
     }
 }

@@ -57,9 +57,10 @@ contract CamelotV3Adapter is AbstractAdapter, ICamelotV3Adapter {
         external
         override
         creditFacadeOnly // U: [CAMV3-2]
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+        returns (bool)
     {
-        (tokensToEnable, tokensToDisable) = _exactInputSingleInternal(params, false); // U: [CAMV3-3]
+        _exactInputSingleInternal(params, false); // U: [CAMV3-3]
+        return true;
     }
 
     /// @notice Swaps given amount of input token for output token through a single pool, supporting fee on transfer tokens
@@ -69,16 +70,18 @@ contract CamelotV3Adapter is AbstractAdapter, ICamelotV3Adapter {
         external
         override
         creditFacadeOnly // U: [CAMV3-2]
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+        returns (bool)
     {
-        (tokensToEnable, tokensToDisable) = _exactInputSingleInternal(params, true); // U: [CAMV3-3A]
+        _exactInputSingleInternal(params, true); // U: [CAMV3-3A]
+        return true;
     }
 
     /// @dev Internal logic for `exactInputSingle` and `exactInputSingleSupportingFeeOnTransferTokens`
     function _exactInputSingleInternal(ICamelotV3Router.ExactInputSingleParams calldata params, bool isFeeOnTransfer)
         internal
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
     {
+        if (!isPoolAllowed(params.tokenIn, params.tokenOut)) revert InvalidPathException();
+
         address creditAccount = _creditAccount();
 
         ICamelotV3Router.ExactInputSingleParams memory paramsUpdate = params;
@@ -88,8 +91,7 @@ contract CamelotV3Adapter is AbstractAdapter, ICamelotV3Adapter {
             ? abi.encodeCall(ICamelotV3Router.exactInputSingleSupportingFeeOnTransferTokens, (paramsUpdate))
             : abi.encodeCall(ICamelotV3Router.exactInputSingle, (paramsUpdate));
 
-        // calling `_executeSwap` because we need to check if output token is registered as collateral token in the CM
-        (tokensToEnable, tokensToDisable,) = _executeSwapSafeApprove(params.tokenIn, params.tokenOut, callData, false);
+        _executeSwapSafeApprove(params.tokenIn, callData);
     }
 
     /// @notice Swaps all balance of input token for output token through a single pool, except the specified amount
@@ -98,9 +100,10 @@ contract CamelotV3Adapter is AbstractAdapter, ICamelotV3Adapter {
         external
         override
         creditFacadeOnly // U: [CAMV3-2]
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+        returns (bool)
     {
-        (tokensToEnable, tokensToDisable) = _exactDiffInputSingleInternal(params, false); // U: [CAMV3-4]
+        _exactDiffInputSingleInternal(params, false); // U: [CAMV3-4]
+        return true;
     }
 
     /// @notice Swaps all balance of input token for output token through a single pool, except the specified amount
@@ -109,20 +112,20 @@ contract CamelotV3Adapter is AbstractAdapter, ICamelotV3Adapter {
         external
         override
         creditFacadeOnly
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+        returns (bool)
     {
-        (tokensToEnable, tokensToDisable) = _exactDiffInputSingleInternal(params, true); // U: [CAMV3-4A]
+        _exactDiffInputSingleInternal(params, true); // U: [CAMV3-4A]
+        return true;
     }
 
     /// @dev Internal logic for `exactDiffInputSingle` and `exactDiffInputSingleSupportingFeeOnTransferTokens`
-    function _exactDiffInputSingleInternal(ExactDiffInputSingleParams calldata params, bool isFeeOnTransfer)
-        internal
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
-    {
+    function _exactDiffInputSingleInternal(ExactDiffInputSingleParams calldata params, bool isFeeOnTransfer) internal {
+        if (!isPoolAllowed(params.tokenIn, params.tokenOut)) revert InvalidPathException();
+
         address creditAccount = _creditAccount();
 
         uint256 amount = IERC20(params.tokenIn).balanceOf(creditAccount);
-        if (amount <= params.leftoverAmount) return (0, 0);
+        if (amount <= params.leftoverAmount) return;
         unchecked {
             amount -= params.leftoverAmount;
         }
@@ -141,9 +144,7 @@ contract CamelotV3Adapter is AbstractAdapter, ICamelotV3Adapter {
             ? abi.encodeCall(ICamelotV3Router.exactInputSingleSupportingFeeOnTransferTokens, (paramsUpdate))
             : abi.encodeCall(ICamelotV3Router.exactInputSingle, (paramsUpdate));
 
-        // calling `_executeSwap` because we need to check if output token is registered as collateral token in the CM
-        (tokensToEnable, tokensToDisable,) =
-            _executeSwapSafeApprove(params.tokenIn, params.tokenOut, callData, params.leftoverAmount <= 1);
+        _executeSwapSafeApprove(params.tokenIn, callData);
     }
 
     /// @notice Swaps given amount of input token for output token through multiple pools
@@ -154,20 +155,18 @@ contract CamelotV3Adapter is AbstractAdapter, ICamelotV3Adapter {
         external
         override
         creditFacadeOnly // U: [CAMV3-2]
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+        returns (bool)
     {
         address creditAccount = _creditAccount();
 
-        (bool valid, address tokenIn, address tokenOut) = _validatePath(params.path);
+        (bool valid, address tokenIn,) = _validatePath(params.path);
         if (!valid) revert InvalidPathException();
 
         ICamelotV3Router.ExactInputParams memory paramsUpdate = params;
         paramsUpdate.recipient = creditAccount;
 
-        // calling `_executeSwap` because we need to check if output token is registered as collateral token in the CM
-        (tokensToEnable, tokensToDisable,) = _executeSwapSafeApprove(
-            tokenIn, tokenOut, abi.encodeCall(ICamelotV3Router.exactInput, (paramsUpdate)), false
-        ); // U: [CAMV3-5]
+        _executeSwapSafeApprove(tokenIn, abi.encodeCall(ICamelotV3Router.exactInput, (paramsUpdate))); // U: [CAMV3-5]
+        return true;
     }
 
     /// @notice Swaps all balance of input token for output token through multiple pools, except the specified amount
@@ -177,15 +176,15 @@ contract CamelotV3Adapter is AbstractAdapter, ICamelotV3Adapter {
         external
         override
         creditFacadeOnly // U: [CAMV3-2]
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+        returns (bool)
     {
         address creditAccount = _creditAccount();
 
-        (bool valid, address tokenIn, address tokenOut) = _validatePath(params.path);
+        (bool valid, address tokenIn,) = _validatePath(params.path);
         if (!valid) revert InvalidPathException();
 
         uint256 amount = IERC20(tokenIn).balanceOf(creditAccount);
-        if (amount <= params.leftoverAmount) return (0, 0);
+        if (amount <= params.leftoverAmount) return false;
 
         unchecked {
             amount -= params.leftoverAmount;
@@ -198,10 +197,8 @@ contract CamelotV3Adapter is AbstractAdapter, ICamelotV3Adapter {
             amountOutMinimum: (amount * params.rateMinRAY) / RAY
         });
 
-        // calling `_executeSwap` because we need to check if output token is registered as collateral token in the CM
-        (tokensToEnable, tokensToDisable,) = _executeSwapSafeApprove(
-            tokenIn, tokenOut, abi.encodeCall(ICamelotV3Router.exactInput, (paramsUpdate)), params.leftoverAmount <= 1
-        ); // U: [CAMV3-6]
+        _executeSwapSafeApprove(tokenIn, abi.encodeCall(ICamelotV3Router.exactInput, (paramsUpdate))); // U: [CAMV3-6]
+        return true;
     }
 
     /// @notice Swaps input token for given amount of output token through a single pool
@@ -211,17 +208,16 @@ contract CamelotV3Adapter is AbstractAdapter, ICamelotV3Adapter {
         external
         override
         creditFacadeOnly // U: [CAMV3-2]
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+        returns (bool)
     {
+        if (!isPoolAllowed(params.tokenIn, params.tokenOut)) revert InvalidPathException();
         address creditAccount = _creditAccount();
 
         ICamelotV3Router.ExactOutputSingleParams memory paramsUpdate = params;
         paramsUpdate.recipient = creditAccount;
 
-        // calling `_executeSwap` because we need to check if output token is registered as collateral token in the CM
-        (tokensToEnable, tokensToDisable,) = _executeSwapSafeApprove(
-            params.tokenIn, params.tokenOut, abi.encodeCall(ICamelotV3Router.exactOutputSingle, (paramsUpdate)), false
-        ); // U: [CAMV3-7]
+        _executeSwapSafeApprove(params.tokenIn, abi.encodeCall(ICamelotV3Router.exactOutputSingle, (paramsUpdate))); // U: [CAMV3-7]
+        return true;
     }
 
     /// @notice Swaps input token for given amount of output token through multiple pools
@@ -232,20 +228,18 @@ contract CamelotV3Adapter is AbstractAdapter, ICamelotV3Adapter {
         external
         override
         creditFacadeOnly // U: [CAMV3-2]
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+        returns (bool)
     {
         address creditAccount = _creditAccount();
 
-        (bool valid, address tokenOut, address tokenIn) = _validatePath(params.path);
+        (bool valid,, address tokenIn) = _validatePath(params.path);
         if (!valid) revert InvalidPathException();
 
         ICamelotV3Router.ExactOutputParams memory paramsUpdate = params;
         paramsUpdate.recipient = creditAccount;
 
-        // calling `_executeSwap` because we need to check if output token is registered as collateral token in the CM
-        (tokensToEnable, tokensToDisable,) = _executeSwapSafeApprove(
-            tokenIn, tokenOut, abi.encodeCall(ICamelotV3Router.exactOutput, (paramsUpdate)), false
-        ); // U: [CAMV3-8]
+        _executeSwapSafeApprove(tokenIn, abi.encodeCall(ICamelotV3Router.exactOutput, (paramsUpdate))); // U: [CAMV3-8]
+        return true;
     }
 
     // ---- //
@@ -288,8 +282,15 @@ contract CamelotV3Adapter is AbstractAdapter, ICamelotV3Adapter {
         unchecked {
             for (uint256 i; i < len; ++i) {
                 (address token0, address token1) = _sortTokens(pools[i].token0, pools[i].token1);
+
                 bytes32 poolHash = keccak256(abi.encode(token0, token1));
                 if (pools[i].allowed) {
+                    /// For each added pool, we verify that the pool tokens are valid collaterals,
+                    /// as otherwise operations with unsupported tokens would be possible, leading
+                    /// to possibility of control flow capture
+                    _getMaskOrRevert(token0);
+                    _getMaskOrRevert(token1);
+
                     _supportedPoolHashes.add(poolHash);
                     _hashToPool[poolHash] = CamelotV3Pool({token0: token0, token1: token1});
                 } else {

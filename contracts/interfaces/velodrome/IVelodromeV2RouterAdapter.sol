@@ -39,14 +39,14 @@ interface IVelodromeV2RouterAdapter is IAdapter, IVelodromeV2AdapterEvents, IVel
         Route[] calldata routes,
         address,
         uint256 deadline
-    ) external returns (uint256 tokensToEnable, uint256 tokensToDisable);
+    ) external returns (bool useSafePrices);
 
     function swapDiffTokensForTokens(
         uint256 leftoverAmount,
         uint256 rateMinRAY,
         Route[] calldata routes,
         uint256 deadline
-    ) external returns (uint256 tokensToEnable, uint256 tokensToDisable);
+    ) external returns (bool useSafePrices);
 
     // ------------- //
     // CONFIGURATION //

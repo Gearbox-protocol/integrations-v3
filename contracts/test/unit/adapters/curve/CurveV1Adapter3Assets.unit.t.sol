@@ -63,45 +63,35 @@ contract CurveV1Adapter3AssetsUnitTest is AdapterUnitTestHelper {
         tokensToApprove[2] = token2;
         _executesCall({
             tokensToApprove: tokensToApprove,
-            tokensToValidate: new address[](0),
             callData: abi.encodeCall(ICurvePool3Assets.add_liquidity, ([uint256(750), 500, 250], 500))
         });
 
         vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.add_liquidity([uint256(750), 500, 250], 500);
-
-        assertEq(tokensToEnable, lpTokenMask, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
+        bool useSafePrices = adapter.add_liquidity([uint256(750), 500, 250], 500);
+        assertTrue(useSafePrices);
     }
 
     /// @notice U:[CRV3-3]: `remove_liquidity` works as expected
     function test_U_CRV3_03_remove_liquidity_works_as_expected() public {
         _executesCall({
             tokensToApprove: new address[](0),
-            tokensToValidate: new address[](0),
             callData: abi.encodeCall(ICurvePool3Assets.remove_liquidity, (500, [uint256(750), 500, 250]))
         });
 
         vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.remove_liquidity(500, [uint256(750), 500, 250]);
-
-        assertEq(tokensToEnable, token0Mask | token1Mask | token2Mask, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
+        bool useSafePrices = adapter.remove_liquidity(500, [uint256(750), 500, 250]);
+        assertTrue(useSafePrices);
     }
 
     /// @notice U:[CRV3-4]: `remove_liquidity_imbalance` works as expected
     function test_U_CRV3_04_remove_liquidity_imbalance_works_as_expected() public {
         _executesCall({
             tokensToApprove: new address[](0),
-            tokensToValidate: new address[](0),
             callData: abi.encodeCall(ICurvePool3Assets.remove_liquidity_imbalance, ([uint256(0), 500, 250], 500))
         });
 
         vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) =
-            adapter.remove_liquidity_imbalance([uint256(0), 500, 250], 500);
-
-        assertEq(tokensToEnable, token1Mask | token2Mask, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
+        bool useSafePrices = adapter.remove_liquidity_imbalance([uint256(0), 500, 250], 500);
+        assertTrue(useSafePrices);
     }
 }
