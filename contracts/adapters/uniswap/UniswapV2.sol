@@ -52,22 +52,21 @@ contract UniswapV2Adapter is AbstractAdapter, IUniswapV2Adapter {
         external
         override
         creditFacadeOnly // U:[UNI2-2]
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+        returns (bool)
     {
         address creditAccount = _creditAccount(); // U:[UNI2-3]
 
-        (bool valid, address tokenIn, address tokenOut) = _validatePath(path);
+        (bool valid, address tokenIn) = _validatePath(path);
         if (!valid) revert InvalidPathException(); // U:[UNI2-3]
 
-        // calling `_executeSwap` because we need to check if output token is registered as collateral token in the CM
-        (tokensToEnable, tokensToDisable,) = _executeSwapSafeApprove(
+        _executeSwapSafeApprove(
             tokenIn,
-            tokenOut,
             abi.encodeCall(
                 IUniswapV2Router02.swapTokensForExactTokens, (amountOut, amountInMax, path, creditAccount, deadline)
-            ),
-            false
+            )
         ); // U:[UNI2-3]
+
+        return true;
     }
 
     /// @notice Swap given amount of input token to output token
@@ -87,22 +86,21 @@ contract UniswapV2Adapter is AbstractAdapter, IUniswapV2Adapter {
         external
         override
         creditFacadeOnly // U:[UNI2-2]
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+        returns (bool)
     {
         address creditAccount = _creditAccount(); // U:[UNI2-4]
 
-        (bool valid, address tokenIn, address tokenOut) = _validatePath(path);
+        (bool valid, address tokenIn) = _validatePath(path);
         if (!valid) revert InvalidPathException(); // U:[UNI2-4]
 
-        // calling `_executeSwap` because we need to check if output token is registered as collateral token in the CM
-        (tokensToEnable, tokensToDisable,) = _executeSwapSafeApprove(
+        _executeSwapSafeApprove(
             tokenIn,
-            tokenOut,
             abi.encodeCall(
                 IUniswapV2Router02.swapExactTokensForTokens, (amountIn, amountOutMin, path, creditAccount, deadline)
-            ),
-            false
+            )
         ); // U:[UNI2-4]
+
+        return true;
     }
 
     /// @notice Swap the entire balance of input token to output token, except the specified amount
@@ -120,36 +118,29 @@ contract UniswapV2Adapter is AbstractAdapter, IUniswapV2Adapter {
         external
         override
         creditFacadeOnly // U:[UNI2-2]
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+        returns (bool)
     {
         address creditAccount = _creditAccount(); // U:[UNI2-5]
 
-        address tokenIn;
-        address tokenOut;
-
-        {
-            bool valid;
-            (valid, tokenIn, tokenOut) = _validatePath(path);
-            if (!valid) revert InvalidPathException(); // U:[UNI2-5]
-        }
+        (bool valid, address tokenIn) = _validatePath(path);
+        if (!valid) revert InvalidPathException(); // U:[UNI2-5]
 
         uint256 amount = IERC20(tokenIn).balanceOf(creditAccount); // U:[UNI2-5]
-        if (amount <= leftoverAmount) return (0, 0);
+        if (amount <= leftoverAmount) return false;
 
         unchecked {
             amount -= leftoverAmount; // U:[UNI2-5]
         }
 
-        // calling `_executeSwap` because we need to check if output token is registered as collateral token in the CM
-        (tokensToEnable, tokensToDisable,) = _executeSwapSafeApprove(
+        _executeSwapSafeApprove(
             tokenIn,
-            tokenOut,
             abi.encodeCall(
                 IUniswapV2Router02.swapExactTokensForTokens,
                 (amount, (amount * rateMinRAY) / RAY, path, creditAccount, deadline)
-            ),
-            leftoverAmount <= 1
+            )
         ); // U:[UNI2-5]
+
+        return true;
     }
 
     // ---- //
@@ -196,6 +187,12 @@ contract UniswapV2Adapter is AbstractAdapter, IUniswapV2Adapter {
                 (address token0, address token1) = _sortTokens(pairs[i].token0, pairs[i].token1);
                 bytes32 pairHash = keccak256(abi.encode(token0, token1));
                 if (pairs[i].allowed) {
+                    /// For each added pool, we verify that the pool tokens are valid collaterals,
+                    /// as otherwise operations with unsupported tokens would be possible, leading
+                    /// to possibility of control flow capture
+                    _getMaskOrRevert(token0);
+                    _getMaskOrRevert(token1);
+
                     _supportedPairHashes.add(pairHash);
                     _hashToPair[pairHash] = UniswapV2Pair({token0: token0, token1: token1});
                 } else {
@@ -211,19 +208,14 @@ contract UniswapV2Adapter is AbstractAdapter, IUniswapV2Adapter {
     // HELPERS //
     // ------- //
 
-    /// @dev Performs sanity check on a swap path, if path is valid also returns input and output tokens
+    /// @dev Performs sanity check on a swap path, if path is valid also returns the input token
     ///      - Path length must be no more than 4 (i.e., at most 3 hops)
     ///      - Each swap must be through an allowed pair
-    function _validatePath(address[] memory path)
-        internal
-        view
-        returns (bool valid, address tokenIn, address tokenOut)
-    {
+    function _validatePath(address[] memory path) internal view returns (bool valid, address tokenIn) {
         uint256 len = path.length;
-        if (len < 2 || len > 4) return (false, tokenIn, tokenOut); // U:[UNI2-7]
+        if (len < 2 || len > 4) return (false, tokenIn); // U:[UNI2-7]
 
         tokenIn = path[0]; // U:[UNI2-7]
-        tokenOut = path[len - 1]; // U:[UNI2-7]
         valid = isPairAllowed(path[0], path[1]);
         if (valid && len > 2) {
             valid = isPairAllowed(path[1], path[2]); // U:[UNI2-7]

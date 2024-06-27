@@ -20,12 +20,6 @@ contract YearnV2Adapter is AbstractAdapter, IYearnV2Adapter {
     /// @notice Vault's underlying token address
     address public immutable override token;
 
-    /// @notice Collateral token mask of underlying token in the credit manager
-    uint256 public immutable override tokenMask;
-
-    /// @notice Collateral token mask of yToken in the credit manager
-    uint256 public immutable override yTokenMask;
-
     /// @notice Constructor
     /// @param _creditManager Credit manager address
     /// @param _vault Yearn vault address
@@ -33,8 +27,11 @@ contract YearnV2Adapter is AbstractAdapter, IYearnV2Adapter {
         AbstractAdapter(_creditManager, _vault) // U:[YFI2-1]
     {
         token = IYVault(targetContract).token(); // U:[YFI2-1]
-        tokenMask = _getMaskOrRevert(token); // U:[YFI2-1]
-        yTokenMask = _getMaskOrRevert(_vault); // U:[YFI2-1]
+
+        // We verify that the vault asset and shares are valid collaterals
+        // in the system before deployment
+        _getMaskOrRevert(token); // U:[YFI2-1]
+        _getMaskOrRevert(_vault); // U:[YFI2-1]
     }
 
     // -------- //
@@ -46,16 +43,18 @@ contract YearnV2Adapter is AbstractAdapter, IYearnV2Adapter {
         external
         override
         creditFacadeOnly // U:[YFI2-2]
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+        returns (bool)
     {
         address creditAccount = _creditAccount(); // U:[YFI2-3]
 
         uint256 balance = IERC20(token).balanceOf(creditAccount); // U:[YFI2-3]
         if (balance > leftoverAmount) {
             unchecked {
-                (tokensToEnable, tokensToDisable) = _deposit(balance - leftoverAmount, leftoverAmount <= 1); // U:[YFI2-3]
+                _deposit(balance - leftoverAmount); // U:[YFI2-3]
             }
         }
+
+        return false;
     }
 
     /// @notice Deposit given amount of underlying tokens into the vault
@@ -64,9 +63,10 @@ contract YearnV2Adapter is AbstractAdapter, IYearnV2Adapter {
         external
         override
         creditFacadeOnly // U:[YFI2-2]
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+        returns (bool)
     {
-        (tokensToEnable, tokensToDisable) = _deposit(amount, false); // U:[YFI2-4]
+        _deposit(amount); // U:[YFI2-4]
+        return false;
     }
 
     /// @notice Deposit given amount of underlying tokens into the vault
@@ -76,23 +76,15 @@ contract YearnV2Adapter is AbstractAdapter, IYearnV2Adapter {
         external
         override
         creditFacadeOnly // U:[YFI2-2]
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+        returns (bool)
     {
-        (tokensToEnable, tokensToDisable) = _deposit(amount, false); // U:[YFI2-5]
+        _deposit(amount); // U:[YFI2-5]
+        return false;
     }
 
     /// @dev Internal implementation of `deposit` functions
-    ///      - underlying is approved before the call because vault needs permission to transfer it
-    ///      - yToken is enabled after the call
-    ///      - underlying is only disabled when depositing the entire balance
-    function _deposit(uint256 amount, bool disableTokenIn)
-        internal
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
-    {
-        _approveToken(token, type(uint256).max); // U:[YFI2-3,4,5]
-        _execute(abi.encodeWithSignature("deposit(uint256)", amount)); // U:[YFI2-3,4,5]
-        _approveToken(token, 1); // U:[YFI2-3,4,5]
-        (tokensToEnable, tokensToDisable) = (yTokenMask, disableTokenIn ? tokenMask : 0);
+    function _deposit(uint256 amount) internal {
+        _executeSwapSafeApprove(token, abi.encodeWithSignature("deposit(uint256)", amount)); // U:[YFI2-3,4,5]
     }
 
     // ----------- //
@@ -104,7 +96,7 @@ contract YearnV2Adapter is AbstractAdapter, IYearnV2Adapter {
         external
         override
         creditFacadeOnly // U:[YFI2-2]
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+        returns (bool)
     {
         address creditAccount = _creditAccount(); // U:[YFI2-6]
 
@@ -112,9 +104,10 @@ contract YearnV2Adapter is AbstractAdapter, IYearnV2Adapter {
 
         if (balance > leftoverAmount) {
             unchecked {
-                (tokensToEnable, tokensToDisable) = _withdraw(balance - leftoverAmount, leftoverAmount <= 1); // U:[YFI2-6]
+                _withdraw(balance - leftoverAmount); // U:[YFI2-6]
             }
         }
+        return false;
     }
 
     /// @notice Burn given amount of yTokens to withdraw corresponding amount of underlying from the vault
@@ -123,9 +116,10 @@ contract YearnV2Adapter is AbstractAdapter, IYearnV2Adapter {
         external
         override
         creditFacadeOnly // U:[YFI2-2]
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+        returns (bool)
     {
-        (tokensToEnable, tokensToDisable) = _withdraw(maxShares, false); // U:[YFI2-7]
+        _withdraw(maxShares); // U:[YFI2-7]
+        return false;
     }
 
     /// @notice Burn given amount of yTokens to withdraw corresponding amount of underlying from the vault
@@ -135,9 +129,10 @@ contract YearnV2Adapter is AbstractAdapter, IYearnV2Adapter {
         external
         override
         creditFacadeOnly // U:[YFI2-2]
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+        returns (bool)
     {
-        (tokensToEnable, tokensToDisable) = _withdraw(maxShares, false); // U:[YFI2-8]
+        _withdraw(maxShares); // U:[YFI2-8]
+        return false;
     }
 
     /// @notice Burn given amount of yTokens to withdraw corresponding amount of underlying from the vault
@@ -148,39 +143,21 @@ contract YearnV2Adapter is AbstractAdapter, IYearnV2Adapter {
         external
         override
         creditFacadeOnly // U:[YFI2-2]
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+        returns (bool)
     {
         address creditAccount = _creditAccount(); // U:[YFI2-9]
-        (tokensToEnable, tokensToDisable) = _withdraw(maxShares, creditAccount, maxLoss); // U:[YFI2-9]
+        _execute(abi.encodeWithSignature("withdraw(uint256,address,uint256)", maxShares, creditAccount, maxLoss)); // U:[YFI2-9]
+        return false;
     }
 
     /// @dev Internal implementation of `withdraw` functions
-    ///      - yToken is not approved because vault doesn't need permission to burn it
-    ///      - underlying is enabled after the call
-    ///      - yToken is only disabled when withdrawing the entire balance
-    function _withdraw(uint256 maxShares, bool disableTokenIn)
-        internal
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
-    {
+    function _withdraw(uint256 maxShares) internal {
         _execute(abi.encodeWithSignature("withdraw(uint256)", maxShares)); // U:[YFI2-6,7,8]
-        (tokensToEnable, tokensToDisable) = (tokenMask, disableTokenIn ? yTokenMask : 0);
-    }
-
-    /// @dev Internal implementation of `withdraw` function with `maxLoss` argument
-    ///      - yToken is not approved because vault doesn't need permission to burn it
-    ///      - underlying is enabled after the call
-    ///      - yToken is not disabled after the call
-    function _withdraw(uint256 maxShares, address creditAccount, uint256 maxLoss)
-        internal
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
-    {
-        _execute(abi.encodeWithSignature("withdraw(uint256,address,uint256)", maxShares, creditAccount, maxLoss)); // U:[YFI2-9]
-        (tokensToEnable, tokensToDisable) = (tokenMask, 0);
     }
 
     /// @notice Returns all adapter parameters serialized into a bytes array,
     ///         as well as adapter type and version, to properly deserialize
     function serialize() external view override returns (bytes memory serializedData) {
-        serializedData = abi.encode(creditManager, targetContract, token, tokenMask, yTokenMask);
+        serializedData = abi.encode(creditManager, targetContract, token);
     }
 }

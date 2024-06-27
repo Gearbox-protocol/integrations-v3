@@ -21,31 +21,17 @@ interface IConvexV1BaseRewardPoolAdapter is IAdapter {
 
     function extraReward4() external view returns (address);
 
-    function curveLPTokenMask() external view returns (uint256);
+    function stake(uint256) external returns (bool useSafePrices);
 
-    function stakingTokenMask() external view returns (uint256);
+    function stakeDiff(uint256 leftoverAmount) external returns (bool useSafePrices);
 
-    function stakedTokenMask() external view returns (uint256);
+    function getReward() external returns (bool useSafePrices);
 
-    function rewardTokensMask() external view returns (uint256);
+    function withdraw(uint256, bool claim) external returns (bool useSafePrices);
 
-    function stake(uint256) external returns (uint256 tokensToEnable, uint256 tokensToDisable);
+    function withdrawDiff(uint256 leftoverAmount, bool claim) external returns (bool useSafePrices);
 
-    function stakeDiff(uint256 leftoverAmount) external returns (uint256 tokensToEnable, uint256 tokensToDisable);
+    function withdrawAndUnwrap(uint256, bool claim) external returns (bool useSafePrices);
 
-    function getReward() external returns (uint256 tokensToEnable, uint256 tokensToDisable);
-
-    function withdraw(uint256, bool claim) external returns (uint256 tokensToEnable, uint256 tokensToDisable);
-
-    function withdrawDiff(uint256 leftoverAmount, bool claim)
-        external
-        returns (uint256 tokensToEnable, uint256 tokensToDisable);
-
-    function withdrawAndUnwrap(uint256, bool claim)
-        external
-        returns (uint256 tokensToEnable, uint256 tokensToDisable);
-
-    function withdrawDiffAndUnwrap(uint256 leftoverAmount, bool claim)
-        external
-        returns (uint256 tokensToEnable, uint256 tokensToDisable);
+    function withdrawDiffAndUnwrap(uint256 leftoverAmount, bool claim) external returns (bool useSafePrices);
 }

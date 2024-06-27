@@ -70,43 +70,13 @@ abstract contract AbstractAdapter is IAdapter, IStateSerializer, ACLTrait {
         return ICreditManagerV3(creditManager).execute(callData);
     }
 
-    /// @dev Executes a swap operation without input token approval
-    ///      Reverts if active credit account is not set or any of passed tokens is not registered as collateral
-    /// @param tokenIn Input token that credit account spends in the call
-    /// @param tokenOut Output token that credit account receives after the call
-    /// @param callData Data to call the target contract with
-    /// @param disableTokenIn Whether `tokenIn` should be disabled after the call
-    ///        (for operations that spend the entire account's balance of the input token)
-    /// @return tokensToEnable Bit mask of tokens that should be enabled after the call
-    /// @return tokensToDisable Bit mask of tokens that should be disabled after the call
-    /// @return result Call result
-    function _executeSwapNoApprove(address tokenIn, address tokenOut, bytes memory callData, bool disableTokenIn)
-        internal
-        returns (uint256 tokensToEnable, uint256 tokensToDisable, bytes memory result)
-    {
-        tokensToEnable = _getMaskOrRevert(tokenOut);
-        uint256 tokenInMask = _getMaskOrRevert(tokenIn);
-        if (disableTokenIn) tokensToDisable = tokenInMask;
-        result = _execute(callData);
-    }
-
     /// @dev Executes a swap operation with maximum input token approval, and revokes approval after the call
     ///      Reverts if active credit account is not set or any of passed tokens is not registered as collateral
     /// @param tokenIn Input token that credit account spends in the call
-    /// @param tokenOut Output token that credit account receives after the call
     /// @param callData Data to call the target contract with
-    /// @param disableTokenIn Whether `tokenIn` should be disabled after the call
-    ///        (for operations that spend the entire account's balance of the input token)
-    /// @return tokensToEnable Bit mask of tokens that should be enabled after the call
-    /// @return tokensToDisable Bit mask of tokens that should be disabled after the call
     /// @return result Call result
     /// @custom:expects Credit manager reverts when trying to approve non-collateral token
-    function _executeSwapSafeApprove(address tokenIn, address tokenOut, bytes memory callData, bool disableTokenIn)
-        internal
-        returns (uint256 tokensToEnable, uint256 tokensToDisable, bytes memory result)
-    {
-        tokensToEnable = _getMaskOrRevert(tokenOut);
-        if (disableTokenIn) tokensToDisable = _getMaskOrRevert(tokenIn);
+    function _executeSwapSafeApprove(address tokenIn, bytes memory callData) internal returns (bytes memory result) {
         _approveToken(tokenIn, type(uint256).max);
         result = _execute(callData);
         _approveToken(tokenIn, 1);

@@ -50,8 +50,6 @@ contract LidoV1AdapterUnitTest is AdapterUnitTestHelper {
         assertEq(adapter.targetContract(), gateway, "Incorrect targetContract");
         assertEq(adapter.weth(), weth, "Incorrect weth");
         assertEq(adapter.stETH(), stETH, "Incorrect stETH");
-        assertEq(adapter.wethTokenMask(), wethMask, "Incorrect wethMask");
-        assertEq(adapter.stETHTokenMask(), stETHMask, "Incorrect stETHMask");
         assertEq(adapter.treasury(), treasury, "Incorrect treasury");
     }
 
@@ -68,16 +66,12 @@ contract LidoV1AdapterUnitTest is AdapterUnitTestHelper {
     function test_U_LDO1_03_submit_works_as_expected() public {
         _executesSwap({
             tokenIn: weth,
-            tokenOut: stETH,
             callData: abi.encodeCall(LidoV1Gateway.submit, (1000, treasury)),
-            requiresApproval: true,
-            validatesTokens: false
+            requiresApproval: true
         });
         vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.submit(1000);
-
-        assertEq(tokensToEnable, stETHMask, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
+        bool useSafePrices = adapter.submit(1000);
+        assertFalse(useSafePrices);
     }
 
     /// @notice U:[LDO1-4]: `submitDiff` works as expected
@@ -87,15 +81,11 @@ contract LidoV1AdapterUnitTest is AdapterUnitTestHelper {
         _readsActiveAccount();
         _executesSwap({
             tokenIn: weth,
-            tokenOut: stETH,
             callData: abi.encodeCall(LidoV1Gateway.submit, (diffInputAmount, treasury)),
-            requiresApproval: true,
-            validatesTokens: false
+            requiresApproval: true
         });
         vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.submitDiff(diffLeftoverAmount);
-
-        assertEq(tokensToEnable, stETHMask, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, diffDisableTokenIn ? wethMask : 0, "Incorrect tokensToDisable");
+        bool useSafePrices = adapter.submitDiff(diffLeftoverAmount);
+        assertFalse(useSafePrices);
     }
 }

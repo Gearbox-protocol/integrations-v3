@@ -55,22 +55,21 @@ contract VelodromeV2RouterAdapter is AbstractAdapter, IVelodromeV2RouterAdapter 
         external
         override
         creditFacadeOnly // U: [VELO2-02]
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+        returns (bool)
     {
         address creditAccount = _creditAccount();
 
-        (bool valid, address tokenIn, address tokenOut) = _validatePath(routes); // U: [VELO2-06]
+        (bool valid, address tokenIn) = _validatePath(routes); // U: [VELO2-06]
         if (!valid) revert InvalidPathException();
 
-        // calling `_executeSwap` because we need to check if output token is registered as collateral token in the CM
-        (tokensToEnable, tokensToDisable,) = _executeSwapSafeApprove(
+        _executeSwapSafeApprove(
             tokenIn,
-            tokenOut,
             abi.encodeCall(
                 IVelodromeV2Router.swapExactTokensForTokens, (amountIn, amountOutMin, routes, creditAccount, deadline)
-            ),
-            false
+            )
         ); // U: [VELO2-03]
+
+        return true;
     }
 
     /// @notice Swap the entire balance of input token to output token, except the specified amount
@@ -87,36 +86,29 @@ contract VelodromeV2RouterAdapter is AbstractAdapter, IVelodromeV2RouterAdapter 
         external
         override
         creditFacadeOnly // U: [VELO2-02]
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+        returns (bool)
     {
         address creditAccount = _creditAccount();
 
-        address tokenIn;
-        address tokenOut;
-
-        {
-            bool valid;
-            (valid, tokenIn, tokenOut) = _validatePath(routes); // U: [VELO2-06]
-            if (!valid) revert InvalidPathException();
-        }
+        (bool valid, address tokenIn) = _validatePath(routes); // U: [VELO2-06]
+        if (!valid) revert InvalidPathException();
 
         uint256 amount = IERC20(tokenIn).balanceOf(creditAccount);
-        if (amount <= leftoverAmount) return (0, 0);
+        if (amount <= leftoverAmount) return false;
 
         unchecked {
             amount -= leftoverAmount; // U: [VELO2-04]
         }
 
-        // calling `_executeSwap` because we need to check if output token is registered as collateral token in the CM
-        (tokensToEnable, tokensToDisable,) = _executeSwapSafeApprove(
+        _executeSwapSafeApprove(
             tokenIn,
-            tokenOut,
             abi.encodeCall(
                 IVelodromeV2Router.swapExactTokensForTokens,
                 (amount, (amount * rateMinRAY) / RAY, routes, creditAccount, deadline)
-            ),
-            leftoverAmount <= 1
+            )
         ); // U: [VELO2-04]
+
+        return true;
     }
 
     // ---- //
@@ -165,6 +157,12 @@ contract VelodromeV2RouterAdapter is AbstractAdapter, IVelodromeV2RouterAdapter 
                 (address token0, address token1) = _sortTokens(pools[i].token0, pools[i].token1);
                 bytes32 poolHash = keccak256(abi.encode(token0, token1, pools[i].stable, pools[i].factory));
                 if (pools[i].allowed) {
+                    /// For each added pool, we verify that the pool tokens are valid collaterals,
+                    /// as otherwise operations with unsupported tokens would be possible, leading
+                    /// to possibility of control flow capture
+                    _getMaskOrRevert(token0);
+                    _getMaskOrRevert(token1);
+
                     _supportedPoolHashes.add(poolHash);
                     _hashToPool[poolHash] = VelodromeV2Pool({
                         token0: token0,
@@ -188,16 +186,11 @@ contract VelodromeV2RouterAdapter is AbstractAdapter, IVelodromeV2RouterAdapter 
     /// @dev Performs sanity check on a swap path, if path is valid also returns input and output tokens
     ///      - Path length must be no more than 4 (i.e., at most 3 hops)
     ///      - Each swap must be through an allowed pool
-    function _validatePath(Route[] memory routes)
-        internal
-        view
-        returns (bool valid, address tokenIn, address tokenOut)
-    {
+    function _validatePath(Route[] memory routes) internal view returns (bool valid, address tokenIn) {
         uint256 len = routes.length;
-        if (len < 1 || len > 3) return (false, tokenIn, tokenOut);
+        if (len < 1 || len > 3) return (false, tokenIn);
 
         tokenIn = routes[0].from;
-        tokenOut = routes[len - 1].to;
         valid = isPoolAllowed(routes[0].from, routes[0].to, routes[0].stable, routes[0].factory);
         if (valid && len > 1) {
             valid = isPoolAllowed(routes[1].from, routes[1].to, routes[1].stable, routes[1].factory)

@@ -32,9 +32,10 @@ contract CurveV1Adapter2Assets is CurveV1AdapterBase, ICurveV1_2AssetsAdapter {
         external
         override
         creditFacadeOnly // U:[CRV2-1]
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+        returns (bool)
     {
-        (tokensToEnable, tokensToDisable) = _add_liquidity(amounts[0] > 1, amounts[1] > 1, false, false); // U:[CRV2-2]
+        _add_liquidity(amounts[0] > 1, amounts[1] > 1, false, false); // U:[CRV2-2]
+        return true;
     }
 
     /// @dev Returns calldata for adding liquidity in coin `i`
@@ -70,38 +71,32 @@ contract CurveV1Adapter2Assets is CurveV1AdapterBase, ICurveV1_2AssetsAdapter {
         external
         virtual
         creditFacadeOnly // U:[CRV2-1]
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+        returns (bool)
     {
-        (tokensToEnable, tokensToDisable) = _remove_liquidity(); // U:[CRV2-3]
+        _execute(msg.data); // U:[CRV2-3]
+        return true;
     }
 
     /// @notice Withdraw exact amounts of tokens from the pool
-    /// @param amounts Amounts of tokens to withdraw
-    /// @dev `max_burn_amount` parameter is ignored because calldata is directly passed to the target contract
-    function remove_liquidity_imbalance(uint256[N_COINS] calldata amounts, uint256)
+    /// @dev `amounts` and `max_burn_amount` parameters are ignored because calldata is directly passed to the target contract
+    function remove_liquidity_imbalance(uint256[N_COINS] calldata, uint256)
         external
         virtual
         override
         creditFacadeOnly // U:[CRV2-1]
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+        returns (bool)
     {
-        (tokensToEnable, tokensToDisable) = _remove_liquidity_imbalance(amounts[0] > 1, amounts[1] > 1, false, false); // U:[CRV2-4]
+        _execute(msg.data); // U:[CRV2-4]
+        return true;
     }
 
     /// @notice Returns all adapter parameters serialized into a bytes array,
     ///         as well as adapter type and version, to properly deserialize
     function serialize() external view virtual override returns (bytes memory serializedData) {
-        serializedData = abi.encode(creditManager, targetContract, token, lp_token, lpTokenMask, metapoolBase);
+        serializedData = abi.encode(creditManager, targetContract, token, lp_token, metapoolBase);
 
         serializedData = bytes.concat(
-            serializedData,
-            abi.encode(
-                use256,
-                [token0, token1],
-                [token0Mask, token1Mask],
-                [underlying0, underlying1, underlying2, underlying3],
-                [underlying0Mask, underlying1Mask, underlying2Mask, underlying3Mask]
-            )
+            serializedData, abi.encode(use256, [token0, token1], [underlying0, underlying1, underlying2, underlying3])
         );
     }
 }

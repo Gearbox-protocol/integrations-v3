@@ -69,26 +69,24 @@ contract BalancerV2VaultAdapter is AbstractAdapter, IBalancerV2VaultAdapter {
         external
         override
         creditFacadeOnly // U:[BAL2-2]
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+        returns (bool)
     {
-        if (poolStatus[singleSwap.poolId] == PoolStatus.NOT_ALLOWED) {
+        PoolStatus pStatus = poolStatus[singleSwap.poolId];
+        if (pStatus != PoolStatus.ALLOWED && pStatus != PoolStatus.SWAP_ONLY) {
             revert PoolNotSupportedException(); // U:[BAL2-3]
         }
 
         address creditAccount = _creditAccount(); // U:[BAL2-3]
 
         address tokenIn = address(singleSwap.assetIn);
-        address tokenOut = address(singleSwap.assetOut);
 
         FundManagement memory fundManagement = _getDefaultFundManagement(creditAccount); // U:[BAL2-3]
 
-        // calling `_executeSwap` because we need to check if output token is registered as collateral token in the CM
-        (tokensToEnable, tokensToDisable,) = _executeSwapSafeApprove(
-            tokenIn,
-            tokenOut,
-            abi.encodeCall(IBalancerV2Vault.swap, (singleSwap, fundManagement, limit, deadline)),
-            false
+        _executeSwapSafeApprove(
+            tokenIn, abi.encodeCall(IBalancerV2Vault.swap, (singleSwap, fundManagement, limit, deadline))
         ); // U:[BAL2-3]
+
+        return true;
     }
 
     /// @notice Swaps the entire balance of a token for another token within a single pool, except the specified amount
@@ -105,16 +103,17 @@ contract BalancerV2VaultAdapter is AbstractAdapter, IBalancerV2VaultAdapter {
         external
         override
         creditFacadeOnly // U:[BAL2-2]
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+        returns (bool)
     {
-        address creditAccount = _creditAccount(); // U:[BAL2-4]
-
-        if (poolStatus[singleSwapDiff.poolId] == PoolStatus.NOT_ALLOWED) {
+        PoolStatus pStatus = poolStatus[singleSwapDiff.poolId];
+        if (pStatus != PoolStatus.ALLOWED && pStatus != PoolStatus.SWAP_ONLY) {
             revert PoolNotSupportedException(); // U:[BAL2-4]
         }
 
+        address creditAccount = _creditAccount(); // U:[BAL2-4]
+
         uint256 amount = IERC20(address(singleSwapDiff.assetIn)).balanceOf(creditAccount); // U:[BAL2-4]
-        if (amount <= singleSwapDiff.leftoverAmount) return (0, 0);
+        if (amount <= singleSwapDiff.leftoverAmount) return false;
 
         unchecked {
             amount -= singleSwapDiff.leftoverAmount; // U:[BAL2-4]
@@ -123,9 +122,8 @@ contract BalancerV2VaultAdapter is AbstractAdapter, IBalancerV2VaultAdapter {
         FundManagement memory fundManagement = _getDefaultFundManagement(creditAccount); // U:[BAL2-4]
 
         // calling `_executeSwap` because we need to check if output token is registered as collateral token in the CM
-        (tokensToEnable, tokensToDisable,) = _executeSwapSafeApprove(
+        _executeSwapSafeApprove(
             address(singleSwapDiff.assetIn),
-            address(singleSwapDiff.assetOut),
             abi.encodeCall(
                 IBalancerV2Vault.swap,
                 (
@@ -141,9 +139,10 @@ contract BalancerV2VaultAdapter is AbstractAdapter, IBalancerV2VaultAdapter {
                     (amount * limitRateRAY) / RAY,
                     deadline
                 )
-            ),
-            singleSwapDiff.leftoverAmount <= 1
+            )
         ); // U:[BAL2-4]
+
+        return true;
     }
 
     /// @notice Performs a multi-hop swap through several Balancer pools
@@ -172,10 +171,11 @@ contract BalancerV2VaultAdapter is AbstractAdapter, IBalancerV2VaultAdapter {
         external
         override
         creditFacadeOnly // U:[BAL2-2]
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+        returns (bool)
     {
         for (uint256 i; i < swaps.length; ++i) {
-            if (poolStatus[swaps[i].poolId] == PoolStatus.NOT_ALLOWED) {
+            PoolStatus pStatus = poolStatus[swaps[i].poolId];
+            if (pStatus != PoolStatus.ALLOWED && pStatus != PoolStatus.SWAP_ONLY) {
                 revert PoolNotSupportedException(); // U:[BAL2-5]
             }
         }
@@ -186,16 +186,11 @@ contract BalancerV2VaultAdapter is AbstractAdapter, IBalancerV2VaultAdapter {
 
         _approveAssets(assets, limits, type(uint256).max); // U:[BAL2-5]
 
-        int256[] memory assetDeltas = abi.decode(
-            _execute(
-                abi.encodeCall(IBalancerV2Vault.batchSwap, (kind, swaps, assets, fundManagement, limits, deadline))
-            ),
-            (int256[])
-        ); // U:[BAL2-5]
+        _execute(abi.encodeCall(IBalancerV2Vault.batchSwap, (kind, swaps, assets, fundManagement, limits, deadline))); // U:[BAL2-5]
 
         _approveAssets(assets, limits, 1); // U:[BAL2-5]
 
-        (tokensToEnable, tokensToDisable) = (_getTokensToEnable(assets, assetDeltas), 0); // U:[BAL2-5]
+        return true;
     }
 
     // --------- //
@@ -217,7 +212,7 @@ contract BalancerV2VaultAdapter is AbstractAdapter, IBalancerV2VaultAdapter {
         external
         override
         creditFacadeOnly // U:[BAL2-2]
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+        returns (bool)
     {
         if (poolStatus[poolId] != PoolStatus.ALLOWED) {
             revert PoolNotSupportedException(); // U:[BAL2-6]
@@ -225,14 +220,12 @@ contract BalancerV2VaultAdapter is AbstractAdapter, IBalancerV2VaultAdapter {
 
         address creditAccount = _creditAccount(); // U:[BAL2-6]
 
-        (address bpt,) = IBalancerV2Vault(targetContract).getPool(poolId);
-
         request.fromInternalBalance = false; // U:[BAL2-6]
 
         _approveAssets(request.assets, request.maxAmountsIn, type(uint256).max); // U:[BAL2-6]
         _execute(abi.encodeCall(IBalancerV2Vault.joinPool, (poolId, creditAccount, creditAccount, request))); // U:[BAL2-6]
         _approveAssets(request.assets, request.maxAmountsIn, 1); // U:[BAL2-6]
-        (tokensToEnable, tokensToDisable) = (_getMaskOrRevert(bpt), 0); // U:[BAL2-6]
+        return true;
     }
 
     /// @notice Deposits single asset as liquidity into a Balancer pool
@@ -245,7 +238,7 @@ contract BalancerV2VaultAdapter is AbstractAdapter, IBalancerV2VaultAdapter {
         external
         override
         creditFacadeOnly // U:[BAL2-2]
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+        returns (bool)
     {
         if (poolStatus[poolId] != PoolStatus.ALLOWED) {
             revert PoolNotSupportedException(); // U:[BAL2-7]
@@ -253,23 +246,19 @@ contract BalancerV2VaultAdapter is AbstractAdapter, IBalancerV2VaultAdapter {
 
         address creditAccount = _creditAccount(); // U:[BAL2-7]
 
-        (address bpt,) = IBalancerV2Vault(targetContract).getPool(poolId);
-
-        // calling `_executeSwap` because we need to check if BPT is registered as collateral token in the CM
-        (tokensToEnable, tokensToDisable,) = _executeSwapSafeApprove(
+        _executeSwapSafeApprove(
             address(assetIn),
-            bpt,
             abi.encodeCall(
                 IBalancerV2Vault.joinPool,
                 (
                     poolId,
                     creditAccount,
                     creditAccount,
-                    _getJoinSingleAssetRequest(poolId, assetIn, amountIn, minAmountOut, bpt)
+                    _getJoinSingleAssetRequest(poolId, assetIn, amountIn, minAmountOut)
                 )
-            ),
-            false
+            )
         ); // U:[BAL2-7]
+        return true;
     }
 
     /// @notice Deposits the entire balance of given asset, except a specified amount, as liquidity into a Balancer pool
@@ -282,44 +271,39 @@ contract BalancerV2VaultAdapter is AbstractAdapter, IBalancerV2VaultAdapter {
         external
         override
         creditFacadeOnly // U:[BAL2-2]
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+        returns (bool)
     {
-        address creditAccount = _creditAccount(); // U:[BAL2-8]
-
         if (poolStatus[poolId] != PoolStatus.ALLOWED) {
             revert PoolNotSupportedException(); // U:[BAL2-8]
         }
 
+        address creditAccount = _creditAccount(); // U:[BAL2-8]
+
         uint256 amount = IERC20(address(assetIn)).balanceOf(creditAccount); // U:[BAL2-8]
-        if (amount <= leftoverAmount) return (0, 0);
+        if (amount <= leftoverAmount) return false;
 
         unchecked {
             amount -= leftoverAmount; // U:[BAL2-8]
         }
 
-        (address bpt,) = IBalancerV2Vault(targetContract).getPool(poolId);
-
         uint256 amountOutMin = (amount * minRateRAY) / RAY; // U:[BAL2-8]
-        JoinPoolRequest memory request = _getJoinSingleAssetRequest(poolId, assetIn, amount, amountOutMin, bpt); // U:[BAL2-8]
+        JoinPoolRequest memory request = _getJoinSingleAssetRequest(poolId, assetIn, amount, amountOutMin); // U:[BAL2-8]
 
-        // calling `_executeSwap` because we need to check if BPT is registered as collateral token in the CM
-        (tokensToEnable, tokensToDisable,) = _executeSwapSafeApprove(
-            address(assetIn),
-            bpt,
-            abi.encodeCall(IBalancerV2Vault.joinPool, (poolId, creditAccount, creditAccount, request)),
-            leftoverAmount <= 1
+        _executeSwapSafeApprove(
+            address(assetIn), abi.encodeCall(IBalancerV2Vault.joinPool, (poolId, creditAccount, creditAccount, request))
         ); // U:[BAL2-8]
+
+        return true;
     }
 
     /// @dev Internal function that builds a `JoinPoolRequest` struct for one-sided deposits
-    function _getJoinSingleAssetRequest(
-        bytes32 poolId,
-        IAsset assetIn,
-        uint256 amountIn,
-        uint256 minAmountOut,
-        address bpt
-    ) internal view returns (JoinPoolRequest memory request) {
+    function _getJoinSingleAssetRequest(bytes32 poolId, IAsset assetIn, uint256 amountIn, uint256 minAmountOut)
+        internal
+        view
+        returns (JoinPoolRequest memory request)
+    {
         (IERC20[] memory tokens,,) = IBalancerV2Vault(targetContract).getPoolTokens(poolId);
+        (address bpt,) = IBalancerV2Vault(targetContract).getPool(poolId);
 
         uint256 len = tokens.length;
 
@@ -360,19 +344,18 @@ contract BalancerV2VaultAdapter is AbstractAdapter, IBalancerV2VaultAdapter {
         external
         override
         creditFacadeOnly // U:[BAL2-2]
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+        returns (bool)
     {
-        address creditAccount = _creditAccount(); // U:[BAL2-9]
+        if (poolStatus[poolId] == PoolStatus.NOT_ALLOWED) {
+            revert PoolNotSupportedException(); // U:[BAL2-9]
+        }
 
-        (address bpt,) = IBalancerV2Vault(targetContract).getPool(poolId);
+        address creditAccount = _creditAccount(); // U:[BAL2-9]
 
         request.toInternalBalance = false; // U:[BAL2-9]
 
         _execute(abi.encodeCall(IBalancerV2Vault.exitPool, (poolId, creditAccount, payable(creditAccount), request))); // U:[BAL2-9]
-
-        _getMaskOrRevert(bpt); // U:[BAL2-9]
-        (tokensToEnable, tokensToDisable) =
-            (_getTokensToEnable(request.assets, _getBalancesFilter(creditAccount, request.assets)), 0); // U:[BAL2-9]
+        return true;
     }
 
     /// @notice Withdraws liquidity from a Balancer pool, burning BPT and receiving a single asset
@@ -384,16 +367,17 @@ contract BalancerV2VaultAdapter is AbstractAdapter, IBalancerV2VaultAdapter {
         external
         override
         creditFacadeOnly // U:[BAL2-2]
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+        returns (bool)
     {
+        if (poolStatus[poolId] == PoolStatus.NOT_ALLOWED) {
+            revert PoolNotSupportedException(); // U:[BAL2-10]
+        }
+
         address creditAccount = _creditAccount(); // U:[BAL2-10]
 
         (address bpt,) = IBalancerV2Vault(targetContract).getPool(poolId);
 
-        // calling `_executeSwap` because we need to check if asset is registered as collateral token in the CM
-        (tokensToEnable, tokensToDisable,) = _executeSwapNoApprove(
-            bpt,
-            address(assetOut),
+        _execute(
             abi.encodeCall(
                 IBalancerV2Vault.exitPool,
                 (
@@ -402,9 +386,9 @@ contract BalancerV2VaultAdapter is AbstractAdapter, IBalancerV2VaultAdapter {
                     payable(creditAccount),
                     _getExitSingleAssetRequest(poolId, assetOut, amountIn, minAmountOut, bpt)
                 )
-            ),
-            false
+            )
         ); // U:[BAL2-10]
+        return true;
     }
 
     /// @notice Withdraws all liquidity from a Balancer pool except the specified amount, burning BPT and receiving a single asset
@@ -416,14 +400,18 @@ contract BalancerV2VaultAdapter is AbstractAdapter, IBalancerV2VaultAdapter {
         external
         override
         creditFacadeOnly // U:[BAL2-2]
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+        returns (bool)
     {
+        if (poolStatus[poolId] == PoolStatus.NOT_ALLOWED) {
+            revert PoolNotSupportedException(); // U:[BAL2-11]
+        }
+
         address creditAccount = _creditAccount(); // U:[BAL2-11]
 
         (address bpt,) = IBalancerV2Vault(targetContract).getPool(poolId);
 
         uint256 amount = IERC20(bpt).balanceOf(creditAccount); // U:[BAL2-11]
-        if (amount <= leftoverAmount) return (0, 0);
+        if (amount <= leftoverAmount) return false;
 
         unchecked {
             amount -= leftoverAmount; // U:[BAL2-11]
@@ -432,13 +420,8 @@ contract BalancerV2VaultAdapter is AbstractAdapter, IBalancerV2VaultAdapter {
         uint256 amountOutMin = (amount * minRateRAY) / RAY; // U:[BAL2-11]
         ExitPoolRequest memory request = _getExitSingleAssetRequest(poolId, assetOut, amount, amountOutMin, bpt); // U:[BAL2-11]
 
-        // calling `_executeSwap` because we need to check if asset is registered as collateral token in the CM
-        (tokensToEnable, tokensToDisable,) = _executeSwapNoApprove(
-            bpt,
-            address(assetOut),
-            abi.encodeCall(IBalancerV2Vault.exitPool, (poolId, creditAccount, payable(creditAccount), request)),
-            leftoverAmount <= 1
-        ); // U:[BAL2-11]
+        _execute(abi.encodeCall(IBalancerV2Vault.exitPool, (poolId, creditAccount, payable(creditAccount), request))); // U:[BAL2-11]
+        return true;
     }
 
     /// @dev Internal function that builds an `ExitPoolRequest` struct for one-sided withdrawals
@@ -522,35 +505,6 @@ contract BalancerV2VaultAdapter is AbstractAdapter, IBalancerV2VaultAdapter {
         }
     }
 
-    /// @dev Returns mask of all tokens that should be enabled, based on balances / balance changes
-    function _getTokensToEnable(IAsset[] memory assets, int256[] memory filter)
-        internal
-        view
-        returns (uint256 tokensToEnable)
-    {
-        uint256 len = assets.length;
-
-        unchecked {
-            for (uint256 i; i < len; ++i) {
-                if (filter[i] < -1) tokensToEnable = tokensToEnable.enable(_getMaskOrRevert(address(assets[i])));
-            }
-        }
-    }
-
-    /// @dev Internal function that creates a filter based on CA token balances
-    function _getBalancesFilter(address creditAccount, IAsset[] memory assets)
-        internal
-        view
-        returns (int256[] memory filter)
-    {
-        uint256 len = assets.length;
-        filter = new int256[](len);
-
-        for (uint256 i; i < len; ++i) {
-            filter[i] = -int256(IERC20(address(assets[i])).balanceOf(creditAccount));
-        }
-    }
-
     /// @dev Returns a standard `FundManagement` struct used by the adapter
     function _getDefaultFundManagement(address creditAccount) internal pure returns (FundManagement memory) {
         return FundManagement({
@@ -593,7 +547,11 @@ contract BalancerV2VaultAdapter is AbstractAdapter, IBalancerV2VaultAdapter {
         configuratorOnly // U:[BAL2-12]
     {
         if (poolStatus[poolId] != newStatus) {
-            if (newStatus == PoolStatus.ALLOWED || newStatus == PoolStatus.SWAP_ONLY) {
+            if (
+                newStatus == PoolStatus.ALLOWED || newStatus == PoolStatus.SWAP_ONLY
+                    || newStatus == PoolStatus.WITHDRAWAL_ONLY
+            ) {
+                _verifyPoolAssets(poolId);
                 _supportedPoolIds.add(poolId);
             } else {
                 _supportedPoolIds.remove(poolId);
@@ -602,5 +560,19 @@ contract BalancerV2VaultAdapter is AbstractAdapter, IBalancerV2VaultAdapter {
             poolStatus[poolId] = newStatus; // U:[BAL2-12]
             emit SetPoolStatus(poolId, newStatus); // U:[BAL2-12]
         }
+    }
+
+    /// @dev Verifies that assets in the pool are valid collaterals before adding the pool to supported list
+    function _verifyPoolAssets(bytes32 poolId) internal view {
+        (IERC20[] memory tokens,,) = IBalancerV2Vault(targetContract).getPoolTokens(poolId);
+        (address bpt,) = IBalancerV2Vault(targetContract).getPool(poolId);
+
+        uint256 len = tokens.length;
+
+        for (uint256 i = 0; i < len; ++i) {
+            if (address(tokens[i]) != bpt) _getMaskOrRevert(address(tokens[i]));
+        }
+
+        _getMaskOrRevert(bpt);
     }
 }

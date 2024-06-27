@@ -25,6 +25,8 @@ import {VaultMock} from "../../../mocks/integrations/balancer/VaultMock.sol";
 
 import {AdapterUnitTestHelper} from "../AdapterUnitTestHelper.sol";
 
+import "@gearbox-protocol/core-v3/contracts/test/lib/constants.sol";
+
 /// @title Balancer v2 vault adapter unit test
 /// @notice U:[BAL2]: Unit tests for Balancer v2 vault adapter
 contract BalancerV2VaultAdapterUnitTest is
@@ -121,17 +123,12 @@ contract BalancerV2VaultAdapterUnitTest is
         _readsActiveAccount();
         _executesSwap({
             tokenIn: tokens[1],
-            tokenOut: tokens[2],
             callData: abi.encodeCall(IBalancerV2Vault.swap, (singleSwap, _getFundManagement(creditAccount), 500, 456)),
-            requiresApproval: true,
-            validatesTokens: true
+            requiresApproval: true
         });
         vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) =
-            adapter.swap(singleSwap, _getFundManagement(address(0)), 500, 456);
-
-        assertEq(tokensToEnable, 4, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
+        bool useSafePrices = adapter.swap(singleSwap, _getFundManagement(address(0)), 500, 456);
+        assertTrue(useSafePrices);
     }
 
     /// @notice U:[BAL2-4]: `swapDiff` works as expected
@@ -165,18 +162,14 @@ contract BalancerV2VaultAdapterUnitTest is
         _readsActiveAccount();
         _executesSwap({
             tokenIn: tokens[1],
-            tokenOut: tokens[2],
             callData: abi.encodeCall(
                 IBalancerV2Vault.swap, (singleSwap, _getFundManagement(creditAccount), diffInputAmount / 2, 456)
-                ),
-            requiresApproval: true,
-            validatesTokens: true
+            ),
+            requiresApproval: true
         });
         vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.swapDiff(singleSwapDiff, 0.5e27, 456);
-
-        assertEq(tokensToEnable, 4, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, diffDisableTokenIn ? 2 : 0, "Incorrect tokensToDisable");
+        bool useSafePrices = adapter.swapDiff(singleSwapDiff, 0.5e27, 456);
+        assertTrue(useSafePrices);
     }
 
     /// @notice U:[BAL2-5]: `batchSwap` works as expected
@@ -211,18 +204,16 @@ contract BalancerV2VaultAdapterUnitTest is
         _readsActiveAccount();
         _executesCall({
             tokensToApprove: tokensToApprove,
-            tokensToValidate: new address[](0),
             callData: abi.encodeCall(
                 IBalancerV2Vault.batchSwap,
                 (SwapKind.GIVEN_IN, swaps, assets, _getFundManagement(creditAccount), limits, 456)
-                )
+            )
         });
 
         vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) =
+        bool useSafePrices =
             adapter.batchSwap(SwapKind.GIVEN_IN, swaps, assets, _getFundManagement(address(0)), limits, 456);
-        assertEq(tokensToEnable, 8 + 64, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
+        assertTrue(useSafePrices);
     }
 
     // ----- //
@@ -256,21 +247,17 @@ contract BalancerV2VaultAdapterUnitTest is
         address[] memory tokensToApprove = new address[](2);
         tokensToApprove[0] = tokens[1];
         tokensToApprove[1] = tokens[3];
-        address[] memory tokensToValidate = new address[](1);
-        tokensToValidate[0] = tokens[0];
 
         _readsActiveAccount();
         _executesCall({
             tokensToApprove: tokensToApprove,
-            tokensToValidate: tokensToValidate,
             callData: abi.encodeCall(IBalancerV2Vault.joinPool, (poolId, creditAccount, creditAccount, request))
         });
 
         vm.prank(creditFacade);
         request.fromInternalBalance = true;
-        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.joinPool(poolId, address(0), address(0), request);
-        assertEq(tokensToEnable, 1, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
+        bool useSafePrices = adapter.joinPool(poolId, address(0), address(0), request);
+        assertTrue(useSafePrices);
     }
 
     /// @notice U:[BAL2-7]: `joinPoolSingleAsset` works as expected
@@ -301,15 +288,12 @@ contract BalancerV2VaultAdapterUnitTest is
         _readsActiveAccount();
         _executesSwap({
             tokenIn: tokens[2],
-            tokenOut: tokens[0],
             callData: abi.encodeCall(IBalancerV2Vault.joinPool, (poolId, creditAccount, creditAccount, request)),
-            requiresApproval: true,
-            validatesTokens: true
+            requiresApproval: true
         });
         vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.joinPoolSingleAsset(poolId, _asset(2), 1000, 500);
-        assertEq(tokensToEnable, 1, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
+        bool useSafePrices = adapter.joinPoolSingleAsset(poolId, _asset(2), 1000, 500);
+        assertTrue(useSafePrices);
     }
 
     /// @notice U:[BAL2-8]: `joinPoolSingleAssetDiff` works as expected
@@ -342,16 +326,12 @@ contract BalancerV2VaultAdapterUnitTest is
         _readsActiveAccount();
         _executesSwap({
             tokenIn: tokens[2],
-            tokenOut: tokens[0],
             callData: abi.encodeCall(IBalancerV2Vault.joinPool, (poolId, creditAccount, creditAccount, request)),
-            requiresApproval: true,
-            validatesTokens: true
+            requiresApproval: true
         });
         vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) =
-            adapter.joinPoolSingleAssetDiff(poolId, _asset(2), diffLeftoverAmount, 0.5e27);
-        assertEq(tokensToEnable, 1, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, diffDisableTokenIn ? 4 : 0, "Incorrect tokensToDisable");
+        bool useSafePrices = adapter.joinPoolSingleAssetDiff(poolId, _asset(2), diffLeftoverAmount, 0.5e27);
+        assertTrue(useSafePrices);
     }
 
     // ----- //
@@ -366,21 +346,23 @@ contract BalancerV2VaultAdapterUnitTest is
         ExitPoolRequest memory request;
         request.assets = _assets(0, 1, 2, 3);
 
-        address[] memory tokensToValidate = new address[](1);
-        tokensToValidate[0] = tokens[0];
+        vm.expectRevert(PoolNotSupportedException.selector);
+        vm.prank(creditFacade);
+        adapter.exitPool(poolId, address(0), payable(0), request);
+
+        vm.prank(configurator);
+        adapter.setPoolStatus(poolId, PoolStatus.WITHDRAWAL_ONLY);
 
         _readsActiveAccount();
         _executesCall({
             tokensToApprove: new address[](0),
-            tokensToValidate: tokensToValidate,
             callData: abi.encodeCall(IBalancerV2Vault.exitPool, (poolId, creditAccount, payable(creditAccount), request))
         });
 
         vm.prank(creditFacade);
         request.toInternalBalance = true;
-        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.exitPool(poolId, address(0), payable(0), request);
-        assertEq(tokensToEnable, 2 + 8, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
+        bool useSafePrices = adapter.exitPool(poolId, address(0), payable(0), request);
+        assertTrue(useSafePrices);
     }
 
     /// @notice U:[BAL2-10]: `exitPoolSingleAsset` works as expected
@@ -391,20 +373,23 @@ contract BalancerV2VaultAdapterUnitTest is
         request.minAmountsOut[2] = 500;
         request.userData = abi.encode(uint256(0), 1000, 1);
 
+        vm.expectRevert(PoolNotSupportedException.selector);
+        vm.prank(creditFacade);
+        adapter.exitPoolSingleAsset(poolId, _asset(2), 1000, 500);
+
+        vm.prank(configurator);
+        adapter.setPoolStatus(poolId, PoolStatus.WITHDRAWAL_ONLY);
+
         _readsActiveAccount();
         _executesSwap({
             tokenIn: tokens[0],
-            tokenOut: tokens[2],
             callData: abi.encodeCall(IBalancerV2Vault.exitPool, (poolId, creditAccount, payable(creditAccount), request)),
-            requiresApproval: false,
-            validatesTokens: true
+            requiresApproval: false
         });
 
         vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.exitPoolSingleAsset(poolId, _asset(2), 1000, 500);
-
-        assertEq(tokensToEnable, 4, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
+        bool useSafePrices = adapter.exitPoolSingleAsset(poolId, _asset(2), 1000, 500);
+        assertTrue(useSafePrices);
     }
 
     /// @notice U:[BAL2-11]: `exitPoolSingleAssetDiff` works as expected
@@ -417,21 +402,23 @@ contract BalancerV2VaultAdapterUnitTest is
         request.minAmountsOut[2] = diffInputAmount / 2;
         request.userData = abi.encode(uint256(0), diffInputAmount, 1);
 
+        vm.expectRevert(PoolNotSupportedException.selector);
+        vm.prank(creditFacade);
+        adapter.exitPoolSingleAssetDiff(poolId, _asset(2), diffLeftoverAmount, 0.5e27);
+
+        vm.prank(configurator);
+        adapter.setPoolStatus(poolId, PoolStatus.WITHDRAWAL_ONLY);
+
         _readsActiveAccount();
         _executesSwap({
             tokenIn: tokens[0],
-            tokenOut: tokens[2],
             callData: abi.encodeCall(IBalancerV2Vault.exitPool, (poolId, creditAccount, payable(creditAccount), request)),
-            requiresApproval: false,
-            validatesTokens: true
+            requiresApproval: false
         });
 
         vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) =
-            adapter.exitPoolSingleAssetDiff(poolId, _asset(2), diffLeftoverAmount, 0.5e27);
-
-        assertEq(tokensToEnable, 4, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, diffDisableTokenIn ? 1 : 0, "Incorrect tokensToDisable");
+        bool useSafePrices = adapter.exitPoolSingleAssetDiff(poolId, _asset(2), diffLeftoverAmount, 0.5e27);
+        assertTrue(useSafePrices);
     }
 
     // ------- //
@@ -440,8 +427,29 @@ contract BalancerV2VaultAdapterUnitTest is
 
     /// @notice U:[BAL2-12]: `setPoolStatus` works as expected
     function test_U_BAL2_12_setPoolStatus_works_as_expected() public {
+        vault.setPoolData("POOL_ID_INCORRECT", DUMB_ADDRESS, _assets(5, 6));
+
+        _revertsOnUnknownToken();
+        vm.prank(configurator);
+        adapter.setPoolStatus("POOL_ID_INCORRECT", PoolStatus.SWAP_ONLY);
+
+        IAsset[] memory assets = new IAsset[](2);
+        assets[0] = IAsset(tokens[1]);
+        assets[1] = IAsset(DUMB_ADDRESS);
+
+        vault.setPoolData("POOL_ID_INCORRECT", tokens[0], assets);
+
+        _revertsOnUnknownToken();
+        vm.prank(configurator);
+        adapter.setPoolStatus("POOL_ID_INCORRECT", PoolStatus.SWAP_ONLY);
+
         _revertsOnNonConfiguratorCaller();
-        adapter.setPoolStatus(poolId, PoolStatus.ALLOWED);
+        adapter.setPoolStatus(poolId, PoolStatus.SWAP_ONLY);
+
+        _readsTokenMask(tokens[0]);
+        _readsTokenMask(tokens[1]);
+        _readsTokenMask(tokens[2]);
+        _readsTokenMask(tokens[3]);
 
         vm.expectEmit(true, false, false, true);
         emit SetPoolStatus(poolId, PoolStatus.ALLOWED);
