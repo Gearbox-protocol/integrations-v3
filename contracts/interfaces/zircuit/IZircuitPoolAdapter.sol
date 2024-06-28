@@ -6,27 +6,24 @@ pragma solidity ^0.8.23;
 import {IAdapter} from "../IAdapter.sol";
 
 interface IZircuitPoolAdapterEvents {
-    /// @notice Emitted when phantom staked token is set for the pool
-    event SetTokenToPhantomToken(address indexed token, address indexed phantomToken);
+    /// @notice Emitted when a supported underlying / phantom token pair is added to adapter
+    event AddSupportedUnderlying(address indexed token, address indexed phantomToken);
+}
+
+interface IZircuitPoolAdapterExceptions {
+    /// @notice Thrown when attempting to deposit/withdraw an unsupported underlying
+    error UnsupportedUnderlyingException();
 }
 
 /// @title Zircuit pool adapter interface
-interface IZircuitPoolAdapter is IAdapter, IZircuitPoolAdapterEvents {
-    function depositFor(address _token, address, uint256 _amount)
-        external
-        returns (uint256 tokensToEnable, uint256 tokensToDisable);
+interface IZircuitPoolAdapter is IAdapter, IZircuitPoolAdapterEvents, IZircuitPoolAdapterExceptions {
+    function depositFor(address _token, address, uint256 _amount) external returns (bool useSafePrices);
 
-    function depositDiff(address _token, uint256 _leftoverAmount)
-        external
-        returns (uint256 tokensToEnable, uint256 tokensToDisable);
+    function depositDiff(address _token, uint256 _leftoverAmount) external returns (bool useSafePrices);
 
-    function withdraw(address _token, uint256 _amount)
-        external
-        returns (uint256 tokensToEnable, uint256 tokensToDisable);
+    function withdraw(address _token, uint256 _amount) external returns (bool useSafePrices);
 
-    function withdrawDiff(address _token, uint256 _leftoverAmount)
-        external
-        returns (uint256 tokensToEnable, uint256 tokensToDisable);
+    function withdrawDiff(address _token, uint256 _leftoverAmount) external returns (bool useSafePrices);
 
     // --------//
     // GETTERS //
@@ -38,5 +35,5 @@ interface IZircuitPoolAdapter is IAdapter, IZircuitPoolAdapterEvents {
     // CONFIGURATION //
     // ------------- //
 
-    function updatePhantomTokensMap() external;
+    function updateSupportedUnderlyings() external;
 }

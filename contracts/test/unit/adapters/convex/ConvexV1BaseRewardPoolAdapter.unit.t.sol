@@ -73,10 +73,6 @@ contract ConvexV1BaseRewardPoolAdapterUnitTest is AdapterUnitTestHelper {
         assertEq(adapter.extraReward2(), address(0), "Incorrect extraReward2");
         assertEq(adapter.extraReward3(), address(0), "Incorrect extraReward3");
         assertEq(adapter.extraReward4(), address(0), "Incorrect extraReward4");
-        assertEq(adapter.curveLPTokenMask(), 1, "Incorrect curveLPTokenMask");
-        assertEq(adapter.stakingTokenMask(), 2, "Incorrect stakingTokenMask");
-        assertEq(adapter.stakedTokenMask(), 4, "Incorrect stakedTokenMask");
-        assertEq(adapter.rewardTokensMask(), 8 + 16, "Incorrect rewardTokensMask");
     }
 
     /// @notice U:[CVX1R-2]: Extra rewards are handled correctly
@@ -86,7 +82,6 @@ contract ConvexV1BaseRewardPoolAdapterUnitTest is AdapterUnitTestHelper {
         adapter = new ConvexV1BaseRewardPoolAdapter(address(creditManager), address(baseRewardPool), stakedPhantomToken);
         assertEq(adapter.extraReward1(), tokens[5], "Incorrect extraReward1");
         assertEq(adapter.extraReward2(), address(0), "Incorrect extraReward1");
-        assertEq(adapter.rewardTokensMask(), 8 + 16 + 32, "Incorrect rewardTokensMask");
 
         baseRewardPool.setNumExtraRewards(2);
         _readsTokenMask(tokens[5]);
@@ -94,7 +89,6 @@ contract ConvexV1BaseRewardPoolAdapterUnitTest is AdapterUnitTestHelper {
         adapter = new ConvexV1BaseRewardPoolAdapter(address(creditManager), address(baseRewardPool), stakedPhantomToken);
         assertEq(adapter.extraReward1(), tokens[5], "Incorrect extraReward1");
         assertEq(adapter.extraReward2(), tokens[6], "Incorrect extraReward2");
-        assertEq(adapter.rewardTokensMask(), 8 + 16 + 32 + 64, "Incorrect rewardTokensMask");
 
         baseRewardPool.setNumExtraRewards(3);
         _readsTokenMask(tokens[5]);
@@ -104,7 +98,6 @@ contract ConvexV1BaseRewardPoolAdapterUnitTest is AdapterUnitTestHelper {
         assertEq(adapter.extraReward1(), tokens[5], "Incorrect extraReward1");
         assertEq(adapter.extraReward2(), tokens[6], "Incorrect extraReward2");
         assertEq(adapter.extraReward3(), tokens[7], "Incorrect extraReward3");
-        assertEq(adapter.rewardTokensMask(), 8 + 16 + 32 + 64 + 128, "Incorrect rewardTokensMask");
 
         baseRewardPool.setNumExtraRewards(4);
         _readsTokenMask(tokens[5]);
@@ -116,7 +109,6 @@ contract ConvexV1BaseRewardPoolAdapterUnitTest is AdapterUnitTestHelper {
         assertEq(adapter.extraReward2(), tokens[6], "Incorrect extraReward2");
         assertEq(adapter.extraReward3(), tokens[7], "Incorrect extraReward3");
         assertEq(adapter.extraReward4(), tokens[8], "Incorrect extraReward4");
-        assertEq(adapter.rewardTokensMask(), 8 + 16 + 32 + 64 + 128 + 256, "Incorrect rewardTokensMask");
     }
 
     /// @notice U:[CVX1R-3]: Wrapper functions revert on wrong caller
@@ -151,15 +143,12 @@ contract ConvexV1BaseRewardPoolAdapterUnitTest is AdapterUnitTestHelper {
     function test_U_CVX1R_04_stake_works_as_expected() public {
         _executesSwap({
             tokenIn: convexStakingToken,
-            tokenOut: stakedPhantomToken,
             callData: abi.encodeCall(adapter.stake, (1000)),
-            requiresApproval: true,
-            validatesTokens: false
+            requiresApproval: true
         });
         vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.stake(1000);
-        assertEq(tokensToEnable, 4, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
+        bool useSafePrices = adapter.stake(1000);
+        assertFalse(useSafePrices);
     }
 
     /// @notice U:[CVX1R-5]: `stakeDiff` works as expected
@@ -168,15 +157,12 @@ contract ConvexV1BaseRewardPoolAdapterUnitTest is AdapterUnitTestHelper {
         _readsActiveAccount();
         _executesSwap({
             tokenIn: convexStakingToken,
-            tokenOut: stakedPhantomToken,
             callData: abi.encodeCall(adapter.stake, (diffInputAmount)),
-            requiresApproval: true,
-            validatesTokens: false
+            requiresApproval: true
         });
         vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.stakeDiff(diffLeftoverAmount);
-        assertEq(tokensToEnable, 4, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, diffDisableTokenIn ? 2 : 0, "Incorrect tokensToDisable");
+        bool useSafePrices = adapter.stakeDiff(diffLeftoverAmount);
+        assertFalse(useSafePrices);
     }
 
     // ----- //
@@ -185,15 +171,10 @@ contract ConvexV1BaseRewardPoolAdapterUnitTest is AdapterUnitTestHelper {
 
     /// @notice U:[CVX1R-6]: `getReward` works as expected
     function test_U_CVX1R_06_getReward_works_as_expected() public {
-        _executesCall({
-            tokensToApprove: new address[](0),
-            tokensToValidate: new address[](0),
-            callData: abi.encodeCall(adapter.getReward, ())
-        });
+        _executesCall({tokensToApprove: new address[](0), callData: abi.encodeCall(adapter.getReward, ())});
         vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.getReward();
-        assertEq(tokensToEnable, 8 + 16, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
+        bool useSafePrices = adapter.getReward();
+        assertFalse(useSafePrices);
     }
 
     // -------- //
@@ -206,15 +187,12 @@ contract ConvexV1BaseRewardPoolAdapterUnitTest is AdapterUnitTestHelper {
             bool claim = i == 1;
             _executesSwap({
                 tokenIn: stakedPhantomToken,
-                tokenOut: convexStakingToken,
                 callData: abi.encodeCall(adapter.withdraw, (1000, claim)),
-                requiresApproval: false,
-                validatesTokens: false
+                requiresApproval: false
             });
             vm.prank(creditFacade);
-            (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.withdraw(1000, claim);
-            assertEq(tokensToEnable, claim ? (2 + 8 + 16) : 2, "Incorrect tokensToEnable");
-            assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
+            bool useSafePrices = adapter.withdraw(1000, claim);
+            assertFalse(useSafePrices);
         }
     }
 
@@ -226,15 +204,12 @@ contract ConvexV1BaseRewardPoolAdapterUnitTest is AdapterUnitTestHelper {
             _readsActiveAccount();
             _executesSwap({
                 tokenIn: stakedPhantomToken,
-                tokenOut: convexStakingToken,
                 callData: abi.encodeCall(adapter.withdraw, (diffInputAmount, claim)),
-                requiresApproval: false,
-                validatesTokens: false
+                requiresApproval: false
             });
             vm.prank(creditFacade);
-            (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.withdrawDiff(diffLeftoverAmount, claim);
-            assertEq(tokensToEnable, claim ? (2 + 8 + 16) : 2, "Incorrect tokensToEnable");
-            assertEq(tokensToDisable, diffDisableTokenIn ? 4 : 0, "Incorrect tokensToDisable");
+            bool useSafePrices = adapter.withdrawDiff(diffLeftoverAmount, claim);
+            assertFalse(useSafePrices);
         }
     }
 
@@ -248,15 +223,12 @@ contract ConvexV1BaseRewardPoolAdapterUnitTest is AdapterUnitTestHelper {
             bool claim = i == 1;
             _executesSwap({
                 tokenIn: stakedPhantomToken,
-                tokenOut: curveLPToken,
                 callData: abi.encodeCall(adapter.withdrawAndUnwrap, (1000, claim)),
-                requiresApproval: false,
-                validatesTokens: false
+                requiresApproval: false
             });
             vm.prank(creditFacade);
-            (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.withdrawAndUnwrap(1000, claim);
-            assertEq(tokensToEnable, claim ? (1 + 8 + 16) : 1, "Incorrect tokensToEnable");
-            assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
+            bool useSafePrices = adapter.withdrawAndUnwrap(1000, claim);
+            assertFalse(useSafePrices);
         }
     }
 
@@ -268,15 +240,12 @@ contract ConvexV1BaseRewardPoolAdapterUnitTest is AdapterUnitTestHelper {
             _readsActiveAccount();
             _executesSwap({
                 tokenIn: stakedPhantomToken,
-                tokenOut: curveLPToken,
                 callData: abi.encodeCall(adapter.withdrawAndUnwrap, (diffInputAmount, claim)),
-                requiresApproval: false,
-                validatesTokens: false
+                requiresApproval: false
             });
             vm.prank(creditFacade);
-            (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.withdrawDiffAndUnwrap(diffLeftoverAmount, claim);
-            assertEq(tokensToEnable, claim ? (1 + 8 + 16) : 1, "Incorrect tokensToEnable");
-            assertEq(tokensToDisable, diffDisableTokenIn ? 4 : 0, "Incorrect tokensToDisable");
+            bool useSafePrices = adapter.withdrawDiffAndUnwrap(diffLeftoverAmount, claim);
+            assertFalse(useSafePrices);
         }
     }
 }

@@ -9,15 +9,11 @@ import {IAdapter} from "../../interfaces/IAdapter.sol";
 interface IwstETHV1Adapter is IAdapter {
     function stETH() external view returns (address);
 
-    function stETHTokenMask() external view returns (uint256);
+    function wrap(uint256 amount) external returns (bool useSafePrices);
 
-    function wstETHTokenMask() external view returns (uint256);
+    function wrapDiff(uint256 leftoverAmount) external returns (bool useSafePrices);
 
-    function wrap(uint256 amount) external returns (uint256 tokensToEnable, uint256 tokensToDisable);
+    function unwrap(uint256 amount) external returns (bool useSafePrices);
 
-    function wrapDiff(uint256 leftoverAmount) external returns (uint256 tokensToEnable, uint256 tokensToDisable);
-
-    function unwrap(uint256 amount) external returns (uint256 tokensToEnable, uint256 tokensToDisable);
-
-    function unwrapDiff(uint256 leftoverAmount) external returns (uint256 tokensToEnable, uint256 tokensToDisable);
+    function unwrapDiff(uint256 leftoverAmount) external returns (bool useSafePrices);
 }

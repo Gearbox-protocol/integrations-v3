@@ -11,13 +11,9 @@ interface ILidoV1Adapter is IAdapter {
 
     function stETH() external view returns (address);
 
-    function wethTokenMask() external view returns (uint256);
-
-    function stETHTokenMask() external view returns (uint256);
-
     function treasury() external view returns (address);
 
-    function submit(uint256 amount) external returns (uint256 tokensToEnable, uint256 tokensToDisable);
+    function submit(uint256 amount) external returns (bool useSafePrices);
 
-    function submitDiff(uint256 leftoverAmount) external returns (uint256 tokensToEnable, uint256 tokensToDisable);
+    function submitDiff(uint256 leftoverAmount) external returns (bool useSafePrices);
 }

@@ -26,15 +26,10 @@ contract CurveV1AdapterStableNG is CurveV1AdapterBase, ICurveV1_StableNGAdapter 
     /// @notice Add liquidity to the pool
     /// @param amounts Amounts of tokens to add
     /// @dev `min_mint_amount` parameter is ignored because calldata is passed directly to the target contract
-    function add_liquidity(uint256[] calldata amounts, uint256)
-        external
-        override
-        creditFacadeOnly
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
-    {
+    function add_liquidity(uint256[] calldata amounts, uint256) external override creditFacadeOnly returns (bool) {
         uint256 len = amounts.length;
-        (tokensToEnable, tokensToDisable) =
-            _add_liquidity(amounts[0] > 1, amounts[1] > 1, len > 2 && amounts[2] > 1, len > 3 && amounts[3] > 1);
+        _add_liquidity(amounts[0] > 1, amounts[1] > 1, len > 2 && amounts[2] > 1, len > 3 && amounts[3] > 1);
+        return true;
     }
 
     /// @dev Returns calldata for adding liquidity in coin `i`
@@ -66,29 +61,22 @@ contract CurveV1AdapterStableNG is CurveV1AdapterBase, ICurveV1_StableNGAdapter 
 
     /// @notice Remove liquidity from the pool
     /// @dev '_amount' and 'min_amounts' parameters are ignored because calldata is directly passed to the target contract
-    function remove_liquidity(uint256, uint256[] calldata)
-        external
-        virtual
-        creditFacadeOnly
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
-    {
-        (tokensToEnable, tokensToDisable) = _remove_liquidity();
+    function remove_liquidity(uint256, uint256[] calldata) external virtual creditFacadeOnly returns (bool) {
+        _execute(msg.data);
+        return true;
     }
 
     /// @notice Withdraw exact amounts of tokens from the pool
-    /// @param amounts Amounts of tokens to withdraw
-    /// @dev `max_burn_amount` parameter is ignored because calldata is directly passed to the target contract
-    function remove_liquidity_imbalance(uint256[] calldata amounts, uint256)
+    /// @dev `amounts` and `max_burn_amount` parameters are ignored because calldata is directly passed to the target contract
+    function remove_liquidity_imbalance(uint256[] calldata, uint256)
         external
         virtual
         override
         creditFacadeOnly
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+        returns (bool)
     {
-        uint256 len = amounts.length;
-        (tokensToEnable, tokensToDisable) = _remove_liquidity_imbalance(
-            amounts[0] > 1, amounts[1] > 1, len > 2 && amounts[2] > 1, len > 3 && amounts[3] > 1
-        );
+        _execute(msg.data);
+        return true;
     }
 
     /// @notice Returns all adapter parameters serialized into a bytes array,
@@ -99,14 +87,11 @@ contract CurveV1AdapterStableNG is CurveV1AdapterBase, ICurveV1_StableNGAdapter 
             targetContract,
             token,
             lp_token,
-            lpTokenMask,
             metapoolBase,
             nCoins,
             use256,
             [token0, token1, token2, token3],
-            [token0Mask, token1Mask, token2Mask, token3Mask],
-            [underlying0, underlying1, underlying2, underlying3],
-            [underlying0Mask, underlying1Mask, underlying2Mask, underlying3Mask]
+            [underlying0, underlying1, underlying2, underlying3]
         );
     }
 }

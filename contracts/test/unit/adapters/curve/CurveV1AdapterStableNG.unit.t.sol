@@ -19,18 +19,13 @@ contract CurveV1AdapterStablNGUnitTest is AdapterUnitTestHelper {
     address token2;
     address lpToken;
 
-    uint256 token0Mask;
-    uint256 token1Mask;
-    uint256 token2Mask;
-    uint256 lpTokenMask;
-
     function setUp() public {
         _setUp();
 
-        (token0, token0Mask) = (tokens[0], 1);
-        (token1, token1Mask) = (tokens[1], 2);
-        (token2, token2Mask) = (tokens[2], 4);
-        (lpToken, lpTokenMask) = (tokens[3], 8);
+        token0 = tokens[0];
+        token1 = tokens[1];
+        token2 = tokens[2];
+        lpToken = tokens[3];
 
         address[] memory coins = new address[](3);
         coins[0] = token0;
@@ -70,15 +65,12 @@ contract CurveV1AdapterStablNGUnitTest is AdapterUnitTestHelper {
 
         _executesCall({
             tokensToApprove: tokensToApprove,
-            tokensToValidate: new address[](0),
             callData: abi.encodeCall(ICurvePoolStableNG.add_liquidity, (amounts, 500))
         });
 
         vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.add_liquidity(amounts, 500);
-
-        assertEq(tokensToEnable, lpTokenMask, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
+        bool useSafePrices = adapter.add_liquidity(amounts, 500);
+        assertTrue(useSafePrices);
     }
 
     /// @notice U:[CRVNG-3]: `remove_liquidity` works as expected
@@ -90,15 +82,12 @@ contract CurveV1AdapterStablNGUnitTest is AdapterUnitTestHelper {
 
         _executesCall({
             tokensToApprove: new address[](0),
-            tokensToValidate: new address[](0),
             callData: abi.encodeCall(ICurvePoolStableNG.remove_liquidity, (500, amounts))
         });
 
         vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.remove_liquidity(500, amounts);
-
-        assertEq(tokensToEnable, token0Mask | token1Mask | token2Mask, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
+        bool useSafePrices = adapter.remove_liquidity(500, amounts);
+        assertTrue(useSafePrices);
     }
 
     /// @notice U:[CRVNG-4]: `remove_liquidity_imbalance` works as expected
@@ -110,14 +99,11 @@ contract CurveV1AdapterStablNGUnitTest is AdapterUnitTestHelper {
 
         _executesCall({
             tokensToApprove: new address[](0),
-            tokensToValidate: new address[](0),
             callData: abi.encodeCall(ICurvePoolStableNG.remove_liquidity_imbalance, (amounts, 500))
         });
 
         vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.remove_liquidity_imbalance(amounts, 500);
-
-        assertEq(tokensToEnable, token0Mask | token2Mask, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
+        bool useSafePrices = adapter.remove_liquidity_imbalance(amounts, 500);
+        assertTrue(useSafePrices);
     }
 }

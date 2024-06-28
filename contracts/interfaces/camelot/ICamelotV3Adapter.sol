@@ -67,35 +67,27 @@ interface ICamelotV3Adapter is
 {
     function exactInputSingle(ICamelotV3Router.ExactInputSingleParams calldata params)
         external
-        returns (uint256 tokensToEnable, uint256 tokensToDisable);
+        returns (bool useSafePrices);
 
-    function exactDiffInputSingle(ExactDiffInputSingleParams calldata params)
-        external
-        returns (uint256 tokensToEnable, uint256 tokensToDisable);
+    function exactDiffInputSingle(ExactDiffInputSingleParams calldata params) external returns (bool useSafePrices);
 
     function exactInputSingleSupportingFeeOnTransferTokens(ICamelotV3Router.ExactInputSingleParams calldata params)
         external
-        returns (uint256 tokensToEnable, uint256 tokensToDisable);
+        returns (bool useSafePrices);
 
     function exactDiffInputSingleSupportingFeeOnTransferTokens(ExactDiffInputSingleParams calldata params)
         external
-        returns (uint256 tokensToEnable, uint256 tokensToDisable);
+        returns (bool useSafePrices);
 
-    function exactInput(ICamelotV3Router.ExactInputParams calldata params)
-        external
-        returns (uint256 tokensToEnable, uint256 tokensToDisable);
+    function exactInput(ICamelotV3Router.ExactInputParams calldata params) external returns (bool useSafePrices);
 
-    function exactDiffInput(ExactDiffInputParams calldata params)
-        external
-        returns (uint256 tokensToEnable, uint256 tokensToDisable);
+    function exactDiffInput(ExactDiffInputParams calldata params) external returns (bool useSafePrices);
 
     function exactOutputSingle(ICamelotV3Router.ExactOutputSingleParams calldata params)
         external
-        returns (uint256 tokensToEnable, uint256 tokensToDisable);
+        returns (bool useSafePrices);
 
-    function exactOutput(ICamelotV3Router.ExactOutputParams calldata params)
-        external
-        returns (uint256 tokensToEnable, uint256 tokensToDisable);
+    function exactOutput(ICamelotV3Router.ExactOutputParams calldata params) external returns (bool useSafePrices);
 
     // ------------- //
     // CONFIGURATION //

@@ -8,7 +8,8 @@ import {Test} from "forge-std/Test.sol";
 import {ICreditManagerV3} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditManagerV3.sol";
 import {
     CallerNotConfiguratorException,
-    CallerNotCreditFacadeException
+    CallerNotCreditFacadeException,
+    TokenNotAllowedException
 } from "@gearbox-protocol/core-v3/contracts/interfaces/IExceptions.sol";
 import {AddressProviderV3ACLMock} from
     "@gearbox-protocol/core-v3/contracts/test/mocks/core/AddressProviderV3ACLMock.sol";
@@ -80,6 +81,11 @@ contract AdapterUnitTestHelper is Test, CreditManagerV3MockEvents {
         vm.expectRevert(CallerNotCreditFacadeException.selector);
     }
 
+    function _revertsOnUnknownToken() internal {
+        //vm.expectRevert(TokenNotAllowedException.selector);
+        vm.expectRevert("Token not recognized");
+    }
+
     function _readsTokenMask(address token) internal {
         vm.expectCall(address(creditManager), abi.encodeCall(ICreditManagerV3.getTokenMaskOrRevert, (token)));
     }
@@ -88,21 +94,7 @@ contract AdapterUnitTestHelper is Test, CreditManagerV3MockEvents {
         vm.expectCall(address(creditManager), abi.encodeCall(ICreditManagerV3.getActiveCreditAccountOrRevert, ()));
     }
 
-    function _executesSwap(
-        address tokenIn,
-        address tokenOut,
-        bytes memory callData,
-        bool requiresApproval,
-        bool validatesTokens
-    ) internal {
-        if (validatesTokens) {
-            vm.expectCall(address(creditManager), abi.encodeCall(ICreditManagerV3.getTokenMaskOrRevert, (tokenOut)));
-
-            if (!requiresApproval) {
-                vm.expectCall(address(creditManager), abi.encodeCall(ICreditManagerV3.getTokenMaskOrRevert, (tokenIn)));
-            }
-        }
-
+    function _executesSwap(address tokenIn, bytes memory callData, bool requiresApproval) internal {
         if (requiresApproval) {
             vm.expectCall(
                 address(creditManager),
@@ -124,15 +116,7 @@ contract AdapterUnitTestHelper is Test, CreditManagerV3MockEvents {
         }
     }
 
-    function _executesCall(address[] memory tokensToApprove, address[] memory tokensToValidate, bytes memory callData)
-        internal
-    {
-        for (uint256 i; i < tokensToValidate.length; ++i) {
-            vm.expectCall(
-                address(creditManager), abi.encodeCall(ICreditManagerV3.getTokenMaskOrRevert, (tokensToValidate[i]))
-            );
-        }
-
+    function _executesCall(address[] memory tokensToApprove, bytes memory callData) internal {
         for (uint256 i; i < tokensToApprove.length; ++i) {
             vm.expectCall(
                 address(creditManager),

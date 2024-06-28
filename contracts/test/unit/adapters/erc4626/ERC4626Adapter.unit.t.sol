@@ -15,14 +15,12 @@ contract ERC4626AdapterUnitTest is AdapterUnitTestHelper {
     address asset;
     address vault;
 
-    uint256 assetMask;
-    uint256 sharesMask;
-
     function setUp() public {
         _setUp();
 
-        (asset, assetMask) = (tokens[0], 1);
-        (vault, sharesMask) = (tokens[1], 2);
+        asset = tokens[0];
+        vault = tokens[1];
+
         vm.mockCall(vault, abi.encodeCall(IERC4626.asset, ()), abi.encode(asset));
 
         adapter = new ERC4626Adapter(address(creditManager), vault);
@@ -37,8 +35,6 @@ contract ERC4626AdapterUnitTest is AdapterUnitTestHelper {
         assertEq(adapter.creditManager(), address(creditManager), "Incorrect creditManager");
         assertEq(adapter.targetContract(), vault, "Incorrect targetContract");
         assertEq(adapter.asset(), asset, "Incorrect asset");
-        assertEq(adapter.assetMask(), assetMask, "Incorrect assetMask");
-        assertEq(adapter.sharesMask(), sharesMask, "Incorrect sharesMask");
     }
 
     /// @notice U:[TV-2]: Wrapper functions revert on wrong caller
@@ -67,16 +63,12 @@ contract ERC4626AdapterUnitTest is AdapterUnitTestHelper {
         _readsActiveAccount();
         _executesSwap({
             tokenIn: asset,
-            tokenOut: vault,
             callData: abi.encodeCall(IERC4626.deposit, (1000, creditAccount)),
-            requiresApproval: true,
-            validatesTokens: false
+            requiresApproval: true
         });
         vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.deposit(1000, address(0));
-
-        assertEq(tokensToEnable, sharesMask, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
+        bool useSafePrices = adapter.deposit(1000, address(0));
+        assertFalse(useSafePrices);
     }
 
     /// @notice U:[TV-4]: `depositDiff` works as expected
@@ -86,16 +78,12 @@ contract ERC4626AdapterUnitTest is AdapterUnitTestHelper {
         _readsActiveAccount();
         _executesSwap({
             tokenIn: asset,
-            tokenOut: vault,
             callData: abi.encodeCall(IERC4626.deposit, (diffInputAmount, creditAccount)),
-            requiresApproval: true,
-            validatesTokens: false
+            requiresApproval: true
         });
         vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.depositDiff(diffLeftoverAmount);
-
-        assertEq(tokensToEnable, sharesMask, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, diffDisableTokenIn ? assetMask : 0, "Incorrect tokensToDisable");
+        bool useSafePrices = adapter.depositDiff(diffLeftoverAmount);
+        assertFalse(useSafePrices);
     }
 
     /// @notice U:[TV-5]: `mint` works as expected
@@ -103,16 +91,12 @@ contract ERC4626AdapterUnitTest is AdapterUnitTestHelper {
         _readsActiveAccount();
         _executesSwap({
             tokenIn: asset,
-            tokenOut: vault,
             callData: abi.encodeCall(IERC4626.mint, (1000, creditAccount)),
-            requiresApproval: true,
-            validatesTokens: false
+            requiresApproval: true
         });
         vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.mint(1000, address(0));
-
-        assertEq(tokensToEnable, sharesMask, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
+        bool useSafePrices = adapter.mint(1000, address(0));
+        assertFalse(useSafePrices);
     }
 
     /// @notice U:[TV-6]: `withdraw` works as expected
@@ -120,16 +104,12 @@ contract ERC4626AdapterUnitTest is AdapterUnitTestHelper {
         _readsActiveAccount();
         _executesSwap({
             tokenIn: vault,
-            tokenOut: asset,
             callData: abi.encodeCall(IERC4626.withdraw, (1000, creditAccount, creditAccount)),
-            requiresApproval: false,
-            validatesTokens: false
+            requiresApproval: false
         });
         vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.withdraw(1000, address(0), address(0));
-
-        assertEq(tokensToEnable, assetMask, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
+        bool useSafePrices = adapter.withdraw(1000, address(0), address(0));
+        assertFalse(useSafePrices);
     }
 
     /// @notice U:[TV-7]: `redeem` works as expected
@@ -137,16 +117,12 @@ contract ERC4626AdapterUnitTest is AdapterUnitTestHelper {
         _readsActiveAccount();
         _executesSwap({
             tokenIn: vault,
-            tokenOut: asset,
             callData: abi.encodeCall(IERC4626.redeem, (1000, creditAccount, creditAccount)),
-            requiresApproval: false,
-            validatesTokens: false
+            requiresApproval: false
         });
         vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.redeem(1000, address(0), address(0));
-
-        assertEq(tokensToEnable, assetMask, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
+        bool useSafePrices = adapter.redeem(1000, address(0), address(0));
+        assertFalse(useSafePrices);
     }
 
     /// @notice U:[TV-8]: `redeemDiff` works as expected
@@ -156,15 +132,11 @@ contract ERC4626AdapterUnitTest is AdapterUnitTestHelper {
         _readsActiveAccount();
         _executesSwap({
             tokenIn: vault,
-            tokenOut: asset,
             callData: abi.encodeCall(IERC4626.redeem, (diffInputAmount, creditAccount, creditAccount)),
-            requiresApproval: false,
-            validatesTokens: false
+            requiresApproval: false
         });
         vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.redeemDiff(diffLeftoverAmount);
-
-        assertEq(tokensToEnable, assetMask, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, diffDisableTokenIn ? sharesMask : 0, "Incorrect tokensToDisable");
+        bool useSafePrices = adapter.redeemDiff(diffLeftoverAmount);
+        assertFalse(useSafePrices);
     }
 }

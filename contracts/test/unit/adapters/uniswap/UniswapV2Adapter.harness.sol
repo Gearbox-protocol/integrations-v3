@@ -8,11 +8,7 @@ import {UniswapV2Adapter} from "../../../../adapters/uniswap/UniswapV2.sol";
 contract UniswapV2AdapterHarness is UniswapV2Adapter {
     constructor(address creditManager, address router) UniswapV2Adapter(creditManager, router) {}
 
-    function validatePath(address[] memory path)
-        external
-        view
-        returns (bool valid, address tokenIn, address tokenOut)
-    {
-        (valid, tokenIn, tokenOut) = _validatePath(path);
+    function validatePath(address[] memory path) external view returns (bool valid, address tokenIn) {
+        (valid, tokenIn) = _validatePath(path);
     }
 }

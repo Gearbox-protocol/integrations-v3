@@ -8,11 +8,7 @@ import {VelodromeV2RouterAdapter, Route} from "../../../../adapters/velodrome/Ve
 contract VelodromeV2AdapterHarness is VelodromeV2RouterAdapter {
     constructor(address creditManager, address router) VelodromeV2RouterAdapter(creditManager, router) {}
 
-    function validatePath(Route[] memory routes)
-        external
-        view
-        returns (bool valid, address tokenIn, address tokenOut)
-    {
-        (valid, tokenIn, tokenOut) = _validatePath(routes);
+    function validatePath(Route[] memory routes) external view returns (bool valid, address tokenIn) {
+        (valid, tokenIn) = _validatePath(routes);
     }
 }

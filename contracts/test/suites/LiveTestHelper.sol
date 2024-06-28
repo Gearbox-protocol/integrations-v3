@@ -189,14 +189,14 @@ contract LiveTestHelper is IntegrationTestHelper {
 
         if (boosterAdapter != address(0)) {
             vm.prank(CONFIGURATOR);
-            IConvexV1BoosterAdapter(boosterAdapter).updateStakedPhantomTokensMap();
+            IConvexV1BoosterAdapter(boosterAdapter).updateSupportedPids();
         }
 
         boosterAdapter = getAdapter(creditManager, Contracts.AURA_BOOSTER);
 
         if (boosterAdapter != address(0)) {
             vm.prank(CONFIGURATOR);
-            IConvexV1BoosterAdapter(boosterAdapter).updateStakedPhantomTokensMap();
+            IConvexV1BoosterAdapter(boosterAdapter).updateSupportedPids();
         }
 
         // ZIRCUIT POOL
@@ -205,7 +205,7 @@ contract LiveTestHelper is IntegrationTestHelper {
 
         if (zircuitAdapter != address(0)) {
             vm.prank(CONFIGURATOR);
-            ZircuitPoolAdapter(zircuitAdapter).updatePhantomTokensMap();
+            ZircuitPoolAdapter(zircuitAdapter).updateSupportedUnderlyings();
         }
 
         // BALANCER VAULT

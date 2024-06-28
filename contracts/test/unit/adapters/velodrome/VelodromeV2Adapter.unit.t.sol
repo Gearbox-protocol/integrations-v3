@@ -13,6 +13,8 @@ import {
 import {AdapterUnitTestHelper} from "../AdapterUnitTestHelper.sol";
 import {VelodromeV2AdapterHarness} from "./VelodromeV2Adapter.harness.sol";
 
+import "@gearbox-protocol/core-v3/contracts/test/lib/constants.sol";
+
 /// @title Velodtome v2 adapter unit test
 /// @notice U:[VELO2]: Unit tests for Velodtome v2 swap router adapter
 contract VelodtomeV2AdapterUnitTest is
@@ -61,18 +63,13 @@ contract VelodtomeV2AdapterUnitTest is
         _readsActiveAccount();
         _executesSwap({
             tokenIn: tokens[0],
-            tokenOut: tokens[1],
             callData: abi.encodeCall(IVelodromeV2Router.swapExactTokensForTokens, (123, 456, routes, creditAccount, 789)),
-            requiresApproval: true,
-            validatesTokens: true
+            requiresApproval: true
         });
 
         vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) =
-            adapter.swapExactTokensForTokens(123, 456, routes, address(0), 789);
-
-        assertEq(tokensToEnable, 2, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
+        bool useSafePrices = adapter.swapExactTokensForTokens(123, 456, routes, address(0), 789);
+        assertTrue(useSafePrices);
     }
 
     /// @notice U:[VELO2-4]: `swapDiffTokensForTokens` works as expected
@@ -88,34 +85,37 @@ contract VelodtomeV2AdapterUnitTest is
         _readsActiveAccount();
         _executesSwap({
             tokenIn: tokens[0],
-            tokenOut: tokens[1],
             callData: abi.encodeCall(
                 IVelodromeV2Router.swapExactTokensForTokens,
                 (diffInputAmount, diffInputAmount / 2, routes, creditAccount, 789)
-                ),
-            requiresApproval: true,
-            validatesTokens: true
+            ),
+            requiresApproval: true
         });
 
         vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) =
-            adapter.swapDiffTokensForTokens(diffLeftoverAmount, 0.5e27, routes, 789);
-
-        assertEq(tokensToEnable, 2, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, diffDisableTokenIn ? 1 : 0, "Incorrect tokensToDisable");
+        bool useSafePrices = adapter.swapDiffTokensForTokens(diffLeftoverAmount, 0.5e27, routes, 789);
+        assertTrue(useSafePrices);
     }
 
     /// @notice U:[VELO2-5]: `setPoolStatusBatch` works as expected
     function test_U_VELO2_05_setPoolStatusBatch_works_as_expected() public {
         _setPoolsStatus(3, 0);
-        VelodromeV2PoolStatus[] memory pools;
+        VelodromeV2PoolStatus[] memory pools = new VelodromeV2PoolStatus[](1);
 
         _revertsOnNonConfiguratorCaller();
+        adapter.setPoolStatusBatch(pools);
+
+        pools[0] = VelodromeV2PoolStatus(tokens[0], DUMB_ADDRESS, false, address(42), true);
+        _revertsOnUnknownToken();
+        vm.prank(configurator);
         adapter.setPoolStatusBatch(pools);
 
         pools = new VelodromeV2PoolStatus[](2);
         pools[0] = VelodromeV2PoolStatus(tokens[0], tokens[1], false, address(42), false);
         pools[1] = VelodromeV2PoolStatus(tokens[1], tokens[2], true, address(32), true);
+
+        _readsTokenMask(tokens[1]);
+        _readsTokenMask(tokens[2]);
 
         vm.expectEmit(true, true, false, true);
         emit SetPoolStatus(_min(tokens[0], tokens[1]), _max(tokens[0], tokens[1]), false, address(42), false);
@@ -148,14 +148,13 @@ contract VelodtomeV2AdapterUnitTest is
     function test_U_VELO2_06_validatePath_works_as_expected() public {
         bool isValid;
         address tokenIn;
-        address tokenOut;
         Route[] memory routes;
 
         // insane paths
-        (isValid,,) = adapter.validatePath(new Route[](0));
+        (isValid,) = adapter.validatePath(new Route[](0));
         assertFalse(isValid, "Empty path incorrectly valid");
 
-        (isValid,,) = adapter.validatePath(new Route[](4));
+        (isValid,) = adapter.validatePath(new Route[](4));
         assertFalse(isValid, "Long path incorrectly valid");
 
         // exhaustive search
@@ -165,12 +164,11 @@ contract VelodtomeV2AdapterUnitTest is
             uint256 numCases = 1 << (pathLen - 1);
             for (uint256 mask; mask < numCases; ++mask) {
                 _setPoolsStatus(pathLen - 1, mask);
-                (isValid, tokenIn, tokenOut) = adapter.validatePath(routes);
+                (isValid, tokenIn) = adapter.validatePath(routes);
 
                 if (mask == numCases - 1) {
                     assertTrue(isValid, "Path incorrectly invalid");
                     assertEq(tokenIn, tokens[0], "Incorrect tokenIn");
-                    assertEq(tokenOut, tokens[pathLen - 1], "Incorrect tokenOut");
                 } else {
                     assertFalse(isValid, "Path incorrectly valid");
                 }
@@ -182,7 +180,6 @@ contract VelodtomeV2AdapterUnitTest is
     function test_U_VELO2_07_validatePath_filters_disjunct_paths() public {
         bool isValid;
         address tokenIn;
-        address tokenOut;
         Route[] memory routes;
 
         VelodromeV2PoolStatus[] memory pools = new VelodromeV2PoolStatus[](2);
@@ -195,7 +192,7 @@ contract VelodtomeV2AdapterUnitTest is
         routes[0] = Route({from: tokens[0], to: tokens[1], stable: false, factory: address(42)});
         routes[1] = Route({from: tokens[2], to: tokens[3], stable: false, factory: address(42)});
 
-        (isValid, tokenIn, tokenOut) = adapter.validatePath(routes);
+        (isValid, tokenIn) = adapter.validatePath(routes);
 
         assertFalse(isValid, "Path incorrectly valid");
     }

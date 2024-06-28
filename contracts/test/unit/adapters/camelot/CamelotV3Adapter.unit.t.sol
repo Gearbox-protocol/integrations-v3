@@ -14,6 +14,8 @@ import {
 import {AdapterUnitTestHelper} from "../AdapterUnitTestHelper.sol";
 import {CamelotV3AdapterHarness} from "./CamelotV3Adapter.harness.sol";
 
+import "@gearbox-protocol/core-v3/contracts/test/lib/constants.sol";
+
 /// @title Camelot v3 adapter unit test
 /// @notice U:[CAMV3]: Unit tests for Camelot v3 swap router adapter
 contract CamelotV3AdapterUnitTest is
@@ -47,9 +49,15 @@ contract CamelotV3AdapterUnitTest is
         _revertsOnNonFacadeCaller();
         adapter.exactInputSingle(p1);
 
+        _revertsOnNonFacadeCaller();
+        adapter.exactInputSingleSupportingFeeOnTransferTokens(p1);
+
         ExactDiffInputSingleParams memory p2_2;
         _revertsOnNonFacadeCaller();
         adapter.exactDiffInputSingle(p2_2);
+
+        _revertsOnNonFacadeCaller();
+        adapter.exactDiffInputSingleSupportingFeeOnTransferTokens(p2_2);
 
         ICamelotV3Router.ExactInputParams memory p3;
         _revertsOnNonFacadeCaller();
@@ -68,6 +76,38 @@ contract CamelotV3AdapterUnitTest is
         adapter.exactOutput(p6);
     }
 
+    /// @notice U:[CAMV3-2A]: Functions not using `validatePath` revert on non-allowed pool
+    function test_U_CAMV3_02A_functions_revert_on_non_allowed_pool() public {
+        ICamelotV3Router.ExactInputSingleParams memory p1;
+        p1.tokenIn = DUMB_ADDRESS;
+        p1.tokenOut = tokens[0];
+        vm.expectRevert(InvalidPathException.selector);
+        vm.prank(creditFacade);
+        adapter.exactInputSingle(p1);
+
+        vm.expectRevert(InvalidPathException.selector);
+        vm.prank(creditFacade);
+        adapter.exactInputSingleSupportingFeeOnTransferTokens(p1);
+
+        ExactDiffInputSingleParams memory p2_2;
+        p2_2.tokenIn = DUMB_ADDRESS;
+        p2_2.tokenOut = tokens[0];
+        vm.expectRevert(InvalidPathException.selector);
+        vm.prank(creditFacade);
+        adapter.exactDiffInputSingle(p2_2);
+
+        vm.expectRevert(InvalidPathException.selector);
+        vm.prank(creditFacade);
+        adapter.exactDiffInputSingleSupportingFeeOnTransferTokens(p2_2);
+
+        ICamelotV3Router.ExactOutputSingleParams memory p5;
+        p5.tokenIn = DUMB_ADDRESS;
+        p5.tokenOut = tokens[0];
+        vm.expectRevert(InvalidPathException.selector);
+        vm.prank(creditFacade);
+        adapter.exactOutputSingle(p5);
+    }
+
     /// @notice U:[CAMV3-3]: `exactInputSingle` works as expected
     function test_U_CAMV3_03_exactInputSingle_works_as_expected() public {
         ICamelotV3Router.ExactInputSingleParams memory params = ICamelotV3Router.ExactInputSingleParams({
@@ -83,18 +123,14 @@ contract CamelotV3AdapterUnitTest is
         _readsActiveAccount();
         _executesSwap({
             tokenIn: tokens[0],
-            tokenOut: tokens[1],
             callData: abi.encodeCall(ICamelotV3Router.exactInputSingle, (params)),
-            requiresApproval: true,
-            validatesTokens: true
+            requiresApproval: true
         });
 
         params.recipient = address(0);
         vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.exactInputSingle(params);
-
-        assertEq(tokensToEnable, 2, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
+        bool useSafePrices = adapter.exactInputSingle(params);
+        assertTrue(useSafePrices);
     }
 
     /// @notice U:[CAMV3-3A]: `exactInputSingleSupportingFeeOnTransferTokens` works as expected
@@ -112,19 +148,14 @@ contract CamelotV3AdapterUnitTest is
         _readsActiveAccount();
         _executesSwap({
             tokenIn: tokens[0],
-            tokenOut: tokens[1],
             callData: abi.encodeCall(ICamelotV3Router.exactInputSingleSupportingFeeOnTransferTokens, (params)),
-            requiresApproval: true,
-            validatesTokens: true
+            requiresApproval: true
         });
 
         params.recipient = address(0);
         vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) =
-            adapter.exactInputSingleSupportingFeeOnTransferTokens(params);
-
-        assertEq(tokensToEnable, 2, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
+        bool useSafePrices = adapter.exactInputSingleSupportingFeeOnTransferTokens(params);
+        assertTrue(useSafePrices);
     }
 
     /// @notice U:[CAMV3-4]: `exactDiffInputSingle` works as expected
@@ -134,7 +165,6 @@ contract CamelotV3AdapterUnitTest is
         _readsActiveAccount();
         _executesSwap({
             tokenIn: tokens[0],
-            tokenOut: tokens[1],
             callData: abi.encodeCall(
                 ICamelotV3Router.exactInputSingle,
                 (
@@ -148,13 +178,12 @@ contract CamelotV3AdapterUnitTest is
                         limitSqrtPrice: 0
                     })
                 )
-                ),
-            requiresApproval: true,
-            validatesTokens: true
+            ),
+            requiresApproval: true
         });
 
         vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.exactDiffInputSingle(
+        bool useSafePrices = adapter.exactDiffInputSingle(
             ExactDiffInputSingleParams({
                 tokenIn: tokens[0],
                 tokenOut: tokens[1],
@@ -165,8 +194,7 @@ contract CamelotV3AdapterUnitTest is
             })
         );
 
-        assertEq(tokensToEnable, 2, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, diffDisableTokenIn ? 1 : 0, "Incorrect tokensToDisable");
+        assertTrue(useSafePrices);
     }
 
     /// @notice U:[CAMV3-4A]: `exactDiffInputSingleSupportingFeeOnTransferTokens` works as expected
@@ -179,7 +207,6 @@ contract CamelotV3AdapterUnitTest is
         _readsActiveAccount();
         _executesSwap({
             tokenIn: tokens[0],
-            tokenOut: tokens[1],
             callData: abi.encodeCall(
                 ICamelotV3Router.exactInputSingleSupportingFeeOnTransferTokens,
                 (
@@ -193,13 +220,12 @@ contract CamelotV3AdapterUnitTest is
                         limitSqrtPrice: 0
                     })
                 )
-                ),
-            requiresApproval: true,
-            validatesTokens: true
+            ),
+            requiresApproval: true
         });
 
         vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.exactDiffInputSingleSupportingFeeOnTransferTokens(
+        bool useSafePrices = adapter.exactDiffInputSingleSupportingFeeOnTransferTokens(
             ExactDiffInputSingleParams({
                 tokenIn: tokens[0],
                 tokenOut: tokens[1],
@@ -210,8 +236,7 @@ contract CamelotV3AdapterUnitTest is
             })
         );
 
-        assertEq(tokensToEnable, 2, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, diffDisableTokenIn ? 1 : 0, "Incorrect tokensToDisable");
+        assertTrue(useSafePrices);
     }
 
     /// @notice U:[CAMV3-5]: `exactInput` works as expected
@@ -231,18 +256,15 @@ contract CamelotV3AdapterUnitTest is
         _readsActiveAccount();
         _executesSwap({
             tokenIn: tokens[0],
-            tokenOut: tokens[2],
             callData: abi.encodeCall(ICamelotV3Router.exactInput, (params)),
-            requiresApproval: true,
-            validatesTokens: true
+            requiresApproval: true
         });
 
         params.recipient = address(0);
         vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.exactInput(params);
+        bool useSafePrices = adapter.exactInput(params);
 
-        assertEq(tokensToEnable, 4, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
+        assertTrue(useSafePrices);
     }
 
     /// @notice U:[CAMV3-6]: `exactDiffInput` works as expected
@@ -263,7 +285,6 @@ contract CamelotV3AdapterUnitTest is
         _readsActiveAccount();
         _executesSwap({
             tokenIn: tokens[0],
-            tokenOut: tokens[2],
             callData: abi.encodeCall(
                 ICamelotV3Router.exactInput,
                 (
@@ -275,16 +296,14 @@ contract CamelotV3AdapterUnitTest is
                         recipient: creditAccount
                     })
                 )
-                ),
-            requiresApproval: true,
-            validatesTokens: true
+            ),
+            requiresApproval: true
         });
 
         vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.exactDiffInput(params);
+        bool useSafePrices = adapter.exactDiffInput(params);
 
-        assertEq(tokensToEnable, 4, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, diffDisableTokenIn ? 1 : 0, "Incorrect tokensToDisable");
+        assertTrue(useSafePrices);
     }
 
     /// @notice U:[CAMV3-7]: `exactOutputSingle` works as expected
@@ -303,18 +322,15 @@ contract CamelotV3AdapterUnitTest is
         _readsActiveAccount();
         _executesSwap({
             tokenIn: tokens[0],
-            tokenOut: tokens[1],
             callData: abi.encodeCall(ICamelotV3Router.exactOutputSingle, (params)),
-            requiresApproval: true,
-            validatesTokens: true
+            requiresApproval: true
         });
 
         params.recipient = address(0);
         vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.exactOutputSingle(params);
+        bool useSafePrices = adapter.exactOutputSingle(params);
 
-        assertEq(tokensToEnable, 2, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
+        assertTrue(useSafePrices);
     }
 
     /// @notice U:[CAMV3-8]: `exactOutput` works as expected
@@ -333,25 +349,28 @@ contract CamelotV3AdapterUnitTest is
         params.path = _makePath(3);
         _readsActiveAccount();
         _executesSwap({
-            tokenIn: tokens[2], // path is reversed for exactOutput
-            tokenOut: tokens[0],
+            tokenIn: tokens[2],
             callData: abi.encodeCall(ICamelotV3Router.exactOutput, (params)),
-            requiresApproval: true,
-            validatesTokens: true
+            requiresApproval: true
         });
 
         params.recipient = address(0);
         vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.exactOutput(params);
+        bool useSafePrices = adapter.exactOutput(params);
 
-        assertEq(tokensToEnable, 1, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
+        assertTrue(useSafePrices);
     }
 
     /// @notice U:[CAMV3-9]: `setPoolStatusBatch` works as expected
     function test_U_CAMV3_09_setPoolStatusBatch_works_as_expected() public {
         _setPoolsStatus(3, 0);
-        CamelotV3PoolStatus[] memory pairs;
+        CamelotV3PoolStatus[] memory pairs = new CamelotV3PoolStatus[](1);
+
+        pairs[0] = CamelotV3PoolStatus(tokens[0], DUMB_ADDRESS, true);
+
+        _revertsOnUnknownToken();
+        vm.prank(configurator);
+        adapter.setPoolStatusBatch(pairs);
 
         _revertsOnNonConfiguratorCaller();
         adapter.setPoolStatusBatch(pairs);
@@ -359,6 +378,9 @@ contract CamelotV3AdapterUnitTest is
         pairs = new CamelotV3PoolStatus[](2);
         pairs[0] = CamelotV3PoolStatus(tokens[0], tokens[1], false);
         pairs[1] = CamelotV3PoolStatus(tokens[1], tokens[2], true);
+
+        _readsTokenMask(tokens[1]);
+        _readsTokenMask(tokens[2]);
 
         vm.expectEmit(true, true, true, true);
         emit SetPoolStatus(_min(tokens[0], tokens[1]), _max(tokens[0], tokens[1]), false);

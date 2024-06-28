@@ -27,12 +27,6 @@ contract LidoV1Adapter is AbstractAdapter, ILidoV1Adapter {
     /// @notice WETH token
     address public immutable override weth;
 
-    /// @notice Collateral token mask of WETH in the credit manager
-    uint256 public immutable override wethTokenMask;
-
-    /// @notice Collateral token mask of stETH in the credit manager
-    uint256 public immutable override stETHTokenMask;
-
     /// @notice Address of Gearbox treasury
     address public immutable override treasury;
 
@@ -43,10 +37,11 @@ contract LidoV1Adapter is AbstractAdapter, ILidoV1Adapter {
         AbstractAdapter(_creditManager, _lidoGateway) // U:[LDO1-1]
     {
         stETH = LidoV1Gateway(payable(_lidoGateway)).stETH(); // U:[LDO1-1]
-        stETHTokenMask = _getMaskOrRevert(stETH); // U:[LDO1-1]
-
         weth = LidoV1Gateway(payable(_lidoGateway)).weth(); // U:[LDO1-1]
-        wethTokenMask = _getMaskOrRevert(weth); // U:[LDO1-1]
+
+        // We check that WETH and stETH are both valid collaterals
+        _getMaskOrRevert(stETH); // U:[LDO1-1]
+        _getMaskOrRevert(weth); // U:[LDO1-1]
 
         treasury = IPoolV3(ICreditManagerV3(creditManager).pool()).treasury(); // U:[LDO1-1]
     }
@@ -58,9 +53,10 @@ contract LidoV1Adapter is AbstractAdapter, ILidoV1Adapter {
         external
         override
         creditFacadeOnly // U:[LDO1-2]
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+        returns (bool)
     {
-        (tokensToEnable, tokensToDisable) = _submit(amount, false); // U:[LDO1-3]
+        _submit(amount); // U:[LDO1-3]
+        return false;
     }
 
     /// @notice Stakes the entire balance of WETH in Lido via Gateway, except the specified amount
@@ -69,35 +65,25 @@ contract LidoV1Adapter is AbstractAdapter, ILidoV1Adapter {
         external
         override
         creditFacadeOnly // U:[LDO1-2]
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+        returns (bool)
     {
         address creditAccount = _creditAccount(); // U:[LDO1-4]
 
         uint256 balance = IERC20(weth).balanceOf(creditAccount); // U:[LDO1-4]
         if (balance > leftoverAmount) {
-            unchecked {
-                (tokensToEnable, tokensToDisable) = _submit(balance - leftoverAmount, leftoverAmount <= 1); // U:[LDO1-4]
-            }
+            _submit(balance - leftoverAmount);
         }
+        return false;
     }
 
     /// @dev Internal implementation of `submit`.
-    ///      - WETH is approved before the call because Gateway needs permission to transfer it
-    ///      - stETH is enabled after the call
-    ///      - WETH is only disabled when staking the entire balance
-    function _submit(uint256 amount, bool disableWETH)
-        internal
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
-    {
-        _approveToken(weth, type(uint256).max); // U:[LDO1-3,4]
-        _execute(abi.encodeCall(LidoV1Gateway.submit, (amount, treasury))); // U:[LDO1-3,4]
-        _approveToken(weth, 1); // U:[LDO1-3,4]
-        (tokensToEnable, tokensToDisable) = (stETHTokenMask, disableWETH ? wethTokenMask : 0);
+    function _submit(uint256 amount) internal {
+        _executeSwapSafeApprove(weth, abi.encodeCall(LidoV1Gateway.submit, (amount, treasury))); // U:[LDO1-3,4]
     }
 
     /// @notice Returns all adapter parameters serialized into a bytes array,
     ///         as well as adapter type and version, to properly deserialize
     function serialize() external view override returns (bytes memory serializedData) {
-        serializedData = abi.encode(creditManager, targetContract, stETH, weth, wethTokenMask, stETHTokenMask, treasury);
+        serializedData = abi.encode(creditManager, targetContract, stETH, weth, treasury);
     }
 }

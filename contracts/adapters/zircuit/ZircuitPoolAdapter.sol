@@ -33,6 +33,12 @@ contract ZircuitPoolAdapter is AbstractAdapter, IZircuitPoolAdapter {
     /// @param _pool Zircuit pool address
     constructor(address _creditManager, address _pool) AbstractAdapter(_creditManager, _pool) {}
 
+    /// @dev Reverts when attempting to deposit/withdraw an underlying unrecognized by the adapter
+    modifier supportedUnderlyingsOnly(address token) {
+        if (!_supportedUnderlyings.contains(token)) revert UnsupportedUnderlyingException();
+        _;
+    }
+
     // -------- //
     // DEPOSITS //
     // -------- //
@@ -41,40 +47,36 @@ contract ZircuitPoolAdapter is AbstractAdapter, IZircuitPoolAdapter {
     /// @dev `_for` parameter is ignored, because the receiver is always the credit account
     function depositFor(address _token, address, uint256 _amount)
         external
-        creditFacadeOnly
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+        creditFacadeOnly // U: [ZIR-1]
+        supportedUnderlyingsOnly(_token) // U: [ZIR-1A]
+        returns (bool)
     {
         address creditAccount = _creditAccount();
-        (tokensToEnable, tokensToDisable) = _deposit(creditAccount, _token, _amount, false);
+        _deposit(creditAccount, _token, _amount); // U: [ZIR-2]
+        return false;
     }
 
     /// @notice Deposit the entire balance of a token into the Zircuit vault, except the specified amount
     function depositDiff(address _token, uint256 _leftoverAmount)
         external
-        creditFacadeOnly
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+        creditFacadeOnly // U: [ZIR-1]
+        supportedUnderlyingsOnly(_token) // U: [ZIR-1A]
+        returns (bool)
     {
         address creditAccount = _creditAccount();
         uint256 balance = IERC20(_token).balanceOf(creditAccount);
 
         if (balance > _leftoverAmount) {
             unchecked {
-                (tokensToEnable, tokensToDisable) =
-                    _deposit(creditAccount, _token, balance - _leftoverAmount, _leftoverAmount <= 1);
+                _deposit(creditAccount, _token, balance - _leftoverAmount); // U: [ZIR-3]
             }
         }
+        return false;
     }
 
     /// @dev Internal implementation for "depositFor" and "depositDiff"
-    function _deposit(address creditAccount, address token, uint256 amount, bool disableToken)
-        internal
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
-    {
-        address phantomToken = tokenToPhantomToken[token];
-
-        (tokensToEnable, tokensToDisable,) = _executeSwapSafeApprove(
-            token, phantomToken, abi.encodeCall(IZircuitPool.depositFor, (token, creditAccount, amount)), disableToken
-        );
+    function _deposit(address creditAccount, address token, uint256 amount) internal {
+        _executeSwapSafeApprove(token, abi.encodeCall(IZircuitPool.depositFor, (token, creditAccount, amount)));
     }
 
     // ----------- //
@@ -84,18 +86,20 @@ contract ZircuitPoolAdapter is AbstractAdapter, IZircuitPoolAdapter {
     /// @notice Withdraw a specified amount of token from the Zircuit vault
     function withdraw(address _token, uint256 _amount)
         external
-        creditFacadeOnly
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+        creditFacadeOnly // U: [ZIR-1]
+        supportedUnderlyingsOnly(_token) // U: [ZIR-1A]
+        returns (bool)
     {
-        address phantomToken = tokenToPhantomToken[_token];
-        (tokensToEnable, tokensToDisable) = _withdraw(_token, phantomToken, _amount, false);
+        _execute(msg.data); // U: [ZIR-4]
+        return false;
     }
 
     /// @notice Withdraw the entire balance of a token from the Zircuit vault, except the specified amount
     function withdrawDiff(address _token, uint256 _leftoverAmount)
         external
-        creditFacadeOnly
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+        creditFacadeOnly // U: [ZIR-1]
+        supportedUnderlyingsOnly(_token) // U: [ZIR-1A]
+        returns (bool)
     {
         address creditAccount = _creditAccount();
         address phantomToken = tokenToPhantomToken[_token];
@@ -104,20 +108,11 @@ contract ZircuitPoolAdapter is AbstractAdapter, IZircuitPoolAdapter {
 
         if (balance > _leftoverAmount) {
             unchecked {
-                (tokensToEnable, tokensToDisable) =
-                    _withdraw(_token, phantomToken, balance - _leftoverAmount, _leftoverAmount <= 1);
+                _execute(abi.encodeCall(IZircuitPool.withdraw, (_token, balance - _leftoverAmount))); // U: [ZIR-5]
             }
         }
-    }
 
-    /// @dev Internal implementation for "withdraw" and "withdrawDiff"
-    function _withdraw(address token, address phantomToken, uint256 amount, bool disableToken)
-        internal
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
-    {
-        (tokensToEnable, tokensToDisable,) = _executeSwapNoApprove(
-            phantomToken, token, abi.encodeCall(IZircuitPool.withdraw, (token, amount)), disableToken
-        );
+        return false;
     }
 
     // ---- //
@@ -149,7 +144,7 @@ contract ZircuitPoolAdapter is AbstractAdapter, IZircuitPoolAdapter {
     // ------------- //
 
     /// @notice Updates the map of underlyings to phantom tokens
-    function updatePhantomTokensMap() external configuratorOnly {
+    function updateSupportedUnderlyings() external configuratorOnly {
         ICreditManagerV3 cm = ICreditManagerV3(creditManager);
 
         uint256 len = cm.collateralTokensCount();
@@ -160,9 +155,13 @@ contract ZircuitPoolAdapter is AbstractAdapter, IZircuitPoolAdapter {
                 try IPhantomToken(token)._gearboxPhantomTokenType() returns (PhantomTokenType ptType) {
                     if (ptType == PhantomTokenType.ZIRCUIT_PHANTOM_TOKEN) {
                         address depositedToken = ZircuitPhantomToken(token).underlying();
+
+                        _getMaskOrRevert(token);
+                        _getMaskOrRevert(depositedToken);
+
                         tokenToPhantomToken[depositedToken] = token;
                         _supportedUnderlyings.add(depositedToken);
-                        emit SetTokenToPhantomToken(depositedToken, token);
+                        emit AddSupportedUnderlying(depositedToken, token);
                     }
                 } catch {}
             }

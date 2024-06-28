@@ -71,27 +71,19 @@ interface IUniswapV3Adapter is
 {
     function exactInputSingle(ISwapRouter.ExactInputSingleParams calldata params)
         external
-        returns (uint256 tokensToEnable, uint256 tokensToDisable);
+        returns (bool useSafePrices);
 
-    function exactDiffInputSingle(ExactDiffInputSingleParams calldata params)
-        external
-        returns (uint256 tokensToEnable, uint256 tokensToDisable);
+    function exactDiffInputSingle(ExactDiffInputSingleParams calldata params) external returns (bool useSafePrices);
 
-    function exactInput(ISwapRouter.ExactInputParams calldata params)
-        external
-        returns (uint256 tokensToEnable, uint256 tokensToDisable);
+    function exactInput(ISwapRouter.ExactInputParams calldata params) external returns (bool useSafePrices);
 
-    function exactDiffInput(ExactDiffInputParams calldata params)
-        external
-        returns (uint256 tokensToEnable, uint256 tokensToDisable);
+    function exactDiffInput(ExactDiffInputParams calldata params) external returns (bool useSafePrices);
 
     function exactOutputSingle(ISwapRouter.ExactOutputSingleParams calldata params)
         external
-        returns (uint256 tokensToEnable, uint256 tokensToDisable);
+        returns (bool useSafePrices);
 
-    function exactOutput(ISwapRouter.ExactOutputParams calldata params)
-        external
-        returns (uint256 tokensToEnable, uint256 tokensToDisable);
+    function exactOutput(ISwapRouter.ExactOutputParams calldata params) external returns (bool useSafePrices);
 
     // ------------- //
     // CONFIGURATION //

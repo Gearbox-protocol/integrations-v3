@@ -20,12 +20,6 @@ contract WstETHV1Adapter is AbstractAdapter, IwstETHV1Adapter {
     /// @notice Address of the stETH token
     address public immutable override stETH;
 
-    /// @notice Collateral token mask of stETH in the credit manager
-    uint256 public immutable override stETHTokenMask;
-
-    /// @notice Collateral token mask of wstETH in the credit manager
-    uint256 public immutable override wstETHTokenMask;
-
     /// @notice Constructor
     /// @param _creditManager Credit manager address
     /// @param _wstETH wstETH token address
@@ -33,8 +27,8 @@ contract WstETHV1Adapter is AbstractAdapter, IwstETHV1Adapter {
         AbstractAdapter(_creditManager, _wstETH) // U:[LDO1W-1]
     {
         stETH = IwstETH(_wstETH).stETH(); // U:[LDO1W-1]
-        wstETHTokenMask = _getMaskOrRevert(_wstETH); // U:[LDO1W-1]
-        stETHTokenMask = _getMaskOrRevert(stETH); // U:[LDO1W-1]
+        _getMaskOrRevert(_wstETH); // U:[LDO1W-1]
+        _getMaskOrRevert(stETH); // U:[LDO1W-1]
     }
 
     // ---- //
@@ -47,9 +41,10 @@ contract WstETHV1Adapter is AbstractAdapter, IwstETHV1Adapter {
         external
         override
         creditFacadeOnly // U:[LDO1W-2]
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+        returns (bool)
     {
-        (tokensToEnable, tokensToDisable) = _wrap(amount, false); // U:[LDO1W-3]
+        _wrap(amount); // U:[LDO1W-3]
+        return false;
     }
 
     /// @notice Wraps the entire balance of stETH into wstETH, except the specified amount
@@ -58,30 +53,22 @@ contract WstETHV1Adapter is AbstractAdapter, IwstETHV1Adapter {
         external
         override
         creditFacadeOnly // U:[LDO1W-2]
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+        returns (bool)
     {
         address creditAccount = _creditAccount(); // U:[LDO1W-4]
 
         uint256 balance = IERC20(stETH).balanceOf(creditAccount); // U:[LDO1W-4]
         if (balance > leftoverAmount) {
             unchecked {
-                (tokensToEnable, tokensToDisable) = _wrap(balance - leftoverAmount, leftoverAmount <= 1); // U:[LDO1W-4]
+                _wrap(balance - leftoverAmount); // U:[LDO1W-4]
             }
         }
+        return false;
     }
 
     /// @dev Internal implementation of `wrap` and `wrapDiff`
-    ///      - stETH is approved before the call
-    ///      - wstETH is enabled after the call
-    ///      - stETH is only disabled if wrapping the entire balance
-    function _wrap(uint256 amount, bool disableStETH)
-        internal
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
-    {
-        _approveToken(stETH, type(uint256).max); // U:[LDO1W-3,4]
-        _execute(abi.encodeCall(IwstETH.wrap, (amount))); // U:[LDO1W-3,4]
-        _approveToken(stETH, 1); // U:[LDO1W-3,4]
-        (tokensToEnable, tokensToDisable) = (wstETHTokenMask, disableStETH ? stETHTokenMask : 0);
+    function _wrap(uint256 amount) internal {
+        _executeSwapSafeApprove(stETH, abi.encodeCall(IwstETH.wrap, (amount))); // U:[LDO1W-3,4]
     }
 
     // ------ //
@@ -94,9 +81,10 @@ contract WstETHV1Adapter is AbstractAdapter, IwstETHV1Adapter {
         external
         override
         creditFacadeOnly // U:[LDO1W-2]
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+        returns (bool)
     {
-        (tokensToEnable, tokensToDisable) = _unwrap(amount, false); // U:[LDO1W-5]
+        _unwrap(amount); // U:[LDO1W-5]
+        return false;
     }
 
     /// @notice Unwraps the entire balance of wstETH to stETH, except the specified amount
@@ -105,33 +93,27 @@ contract WstETHV1Adapter is AbstractAdapter, IwstETHV1Adapter {
         external
         override
         creditFacadeOnly // U:[LDO1W-2]
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+        returns (bool)
     {
         address creditAccount = _creditAccount(); // U:[LDO1W-6]
 
         uint256 balance = IERC20(targetContract).balanceOf(creditAccount); // U:[LDO1W-6]
         if (balance > leftoverAmount) {
             unchecked {
-                (tokensToEnable, tokensToDisable) = _unwrap(balance - leftoverAmount, leftoverAmount <= 1); // U:[LDO1W-6]
+                _unwrap(balance - leftoverAmount); // U:[LDO1W-6]
             }
         }
+        return false;
     }
 
     /// @dev Internal implementation of `unwrap` and `unwrapDiff`
-    ///      - wstETH is not approved before the call
-    ///      - stETH is enabled after the call
-    ///      - wstETH is only disabled if unwrapping the entire balance
-    function _unwrap(uint256 amount, bool disableWstETH)
-        internal
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
-    {
+    function _unwrap(uint256 amount) internal {
         _execute(abi.encodeCall(IwstETH.unwrap, (amount))); // U:[LDO1W-5,6]
-        (tokensToEnable, tokensToDisable) = (stETHTokenMask, disableWstETH ? wstETHTokenMask : 0);
     }
 
     /// @notice Returns all adapter parameters serialized into a bytes array,
     ///         as well as adapter type and version, to properly deserialize
     function serialize() external view override returns (bytes memory serializedData) {
-        serializedData = abi.encode(creditManager, targetContract, stETH, stETHTokenMask, wstETHTokenMask);
+        serializedData = abi.encode(creditManager, targetContract, stETH);
     }
 }
