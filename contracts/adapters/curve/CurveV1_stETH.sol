@@ -95,8 +95,7 @@ contract CurveV1AdapterStETH is CurveV1Adapter2Assets {
         withLPTokenApproval
         returns (bool)
     {
-        _remove_diff_liquidity_one_coin(i, leftoverAmount, rateMinRAY);
-        return true;
+        return _remove_diff_liquidity_one_coin(i, leftoverAmount, rateMinRAY);
     }
 
     /// @notice Returns all adapter parameters serialized into a bytes array,
