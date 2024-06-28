@@ -18,9 +18,6 @@ contract LidoV1AdapterUnitTest is AdapterUnitTestHelper {
     address weth;
     address stETH;
 
-    uint256 wethMask;
-    uint256 stETHMask;
-
     function setUp() public {
         _setUp();
 
@@ -31,8 +28,8 @@ contract LidoV1AdapterUnitTest is AdapterUnitTestHelper {
         vm.mockCall(address(creditManager), abi.encodeWithSignature("pool()"), abi.encode(pool));
         vm.mockCall(pool, abi.encodeWithSignature("treasury()"), abi.encode(treasury));
 
-        (weth, wethMask) = (tokens[0], 1);
-        (stETH, stETHMask) = (tokens[1], 2);
+        weth = tokens[0];
+        stETH = tokens[1];
 
         vm.mockCall(gateway, abi.encodeWithSignature("weth()"), abi.encode(weth));
         vm.mockCall(gateway, abi.encodeWithSignature("stETH()"), abi.encode(stETH));

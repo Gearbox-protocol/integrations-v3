@@ -17,17 +17,11 @@ contract ZircuitPoolAdapterUnitTest is AdapterUnitTestHelper, IZircuitPoolAdapte
     address depositToken;
     address phantomToken;
 
-    uint256 token0Mask;
-    uint256 token1Mask;
-
     function setUp() public {
         _setUp();
 
         depositToken = tokens[0];
         phantomToken = tokens[1];
-
-        token0Mask = creditManager.getTokenMaskOrRevert(depositToken);
-        token1Mask = creditManager.getTokenMaskOrRevert(phantomToken);
 
         zircuitMock = new GeneralMock();
         adapter = new ZircuitPoolAdapterHarness(address(creditManager), address(zircuitMock));

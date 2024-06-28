@@ -15,14 +15,12 @@ contract ERC4626AdapterUnitTest is AdapterUnitTestHelper {
     address asset;
     address vault;
 
-    uint256 assetMask;
-    uint256 sharesMask;
-
     function setUp() public {
         _setUp();
 
-        (asset, assetMask) = (tokens[0], 1);
-        (vault, sharesMask) = (tokens[1], 2);
+        asset = tokens[0];
+        vault = tokens[1];
+
         vm.mockCall(vault, abi.encodeCall(IERC4626.asset, ()), abi.encode(asset));
 
         adapter = new ERC4626Adapter(address(creditManager), vault);
