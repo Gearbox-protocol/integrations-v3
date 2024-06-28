@@ -15,14 +15,12 @@ contract WstETHV1AdapterUnitTest is AdapterUnitTestHelper {
     address stETH;
     address wstETH;
 
-    uint256 stETHMask;
-    uint256 wstETHMask;
-
     function setUp() public {
         _setUp();
 
-        (stETH, stETHMask) = (tokens[0], 1);
-        (wstETH, wstETHMask) = (tokens[1], 2);
+        stETH = tokens[0];
+        wstETH = tokens[1];
+
         vm.mockCall(wstETH, abi.encodeCall(IwstETHGetters.stETH, ()), abi.encode(stETH));
 
         adapter = new WstETHV1Adapter(address(creditManager), wstETH);

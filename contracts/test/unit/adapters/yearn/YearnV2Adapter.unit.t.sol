@@ -15,14 +15,12 @@ contract YearnV2AdapterUnitTest is AdapterUnitTestHelper {
     address token;
     address yToken;
 
-    uint256 tokenMask;
-    uint256 yTokenMask;
-
     function setUp() public {
         _setUp();
 
-        (token, tokenMask) = (tokens[0], 1);
-        (yToken, yTokenMask) = (tokens[1], 2);
+        token = tokens[0];
+        yToken = tokens[1];
+
         vm.mockCall(yToken, abi.encodeCall(IYVault.token, ()), abi.encode(token));
 
         adapter = new YearnV2Adapter(address(creditManager), yToken);

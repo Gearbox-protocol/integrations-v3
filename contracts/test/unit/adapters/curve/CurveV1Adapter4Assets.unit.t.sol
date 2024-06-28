@@ -20,20 +20,14 @@ contract CurveV1Adapter4AssetsUnitTest is AdapterUnitTestHelper {
     address token3;
     address lpToken;
 
-    uint256 token0Mask;
-    uint256 token1Mask;
-    uint256 token2Mask;
-    uint256 token3Mask;
-    uint256 lpTokenMask;
-
     function setUp() public {
         _setUp();
 
-        (token0, token0Mask) = (tokens[0], 1);
-        (token1, token1Mask) = (tokens[1], 2);
-        (token2, token2Mask) = (tokens[2], 4);
-        (token3, token3Mask) = (tokens[3], 8);
-        (lpToken, lpTokenMask) = (tokens[4], 16);
+        token0 = tokens[0];
+        token1 = tokens[1];
+        token2 = tokens[2];
+        token3 = tokens[3];
+        lpToken = tokens[4];
 
         address[] memory coins = new address[](4);
         coins[0] = token0;
