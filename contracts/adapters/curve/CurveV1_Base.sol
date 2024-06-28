@@ -371,22 +371,25 @@ abstract contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
         creditFacadeOnly // U:[CRVB-2]
         returns (bool)
     {
-        _remove_diff_liquidity_one_coin(i, leftoverAmount, rateMinRAY); // U:[CRVB-10]
-        return true;
+        return _remove_diff_liquidity_one_coin(i, leftoverAmount, rateMinRAY); // U:[CRVB-10]
     }
 
     /// @dev Implementation of `remove_diff_liquidity_one_coin`
-    function _remove_diff_liquidity_one_coin(uint256 i, uint256 leftoverAmount, uint256 rateMinRAY) internal {
+    function _remove_diff_liquidity_one_coin(uint256 i, uint256 leftoverAmount, uint256 rateMinRAY)
+        internal
+        returns (bool)
+    {
         address creditAccount = _creditAccount(); // U:[CRVB-10]
 
         uint256 amount = IERC20(lp_token).balanceOf(creditAccount); // U:[CRVB-10]
-        if (amount <= leftoverAmount) return;
+        if (amount <= leftoverAmount) return false;
 
         unchecked {
             amount -= leftoverAmount; // U:[CRVB-10]
         }
         uint256 minAmount = (amount * rateMinRAY) / RAY; // U:[CRVB-10]
         _execute(_getRemoveLiquidityOneCoinCallData(i, amount, minAmount)); // U:[CRVB-10]
+        return true;
     }
 
     /// @dev Returns calldata for `remove_liquidity_one_coin` and `remove_diff_liquidity_one_coin` calls
