@@ -70,8 +70,7 @@ contract CurveV1AdapterDeposit is CurveV1AdapterBase {
         withLPTokenApproval
         returns (bool)
     {
-        _remove_diff_liquidity_one_coin(i, leftoverAmount, rateMinRAY);
-        return true;
+        return _remove_diff_liquidity_one_coin(i, leftoverAmount, rateMinRAY);
     }
 
     /// @dev Does nothing since this adapter should not be used to add liquidity

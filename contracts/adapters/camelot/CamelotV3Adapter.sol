@@ -102,8 +102,7 @@ contract CamelotV3Adapter is AbstractAdapter, ICamelotV3Adapter {
         creditFacadeOnly // U: [CAMV3-2]
         returns (bool)
     {
-        _exactDiffInputSingleInternal(params, false); // U: [CAMV3-4]
-        return true;
+        return _exactDiffInputSingleInternal(params, false); // U: [CAMV3-4]
     }
 
     /// @notice Swaps all balance of input token for output token through a single pool, except the specified amount
@@ -114,18 +113,20 @@ contract CamelotV3Adapter is AbstractAdapter, ICamelotV3Adapter {
         creditFacadeOnly
         returns (bool)
     {
-        _exactDiffInputSingleInternal(params, true); // U: [CAMV3-4A]
-        return true;
+        return _exactDiffInputSingleInternal(params, true); // U: [CAMV3-4A]
     }
 
     /// @dev Internal logic for `exactDiffInputSingle` and `exactDiffInputSingleSupportingFeeOnTransferTokens`
-    function _exactDiffInputSingleInternal(ExactDiffInputSingleParams calldata params, bool isFeeOnTransfer) internal {
+    function _exactDiffInputSingleInternal(ExactDiffInputSingleParams calldata params, bool isFeeOnTransfer)
+        internal
+        returns (bool)
+    {
         if (!isPoolAllowed(params.tokenIn, params.tokenOut)) revert InvalidPathException();
 
         address creditAccount = _creditAccount();
 
         uint256 amount = IERC20(params.tokenIn).balanceOf(creditAccount);
-        if (amount <= params.leftoverAmount) return;
+        if (amount <= params.leftoverAmount) return false;
         unchecked {
             amount -= params.leftoverAmount;
         }
@@ -145,6 +146,7 @@ contract CamelotV3Adapter is AbstractAdapter, ICamelotV3Adapter {
             : abi.encodeCall(ICamelotV3Router.exactInputSingle, (paramsUpdate));
 
         _executeSwapSafeApprove(params.tokenIn, callData);
+        return true;
     }
 
     /// @notice Swaps given amount of input token for output token through multiple pools
