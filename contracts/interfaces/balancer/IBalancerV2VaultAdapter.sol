@@ -30,18 +30,13 @@ struct SingleSwapDiff {
     bytes userData;
 }
 
-interface IBalancerV2VaultAdapterEvents {
+/// @title Balancer V2 Vault adapter interface
+interface IBalancerV2VaultAdapter is IAdapter {
     /// @notice Emitted when new status is set for a pool with given ID
     event SetPoolStatus(bytes32 indexed poolId, PoolStatus newStatus);
-}
 
-interface IBalancerV2VaultAdapterExceptions {
     /// @notice Thrown when attempting to swap or change liqudity in the pool that is not supported for that action
     error PoolNotSupportedException();
-}
-
-/// @title Balancer V2 Vault adapter interface
-interface IBalancerV2VaultAdapter is IAdapter, IBalancerV2VaultAdapterEvents, IBalancerV2VaultAdapterExceptions {
     // ----- //
     // SWAPS //
     // ----- //

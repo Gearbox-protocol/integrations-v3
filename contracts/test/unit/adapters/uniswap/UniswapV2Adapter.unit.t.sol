@@ -5,10 +5,7 @@ pragma solidity ^0.8.23;
 
 import {IUniswapV2Router01} from "../../../../integrations/uniswap/IUniswapV2Router01.sol";
 import {
-    IUniswapV2AdapterEvents,
-    IUniswapV2AdapterExceptions,
-    UniswapV2PairStatus,
-    UniswapV2Pair
+    IUniswapV2Adapter, UniswapV2PairStatus, UniswapV2Pair
 } from "../../../../interfaces/uniswap/IUniswapV2Adapter.sol";
 import {AdapterUnitTestHelper} from "../AdapterUnitTestHelper.sol";
 import {UniswapV2AdapterHarness} from "./UniswapV2Adapter.harness.sol";
@@ -17,7 +14,7 @@ import "@gearbox-protocol/core-v3/contracts/test/lib/constants.sol";
 
 /// @title Uniswap v2 adapter unit test
 /// @notice U:[UNI2]: Unit tests for Uniswap v2 swap router adapter
-contract UniswapV2AdapterUnitTest is AdapterUnitTestHelper, IUniswapV2AdapterEvents, IUniswapV2AdapterExceptions {
+contract UniswapV2AdapterUnitTest is AdapterUnitTestHelper {
     UniswapV2AdapterHarness adapter;
 
     address router;
@@ -54,7 +51,7 @@ contract UniswapV2AdapterUnitTest is AdapterUnitTestHelper, IUniswapV2AdapterEve
     /// @notice U:[UNI2-3]: `swapTokensForExactTokens` works as expected
     function test_U_UNI2_03_swapTokensForExactTokens_works_as_expected() public {
         address[] memory path = _makePath(0);
-        vm.expectRevert(InvalidPathException.selector);
+        vm.expectRevert(IUniswapV2Adapter.InvalidPathException.selector);
         vm.prank(creditFacade);
         adapter.swapExactTokensForTokens(123, 456, path, address(0), 789);
 
@@ -74,7 +71,7 @@ contract UniswapV2AdapterUnitTest is AdapterUnitTestHelper, IUniswapV2AdapterEve
     /// @notice U:[UNI2-4]: `swapExactTokensForTokens` works as expected
     function test_U_UNI2_04_swapExactTokensForTokens_works_as_expected() public {
         address[] memory path = _makePath(0);
-        vm.expectRevert(InvalidPathException.selector);
+        vm.expectRevert(IUniswapV2Adapter.InvalidPathException.selector);
         vm.prank(creditFacade);
         adapter.swapExactTokensForTokens(123, 456, path, address(0), 789);
 
@@ -96,7 +93,7 @@ contract UniswapV2AdapterUnitTest is AdapterUnitTestHelper, IUniswapV2AdapterEve
         deal({token: tokens[0], to: creditAccount, give: diffMintedAmount});
 
         address[] memory path = _makePath(0);
-        vm.expectRevert(InvalidPathException.selector);
+        vm.expectRevert(IUniswapV2Adapter.InvalidPathException.selector);
         vm.prank(creditFacade);
         adapter.swapDiffTokensForTokens(diffInputAmount, 0.5e27, path, 789);
 
@@ -137,10 +134,10 @@ contract UniswapV2AdapterUnitTest is AdapterUnitTestHelper, IUniswapV2AdapterEve
         _readsTokenMask(tokens[2]);
 
         vm.expectEmit(true, true, false, true);
-        emit SetPairStatus(_min(tokens[0], tokens[1]), _max(tokens[0], tokens[1]), false);
+        emit IUniswapV2Adapter.SetPairStatus(_min(tokens[0], tokens[1]), _max(tokens[0], tokens[1]), false);
 
         vm.expectEmit(true, true, false, true);
-        emit SetPairStatus(_min(tokens[1], tokens[2]), _max(tokens[1], tokens[2]), true);
+        emit IUniswapV2Adapter.SetPairStatus(_min(tokens[1], tokens[2]), _max(tokens[1], tokens[2]), true);
 
         vm.prank(configurator);
         adapter.setPairStatusBatch(pairs);
