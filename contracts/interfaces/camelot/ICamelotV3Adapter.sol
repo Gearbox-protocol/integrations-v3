@@ -48,23 +48,14 @@ interface ICamelotV3AdapterTypes {
     }
 }
 
-interface ICamelotV3AdapterEvents {
+/// @title Camelot V3 Router adapter interface
+interface ICamelotV3Adapter is IAdapter, ICamelotV3AdapterTypes {
     /// @notice Emitted when new status is set for a pool
     event SetPoolStatus(address indexed token0, address indexed token1, bool allowed);
-}
 
-interface ICamelotV3AdapterExceptions {
     /// @notice Thrown when sanity checks on a swap path fail
     error InvalidPathException();
-}
 
-/// @title Camelot V3 Router adapter interface
-interface ICamelotV3Adapter is
-    IAdapter,
-    ICamelotV3AdapterTypes,
-    ICamelotV3AdapterEvents,
-    ICamelotV3AdapterExceptions
-{
     function exactInputSingle(ICamelotV3Router.ExactInputSingleParams calldata params)
         external
         returns (bool useSafePrices);

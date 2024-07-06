@@ -52,23 +52,14 @@ interface IUniswapV3AdapterTypes {
     }
 }
 
-interface IUniswapV3AdapterEvents {
+/// @title Uniswap V3 Router adapter interface
+interface IUniswapV3Adapter is IAdapter, IUniswapV3AdapterTypes {
     /// @notice Emitted when new status is set for a pool
     event SetPoolStatus(address indexed token0, address indexed token1, uint24 indexed fee, bool allowed);
-}
 
-interface IUniswapV3AdapterExceptions {
     /// @notice Thrown when sanity checks on a swap path fail
     error InvalidPathException();
-}
 
-/// @title Uniswap V3 Router adapter interface
-interface IUniswapV3Adapter is
-    IAdapter,
-    IUniswapV3AdapterTypes,
-    IUniswapV3AdapterEvents,
-    IUniswapV3AdapterExceptions
-{
     function exactInputSingle(ISwapRouter.ExactInputSingleParams calldata params)
         external
         returns (bool useSafePrices);

@@ -6,11 +6,11 @@ pragma solidity ^0.8.23;
 import {BoosterMock} from "../../../mocks/integrations/convex/BoosterMock.sol";
 import {AdapterUnitTestHelper} from "../AdapterUnitTestHelper.sol";
 import {ConvexV1BoosterAdapterHarness} from "./ConvexV1BoosterAdapter.harness.sol";
-import {IConvexV1BoosterAdapterExceptions} from "../../../../interfaces/convex/IConvexV1BoosterAdapter.sol";
+import {IConvexV1BoosterAdapter} from "../../../../interfaces/convex/IConvexV1BoosterAdapter.sol";
 
 /// @title Convex v1 booster adapter unit test
 /// @notice U:[CVX1B]: Unit tests for Convex v1 booster adapter
-contract ConvexV1BoosterAdapterUnitTest is AdapterUnitTestHelper, IConvexV1BoosterAdapterExceptions {
+contract ConvexV1BoosterAdapterUnitTest is AdapterUnitTestHelper {
     ConvexV1BoosterAdapterHarness adapter;
     BoosterMock booster;
 
@@ -48,19 +48,19 @@ contract ConvexV1BoosterAdapterUnitTest is AdapterUnitTestHelper, IConvexV1Boost
 
     /// @notice U:[CVX1B-2A]: Functions revert on unknown pid
     function test_U_CVX1B_02A_functions_revert_on_unknown_pid() public {
-        vm.expectRevert(UnsupportedPidException.selector);
+        vm.expectRevert(IConvexV1BoosterAdapter.UnsupportedPidException.selector);
         vm.prank(creditFacade);
         adapter.deposit(90, 0, false);
 
-        vm.expectRevert(UnsupportedPidException.selector);
+        vm.expectRevert(IConvexV1BoosterAdapter.UnsupportedPidException.selector);
         vm.prank(creditFacade);
         adapter.depositDiff(90, 0, false);
 
-        vm.expectRevert(UnsupportedPidException.selector);
+        vm.expectRevert(IConvexV1BoosterAdapter.UnsupportedPidException.selector);
         vm.prank(creditFacade);
         adapter.withdraw(90, 0);
 
-        vm.expectRevert(UnsupportedPidException.selector);
+        vm.expectRevert(IConvexV1BoosterAdapter.UnsupportedPidException.selector);
         vm.prank(creditFacade);
         adapter.withdrawDiff(90, 0);
     }

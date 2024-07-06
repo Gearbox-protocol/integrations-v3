@@ -5,8 +5,7 @@ pragma solidity ^0.8.23;
 
 import {IVelodromeV2Router, Route} from "../../../../integrations/velodrome/IVelodromeV2Router.sol";
 import {
-    IVelodromeV2AdapterEvents,
-    IVelodromeV2AdapterExceptions,
+    IVelodromeV2RouterAdapter,
     VelodromeV2PoolStatus,
     VelodromeV2Pool
 } from "../../../../interfaces/velodrome/IVelodromeV2RouterAdapter.sol";
@@ -17,11 +16,7 @@ import "@gearbox-protocol/core-v3/contracts/test/lib/constants.sol";
 
 /// @title Velodtome v2 adapter unit test
 /// @notice U:[VELO2]: Unit tests for Velodtome v2 swap router adapter
-contract VelodtomeV2AdapterUnitTest is
-    AdapterUnitTestHelper,
-    IVelodromeV2AdapterEvents,
-    IVelodromeV2AdapterExceptions
-{
+contract VelodtomeV2AdapterUnitTest is AdapterUnitTestHelper {
     VelodromeV2AdapterHarness adapter;
 
     address router;
@@ -55,7 +50,7 @@ contract VelodtomeV2AdapterUnitTest is
     /// @notice U:[VELO2-3]: `swapExactTokensForTokens` works as expected
     function test_U_VELO2_03_swapExactTokensForTokens_works_as_expected() public {
         Route[] memory routes = _makePath(0);
-        vm.expectRevert(InvalidPathException.selector);
+        vm.expectRevert(IVelodromeV2RouterAdapter.InvalidPathException.selector);
         vm.prank(creditFacade);
         adapter.swapExactTokensForTokens(123, 456, routes, address(0), 789);
 
@@ -77,7 +72,7 @@ contract VelodtomeV2AdapterUnitTest is
         deal({token: tokens[0], to: creditAccount, give: diffMintedAmount});
 
         Route[] memory routes = _makePath(0);
-        vm.expectRevert(InvalidPathException.selector);
+        vm.expectRevert(IVelodromeV2RouterAdapter.InvalidPathException.selector);
         vm.prank(creditFacade);
         adapter.swapDiffTokensForTokens(diffInputAmount, 0.5e27, routes, 789);
 
@@ -118,10 +113,14 @@ contract VelodtomeV2AdapterUnitTest is
         _readsTokenMask(tokens[2]);
 
         vm.expectEmit(true, true, false, true);
-        emit SetPoolStatus(_min(tokens[0], tokens[1]), _max(tokens[0], tokens[1]), false, address(42), false);
+        emit IVelodromeV2RouterAdapter.SetPoolStatus(
+            _min(tokens[0], tokens[1]), _max(tokens[0], tokens[1]), false, address(42), false
+        );
 
         vm.expectEmit(true, true, false, true);
-        emit SetPoolStatus(_min(tokens[1], tokens[2]), _max(tokens[1], tokens[2]), true, address(32), true);
+        emit IVelodromeV2RouterAdapter.SetPoolStatus(
+            _min(tokens[1], tokens[2]), _max(tokens[1], tokens[2]), true, address(32), true
+        );
 
         vm.prank(configurator);
         adapter.setPoolStatusBatch(pools);

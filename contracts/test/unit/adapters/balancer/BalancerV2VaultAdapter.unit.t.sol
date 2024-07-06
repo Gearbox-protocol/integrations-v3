@@ -15,8 +15,7 @@ import {
     ExitPoolRequest
 } from "../../../../integrations/balancer/IBalancerV2Vault.sol";
 import {
-    IBalancerV2VaultAdapterEvents,
-    IBalancerV2VaultAdapterExceptions,
+    IBalancerV2VaultAdapter,
     PoolStatus,
     SingleSwapDiff
 } from "../../../../interfaces/balancer/IBalancerV2VaultAdapter.sol";
@@ -29,11 +28,7 @@ import "@gearbox-protocol/core-v3/contracts/test/lib/constants.sol";
 
 /// @title Balancer v2 vault adapter unit test
 /// @notice U:[BAL2]: Unit tests for Balancer v2 vault adapter
-contract BalancerV2VaultAdapterUnitTest is
-    AdapterUnitTestHelper,
-    IBalancerV2VaultAdapterEvents,
-    IBalancerV2VaultAdapterExceptions
-{
+contract BalancerV2VaultAdapterUnitTest is AdapterUnitTestHelper {
     BalancerV2VaultAdapter adapter;
 
     VaultMock vault;
@@ -113,7 +108,7 @@ contract BalancerV2VaultAdapterUnitTest is
             userData: "DUMMY DATA"
         });
 
-        vm.expectRevert(PoolNotSupportedException.selector);
+        vm.expectRevert(IBalancerV2VaultAdapter.PoolNotSupportedException.selector);
         vm.prank(creditFacade);
         adapter.swap(singleSwap, _getFundManagement(address(0)), 0, 0);
 
@@ -152,7 +147,7 @@ contract BalancerV2VaultAdapterUnitTest is
             userData: "DUMMY DATA"
         });
 
-        vm.expectRevert(PoolNotSupportedException.selector);
+        vm.expectRevert(IBalancerV2VaultAdapter.PoolNotSupportedException.selector);
         vm.prank(creditFacade);
         adapter.swapDiff(singleSwapDiff, 0, 0);
 
@@ -189,7 +184,7 @@ contract BalancerV2VaultAdapterUnitTest is
 
         creditManager.setExecuteResult(abi.encode(limits));
 
-        vm.expectRevert(PoolNotSupportedException.selector);
+        vm.expectRevert(IBalancerV2VaultAdapter.PoolNotSupportedException.selector);
         vm.prank(creditFacade);
         adapter.batchSwap(SwapKind.GIVEN_IN, swaps, assets, _getFundManagement(address(0)), limits, 456);
 
@@ -230,14 +225,14 @@ contract BalancerV2VaultAdapterUnitTest is
         request.userData = "DUMMY DATA";
         request.fromInternalBalance = false;
 
-        vm.expectRevert(PoolNotSupportedException.selector);
+        vm.expectRevert(IBalancerV2VaultAdapter.PoolNotSupportedException.selector);
         vm.prank(creditFacade);
         adapter.joinPool(poolId, address(0), address(0), request);
 
         vm.prank(configurator);
         adapter.setPoolStatus(poolId, PoolStatus.SWAP_ONLY);
 
-        vm.expectRevert(PoolNotSupportedException.selector);
+        vm.expectRevert(IBalancerV2VaultAdapter.PoolNotSupportedException.selector);
         vm.prank(creditFacade);
         adapter.joinPool(poolId, address(0), address(0), request);
 
@@ -262,14 +257,14 @@ contract BalancerV2VaultAdapterUnitTest is
 
     /// @notice U:[BAL2-7]: `joinPoolSingleAsset` works as expected
     function test_U_BAL2_07_joinPoolSingleAsset_works_as_expected() public {
-        vm.expectRevert(PoolNotSupportedException.selector);
+        vm.expectRevert(IBalancerV2VaultAdapter.PoolNotSupportedException.selector);
         vm.prank(creditFacade);
         adapter.joinPoolSingleAsset(poolId, _asset(2), 1000, 500);
 
         vm.prank(configurator);
         adapter.setPoolStatus(poolId, PoolStatus.SWAP_ONLY);
 
-        vm.expectRevert(PoolNotSupportedException.selector);
+        vm.expectRevert(IBalancerV2VaultAdapter.PoolNotSupportedException.selector);
         vm.prank(creditFacade);
         adapter.joinPoolSingleAsset(poolId, _asset(2), 1000, 500);
 
@@ -300,14 +295,14 @@ contract BalancerV2VaultAdapterUnitTest is
     function test_U_BAL2_08_joinPoolSingleAssetDiff_works_as_expected() public diffTestCases {
         deal({token: tokens[2], to: creditAccount, give: diffMintedAmount});
 
-        vm.expectRevert(PoolNotSupportedException.selector);
+        vm.expectRevert(IBalancerV2VaultAdapter.PoolNotSupportedException.selector);
         vm.prank(creditFacade);
         adapter.joinPoolSingleAssetDiff(poolId, _asset(2), diffLeftoverAmount, 0.5e27);
 
         vm.prank(configurator);
         adapter.setPoolStatus(poolId, PoolStatus.SWAP_ONLY);
 
-        vm.expectRevert(PoolNotSupportedException.selector);
+        vm.expectRevert(IBalancerV2VaultAdapter.PoolNotSupportedException.selector);
         vm.prank(creditFacade);
         adapter.joinPoolSingleAssetDiff(poolId, _asset(2), diffLeftoverAmount, 0.5e27);
 
@@ -346,7 +341,7 @@ contract BalancerV2VaultAdapterUnitTest is
         ExitPoolRequest memory request;
         request.assets = _assets(0, 1, 2, 3);
 
-        vm.expectRevert(PoolNotSupportedException.selector);
+        vm.expectRevert(IBalancerV2VaultAdapter.PoolNotSupportedException.selector);
         vm.prank(creditFacade);
         adapter.exitPool(poolId, address(0), payable(0), request);
 
@@ -373,7 +368,7 @@ contract BalancerV2VaultAdapterUnitTest is
         request.minAmountsOut[2] = 500;
         request.userData = abi.encode(uint256(0), 1000, 1);
 
-        vm.expectRevert(PoolNotSupportedException.selector);
+        vm.expectRevert(IBalancerV2VaultAdapter.PoolNotSupportedException.selector);
         vm.prank(creditFacade);
         adapter.exitPoolSingleAsset(poolId, _asset(2), 1000, 500);
 
@@ -402,7 +397,7 @@ contract BalancerV2VaultAdapterUnitTest is
         request.minAmountsOut[2] = diffInputAmount / 2;
         request.userData = abi.encode(uint256(0), diffInputAmount, 1);
 
-        vm.expectRevert(PoolNotSupportedException.selector);
+        vm.expectRevert(IBalancerV2VaultAdapter.PoolNotSupportedException.selector);
         vm.prank(creditFacade);
         adapter.exitPoolSingleAssetDiff(poolId, _asset(2), diffLeftoverAmount, 0.5e27);
 
@@ -452,7 +447,7 @@ contract BalancerV2VaultAdapterUnitTest is
         _readsTokenMask(tokens[3]);
 
         vm.expectEmit(true, false, false, true);
-        emit SetPoolStatus(poolId, PoolStatus.ALLOWED);
+        emit IBalancerV2VaultAdapter.SetPoolStatus(poolId, PoolStatus.ALLOWED);
 
         vm.prank(configurator);
         adapter.setPoolStatus(poolId, PoolStatus.ALLOWED);
