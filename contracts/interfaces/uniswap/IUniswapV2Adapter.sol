@@ -16,18 +16,14 @@ struct UniswapV2PairStatus {
     bool allowed;
 }
 
-interface IUniswapV2AdapterEvents {
+/// @title Uniswap V2 Router adapter interface
+interface IUniswapV2Adapter is IAdapter {
     /// @notice Emited when new status is set for a pair
     event SetPairStatus(address indexed token0, address indexed token1, bool allowed);
-}
 
-interface IUniswapV2AdapterExceptions {
     /// @notice Thrown when sanity checks on a swap path fail
     error InvalidPathException();
-}
 
-/// @title Uniswap V2 Router adapter interface
-interface IUniswapV2Adapter is IAdapter, IUniswapV2AdapterEvents, IUniswapV2AdapterExceptions {
     function swapTokensForExactTokens(
         uint256 amountOut,
         uint256 amountInMax,

@@ -5,8 +5,7 @@ pragma solidity ^0.8.23;
 
 import {ISwapRouter} from "../../../../integrations/uniswap/IUniswapV3.sol";
 import {
-    IUniswapV3AdapterEvents,
-    IUniswapV3AdapterExceptions,
+    IUniswapV3Adapter,
     IUniswapV3AdapterTypes,
     UniswapV3PoolStatus,
     UniswapV3Pool
@@ -18,12 +17,7 @@ import "@gearbox-protocol/core-v3/contracts/test/lib/constants.sol";
 
 /// @title Uniswap v3 adapter unit test
 /// @notice U:[UNI3]: Unit tests for Uniswap v3 swap router adapter
-contract UniswapV3AdapterUnitTest is
-    AdapterUnitTestHelper,
-    IUniswapV3AdapterEvents,
-    IUniswapV3AdapterExceptions,
-    IUniswapV3AdapterTypes
-{
+contract UniswapV3AdapterUnitTest is AdapterUnitTestHelper, IUniswapV3AdapterTypes {
     UniswapV3AdapterHarness adapter;
 
     address router;
@@ -76,21 +70,21 @@ contract UniswapV3AdapterUnitTest is
         ISwapRouter.ExactInputSingleParams memory p1;
         p1.tokenIn = DUMB_ADDRESS;
         p1.tokenOut = tokens[0];
-        vm.expectRevert(InvalidPathException.selector);
+        vm.expectRevert(IUniswapV3Adapter.InvalidPathException.selector);
         vm.prank(creditFacade);
         adapter.exactInputSingle(p1);
 
         ExactDiffInputSingleParams memory p2_2;
         p2_2.tokenIn = DUMB_ADDRESS;
         p2_2.tokenOut = tokens[0];
-        vm.expectRevert(InvalidPathException.selector);
+        vm.expectRevert(IUniswapV3Adapter.InvalidPathException.selector);
         vm.prank(creditFacade);
         adapter.exactDiffInputSingle(p2_2);
 
         ISwapRouter.ExactOutputSingleParams memory p5;
         p5.tokenIn = DUMB_ADDRESS;
         p5.tokenOut = tokens[0];
-        vm.expectRevert(InvalidPathException.selector);
+        vm.expectRevert(IUniswapV3Adapter.InvalidPathException.selector);
         vm.prank(creditFacade);
         adapter.exactOutputSingle(p5);
     }
@@ -170,7 +164,7 @@ contract UniswapV3AdapterUnitTest is
             deadline: 789,
             recipient: creditAccount
         });
-        vm.expectRevert(InvalidPathException.selector);
+        vm.expectRevert(IUniswapV3Adapter.InvalidPathException.selector);
         vm.prank(creditFacade);
         adapter.exactInput(params);
 
@@ -198,7 +192,7 @@ contract UniswapV3AdapterUnitTest is
             leftoverAmount: diffLeftoverAmount,
             rateMinRAY: 0.5e27
         });
-        vm.expectRevert(InvalidPathException.selector);
+        vm.expectRevert(IUniswapV3Adapter.InvalidPathException.selector);
         vm.prank(creditFacade);
         adapter.exactDiffInput(params);
 
@@ -261,7 +255,7 @@ contract UniswapV3AdapterUnitTest is
             deadline: 789,
             recipient: creditAccount
         });
-        vm.expectRevert(InvalidPathException.selector);
+        vm.expectRevert(IUniswapV3Adapter.InvalidPathException.selector);
         vm.prank(creditFacade);
         adapter.exactOutput(params);
 
@@ -301,10 +295,10 @@ contract UniswapV3AdapterUnitTest is
         _readsTokenMask(tokens[2]);
 
         vm.expectEmit(true, true, true, true);
-        emit SetPoolStatus(_min(tokens[0], tokens[1]), _max(tokens[0], tokens[1]), 500, false);
+        emit IUniswapV3Adapter.SetPoolStatus(_min(tokens[0], tokens[1]), _max(tokens[0], tokens[1]), 500, false);
 
         vm.expectEmit(true, true, true, true);
-        emit SetPoolStatus(_min(tokens[1], tokens[2]), _max(tokens[1], tokens[2]), 3000, true);
+        emit IUniswapV3Adapter.SetPoolStatus(_min(tokens[1], tokens[2]), _max(tokens[1], tokens[2]), 3000, true);
 
         vm.prank(configurator);
         adapter.setPoolStatusBatch(pairs);

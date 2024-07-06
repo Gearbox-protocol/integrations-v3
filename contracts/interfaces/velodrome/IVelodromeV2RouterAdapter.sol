@@ -21,18 +21,14 @@ struct VelodromeV2PoolStatus {
     bool allowed;
 }
 
-interface IVelodromeV2AdapterEvents {
+/// @title Velodrome V2 Router adapter interface
+interface IVelodromeV2RouterAdapter is IAdapter {
     /// @notice Emited when new status is set for a pair
     event SetPoolStatus(address indexed token0, address indexed token1, bool stable, address factory, bool allowed);
-}
 
-interface IVelodromeV2AdapterExceptions {
     /// @notice Thrown when sanity checks on a swap path fail
     error InvalidPathException();
-}
 
-/// @title Velodrome V2 Router adapter interface
-interface IVelodromeV2RouterAdapter is IAdapter, IVelodromeV2AdapterEvents, IVelodromeV2AdapterExceptions {
     function swapExactTokensForTokens(
         uint256 amountIn,
         uint256 amountOutMin,

@@ -4,13 +4,13 @@
 pragma solidity ^0.8.23;
 
 import {ZircuitPoolAdapterHarness} from "./ZircuitPoolAdapter.harness.sol";
-import {IZircuitPoolAdapterExceptions} from "../../../../interfaces/zircuit/IZircuitPoolAdapter.sol";
+import {IZircuitPoolAdapter} from "../../../../interfaces/zircuit/IZircuitPoolAdapter.sol";
 import {IZircuitPool} from "../../../../integrations/zircuit/IZircuitPool.sol";
 import {GeneralMock} from "@gearbox-protocol/core-v3/contracts/test/mocks/GeneralMock.sol";
 import {AdapterUnitTestHelper} from "../AdapterUnitTestHelper.sol";
 
 /// @title Zircuit adapter unit test
-contract ZircuitPoolAdapterUnitTest is AdapterUnitTestHelper, IZircuitPoolAdapterExceptions {
+contract ZircuitPoolAdapterUnitTest is AdapterUnitTestHelper {
     ZircuitPoolAdapterHarness adapter;
     GeneralMock zircuitMock;
 
@@ -50,19 +50,19 @@ contract ZircuitPoolAdapterUnitTest is AdapterUnitTestHelper, IZircuitPoolAdapte
 
     /// @notice U:[ZIR-1A]: functions revert on unsupported token
     function test_U_ZIR_01A_functions_revert_on_unsupported_token() public {
-        vm.expectRevert(UnsupportedUnderlyingException.selector);
+        vm.expectRevert(IZircuitPoolAdapter.UnsupportedUnderlyingException.selector);
         vm.prank(creditFacade);
         adapter.depositFor(address(1), address(1), 1);
 
-        vm.expectRevert(UnsupportedUnderlyingException.selector);
+        vm.expectRevert(IZircuitPoolAdapter.UnsupportedUnderlyingException.selector);
         vm.prank(creditFacade);
         adapter.depositDiff(address(1), 1);
 
-        vm.expectRevert(UnsupportedUnderlyingException.selector);
+        vm.expectRevert(IZircuitPoolAdapter.UnsupportedUnderlyingException.selector);
         vm.prank(creditFacade);
         adapter.withdraw(address(1), 1);
 
-        vm.expectRevert(UnsupportedUnderlyingException.selector);
+        vm.expectRevert(IZircuitPoolAdapter.UnsupportedUnderlyingException.selector);
         vm.prank(creditFacade);
         adapter.withdrawDiff(address(1), 1);
     }
