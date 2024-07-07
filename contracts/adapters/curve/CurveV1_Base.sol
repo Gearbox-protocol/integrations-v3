@@ -65,12 +65,10 @@ abstract contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
         use256 = _use256();
 
         address[4] memory tokens;
-        unchecked {
-            for (uint256 i; i < nCoins; ++i) {
-                tokens[i] = _getCoin(_curvePool, i); // U:[CRVB-1]
-                if (tokens[i] == address(0)) revert IncorrectParameterException(); // U:[CRVB-1]
-                _getMaskOrRevert(tokens[i]); // U:[CRVB-1]
-            }
+        for (uint256 i; i < nCoins; ++i) {
+            tokens[i] = _getCoin(_curvePool, i); // U:[CRVB-1]
+            if (tokens[i] == address(0)) revert IncorrectParameterException(); // U:[CRVB-1]
+            _getMaskOrRevert(tokens[i]); // U:[CRVB-1]
         }
 
         token0 = tokens[0];

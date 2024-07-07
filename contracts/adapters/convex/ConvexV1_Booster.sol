@@ -180,28 +180,26 @@ contract ConvexV1BoosterAdapter is AbstractAdapter, IConvexV1BoosterAdapter {
 
         address[] memory allowedAdapters = cc.allowedAdapters();
         uint256 len = allowedAdapters.length;
-        unchecked {
-            for (uint256 i = 0; i < len; ++i) {
-                address adapter = allowedAdapters[i];
-                address poolTargetContract = IAdapter(adapter).targetContract();
+        for (uint256 i = 0; i < len; ++i) {
+            address adapter = allowedAdapters[i];
+            address poolTargetContract = IAdapter(adapter).targetContract();
 
-                if (
-                    IAdapter(adapter).contractType() == "AD_CONVEX_V1_BASE_REWARD_POOL"
-                        && IBaseRewardPool(poolTargetContract).operator() == targetContract
-                ) {
-                    uint256 pid = IBaseRewardPool(poolTargetContract).pid();
-                    address phantomToken = IConvexV1BaseRewardPoolAdapter(adapter).stakedPhantomToken();
+            if (
+                IAdapter(adapter).contractType() == "AD_CONVEX_V1_BASE_REWARD_POOL"
+                    && IBaseRewardPool(poolTargetContract).operator() == targetContract
+            ) {
+                uint256 pid = IBaseRewardPool(poolTargetContract).pid();
+                address phantomToken = IConvexV1BaseRewardPoolAdapter(adapter).stakedPhantomToken();
 
-                    /// No sanity checks on pool-related tokens (Curve token, Convex token, phantom token) being collateral
-                    /// need to be performed, as they were already done while deploying the pool adapter itself
+                /// No sanity checks on pool-related tokens (Curve token, Convex token, phantom token) being collateral
+                /// need to be performed, as they were already done while deploying the pool adapter itself
 
-                    pidToPhantomToken[pid] = phantomToken;
-                    pidToCurveToken[pid] = IConvexV1BaseRewardPoolAdapter(adapter).curveLPtoken();
-                    pidToConvexToken[pid] = IConvexV1BaseRewardPoolAdapter(adapter).stakingToken();
+                pidToPhantomToken[pid] = phantomToken;
+                pidToCurveToken[pid] = IConvexV1BaseRewardPoolAdapter(adapter).curveLPtoken();
+                pidToConvexToken[pid] = IConvexV1BaseRewardPoolAdapter(adapter).stakingToken();
 
-                    _supportedPids.add(pid);
-                    emit AddSupportedPid(pid);
-                }
+                _supportedPids.add(pid);
+                emit AddSupportedPid(pid);
             }
         }
     }
