@@ -8,8 +8,7 @@ import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IER
 import {ICreditFacadeV3} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacadeV3.sol";
 import {ICreditFacadeV3Multicall} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacadeV3Multicall.sol";
 
-import {IAdapter} from "../../../../interfaces/IAdapter.sol";
-import {AdapterType} from "@gearbox-protocol/sdk-gov/contracts/AdapterType.sol";
+import {IAdapter} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IAdapter.sol";
 import {IERC4626} from "@openzeppelin/contracts/interfaces/IERC4626.sol";
 import {IERC4626Adapter} from "../../../../interfaces/erc4626/IERC4626Adapter.sol";
 import {ERC4626_Calls, ERC4626_Multicaller} from "../../../multicall/erc4626/ERC4626_Calls.sol";
@@ -157,7 +156,7 @@ contract Live_ERC4626EquivalenceTest is LiveTestHelper {
         address[] memory adapters = creditConfigurator.allowedAdapters();
 
         for (uint256 i = 0; i < adapters.length; ++i) {
-            if (IAdapter(adapters[i]).adapterType() != uint256(AdapterType.ERC4626_VAULT)) continue;
+            if (IAdapter(adapters[i]).contractType() != "AD_ERC4626_VAULT") continue;
 
             uint256 snapshot0 = vm.snapshot();
 

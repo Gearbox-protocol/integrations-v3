@@ -9,7 +9,6 @@ import {ICreditManagerV3} from "@gearbox-protocol/core-v3/contracts/interfaces/I
 import {IPoolV3} from "@gearbox-protocol/core-v3/contracts/interfaces/IPoolV3.sol";
 
 import {AbstractAdapter} from "../AbstractAdapter.sol";
-import {AdapterType} from "@gearbox-protocol/sdk-gov/contracts/AdapterType.sol";
 
 import {IstETH} from "../../integrations/lido/IstETH.sol";
 import {ILidoV1Adapter} from "../../interfaces/lido/ILidoV1Adapter.sol";
@@ -18,7 +17,7 @@ import {LidoV1Gateway} from "../../helpers/lido/LidoV1_WETHGateway.sol";
 /// @title Lido V1 adapter
 /// @notice Implements logic for interacting with the Lido contract through the gateway
 contract LidoV1Adapter is AbstractAdapter, ILidoV1Adapter {
-    uint256 public constant override adapterType = uint256(AdapterType.LIDO_V1);
+    bytes32 public constant override contractType = "AD_LIDO_V1";
     uint256 public constant override version = 3_10;
 
     /// @notice stETH token

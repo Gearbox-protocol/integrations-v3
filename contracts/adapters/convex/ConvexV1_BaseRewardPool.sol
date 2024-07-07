@@ -7,7 +7,6 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import {ICreditManagerV3} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditManagerV3.sol";
 import {AbstractAdapter} from "../AbstractAdapter.sol";
-import {AdapterType} from "@gearbox-protocol/sdk-gov/contracts/AdapterType.sol";
 import {BitMask} from "@gearbox-protocol/core-v3/contracts/libraries/BitMask.sol";
 
 import {IBooster} from "../../integrations/convex/IBooster.sol";
@@ -20,8 +19,8 @@ import {IConvexV1BaseRewardPoolAdapter} from "../../interfaces/convex/IConvexV1B
 contract ConvexV1BaseRewardPoolAdapter is AbstractAdapter, IConvexV1BaseRewardPoolAdapter {
     using BitMask for uint256;
 
-    uint256 public constant override adapterType = uint256(AdapterType.CONVEX_V1_BASE_REWARD_POOL);
-    uint256 public constant override version = 3_01;
+    bytes32 public constant override contractType = "AD_CONVEX_V1_BASE_REWARD_POOL";
+    uint256 public constant override version = 3_10;
 
     /// @notice Address of a Curve LP token deposited into the Convex pool
     address public immutable override curveLPtoken;

@@ -3,8 +3,6 @@
 // (c) Gearbox Foundation, 2023.
 pragma solidity ^0.8.23;
 
-import {AdapterType} from "@gearbox-protocol/sdk-gov/contracts/AdapterType.sol";
-
 import {CurveV1AdapterBase} from "../../../../adapters/curve/CurveV1_Base.sol";
 import {ICurvePool2Assets} from "../../../../integrations/curve/ICurvePool_2.sol";
 import {ICurvePool3Assets} from "../../../../integrations/curve/ICurvePool_3.sol";
@@ -15,11 +13,11 @@ contract CurveV1AdapterBaseHarness is CurveV1AdapterBase {
         CurveV1AdapterBase(_creditManager, _curvePool, _lp_token, _metapoolBase, _nCoins)
     {}
 
-    function adapterType() public view override returns (uint256) {
-        return uint256(
+    function contractType() public view override returns (bytes32) {
+        return (
             nCoins == 2
-                ? AdapterType.CURVE_V1_2ASSETS
-                : (nCoins == 3 ? AdapterType.CURVE_V1_3ASSETS : AdapterType.CURVE_V1_4ASSETS)
+                ? bytes32("AD_CURVE_V1_2ASSETS")
+                : (nCoins == 3 ? bytes32("AD_CURVE_V1_3ASSETS") : bytes32("AD_CURVE_V1_4ASSETS"))
         );
     }
 

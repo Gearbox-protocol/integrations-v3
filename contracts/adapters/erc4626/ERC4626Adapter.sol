@@ -7,14 +7,13 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IERC4626} from "@openzeppelin/contracts/interfaces/IERC4626.sol";
 
 import {AbstractAdapter} from "../AbstractAdapter.sol";
-import {AdapterType} from "@gearbox-protocol/sdk-gov/contracts/AdapterType.sol";
 
 import {IERC4626Adapter} from "../../interfaces/erc4626/IERC4626Adapter.sol";
 
 /// @title ERC4626 Vault adapter
 /// @notice Implements logic allowing CAs to interact with any standard-compliant ERC4626 vault
 contract ERC4626Adapter is AbstractAdapter, IERC4626Adapter {
-    uint256 public constant override adapterType = uint256(AdapterType.ERC4626_VAULT);
+    bytes32 public constant override contractType = "AD_ERC4626_VAULT";
     uint256 public constant override version = 3_10;
 
     /// @notice Address of the underlying asset of the vault

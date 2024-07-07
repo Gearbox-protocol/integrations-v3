@@ -3,11 +3,8 @@
 // (c) Gearbox Foundation, 2023.
 pragma solidity ^0.8.23;
 
-import {
-    ICreditManagerV3,
-    ICreditManagerV3Events
-} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditManagerV3.sol";
-import {ICreditFacadeV3Events} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacadeV3.sol";
+import {ICreditFacadeV3} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacadeV3.sol";
+import {ICreditManagerV3} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditManagerV3.sol";
 
 // TEST
 import "../../lib/constants.sol";
@@ -21,7 +18,7 @@ import {Tokens} from "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
 import {IntegrationTestHelper} from "@gearbox-protocol/core-v3/contracts/test/helpers/IntegrationTestHelper.sol";
 // import {CreditConfig} from "../../config/CreditConfig.sol";
 
-contract AdapterTestHelper is Test, ICreditManagerV3Events, ICreditFacadeV3Events, IntegrationTestHelper {
+contract AdapterTestHelper is Test, IntegrationTestHelper {
     function _setUp() internal {
         _setUp(Tokens.DAI);
     }
@@ -56,7 +53,7 @@ contract AdapterTestHelper is Test, ICreditManagerV3Events, ICreditFacadeV3Event
         bool allowTokenIn
     ) internal {
         vm.expectEmit(true, true, false, false);
-        emit StartMultiCall(creditAccount, borrower);
+        emit ICreditFacadeV3.StartMultiCall(creditAccount, borrower);
 
         if (allowTokenIn) {
             vm.expectCall(
@@ -68,13 +65,13 @@ contract AdapterTestHelper is Test, ICreditManagerV3Events, ICreditFacadeV3Event
         vm.expectCall(address(creditManager), abi.encodeCall(ICreditManagerV3.execute, (callData)));
 
         vm.expectEmit(true, false, false, false);
-        emit Execute(creditAccount, targetContract);
+        emit ICreditFacadeV3.Execute(creditAccount, targetContract);
 
         if (allowTokenIn) {
             vm.expectCall(address(creditManager), abi.encodeCall(ICreditManagerV3.approveCreditAccount, (tokenIn, 1)));
         }
 
         vm.expectEmit(false, false, false, false);
-        emit FinishMultiCall();
+        emit ICreditFacadeV3.FinishMultiCall();
     }
 }

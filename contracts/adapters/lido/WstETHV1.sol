@@ -6,7 +6,6 @@ pragma solidity ^0.8.23;
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import {AbstractAdapter} from "../AbstractAdapter.sol";
-import {AdapterType} from "@gearbox-protocol/sdk-gov/contracts/AdapterType.sol";
 
 import {IwstETH} from "../../integrations/lido/IwstETH.sol";
 import {IwstETHV1Adapter} from "../../interfaces/lido/IwstETHV1Adapter.sol";
@@ -14,7 +13,7 @@ import {IwstETHV1Adapter} from "../../interfaces/lido/IwstETHV1Adapter.sol";
 /// @title wstETH adapter
 /// @notice Implements logic for wrapping / unwrapping stETH
 contract WstETHV1Adapter is AbstractAdapter, IwstETHV1Adapter {
-    uint256 public constant override adapterType = uint256(AdapterType.LIDO_WSTETH_V1);
+    bytes32 public constant override contractType = "AD_LIDO_WSTETH_V1";
     uint256 public constant override version = 3_10;
 
     /// @notice Address of the stETH token

@@ -16,8 +16,7 @@ import {ICurveV1_2AssetsAdapter} from "../../../../interfaces/curve/ICurveV1_2As
 import {ICurveV1_3AssetsAdapter} from "../../../../interfaces/curve/ICurveV1_3AssetsAdapter.sol";
 import {ICurveV1_4AssetsAdapter} from "../../../../interfaces/curve/ICurveV1_4AssetsAdapter.sol";
 import {ICurveV1_StableNGAdapter} from "../../../../interfaces/curve/ICurveV1_StableNGAdapter.sol";
-import {IAdapter} from "../../../../interfaces/IAdapter.sol";
-import {AdapterType} from "@gearbox-protocol/sdk-gov/contracts/AdapterType.sol";
+import {IAdapter} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IAdapter.sol";
 import {AddressList} from "@gearbox-protocol/core-v3/contracts/test/lib/AddressList.sol";
 
 import {Tokens} from "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
@@ -611,10 +610,9 @@ contract Live_CurveEquivalenceTest is LiveTestHelper {
         }
     }
 
-    function isCurveAdapter(AdapterType aType) internal pure returns (bool) {
-        return aType == AdapterType.CURVE_V1_2ASSETS || aType == AdapterType.CURVE_V1_3ASSETS
-            || aType == AdapterType.CURVE_V1_4ASSETS || aType == AdapterType.CURVE_V1_STECRV_POOL
-            || aType == AdapterType.CURVE_STABLE_NG;
+    function isCurveAdapter(bytes32 aType) internal pure returns (bool) {
+        return aType == "AD_CURVE_V1_2ASSETS" || aType == "AD_CURVE_V1_3ASSETS" || aType == "AD_CURVE_V1_4ASSETS"
+            || aType == "AD_CURVE_V1_STECRV_POOL" || aType == "AD_CURVE_STABLE_NG";
     }
 
     /// @dev [L-CRVET-1]: Curve adapter and normal account works identically
@@ -622,7 +620,7 @@ contract Live_CurveEquivalenceTest is LiveTestHelper {
         address[] memory adapters = creditConfigurator.allowedAdapters();
 
         for (uint256 i = 0; i < adapters.length; ++i) {
-            if (!isCurveAdapter(AdapterType(uint8(IAdapter(adapters[i]).adapterType())))) continue;
+            if (!isCurveAdapter(IAdapter(adapters[i]).contractType())) continue;
 
             uint256 snapshot0 = vm.snapshot();
 
@@ -636,7 +634,7 @@ contract Live_CurveEquivalenceTest is LiveTestHelper {
             CurvePoolParams memory cpp = CurvePoolParams({
                 use256: ICurveV1Adapter(adapters[i]).use256(),
                 hasUnderlying: ICurveV1Adapter(adapters[i]).underlying0() != address(0),
-                isNGPool: IAdapter(adapters[i]).adapterType() == uint256(AdapterType.CURVE_STABLE_NG),
+                isNGPool: IAdapter(adapters[i]).contractType() == "AD_CURVE_STABLE_NG",
                 nCoins: ICurveV1Adapter(adapters[i]).nCoins(),
                 lpToken: ICurveV1Adapter(adapters[i]).token(),
                 lpSupported: creditManager.liquidationThresholds(ICurveV1Adapter(adapters[i]).token()) != 0,
