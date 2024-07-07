@@ -181,25 +181,23 @@ contract UniswapV2Adapter is AbstractAdapter, IUniswapV2Adapter {
         configuratorOnly // U:[UNI2-6]
     {
         uint256 len = pairs.length;
-        unchecked {
-            for (uint256 i; i < len; ++i) {
-                (address token0, address token1) = _sortTokens(pairs[i].token0, pairs[i].token1);
-                bytes32 pairHash = keccak256(abi.encode(token0, token1));
-                if (pairs[i].allowed) {
-                    /// For each added pool, we verify that the pool tokens are valid collaterals,
-                    /// as otherwise operations with unsupported tokens would be possible, leading
-                    /// to possibility of control flow capture
-                    _getMaskOrRevert(token0);
-                    _getMaskOrRevert(token1);
+        for (uint256 i; i < len; ++i) {
+            (address token0, address token1) = _sortTokens(pairs[i].token0, pairs[i].token1);
+            bytes32 pairHash = keccak256(abi.encode(token0, token1));
+            if (pairs[i].allowed) {
+                /// For each added pool, we verify that the pool tokens are valid collaterals,
+                /// as otherwise operations with unsupported tokens would be possible, leading
+                /// to possibility of control flow capture
+                _getMaskOrRevert(token0);
+                _getMaskOrRevert(token1);
 
-                    _supportedPairHashes.add(pairHash);
-                    _hashToPair[pairHash] = UniswapV2Pair({token0: token0, token1: token1});
-                } else {
-                    _supportedPairHashes.remove(pairHash);
-                    delete _hashToPair[pairHash];
-                }
-                emit SetPairStatus(token0, token1, pairs[i].allowed); // U:[UNI2-6]
+                _supportedPairHashes.add(pairHash);
+                _hashToPair[pairHash] = UniswapV2Pair({token0: token0, token1: token1});
+            } else {
+                _supportedPairHashes.remove(pairHash);
+                delete _hashToPair[pairHash];
             }
+            emit SetPairStatus(token0, token1, pairs[i].allowed); // U:[UNI2-6]
         }
     }
 

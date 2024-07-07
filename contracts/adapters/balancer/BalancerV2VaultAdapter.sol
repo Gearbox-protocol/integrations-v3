@@ -496,11 +496,8 @@ contract BalancerV2VaultAdapter is AbstractAdapter, IBalancerV2VaultAdapter {
     /// @dev Internal function that changes approval for a batch of assets in the vault (overloading)
     function _approveAssets(IAsset[] memory assets, uint256[] memory filter, uint256 amount) internal {
         uint256 len = assets.length;
-
-        unchecked {
-            for (uint256 i = 0; i < len; ++i) {
-                if (filter[i] > 1) _approveToken(address(assets[i]), amount);
-            }
+        for (uint256 i = 0; i < len; ++i) {
+            if (filter[i] > 1) _approveToken(address(assets[i]), amount);
         }
     }
 

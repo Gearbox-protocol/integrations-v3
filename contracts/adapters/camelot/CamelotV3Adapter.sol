@@ -280,26 +280,24 @@ contract CamelotV3Adapter is AbstractAdapter, ICamelotV3Adapter {
     /// @param pools Array of `CamelotV3PoolStatus` objects
     function setPoolStatusBatch(CamelotV3PoolStatus[] calldata pools) external override configuratorOnly {
         uint256 len = pools.length;
-        unchecked {
-            for (uint256 i; i < len; ++i) {
-                (address token0, address token1) = _sortTokens(pools[i].token0, pools[i].token1);
+        for (uint256 i; i < len; ++i) {
+            (address token0, address token1) = _sortTokens(pools[i].token0, pools[i].token1);
 
-                bytes32 poolHash = keccak256(abi.encode(token0, token1));
-                if (pools[i].allowed) {
-                    /// For each added pool, we verify that the pool tokens are valid collaterals,
-                    /// as otherwise operations with unsupported tokens would be possible, leading
-                    /// to possibility of control flow capture
-                    _getMaskOrRevert(token0);
-                    _getMaskOrRevert(token1);
+            bytes32 poolHash = keccak256(abi.encode(token0, token1));
+            if (pools[i].allowed) {
+                /// For each added pool, we verify that the pool tokens are valid collaterals,
+                /// as otherwise operations with unsupported tokens would be possible, leading
+                /// to possibility of control flow capture
+                _getMaskOrRevert(token0);
+                _getMaskOrRevert(token1);
 
-                    _supportedPoolHashes.add(poolHash);
-                    _hashToPool[poolHash] = CamelotV3Pool({token0: token0, token1: token1});
-                } else {
-                    _supportedPoolHashes.remove(poolHash);
-                    delete _hashToPool[poolHash];
-                }
-                emit SetPoolStatus(token0, token1, pools[i].allowed); // U: [CAMV3-9]
+                _supportedPoolHashes.add(poolHash);
+                _hashToPool[poolHash] = CamelotV3Pool({token0: token0, token1: token1});
+            } else {
+                _supportedPoolHashes.remove(poolHash);
+                delete _hashToPool[poolHash];
             }
+            emit SetPoolStatus(token0, token1, pools[i].allowed); // U: [CAMV3-9]
         }
     }
 

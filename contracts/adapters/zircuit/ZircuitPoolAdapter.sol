@@ -147,23 +147,20 @@ contract ZircuitPoolAdapter is AbstractAdapter, IZircuitPoolAdapter {
         ICreditManagerV3 cm = ICreditManagerV3(creditManager);
 
         uint256 len = cm.collateralTokensCount();
+        for (uint256 i = 0; i < len; ++i) {
+            address token = cm.getTokenByMask(1 << i);
+            try IPhantomToken(token)._gearboxPhantomTokenType() returns (PhantomTokenType ptType) {
+                if (ptType == PhantomTokenType.ZIRCUIT_PHANTOM_TOKEN) {
+                    address depositedToken = ZircuitPhantomToken(token).underlying();
 
-        unchecked {
-            for (uint256 i = 0; i < len; ++i) {
-                address token = cm.getTokenByMask(1 << i);
-                try IPhantomToken(token)._gearboxPhantomTokenType() returns (PhantomTokenType ptType) {
-                    if (ptType == PhantomTokenType.ZIRCUIT_PHANTOM_TOKEN) {
-                        address depositedToken = ZircuitPhantomToken(token).underlying();
+                    _getMaskOrRevert(token);
+                    _getMaskOrRevert(depositedToken);
 
-                        _getMaskOrRevert(token);
-                        _getMaskOrRevert(depositedToken);
-
-                        tokenToPhantomToken[depositedToken] = token;
-                        _supportedUnderlyings.add(depositedToken);
-                        emit AddSupportedUnderlying(depositedToken, token);
-                    }
-                } catch {}
-            }
+                    tokenToPhantomToken[depositedToken] = token;
+                    _supportedUnderlyings.add(depositedToken);
+                    emit AddSupportedUnderlying(depositedToken, token);
+                }
+            } catch {}
         }
     }
 }
