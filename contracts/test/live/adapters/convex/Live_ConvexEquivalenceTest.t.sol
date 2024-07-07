@@ -3,6 +3,7 @@
 // (c) Gearbox Foundation, 2023.
 pragma solidity ^0.8.23;
 
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {ICreditFacadeV3} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacadeV3.sol";
 import {ICreditFacadeV3Multicall} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacadeV3Multicall.sol";
@@ -11,7 +12,7 @@ import {IRewards} from "../../../../integrations/convex/IRewards.sol";
 import {IBooster} from "../../../../integrations/convex/IBooster.sol";
 import {IConvexV1BaseRewardPoolAdapter} from "../../../../interfaces/convex/IConvexV1BaseRewardPoolAdapter.sol";
 import {ConvexStakedPositionToken} from "../../../../helpers/convex/ConvexV1_StakedPositionToken.sol";
-import {IPhantomToken} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IPhantomToken.sol";
+import {IPhantomToken} from "../../../../interfaces/IPhantomToken.sol";
 import {PhantomTokenType} from "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
 import {PriceFeedParams} from "@gearbox-protocol/core-v3/contracts/interfaces/IPriceOracleV3.sol";
 import {IPriceFeed} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IPriceFeed.sol";
@@ -21,8 +22,7 @@ import {
     ConvexV1_BaseRewardPoolMulticaller
 } from "../../../multicall/convex/ConvexV1_BaseRewardPoolCalls.sol";
 import {ConvexV1_BoosterCalls, ConvexV1_BoosterMulticaller} from "../../../multicall/convex/ConvexV1_BoosterCalls.sol";
-import {IAdapter} from "../../../../interfaces/IAdapter.sol";
-import {AdapterType} from "@gearbox-protocol/sdk-gov/contracts/AdapterType.sol";
+import {IAdapter} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IAdapter.sol";
 
 import {Tokens} from "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
 import {Contracts} from "@gearbox-protocol/sdk-gov/contracts/SupportedContracts.sol";
@@ -251,7 +251,7 @@ contract Live_ConvexEquivalenceTest is LiveTestHelper {
         address[] memory adapters = creditConfigurator.allowedAdapters();
 
         for (uint256 i = 0; i < adapters.length; ++i) {
-            if (IAdapter(adapters[i]).adapterType() != uint256(AdapterType.CONVEX_V1_BASE_REWARD_POOL)) continue;
+            if (IAdapter(adapters[i]).contractType() != "AD_CONVEX_V1_BASE_REWARD_POOL") continue;
 
             uint256 snapshot0 = vm.snapshot();
 
@@ -310,7 +310,7 @@ contract Live_ConvexEquivalenceTest is LiveTestHelper {
 
             if (priceOracle.reservePriceFeeds(token) == address(0)) {
                 PriceFeedParams memory pfParams = priceOracle.priceFeedParams(token);
-                vm.prank(acl.owner());
+                vm.prank(Ownable(address(acl)).owner());
                 priceOracle.setReservePriceFeed(token, pfParams.priceFeed, pfParams.stalenessPeriod);
             }
 

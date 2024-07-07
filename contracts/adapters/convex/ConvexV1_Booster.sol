@@ -10,8 +10,7 @@ import {ICreditManagerV3} from "@gearbox-protocol/core-v3/contracts/interfaces/I
 import {ICreditConfiguratorV3} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditConfiguratorV3.sol";
 
 import {AbstractAdapter} from "../AbstractAdapter.sol";
-import {AdapterType} from "@gearbox-protocol/sdk-gov/contracts/AdapterType.sol";
-import {IAdapter} from "../../interfaces/IAdapter.sol";
+import {IAdapter} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IAdapter.sol";
 
 import {IBooster} from "../../integrations/convex/IBooster.sol";
 import {IBaseRewardPool} from "../../integrations/convex/IBaseRewardPool.sol";
@@ -23,7 +22,7 @@ import {IConvexV1BaseRewardPoolAdapter} from "../../interfaces/convex/IConvexV1B
 contract ConvexV1BoosterAdapter is AbstractAdapter, IConvexV1BoosterAdapter {
     using EnumerableSet for EnumerableSet.UintSet;
 
-    uint256 public constant override adapterType = uint256(AdapterType.CONVEX_V1_BOOSTER);
+    bytes32 public constant override contractType = "AD_CONVEX_V1_BOOSTER";
     uint256 public constant override version = 3_10;
 
     /// @dev Set of all pids that have corresponding phantom tokens
@@ -185,10 +184,9 @@ contract ConvexV1BoosterAdapter is AbstractAdapter, IConvexV1BoosterAdapter {
             for (uint256 i = 0; i < len; ++i) {
                 address adapter = allowedAdapters[i];
                 address poolTargetContract = IAdapter(adapter).targetContract();
-                AdapterType aType = AdapterType(uint8(IAdapter(adapter).adapterType()));
 
                 if (
-                    aType == AdapterType.CONVEX_V1_BASE_REWARD_POOL
+                    IAdapter(adapter).contractType() == "AD_CONVEX_V1_BASE_REWARD_POOL"
                         && IBaseRewardPool(poolTargetContract).operator() == targetContract
                 ) {
                     uint256 pid = IBaseRewardPool(poolTargetContract).pid();

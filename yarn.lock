@@ -1031,10 +1031,10 @@
   resolved "https://registry.yarnpkg.com/@gearbox-protocol/core-v2/-/core-v2-1.19.0-base.10.tgz#a21bce9eac4ca1783f5fcb4322b1c1257158d2de"
   integrity sha512-S9reS5zGt+cKxEdQppVCU0cZEmnSqx8DaoloY6KXqCsAedVJvwNUoCHnLjh9s/oWyOHa37qExN1QohntNQyB2Q==
 
-"@gearbox-protocol/core-v3@^1.50.0-next.16":
-  version "1.50.0-next.16"
-  resolved "https://registry.yarnpkg.com/@gearbox-protocol/core-v3/-/core-v3-1.50.0-next.16.tgz#1de32de073d68dff954e6953ccaf4e50dd9e4fe2"
-  integrity sha512-jRN4RJoFuOQeUmrR8b/bXO3A/6QSrxxDX/plS9shE7ucRGcFQUylADbXvAlLJK376xt+ozMXUSNsLZHFQXzReg==
+"@gearbox-protocol/core-v3@^1.50.0-next.18":
+  version "1.50.0-next.18"
+  resolved "https://registry.yarnpkg.com/@gearbox-protocol/core-v3/-/core-v3-1.50.0-next.18.tgz#9adcce03da40ce2f7da6260e031ef8901bda50b9"
+  integrity sha512-rDFNyd+79VgYjn6hZiA4IH0RLg55KqjwO2hhke5KwR/Ylw1JNLBWDPfAS1M0Q5BxsjhBpcO04z9XwSyyVQGkrA==
 
 "@gearbox-protocol/eslint-config@^1.6.1":
   version "1.6.1"
@@ -1051,10 +1051,17 @@
     eslint-plugin-simple-import-sort "^7.0.0"
     eslint-plugin-unused-imports "^2.0.0"
 
-"@gearbox-protocol/oracles-v3@^1.11.0-next.3":
-  version "1.11.0-next.3"
-  resolved "https://registry.yarnpkg.com/@gearbox-protocol/oracles-v3/-/oracles-v3-1.11.0-next.3.tgz#1f9e58cce2c1b3996ceb40a3dc6da9027d74bfdb"
-  integrity sha512-cTgavGf7Vl/qUL3XDMSmvUbmK/vKZWYZ2ZI7NpkNGb/sawQR7wBwtFQDSXfvmTnmb1Fb+tPjg6OvDHsAs7JG1Q==
+"@gearbox-protocol/oracles-v3@https://github.com/Gearbox-protocol/oracles-v3#4f5c619a094127fb22e0aff4648a7291008c3263":
+  version "1.0.0"
+  resolved "https://github.com/Gearbox-protocol/oracles-v3#4f5c619a094127fb22e0aff4648a7291008c3263"
+  dependencies:
+    "@pythnetwork/pyth-sdk-solidity" "^3.1.0"
+    axios "^1.6.8"
+    redstone-protocol "^1.0.5"
+
+"@gearbox-protocol/oracles-v3@https://github.com/Gearbox-protocol/oracles-v3#5eddfd95c7f538d8bd16661413690f1d17ed94b4":
+  version "1.0.0"
+  resolved "https://github.com/Gearbox-protocol/oracles-v3#5eddfd95c7f538d8bd16661413690f1d17ed94b4"
   dependencies:
     "@pythnetwork/pyth-sdk-solidity" "^3.1.0"
     axios "^1.6.8"

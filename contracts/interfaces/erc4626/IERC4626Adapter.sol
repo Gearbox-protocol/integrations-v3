@@ -3,7 +3,7 @@
 // (c) Gearbox Foundation, 2023.
 pragma solidity ^0.8.23;
 
-import {IAdapter} from "../../interfaces/IAdapter.sol";
+import {IAdapter} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IAdapter.sol";
 
 interface IERC4626Adapter is IAdapter {
     function asset() external view returns (address);

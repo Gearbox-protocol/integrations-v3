@@ -7,20 +7,19 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 import {AbstractAdapter} from "../AbstractAdapter.sol";
-import {AdapterType} from "@gearbox-protocol/sdk-gov/contracts/AdapterType.sol";
 import {PhantomTokenType} from "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
 import {ZircuitPhantomToken} from "../../helpers/zircuit/ZircuitPhantomToken.sol";
 
 import {ICreditManagerV3} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditManagerV3.sol";
 import {IZircuitPoolAdapter} from "../../interfaces/zircuit/IZircuitPoolAdapter.sol";
-import {IPhantomToken} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IPhantomToken.sol";
+import {IPhantomToken} from "../../interfaces/IPhantomToken.sol";
 import {IZircuitPool} from "../../integrations/zircuit/IZircuitPool.sol";
 
 contract ZircuitPoolAdapter is AbstractAdapter, IZircuitPoolAdapter {
     using EnumerableSet for EnumerableSet.AddressSet;
 
-    uint256 public constant override adapterType = uint256(AdapterType.ZIRCUIT_POOL);
-    uint256 public constant override version = 3_1;
+    bytes32 public constant override contractType = "AD_ZIRCUIT_POOL";
+    uint256 public constant override version = 3_10;
 
     /// @dev Set of all underlyings that have corresponding phantom tokens
     EnumerableSet.AddressSet internal _supportedUnderlyings;

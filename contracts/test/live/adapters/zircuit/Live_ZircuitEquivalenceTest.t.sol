@@ -3,13 +3,14 @@
 // (c) Gearbox Foundation, 2023.
 pragma solidity ^0.8.23;
 
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {ICreditFacadeV3} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacadeV3.sol";
 import {ICreditFacadeV3Multicall} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacadeV3Multicall.sol";
 import {IZircuitPool} from "../../../../integrations/zircuit/IZircuitPool.sol";
 import {IZircuitPoolAdapter} from "../../../../interfaces/zircuit/IZircuitPoolAdapter.sol";
 
-import {IPhantomToken} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IPhantomToken.sol";
+import {IPhantomToken} from "../../../../interfaces/IPhantomToken.sol";
 import {PhantomTokenType} from "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
 import {ZircuitPhantomToken} from "../../../../helpers/zircuit/ZircuitPhantomToken.sol";
 import {PriceFeedParams} from "@gearbox-protocol/core-v3/contracts/interfaces/IPriceOracleV3.sol";
@@ -17,8 +18,7 @@ import {IPriceFeed} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IP
 
 import {ZircuitPoolCalls, ZircuitPoolMulticaller} from "../../../multicall/zircuit/ZircuitPool_Calls.sol";
 
-import {IAdapter} from "../../../../interfaces/IAdapter.sol";
-import {AdapterType} from "@gearbox-protocol/sdk-gov/contracts/AdapterType.sol";
+import {IAdapter} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IAdapter.sol";
 
 import {Tokens} from "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
 import {Contracts} from "@gearbox-protocol/sdk-gov/contracts/SupportedContracts.sol";
@@ -204,7 +204,7 @@ contract Live_ZircuitEquivalenceTest is LiveTestHelper {
 
             if (priceOracle.reservePriceFeeds(token) == address(0)) {
                 PriceFeedParams memory pfParams = priceOracle.priceFeedParams(token);
-                vm.prank(acl.owner());
+                vm.prank(Ownable(address(acl)).owner());
                 priceOracle.setReservePriceFeed(token, pfParams.priceFeed, pfParams.stalenessPeriod);
             }
 

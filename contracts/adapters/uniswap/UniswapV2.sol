@@ -9,7 +9,6 @@ import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet
 import {RAY} from "@gearbox-protocol/core-v3/contracts/libraries/Constants.sol";
 
 import {AbstractAdapter} from "../AbstractAdapter.sol";
-import {AdapterType} from "@gearbox-protocol/sdk-gov/contracts/AdapterType.sol";
 
 import {IUniswapV2Router02} from "../../integrations/uniswap/IUniswapV2Router02.sol";
 import {IUniswapV2Adapter, UniswapV2PairStatus, UniswapV2Pair} from "../../interfaces/uniswap/IUniswapV2Adapter.sol";
@@ -19,8 +18,8 @@ import {IUniswapV2Adapter, UniswapV2PairStatus, UniswapV2Pair} from "../../inter
 contract UniswapV2Adapter is AbstractAdapter, IUniswapV2Adapter {
     using EnumerableSet for EnumerableSet.Bytes32Set;
 
-    uint256 public constant override adapterType = uint256(AdapterType.UNISWAP_V2_ROUTER);
-    uint256 public constant override version = 3_00;
+    bytes32 public constant override contractType = "AD_UNISWAP_V2_ROUTER";
+    uint256 public constant override version = 3_10;
 
     /// @dev Mapping from hash(token0, token1) to respective tuple
     mapping(bytes32 => UniswapV2Pair) internal _hashToPair;

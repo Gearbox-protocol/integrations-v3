@@ -7,7 +7,7 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IZircuitPool} from "../../integrations/zircuit/IZircuitPool.sol";
 import {PhantomERC20} from "../PhantomERC20.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
-import {IPhantomToken} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IPhantomToken.sol";
+import {IPhantomToken} from "../../interfaces/IPhantomToken.sol";
 import {PhantomTokenType} from "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
 import {MultiCall} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacadeV3.sol";
 
