@@ -241,25 +241,23 @@ contract UniswapV3Adapter is AbstractAdapter, IUniswapV3Adapter {
         configuratorOnly // U:[UNI3-9]
     {
         uint256 len = pools.length;
-        unchecked {
-            for (uint256 i; i < len; ++i) {
-                (address token0, address token1) = _sortTokens(pools[i].token0, pools[i].token1);
-                bytes32 poolHash = keccak256(abi.encode(token0, token1, pools[i].fee));
-                if (pools[i].allowed) {
-                    /// For each added pool, we verify that the pool tokens are valid collaterals,
-                    /// as otherwise operations with unsupported tokens would be possible, leading
-                    /// to possibility of control flow capture
-                    _getMaskOrRevert(token0);
-                    _getMaskOrRevert(token1);
+        for (uint256 i; i < len; ++i) {
+            (address token0, address token1) = _sortTokens(pools[i].token0, pools[i].token1);
+            bytes32 poolHash = keccak256(abi.encode(token0, token1, pools[i].fee));
+            if (pools[i].allowed) {
+                /// For each added pool, we verify that the pool tokens are valid collaterals,
+                /// as otherwise operations with unsupported tokens would be possible, leading
+                /// to possibility of control flow capture
+                _getMaskOrRevert(token0);
+                _getMaskOrRevert(token1);
 
-                    _supportedPoolHashes.add(poolHash);
-                    _hashToPool[poolHash] = UniswapV3Pool({token0: token0, token1: token1, fee: pools[i].fee});
-                } else {
-                    _supportedPoolHashes.remove(poolHash);
-                    delete _hashToPool[poolHash];
-                }
-                emit SetPoolStatus(token0, token1, pools[i].fee, pools[i].allowed); // U:[UNI3-9]
+                _supportedPoolHashes.add(poolHash);
+                _hashToPool[poolHash] = UniswapV3Pool({token0: token0, token1: token1, fee: pools[i].fee});
+            } else {
+                _supportedPoolHashes.remove(poolHash);
+                delete _hashToPool[poolHash];
             }
+            emit SetPoolStatus(token0, token1, pools[i].fee, pools[i].allowed); // U:[UNI3-9]
         }
     }
 

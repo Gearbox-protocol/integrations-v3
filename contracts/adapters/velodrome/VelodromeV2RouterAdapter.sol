@@ -151,30 +151,28 @@ contract VelodromeV2RouterAdapter is AbstractAdapter, IVelodromeV2RouterAdapter 
     /// @param pools Array of `VelodromeV2PoolStatus` objects
     function setPoolStatusBatch(VelodromeV2PoolStatus[] calldata pools) external override configuratorOnly {
         uint256 len = pools.length;
-        unchecked {
-            for (uint256 i; i < len; ++i) {
-                (address token0, address token1) = _sortTokens(pools[i].token0, pools[i].token1);
-                bytes32 poolHash = keccak256(abi.encode(token0, token1, pools[i].stable, pools[i].factory));
-                if (pools[i].allowed) {
-                    /// For each added pool, we verify that the pool tokens are valid collaterals,
-                    /// as otherwise operations with unsupported tokens would be possible, leading
-                    /// to possibility of control flow capture
-                    _getMaskOrRevert(token0);
-                    _getMaskOrRevert(token1);
+        for (uint256 i; i < len; ++i) {
+            (address token0, address token1) = _sortTokens(pools[i].token0, pools[i].token1);
+            bytes32 poolHash = keccak256(abi.encode(token0, token1, pools[i].stable, pools[i].factory));
+            if (pools[i].allowed) {
+                /// For each added pool, we verify that the pool tokens are valid collaterals,
+                /// as otherwise operations with unsupported tokens would be possible, leading
+                /// to possibility of control flow capture
+                _getMaskOrRevert(token0);
+                _getMaskOrRevert(token1);
 
-                    _supportedPoolHashes.add(poolHash);
-                    _hashToPool[poolHash] = VelodromeV2Pool({
-                        token0: token0,
-                        token1: token1,
-                        stable: pools[i].stable,
-                        factory: pools[i].factory
-                    });
-                } else {
-                    _supportedPoolHashes.remove(poolHash);
-                    delete _hashToPool[poolHash];
-                }
-                emit SetPoolStatus(token0, token1, pools[i].stable, pools[i].factory, pools[i].allowed); // U: [VELO2-05]
+                _supportedPoolHashes.add(poolHash);
+                _hashToPool[poolHash] = VelodromeV2Pool({
+                    token0: token0,
+                    token1: token1,
+                    stable: pools[i].stable,
+                    factory: pools[i].factory
+                });
+            } else {
+                _supportedPoolHashes.remove(poolHash);
+                delete _hashToPool[poolHash];
             }
+            emit SetPoolStatus(token0, token1, pools[i].stable, pools[i].factory, pools[i].allowed); // U: [VELO2-05]
         }
     }
 
