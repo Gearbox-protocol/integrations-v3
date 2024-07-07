@@ -3,8 +3,6 @@
 // (c) Gearbox Foundation, 2023.
 pragma solidity ^0.8.23;
 
-import {AdapterType} from "@gearbox-protocol/sdk-gov/contracts/AdapterType.sol";
-
 import {ICurvePoolStableNG} from "../../integrations/curve/ICurvePool_StableNG.sol";
 import {ICurveV1_StableNGAdapter} from "../../interfaces/curve/ICurveV1_StableNGAdapter.sol";
 import {CurveV1AdapterBase} from "./CurveV1_Base.sol";
@@ -12,7 +10,7 @@ import {CurveV1AdapterBase} from "./CurveV1_Base.sol";
 /// @title Curve Stable NG adapter
 /// @notice Implements logic allowing to interact with Curve StableNG pools
 contract CurveV1AdapterStableNG is CurveV1AdapterBase, ICurveV1_StableNGAdapter {
-    uint256 public constant override adapterType = uint256(AdapterType.CURVE_STABLE_NG);
+    bytes32 public constant override contractType = "AD_CURVE_STABLE_NG";
 
     /// @notice Constructor
     /// @param _creditManager Credit manager address

@@ -9,7 +9,6 @@ import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet
 import {RAY} from "@gearbox-protocol/core-v3/contracts/libraries/Constants.sol";
 
 import {AbstractAdapter} from "../AbstractAdapter.sol";
-import {AdapterType} from "@gearbox-protocol/sdk-gov/contracts/AdapterType.sol";
 
 import {ISwapRouter} from "../../integrations/uniswap/IUniswapV3.sol";
 import {BytesLib} from "../../integrations/uniswap/BytesLib.sol";
@@ -21,8 +20,8 @@ contract UniswapV3Adapter is AbstractAdapter, IUniswapV3Adapter {
     using EnumerableSet for EnumerableSet.Bytes32Set;
     using BytesLib for bytes;
 
-    uint256 public constant override adapterType = uint256(AdapterType.UNISWAP_V3_ROUTER);
-    uint256 public constant override version = 3_00;
+    bytes32 public constant override contractType = "AD_UNISWAP_V3_ROUTER";
+    uint256 public constant override version = 3_10;
 
     /// @dev The length of the bytes encoded address
     uint256 private constant ADDR_SIZE = 20;

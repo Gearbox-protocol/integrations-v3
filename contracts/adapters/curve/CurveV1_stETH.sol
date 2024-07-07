@@ -7,8 +7,6 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import {RAY} from "@gearbox-protocol/core-v3/contracts/libraries/Constants.sol";
 
-import {AdapterType} from "@gearbox-protocol/sdk-gov/contracts/AdapterType.sol";
-
 import {N_COINS} from "../../integrations/curve/ICurvePool_2.sol";
 import {ICurveV1Adapter} from "../../interfaces/curve/ICurveV1Adapter.sol";
 import {CurveV1AdapterBase} from "./CurveV1_Base.sol";
@@ -17,7 +15,7 @@ import {CurveV1Adapter2Assets} from "./CurveV1_2.sol";
 /// @title Curve V1 stETH adapter
 /// @notice Same as `CurveV1Adapter2Assets` but uses stETH gateway and needs to approve LP token
 contract CurveV1AdapterStETH is CurveV1Adapter2Assets {
-    uint256 public constant override adapterType = uint256(AdapterType.CURVE_V1_STECRV_POOL);
+    bytes32 public constant override contractType = "AD_CURVE_V1_STECRV_POOL";
 
     /// @notice Sets allowance for the pool LP token to max before the operation and to 1 after
     modifier withLPTokenApproval() {

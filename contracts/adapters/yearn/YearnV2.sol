@@ -6,7 +6,6 @@ pragma solidity ^0.8.23;
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import {AbstractAdapter} from "../AbstractAdapter.sol";
-import {AdapterType} from "@gearbox-protocol/sdk-gov/contracts/AdapterType.sol";
 
 import {IYVault} from "../../integrations/yearn/IYVault.sol";
 import {IYearnV2Adapter} from "../../interfaces/yearn/IYearnV2Adapter.sol";
@@ -14,7 +13,7 @@ import {IYearnV2Adapter} from "../../interfaces/yearn/IYearnV2Adapter.sol";
 /// @title Yearn V2 Vault adapter
 /// @notice Implements logic allowing CAs to deposit into Yearn vaults
 contract YearnV2Adapter is AbstractAdapter, IYearnV2Adapter {
-    uint256 public constant override adapterType = uint256(AdapterType.YEARN_V2);
+    bytes32 public constant override contractType = "AD_YEARN_V2";
     uint256 public constant override version = 3_10;
 
     /// @notice Vault's underlying token address

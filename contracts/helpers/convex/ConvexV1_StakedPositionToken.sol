@@ -8,7 +8,7 @@ import {IBaseRewardPool} from "../../integrations/convex/IBaseRewardPool.sol";
 import {IBooster} from "../../integrations/convex/IBooster.sol";
 import {PhantomERC20} from "../PhantomERC20.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
-import {IPhantomToken} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IPhantomToken.sol";
+import {IPhantomToken} from "../../interfaces/IPhantomToken.sol";
 import {PhantomTokenType} from "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
 import {MultiCall} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacadeV3.sol";
 

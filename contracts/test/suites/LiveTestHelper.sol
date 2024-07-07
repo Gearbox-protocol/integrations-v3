@@ -8,7 +8,7 @@ import {Pausable} from "@openzeppelin/contracts/security/Pausable.sol";
 import {ICreditManagerV3} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditManagerV3.sol";
 import {ICreditFacadeV3} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacadeV3.sol";
 import {IVersion} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IVersion.sol";
-import {IDegenNFT} from "@gearbox-protocol/core-v3/contracts/interfaces/IDegenNFT.sol";
+import {DegenNFTMock} from "@gearbox-protocol/core-v3/contracts/test/mocks/token/DegenNFTMock.sol";
 
 import {Tokens} from "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
 import {SupportedContracts, Contracts} from "@gearbox-protocol/sdk-gov/contracts/SupportedContracts.sol";
@@ -173,10 +173,10 @@ contract LiveTestHelper is IntegrationTestHelper {
             address degenNFT = ICreditFacadeV3(ICreditManagerV3(creditManagers[i]).creditFacade()).degenNFT();
 
             if (degenNFT != address(0)) {
-                address minter = IDegenNFT(degenNFT).minter();
+                address minter = DegenNFTMock(degenNFT).minter();
 
                 vm.prank(minter);
-                IDegenNFT(degenNFT).mint(USER, 1000);
+                DegenNFTMock(degenNFT).mint(USER, 1000);
             }
         }
     }

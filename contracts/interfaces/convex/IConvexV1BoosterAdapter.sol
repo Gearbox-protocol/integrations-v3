@@ -3,7 +3,7 @@
 // (c) Gearbox Foundation, 2023.
 pragma solidity ^0.8.23;
 
-import {IAdapter} from "../IAdapter.sol";
+import {IAdapter} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IAdapter.sol";
 
 /// @title Convex V1 Booster adapter interface
 interface IConvexV1BoosterAdapter is IAdapter {

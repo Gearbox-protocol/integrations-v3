@@ -7,14 +7,12 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import {RAY} from "@gearbox-protocol/core-v3/contracts/libraries/Constants.sol";
 
-import {AdapterType} from "@gearbox-protocol/sdk-gov/contracts/AdapterType.sol";
-
 import {CurveV1AdapterBase} from "./CurveV1_Base.sol";
 
 /// @title Curve V1 DepozitZap adapter
 /// @notice Implements logic for interacting with a Curve zap wrapper (to `remove_liquidity_one_coin` from older pools)
 contract CurveV1AdapterDeposit is CurveV1AdapterBase {
-    uint256 public constant override adapterType = uint256(AdapterType.CURVE_V1_WRAPPER);
+    bytes32 public constant override contractType = "AD_CURVE_V1_WRAPPER";
 
     /// @notice Sets allowance for the pool LP token to max before the operation and to 1 after
     modifier withLPTokenApproval() {

@@ -9,7 +9,6 @@ import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet
 import {RAY} from "@gearbox-protocol/core-v3/contracts/libraries/Constants.sol";
 
 import {AbstractAdapter} from "../AbstractAdapter.sol";
-import {AdapterType} from "@gearbox-protocol/sdk-gov/contracts/AdapterType.sol";
 
 import {IVelodromeV2Router, Route} from "../../integrations/velodrome/IVelodromeV2Router.sol";
 import {
@@ -23,8 +22,8 @@ import {
 contract VelodromeV2RouterAdapter is AbstractAdapter, IVelodromeV2RouterAdapter {
     using EnumerableSet for EnumerableSet.Bytes32Set;
 
-    uint256 public constant override adapterType = uint256(AdapterType.VELODROME_V2_ROUTER);
-    uint256 public constant override version = 3_00;
+    bytes32 public constant override contractType = "AD_VELODROME_V2_ROUTER";
+    uint256 public constant override version = 3_10;
 
     /// @dev Mapping from hash(token0, token1, stable, factory) to respective tuple
     mapping(bytes32 => VelodromeV2Pool) internal _hashToPool;

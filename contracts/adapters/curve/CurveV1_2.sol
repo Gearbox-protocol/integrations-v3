@@ -3,8 +3,6 @@
 // (c) Gearbox Foundation, 2023.
 pragma solidity ^0.8.23;
 
-import {AdapterType} from "@gearbox-protocol/sdk-gov/contracts/AdapterType.sol";
-
 import {ICurvePool2Assets, N_COINS} from "../../integrations/curve/ICurvePool_2.sol";
 import {ICurveV1_2AssetsAdapter} from "../../interfaces/curve/ICurveV1_2AssetsAdapter.sol";
 import {CurveV1AdapterBase} from "./CurveV1_Base.sol";
@@ -12,8 +10,8 @@ import {CurveV1AdapterBase} from "./CurveV1_Base.sol";
 /// @title Curve V1 2 assets adapter
 /// @notice Implements logic allowing to interact with Curve pools with 2 assets
 contract CurveV1Adapter2Assets is CurveV1AdapterBase, ICurveV1_2AssetsAdapter {
-    function adapterType() external pure virtual override returns (uint256) {
-        return uint256(AdapterType.CURVE_V1_2ASSETS);
+    function contractType() external pure virtual override returns (bytes32) {
+        return "AD_CURVE_V1_2ASSETS";
     }
 
     /// @notice Constructor

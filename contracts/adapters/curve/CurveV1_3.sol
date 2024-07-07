@@ -3,8 +3,6 @@
 // (c) Gearbox Foundation, 2023.
 pragma solidity ^0.8.23;
 
-import {AdapterType} from "@gearbox-protocol/sdk-gov/contracts/AdapterType.sol";
-
 import {ICurvePool3Assets, N_COINS} from "../../integrations/curve/ICurvePool_3.sol";
 import {ICurveV1_3AssetsAdapter} from "../../interfaces/curve/ICurveV1_3AssetsAdapter.sol";
 import {CurveV1AdapterBase} from "./CurveV1_Base.sol";
@@ -12,7 +10,7 @@ import {CurveV1AdapterBase} from "./CurveV1_Base.sol";
 /// @title Curve V1 3 assets adapter
 /// @notice Implements logic allowing to interact with Curve pools with 3 assets
 contract CurveV1Adapter3Assets is CurveV1AdapterBase, ICurveV1_3AssetsAdapter {
-    uint256 public constant override adapterType = uint256(AdapterType.CURVE_V1_3ASSETS);
+    bytes32 public constant override contractType = "AD_CURVE_V1_3ASSETS";
 
     /// @notice Constructor
     /// @param _creditManager Credit manager address
