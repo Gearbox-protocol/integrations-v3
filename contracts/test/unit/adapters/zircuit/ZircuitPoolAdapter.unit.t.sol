@@ -44,6 +44,9 @@ contract ZircuitPoolAdapterUnitTest is AdapterUnitTestHelper {
         _revertsOnNonFacadeCaller();
         adapter.withdrawDiff(address(1), 1);
 
+        _revertsOnNonFacadeCaller();
+        adapter.withdrawPhantomToken(address(1), 1);
+
         _revertsOnNonConfiguratorCaller();
         adapter.updateSupportedUnderlyings();
     }
@@ -65,6 +68,10 @@ contract ZircuitPoolAdapterUnitTest is AdapterUnitTestHelper {
         vm.expectRevert(IZircuitPoolAdapter.UnsupportedUnderlyingException.selector);
         vm.prank(creditFacade);
         adapter.withdrawDiff(address(1), 1);
+
+        vm.expectRevert(IZircuitPoolAdapter.UnsupportedUnderlyingException.selector);
+        vm.prank(creditFacade);
+        adapter.withdrawPhantomToken(address(1), 1);
     }
 
     /// @notice U:[ZIR-2]: depositFor works correctly

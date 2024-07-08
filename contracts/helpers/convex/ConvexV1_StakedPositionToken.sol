@@ -9,14 +9,11 @@ import {IBooster} from "../../integrations/convex/IBooster.sol";
 import {PhantomERC20} from "../PhantomERC20.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {IPhantomToken} from "../../interfaces/IPhantomToken.sol";
-import {PhantomTokenType} from "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
 import {MultiCall} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacadeV3.sol";
 
 /// @title Convex staked position token
 /// @notice Phantom ERC-20 token that represents the balance of the staking position in Convex pools
 contract ConvexStakedPositionToken is PhantomERC20, IPhantomToken {
-    PhantomTokenType public constant override _gearboxPhantomTokenType = PhantomTokenType.CONVEX_PHANTOM_TOKEN;
-
     address public immutable pool;
     address public immutable booster;
     address public immutable curveToken;
@@ -48,15 +45,8 @@ contract ConvexStakedPositionToken is PhantomERC20, IPhantomToken {
         return IERC20(pool).balanceOf(account);
     }
 
-    /// @notice Returns the calls required to unwrap a Convex position into Curve LP before withdrawing from Gearbox
-    function getWithdrawalMultiCall(address, uint256 amount)
-        external
-        view
-        returns (address tokenOut, uint256 amountOut, address targetContract, bytes memory callData)
-    {
-        tokenOut = curveToken;
-        amountOut = amount;
-        targetContract = pool;
-        callData = abi.encodeCall(IBaseRewardPool.withdrawAndUnwrap, (amount, false));
+    /// @notice Returns phantom token's target contract and underlying
+    function getPhantomTokenInfo() external view override returns (address, address) {
+        return (pool, underlying);
     }
 }

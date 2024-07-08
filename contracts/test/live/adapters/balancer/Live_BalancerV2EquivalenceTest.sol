@@ -3,6 +3,7 @@
 // (c) Gearbox Foundation, 2023.
 pragma solidity ^0.8.23;
 
+import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {ICreditFacadeV3} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacadeV3.sol";
@@ -54,6 +55,7 @@ struct BalancerPoolParams {
 contract Live_BalancerV2EquivalenceTest is LiveTestHelper {
     using BalancerV2_Calls for BalancerV2_Multicaller;
     using AddressList for address[];
+    using Address for address;
 
     BalanceComparator comparator;
 
@@ -209,7 +211,7 @@ contract Live_BalancerV2EquivalenceTest is LiveTestHelper {
                 creditAccount, MultiCallBuilder.build(MultiCall({target: balancerVaultAddress, callData: callData}))
             );
         } else {
-            address(balancerVaultAddress).call(callData);
+            address(balancerVaultAddress).functionCall(callData);
         }
 
         comparator.takeSnapshot("after_batchSwap", creditAccount);
