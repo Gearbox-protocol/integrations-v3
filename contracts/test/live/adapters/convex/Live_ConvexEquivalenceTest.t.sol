@@ -13,7 +13,6 @@ import {IBooster} from "../../../../integrations/convex/IBooster.sol";
 import {IConvexV1BaseRewardPoolAdapter} from "../../../../interfaces/convex/IConvexV1BaseRewardPoolAdapter.sol";
 import {ConvexStakedPositionToken} from "../../../../helpers/convex/ConvexV1_StakedPositionToken.sol";
 import {IPhantomToken} from "../../../../interfaces/IPhantomToken.sol";
-import {PhantomTokenType} from "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
 import {PriceFeedParams} from "@gearbox-protocol/core-v3/contracts/interfaces/IPriceOracleV3.sol";
 import {IPriceFeed} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IPriceFeed.sol";
 
@@ -297,8 +296,9 @@ contract Live_ConvexEquivalenceTest is LiveTestHelper {
 
             address token = creditManager.getTokenByMask(1 << i);
 
-            try IPhantomToken(token)._gearboxPhantomTokenType() returns (PhantomTokenType ptType) {
-                if (ptType != PhantomTokenType.CONVEX_PHANTOM_TOKEN) continue;
+            try IPhantomToken(token).getPhantomTokenInfo() returns (address target, address) {
+                address adapter = creditManager.contractToAdapter(target);
+                if (IAdapter(adapter).contractType() != "AD_CONVEX_V1_BASE_REWARD_POOL") continue;
             } catch {
                 continue;
             }

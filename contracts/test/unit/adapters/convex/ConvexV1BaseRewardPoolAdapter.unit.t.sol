@@ -129,6 +129,9 @@ contract ConvexV1BaseRewardPoolAdapterUnitTest is AdapterUnitTestHelper {
         adapter.withdrawDiff(0, false);
 
         _revertsOnNonFacadeCaller();
+        adapter.withdrawPhantomToken(address(0), 0);
+
+        _revertsOnNonFacadeCaller();
         adapter.withdrawAndUnwrap(0, false);
 
         _revertsOnNonFacadeCaller();

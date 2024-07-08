@@ -1,14 +1,14 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: MIT
 // Gearbox Protocol. Generalized leverage for DeFi protocols
-// (c) Gearbox Foundation, 2024.
+// (c) Gearbox Foundation, 2023.
 pragma solidity ^0.8.23;
 
-import {PhantomTokenType} from "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
-
 interface IPhantomToken {
-    function _gearboxPhantomTokenType() external view returns (PhantomTokenType);
+    /// @notice Returns phantom token's target contract and underlying
+    function getPhantomTokenInfo() external view returns (address targetContract, address underlying);
+}
 
-    function getWithdrawalMultiCall(address creditAccount, uint256 amount)
-        external
-        returns (address tokenOut, uint256 amountOut, address targetContract, bytes memory callData);
+interface IPhantomTokenWithdrawer {
+    /// @notice Withdraws phantom token for its underlying
+    function withdrawPhantomToken(address token, uint256 amount) external returns (bool useSafePrices);
 }

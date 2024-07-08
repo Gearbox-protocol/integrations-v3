@@ -11,7 +11,6 @@ import {IZircuitPool} from "../../../../integrations/zircuit/IZircuitPool.sol";
 import {IZircuitPoolAdapter} from "../../../../interfaces/zircuit/IZircuitPoolAdapter.sol";
 
 import {IPhantomToken} from "../../../../interfaces/IPhantomToken.sol";
-import {PhantomTokenType} from "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
 import {ZircuitPhantomToken} from "../../../../helpers/zircuit/ZircuitPhantomToken.sol";
 import {PriceFeedParams} from "@gearbox-protocol/core-v3/contracts/interfaces/IPriceOracleV3.sol";
 import {IPriceFeed} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IPriceFeed.sol";
@@ -149,8 +148,9 @@ contract Live_ZircuitEquivalenceTest is LiveTestHelper {
         for (uint256 i = 0; i < collateralTokensCount; ++i) {
             address token = creditManager.getTokenByMask(1 << i);
 
-            try IPhantomToken(token)._gearboxPhantomTokenType() returns (PhantomTokenType ptType) {
-                if (ptType != PhantomTokenType.ZIRCUIT_PHANTOM_TOKEN) continue;
+            try IPhantomToken(token).getPhantomTokenInfo() returns (address target, address) {
+                address adapter = creditManager.contractToAdapter(target);
+                if (IAdapter(adapter).contractType() != "AD_ZIRCUIT_POOL") continue;
             } catch {
                 continue;
             }
@@ -196,8 +196,9 @@ contract Live_ZircuitEquivalenceTest is LiveTestHelper {
 
             address token = creditManager.getTokenByMask(1 << i);
 
-            try IPhantomToken(token)._gearboxPhantomTokenType() returns (PhantomTokenType ptType) {
-                if (ptType != PhantomTokenType.ZIRCUIT_PHANTOM_TOKEN) continue;
+            try IPhantomToken(token).getPhantomTokenInfo() returns (address target, address) {
+                address adapter = creditManager.contractToAdapter(target);
+                if (IAdapter(adapter).contractType() != "AD_ZIRCUIT_POOL") continue;
             } catch {
                 continue;
             }
