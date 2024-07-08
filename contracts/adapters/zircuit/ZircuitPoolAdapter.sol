@@ -7,7 +7,6 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 import {AbstractAdapter} from "../AbstractAdapter.sol";
-import {PhantomTokenType} from "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
 import {ZircuitPhantomToken} from "../../helpers/zircuit/ZircuitPhantomToken.sol";
 
 import {ICreditManagerV3} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditManagerV3.sol";
@@ -114,6 +113,18 @@ contract ZircuitPoolAdapter is AbstractAdapter, IZircuitPoolAdapter {
         return false;
     }
 
+    /// @notice Withdraws phantom token for its underlying
+    function withdrawPhantomToken(address token, uint256 amount)
+        external
+        override
+        creditFacadeOnly // U: [ZIR-1]
+        supportedUnderlyingsOnly(token) // U: [ZIR-1A]
+        returns (bool)
+    {
+        _execute(abi.encodeCall(IZircuitPool.withdraw, (token, amount)));
+        return false;
+    }
+
     // ---- //
     // DATA //
     // ---- //
@@ -149,10 +160,8 @@ contract ZircuitPoolAdapter is AbstractAdapter, IZircuitPoolAdapter {
         uint256 len = cm.collateralTokensCount();
         for (uint256 i = 0; i < len; ++i) {
             address token = cm.getTokenByMask(1 << i);
-            try IPhantomToken(token)._gearboxPhantomTokenType() returns (PhantomTokenType ptType) {
-                if (ptType == PhantomTokenType.ZIRCUIT_PHANTOM_TOKEN) {
-                    address depositedToken = ZircuitPhantomToken(token).underlying();
-
+            try IPhantomToken(token).getPhantomTokenInfo() returns (address target, address depositedToken) {
+                if (target == targetContract) {
                     _getMaskOrRevert(token);
                     _getMaskOrRevert(depositedToken);
 

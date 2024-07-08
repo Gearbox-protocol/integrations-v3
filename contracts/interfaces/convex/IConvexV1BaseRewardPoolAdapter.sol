@@ -4,9 +4,10 @@
 pragma solidity ^0.8.23;
 
 import {IAdapter} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IAdapter.sol";
+import {IPhantomTokenWithdrawer} from "../IPhantomToken.sol";
 
 /// @title Convex V1 BaseRewardPool adapter interface
-interface IConvexV1BaseRewardPoolAdapter is IAdapter {
+interface IConvexV1BaseRewardPoolAdapter is IAdapter, IPhantomTokenWithdrawer {
     function curveLPtoken() external view returns (address);
 
     function stakingToken() external view returns (address);

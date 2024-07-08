@@ -213,6 +213,18 @@ contract ConvexV1BaseRewardPoolAdapter is AbstractAdapter, IConvexV1BaseRewardPo
         return false;
     }
 
+    /// @notice Withdraws phantom token for its underlying
+    /// @dev `token` parameter is ignored as adapter only handles one token
+    function withdrawPhantomToken(address, uint256 amount)
+        external
+        override
+        creditFacadeOnly // U:[CVX1R-3]
+        returns (bool)
+    {
+        _execute(abi.encodeCall(IBaseRewardPool.withdraw, (amount, false)));
+        return false;
+    }
+
     // ------ //
     // UNWRAP //
     // ------ //
