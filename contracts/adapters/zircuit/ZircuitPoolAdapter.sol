@@ -166,8 +166,7 @@ contract ZircuitPoolAdapter is AbstractAdapter, IZircuitPoolAdapter {
                     _getMaskOrRevert(depositedToken);
 
                     tokenToPhantomToken[depositedToken] = token;
-                    _supportedUnderlyings.add(depositedToken);
-                    emit AddSupportedUnderlying(depositedToken, token);
+                    if (_supportedUnderlyings.add(depositedToken)) emit AddSupportedUnderlying(depositedToken, token);
                 }
             } catch {}
         }

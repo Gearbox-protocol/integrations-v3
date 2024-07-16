@@ -197,8 +197,7 @@ contract ConvexV1BoosterAdapter is AbstractAdapter, IConvexV1BoosterAdapter {
                 pidToCurveToken[pid] = IConvexV1BaseRewardPoolAdapter(adapter).curveLPtoken();
                 pidToConvexToken[pid] = IConvexV1BaseRewardPoolAdapter(adapter).stakingToken();
 
-                _supportedPids.add(pid);
-                emit AddSupportedPid(pid);
+                if (_supportedPids.add(pid)) emit AddSupportedPid(pid);
             }
         }
     }
