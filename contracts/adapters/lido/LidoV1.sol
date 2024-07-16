@@ -80,9 +80,8 @@ contract LidoV1Adapter is AbstractAdapter, ILidoV1Adapter {
         _executeSwapSafeApprove(weth, abi.encodeCall(LidoV1Gateway.submit, (amount, treasury))); // U:[LDO1-3,4]
     }
 
-    /// @notice Returns all adapter parameters serialized into a bytes array,
-    ///         as well as adapter type and version, to properly deserialize
-    function serialize() external view override returns (bytes memory serializedData) {
+    /// @notice Serialized adapter parameters
+    function serialize() external view returns (bytes memory serializedData) {
         serializedData = abi.encode(creditManager, targetContract, stETH, weth, treasury);
     }
 }

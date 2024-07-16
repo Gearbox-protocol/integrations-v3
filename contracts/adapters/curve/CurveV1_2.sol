@@ -88,9 +88,8 @@ contract CurveV1Adapter2Assets is CurveV1AdapterBase, ICurveV1_2AssetsAdapter {
         return true;
     }
 
-    /// @notice Returns all adapter parameters serialized into a bytes array,
-    ///         as well as adapter type and version, to properly deserialize
-    function serialize() external view virtual override returns (bytes memory serializedData) {
+    /// @notice Serialized adapter parameters
+    function serialize() external view virtual returns (bytes memory serializedData) {
         serializedData = abi.encode(creditManager, targetContract, token, lp_token, metapoolBase);
 
         serializedData = bytes.concat(

@@ -110,9 +110,8 @@ contract WstETHV1Adapter is AbstractAdapter, IwstETHV1Adapter {
         _execute(abi.encodeCall(IwstETH.unwrap, (amount))); // U:[LDO1W-5,6]
     }
 
-    /// @notice Returns all adapter parameters serialized into a bytes array,
-    ///         as well as adapter type and version, to properly deserialize
-    function serialize() external view override returns (bytes memory serializedData) {
+    /// @notice Serialized adapter parameters
+    function serialize() external view returns (bytes memory serializedData) {
         serializedData = abi.encode(creditManager, targetContract, stETH);
     }
 }

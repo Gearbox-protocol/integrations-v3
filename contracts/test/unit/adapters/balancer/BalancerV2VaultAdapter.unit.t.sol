@@ -47,7 +47,7 @@ contract BalancerV2VaultAdapterUnitTest is AdapterUnitTestHelper {
     }
 
     /// @notice U:[BAL2-1]: Constructor works as expected
-    function test_U_BAL2_01_constructor_works_as_expected() public {
+    function test_U_BAL2_01_constructor_works_as_expected() public view {
         assertEq(adapter.creditManager(), address(creditManager), "Incorrect creditManager");
         assertEq(adapter.targetContract(), address(vault), "Incorrect targetContract");
     }

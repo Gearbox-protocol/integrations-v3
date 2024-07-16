@@ -8,12 +8,15 @@ import {IBaseRewardPool} from "../../integrations/convex/IBaseRewardPool.sol";
 import {IBooster} from "../../integrations/convex/IBooster.sol";
 import {PhantomERC20} from "../PhantomERC20.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
-import {IPhantomToken} from "../../interfaces/IPhantomToken.sol";
 import {MultiCall} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacadeV3.sol";
+import {IPhantomToken} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IPhantomToken.sol";
 
 /// @title Convex staked position token
 /// @notice Phantom ERC-20 token that represents the balance of the staking position in Convex pools
 contract ConvexStakedPositionToken is PhantomERC20, IPhantomToken {
+    uint256 public constant override version = 3_10;
+    bytes32 public constant override contractType = "PT_CONVEX";
+
     address public immutable pool;
     address public immutable booster;
     address public immutable curveToken;

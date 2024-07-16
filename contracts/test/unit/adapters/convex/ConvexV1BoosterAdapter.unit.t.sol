@@ -26,7 +26,7 @@ contract ConvexV1BoosterAdapterUnitTest is AdapterUnitTestHelper {
     }
 
     /// @notice U:[CVX1B-1]: Constructor works as expected
-    function test_U_CVX1B_01_constructor_works_as_expected() public {
+    function test_U_CVX1B_01_constructor_works_as_expected() public view {
         assertEq(adapter.creditManager(), address(creditManager), "Incorrect creditManager");
         assertEq(adapter.targetContract(), address(booster), "Incorrect targetContract");
     }

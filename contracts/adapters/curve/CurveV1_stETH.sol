@@ -96,8 +96,7 @@ contract CurveV1AdapterStETH is CurveV1Adapter2Assets {
         return _remove_diff_liquidity_one_coin(i, leftoverAmount, rateMinRAY);
     }
 
-    /// @notice Returns all adapter parameters serialized into a bytes array,
-    ///         as well as adapter type and version, to properly deserialize
+    /// @notice Serialized adapter parameters
     function serialize() external view override returns (bytes memory serializedData) {
         serializedData =
             abi.encode(creditManager, targetContract, token, lp_token, metapoolBase, nCoins, use256, [token0, token1]);
