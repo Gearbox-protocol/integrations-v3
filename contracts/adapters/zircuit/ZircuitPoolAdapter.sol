@@ -11,7 +11,7 @@ import {ZircuitPhantomToken} from "../../helpers/zircuit/ZircuitPhantomToken.sol
 
 import {ICreditManagerV3} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditManagerV3.sol";
 import {IZircuitPoolAdapter} from "../../interfaces/zircuit/IZircuitPoolAdapter.sol";
-import {IPhantomToken} from "../../interfaces/IPhantomToken.sol";
+import {IPhantomToken} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IPhantomToken.sol";
 import {IZircuitPool} from "../../integrations/zircuit/IZircuitPool.sol";
 
 contract ZircuitPoolAdapter is AbstractAdapter, IZircuitPoolAdapter {
@@ -82,7 +82,8 @@ contract ZircuitPoolAdapter is AbstractAdapter, IZircuitPoolAdapter {
     // ----------- //
 
     /// @notice Withdraw a specified amount of token from the Zircuit vault
-    function withdraw(address _token, uint256 _amount)
+    /// @dev `_amount` parameter is ignored since calldata is passed directly to the target contract
+    function withdraw(address _token, uint256)
         external
         creditFacadeOnly // U: [ZIR-1]
         supportedUnderlyingsOnly(_token) // U: [ZIR-1A]
@@ -134,9 +135,8 @@ contract ZircuitPoolAdapter is AbstractAdapter, IZircuitPoolAdapter {
         return _supportedUnderlyings.values();
     }
 
-    /// @notice Returns all adapter parameters serialized into a bytes array,
-    ///         as well as adapter type and version, to properly deserialize
-    function serialize() external view override returns (bytes memory serializedData) {
+    /// @notice Serialized adapter parameters
+    function serialize() external view returns (bytes memory serializedData) {
         address[] memory supportedUnderlyings = getSupportedUnderlyings();
         address[] memory supportedPhantomTokens = new address[](supportedUnderlyings.length);
 
@@ -166,8 +166,7 @@ contract ZircuitPoolAdapter is AbstractAdapter, IZircuitPoolAdapter {
                     _getMaskOrRevert(depositedToken);
 
                     tokenToPhantomToken[depositedToken] = token;
-                    _supportedUnderlyings.add(depositedToken);
-                    emit AddSupportedUnderlying(depositedToken, token);
+                    if (_supportedUnderlyings.add(depositedToken)) emit AddSupportedUnderlying(depositedToken, token);
                 }
             } catch {}
         }

@@ -4,7 +4,7 @@
 pragma solidity ^0.8.23;
 
 import {IAdapter} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IAdapter.sol";
-import {IPhantomTokenWithdrawer} from "../IPhantomToken.sol";
+import {IPhantomTokenWithdrawer} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IPhantomToken.sol";
 
 /// @title Convex V1 BaseRewardPool adapter interface
 interface IConvexV1BaseRewardPoolAdapter is IAdapter, IPhantomTokenWithdrawer {

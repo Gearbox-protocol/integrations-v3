@@ -29,7 +29,7 @@ contract UniswapV2AdapterUnitTest is AdapterUnitTestHelper {
     }
 
     /// @notice U:[UNI2-1]: Constructor works as expected
-    function test_U_UNI2_01_constructor_works_as_expected() public {
+    function test_U_UNI2_01_constructor_works_as_expected() public view {
         assertEq(adapter.creditManager(), address(creditManager), "Incorrect creditManager");
         assertEq(adapter.targetContract(), router, "Incorrect targetContract");
     }

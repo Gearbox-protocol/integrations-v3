@@ -150,9 +150,8 @@ contract ConvexV1BoosterAdapter is AbstractAdapter, IConvexV1BoosterAdapter {
         return _supportedPids.values();
     }
 
-    /// @notice Returns all adapter parameters serialized into a bytes array,
-    ///         as well as adapter type and version, to properly deserialize
-    function serialize() external view override returns (bytes memory serializedData) {
+    /// @notice Serialized adapter parameters
+    function serialize() external view returns (bytes memory serializedData) {
         uint256[] memory supportedPids = getSupportedPids();
         address[] memory supportedPhantomTokens = new address[](supportedPids.length);
 
@@ -198,8 +197,7 @@ contract ConvexV1BoosterAdapter is AbstractAdapter, IConvexV1BoosterAdapter {
                 pidToCurveToken[pid] = IConvexV1BaseRewardPoolAdapter(adapter).curveLPtoken();
                 pidToConvexToken[pid] = IConvexV1BaseRewardPoolAdapter(adapter).stakingToken();
 
-                _supportedPids.add(pid);
-                emit AddSupportedPid(pid);
+                if (_supportedPids.add(pid)) emit AddSupportedPid(pid);
             }
         }
     }

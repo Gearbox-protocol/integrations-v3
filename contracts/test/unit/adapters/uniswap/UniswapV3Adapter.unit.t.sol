@@ -32,7 +32,7 @@ contract UniswapV3AdapterUnitTest is AdapterUnitTestHelper, IUniswapV3AdapterTyp
     }
 
     /// @notice U:[UNI3-1]: Constructor works as expected
-    function test_U_UNI3_01_constructor_works_as_expected() public {
+    function test_U_UNI3_01_constructor_works_as_expected() public view {
         assertEq(adapter.creditManager(), address(creditManager), "Incorrect creditManager");
         assertEq(adapter.targetContract(), router, "Incorrect targetContract");
     }

@@ -47,7 +47,7 @@ contract ZapperBaseUnitTest is Test {
     }
 
     /// @notice U:[ZB-1]: Constructor works as expected
-    function test_U_ZB_01_constructor_works_as_expected() public {
+    function test_U_ZB_01_constructor_works_as_expected() public view {
         assertEq(zapper.pool(), address(pool), "Incorrect pool");
         assertEq(zapper.underlying(), address(underlying), "Incorrect underlying");
         assertEq(underlying.allowance(address(zapper), address(pool)), type(uint256).max, "Incorrect allowance");

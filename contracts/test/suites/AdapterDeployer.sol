@@ -89,9 +89,9 @@ contract AdapterDeployer is AdapterData, Test {
         return adapters;
     }
 
-    function deployAdapter(Contracts cnt) internal returns (address adapter) {
-        uint256 len = simpleAdapters.length;
-        address targetContract;
+    function deployAdapter(Contracts /* cnt */ ) internal view returns (address /* adapter */ ) {
+        // uint256 len = simpleAdapters.length;
+        // address targetContract;
 
         // for (uint256 i = 0; i < len; ++i) {
         //     if (cnt == simpleAdapters[i].targetContract) {

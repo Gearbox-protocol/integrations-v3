@@ -153,7 +153,7 @@ contract LiveTestHelper is IntegrationTestHelper {
         supportedContracts = new SupportedContracts(chainId);
 
         PriceFeedDeployer priceFeedDeployer =
-            new PriceFeedDeployer(chainId, address(acl), address(priceOracle), tokenTestSuite, supportedContracts);
+            new PriceFeedDeployer(chainId, address(acl), tokenTestSuite, supportedContracts);
 
         priceFeedDeployer.addPriceFeeds(address(priceOracle));
 

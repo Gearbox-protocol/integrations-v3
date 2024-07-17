@@ -4,7 +4,6 @@
 pragma solidity ^0.8.23;
 
 import {IAdapter} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IAdapter.sol";
-import {IStateSerializer} from "../interfaces/IStateSerializer.sol";
 import {ICreditManagerV3} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditManagerV3.sol";
 import {PoolV3} from "@gearbox-protocol/core-v3/contracts/pool/PoolV3.sol";
 import {CallerNotCreditFacadeException} from "@gearbox-protocol/core-v3/contracts/interfaces/IExceptions.sol";
@@ -13,7 +12,7 @@ import {SanityCheckTrait} from "@gearbox-protocol/core-v3/contracts/traits/Sanit
 
 /// @title Abstract adapter
 /// @dev Inheriting adapters MUST use provided internal functions to perform all operations with credit accounts
-abstract contract AbstractAdapter is IAdapter, IStateSerializer, ACLTrait, SanityCheckTrait {
+abstract contract AbstractAdapter is IAdapter, ACLTrait, SanityCheckTrait {
     /// @notice Credit manager the adapter is connected to
     address public immutable override creditManager;
 

@@ -467,9 +467,8 @@ contract BalancerV2VaultAdapter is AbstractAdapter, IBalancerV2VaultAdapter {
         return _supportedPoolIds.values();
     }
 
-    /// @notice Returns all adapter parameters serialized into a bytes array,
-    ///         as well as adapter type and version, to properly deserialize
-    function serialize() external view override returns (bytes memory serializedData) {
+    /// @notice Serialized adapter parameters
+    function serialize() external view returns (bytes memory serializedData) {
         bytes32[] memory supportedIDs = supportedPoolIds();
         PoolStatus[] memory supportedPoolStatus = new PoolStatus[](supportedIDs.length);
 
