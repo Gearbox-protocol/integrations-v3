@@ -1,30 +1,23 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Gearbox Protocol. Generalized leverage for DeFi protocols
 // (c) Gearbox Foundation, 2023.
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.23;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IERC4626} from "@openzeppelin/contracts/interfaces/IERC4626.sol";
 
 import {AbstractAdapter} from "../AbstractAdapter.sol";
-import {AdapterType} from "@gearbox-protocol/sdk-gov/contracts/AdapterType.sol";
 
 import {IERC4626Adapter} from "../../interfaces/erc4626/IERC4626Adapter.sol";
 
 /// @title ERC4626 Vault adapter
 /// @notice Implements logic allowing CAs to interact with any standard-compliant ERC4626 vault
 contract ERC4626Adapter is AbstractAdapter, IERC4626Adapter {
-    AdapterType public constant override _gearboxAdapterType = AdapterType.ERC4626_VAULT;
-    uint16 public constant override _gearboxAdapterVersion = 3_00;
+    bytes32 public constant override contractType = "AD_ERC4626_VAULT";
+    uint256 public constant override version = 3_10;
 
     /// @notice Address of the underlying asset of the vault
     address public immutable override asset;
-
-    /// @notice Mask of the underlying asset of the vault
-    uint256 public immutable override assetMask;
-
-    /// @notice Mask of the ERC4626 vault shares
-    uint256 public immutable override sharesMask;
 
     /// @notice Constructor
     /// @param _creditManager Credit manager address
@@ -33,8 +26,11 @@ contract ERC4626Adapter is AbstractAdapter, IERC4626Adapter {
         AbstractAdapter(_creditManager, _vault) // U:[TV-1]
     {
         asset = IERC4626(_vault).asset(); // U:[TV-1]
-        assetMask = _getMaskOrRevert(asset); // U:[TV-1]
-        sharesMask = _getMaskOrRevert(_vault); // U:[TV-1]
+
+        // We verify that the vault asset and shares are valid collaterals
+        // in the system before deployment
+        _getMaskOrRevert(asset); // U:[TV-1]
+        _getMaskOrRevert(_vault); // U:[TV-1]
     }
 
     /// @notice Deposits a specified amount of underlying asset from the credit account
@@ -44,10 +40,11 @@ contract ERC4626Adapter is AbstractAdapter, IERC4626Adapter {
         external
         override
         creditFacadeOnly // U:[TV-2]
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+        returns (bool)
     {
         address creditAccount = _creditAccount(); // U:[TV-3]
-        (tokensToEnable, tokensToDisable) = _deposit(creditAccount, assets, false); // U:[TV-3]
+        _deposit(creditAccount, assets); // U:[TV-3]
+        return false;
     }
 
     /// @notice Deposits the entire balance of underlying asset from the credit account, except the specified amount
@@ -56,25 +53,22 @@ contract ERC4626Adapter is AbstractAdapter, IERC4626Adapter {
         external
         override
         creditFacadeOnly // U:[TV-2]
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+        returns (bool)
     {
         address creditAccount = _creditAccount(); // U:[TV-4]
         uint256 balance = IERC20(asset).balanceOf(creditAccount); // U:[TV-4]
 
-        if (balance <= leftoverAmount) return (0, 0);
+        if (balance <= leftoverAmount) return false;
         unchecked {
             balance -= leftoverAmount; // U:[TV-4]
         }
-        (tokensToEnable, tokensToDisable) = _deposit(creditAccount, balance, leftoverAmount <= 1); // U:[TV-4]
+        _deposit(creditAccount, balance); // U:[TV-4]
+        return false;
     }
 
     /// @dev Implementation for the deposit function
-    function _deposit(address creditAccount, uint256 assets, bool disableTokenIn)
-        internal
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
-    {
-        (tokensToEnable, tokensToDisable) =
-            _executeDeposit(disableTokenIn, abi.encodeCall(IERC4626.deposit, (assets, creditAccount))); // U:[TV-3,4]
+    function _deposit(address creditAccount, uint256 assets) internal {
+        _executeSwapSafeApprove(asset, abi.encodeCall(IERC4626.deposit, (assets, creditAccount))); // U:[TV-3,4]
     }
 
     /// @notice Deposits an amount of asset required to mint exactly 'shares' of vault shares
@@ -84,11 +78,11 @@ contract ERC4626Adapter is AbstractAdapter, IERC4626Adapter {
         external
         override
         creditFacadeOnly // U:[TV-2]
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+        returns (bool)
     {
         address creditAccount = _creditAccount(); // U:[TV-5]
-        (tokensToEnable, tokensToDisable) =
-            _executeDeposit(false, abi.encodeCall(IERC4626.mint, (shares, creditAccount))); // U:[TV-5]
+        _executeSwapSafeApprove(asset, abi.encodeCall(IERC4626.mint, (shares, creditAccount))); // U:[TV-5]
+        return false;
     }
 
     /// @notice Burns an amount of shares required to get exactly `assets` of asset
@@ -98,11 +92,11 @@ contract ERC4626Adapter is AbstractAdapter, IERC4626Adapter {
         external
         override
         creditFacadeOnly // U:[TV-2]
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+        returns (bool)
     {
         address creditAccount = _creditAccount(); // U:[TV-6]
-        (tokensToEnable, tokensToDisable) =
-            _executeWithdrawal(false, abi.encodeCall(IERC4626.withdraw, (assets, creditAccount, creditAccount))); // U:[TV-6]
+        _execute(abi.encodeCall(IERC4626.withdraw, (assets, creditAccount, creditAccount))); // U:[TV-6]
+        return false;
     }
 
     /// @notice Burns a specified amount of shares from the credit account
@@ -112,10 +106,11 @@ contract ERC4626Adapter is AbstractAdapter, IERC4626Adapter {
         external
         override
         creditFacadeOnly // U:[TV-2]
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+        returns (bool)
     {
         address creditAccount = _creditAccount(); // U:[TV-7]
-        (tokensToEnable, tokensToDisable) = _redeem(creditAccount, shares, false); // U:[TV-7]
+        _redeem(creditAccount, shares); // U:[TV-7]
+        return false;
     }
 
     /// @notice Burns the entire balance of shares from the credit account, except the specified amount
@@ -124,49 +119,25 @@ contract ERC4626Adapter is AbstractAdapter, IERC4626Adapter {
         external
         override
         creditFacadeOnly // U:[TV-2]
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+        returns (bool)
     {
         address creditAccount = _creditAccount(); // U:[TV-8]
         uint256 balance = IERC20(targetContract).balanceOf(creditAccount); // U:[TV-8]
-        if (balance <= leftoverAmount) return (0, 0);
+        if (balance <= leftoverAmount) return false;
         unchecked {
             balance -= leftoverAmount; // U:[TV-8]
         }
-        (tokensToEnable, tokensToDisable) = _redeem(creditAccount, balance, leftoverAmount <= 1); // U:[TV-8]
+        _redeem(creditAccount, balance); // U:[TV-8]
+        return false;
     }
 
     /// @dev Implementation for the redeem function
-    function _redeem(address creditAccount, uint256 shares, bool disableTokenIn)
-        internal
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
-    {
-        (tokensToEnable, tokensToDisable) =
-            _executeWithdrawal(disableTokenIn, abi.encodeCall(IERC4626.redeem, (shares, creditAccount, creditAccount))); // U:[TV-7,8]
+    function _redeem(address creditAccount, uint256 shares) internal {
+        _execute(abi.encodeCall(IERC4626.redeem, (shares, creditAccount, creditAccount))); // U:[TV-7,8]
     }
 
-    /// @dev Implementation for deposit (asset => shares) actions execution
-    /// @dev All deposit-type actions follow the same structure, with only
-    ///      calldata and disabling the input token being different
-    function _executeDeposit(bool disableAsset, bytes memory callData)
-        internal
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
-    {
-        _approveToken(asset, type(uint256).max); // U:[TV-3,4,5]
-        _execute(callData); // U:[TV-3,4,5]
-        _approveToken(asset, 1); // U:[TV-3,4,5]
-        tokensToEnable = sharesMask;
-        tokensToDisable = disableAsset ? assetMask : 0;
-    }
-
-    /// @dev Implementation for withdrawal (shares => asset) actions execution
-    /// @dev All withdrawal-type actions follow the same structure, with only
-    ///      calldata and disabling the input token being different
-    function _executeWithdrawal(bool disableShares, bytes memory callData)
-        internal
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
-    {
-        _execute(callData); // U:[TV-6,7,8]
-        tokensToEnable = assetMask;
-        tokensToDisable = disableShares ? sharesMask : 0;
+    /// @notice Serialized adapter parameters
+    function serialize() external view returns (bytes memory serializedData) {
+        serializedData = abi.encode(creditManager, targetContract, asset);
     }
 }

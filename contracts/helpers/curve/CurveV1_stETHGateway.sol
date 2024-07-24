@@ -3,7 +3,7 @@
 // (c) Gearbox Foundation, 2023.
 pragma solidity ^0.8.10;
 
-import {IWETH} from "@gearbox-protocol/core-v2/contracts/interfaces/external/IWETH.sol";
+import {IWETH} from "@gearbox-protocol/core-v3/contracts/interfaces/external/IWETH.sol";
 import {N_COINS, ICurvePool2Assets} from "../../integrations/curve/ICurvePool_2.sol";
 import {ICurvePoolStETH} from "../../integrations/curve/ICurvePoolStETH.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -11,8 +11,9 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 
 // EXCEPTIONS
 import {
-    ZeroAddressException, NotImplementedException
-} from "@gearbox-protocol/core-v2/contracts/interfaces/IErrors.sol";
+    ZeroAddressException,
+    NotImplementedException
+} from "@gearbox-protocol/core-v3/contracts/interfaces/IExceptions.sol";
 
 /// @title CurveV1StETHPoolGateway
 /// @dev This is connector contract to connect creditAccounts and Curve stETH pool

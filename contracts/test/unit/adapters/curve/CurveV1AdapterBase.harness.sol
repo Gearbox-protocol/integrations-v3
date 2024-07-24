@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 // Gearbox Protocol. Generalized leverage for DeFi protocols
 // (c) Gearbox Foundation, 2023.
-pragma solidity ^0.8.17;
-
-import {AdapterType} from "@gearbox-protocol/sdk-gov/contracts/AdapterType.sol";
+pragma solidity ^0.8.23;
 
 import {CurveV1AdapterBase} from "../../../../adapters/curve/CurveV1_Base.sol";
 import {ICurvePool2Assets} from "../../../../integrations/curve/ICurvePool_2.sol";
@@ -15,10 +13,12 @@ contract CurveV1AdapterBaseHarness is CurveV1AdapterBase {
         CurveV1AdapterBase(_creditManager, _curvePool, _lp_token, _metapoolBase, _nCoins)
     {}
 
-    function _gearboxAdapterType() external view override returns (AdapterType) {
-        return nCoins == 2
-            ? AdapterType.CURVE_V1_2ASSETS
-            : (nCoins == 3 ? AdapterType.CURVE_V1_3ASSETS : AdapterType.CURVE_V1_4ASSETS);
+    function contractType() public view override returns (bytes32) {
+        return (
+            nCoins == 2
+                ? bytes32("AD_CURVE_V1_2ASSETS")
+                : (nCoins == 3 ? bytes32("AD_CURVE_V1_3ASSETS") : bytes32("AD_CURVE_V1_4ASSETS"))
+        );
     }
 
     function _getAddLiquidityOneCoinCallData(uint256 i, uint256 amount, uint256 minAmount)
@@ -70,5 +70,9 @@ contract CurveV1AdapterBaseHarness is CurveV1AdapterBase {
                 abi.encodeWithSignature("calc_token_amount(uint256[4])", amounts)
             );
         }
+    }
+
+    function serialize() external view returns (bytes memory serializedData) {
+        serializedData = abi.encode(creditManager, targetContract);
     }
 }

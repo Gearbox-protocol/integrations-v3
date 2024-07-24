@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 // Gearbox Protocol. Generalized leverage for DeFi protocols
 // (c) Gearbox Foundation, 2024.
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.23;
 
 import {IERC20Permit} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Permit.sol";
 
@@ -9,22 +9,19 @@ import {PoolV3} from "@gearbox-protocol/core-v3/contracts/pool/PoolV3.sol";
 import {Tokens} from "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
 
 import {IZapper} from "../../interfaces/zappers/IZapper.sol";
-import {IZapperRegister} from "../../interfaces/zappers/IZapperRegister.sol";
 
-import {DTokenDepositZapper} from "../../zappers/DTokenDepositZapper.sol";
-import {DTokenFarmingZapper} from "../../zappers/DTokenFarmingZapper.sol";
 import {UnderlyingDepositZapper} from "../../zappers/UnderlyingDepositZapper.sol";
 import {UnderlyingFarmingZapper} from "../../zappers/UnderlyingFarmingZapper.sol";
 import {WETHDepositZapper} from "../../zappers/WETHDepositZapper.sol";
 import {WETHFarmingZapper} from "../../zappers/WETHFarmingZapper.sol";
 import {WstETHDepositZapper} from "../../zappers/WstETHDepositZapper.sol";
 import {WstETHFarmingZapper} from "../../zappers/WstETHFarmingZapper.sol";
-import {ZapperRegister} from "../../zappers/ZapperRegister.sol";
 
+import {ZapperRegister} from "./ZapperRegister.sol";
 import {LiveTestHelper} from "./LiveTestHelper.sol";
 
 contract ZapperLiveTestHelper is LiveTestHelper {
-    IZapperRegister zapperRegister;
+    ZapperRegister zapperRegister;
     mapping(address => address) farmingPools;
     mapping(address => address) legacyPools;
 
@@ -45,10 +42,10 @@ contract ZapperLiveTestHelper is LiveTestHelper {
             // To test the ones that are not deployed yet, set `REDEPLOY_ZAPPERS` to `true`.
             bool redeployZappers = vm.envOr("REDEPLOY_ZAPPERS", false);
             if (redeployZappers) {
-                zapperRegister = new ZapperRegister(address(addressProvider));
+                zapperRegister = new ZapperRegister(address(addressProvider), address(addressProvider));
             } else {
                 uint256 version = vm.envOr("ATTACH_ZAPPER_REGISTER_VERSION", uint256(300));
-                zapperRegister = IZapperRegister(addressProvider.getAddressOrRevert("ZAPPER_REGISTER", version));
+                zapperRegister = ZapperRegister(addressProvider.getAddressOrRevert("ZAPPER_REGISTER", version));
             }
 
             // If `ATTACH_POOL` is specified, the tests are executed only for this pool's zappers.
@@ -72,7 +69,7 @@ contract ZapperLiveTestHelper is LiveTestHelper {
             // Deploy the system from scratch using given config.
             _setupCore();
             _attachState();
-            zapperRegister = new ZapperRegister(address(addressProvider));
+            zapperRegister = new ZapperRegister(address(addressProvider), address(addressProvider));
             _deployPool(getDeployConfig(vm.envString("LIVE_TEST_CONFIG")));
             _deployZappers(address(pool));
             _;
@@ -100,15 +97,6 @@ contract ZapperLiveTestHelper is LiveTestHelper {
         } catch {}
         if (farmingPool != address(0)) {
             zapperRegister.addZapper(address(new UnderlyingFarmingZapper(pool, farmingPool)));
-        }
-
-        // dToken zapper
-        address legacyPool = legacyPools[underlying];
-        if (legacyPool != address(0)) {
-            zapperRegister.addZapper(address(new DTokenDepositZapper(pool, legacyPool)));
-            if (farmingPool != address(0)) {
-                zapperRegister.addZapper(address(new DTokenFarmingZapper(pool, legacyPool, farmingPool)));
-            }
         }
 
         // WETH zapper

@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 // Gearbox Protocol. Generalized leverage for DeFi protocols
 // (c) Gearbox Foundation, 2023
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.23;
 
-import {MultiCall} from "@gearbox-protocol/core-v2/contracts/libraries/MultiCall.sol";
+import {MultiCall} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacadeV3.sol";
 
 import {ICurveV1Adapter} from "../../../interfaces/curve/ICurveV1Adapter.sol";
 import {ICurveV1_2AssetsAdapter} from "../../../interfaces/curve/ICurveV1_2AssetsAdapter.sol";

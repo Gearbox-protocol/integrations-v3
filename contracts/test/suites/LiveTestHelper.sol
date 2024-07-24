@@ -7,8 +7,8 @@ import {Pausable} from "@openzeppelin/contracts/security/Pausable.sol";
 
 import {ICreditManagerV3} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditManagerV3.sol";
 import {ICreditFacadeV3} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacadeV3.sol";
-import {IVersion} from "@gearbox-protocol/core-v2/contracts/interfaces/IVersion.sol";
-import {DegenNFTV2} from "@gearbox-protocol/core-v2/contracts/tokens/DegenNFTV2.sol";
+import {IVersion} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IVersion.sol";
+import {DegenNFTMock} from "@gearbox-protocol/core-v3/contracts/test/mocks/token/DegenNFTMock.sol";
 
 import {Tokens} from "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
 import {SupportedContracts, Contracts} from "@gearbox-protocol/sdk-gov/contracts/SupportedContracts.sol";
@@ -31,11 +31,13 @@ import {CONFIG_MAINNET_WETH_V3} from "../config/WETH_Mainnet_config.sol";
 import {CONFIG_MAINNET_GHO_V3} from "../config/GHO_Mainnet_config.sol";
 import {CONFIG_MAINNET_DAI_V3} from "../config/DAI_Mainnet_config.sol";
 import {CONFIG_MAINNET_USDT_V3} from "../config/USDT_Mainnet_config.sol";
+import {CONFIG_MAINNET_CRVUSD_V3} from "../config/CRVUSD_Mainnet_config.sol";
 
 import {CONFIG_OPTIMISM_USDC_V3} from "../config/USDC_Optimism_config.sol";
 import {CONFIG_OPTIMISM_WETH_V3} from "../config/WETH_Optimism_config.sol";
 
 import {CONFIG_ARBITRUM_USDC_V3} from "../config/USDC_Arbitrum_config.sol";
+import {CONFIG_ARBITRUM_USDCE_V3} from "../config/USDCE_Arbitrum_config.sol";
 import {CONFIG_ARBITRUM_WETH_V3} from "../config/WETH_Arbitrum_config.sol";
 
 import {CONFIG_MAINNET_USDC_TEST_V3} from "../config/TEST_USDC_Mainnet_config.sol";
@@ -45,6 +47,7 @@ import {IConvexV1BoosterAdapter} from "../../interfaces/convex/IConvexV1BoosterA
 import {BalancerV2VaultAdapter} from "../../adapters/balancer/BalancerV2VaultAdapter.sol";
 import {UniswapV2Adapter} from "../../adapters/uniswap/UniswapV2.sol";
 import {UniswapV3Adapter} from "../../adapters/uniswap/UniswapV3.sol";
+import {ZircuitPoolAdapter} from "../../adapters/zircuit/ZircuitPoolAdapter.sol";
 import {VelodromeV2RouterAdapter} from "../../adapters/velodrome/VelodromeV2RouterAdapter.sol";
 import {CamelotV3Adapter} from "../../adapters/camelot/CamelotV3Adapter.sol";
 import {PoolStatus} from "../../interfaces/balancer/IBalancerV2VaultAdapter.sol";
@@ -71,6 +74,8 @@ contract LiveTestHelper is IntegrationTestHelper {
         addDeployConfig(new CONFIG_MAINNET_GHO_V3());
         addDeployConfig(new CONFIG_MAINNET_DAI_V3());
         addDeployConfig(new CONFIG_MAINNET_USDT_V3());
+        addDeployConfig(new CONFIG_MAINNET_CRVUSD_V3());
+        addDeployConfig(new CONFIG_ARBITRUM_USDCE_V3());
     }
 
     SupportedContracts public supportedContracts;
@@ -148,7 +153,7 @@ contract LiveTestHelper is IntegrationTestHelper {
         supportedContracts = new SupportedContracts(chainId);
 
         PriceFeedDeployer priceFeedDeployer =
-            new PriceFeedDeployer(chainId, address(addressProvider), tokenTestSuite, supportedContracts);
+            new PriceFeedDeployer(chainId, address(acl), tokenTestSuite, supportedContracts);
 
         priceFeedDeployer.addPriceFeeds(address(priceOracle));
 
@@ -168,10 +173,10 @@ contract LiveTestHelper is IntegrationTestHelper {
             address degenNFT = ICreditFacadeV3(ICreditManagerV3(creditManagers[i]).creditFacade()).degenNFT();
 
             if (degenNFT != address(0)) {
-                address minter = DegenNFTV2(degenNFT).minter();
+                address minter = DegenNFTMock(degenNFT).minter();
 
                 vm.prank(minter);
-                DegenNFTV2(degenNFT).mint(USER, 1000);
+                DegenNFTMock(degenNFT).mint(USER, 1000);
             }
         }
     }
@@ -184,14 +189,23 @@ contract LiveTestHelper is IntegrationTestHelper {
 
         if (boosterAdapter != address(0)) {
             vm.prank(CONFIGURATOR);
-            IConvexV1BoosterAdapter(boosterAdapter).updateStakedPhantomTokensMap();
+            IConvexV1BoosterAdapter(boosterAdapter).updateSupportedPids();
         }
 
         boosterAdapter = getAdapter(creditManager, Contracts.AURA_BOOSTER);
 
         if (boosterAdapter != address(0)) {
             vm.prank(CONFIGURATOR);
-            IConvexV1BoosterAdapter(boosterAdapter).updateStakedPhantomTokensMap();
+            IConvexV1BoosterAdapter(boosterAdapter).updateSupportedPids();
+        }
+
+        // ZIRCUIT POOL
+
+        address zircuitAdapter = getAdapter(creditManager, Contracts.ZIRCUIT_POOL);
+
+        if (zircuitAdapter != address(0)) {
+            vm.prank(CONFIGURATOR);
+            ZircuitPoolAdapter(zircuitAdapter).updateSupportedUnderlyings();
         }
 
         // BALANCER VAULT
