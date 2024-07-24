@@ -83,6 +83,6 @@ abstract contract ERC20ZapperBase is ZapperBase, IERC20ZapperDeposits {
         bytes32 s
     ) external returns (uint256 tokenOutAmount) {
         _permitAllowed(tokenIn(), nonce, expiry, v, r, s);
-        tokenOutAmount = _deposit(tokenInAmount, receiver, false, referralCode);
+        tokenOutAmount = _deposit(tokenInAmount, receiver, true, referralCode);
     }
 }
