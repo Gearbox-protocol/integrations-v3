@@ -150,18 +150,23 @@ contract ConvexV1BoosterAdapter is AbstractAdapter, IConvexV1BoosterAdapter {
         return _supportedPids.values();
     }
 
+    struct Pool {
+        uint256 pid;
+        address curveToken;
+        address convexToken;
+        address phantomToken;
+    }
+
     /// @notice Serialized adapter parameters
     function serialize() external view returns (bytes memory serializedData) {
         uint256[] memory supportedPids = getSupportedPids();
-        address[] memory supportedPhantomTokens = new address[](supportedPids.length);
-
         uint256 len = supportedPids.length;
-
+        Pool[] memory supportedPools = new Pool[](len);
         for (uint256 i = 0; i < len; ++i) {
-            supportedPhantomTokens[i] = pidToPhantomToken[supportedPids[i]];
+            uint256 pid = supportedPids[i];
+            supportedPools[i] = Pool(pid, pidToCurveToken[pid], pidToConvexToken[pid], pidToPhantomToken[pid]);
         }
-
-        serializedData = abi.encode(creditManager, targetContract, supportedPids, supportedPhantomTokens);
+        serializedData = abi.encode(creditManager, targetContract, supportedPools);
     }
 
     // ------------- //
