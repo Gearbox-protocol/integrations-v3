@@ -249,7 +249,7 @@ contract ConvexV1BaseRewardPoolAdapter is AbstractAdapter, IConvexV1BaseRewardPo
         external
         override
         creditFacadeOnly // U:[CVX1R-3]
-        returns (bool enableSafePrices)
+        returns (bool)
     {
         address creditAccount = _creditAccount(); // U:[CVX1R-10]
 

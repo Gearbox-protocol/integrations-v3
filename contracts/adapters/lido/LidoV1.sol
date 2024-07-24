@@ -70,7 +70,9 @@ contract LidoV1Adapter is AbstractAdapter, ILidoV1Adapter {
 
         uint256 balance = IERC20(weth).balanceOf(creditAccount); // U:[LDO1-4]
         if (balance > leftoverAmount) {
-            _submit(balance - leftoverAmount);
+            unchecked {
+                _submit(balance - leftoverAmount);
+            }
         }
         return false;
     }

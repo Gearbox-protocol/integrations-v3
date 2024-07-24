@@ -162,9 +162,6 @@ contract ZircuitPoolAdapter is AbstractAdapter, IZircuitPoolAdapter {
             address token = cm.getTokenByMask(1 << i);
             try IPhantomToken(token).getPhantomTokenInfo() returns (address target, address depositedToken) {
                 if (target == targetContract) {
-                    _getMaskOrRevert(token);
-                    _getMaskOrRevert(depositedToken);
-
                     tokenToPhantomToken[depositedToken] = token;
                     if (_supportedUnderlyings.add(depositedToken)) emit AddSupportedUnderlying(depositedToken, token);
                 }
