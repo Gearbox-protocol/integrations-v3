@@ -6,6 +6,9 @@ pragma solidity ^0.8.23;
 import {ZapperBase} from "../../../zappers/ZapperBase.sol";
 
 contract ZapperBaseHarness is ZapperBase {
+    uint256 public constant override version = 3_10;
+    bytes32 public constant override contractType = "ZAP_HARNESS";
+
     event ConvertTokenInToUnderlying(uint256 tokenInAmount, uint256 assets);
     event ConvertUnderlyingToTokenIn(uint256 assets, uint256 tokenInAmount, address receiver);
     event ConvertSharesToTokenOut(uint256 shares, uint256 tokenOutAmount, address receiver);
