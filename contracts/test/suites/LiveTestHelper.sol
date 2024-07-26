@@ -246,6 +246,23 @@ contract LiveTestHelper is IntegrationTestHelper {
                 vm.prank(CONFIGURATOR);
                 UniswapV3Adapter(pancakeswapV3Adapter).setPoolStatusBatch(pools);
             }
+
+            for (uint256 i = 0; i < uniV3Pools.length; ++i) {
+                if (uniV3Pools[i].router != Contracts.VELODROME_CL_ROUTER) continue;
+                pools[i] = UniswapV3PoolStatus({
+                    token0: tokenTestSuite.addressOf(uniV3Pools[i].token0),
+                    token1: tokenTestSuite.addressOf(uniV3Pools[i].token1),
+                    fee: uniV3Pools[i].fee,
+                    allowed: true
+                });
+            }
+
+            address velodromeCLAdapter = getAdapter(creditManager, Contracts.VELODROME_CL_ROUTER);
+
+            if (velodromeCLAdapter != address(0)) {
+                vm.prank(CONFIGURATOR);
+                UniswapV3Adapter(velodromeCLAdapter).setPoolStatusBatch(pools);
+            }
         }
         // SIMPLE INTERFACE SWAPPERS
         GenericSwapPair[] memory genericPairs = creditManagerParams.genericSwapPairs;
