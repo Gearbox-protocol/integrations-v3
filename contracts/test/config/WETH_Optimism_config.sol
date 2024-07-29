@@ -35,12 +35,12 @@ contract CONFIG_OPTIMISM_WETH_V3 is IPoolV3DeployConfig {
         PoolV3DeployParams({withdrawalFee: 0, totalDebtLimit: 150_000_000_000_000_000_000_000});
 
     LinearIRMV3DeployParams _irm = LinearIRMV3DeployParams({
-        U_1: 70_00,
-        U_2: 90_00,
+        U_1: 7_000,
+        U_2: 9_000,
         R_base: 0,
-        R_slope1: 2_00,
-        R_slope2: 2_50,
-        R_slope3: 60_00,
+        R_slope1: 200,
+        R_slope2: 250,
+        R_slope3: 6_000,
         _isBorrowingMoreU2Forbidden: true
     });
 
@@ -50,15 +50,16 @@ contract CONFIG_OPTIMISM_WETH_V3 is IPoolV3DeployConfig {
     CreditManagerV3DeployParams[] _creditManagers;
 
     constructor() {
-        _gaugeRates.push(GaugeRate({token: Tokens.WBTC, minRate: 4, maxRate: 40_00}));
-        _gaugeRates.push(GaugeRate({token: Tokens.USDC_e, minRate: 4, maxRate: 12_00}));
-        _gaugeRates.push(GaugeRate({token: Tokens.OP, minRate: 4, maxRate: 40_00}));
-        _gaugeRates.push(GaugeRate({token: Tokens.WLD, minRate: 80, maxRate: 50_00}));
-        _gaugeRates.push(GaugeRate({token: Tokens.SNX, minRate: 80, maxRate: 50_00}));
-        _gaugeRates.push(GaugeRate({token: Tokens.yvUSDC_e, minRate: 5, maxRate: 27_00}));
-        _gaugeRates.push(GaugeRate({token: Tokens.yvWETH, minRate: 4, maxRate: 5_00}));
-        _gaugeRates.push(GaugeRate({token: Tokens.wstETH, minRate: 4, maxRate: 5_00}));
-        _gaugeRates.push(GaugeRate({token: Tokens.rETH, minRate: 4, maxRate: 5_00}));
+        _gaugeRates.push(GaugeRate({token: Tokens.WBTC, minRate: 4, maxRate: 4_000}));
+        _gaugeRates.push(GaugeRate({token: Tokens.USDC_e, minRate: 4, maxRate: 1_200}));
+        _gaugeRates.push(GaugeRate({token: Tokens.OP, minRate: 4, maxRate: 4_000}));
+        _gaugeRates.push(GaugeRate({token: Tokens.WLD, minRate: 80, maxRate: 5_000}));
+        _gaugeRates.push(GaugeRate({token: Tokens.SNX, minRate: 80, maxRate: 5_000}));
+        _gaugeRates.push(GaugeRate({token: Tokens.yvUSDC_e, minRate: 5, maxRate: 2_700}));
+        _gaugeRates.push(GaugeRate({token: Tokens.yvWETH, minRate: 4, maxRate: 500}));
+        _gaugeRates.push(GaugeRate({token: Tokens.wstETH, minRate: 4, maxRate: 500}));
+        _gaugeRates.push(GaugeRate({token: Tokens.rETH, minRate: 4, maxRate: 500}));
+        _gaugeRates.push(GaugeRate({token: Tokens.ezETH, minRate: 4, maxRate: 500}));
         _quotaLimits.push(PoolQuotaLimit({token: Tokens.WBTC, quotaIncreaseFee: 1, limit: 150_000_000_000_000_000_000}));
         _quotaLimits.push(
             PoolQuotaLimit({token: Tokens.USDC_e, quotaIncreaseFee: 1, limit: 1_000_000_000_000_000_000_000})
@@ -76,6 +77,9 @@ contract CONFIG_OPTIMISM_WETH_V3 is IPoolV3DeployConfig {
             PoolQuotaLimit({token: Tokens.wstETH, quotaIncreaseFee: 0, limit: 1_000_000_000_000_000_000_000})
         );
         _quotaLimits.push(PoolQuotaLimit({token: Tokens.rETH, quotaIncreaseFee: 0, limit: 500_000_000_000_000_000_000}));
+        _quotaLimits.push(
+            PoolQuotaLimit({token: Tokens.ezETH, quotaIncreaseFee: 0, limit: 500_000_000_000_000_000_000})
+        );
 
         {
             /// CREDIT_MANAGER_0
@@ -94,19 +98,21 @@ contract CONFIG_OPTIMISM_WETH_V3 is IPoolV3DeployConfig {
             cp.poolLimit = 700_000_000_000_000_000_000;
 
             CollateralTokenHuman[] storage cts = cp.collateralTokens;
-            cts.push(CollateralTokenHuman({token: Tokens.USDC_e, lt: 94_00}));
+            cts.push(CollateralTokenHuman({token: Tokens.USDC_e, lt: 9_400}));
 
-            cts.push(CollateralTokenHuman({token: Tokens.WBTC, lt: 94_00}));
+            cts.push(CollateralTokenHuman({token: Tokens.WBTC, lt: 9_400}));
 
-            cts.push(CollateralTokenHuman({token: Tokens.OP, lt: 90_00}));
+            cts.push(CollateralTokenHuman({token: Tokens.OP, lt: 9_000}));
 
-            cts.push(CollateralTokenHuman({token: Tokens.yvUSDC_e, lt: 94_00}));
+            cts.push(CollateralTokenHuman({token: Tokens.yvUSDC_e, lt: 9_400}));
 
-            cts.push(CollateralTokenHuman({token: Tokens.wstETH, lt: 94_00}));
+            cts.push(CollateralTokenHuman({token: Tokens.wstETH, lt: 9_400}));
 
-            cts.push(CollateralTokenHuman({token: Tokens.rETH, lt: 94_00}));
+            cts.push(CollateralTokenHuman({token: Tokens.rETH, lt: 9_400}));
 
-            cts.push(CollateralTokenHuman({token: Tokens.yvWETH, lt: 94_00}));
+            cts.push(CollateralTokenHuman({token: Tokens.ezETH, lt: 9_400}));
+
+            cts.push(CollateralTokenHuman({token: Tokens.yvWETH, lt: 9_400}));
             Contracts[] storage cs = cp.contracts;
             cs.push(Contracts.UNISWAP_V3_ROUTER);
             {
@@ -224,6 +230,18 @@ contract CONFIG_OPTIMISM_WETH_V3 is IPoolV3DeployConfig {
                     factory: 0xF1046053aa5682b4F9a81b5481394DA16BE5FF5a
                 })
             );
+            cs.push(Contracts.VELODROME_CL_ROUTER);
+            {
+                UniswapV3Pair[] storage uv3p = cp.uniswapV3Pairs;
+                uv3p.push(
+                    UniswapV3Pair({
+                        router: Contracts.VELODROME_CL_ROUTER,
+                        token0: Tokens.ezETH,
+                        token1: Tokens.wstETH,
+                        fee: 1
+                    })
+                );
+            }
             cs.push(Contracts.YEARN_USDC_E_VAULT);
             cs.push(Contracts.YEARN_WETH_VAULT);
         }
@@ -244,11 +262,11 @@ contract CONFIG_OPTIMISM_WETH_V3 is IPoolV3DeployConfig {
             cp.poolLimit = 350_000_000_000_000_000_000;
 
             CollateralTokenHuman[] storage cts = cp.collateralTokens;
-            cts.push(CollateralTokenHuman({token: Tokens.USDC_e, lt: 94_00}));
+            cts.push(CollateralTokenHuman({token: Tokens.USDC_e, lt: 9_400}));
 
-            cts.push(CollateralTokenHuman({token: Tokens.WLD, lt: 85_00}));
+            cts.push(CollateralTokenHuman({token: Tokens.WLD, lt: 8_500}));
 
-            cts.push(CollateralTokenHuman({token: Tokens.SNX, lt: 85_00}));
+            cts.push(CollateralTokenHuman({token: Tokens.SNX, lt: 8_500}));
             Contracts[] storage cs = cp.contracts;
             cs.push(Contracts.UNISWAP_V3_ROUTER);
             {
