@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 // Gearbox Protocol. Generalized leverage for DeFi protocols
-// (c) Gearbox Foundation, 2023.
+// (c) Gearbox Foundation, 2024.
 pragma solidity ^0.8.23;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -105,7 +105,7 @@ contract Live_UniswapV3EquivalenceTest is LiveTestHelper {
             ISwapRouter.ExactInputParams memory exactInputParams = ISwapRouter.ExactInputParams({
                 path: abi.encodePacked(
                     tokenTestSuite.addressOf(Tokens.WETH), uint24(500), tokenTestSuite.addressOf(Tokens.USDC)
-                    ),
+                ),
                 recipient: creditAccount,
                 deadline: block.timestamp + 3600,
                 amountIn: WAD,
@@ -118,7 +118,7 @@ contract Live_UniswapV3EquivalenceTest is LiveTestHelper {
                 .ExactDiffInputParams({
                 path: abi.encodePacked(
                     tokenTestSuite.addressOf(Tokens.WETH), uint24(500), tokenTestSuite.addressOf(Tokens.USDC)
-                    ),
+                ),
                 deadline: block.timestamp + 3600,
                 leftoverAmount: 10 * WAD,
                 rateMinRAY: 0
@@ -144,7 +144,7 @@ contract Live_UniswapV3EquivalenceTest is LiveTestHelper {
             ISwapRouter.ExactOutputParams memory exactOutputParams = ISwapRouter.ExactOutputParams({
                 path: abi.encodePacked(
                     tokenTestSuite.addressOf(Tokens.WETH), uint24(500), tokenTestSuite.addressOf(Tokens.USDC)
-                    ),
+                ),
                 recipient: creditAccount,
                 deadline: block.timestamp + 3600,
                 amountOut: 100 * 10 ** 6,
@@ -193,7 +193,7 @@ contract Live_UniswapV3EquivalenceTest is LiveTestHelper {
                 ISwapRouter.ExactInputParams({
                     path: abi.encodePacked(
                         tokenTestSuite.addressOf(Tokens.WETH), uint24(500), tokenTestSuite.addressOf(Tokens.USDC)
-                        ),
+                    ),
                     recipient: creditAccount,
                     deadline: block.timestamp + 3600,
                     amountIn: WAD,
@@ -207,7 +207,7 @@ contract Live_UniswapV3EquivalenceTest is LiveTestHelper {
                 ISwapRouter.ExactInputParams({
                     path: abi.encodePacked(
                         tokenTestSuite.addressOf(Tokens.WETH), uint24(500), tokenTestSuite.addressOf(Tokens.USDC)
-                        ),
+                    ),
                     recipient: creditAccount,
                     deadline: block.timestamp + 3600,
                     amountIn: balanceToSwap,
@@ -234,7 +234,7 @@ contract Live_UniswapV3EquivalenceTest is LiveTestHelper {
                 ISwapRouter.ExactOutputParams({
                     path: abi.encodePacked(
                         tokenTestSuite.addressOf(Tokens.WETH), uint24(500), tokenTestSuite.addressOf(Tokens.USDC)
-                        ),
+                    ),
                     recipient: creditAccount,
                     deadline: block.timestamp + 3600,
                     amountOut: 100 * 10 ** 6,

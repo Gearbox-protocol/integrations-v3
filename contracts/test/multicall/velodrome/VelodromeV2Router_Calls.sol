@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Gearbox Protocol. Generalized leverage for DeFi protocols
-// (c) Gearbox Foundation, 2023
+// (c) Gearbox Foundation, 2024
 pragma solidity ^0.8.23;
 
 import {MultiCall} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacadeV3.sol";
@@ -22,7 +22,7 @@ library VelodromeV2Router_Calls {
             target: address(c),
             callData: abi.encodeCall(
                 IVelodromeV2RouterAdapter.swapExactTokensForTokens, (amountIn, amountOutMin, routes, address(0), deadline)
-                )
+            )
         });
     }
 
@@ -37,7 +37,7 @@ library VelodromeV2Router_Calls {
             target: address(c),
             callData: abi.encodeCall(
                 IVelodromeV2RouterAdapter.swapDiffTokensForTokens, (leftoverAmount, rateMinRAY, routes, deadline)
-                )
+            )
         });
     }
 }
