@@ -84,6 +84,6 @@ interface IPendleRouterAdapter is IAdapter, IPendleRouterAdapterEvents, IPendleR
     /// @notice Changes the allowed status of several pairs
     function setPairStatusBatch(PendlePairStatus[] calldata pairs) external;
 
-    /// @notice List of all markets that were ever approved for swapping
-    function getKnownMarkets() external view returns (address[] memory);
+    /// @notice List of all pairs that are currently allowed in the adapter
+    function getAllowedPairs() external view returns (PendlePairStatus[] memory pairs);
 }

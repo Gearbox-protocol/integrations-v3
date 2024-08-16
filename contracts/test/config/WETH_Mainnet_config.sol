@@ -184,7 +184,7 @@ contract CONFIG_MAINNET_WETH_V3 is IPoolV3DeployConfig {
             Contracts[] storage cs = cp.contracts;
             cs.push(Contracts.UNISWAP_V2_ROUTER);
             {
-                GenericSwapPair[] storage gsp = cp.genericSwapPairs;
+                GenericSwapPair[] storage gsp = cp.adapterConfig.genericSwapPairs;
                 gsp.push(
                     GenericSwapPair({router: Contracts.UNISWAP_V2_ROUTER, token0: Tokens.WETH, token1: Tokens.USDT})
                 );
@@ -206,7 +206,7 @@ contract CONFIG_MAINNET_WETH_V3 is IPoolV3DeployConfig {
             }
             cs.push(Contracts.UNISWAP_V3_ROUTER);
             {
-                UniswapV3Pair[] storage uv3p = cp.uniswapV3Pairs;
+                UniswapV3Pair[] storage uv3p = cp.adapterConfig.uniswapV3Pairs;
                 uv3p.push(
                     UniswapV3Pair({
                         router: Contracts.UNISWAP_V3_ROUTER,
@@ -330,7 +330,7 @@ contract CONFIG_MAINNET_WETH_V3 is IPoolV3DeployConfig {
             }
             cs.push(Contracts.SUSHISWAP_ROUTER);
             {
-                GenericSwapPair[] storage gsp = cp.genericSwapPairs;
+                GenericSwapPair[] storage gsp = cp.adapterConfig.genericSwapPairs;
                 gsp.push(
                     GenericSwapPair({router: Contracts.SUSHISWAP_ROUTER, token0: Tokens.WBTC, token1: Tokens.WETH})
                 );
@@ -383,7 +383,7 @@ contract CONFIG_MAINNET_WETH_V3 is IPoolV3DeployConfig {
             Contracts[] storage cs = cp.contracts;
             cs.push(Contracts.UNISWAP_V2_ROUTER);
             {
-                GenericSwapPair[] storage gsp = cp.genericSwapPairs;
+                GenericSwapPair[] storage gsp = cp.adapterConfig.genericSwapPairs;
                 gsp.push(
                     GenericSwapPair({router: Contracts.UNISWAP_V2_ROUTER, token0: Tokens.WETH, token1: Tokens.USDT})
                 );
@@ -409,7 +409,7 @@ contract CONFIG_MAINNET_WETH_V3 is IPoolV3DeployConfig {
             }
             cs.push(Contracts.UNISWAP_V3_ROUTER);
             {
-                UniswapV3Pair[] storage uv3p = cp.uniswapV3Pairs;
+                UniswapV3Pair[] storage uv3p = cp.adapterConfig.uniswapV3Pairs;
                 uv3p.push(
                     UniswapV3Pair({
                         router: Contracts.UNISWAP_V3_ROUTER,
@@ -541,7 +541,7 @@ contract CONFIG_MAINNET_WETH_V3 is IPoolV3DeployConfig {
             }
             cs.push(Contracts.SUSHISWAP_ROUTER);
             {
-                GenericSwapPair[] storage gsp = cp.genericSwapPairs;
+                GenericSwapPair[] storage gsp = cp.adapterConfig.genericSwapPairs;
                 gsp.push(
                     GenericSwapPair({router: Contracts.SUSHISWAP_ROUTER, token0: Tokens.WETH, token1: Tokens.USDT})
                 );
@@ -596,7 +596,7 @@ contract CONFIG_MAINNET_WETH_V3 is IPoolV3DeployConfig {
             Contracts[] storage cs = cp.contracts;
             cs.push(Contracts.UNISWAP_V2_ROUTER);
             {
-                GenericSwapPair[] storage gsp = cp.genericSwapPairs;
+                GenericSwapPair[] storage gsp = cp.adapterConfig.genericSwapPairs;
                 gsp.push(
                     GenericSwapPair({router: Contracts.UNISWAP_V2_ROUTER, token0: Tokens.WETH, token1: Tokens.USDT})
                 );
@@ -621,7 +621,7 @@ contract CONFIG_MAINNET_WETH_V3 is IPoolV3DeployConfig {
             }
             cs.push(Contracts.UNISWAP_V3_ROUTER);
             {
-                UniswapV3Pair[] storage uv3p = cp.uniswapV3Pairs;
+                UniswapV3Pair[] storage uv3p = cp.adapterConfig.uniswapV3Pairs;
                 uv3p.push(
                     UniswapV3Pair({
                         router: Contracts.UNISWAP_V3_ROUTER,
@@ -777,7 +777,7 @@ contract CONFIG_MAINNET_WETH_V3 is IPoolV3DeployConfig {
             }
             cs.push(Contracts.SUSHISWAP_ROUTER);
             {
-                GenericSwapPair[] storage gsp = cp.genericSwapPairs;
+                GenericSwapPair[] storage gsp = cp.adapterConfig.genericSwapPairs;
                 gsp.push(
                     GenericSwapPair({router: Contracts.SUSHISWAP_ROUTER, token0: Tokens.WETH, token1: Tokens.USDT})
                 );
@@ -791,7 +791,7 @@ contract CONFIG_MAINNET_WETH_V3 is IPoolV3DeployConfig {
             }
             cs.push(Contracts.FRAXSWAP_ROUTER);
             {
-                GenericSwapPair[] storage gsp = cp.genericSwapPairs;
+                GenericSwapPair[] storage gsp = cp.adapterConfig.genericSwapPairs;
                 gsp.push(GenericSwapPair({router: Contracts.FRAXSWAP_ROUTER, token0: Tokens.FRAX, token1: Tokens.FXS}));
                 gsp.push(GenericSwapPair({router: Contracts.FRAXSWAP_ROUTER, token0: Tokens.FRAX, token1: Tokens.WETH}));
             }
@@ -867,7 +867,7 @@ contract CONFIG_MAINNET_WETH_V3 is IPoolV3DeployConfig {
             Contracts[] storage cs = cp.contracts;
             cs.push(Contracts.UNISWAP_V3_ROUTER);
             {
-                UniswapV3Pair[] storage uv3p = cp.uniswapV3Pairs;
+                UniswapV3Pair[] storage uv3p = cp.adapterConfig.uniswapV3Pairs;
                 uv3p.push(
                     UniswapV3Pair({
                         router: Contracts.UNISWAP_V3_ROUTER,
@@ -918,7 +918,7 @@ contract CONFIG_MAINNET_WETH_V3 is IPoolV3DeployConfig {
                 );
             }
             cs.push(Contracts.BALANCER_VAULT);
-            BalancerPool[] storage bp = cp.balancerPools;
+            BalancerPool[] storage bp = cp.adapterConfig.balancerPools;
 
             bp.push(
                 BalancerPool({poolId: 0x05ff47afada98a98982113758878f9a8b9fdda0a000000000000000000000645, status: 2})
@@ -992,7 +992,7 @@ contract CONFIG_MAINNET_WETH_V3 is IPoolV3DeployConfig {
             Contracts[] storage cs = cp.contracts;
             cs.push(Contracts.UNISWAP_V3_ROUTER);
             {
-                UniswapV3Pair[] storage uv3p = cp.uniswapV3Pairs;
+                UniswapV3Pair[] storage uv3p = cp.adapterConfig.uniswapV3Pairs;
                 uv3p.push(
                     UniswapV3Pair({
                         router: Contracts.UNISWAP_V3_ROUTER,
@@ -1028,7 +1028,7 @@ contract CONFIG_MAINNET_WETH_V3 is IPoolV3DeployConfig {
             }
             cs.push(Contracts.PANCAKESWAP_V3_ROUTER);
             {
-                UniswapV3Pair[] storage uv3p = cp.uniswapV3Pairs;
+                UniswapV3Pair[] storage uv3p = cp.adapterConfig.uniswapV3Pairs;
                 uv3p.push(
                     UniswapV3Pair({
                         router: Contracts.PANCAKESWAP_V3_ROUTER,
@@ -1039,7 +1039,7 @@ contract CONFIG_MAINNET_WETH_V3 is IPoolV3DeployConfig {
                 );
             }
             cs.push(Contracts.BALANCER_VAULT);
-            BalancerPool[] storage bp = cp.balancerPools;
+            BalancerPool[] storage bp = cp.adapterConfig.balancerPools;
 
             bp.push(
                 BalancerPool({poolId: 0x05ff47afada98a98982113758878f9a8b9fdda0a000000000000000000000645, status: 2})

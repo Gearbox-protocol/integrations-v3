@@ -130,7 +130,7 @@ contract CONFIG_ARBITRUM_WETH_V3 is IPoolV3DeployConfig {
             Contracts[] storage cs = cp.contracts;
             cs.push(Contracts.UNISWAP_V3_ROUTER);
             {
-                UniswapV3Pair[] storage uv3p = cp.uniswapV3Pairs;
+                UniswapV3Pair[] storage uv3p = cp.adapterConfig.uniswapV3Pairs;
                 uv3p.push(
                     UniswapV3Pair({
                         router: Contracts.UNISWAP_V3_ROUTER,
@@ -197,7 +197,7 @@ contract CONFIG_ARBITRUM_WETH_V3 is IPoolV3DeployConfig {
                 );
             }
             cs.push(Contracts.BALANCER_VAULT);
-            BalancerPool[] storage bp = cp.balancerPools;
+            BalancerPool[] storage bp = cp.adapterConfig.balancerPools;
 
             bp.push(
                 BalancerPool({poolId: 0x9791d590788598535278552eecd4b211bfc790cb000000000000000000000498, status: 2})
@@ -216,7 +216,7 @@ contract CONFIG_ARBITRUM_WETH_V3 is IPoolV3DeployConfig {
             );
             cs.push(Contracts.CAMELOT_V3_ROUTER);
             {
-                GenericSwapPair[] storage gsp = cp.genericSwapPairs;
+                GenericSwapPair[] storage gsp = cp.adapterConfig.genericSwapPairs;
                 gsp.push(
                     GenericSwapPair({router: Contracts.CAMELOT_V3_ROUTER, token0: Tokens.ezETH, token1: Tokens.WETH})
                 );
@@ -247,7 +247,7 @@ contract CONFIG_ARBITRUM_WETH_V3 is IPoolV3DeployConfig {
             Contracts[] storage cs = cp.contracts;
             cs.push(Contracts.UNISWAP_V3_ROUTER);
             {
-                UniswapV3Pair[] storage uv3p = cp.uniswapV3Pairs;
+                UniswapV3Pair[] storage uv3p = cp.adapterConfig.uniswapV3Pairs;
                 uv3p.push(
                     UniswapV3Pair({
                         router: Contracts.UNISWAP_V3_ROUTER,

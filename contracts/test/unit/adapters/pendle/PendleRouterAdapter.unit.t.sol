@@ -262,10 +262,13 @@ contract PendleRouterAdapterUnitTest is
             "Second pair status is incorrect"
         );
         assertEq(adapter.ptToMarket(pt), market, "Incorrect market for PT");
-        assertTrue(
-            adapter.getKnownMarkets().length > 0 && adapter.getKnownMarkets()[0] == market,
-            "Market not added to known markets"
-        );
+
+        PendlePairStatus[] memory allowedPairs = adapter.getAllowedPairs();
+        assertEq(allowedPairs.length, 1, "Incorrect number of allowed pairs");
+        assertEq(allowedPairs[0].market, market, "Incorrect market in allowed pairs");
+        assertEq(allowedPairs[0].inputToken, tokens[1], "Incorrect input token in allowed pairs");
+        assertEq(allowedPairs[0].pendleToken, pt, "Incorrect pendle token in allowed pairs");
+        assertEq(uint256(allowedPairs[0].status), uint256(PendleStatus.ALLOWED), "Incorrect status in allowed pairs");
     }
 
     // ------- //

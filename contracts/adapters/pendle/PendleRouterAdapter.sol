@@ -31,9 +31,9 @@ import {
 /// @title Pendle Router adapter
 /// @notice Implements logic for interacting with the Pendle Router (swapping to / from PT only)
 contract PendleRouterAdapter is AbstractAdapter, IPendleRouterAdapter {
-    using EnumerableSet for EnumerableSet.AddressSet;
+    using EnumerableSet for EnumerableSet.Bytes32Set;
 
-    AdapterType public constant override _gearboxAdapterType = AdapterType.MELLOW_LRT_VAULT;
+    AdapterType public constant override _gearboxAdapterType = AdapterType.PENDLE_ROUTER;
     uint16 public constant override _gearboxAdapterVersion = 3_00;
 
     /// @notice Mapping from (market, tokenIn, pendleToken) to whether swaps are allowed, and which directions
@@ -42,8 +42,11 @@ contract PendleRouterAdapter is AbstractAdapter, IPendleRouterAdapter {
     /// @notice Mapping from PT token to its canonical market
     mapping(address => address) public ptToMarket;
 
-    /// @notice Set of all markets known to the adapter
-    EnumerableSet.AddressSet internal _knownMarkets;
+    /// @dev Set of hashes of all allowed pairs
+    EnumerableSet.Bytes32Set internal _allowedPairHashes;
+
+    /// @dev Mapping from pendle pair hash to the pair data and status
+    mapping(bytes32 => PendlePairStatus) internal _hashToPendlePair;
 
     /// @notice Constructor
     /// @param _creditManager Credit manager address
@@ -234,8 +237,19 @@ contract PendleRouterAdapter is AbstractAdapter, IPendleRouterAdapter {
     // ------------- //
 
     /// @notice Return the list of all markets that were ever allowed in this adapter
-    function getKnownMarkets() external view override returns (address[] memory) {
-        return _knownMarkets.values();
+    function getAllowedPairs() external view override returns (PendlePairStatus[] memory pairs) {
+        bytes32[] memory allowedHashes = _allowedPairHashes.values();
+        uint256 len = allowedHashes.length;
+
+        pairs = new PendlePairStatus[](len);
+
+        for (uint256 i = 0; i < len;) {
+            pairs[i] = _hashToPendlePair[allowedHashes[i]];
+
+            unchecked {
+                ++i;
+            }
+        }
     }
 
     /// @notice Sets the allowed status of several (market, inputToken, pendleToken) tuples
@@ -246,7 +260,14 @@ contract PendleRouterAdapter is AbstractAdapter, IPendleRouterAdapter {
                 isPairAllowed[pairs[i].market][pairs[i].inputToken][pairs[i].pendleToken] = pairs[i].status;
                 (, address pt,) = IPendleMarket(pairs[i].market).readTokens();
                 ptToMarket[pt] = pairs[i].market;
-                _knownMarkets.add(pairs[i].market);
+                bytes32 pairHash = keccak256(abi.encode(pairs[i].market, pairs[i].inputToken, pairs[i].pendleToken));
+                if (pairs[i].status != PendleStatus.NOT_ALLOWED) {
+                    _allowedPairHashes.add(pairHash);
+                } else {
+                    _allowedPairHashes.remove(pairHash);
+                }
+                _hashToPendlePair[pairHash] = pairs[i];
+
                 emit SetPairStatus(pairs[i].market, pairs[i].inputToken, pairs[i].pendleToken, pairs[i].status);
             }
         }

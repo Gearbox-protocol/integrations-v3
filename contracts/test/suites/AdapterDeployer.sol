@@ -44,6 +44,9 @@ import {BalancerV2VaultAdapter} from "../../adapters/balancer/BalancerV2VaultAda
 import {VelodromeV2RouterAdapter} from "../../adapters/velodrome/VelodromeV2RouterAdapter.sol";
 import {CamelotV3Adapter} from "../../adapters/camelot/CamelotV3Adapter.sol";
 
+import {MellowVaultAdapter} from "../../adapters/mellow/MellowVaultAdapter.sol";
+import {PendleRouterAdapter} from "../../adapters/pendle/PendleRouterAdapter.sol";
+
 import {TokensTestSuite} from "@gearbox-protocol/core-v3/contracts/test/suites/TokensTestSuite.sol";
 import {Test} from "forge-std/Test.sol";
 
@@ -139,6 +142,10 @@ contract AdapterDeployer is AdapterData, Test {
                         adapter = address(new VelodromeV2RouterAdapter(address(creditManager), targetContract));
                     } else if (at == AdapterType.CAMELOT_V3_ROUTER) {
                         adapter = address(new CamelotV3Adapter(address(creditManager), targetContract));
+                    } else if (at == AdapterType.MELLOW_LRT_VAULT) {
+                        adapter = address(new MellowVaultAdapter(address(creditManager), targetContract));
+                    } else if (at == AdapterType.PENDLE_ROUTER) {
+                        adapter = address(new PendleRouterAdapter(address(creditManager), targetContract));
                     }
 
                     return adapter;

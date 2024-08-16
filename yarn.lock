@@ -1031,10 +1031,10 @@
   resolved "https://registry.yarnpkg.com/@gearbox-protocol/core-v2/-/core-v2-1.19.0-base.10.tgz#a21bce9eac4ca1783f5fcb4322b1c1257158d2de"
   integrity sha512-S9reS5zGt+cKxEdQppVCU0cZEmnSqx8DaoloY6KXqCsAedVJvwNUoCHnLjh9s/oWyOHa37qExN1QohntNQyB2Q==
 
-"@gearbox-protocol/core-v3@^1.49.7":
-  version "1.49.7"
-  resolved "https://registry.yarnpkg.com/@gearbox-protocol/core-v3/-/core-v3-1.49.7.tgz#2e1743355649733f53486063703f7160a61ef454"
-  integrity sha512-Ovl5FNv6eL8CdsvFcjABFELBij/uP8HpPnn8gCW/BxFPK4TRhufnIoOM4RjhmN4pA2AxYbwpXyXC51Jynv5Cxg==
+"@gearbox-protocol/core-v3@^1.50.0":
+  version "1.50.0"
+  resolved "https://registry.yarnpkg.com/@gearbox-protocol/core-v3/-/core-v3-1.50.0.tgz#1327ed3a265ccfd6da02bcef165d0d347247d19e"
+  integrity sha512-c7APqdL3lt9XswPUl1/Obr+VJp7pYOte6azQbXsEm2oRDvFQ3KYq++mvk2dG/9mdK/PVAM/USKlKcqSrKqOrmA==
 
 "@gearbox-protocol/eslint-config@^1.6.1":
   version "1.6.1"
@@ -1063,10 +1063,10 @@
   resolved "https://registry.yarnpkg.com/@gearbox-protocol/prettier-config/-/prettier-config-1.5.0.tgz#4df8e9fd2305fee6ab8c1417a02e31343836932a"
   integrity sha512-FUoprSsBdZyBjgxXCKL6mTkbeUJytaLzPJqIOoQpDmBRTX0seCc2o5I9PI9tySoRIlNnd/XXnKCXq1xHDEGbxw==
 
-"@gearbox-protocol/sdk-gov@^2.12.0":
-  version "2.12.0"
-  resolved "https://registry.yarnpkg.com/@gearbox-protocol/sdk-gov/-/sdk-gov-2.12.0.tgz#87a993bf7f18246f1dc406954cf981e1dc6a5c96"
-  integrity sha512-clFaZ/nrTdZD8H4tRMXbrnauTklaU+amYzet0HBj+0VX3xF15E3NBqlLwhfh69XXX55OcjWzLyWz508S359u5A==
+"@gearbox-protocol/sdk-gov@^2.16.0":
+  version "2.16.0"
+  resolved "https://registry.yarnpkg.com/@gearbox-protocol/sdk-gov/-/sdk-gov-2.16.0.tgz#5205df77137a71a410c0037f0bd3da53ef53b3a7"
+  integrity sha512-/Sf5OWYMUp7Nd9svM4ZgE1T2/Ralf0OTI7NV4M1O4CKxeLtoyEs6+PEamYGxaItxlwt6Oo3NPej+99KTn3GzyA==
   dependencies:
     ethers "6.12.1"
     humanize-duration-ts "^2.1.1"
