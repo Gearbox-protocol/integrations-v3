@@ -6,6 +6,7 @@ pragma solidity ^0.8.17;
 import {
     IPendleRouter,
     IPendleMarket,
+    IYToken,
     SwapData,
     SwapType,
     TokenInput,
@@ -36,6 +37,7 @@ contract PendleRouterAdapterUnitTest is
     address pendleRouter;
     address market;
     address pt;
+    address yt;
 
     function setUp() public {
         _setUp();
@@ -43,10 +45,12 @@ contract PendleRouterAdapterUnitTest is
         pendleRouter = makeAddr("PENDLE_ROUTER");
         market = makeAddr("PENDLE_MARKET");
         pt = tokens[1];
+        yt = makeAddr("YT_TOKEN");
 
         adapter = new PendleRouterAdapter(address(creditManager), pendleRouter);
 
         vm.mockCall(market, abi.encodeCall(IPendleMarket.readTokens, ()), abi.encode(address(0), pt, address(0)));
+        vm.mockCall(yt, abi.encodeCall(IYToken.PT, ()), abi.encode(pt));
 
         _setPairStatus(market, tokens[0], pt, PendleStatus.ALLOWED);
     }
@@ -77,6 +81,12 @@ contract PendleRouterAdapterUnitTest is
 
         _revertsOnNonFacadeCaller();
         adapter.swapDiffPtForToken(market, 0, TokenDiffOutput(address(0), 0));
+
+        _revertsOnNonFacadeCaller();
+        adapter.redeemPyToToken(address(0), yt, 0, output);
+
+        _revertsOnNonFacadeCaller();
+        adapter.redeemDiffPyToToken(yt, 0, TokenDiffOutput(address(0), 0));
     }
 
     /// @notice U:[PEND-3]: `swapExactTokenForPt` works as expected
@@ -231,8 +241,89 @@ contract PendleRouterAdapterUnitTest is
         assertEq(tokensToDisable, diffDisableTokenIn ? 2 : 0, "Incorrect tokensToDisable");
     }
 
-    /// @notice U:[PEND-7]: `setPairStatusBatch` works as expected
-    function test_U_PEND_07_setPairStatusBatch_works_as_expected() public {
+    /// @notice U:[PEND-7]: `redeemPyToToken` works as expected
+    function test_U_PEND_07_redeemPyToToken_works_as_expected() public {
+        TokenOutput memory output;
+        output.tokenOut = tokens[0];
+        output.minTokenOut = 90;
+        output.tokenRedeemSy = tokens[0];
+
+        vm.mockCall(yt, abi.encodeCall(IYToken.expiry, ()), abi.encode(block.timestamp - 1));
+        _setPairStatus(market, tokens[0], pt, PendleStatus.NOT_ALLOWED);
+
+        vm.expectRevert(RedemptionNotAllowedException.selector);
+        vm.prank(creditFacade);
+        adapter.redeemPyToToken(address(0), yt, 100, output);
+
+        _setPairStatus(market, tokens[0], pt, PendleStatus.ALLOWED);
+        vm.mockCall(yt, abi.encodeCall(IYToken.expiry, ()), abi.encode(block.timestamp + 1));
+
+        vm.expectRevert(RedemptionNotAllowedException.selector);
+        vm.prank(creditFacade);
+        adapter.redeemPyToToken(address(0), yt, 100, output);
+
+        vm.mockCall(yt, abi.encodeCall(IYToken.expiry, ()), abi.encode(block.timestamp - 1));
+
+        _readsActiveAccount();
+        _executesSwap({
+            tokenIn: pt,
+            tokenOut: tokens[0],
+            callData: abi.encodeCall(IPendleRouter.redeemPyToToken, (creditAccount, yt, 100, output)),
+            requiresApproval: true,
+            validatesTokens: true
+        });
+
+        vm.prank(creditFacade);
+        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.redeemPyToToken(address(0), yt, 100, output);
+
+        assertEq(tokensToEnable, 1, "Incorrect tokensToEnable");
+        assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
+    }
+
+    /// @notice U:[PEND-8]: `redeemDiffPyToToken` works as expected
+    function test_U_PEND_08_redeemDiffPyToToken_works_as_expected() public diffTestCases {
+        deal({token: pt, to: creditAccount, give: diffMintedAmount});
+
+        vm.mockCall(yt, abi.encodeCall(IYToken.expiry, ()), abi.encode(block.timestamp - 1));
+        _setPairStatus(market, tokens[0], pt, PendleStatus.NOT_ALLOWED);
+
+        vm.expectRevert(RedemptionNotAllowedException.selector);
+        vm.prank(creditFacade);
+        adapter.redeemDiffPyToToken(yt, diffLeftoverAmount, TokenDiffOutput(tokens[0], 0.5e27));
+
+        _setPairStatus(market, tokens[0], pt, PendleStatus.ALLOWED);
+        vm.mockCall(yt, abi.encodeCall(IYToken.expiry, ()), abi.encode(block.timestamp + 1));
+
+        vm.expectRevert(RedemptionNotAllowedException.selector);
+        vm.prank(creditFacade);
+        adapter.redeemDiffPyToToken(yt, diffLeftoverAmount, TokenDiffOutput(tokens[0], 0.5e27));
+
+        vm.mockCall(yt, abi.encodeCall(IYToken.expiry, ()), abi.encode(block.timestamp - 1));
+
+        TokenOutput memory output;
+        output.tokenOut = tokens[0];
+        output.minTokenOut = diffInputAmount / 2;
+        output.tokenRedeemSy = tokens[0];
+
+        _readsActiveAccount();
+        _executesSwap({
+            tokenIn: pt,
+            tokenOut: tokens[0],
+            callData: abi.encodeCall(IPendleRouter.redeemPyToToken, (creditAccount, yt, diffInputAmount, output)),
+            requiresApproval: true,
+            validatesTokens: true
+        });
+
+        vm.prank(creditFacade);
+        (uint256 tokensToEnable, uint256 tokensToDisable) =
+            adapter.redeemDiffPyToToken(yt, diffLeftoverAmount, TokenDiffOutput(tokens[0], 0.5e27));
+
+        assertEq(tokensToEnable, 1, "Incorrect tokensToEnable");
+        assertEq(tokensToDisable, diffDisableTokenIn ? 2 : 0, "Incorrect tokensToDisable");
+    }
+
+    /// @notice U:[PEND-9]: `setPairStatusBatch` works as expected
+    function test_U_PEND_09_setPairStatusBatch_works_as_expected() public {
         PendlePairStatus[] memory pairs;
 
         _revertsOnNonConfiguratorCaller();
@@ -262,6 +353,8 @@ contract PendleRouterAdapterUnitTest is
             "Second pair status is incorrect"
         );
         assertEq(adapter.ptToMarket(pt), market, "Incorrect market for PT");
+        assertEq(adapter.isRedemptionAllowed(tokens[0], pt), false, "Incorrect redemption status for first pair");
+        assertEq(adapter.isRedemptionAllowed(tokens[1], pt), true, "Incorrect redemption status for second pair");
 
         PendlePairStatus[] memory allowedPairs = adapter.getAllowedPairs();
         assertEq(allowedPairs.length, 1, "Incorrect number of allowed pairs");

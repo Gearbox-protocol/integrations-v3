@@ -11,6 +11,8 @@ import {AdapterType} from "@gearbox-protocol/sdk-gov/contracts/AdapterType.sol";
 import {
     IPendleRouter,
     IPendleMarket,
+    IPToken,
+    IYToken,
     SwapData,
     SwapType,
     TokenInput,
@@ -45,11 +47,13 @@ contract Live_PendleRouterAdapterTest is LiveTestHelper {
 
     BalanceComparator comparator;
 
-    string[4] stages = [
+    string[6] stages = [
         "after_swapExactTokenForPt",
         "after_swapDiffTokenForPt",
         "after_swapExactPtForToken",
-        "after_swapDiffPtForToken"
+        "after_swapDiffPtForToken",
+        "after_redeemPyToToken",
+        "after_redeemDiffPyToToken"
     ];
 
     string[] _stages;
@@ -151,6 +155,19 @@ contract Live_PendleRouterAdapterTest is LiveTestHelper {
                 creditAccount, MultiCallBuilder.build(router.swapDiffPtForToken(pair.market, 10 * baseUnit, diffOutput))
             );
             comparator.takeSnapshot("after_swapDiffPtForToken", creditAccount);
+
+            address yt = IPToken(pair.pendleToken).YT();
+            vm.warp(IYToken(yt).expiry() + 1); // Move time forward to ensure expiry
+
+            creditFacade.multicall(
+                creditAccount, MultiCallBuilder.build(router.redeemPyToToken(creditAccount, yt, 3 * baseUnit, output))
+            );
+            comparator.takeSnapshot("after_redeemPyToToken", creditAccount);
+
+            creditFacade.multicall(
+                creditAccount, MultiCallBuilder.build(router.redeemDiffPyToToken(yt, 3 * baseUnit, diffOutput))
+            );
+            comparator.takeSnapshot("after_redeemDiffPyToToken", creditAccount);
         } else {
             IPendleRouter router = IPendleRouter(routerAddress);
 
@@ -212,6 +229,17 @@ contract Live_PendleRouterAdapterTest is LiveTestHelper {
             uint256 leftoverPt = 10 * baseUnit;
             router.swapExactPtForToken(creditAccount, pair.market, ptBalance - leftoverPt, output, lod);
             comparator.takeSnapshot("after_swapDiffPtForToken", creditAccount);
+
+            address yt = IPToken(pair.pendleToken).YT();
+            vm.warp(IYToken(yt).expiry() + 1); // Move time forward to ensure expiry
+
+            router.redeemPyToToken(creditAccount, yt, 3 * baseUnit, output);
+            comparator.takeSnapshot("after_redeemPyToToken", creditAccount);
+
+            ptBalance = IERC20(pair.pendleToken).balanceOf(creditAccount);
+            leftoverPt = 3 * baseUnit;
+            router.redeemPyToToken(creditAccount, yt, ptBalance - leftoverPt, output);
+            comparator.takeSnapshot("after_redeemDiffPyToToken", creditAccount);
         }
 
         vm.stopPrank();

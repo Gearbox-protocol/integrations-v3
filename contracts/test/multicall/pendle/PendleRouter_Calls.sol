@@ -70,4 +70,29 @@ library PendleRouter_Calls {
             callData: abi.encodeCall(IPendleRouterAdapter.swapDiffPtForToken, (market, leftoverPt, diffOutput))
         });
     }
+
+    function redeemPyToToken(
+        PendleRouter_Multicaller c,
+        address receiver,
+        address yt,
+        uint256 netPyIn,
+        TokenOutput memory output
+    ) internal pure returns (MultiCall memory) {
+        return MultiCall({
+            target: address(c),
+            callData: abi.encodeCall(IPendleRouterAdapter.redeemPyToToken, (receiver, yt, netPyIn, output))
+        });
+    }
+
+    function redeemDiffPyToToken(
+        PendleRouter_Multicaller c,
+        address yt,
+        uint256 leftoverPt,
+        TokenDiffOutput memory diffOutput
+    ) internal pure returns (MultiCall memory) {
+        return MultiCall({
+            target: address(c),
+            callData: abi.encodeCall(IPendleRouterAdapter.redeemDiffPyToToken, (yt, leftoverPt, diffOutput))
+        });
+    }
 }

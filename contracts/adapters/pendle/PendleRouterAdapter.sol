@@ -20,6 +20,7 @@ import {
 import {
     IPendleRouter,
     IPendleMarket,
+    IYToken,
     SwapData,
     SwapType,
     TokenInput,
@@ -38,6 +39,9 @@ contract PendleRouterAdapter is AbstractAdapter, IPendleRouterAdapter {
 
     /// @notice Mapping from (market, tokenIn, pendleToken) to whether swaps are allowed, and which directions
     mapping(address => mapping(address => mapping(address => PendleStatus))) public isPairAllowed;
+
+    /// @notice Mapping from (tokenOut, pendleToken) to whether redemption after expiry is allowed
+    mapping(address => mapping(address => bool)) public isRedemptionAllowed;
 
     /// @notice Mapping from PT token to its canonical market
     mapping(address => address) public ptToMarket;
@@ -194,7 +198,7 @@ contract PendleRouterAdapter is AbstractAdapter, IPendleRouterAdapter {
     /// @notice Swaps the entire balance of PT into input token, except the specified amount
     /// @param market Address of the market to swap in
     /// @param leftoverPt Amount of PT to leave on the Credit Account
-    /// @param diffOutput Input token parameters
+    /// @param diffOutput Output token parameters:
     ///        * `tokenOut` - token to swap PT into
     ///        * `minRateRAY` - minimal exchange rate of PT into the output token
     function swapDiffPtForToken(address market, uint256 leftoverPt, TokenDiffOutput calldata diffOutput)
@@ -232,6 +236,93 @@ contract PendleRouterAdapter is AbstractAdapter, IPendleRouterAdapter {
         );
     }
 
+    /// @notice Redeems a specified amount of PT tokens into underlying after expiry
+    /// @param yt YT token associated to PT
+    /// @param netPyIn Amount of PT token to redeem
+    /// @param output Output token params:
+    ///        * `tokenOut` - token to swap PT into
+    ///        * `minTokenOut` - the minimal amount of token to receive
+    ///        * `tokenRedeemSy` - token received after redeeming SY. Since the adapter does not use PendleRouter's external routing features,
+    ///                            this is always enforced to be equal to `tokenOut`
+    ///        * `pendleSwap` - address of the swap aggregator. Since the adapter does not use PendleRouter's external routing features,
+    ///                         this is always enforced to be `address(0)`.
+    ///        * `swapData` - off-chain data for external routing. Since the adapter does not use PendleRouter's external routing features,
+    ///                            this is always enforced to be an empty struct
+    /// @notice `receiver` is ignored, since the recipient is always the Credit Account
+    /// @notice Before expiry PT redemption also spends a corresponding amount of YT. To avoid the CA interacting
+    ///         with potentially non-collateral YT tokens, this function is only executable after expiry
+    function redeemPyToToken(address, address yt, uint256 netPyIn, TokenOutput calldata output)
+        external
+        creditFacadeOnly
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+    {
+        address pt = IYToken(yt).PT();
+
+        if (!isRedemptionAllowed[output.tokenOut][pt] || IYToken(yt).expiry() > block.timestamp) {
+            revert RedemptionNotAllowedException();
+        }
+
+        address creditAccount = _creditAccount();
+
+        TokenOutput memory output_m;
+
+        {
+            output_m.tokenOut = output.tokenOut;
+            output_m.tokenRedeemSy = output.tokenOut;
+            output_m.minTokenOut = output.minTokenOut;
+        }
+
+        (tokensToEnable, tokensToDisable,) = _executeSwapSafeApprove(
+            pt,
+            output_m.tokenOut,
+            abi.encodeCall(IPendleRouter.redeemPyToToken, (creditAccount, yt, netPyIn, output_m)),
+            false
+        );
+    }
+    /// @notice Redeems the entire balance of PT token into underlying after expiry, except the specified amount
+    /// @param yt YT token associated to PT
+    /// @param leftoverPt Amount of PT to keep on the account
+    /// @param diffOutput Output token parameters:
+    ///        * `tokenOut` - token to swap PT into
+    ///        * `minRateRAY` - minimal exchange rate of PT into the output token
+    /// @notice Before expiry PT redemption also spends a corresponding amount of YT. To avoid the CA interacting
+    ///         with potentially non-collateral YT tokens, this function is only executable after expiry
+
+    function redeemDiffPyToToken(address yt, uint256 leftoverPt, TokenDiffOutput calldata diffOutput)
+        external
+        creditFacadeOnly
+        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+    {
+        address pt = IYToken(yt).PT();
+
+        if (!isRedemptionAllowed[diffOutput.tokenOut][pt] || IYToken(yt).expiry() > block.timestamp) {
+            revert RedemptionNotAllowedException();
+        }
+
+        address creditAccount = _creditAccount();
+
+        uint256 amount = IERC20(pt).balanceOf(creditAccount);
+        if (amount <= leftoverPt) return (0, 0);
+
+        unchecked {
+            amount -= leftoverPt;
+        }
+
+        TokenOutput memory output;
+        output.tokenOut = diffOutput.tokenOut;
+        output.minTokenOut = amount * diffOutput.minRateRAY / RAY;
+        output.tokenRedeemSy = diffOutput.tokenOut;
+
+        LimitOrderData memory limit;
+
+        (tokensToEnable, tokensToDisable,) = _executeSwapSafeApprove(
+            pt,
+            diffOutput.tokenOut,
+            abi.encodeCall(IPendleRouter.redeemPyToToken, (creditAccount, yt, amount, output)),
+            leftoverPt <= 1
+        );
+    }
+
     // ------------- //
     // CONFIGURATION //
     // ------------- //
@@ -263,8 +354,10 @@ contract PendleRouterAdapter is AbstractAdapter, IPendleRouterAdapter {
                 bytes32 pairHash = keccak256(abi.encode(pairs[i].market, pairs[i].inputToken, pairs[i].pendleToken));
                 if (pairs[i].status != PendleStatus.NOT_ALLOWED) {
                     _allowedPairHashes.add(pairHash);
+                    isRedemptionAllowed[pairs[i].inputToken][pairs[i].pendleToken] = true;
                 } else {
                     _allowedPairHashes.remove(pairHash);
+                    isRedemptionAllowed[pairs[i].inputToken][pairs[i].pendleToken] = false;
                 }
                 _hashToPendlePair[pairHash] = pairs[i];
 

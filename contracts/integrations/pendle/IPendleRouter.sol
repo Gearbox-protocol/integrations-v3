@@ -96,8 +96,22 @@ interface IPendleRouter {
         TokenOutput calldata output,
         LimitOrderData calldata limit
     ) external returns (uint256 netTokenOut, uint256 netSyFee, uint256 netSyInterm);
+
+    function redeemPyToToken(address receiver, address YT, uint256 netPyIn, TokenOutput calldata output)
+        external
+        returns (uint256 netTokenOut, uint256 netSyInterm);
 }
 
 interface IPendleMarket {
     function readTokens() external view returns (address sy, address pt, address yt);
+}
+
+interface IYToken {
+    function PT() external view returns (address);
+
+    function expiry() external view returns (uint256);
+}
+
+interface IPToken {
+    function YT() external view returns (address);
 }

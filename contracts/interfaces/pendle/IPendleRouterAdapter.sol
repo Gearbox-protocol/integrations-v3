@@ -39,6 +39,9 @@ interface IPendleRouterAdapterEvents {
 interface IPendleRouterAdapterExceptions {
     /// @notice Thrown when a pair is not allowed for swapping (direction-sensitive)
     error PairNotAllowedException();
+
+    /// @notice Thrown when a pair is not allowed for PT to token redemption after expiry
+    error RedemptionNotAllowedException();
 }
 
 /// @title PendleRouter adapter interface
@@ -68,6 +71,14 @@ interface IPendleRouterAdapter is IAdapter, IPendleRouterAdapterEvents, IPendleR
     ) external returns (uint256 tokensToEnable, uint256 tokensToDisable);
 
     function swapDiffPtForToken(address market, uint256 leftoverPt, TokenDiffOutput calldata diffOutput)
+        external
+        returns (uint256 tokensToEnable, uint256 tokensToDisable);
+
+    function redeemPyToToken(address receiver, address yt, uint256 netPyIn, TokenOutput calldata output)
+        external
+        returns (uint256 tokensToEnable, uint256 tokensToDisable);
+
+    function redeemDiffPyToToken(address yt, uint256 leftoverPt, TokenDiffOutput calldata output)
         external
         returns (uint256 tokensToEnable, uint256 tokensToDisable);
 
