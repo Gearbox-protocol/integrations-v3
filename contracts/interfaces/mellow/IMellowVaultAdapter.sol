@@ -18,6 +18,12 @@ interface IMellowVaultAdapterEvents {
 interface IMellowVaultAdapterExceptions {
     /// @notice Thrown when an unsupported asset is passed as the deposited underlying
     error UnderlyingNotAllowedException(address asset);
+
+    /// @notice Thrown when attempting to pass an asset that is not an underlying
+    error UnderlyingNotFoundException(address asset);
+
+    /// @notice Thrown when attempting to pass an amounts array with length mismatched to underlyings
+    error IncorrectArrayLengthException();
 }
 
 /// @title Mellow Vault adapter interface

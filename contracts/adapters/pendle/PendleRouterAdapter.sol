@@ -21,6 +21,7 @@ import {
     IPendleRouter,
     IPendleMarket,
     IYToken,
+    IPToken,
     SwapData,
     SwapType,
     TokenInput,
@@ -37,7 +38,7 @@ contract PendleRouterAdapter is AbstractAdapter, IPendleRouterAdapter {
     AdapterType public constant override _gearboxAdapterType = AdapterType.PENDLE_ROUTER;
     uint16 public constant override _gearboxAdapterVersion = 3_00;
 
-    /// @notice Mapping from (market, tokenIn, pendleToken) to whether swaps are allowed, and which directions
+    /// @notice Mapping from (market, inputToken, pendleToken) to whether swaps are allowed, and which directions
     mapping(address => mapping(address => mapping(address => PendleStatus))) public isPairAllowed;
 
     /// @notice Mapping from (tokenOut, pendleToken) to whether redemption after expiry is allowed
@@ -258,7 +259,10 @@ contract PendleRouterAdapter is AbstractAdapter, IPendleRouterAdapter {
     {
         address pt = IYToken(yt).PT();
 
-        if (!isRedemptionAllowed[output.tokenOut][pt] || IYToken(yt).expiry() > block.timestamp) {
+        if (
+            IPToken(pt).YT() != yt || !isRedemptionAllowed[output.tokenOut][pt]
+                || IYToken(yt).expiry() > block.timestamp
+        ) {
             revert RedemptionNotAllowedException();
         }
 
@@ -295,7 +299,10 @@ contract PendleRouterAdapter is AbstractAdapter, IPendleRouterAdapter {
     {
         address pt = IYToken(yt).PT();
 
-        if (!isRedemptionAllowed[diffOutput.tokenOut][pt] || IYToken(yt).expiry() > block.timestamp) {
+        if (
+            IPToken(pt).YT() != yt || !isRedemptionAllowed[diffOutput.tokenOut][pt]
+                || IYToken(yt).expiry() > block.timestamp
+        ) {
             revert RedemptionNotAllowedException();
         }
 
@@ -312,8 +319,6 @@ contract PendleRouterAdapter is AbstractAdapter, IPendleRouterAdapter {
         output.tokenOut = diffOutput.tokenOut;
         output.minTokenOut = amount * diffOutput.minRateRAY / RAY;
         output.tokenRedeemSy = diffOutput.tokenOut;
-
-        LimitOrderData memory limit;
 
         (tokensToEnable, tokensToDisable,) = _executeSwapSafeApprove(
             pt,

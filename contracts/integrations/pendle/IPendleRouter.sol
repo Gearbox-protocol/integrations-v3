@@ -114,4 +114,6 @@ interface IYToken {
 
 interface IPToken {
     function YT() external view returns (address);
+
+    function expiry() external view returns (uint256);
 }

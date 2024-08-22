@@ -7,6 +7,7 @@ import {
     IPendleRouter,
     IPendleMarket,
     IYToken,
+    IPToken,
     SwapData,
     SwapType,
     TokenInput,
@@ -248,6 +249,8 @@ contract PendleRouterAdapterUnitTest is
         output.minTokenOut = 90;
         output.tokenRedeemSy = tokens[0];
 
+        vm.mockCall(pt, abi.encodeCall(IPToken.YT, ()), abi.encode(yt));
+
         vm.mockCall(yt, abi.encodeCall(IYToken.expiry, ()), abi.encode(block.timestamp - 1));
         _setPairStatus(market, tokens[0], pt, PendleStatus.NOT_ALLOWED);
 
@@ -263,6 +266,13 @@ contract PendleRouterAdapterUnitTest is
         adapter.redeemPyToToken(address(0), yt, 100, output);
 
         vm.mockCall(yt, abi.encodeCall(IYToken.expiry, ()), abi.encode(block.timestamp - 1));
+
+        vm.mockCall(pt, abi.encodeCall(IPToken.YT, ()), abi.encode(makeAddr("WRONG_YT")));
+        vm.expectRevert(RedemptionNotAllowedException.selector);
+        vm.prank(creditFacade);
+        adapter.redeemPyToToken(address(0), yt, 100, output);
+
+        vm.mockCall(pt, abi.encodeCall(IPToken.YT, ()), abi.encode(yt));
 
         _readsActiveAccount();
         _executesSwap({
@@ -284,6 +294,8 @@ contract PendleRouterAdapterUnitTest is
     function test_U_PEND_08_redeemDiffPyToToken_works_as_expected() public diffTestCases {
         deal({token: pt, to: creditAccount, give: diffMintedAmount});
 
+        vm.mockCall(pt, abi.encodeCall(IPToken.YT, ()), abi.encode(yt));
+
         vm.mockCall(yt, abi.encodeCall(IYToken.expiry, ()), abi.encode(block.timestamp - 1));
         _setPairStatus(market, tokens[0], pt, PendleStatus.NOT_ALLOWED);
 
@@ -299,6 +311,13 @@ contract PendleRouterAdapterUnitTest is
         adapter.redeemDiffPyToToken(yt, diffLeftoverAmount, TokenDiffOutput(tokens[0], 0.5e27));
 
         vm.mockCall(yt, abi.encodeCall(IYToken.expiry, ()), abi.encode(block.timestamp - 1));
+
+        vm.mockCall(pt, abi.encodeCall(IPToken.YT, ()), abi.encode(abi.encode(makeAddr("WRONG_YT"))));
+        vm.expectRevert(RedemptionNotAllowedException.selector);
+        vm.prank(creditFacade);
+        adapter.redeemDiffPyToToken(yt, diffLeftoverAmount, TokenDiffOutput(tokens[0], 0.5e27));
+
+        vm.mockCall(pt, abi.encodeCall(IPToken.YT, ()), abi.encode(yt));
 
         TokenOutput memory output;
         output.tokenOut = tokens[0];

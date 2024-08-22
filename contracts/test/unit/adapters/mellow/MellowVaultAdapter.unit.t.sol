@@ -3,6 +3,7 @@
 // (c) Gearbox Foundation, 2024.
 pragma solidity ^0.8.17;
 
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IMellowVault} from "../../../../integrations/mellow/IMellowVault.sol";
 import {
     IMellowVaultAdapterEvents,
@@ -72,6 +73,11 @@ contract MellowVaultAdapterUnitTest is
         vm.prank(creditFacade);
         adapter.deposit(address(0), amounts, 0, 789);
 
+        uint256[] memory incorrectAmounts = new uint256[](2);
+        vm.expectRevert(IncorrectArrayLengthException.selector);
+        vm.prank(creditFacade);
+        adapter.deposit(address(0), incorrectAmounts, 0, 789);
+
         amounts[1] = 0;
 
         address[] memory tokensToApprove = new address[](1);
@@ -96,6 +102,12 @@ contract MellowVaultAdapterUnitTest is
         vm.expectRevert(abi.encodeWithSelector(UnderlyingNotAllowedException.selector, tokens[1]));
         vm.prank(creditFacade);
         adapter.depositOneAsset(tokens[1], 100, 0, 789);
+
+        address nonExistentToken = makeAddr("WRONG_TOKEN");
+        _allowUnderlying(nonExistentToken);
+        vm.expectRevert(abi.encodeWithSelector(UnderlyingNotFoundException.selector, nonExistentToken));
+        vm.prank(creditFacade);
+        adapter.depositOneAsset(nonExistentToken, 100, 0, 789);
 
         uint256[] memory amounts = new uint256[](3);
 
@@ -123,7 +135,14 @@ contract MellowVaultAdapterUnitTest is
 
         vm.expectRevert(abi.encodeWithSelector(UnderlyingNotAllowedException.selector, tokens[1]));
         vm.prank(creditFacade);
-        adapter.depositOneAsset(tokens[1], diffInputAmount, diffInputAmount / 2, 789);
+        adapter.depositOneAssetDiff(tokens[1], diffLeftoverAmount, 0.5e27, 789);
+
+        address nonExistentToken = makeAddr("WRONG_TOKEN");
+        _allowUnderlying(nonExistentToken);
+        vm.mockCall(nonExistentToken, abi.encodeCall(IERC20.balanceOf, (creditAccount)), abi.encode(diffMintedAmount));
+        vm.expectRevert(abi.encodeWithSelector(UnderlyingNotFoundException.selector, nonExistentToken));
+        vm.prank(creditFacade);
+        adapter.depositOneAssetDiff(nonExistentToken, diffLeftoverAmount, 0.5e27, 789);
 
         uint256[] memory amounts = new uint256[](3);
 
@@ -174,12 +193,18 @@ contract MellowVaultAdapterUnitTest is
     // HELPERS //
     // ------- //
 
-    /// @dev Sets statuses for `len` consecutive pairs of `tokens` based on `allowedPairsMask`
     function _setUnderlyingsStatus(uint256 len) internal {
         MellowUnderlyingStatus[] memory underlyings = new MellowUnderlyingStatus[](len);
         for (uint256 i; i < len; ++i) {
             underlyings[i] = MellowUnderlyingStatus(tokens[i], true);
         }
+        vm.prank(configurator);
+        adapter.setUnderlyingStatusBatch(underlyings);
+    }
+
+    function _allowUnderlying(address token) internal {
+        MellowUnderlyingStatus[] memory underlyings = new MellowUnderlyingStatus[](1);
+        underlyings[0] = MellowUnderlyingStatus(token, true);
         vm.prank(configurator);
         adapter.setUnderlyingStatusBatch(underlyings);
     }

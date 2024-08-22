@@ -97,4 +97,7 @@ interface IPendleRouterAdapter is IAdapter, IPendleRouterAdapterEvents, IPendleR
 
     /// @notice List of all pairs that are currently allowed in the adapter
     function getAllowedPairs() external view returns (PendlePairStatus[] memory pairs);
+
+    /// @notice Mapping from PT to its canonical market
+    function ptToMarket(address pt) external view returns (address market);
 }

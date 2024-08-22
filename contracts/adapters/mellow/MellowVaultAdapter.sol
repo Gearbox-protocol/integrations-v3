@@ -47,6 +47,8 @@ contract MellowVaultAdapter is AbstractAdapter, IMellowVaultAdapter {
 
         uint256 len = underlyings.length;
 
+        if (amounts.length != len) revert IncorrectArrayLengthException();
+
         for (uint256 i = 0; i < len;) {
             if (amounts[i] > 0 && !isUnderlyingAllowed[underlyings[i]]) {
                 revert UnderlyingNotAllowedException(underlyings[i]);
@@ -125,6 +127,8 @@ contract MellowVaultAdapter is AbstractAdapter, IMellowVaultAdapter {
                 amounts[i] = amount;
                 break;
             }
+
+            if (i == len - 1) revert UnderlyingNotFoundException(asset);
 
             unchecked {
                 ++i;

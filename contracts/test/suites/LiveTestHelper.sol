@@ -41,6 +41,7 @@ import {CONFIG_ARBITRUM_USDC_V3} from "../config/USDC_Arbitrum_config.sol";
 import {CONFIG_ARBITRUM_WETH_V3} from "../config/WETH_Arbitrum_config.sol";
 
 import {CONFIG_MAINNET_USDC_TEST_V3} from "../config/TEST_USDC_Mainnet_config.sol";
+import {CONFIG_MAINNET_WETH_TEST_V3} from "../config/TEST_WETH_Mainnet_config.sol";
 import {CONFIG_ARBITRUM_WETH_TEST_V3} from "../config/TEST_WETH_Arbitrum_config.sol";
 
 import {IConvexV1BoosterAdapter} from "../../interfaces/convex/IConvexV1BoosterAdapter.sol";
@@ -73,6 +74,7 @@ contract LiveTestHelper is IntegrationTestHelper {
         addDeployConfig(new CONFIG_ARBITRUM_USDC_V3());
         addDeployConfig(new CONFIG_ARBITRUM_WETH_V3());
         addDeployConfig(new CONFIG_MAINNET_USDC_TEST_V3());
+        addDeployConfig(new CONFIG_MAINNET_WETH_TEST_V3());
         addDeployConfig(new CONFIG_ARBITRUM_WETH_TEST_V3());
         addDeployConfig(new CONFIG_MAINNET_GHO_V3());
         addDeployConfig(new CONFIG_MAINNET_DAI_V3());
