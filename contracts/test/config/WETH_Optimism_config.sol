@@ -116,7 +116,7 @@ contract CONFIG_OPTIMISM_WETH_V3 is IPoolV3DeployConfig {
             Contracts[] storage cs = cp.contracts;
             cs.push(Contracts.UNISWAP_V3_ROUTER);
             {
-                UniswapV3Pair[] storage uv3p = cp.uniswapV3Pairs;
+                UniswapV3Pair[] storage uv3p = cp.adapterConfig.uniswapV3Pairs;
                 uv3p.push(
                     UniswapV3Pair({
                         router: Contracts.UNISWAP_V3_ROUTER,
@@ -183,7 +183,7 @@ contract CONFIG_OPTIMISM_WETH_V3 is IPoolV3DeployConfig {
                 );
             }
             cs.push(Contracts.BALANCER_VAULT);
-            BalancerPool[] storage bp = cp.balancerPools;
+            BalancerPool[] storage bp = cp.adapterConfig.balancerPools;
 
             bp.push(
                 BalancerPool({poolId: 0x4fd63966879300cafafbb35d157dc5229278ed2300020000000000000000002b, status: 2})
@@ -197,7 +197,7 @@ contract CONFIG_OPTIMISM_WETH_V3 is IPoolV3DeployConfig {
                 BalancerPool({poolId: 0x39965c9dab5448482cf7e002f583c812ceb53046000100000000000000000003, status: 2})
             );
             cs.push(Contracts.VELODROME_V2_ROUTER);
-            VelodromeV2Pool[] storage vv2p = cp.velodromeV2Pools;
+            VelodromeV2Pool[] storage vv2p = cp.adapterConfig.velodromeV2Pools;
             vv2p.push(
                 VelodromeV2Pool({
                     token0: Tokens.WETH,
@@ -232,7 +232,7 @@ contract CONFIG_OPTIMISM_WETH_V3 is IPoolV3DeployConfig {
             );
             cs.push(Contracts.VELODROME_CL_ROUTER);
             {
-                UniswapV3Pair[] storage uv3p = cp.uniswapV3Pairs;
+                UniswapV3Pair[] storage uv3p = cp.adapterConfig.uniswapV3Pairs;
                 uv3p.push(
                     UniswapV3Pair({
                         router: Contracts.VELODROME_CL_ROUTER,
@@ -270,7 +270,7 @@ contract CONFIG_OPTIMISM_WETH_V3 is IPoolV3DeployConfig {
             Contracts[] storage cs = cp.contracts;
             cs.push(Contracts.UNISWAP_V3_ROUTER);
             {
-                UniswapV3Pair[] storage uv3p = cp.uniswapV3Pairs;
+                UniswapV3Pair[] storage uv3p = cp.adapterConfig.uniswapV3Pairs;
                 uv3p.push(
                     UniswapV3Pair({
                         router: Contracts.UNISWAP_V3_ROUTER,
@@ -313,7 +313,7 @@ contract CONFIG_OPTIMISM_WETH_V3 is IPoolV3DeployConfig {
                 );
             }
             cs.push(Contracts.VELODROME_V2_ROUTER);
-            VelodromeV2Pool[] storage vv2p = cp.velodromeV2Pools;
+            VelodromeV2Pool[] storage vv2p = cp.adapterConfig.velodromeV2Pools;
             vv2p.push(
                 VelodromeV2Pool({
                     token0: Tokens.WETH,

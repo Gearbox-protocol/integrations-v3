@@ -76,7 +76,7 @@ contract CONFIG_ARBITRUM_WETH_TEST_V3 is IPoolV3DeployConfig {
             Contracts[] storage cs = cp.contracts;
             cs.push(Contracts.CAMELOT_V3_ROUTER);
             {
-                GenericSwapPair[] storage gsp = cp.genericSwapPairs;
+                GenericSwapPair[] storage gsp = cp.adapterConfig.genericSwapPairs;
                 gsp.push(
                     GenericSwapPair({router: Contracts.CAMELOT_V3_ROUTER, token0: Tokens.WETH, token1: Tokens.USDC})
                 );

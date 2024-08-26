@@ -109,7 +109,7 @@ contract CONFIG_MAINNET_GHO_V3 is IPoolV3DeployConfig {
             cts.push(CollateralTokenHuman({token: Tokens.MtEthena, lt: 0}));
             Contracts[] storage cs = cp.contracts;
             cs.push(Contracts.BALANCER_VAULT);
-            BalancerPool[] storage bp = cp.balancerPools;
+            BalancerPool[] storage bp = cp.adapterConfig.balancerPools;
 
             bp.push(
                 BalancerPool({poolId: 0x8353157092ed8be69a9df8f95af097bbf33cb2af0000000000000000000005d9, status: 2})

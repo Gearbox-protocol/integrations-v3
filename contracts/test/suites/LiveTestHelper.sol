@@ -18,7 +18,9 @@ import {
     BalancerPool,
     UniswapV3Pair,
     GenericSwapPair,
-    VelodromeV2Pool
+    VelodromeV2Pool,
+    PendlePair,
+    MellowUnderlyingConfig
 } from "@gearbox-protocol/core-v3/contracts/test/interfaces/ICreditConfig.sol";
 
 import {PriceFeedDeployer} from "@gearbox-protocol/oracles-v3/contracts/test/suites/PriceFeedDeployer.sol";
@@ -39,6 +41,7 @@ import {CONFIG_ARBITRUM_USDC_V3} from "../config/USDC_Arbitrum_config.sol";
 import {CONFIG_ARBITRUM_WETH_V3} from "../config/WETH_Arbitrum_config.sol";
 
 import {CONFIG_MAINNET_USDC_TEST_V3} from "../config/TEST_USDC_Mainnet_config.sol";
+import {CONFIG_MAINNET_WETH_TEST_V3} from "../config/TEST_WETH_Mainnet_config.sol";
 import {CONFIG_ARBITRUM_WETH_TEST_V3} from "../config/TEST_WETH_Arbitrum_config.sol";
 
 import {IConvexV1BoosterAdapter} from "../../interfaces/convex/IConvexV1BoosterAdapter.sol";
@@ -47,11 +50,15 @@ import {UniswapV2Adapter} from "../../adapters/uniswap/UniswapV2.sol";
 import {UniswapV3Adapter} from "../../adapters/uniswap/UniswapV3.sol";
 import {VelodromeV2RouterAdapter} from "../../adapters/velodrome/VelodromeV2RouterAdapter.sol";
 import {CamelotV3Adapter} from "../../adapters/camelot/CamelotV3Adapter.sol";
+import {PendleRouterAdapter} from "../../adapters/pendle/PendleRouterAdapter.sol";
+import {MellowVaultAdapter} from "../../adapters/mellow/MellowVaultAdapter.sol";
 import {PoolStatus} from "../../interfaces/balancer/IBalancerV2VaultAdapter.sol";
 import {UniswapV2PairStatus} from "../../interfaces/uniswap/IUniswapV2Adapter.sol";
 import {UniswapV3PoolStatus} from "../../interfaces/uniswap/IUniswapV3Adapter.sol";
 import {VelodromeV2PoolStatus} from "../../interfaces/velodrome/IVelodromeV2RouterAdapter.sol";
 import {CamelotV3PoolStatus} from "../../interfaces/camelot/ICamelotV3Adapter.sol";
+import {PendlePairStatus, PendleStatus} from "../../interfaces/pendle/IPendleRouterAdapter.sol";
+import {MellowUnderlyingStatus} from "../../interfaces/mellow/IMellowVaultAdapter.sol";
 
 import "@gearbox-protocol/core-v3/contracts/test/lib/constants.sol";
 
@@ -67,6 +74,7 @@ contract LiveTestHelper is IntegrationTestHelper {
         addDeployConfig(new CONFIG_ARBITRUM_USDC_V3());
         addDeployConfig(new CONFIG_ARBITRUM_WETH_V3());
         addDeployConfig(new CONFIG_MAINNET_USDC_TEST_V3());
+        addDeployConfig(new CONFIG_MAINNET_WETH_TEST_V3());
         addDeployConfig(new CONFIG_ARBITRUM_WETH_TEST_V3());
         addDeployConfig(new CONFIG_MAINNET_GHO_V3());
         addDeployConfig(new CONFIG_MAINNET_DAI_V3());
@@ -195,7 +203,7 @@ contract LiveTestHelper is IntegrationTestHelper {
         }
 
         // BALANCER VAULT
-        BalancerPool[] memory bPools = creditManagerParams.balancerPools;
+        BalancerPool[] memory bPools = creditManagerParams.adapterConfig.balancerPools;
 
         if (bPools.length != 0) {
             address balancerAdapter = getAdapter(creditManager, Contracts.BALANCER_VAULT);
@@ -205,8 +213,47 @@ contract LiveTestHelper is IntegrationTestHelper {
                 BalancerV2VaultAdapter(balancerAdapter).setPoolStatus(bPools[i].poolId, PoolStatus(bPools[i].status));
             }
         }
+
+        // PENDLE_ROUTER
+        PendlePair[] memory pPairs = creditManagerParams.adapterConfig.pendlePairs;
+
+        if (pPairs.length != 0) {
+            PendlePairStatus[] memory pairs = new PendlePairStatus[](pPairs.length);
+
+            for (uint256 i = 0; i < pPairs.length; ++i) {
+                pairs[i] = PendlePairStatus({
+                    market: pPairs[i].market,
+                    inputToken: tokenTestSuite.addressOf(pPairs[i].inputToken),
+                    pendleToken: tokenTestSuite.addressOf(pPairs[i].pendleToken),
+                    status: PendleStatus(pPairs[i].status)
+                });
+            }
+
+            address pendleRouterAdapter = getAdapter(creditManager, Contracts.PENDLE_ROUTER);
+            vm.prank(CONFIGURATOR);
+            PendleRouterAdapter(pendleRouterAdapter).setPairStatusBatch(pairs);
+        }
+
+        // MELLOW VAULTS
+        MellowUnderlyingConfig[] memory mellowConfigs = creditManagerParams.adapterConfig.mellowUnderlyings;
+
+        if (mellowConfigs.length != 0) {
+            for (uint256 i = 0; i < mellowConfigs.length; ++i) {
+                address mellowAdapter = getAdapter(creditManager, mellowConfigs[i].vault);
+
+                MellowUnderlyingStatus[] memory ms = new MellowUnderlyingStatus[](1);
+                ms[0] = MellowUnderlyingStatus({
+                    underlying: tokenTestSuite.addressOf(mellowConfigs[i].underlying),
+                    allowed: true
+                });
+
+                vm.prank(CONFIGURATOR);
+                MellowVaultAdapter(mellowAdapter).setUnderlyingStatusBatch(ms);
+            }
+        }
+
         // UNISWAP V3 ROUTER
-        UniswapV3Pair[] memory uniV3Pools = creditManagerParams.uniswapV3Pairs;
+        UniswapV3Pair[] memory uniV3Pools = creditManagerParams.adapterConfig.uniswapV3Pairs;
 
         if (uniV3Pools.length != 0) {
             UniswapV3PoolStatus[] memory pools = new UniswapV3PoolStatus[](uniV3Pools.length);
@@ -265,7 +312,7 @@ contract LiveTestHelper is IntegrationTestHelper {
             }
         }
         // SIMPLE INTERFACE SWAPPERS
-        GenericSwapPair[] memory genericPairs = creditManagerParams.genericSwapPairs;
+        GenericSwapPair[] memory genericPairs = creditManagerParams.adapterConfig.genericSwapPairs;
 
         if (genericPairs.length != 0) {
             UniswapV2PairStatus[] memory pairs = new UniswapV2PairStatus[](genericPairs.length);
@@ -341,7 +388,7 @@ contract LiveTestHelper is IntegrationTestHelper {
             }
         }
         // VELODROME V2
-        VelodromeV2Pool[] memory velodromeV2Pools = creditManagerParams.velodromeV2Pools;
+        VelodromeV2Pool[] memory velodromeV2Pools = creditManagerParams.adapterConfig.velodromeV2Pools;
 
         if (velodromeV2Pools.length != 0) {
             VelodromeV2PoolStatus[] memory pools = new VelodromeV2PoolStatus[](velodromeV2Pools.length);
