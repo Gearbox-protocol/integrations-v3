@@ -33,7 +33,7 @@ contract VelodromeV2RouterAdapter is AbstractAdapter, IVelodromeV2RouterAdapter 
 
     /// @notice Swap given amount of input token to output token
     /// @param amountIn Amount of input token to spend
-    /// @param amountOutMin Minumum amount of output token to receive
+    /// @param amountOutMin Minimum amount of output token to receive
     /// @param routes Array of Route structs representing a swap path, must have at most 3 elements
     /// @param deadline Maximum timestamp until which the transaction is valid
     /// @dev Parameter `to` is ignored since swap recipient can only be the credit account

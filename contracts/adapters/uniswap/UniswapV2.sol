@@ -66,7 +66,7 @@ contract UniswapV2Adapter is AbstractAdapter, IUniswapV2Adapter {
 
     /// @notice Swap given amount of input token to output token
     /// @param amountIn Amount of input token to spend
-    /// @param amountOutMin Minumum amount of output token to receive
+    /// @param amountOutMin Minimum amount of output token to receive
     /// @param path Array of token addresses representing swap path, which must have at most 3 hops
     ///        through allowed pools
     /// @param deadline Maximum timestamp until which the transaction is valid
