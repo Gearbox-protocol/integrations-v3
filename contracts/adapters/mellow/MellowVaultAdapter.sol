@@ -49,7 +49,7 @@ contract MellowVaultAdapter is AbstractAdapter, IMellowVaultAdapter {
         if (amounts.length != len) revert IncorrectArrayLengthException(); // U:[MEL-3]
 
         for (uint256 i = 0; i < len;) {
-            if (amounts[i] > 0 && !_allowedUnderlyings.contains(underlyings[i])) {
+            if (!_allowedUnderlyings.contains(underlyings[i])) {
                 revert UnderlyingNotAllowedException(underlyings[i]); // U:[MEL-3]
             }
 
