@@ -78,7 +78,7 @@ contract MellowVaultAdapterUnitTest is
         vm.prank(creditFacade);
         adapter.deposit(address(0), incorrectAmounts, 0, 789);
 
-        amounts[1] = 0;
+        _setUnderlyingsStatus(3);
 
         address[] memory tokensToApprove = new address[](1);
         tokensToApprove[0] = tokens[0];
