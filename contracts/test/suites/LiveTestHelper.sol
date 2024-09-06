@@ -95,16 +95,7 @@ contract LiveTestHelper is IntegrationTestHelper {
 
     modifier attachOrLiveTest() {
         if (chainId != 1337 && chainId != 31337) {
-            try vm.envAddress("ATTACH_ADDRESS_PROVIDER") returns (address) {
-                _attachCore();
-                supportedContracts = new SupportedContracts(chainId);
-
-                address creditManagerToAttach;
-
-                try vm.envAddress("ATTACH_CREDIT_MANAGER") returns (address val) {
-                    creditManagerToAttach = val;
-                } catch {}
-
+            try vm.envAddress("ATTACH_CREDIT_MANAGER") returns (address creditManagerToAttach) {
                 if (creditManagerToAttach != address(0)) {
                     if (_checkFunctionalSuite(creditManagerToAttach)) {
                         _attachCreditManager(creditManagerToAttach);
@@ -113,8 +104,13 @@ contract LiveTestHelper is IntegrationTestHelper {
                     } else {
                         console.log("Pool or facade for attached CM paused, skipping: %s", creditManagerToAttach);
                     }
-                } else {
-                    address[] memory cms = cr.getCreditManagers();
+                }
+            } catch {
+                try vm.envAddress("ATTACH_POOL") returns (address poolToAttach) {
+                    _attachPool(poolToAttach);
+                    supportedContracts = new SupportedContracts(chainId);
+
+                    address[] memory cms = pool.creditManagers();
                     uint256 len = cms.length;
                     for (uint256 i = 0; i < len; ++i) {
                         if (IVersion(cms[i]).version() >= 3_00) {
@@ -129,20 +125,25 @@ contract LiveTestHelper is IntegrationTestHelper {
                             vm.revertTo(snapshot);
                         }
                     }
-                }
-            } catch {
-                try vm.envString("LIVE_TEST_CONFIG") returns (string memory id) {
-                    _setupLiveCreditTest(id);
-
-                    vm.prank(address(gauge));
-                    poolQuotaKeeper.updateRates();
-
-                    for (uint256 i = 0; i < creditManagers.length; ++i) {
-                        _attachCreditManager(address(creditManagers[i]));
-                        _;
-                    }
+                    console.log("Successfully ran tests on attached pool: %s", poolToAttach);
                 } catch {
-                    revert("Neither attach AP nor live test config was defined.");
+                    try vm.envString("LIVE_TEST_CONFIG") returns (string memory id) {
+                        _setupLiveCreditTest(id);
+
+                        vm.prank(address(gauge));
+                        poolQuotaKeeper.updateRates();
+
+                        for (uint256 i = 0; i < creditManagers.length; ++i) {
+                            uint256 s = vm.snapshot();
+                            _attachCreditManager(address(creditManagers[i]));
+                            _;
+                            vm.revertTo(s);
+                        }
+                    } catch {
+                        revert(
+                            "Live/attach tests require the attached pool/CM address or live test config. Please set one of the env variables: ATTACH_POOL or ATTACH_CREDIT_MANAGER or LIVE_TEST_CONFIG"
+                        );
+                    }
                 }
             }
         }
@@ -367,65 +368,9 @@ contract LiveTestHelper is IntegrationTestHelper {
         return !Pausable(pool).paused() && !Pausable(creditFacade).paused();
     }
 
-    function _setUp() public virtual liveTest {
-        // lts = new LiveEnvTestSuite();
-        // MAINNET_CONFIGURATOR = lts.ROOT_ADDRESS();
-        // tokenTestSuite = lts.tokenTestSuite();
-        // supportedContracts = lts.supportedContracts();
-
-        // TODO: CHANGE
-    }
-
-    //     function getUniV2() internal view returns (IUniswapV2Router02) {
-    //         return IUniswapV2Router02(supportedContracts.addressOf(Contracts.UNISWAP_V2_ROUTER));
-    //     }
-
-    //     function swapEthToTokens(address onBehalfOf, Tokens t, uint256 amount) internal {
-    //         vm.startPrank(onBehalfOf);
-
-    //         getUniV2().swapExactETHForTokens{value: amount}(
-    //             0, arrayOf(tokenTestSuite.addressOf(Tokens.WETH), tokenTestSuite.addressOf(t)), onBehalfOf, block.timestamp
-    //         );
-
-    //         vm.stopPrank();
-    //     }
-
-    //     // [TODO]: add new lib for arrayOf
-    //     function arrayOf(address addr0, address addr1) internal pure returns (address[] memory result) {
-    //         result = new address[](2);
-    //         result[0] = addr0;
-    //         result[1] = addr1;
-    //     }
-
-    //     function getTokensOfType(TokenType tokenType) internal view returns (Tokens[] memory tokens) {
-    //         uint256 tokenCount = tokenTestSuite.tokenCount();
-
-    //         uint256[] memory temp = new uint256[](tokenCount);
-    //         uint256 found;
-
-    //         for (uint256 i = 0; i < tokenCount; ++i) {
-    //             if (tokenTestSuite.tokenTypes(Tokens(i)) == tokenType) {
-    //                 temp[found] = i;
-    //                 ++found;
-    //             }
-    //         }
-
-    //         tokens = new Tokens[](found);
-
-    //         for (uint256 i = 0; i < found; ++i) {
-    //             tokens[i] = Tokens(temp[i]);
-    //         }
-    //     }
+    function _setUp() public virtual liveTest {}
 
     function getAdapter(address creditManager, Contracts target) public view returns (address) {
         return ICreditManagerV3(creditManager).contractToAdapter(supportedContracts.addressOf(target));
     }
-
-    // function getAdapter(Tokens underlying, Contracts target) public view returns (address) {
-    //     return _creditManagers[underlying][0].contractToAdapter(supportedContracts.addressOf(target));
-    // }
-
-    // function getAdapter(Tokens underlying, Contracts target, uint256 cmIdx) public view returns (address) {
-    //     return _creditManagers[underlying][cmIdx].contractToAdapter(supportedContracts.addressOf(target));
-    // }
 }
