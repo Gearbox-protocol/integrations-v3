@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 // Gearbox. Generalized leverage protocol that allows to take leverage and then use it across other DeFi protocols and platforms in a composable way.
-// (c) Gearbox Foundation, 2024.
+// (c) Gearbox Foundation, 2023.
 pragma solidity ^0.8.10;
 
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
@@ -11,6 +11,8 @@ import {ICreditConfiguratorV3} from "@gearbox-protocol/core-v3/contracts/interfa
 import {Tokens} from "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
 import {AdapterData} from "@gearbox-protocol/sdk-gov/contracts/AdapterData.sol";
 import {SupportedContracts, Contracts} from "@gearbox-protocol/sdk-gov/contracts/SupportedContracts.sol";
+
+import {AdapterType} from "@gearbox-protocol/sdk-gov/contracts/AdapterType.sol";
 
 // SIMPLE ADAPTERS
 import {UniswapV2Adapter} from "../../adapters/uniswap/UniswapV2.sol";
@@ -36,7 +38,8 @@ import {BalancerV2VaultAdapter} from "../../adapters/balancer/BalancerV2VaultAda
 import {VelodromeV2RouterAdapter} from "../../adapters/velodrome/VelodromeV2RouterAdapter.sol";
 import {CamelotV3Adapter} from "../../adapters/camelot/CamelotV3Adapter.sol";
 
-import {ZircuitPoolAdapter} from "../../adapters/zircuit/ZircuitPoolAdapter.sol";
+import {MellowVaultAdapter} from "../../adapters/mellow/MellowVaultAdapter.sol";
+import {PendleRouterAdapter} from "../../adapters/pendle/PendleRouterAdapter.sol";
 
 import {TokensTestSuite} from "@gearbox-protocol/core-v3/contracts/test/suites/TokensTestSuite.sol";
 import {Test} from "forge-std/Test.sol";
@@ -67,13 +70,16 @@ contract AdapterDeployer is AdapterData, Test {
 
         string memory cmLabel = string.concat("CreditManager ", ERC20(creditManager.underlying()).symbol());
 
-        for (uint256 i; i < len; ++i) {
-            address newAdapter = deployAdapter(adaptersList[i]);
+        unchecked {
+            for (uint256 i; i < len; ++i) {
+                address newAdapter = deployAdapter(adaptersList[i]);
 
-            adapters.push(newAdapter);
-            vm.label(
-                newAdapter, string(abi.encodePacked(cmLabel, "_ADAPTER_", supportedContracts.nameOf(adaptersList[i])))
-            );
+                adapters.push(newAdapter);
+                vm.label(
+                    newAdapter,
+                    string(abi.encodePacked(cmLabel, "_ADAPTER_", supportedContracts.nameOf(adaptersList[i])))
+                );
+            }
         }
     }
 
@@ -89,148 +95,154 @@ contract AdapterDeployer is AdapterData, Test {
         return adapters;
     }
 
-    function deployAdapter(Contracts /* cnt */ ) internal view returns (address /* adapter */ ) {
-        // uint256 len = simpleAdapters.length;
-        // address targetContract;
+    function deployAdapter(Contracts cnt) internal returns (address adapter) {
+        uint256 len = simpleAdapters.length;
+        address targetContract;
+        unchecked {
+            for (uint256 i; i < len; ++i) {
+                if (cnt == simpleAdapters[i].targetContract) {
+                    AdapterType at = simpleAdapters[i].adapterType;
+                    targetContract = supportedContracts.addressOf(cnt);
 
-        // for (uint256 i = 0; i < len; ++i) {
-        //     if (cnt == simpleAdapters[i].targetContract) {
-        //         AdapterType at = simpleAdapters[i].adapterType;
-        //         targetContract = supportedContracts.addressOf(cnt);
+                    if (at == AdapterType.UNISWAP_V2_ROUTER) {
+                        adapter = address(new UniswapV2Adapter(address(creditManager), targetContract));
+                    } else if (at == AdapterType.UNISWAP_V3_ROUTER) {
+                        adapter = address(new UniswapV3Adapter(address(creditManager), targetContract));
+                    }
+                    if (at == AdapterType.YEARN_V2) {
+                        adapter = address(new YearnV2Adapter(address(creditManager), targetContract));
+                    } else if (at == AdapterType.CONVEX_V1_BOOSTER) {
+                        adapter = address(new ConvexV1BoosterAdapter(address(creditManager), targetContract));
+                    } else if (at == AdapterType.LIDO_V1) {
+                        adapter = address(new LidoV1Adapter(address(creditManager), targetContract));
+                        targetContract = LidoV1Adapter(adapter).targetContract();
+                    } else if (at == AdapterType.LIDO_WSTETH_V1) {
+                        adapter = address(
+                            new WstETHV1Adapter(address(creditManager), tokenTestSuite.addressOf(Tokens.wstETH))
+                        );
+                    } else if (at == AdapterType.ERC4626_VAULT) {
+                        adapter = address(new ERC4626Adapter(address(creditManager), targetContract));
+                    } else if (at == AdapterType.BALANCER_VAULT) {
+                        adapter = address(new BalancerV2VaultAdapter(address(creditManager), targetContract));
+                    } else if (at == AdapterType.VELODROME_V2_ROUTER) {
+                        adapter = address(new VelodromeV2RouterAdapter(address(creditManager), targetContract));
+                    } else if (at == AdapterType.CAMELOT_V3_ROUTER) {
+                        adapter = address(new CamelotV3Adapter(address(creditManager), targetContract));
+                    } else if (at == AdapterType.MELLOW_LRT_VAULT) {
+                        adapter = address(new MellowVaultAdapter(address(creditManager), targetContract));
+                    } else if (at == AdapterType.PENDLE_ROUTER) {
+                        adapter = address(new PendleRouterAdapter(address(creditManager), targetContract));
+                    }
 
-        //         if (at == AdapterType.UNISWAP_V2_ROUTER) {
-        //             adapter = address(new UniswapV2Adapter(address(creditManager), targetContract));
-        //         } else if (at == AdapterType.UNISWAP_V3_ROUTER) {
-        //             adapter = address(new UniswapV3Adapter(address(creditManager), targetContract));
-        //         }
-        //         if (at == AdapterType.YEARN_V2) {
-        //             adapter = address(new YearnV2Adapter(address(creditManager), targetContract));
-        //         } else if (at == AdapterType.CONVEX_V1_BOOSTER) {
-        //             adapter = address(new ConvexV1BoosterAdapter(address(creditManager), targetContract));
-        //         } else if (at == AdapterType.LIDO_V1) {
-        //             adapter = address(new LidoV1Adapter(address(creditManager), targetContract));
-        //             targetContract = LidoV1Adapter(adapter).targetContract();
-        //         } else if (at == AdapterType.LIDO_WSTETH_V1) {
-        //             adapter =
-        //                 address(new WstETHV1Adapter(address(creditManager), tokenTestSuite.addressOf(Tokens.wstETH)));
-        //         } else if (at == AdapterType.ERC4626_VAULT) {
-        //             adapter = address(new ERC4626Adapter(address(creditManager), targetContract));
-        //         } else if (at == AdapterType.BALANCER_VAULT) {
-        //             adapter = address(new BalancerV2VaultAdapter(address(creditManager), targetContract));
-        //         } else if (at == AdapterType.VELODROME_V2_ROUTER) {
-        //             adapter = address(new VelodromeV2RouterAdapter(address(creditManager), targetContract));
-        //         } else if (at == AdapterType.CAMELOT_V3_ROUTER) {
-        //             adapter = address(new CamelotV3Adapter(address(creditManager), targetContract));
-        //         } else if (at == AdapterType.ZIRCUIT_POOL) {
-        //             adapter = address(new ZircuitPoolAdapter(address(creditManager), targetContract));
-        //         }
+                    return adapter;
+                }
+            }
 
-        //         return adapter;
-        //     }
-        // }
+            len = curveAdapters.length;
+            for (uint256 i; i < len; ++i) {
+                if (cnt == curveAdapters[i].targetContract) {
+                    AdapterType at = curveAdapters[i].adapterType;
+                    targetContract = supportedContracts.addressOf(cnt);
 
-        // len = curveAdapters.length;
-        // for (uint256 i; i < len; ++i) {
-        //     if (cnt == curveAdapters[i].targetContract) {
-        //         AdapterType at = curveAdapters[i].adapterType;
-        //         targetContract = supportedContracts.addressOf(cnt);
+                    if (at == AdapterType.CURVE_V1_2ASSETS) {
+                        adapter = address(
+                            new CurveV1Adapter2Assets(
+                                address(creditManager),
+                                targetContract,
+                                tokenTestSuite.addressOf(curveAdapters[i].lpToken),
+                                supportedContracts.addressOf(curveAdapters[i].basePool)
+                            )
+                        );
+                    } else if (at == AdapterType.CURVE_V1_3ASSETS) {
+                        adapter = address(
+                            new CurveV1Adapter3Assets(
+                                address(creditManager),
+                                targetContract,
+                                tokenTestSuite.addressOf(curveAdapters[i].lpToken),
+                                address(0)
+                            )
+                        );
+                    } else if (at == AdapterType.CURVE_V1_4ASSETS) {
+                        adapter = address(
+                            new CurveV1Adapter4Assets(
+                                address(creditManager),
+                                targetContract,
+                                tokenTestSuite.addressOf(curveAdapters[i].lpToken),
+                                address(0)
+                            )
+                        );
+                    } else if (at == AdapterType.CURVE_STABLE_NG) {
+                        adapter = address(
+                            new CurveV1AdapterStableNG(
+                                address(creditManager),
+                                targetContract,
+                                tokenTestSuite.addressOf(curveAdapters[i].lpToken),
+                                address(0)
+                            )
+                        );
+                    }
+                    return adapter;
+                }
+            }
 
-        //         if (at == AdapterType.CURVE_V1_2ASSETS) {
-        //             adapter = address(
-        //                 new CurveV1Adapter2Assets(
-        //                     address(creditManager),
-        //                     targetContract,
-        //                     tokenTestSuite.addressOf(curveAdapters[i].lpToken),
-        //                     supportedContracts.addressOf(curveAdapters[i].basePool)
-        //                 )
-        //             );
-        //         } else if (at == AdapterType.CURVE_V1_3ASSETS) {
-        //             adapter = address(
-        //                 new CurveV1Adapter3Assets(
-        //                     address(creditManager),
-        //                     targetContract,
-        //                     tokenTestSuite.addressOf(curveAdapters[i].lpToken),
-        //                     address(0)
-        //                 )
-        //             );
-        //         } else if (at == AdapterType.CURVE_V1_4ASSETS) {
-        //             adapter = address(
-        //                 new CurveV1Adapter4Assets(
-        //                     address(creditManager),
-        //                     targetContract,
-        //                     tokenTestSuite.addressOf(curveAdapters[i].lpToken),
-        //                     address(0)
-        //                 )
-        //             );
-        //         } else if (at == AdapterType.CURVE_STABLE_NG) {
-        //             adapter = address(
-        //                 new CurveV1AdapterStableNG(
-        //                     address(creditManager),
-        //                     targetContract,
-        //                     tokenTestSuite.addressOf(curveAdapters[i].lpToken),
-        //                     address(0)
-        //                 )
-        //             );
-        //         }
-        //         return adapter;
-        //     }
-        // }
+            len = curveStEthAdapters.length;
+            for (uint256 i; i < len; ++i) {
+                if (cnt == curveStEthAdapters[i].curveETHGateway) {
+                    targetContract = supportedContracts.addressOf(cnt);
+                    adapter = address(
+                        new CurveV1AdapterStETH(
+                            address(creditManager),
+                            supportedContracts.addressOf(curveStEthAdapters[i].curveETHGateway),
+                            tokenTestSuite.addressOf(curveStEthAdapters[i].lpToken)
+                        )
+                    );
+                    return adapter;
+                }
+            }
 
-        // len = curveStEthAdapters.length;
-        // for (uint256 i; i < len; ++i) {
-        //     if (cnt == curveStEthAdapters[i].curveETHGateway) {
-        //         targetContract = supportedContracts.addressOf(cnt);
-        //         adapter = address(
-        //             new CurveV1AdapterStETH(
-        //                 address(creditManager),
-        //                 supportedContracts.addressOf(curveStEthAdapters[i].curveETHGateway),
-        //                 tokenTestSuite.addressOf(curveStEthAdapters[i].lpToken)
-        //             )
-        //         );
-        //         return adapter;
-        //     }
-        // }
+            len = curveWrappers.length;
+            for (uint256 i; i < len; ++i) {
+                if (cnt == curveWrappers[i].targetContract) {
+                    targetContract = supportedContracts.addressOf(cnt);
+                    adapter = address(
+                        new CurveV1AdapterDeposit(
+                            address(creditManager),
+                            targetContract,
+                            tokenTestSuite.addressOf(curveWrappers[i].lpToken),
+                            curveWrappers[i].nCoins
+                        )
+                    );
+                    return adapter;
+                }
+            }
 
-        // len = curveWrappers.length;
-        // for (uint256 i; i < len; ++i) {
-        //     if (cnt == curveWrappers[i].targetContract) {
-        //         targetContract = supportedContracts.addressOf(cnt);
-        //         adapter = address(
-        //             new CurveV1AdapterDeposit(
-        //                 address(creditManager),
-        //                 targetContract,
-        //                 tokenTestSuite.addressOf(curveWrappers[i].lpToken),
-        //                 curveWrappers[i].nCoins
-        //             )
-        //         );
-        //         return adapter;
-        //     }
-        // }
+            len = convexBasePoolAdapters.length;
+            for (uint256 i; i < len; ++i) {
+                if (cnt == convexBasePoolAdapters[i].targetContract) {
+                    targetContract = supportedContracts.addressOf(cnt);
+                    adapter = address(
+                        new ConvexV1BaseRewardPoolAdapter(
+                            address(creditManager),
+                            targetContract,
+                            tokenTestSuite.addressOf(convexBasePoolAdapters[i].stakedToken)
+                        )
+                    );
+                    return adapter;
+                }
+            }
 
-        // len = convexBasePoolAdapters.length;
-        // for (uint256 i = 0; i < len; ++i) {
-        //     if (cnt == convexBasePoolAdapters[i].targetContract) {
-        //         targetContract = supportedContracts.addressOf(cnt);
-        //         adapter = address(
-        //             new ConvexV1BaseRewardPoolAdapter(
-        //                 address(creditManager),
-        //                 targetContract,
-        //                 tokenTestSuite.addressOf(convexBasePoolAdapters[i].stakedToken)
-        //             )
-        //         );
-        //         return adapter;
-        //     }
-        // }
-        // revert AdapterNotFoundException(cnt);
+            revert AdapterNotFoundException(cnt);
+        }
     }
 
     function connectAdapters() external {
         ICreditConfiguratorV3 creditConfigurator = ICreditConfiguratorV3(creditManager.creditConfigurator());
         uint256 len = adapters.length;
-
-        for (uint256 i; i < len; ++i) {
-            vm.prank(CONFIGURATOR);
-            creditConfigurator.allowAdapter(adapters[i]);
+        unchecked {
+            for (uint256 i; i < len; ++i) {
+                vm.prank(CONFIGURATOR);
+                creditConfigurator.allowAdapter(adapters[i]);
+            }
         }
     }
 }
