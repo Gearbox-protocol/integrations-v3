@@ -99,6 +99,7 @@ contract CONFIG_MAINNET_WETH_TEST_V3 is IPoolV3DeployConfig {
             cp.skipInit = false;
             cp.poolLimit = 5_000_000_000_000_000_000_000;
             cp.maxEnabledTokens = 4;
+            cp.name = "Test Credit Manager";
 
             CollateralTokenHuman[] storage cts = cp.collateralTokens;
             cts.push(CollateralTokenHuman({token: Tokens.USDC, lt: 9_000}));
