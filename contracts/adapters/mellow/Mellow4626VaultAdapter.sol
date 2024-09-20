@@ -19,32 +19,17 @@ contract Mellow4626VaultAdapter is ERC4626Adapter {
     constructor(address _creditManager, address _vault) ERC4626Adapter(_creditManager, _vault) {}
 
     /// @dev For Mellow ERC4626 vaults all withdrawals revert to avoid CA's interacting with Mellow's delayed withdrawals
-    function withdraw(uint256 assets, address, address)
-        external
-        override
-        creditFacadeOnly
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
-    {
+    function withdraw(uint256, address, address) external view override creditFacadeOnly returns (uint256, uint256) {
         revert NotImplementedException();
     }
 
     /// @dev For Mellow ERC4626 vaults all withdrawals revert to avoid CA's interacting with Mellow's delayed withdrawals
-    function redeem(uint256 shares, address, address)
-        external
-        override
-        creditFacadeOnly
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
-    {
+    function redeem(uint256, address, address) external view override creditFacadeOnly returns (uint256, uint256) {
         revert NotImplementedException();
     }
 
     /// @dev For Mellow ERC4626 vaults all withdrawals revert to avoid CA's interacting with Mellow's delayed withdrawals
-    function redeemDiff(uint256 leftoverAmount)
-        external
-        override
-        creditFacadeOnly
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
-    {
+    function redeemDiff(uint256) external view override creditFacadeOnly returns (uint256, uint256) {
         revert NotImplementedException();
     }
 }
