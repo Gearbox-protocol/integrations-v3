@@ -14,7 +14,6 @@ import {IERC4626Adapter} from "../../interfaces/erc4626/IERC4626Adapter.sol";
 /// @title ERC4626 Vault adapter
 /// @notice Implements logic allowing CAs to interact with any standard-compliant ERC4626 vault
 contract ERC4626Adapter is AbstractAdapter, IERC4626Adapter {
-    AdapterType public constant override _gearboxAdapterType = AdapterType.ERC4626_VAULT;
     uint16 public constant override _gearboxAdapterVersion = 3_00;
 
     /// @notice Address of the underlying asset of the vault
@@ -25,6 +24,10 @@ contract ERC4626Adapter is AbstractAdapter, IERC4626Adapter {
 
     /// @notice Mask of the ERC4626 vault shares
     uint256 public immutable override sharesMask;
+
+    function _gearboxAdapterType() external pure virtual override returns (AdapterType) {
+        return AdapterType.ERC4626_VAULT;
+    }
 
     /// @notice Constructor
     /// @param _creditManager Credit manager address
@@ -96,6 +99,7 @@ contract ERC4626Adapter is AbstractAdapter, IERC4626Adapter {
     /// @dev `receiver` and `owner` are ignored, since they are always set to the credit account address
     function withdraw(uint256 assets, address, address)
         external
+        virtual
         override
         creditFacadeOnly // U:[TV-2]
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
@@ -110,6 +114,7 @@ contract ERC4626Adapter is AbstractAdapter, IERC4626Adapter {
     /// @dev `receiver` and `owner` are ignored, since they are always set to the credit account address
     function redeem(uint256 shares, address, address)
         external
+        virtual
         override
         creditFacadeOnly // U:[TV-2]
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
@@ -122,6 +127,7 @@ contract ERC4626Adapter is AbstractAdapter, IERC4626Adapter {
     /// @param leftoverAmount Amount of vault token to keep on the account
     function redeemDiff(uint256 leftoverAmount)
         external
+        virtual
         override
         creditFacadeOnly // U:[TV-2]
         returns (uint256 tokensToEnable, uint256 tokensToDisable)
