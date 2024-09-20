@@ -5,7 +5,9 @@ pragma solidity ^0.8.23;
 
 import {IERC4626} from "@openzeppelin/contracts/interfaces/IERC4626.sol";
 import {ERC4626Adapter} from "../../../../adapters/erc4626/ERC4626Adapter.sol";
+import {Mellow4626VaultAdapter} from "../../../../adapters/mellow/Mellow4626VaultAdapter.sol";
 import {AdapterUnitTestHelper} from "../AdapterUnitTestHelper.sol";
+import {NotImplementedException} from "@gearbox-protocol/core-v3/contracts/interfaces/IExceptions.sol";
 
 /// @title ERC-4626 adapter unit test
 /// @notice U:[TV]: Unit tests for ERC-4626 tokenized vault adapter
@@ -138,5 +140,22 @@ contract ERC4626AdapterUnitTest is AdapterUnitTestHelper {
         vm.prank(creditFacade);
         bool useSafePrices = adapter.redeemDiff(diffLeftoverAmount);
         assertFalse(useSafePrices);
+    }
+
+    /// @notice U:[TV-9]: withdrawal functions restricted for Mellow adapter
+    function test_U_TV_09_withdrawal_functions_restricted_for_mellow() public diffTestCases {
+        adapter = new Mellow4626VaultAdapter(address(creditManager), vault);
+
+        vm.expectRevert(NotImplementedException.selector);
+        vm.prank(creditFacade);
+        adapter.withdraw(1000, address(0), address(0));
+
+        vm.expectRevert(NotImplementedException.selector);
+        vm.prank(creditFacade);
+        adapter.redeem(1000, address(0), address(0));
+
+        vm.expectRevert(NotImplementedException.selector);
+        vm.prank(creditFacade);
+        adapter.redeemDiff(1000);
     }
 }
