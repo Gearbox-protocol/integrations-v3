@@ -52,20 +52,25 @@ contract CONFIG_MAINNET_WETH_TEST_V3 is IPoolV3DeployConfig {
     CreditManagerV3DeployParams[] _creditManagers;
 
     constructor() {
+        _gaugeRates.push(GaugeRate({token: Tokens.LDO, minRate: 4, maxRate: 1_500}));
         _gaugeRates.push(GaugeRate({token: Tokens.steCRV, minRate: 4, maxRate: 1_500}));
+        _gaugeRates.push(GaugeRate({token: Tokens.cvxsteCRV, minRate: 4, maxRate: 1_500}));
         _gaugeRates.push(GaugeRate({token: Tokens.rsETH_WETH, minRate: 4, maxRate: 1_500}));
         _gaugeRates.push(GaugeRate({token: Tokens.trenSTETH, minRate: 4, maxRate: 1_500}));
         _gaugeRates.push(GaugeRate({token: Tokens.Re7LRT, minRate: 4, maxRate: 1_500}));
         _gaugeRates.push(GaugeRate({token: Tokens.rstETH, minRate: 4, maxRate: 1_500}));
         _gaugeRates.push(GaugeRate({token: Tokens.amphrETH, minRate: 4, maxRate: 1_500}));
         _gaugeRates.push(GaugeRate({token: Tokens.STETH, minRate: 4, maxRate: 1_500}));
+        _gaugeRates.push(GaugeRate({token: Tokens.stkcvxsteCRV, minRate: 4, maxRate: 1_500}));
         _gaugeRates.push(GaugeRate({token: Tokens.wstETH, minRate: 4, maxRate: 1_500}));
         _gaugeRates.push(GaugeRate({token: Tokens.steakLRT, minRate: 4, maxRate: 1_500}));
         _gaugeRates.push(GaugeRate({token: Tokens.rsETH, minRate: 4, maxRate: 1_500}));
         _gaugeRates.push(GaugeRate({token: Tokens.PT_rsETH_26SEP2024, minRate: 4, maxRate: 1_500}));
         _gaugeRates.push(GaugeRate({token: Tokens.USDC, minRate: 4, maxRate: 1_500}));
         _gaugeRates.push(GaugeRate({token: Tokens.WBTC, minRate: 4, maxRate: 1_500}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.LDO, quotaIncreaseFee: 0, limit: 0}));
         _quotaLimits.push(PoolQuotaLimit({token: Tokens.steCRV, quotaIncreaseFee: 0, limit: 0}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.cvxsteCRV, quotaIncreaseFee: 0, limit: 0}));
         _quotaLimits.push(PoolQuotaLimit({token: Tokens.rsETH_WETH, quotaIncreaseFee: 0, limit: 0}));
         _quotaLimits.push(PoolQuotaLimit({token: Tokens.trenSTETH, quotaIncreaseFee: 0, limit: 0}));
         _quotaLimits.push(PoolQuotaLimit({token: Tokens.Re7LRT, quotaIncreaseFee: 0, limit: 0}));
@@ -73,6 +78,9 @@ contract CONFIG_MAINNET_WETH_TEST_V3 is IPoolV3DeployConfig {
         _quotaLimits.push(PoolQuotaLimit({token: Tokens.amphrETH, quotaIncreaseFee: 0, limit: 0}));
         _quotaLimits.push(
             PoolQuotaLimit({token: Tokens.STETH, quotaIncreaseFee: 0, limit: 4_000_000_000_000_000_000_000})
+        );
+        _quotaLimits.push(
+            PoolQuotaLimit({token: Tokens.stkcvxsteCRV, quotaIncreaseFee: 0, limit: 4_000_000_000_000_000_000_000})
         );
         _quotaLimits.push(
             PoolQuotaLimit({token: Tokens.wstETH, quotaIncreaseFee: 0, limit: 4_000_000_000_000_000_000_000})
@@ -126,7 +134,11 @@ contract CONFIG_MAINNET_WETH_TEST_V3 is IPoolV3DeployConfig {
 
             cts.push(CollateralTokenHuman({token: Tokens.PT_rsETH_26SEP2024, lt: 9_000}));
 
+            cts.push(CollateralTokenHuman({token: Tokens.stkcvxsteCRV, lt: 9_000}));
+
             cts.push(CollateralTokenHuman({token: Tokens.steCRV, lt: 0}));
+
+            cts.push(CollateralTokenHuman({token: Tokens.cvxsteCRV, lt: 0}));
 
             cts.push(CollateralTokenHuman({token: Tokens.rsETH_WETH, lt: 0}));
 
@@ -137,6 +149,8 @@ contract CONFIG_MAINNET_WETH_TEST_V3 is IPoolV3DeployConfig {
             cts.push(CollateralTokenHuman({token: Tokens.rstETH, lt: 0}));
 
             cts.push(CollateralTokenHuman({token: Tokens.amphrETH, lt: 0}));
+
+            cts.push(CollateralTokenHuman({token: Tokens.LDO, lt: 0}));
             Contracts[] storage cs = cp.contracts;
             cs.push(Contracts.UNISWAP_V3_ROUTER);
             {
