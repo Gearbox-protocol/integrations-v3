@@ -18,30 +18,34 @@ import {
     BalancerPool,
     UniswapV3Pair,
     GenericSwapPair,
-    VelodromeV2Pool
+    VelodromeV2Pool,
+    MellowUnderlyingConfig,
+    PendlePair
 } from "@gearbox-protocol/core-v3/contracts/test/interfaces/ICreditConfig.sol";
 
 import {PriceFeedDeployer} from "@gearbox-protocol/oracles-v3/contracts/test/suites/PriceFeedDeployer.sol";
 import {IntegrationTestHelper} from "@gearbox-protocol/core-v3/contracts/test/helpers/IntegrationTestHelper.sol";
 import {AdapterDeployer} from "./AdapterDeployer.sol";
 
-import {CONFIG_MAINNET_USDC_V3} from "../config/USDC_Mainnet_config.sol";
-import {CONFIG_MAINNET_WBTC_V3} from "../config/WBTC_Mainnet_config.sol";
-import {CONFIG_MAINNET_WETH_V3} from "../config/WETH_Mainnet_config.sol";
-import {CONFIG_MAINNET_GHO_V3} from "../config/GHO_Mainnet_config.sol";
-import {CONFIG_MAINNET_DAI_V3} from "../config/DAI_Mainnet_config.sol";
-import {CONFIG_MAINNET_USDT_V3} from "../config/USDT_Mainnet_config.sol";
-import {CONFIG_MAINNET_CRVUSD_V3} from "../config/CRVUSD_Mainnet_config.sol";
+// import {CONFIG_MAINNET_USDC_V3} from "../config/USDC_Mainnet_config.sol";
+// import {CONFIG_MAINNET_WBTC_V3} from "../config/WBTC_Mainnet_config.sol";
+// import {CONFIG_MAINNET_WETH_V3} from "../config/WETH_Mainnet_config.sol";
+// import {CONFIG_MAINNET_GHO_V3} from "../config/GHO_Mainnet_config.sol";
+// import {CONFIG_MAINNET_DAI_V3} from "../config/DAI_Mainnet_config.sol";
+// import {CONFIG_MAINNET_USDT_V3} from "../config/USDT_Mainnet_config.sol";
+// import {CONFIG_MAINNET_CRVUSD_V3} from "../config/CRVUSD_Mainnet_config.sol";
 
-import {CONFIG_OPTIMISM_USDC_V3} from "../config/USDC_Optimism_config.sol";
-import {CONFIG_OPTIMISM_WETH_V3} from "../config/WETH_Optimism_config.sol";
+// import {CONFIG_OPTIMISM_USDC_V3} from "../config/USDC_Optimism_config.sol";
+// import {CONFIG_OPTIMISM_WETH_V3} from "../config/WETH_Optimism_config.sol";
 
-import {CONFIG_ARBITRUM_USDC_V3} from "../config/USDC_Arbitrum_config.sol";
-import {CONFIG_ARBITRUM_USDCE_V3} from "../config/USDCE_Arbitrum_config.sol";
-import {CONFIG_ARBITRUM_WETH_V3} from "../config/WETH_Arbitrum_config.sol";
+// import {CONFIG_ARBITRUM_USDC_V3} from "../config/USDC_Arbitrum_config.sol";
+// import {CONFIG_ARBITRUM_USDCE_V3} from "../config/USDCE_Arbitrum_config.sol";
+// import {CONFIG_ARBITRUM_WETH_V3} from "../config/WETH_Arbitrum_config.sol";
 
-import {CONFIG_MAINNET_USDC_TEST_V3} from "../config/TEST_USDC_Mainnet_config.sol";
-import {CONFIG_ARBITRUM_WETH_TEST_V3} from "../config/TEST_WETH_Arbitrum_config.sol";
+// import {CONFIG_MAINNET_USDC_TEST_V3} from "../config/TEST_USDC_Mainnet_config.sol";
+// import {CONFIG_ARBITRUM_WETH_TEST_V3} from "../config/TEST_WETH_Arbitrum_config.sol";
+
+import {CONFIG_MAINNET_WETH_TEST_V3} from "../config/TEST_WETH_Mainnet_config.sol";
 
 import {IConvexV1BoosterAdapter} from "../../interfaces/convex/IConvexV1BoosterAdapter.sol";
 import {BalancerV2VaultAdapter} from "../../adapters/balancer/BalancerV2VaultAdapter.sol";
@@ -50,11 +54,16 @@ import {UniswapV3Adapter} from "../../adapters/uniswap/UniswapV3.sol";
 import {ZircuitPoolAdapter} from "../../adapters/zircuit/ZircuitPoolAdapter.sol";
 import {VelodromeV2RouterAdapter} from "../../adapters/velodrome/VelodromeV2RouterAdapter.sol";
 import {CamelotV3Adapter} from "../../adapters/camelot/CamelotV3Adapter.sol";
+import {PendleRouterAdapter} from "../../adapters/pendle/PendleRouterAdapter.sol";
+import {MellowVaultAdapter} from "../../adapters/mellow/MellowVaultAdapter.sol";
+
 import {PoolStatus} from "../../interfaces/balancer/IBalancerV2VaultAdapter.sol";
 import {UniswapV2PairStatus} from "../../interfaces/uniswap/IUniswapV2Adapter.sol";
 import {UniswapV3PoolStatus} from "../../interfaces/uniswap/IUniswapV3Adapter.sol";
 import {VelodromeV2PoolStatus} from "../../interfaces/velodrome/IVelodromeV2RouterAdapter.sol";
 import {CamelotV3PoolStatus} from "../../interfaces/camelot/ICamelotV3Adapter.sol";
+import {PendlePairStatus, PendleStatus} from "../../interfaces/pendle/IPendleRouterAdapter.sol";
+import {MellowUnderlyingStatus} from "../../interfaces/mellow/IMellowVaultAdapter.sol";
 
 import "@gearbox-protocol/core-v3/contracts/test/lib/constants.sol";
 
@@ -62,20 +71,22 @@ import "forge-std/console.sol";
 
 contract LiveTestHelper is IntegrationTestHelper {
     constructor() {
-        addDeployConfig(new CONFIG_MAINNET_USDC_V3());
-        addDeployConfig(new CONFIG_MAINNET_WBTC_V3());
-        addDeployConfig(new CONFIG_MAINNET_WETH_V3());
-        addDeployConfig(new CONFIG_OPTIMISM_USDC_V3());
-        addDeployConfig(new CONFIG_OPTIMISM_WETH_V3());
-        addDeployConfig(new CONFIG_ARBITRUM_USDC_V3());
-        addDeployConfig(new CONFIG_ARBITRUM_WETH_V3());
-        addDeployConfig(new CONFIG_MAINNET_USDC_TEST_V3());
-        addDeployConfig(new CONFIG_ARBITRUM_WETH_TEST_V3());
-        addDeployConfig(new CONFIG_MAINNET_GHO_V3());
-        addDeployConfig(new CONFIG_MAINNET_DAI_V3());
-        addDeployConfig(new CONFIG_MAINNET_USDT_V3());
-        addDeployConfig(new CONFIG_MAINNET_CRVUSD_V3());
-        addDeployConfig(new CONFIG_ARBITRUM_USDCE_V3());
+        // addDeployConfig(new CONFIG_MAINNET_USDC_V3());
+        // addDeployConfig(new CONFIG_MAINNET_WBTC_V3());
+        // addDeployConfig(new CONFIG_MAINNET_WETH_V3());
+        // addDeployConfig(new CONFIG_OPTIMISM_USDC_V3());
+        // addDeployConfig(new CONFIG_OPTIMISM_WETH_V3());
+        // addDeployConfig(new CONFIG_ARBITRUM_USDC_V3());
+        // addDeployConfig(new CONFIG_ARBITRUM_WETH_V3());
+        // addDeployConfig(new CONFIG_MAINNET_USDC_TEST_V3());
+        // addDeployConfig(new CONFIG_ARBITRUM_WETH_TEST_V3());
+        // addDeployConfig(new CONFIG_MAINNET_GHO_V3());
+        // addDeployConfig(new CONFIG_MAINNET_DAI_V3());
+        // addDeployConfig(new CONFIG_MAINNET_USDT_V3());
+        // addDeployConfig(new CONFIG_MAINNET_CRVUSD_V3());
+        // addDeployConfig(new CONFIG_ARBITRUM_USDCE_V3());
+
+        addDeployConfig(new CONFIG_MAINNET_WETH_TEST_V3());
     }
 
     SupportedContracts public supportedContracts;
@@ -95,16 +106,7 @@ contract LiveTestHelper is IntegrationTestHelper {
 
     modifier attachOrLiveTest() {
         if (chainId != 1337 && chainId != 31337) {
-            try vm.envAddress("ATTACH_ADDRESS_PROVIDER") returns (address) {
-                _attachCore();
-                supportedContracts = new SupportedContracts(chainId);
-
-                address creditManagerToAttach;
-
-                try vm.envAddress("ATTACH_CREDIT_MANAGER") returns (address val) {
-                    creditManagerToAttach = val;
-                } catch {}
-
+            try vm.envAddress("ATTACH_CREDIT_MANAGER") returns (address creditManagerToAttach) {
                 if (creditManagerToAttach != address(0)) {
                     if (_checkFunctionalSuite(creditManagerToAttach)) {
                         _attachCreditManager(creditManagerToAttach);
@@ -113,8 +115,13 @@ contract LiveTestHelper is IntegrationTestHelper {
                     } else {
                         console.log("Pool or facade for attached CM paused, skipping: %s", creditManagerToAttach);
                     }
-                } else {
-                    address[] memory cms = cr.getCreditManagers();
+                }
+            } catch {
+                try vm.envAddress("ATTACH_POOL") returns (address poolToAttach) {
+                    _attachPool(poolToAttach);
+                    supportedContracts = new SupportedContracts(chainId);
+
+                    address[] memory cms = pool.creditManagers();
                     uint256 len = cms.length;
                     for (uint256 i = 0; i < len; ++i) {
                         if (IVersion(cms[i]).version() >= 3_00) {
@@ -129,20 +136,25 @@ contract LiveTestHelper is IntegrationTestHelper {
                             vm.revertTo(snapshot);
                         }
                     }
-                }
-            } catch {
-                try vm.envString("LIVE_TEST_CONFIG") returns (string memory id) {
-                    _setupLiveCreditTest(id);
-
-                    vm.prank(address(gauge));
-                    poolQuotaKeeper.updateRates();
-
-                    for (uint256 i = 0; i < creditManagers.length; ++i) {
-                        _attachCreditManager(address(creditManagers[i]));
-                        _;
-                    }
+                    console.log("Successfully ran tests on attached pool: %s", poolToAttach);
                 } catch {
-                    revert("Neither attach AP nor live test config was defined.");
+                    try vm.envString("LIVE_TEST_CONFIG") returns (string memory id) {
+                        _setupLiveCreditTest(id);
+
+                        vm.prank(address(gauge));
+                        poolQuotaKeeper.updateRates();
+
+                        for (uint256 i = 0; i < creditManagers.length; ++i) {
+                            uint256 s = vm.snapshot();
+                            _attachCreditManager(address(creditManagers[i]));
+                            _;
+                            vm.revertTo(s);
+                        }
+                    } catch {
+                        revert(
+                            "Live/attach tests require the attached pool/CM address or live test config. Please set one of the env variables: ATTACH_POOL or ATTACH_CREDIT_MANAGER or LIVE_TEST_CONFIG"
+                        );
+                    }
                 }
             }
         }
@@ -209,7 +221,7 @@ contract LiveTestHelper is IntegrationTestHelper {
         }
 
         // BALANCER VAULT
-        BalancerPool[] memory bPools = creditManagerParams.balancerPools;
+        BalancerPool[] memory bPools = creditManagerParams.adapterConfig.balancerPools;
 
         if (bPools.length != 0) {
             address balancerAdapter = getAdapter(creditManager, Contracts.BALANCER_VAULT);
@@ -219,8 +231,47 @@ contract LiveTestHelper is IntegrationTestHelper {
                 BalancerV2VaultAdapter(balancerAdapter).setPoolStatus(bPools[i].poolId, PoolStatus(bPools[i].status));
             }
         }
+
+        // PENDLE_ROUTER
+        PendlePair[] memory pPairs = creditManagerParams.adapterConfig.pendlePairs;
+
+        if (pPairs.length != 0) {
+            PendlePairStatus[] memory pairs = new PendlePairStatus[](pPairs.length);
+
+            for (uint256 i = 0; i < pPairs.length; ++i) {
+                pairs[i] = PendlePairStatus({
+                    market: pPairs[i].market,
+                    inputToken: tokenTestSuite.addressOf(pPairs[i].inputToken),
+                    pendleToken: tokenTestSuite.addressOf(pPairs[i].pendleToken),
+                    status: PendleStatus(pPairs[i].status)
+                });
+            }
+
+            address pendleRouterAdapter = getAdapter(creditManager, Contracts.PENDLE_ROUTER);
+            vm.prank(CONFIGURATOR);
+            PendleRouterAdapter(pendleRouterAdapter).setPairStatusBatch(pairs);
+        }
+
+        // MELLOW VAULTS
+        MellowUnderlyingConfig[] memory mellowConfigs = creditManagerParams.adapterConfig.mellowUnderlyings;
+
+        if (mellowConfigs.length != 0) {
+            for (uint256 i = 0; i < mellowConfigs.length; ++i) {
+                address mellowAdapter = getAdapter(creditManager, mellowConfigs[i].vault);
+
+                MellowUnderlyingStatus[] memory ms = new MellowUnderlyingStatus[](1);
+                ms[0] = MellowUnderlyingStatus({
+                    underlying: tokenTestSuite.addressOf(mellowConfigs[i].underlying),
+                    allowed: true
+                });
+
+                vm.prank(CONFIGURATOR);
+                MellowVaultAdapter(mellowAdapter).setUnderlyingStatusBatch(ms);
+            }
+        }
+
         // UNISWAP V3 ROUTER
-        UniswapV3Pair[] memory uniV3Pools = creditManagerParams.uniswapV3Pairs;
+        UniswapV3Pair[] memory uniV3Pools = creditManagerParams.adapterConfig.uniswapV3Pairs;
 
         if (uniV3Pools.length != 0) {
             UniswapV3PoolStatus[] memory pools = new UniswapV3PoolStatus[](uniV3Pools.length);
@@ -260,9 +311,26 @@ contract LiveTestHelper is IntegrationTestHelper {
                 vm.prank(CONFIGURATOR);
                 UniswapV3Adapter(pancakeswapV3Adapter).setPoolStatusBatch(pools);
             }
+
+            for (uint256 i = 0; i < uniV3Pools.length; ++i) {
+                if (uniV3Pools[i].router != Contracts.VELODROME_CL_ROUTER) continue;
+                pools[i] = UniswapV3PoolStatus({
+                    token0: tokenTestSuite.addressOf(uniV3Pools[i].token0),
+                    token1: tokenTestSuite.addressOf(uniV3Pools[i].token1),
+                    fee: uniV3Pools[i].fee,
+                    allowed: true
+                });
+            }
+
+            address velodromeCLAdapter = getAdapter(creditManager, Contracts.VELODROME_CL_ROUTER);
+
+            if (velodromeCLAdapter != address(0)) {
+                vm.prank(CONFIGURATOR);
+                UniswapV3Adapter(velodromeCLAdapter).setPoolStatusBatch(pools);
+            }
         }
         // SIMPLE INTERFACE SWAPPERS
-        GenericSwapPair[] memory genericPairs = creditManagerParams.genericSwapPairs;
+        GenericSwapPair[] memory genericPairs = creditManagerParams.adapterConfig.genericSwapPairs;
 
         if (genericPairs.length != 0) {
             UniswapV2PairStatus[] memory pairs = new UniswapV2PairStatus[](genericPairs.length);
@@ -338,7 +406,7 @@ contract LiveTestHelper is IntegrationTestHelper {
             }
         }
         // VELODROME V2
-        VelodromeV2Pool[] memory velodromeV2Pools = creditManagerParams.velodromeV2Pools;
+        VelodromeV2Pool[] memory velodromeV2Pools = creditManagerParams.adapterConfig.velodromeV2Pools;
 
         if (velodromeV2Pools.length != 0) {
             VelodromeV2PoolStatus[] memory pools = new VelodromeV2PoolStatus[](velodromeV2Pools.length);
@@ -367,65 +435,9 @@ contract LiveTestHelper is IntegrationTestHelper {
         return !Pausable(pool).paused() && !Pausable(creditFacade).paused();
     }
 
-    function _setUp() public virtual liveTest {
-        // lts = new LiveEnvTestSuite();
-        // MAINNET_CONFIGURATOR = lts.ROOT_ADDRESS();
-        // tokenTestSuite = lts.tokenTestSuite();
-        // supportedContracts = lts.supportedContracts();
-
-        // TODO: CHANGE
-    }
-
-    //     function getUniV2() internal view returns (IUniswapV2Router02) {
-    //         return IUniswapV2Router02(supportedContracts.addressOf(Contracts.UNISWAP_V2_ROUTER));
-    //     }
-
-    //     function swapEthToTokens(address onBehalfOf, Tokens t, uint256 amount) internal {
-    //         vm.startPrank(onBehalfOf);
-
-    //         getUniV2().swapExactETHForTokens{value: amount}(
-    //             0, arrayOf(tokenTestSuite.addressOf(Tokens.WETH), tokenTestSuite.addressOf(t)), onBehalfOf, block.timestamp
-    //         );
-
-    //         vm.stopPrank();
-    //     }
-
-    //     // [TODO]: add new lib for arrayOf
-    //     function arrayOf(address addr0, address addr1) internal pure returns (address[] memory result) {
-    //         result = new address[](2);
-    //         result[0] = addr0;
-    //         result[1] = addr1;
-    //     }
-
-    //     function getTokensOfType(TokenType tokenType) internal view returns (Tokens[] memory tokens) {
-    //         uint256 tokenCount = tokenTestSuite.tokenCount();
-
-    //         uint256[] memory temp = new uint256[](tokenCount);
-    //         uint256 found;
-
-    //         for (uint256 i = 0; i < tokenCount; ++i) {
-    //             if (tokenTestSuite.tokenTypes(Tokens(i)) == tokenType) {
-    //                 temp[found] = i;
-    //                 ++found;
-    //             }
-    //         }
-
-    //         tokens = new Tokens[](found);
-
-    //         for (uint256 i = 0; i < found; ++i) {
-    //             tokens[i] = Tokens(temp[i]);
-    //         }
-    //     }
+    function _setUp() public virtual liveTest {}
 
     function getAdapter(address creditManager, Contracts target) public view returns (address) {
         return ICreditManagerV3(creditManager).contractToAdapter(supportedContracts.addressOf(target));
     }
-
-    // function getAdapter(Tokens underlying, Contracts target) public view returns (address) {
-    //     return _creditManagers[underlying][0].contractToAdapter(supportedContracts.addressOf(target));
-    // }
-
-    // function getAdapter(Tokens underlying, Contracts target, uint256 cmIdx) public view returns (address) {
-    //     return _creditManagers[underlying][cmIdx].contractToAdapter(supportedContracts.addressOf(target));
-    // }
 }

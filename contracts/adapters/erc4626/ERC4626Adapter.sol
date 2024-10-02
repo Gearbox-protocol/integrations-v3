@@ -13,11 +13,14 @@ import {IERC4626Adapter} from "../../interfaces/erc4626/IERC4626Adapter.sol";
 /// @title ERC4626 Vault adapter
 /// @notice Implements logic allowing CAs to interact with any standard-compliant ERC4626 vault
 contract ERC4626Adapter is AbstractAdapter, IERC4626Adapter {
-    bytes32 public constant override contractType = "AD_ERC4626_VAULT";
     uint256 public constant override version = 3_10;
 
     /// @notice Address of the underlying asset of the vault
     address public immutable override asset;
+
+    function contractType() external pure virtual override returns (bytes32) {
+        return "AD_ERC4626_VAULT";
+    }
 
     /// @notice Constructor
     /// @param _creditManager Credit manager address
@@ -90,6 +93,7 @@ contract ERC4626Adapter is AbstractAdapter, IERC4626Adapter {
     /// @dev `receiver` and `owner` are ignored, since they are always set to the credit account address
     function withdraw(uint256 assets, address, address)
         external
+        virtual
         override
         creditFacadeOnly // U:[TV-2]
         returns (bool)
@@ -104,6 +108,7 @@ contract ERC4626Adapter is AbstractAdapter, IERC4626Adapter {
     /// @dev `receiver` and `owner` are ignored, since they are always set to the credit account address
     function redeem(uint256 shares, address, address)
         external
+        virtual
         override
         creditFacadeOnly // U:[TV-2]
         returns (bool)
@@ -117,6 +122,7 @@ contract ERC4626Adapter is AbstractAdapter, IERC4626Adapter {
     /// @param leftoverAmount Amount of vault token to keep on the account
     function redeemDiff(uint256 leftoverAmount)
         external
+        virtual
         override
         creditFacadeOnly // U:[TV-2]
         returns (bool)
