@@ -53,6 +53,8 @@ contract CONFIG_MAINNET_WETH_TEST_V3 is IPoolV3DeployConfig {
 
     constructor() {
         _gaugeRates.push(GaugeRate({token: Tokens.LDO, minRate: 4, maxRate: 1_500}));
+        _gaugeRates.push(GaugeRate({token: Tokens.CRV, minRate: 4, maxRate: 1_500}));
+        _gaugeRates.push(GaugeRate({token: Tokens.CVX, minRate: 4, maxRate: 1_500}));
         _gaugeRates.push(GaugeRate({token: Tokens.steCRV, minRate: 4, maxRate: 1_500}));
         _gaugeRates.push(GaugeRate({token: Tokens.cvxsteCRV, minRate: 4, maxRate: 1_500}));
         _gaugeRates.push(GaugeRate({token: Tokens.rsETH_WETH, minRate: 4, maxRate: 1_500}));
@@ -69,6 +71,8 @@ contract CONFIG_MAINNET_WETH_TEST_V3 is IPoolV3DeployConfig {
         _gaugeRates.push(GaugeRate({token: Tokens.USDC, minRate: 4, maxRate: 1_500}));
         _gaugeRates.push(GaugeRate({token: Tokens.WBTC, minRate: 4, maxRate: 1_500}));
         _quotaLimits.push(PoolQuotaLimit({token: Tokens.LDO, quotaIncreaseFee: 0, limit: 0}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.CRV, quotaIncreaseFee: 0, limit: 0}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.CVX, quotaIncreaseFee: 0, limit: 0}));
         _quotaLimits.push(PoolQuotaLimit({token: Tokens.steCRV, quotaIncreaseFee: 0, limit: 0}));
         _quotaLimits.push(PoolQuotaLimit({token: Tokens.cvxsteCRV, quotaIncreaseFee: 0, limit: 0}));
         _quotaLimits.push(PoolQuotaLimit({token: Tokens.rsETH_WETH, quotaIncreaseFee: 0, limit: 0}));
@@ -151,6 +155,10 @@ contract CONFIG_MAINNET_WETH_TEST_V3 is IPoolV3DeployConfig {
             cts.push(CollateralTokenHuman({token: Tokens.amphrETH, lt: 0}));
 
             cts.push(CollateralTokenHuman({token: Tokens.LDO, lt: 0}));
+
+            cts.push(CollateralTokenHuman({token: Tokens.CRV, lt: 0}));
+
+            cts.push(CollateralTokenHuman({token: Tokens.CVX, lt: 0}));
             Contracts[] storage cs = cp.contracts;
             cs.push(Contracts.UNISWAP_V3_ROUTER);
             {
@@ -169,6 +177,30 @@ contract CONFIG_MAINNET_WETH_TEST_V3 is IPoolV3DeployConfig {
                         token0: Tokens.WETH,
                         token1: Tokens.USDC,
                         fee: 500
+                    })
+                );
+                uv3p.push(
+                    UniswapV3Pair({
+                        router: Contracts.UNISWAP_V3_ROUTER,
+                        token0: Tokens.WETH,
+                        token1: Tokens.CRV,
+                        fee: 3000
+                    })
+                );
+                uv3p.push(
+                    UniswapV3Pair({
+                        router: Contracts.UNISWAP_V3_ROUTER,
+                        token0: Tokens.WETH,
+                        token1: Tokens.CRV,
+                        fee: 10000
+                    })
+                );
+                uv3p.push(
+                    UniswapV3Pair({
+                        router: Contracts.UNISWAP_V3_ROUTER,
+                        token0: Tokens.WETH,
+                        token1: Tokens.CVX,
+                        fee: 10000
                     })
                 );
             }
