@@ -26,6 +26,9 @@ contract ZircuitPoolAdapter is AbstractAdapter, IZircuitPoolAdapter {
     /// @notice Map from Zircuit underlying to their respective phantom tokens
     mapping(address => address) public tokenToPhantomToken;
 
+    /// @notice Map from phantom token to Zircuit underlying
+    mapping(address => address) public phantomTokenToToken;
+
     /// @notice Constructor
     /// @param _creditManager Credit manager address
     /// @param _pool Zircuit pool address
@@ -119,10 +122,13 @@ contract ZircuitPoolAdapter is AbstractAdapter, IZircuitPoolAdapter {
         external
         override
         creditFacadeOnly // U: [ZIR-1]
-        supportedUnderlyingsOnly(token) // U: [ZIR-1A]
         returns (bool)
     {
-        _execute(abi.encodeCall(IZircuitPool.withdraw, (token, amount)));
+        address depositedToken = phantomTokenToToken[token];
+
+        if (!_supportedUnderlyings.contains(depositedToken)) revert UnsupportedUnderlyingException();
+
+        _execute(abi.encodeCall(IZircuitPool.withdraw, (depositedToken, amount))); // U: [ZIR-1A]
         return false;
     }
 
@@ -163,6 +169,7 @@ contract ZircuitPoolAdapter is AbstractAdapter, IZircuitPoolAdapter {
             try IPhantomToken(token).getPhantomTokenInfo() returns (address target, address depositedToken) {
                 if (target == targetContract) {
                     tokenToPhantomToken[depositedToken] = token;
+                    phantomTokenToToken[token] = depositedToken;
                     if (_supportedUnderlyings.add(depositedToken)) emit AddSupportedUnderlying(depositedToken, token);
                 }
             } catch {}

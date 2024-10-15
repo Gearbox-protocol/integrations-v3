@@ -14,6 +14,7 @@ import {IPhantomToken} from "@gearbox-protocol/core-v3/contracts/interfaces/base
 import {ZircuitPhantomToken} from "../../../../helpers/zircuit/ZircuitPhantomToken.sol";
 import {PriceFeedParams} from "@gearbox-protocol/core-v3/contracts/interfaces/IPriceOracleV3.sol";
 import {IPriceFeed} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IPriceFeed.sol";
+import {IPhantomTokenWithdrawer} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IPhantomToken.sol";
 
 import {ZircuitPoolCalls, ZircuitPoolMulticaller} from "../../../multicall/zircuit/ZircuitPool_Calls.sol";
 
@@ -221,7 +222,7 @@ contract Live_ZircuitEquivalenceTest is LiveTestHelper {
                 )
             );
 
-            vm.expectCall(zircuitAdapter, abi.encodeCall(IZircuitPoolAdapter.withdraw, (depositedToken, WAD)));
+            vm.expectCall(zircuitAdapter, abi.encodeCall(IPhantomTokenWithdrawer.withdrawPhantomToken, (token, WAD)));
             vm.prank(USER);
             MultiCall memory call = MultiCall({
                 target: address(creditFacade),
