@@ -15,6 +15,7 @@ import {ConvexStakedPositionToken} from "../../../../helpers/convex/ConvexV1_Sta
 import {IPhantomToken} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IPhantomToken.sol";
 import {PriceFeedParams} from "@gearbox-protocol/core-v3/contracts/interfaces/IPriceOracleV3.sol";
 import {IPriceFeed} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IPriceFeed.sol";
+import {IPhantomTokenWithdrawer} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IPhantomToken.sol";
 
 import {
     ConvexV1_BaseRewardPoolCalls,
@@ -326,7 +327,7 @@ contract Live_ConvexEquivalenceTest is LiveTestHelper {
 
             address poolAdapter = creditManager.contractToAdapter(pool);
 
-            vm.expectCall(poolAdapter, abi.encodeCall(IConvexV1BaseRewardPoolAdapter.withdrawAndUnwrap, (WAD, false)));
+            vm.expectCall(poolAdapter, abi.encodeCall(IPhantomTokenWithdrawer.withdrawPhantomToken, (token, WAD)));
             vm.prank(USER);
             MultiCall memory call = MultiCall({
                 target: address(creditFacade),
@@ -335,7 +336,9 @@ contract Live_ConvexEquivalenceTest is LiveTestHelper {
 
             creditFacade.multicall(creditAccount, MultiCallBuilder.build(call));
 
-            assertEq(IERC20(curveToken).balanceOf(USER), WAD);
+            address convexToken = ConvexStakedPositionToken(token).underlying();
+
+            assertEq(IERC20(convexToken).balanceOf(USER), WAD);
 
             vm.revertTo(snapshot);
         }

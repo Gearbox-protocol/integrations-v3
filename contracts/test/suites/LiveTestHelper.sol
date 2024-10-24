@@ -46,6 +46,7 @@ import {AdapterDeployer} from "./AdapterDeployer.sol";
 // import {CONFIG_ARBITRUM_WETH_TEST_V3} from "../config/TEST_WETH_Arbitrum_config.sol";
 
 import {CONFIG_MAINNET_WETH_TEST_V3} from "../config/TEST_WETH_Mainnet_config.sol";
+import {CONFIG_MAINNET_DAI_TEST_V3} from "../config/TEST_DAI_Mainnet_config.sol";
 
 import {IConvexV1BoosterAdapter} from "../../interfaces/convex/IConvexV1BoosterAdapter.sol";
 import {BalancerV2VaultAdapter} from "../../adapters/balancer/BalancerV2VaultAdapter.sol";
@@ -87,6 +88,7 @@ contract LiveTestHelper is IntegrationTestHelper {
         // addDeployConfig(new CONFIG_ARBITRUM_USDCE_V3());
 
         addDeployConfig(new CONFIG_MAINNET_WETH_TEST_V3());
+        addDeployConfig(new CONFIG_MAINNET_DAI_TEST_V3());
     }
 
     SupportedContracts public supportedContracts;

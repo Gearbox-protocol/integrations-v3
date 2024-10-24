@@ -41,6 +41,11 @@ import {CamelotV3Adapter} from "../../adapters/camelot/CamelotV3Adapter.sol";
 import {MellowVaultAdapter} from "../../adapters/mellow/MellowVaultAdapter.sol";
 import {PendleRouterAdapter} from "../../adapters/pendle/PendleRouterAdapter.sol";
 
+import {ZircuitPoolAdapter} from "../../adapters/zircuit/ZircuitPoolAdapter.sol";
+
+import {DaiUsdsAdapter} from "../../adapters/sky/DaiUsdsAdapter.sol";
+import {StakingRewardsAdapter} from "../../adapters/sky/StakingRewardsAdapter.sol";
+
 import {TokensTestSuite} from "@gearbox-protocol/core-v3/contracts/test/suites/TokensTestSuite.sol";
 import {Test} from "forge-std/Test.sol";
 
@@ -132,6 +137,10 @@ contract AdapterDeployer is AdapterData, Test {
                         adapter = address(new MellowVaultAdapter(address(creditManager), targetContract));
                     } else if (at == AdapterType.PENDLE_ROUTER) {
                         adapter = address(new PendleRouterAdapter(address(creditManager), targetContract));
+                    } else if (at == AdapterType.DAI_USDS_EXCHANGE) {
+                        adapter = address(new DaiUsdsAdapter(address(creditManager), targetContract));
+                    } else if (at == AdapterType.ZIRCUIT_POOL) {
+                        adapter = address(new ZircuitPoolAdapter(address(creditManager), targetContract));
                     }
 
                     return adapter;
@@ -225,6 +234,21 @@ contract AdapterDeployer is AdapterData, Test {
                             address(creditManager),
                             targetContract,
                             tokenTestSuite.addressOf(convexBasePoolAdapters[i].stakedToken)
+                        )
+                    );
+                    return adapter;
+                }
+            }
+
+            len = stakingRewardsAdapters.length;
+            for (uint256 i; i < len; ++i) {
+                if (cnt == stakingRewardsAdapters[i].targetContract) {
+                    targetContract = supportedContracts.addressOf(cnt);
+                    adapter = address(
+                        new StakingRewardsAdapter(
+                            address(creditManager),
+                            targetContract,
+                            tokenTestSuite.addressOf(stakingRewardsAdapters[i].stakedToken)
                         )
                     );
                     return adapter;
