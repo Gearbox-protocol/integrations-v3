@@ -27,22 +27,8 @@ import {PriceFeedDeployer} from "@gearbox-protocol/oracles-v3/contracts/test/sui
 import {IntegrationTestHelper} from "@gearbox-protocol/core-v3/contracts/test/helpers/IntegrationTestHelper.sol";
 import {AdapterDeployer} from "./AdapterDeployer.sol";
 
-import {CONFIG_MAINNET_USDC_V3} from "../config/USDC_Mainnet_config.sol";
-import {CONFIG_MAINNET_WBTC_V3} from "../config/WBTC_Mainnet_config.sol";
-import {CONFIG_MAINNET_WETH_V3} from "../config/WETH_Mainnet_config.sol";
-import {CONFIG_MAINNET_GHO_V3} from "../config/GHO_Mainnet_config.sol";
-import {CONFIG_MAINNET_DAI_V3} from "../config/DAI_Mainnet_config.sol";
-import {CONFIG_MAINNET_USDT_V3} from "../config/USDT_Mainnet_config.sol";
-
-import {CONFIG_OPTIMISM_USDC_V3} from "../config/USDC_Optimism_config.sol";
-import {CONFIG_OPTIMISM_WETH_V3} from "../config/WETH_Optimism_config.sol";
-
-import {CONFIG_ARBITRUM_USDC_V3} from "../config/USDC_Arbitrum_config.sol";
-import {CONFIG_ARBITRUM_WETH_V3} from "../config/WETH_Arbitrum_config.sol";
-
-import {CONFIG_MAINNET_USDC_TEST_V3} from "../config/TEST_USDC_Mainnet_config.sol";
+import {CONFIG_MAINNET_DAI_TEST_V3} from "../config/TEST_DAI_Mainnet_config.sol";
 import {CONFIG_MAINNET_WETH_TEST_V3} from "../config/TEST_WETH_Mainnet_config.sol";
-import {CONFIG_ARBITRUM_WETH_TEST_V3} from "../config/TEST_WETH_Arbitrum_config.sol";
 
 import {IConvexV1BoosterAdapter} from "../../interfaces/convex/IConvexV1BoosterAdapter.sol";
 import {BalancerV2VaultAdapter} from "../../adapters/balancer/BalancerV2VaultAdapter.sol";
@@ -66,19 +52,8 @@ import "forge-std/console.sol";
 
 contract LiveTestHelper is IntegrationTestHelper {
     constructor() {
-        addDeployConfig(new CONFIG_MAINNET_USDC_V3());
-        addDeployConfig(new CONFIG_MAINNET_WBTC_V3());
-        addDeployConfig(new CONFIG_MAINNET_WETH_V3());
-        addDeployConfig(new CONFIG_OPTIMISM_USDC_V3());
-        addDeployConfig(new CONFIG_OPTIMISM_WETH_V3());
-        addDeployConfig(new CONFIG_ARBITRUM_USDC_V3());
-        addDeployConfig(new CONFIG_ARBITRUM_WETH_V3());
-        addDeployConfig(new CONFIG_MAINNET_USDC_TEST_V3());
         addDeployConfig(new CONFIG_MAINNET_WETH_TEST_V3());
-        addDeployConfig(new CONFIG_ARBITRUM_WETH_TEST_V3());
-        addDeployConfig(new CONFIG_MAINNET_GHO_V3());
-        addDeployConfig(new CONFIG_MAINNET_DAI_V3());
-        addDeployConfig(new CONFIG_MAINNET_USDT_V3());
+        addDeployConfig(new CONFIG_MAINNET_DAI_TEST_V3());
     }
 
     SupportedContracts public supportedContracts;

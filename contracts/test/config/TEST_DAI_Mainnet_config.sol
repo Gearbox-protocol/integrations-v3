@@ -16,11 +16,13 @@ import {
     GenericSwapPair,
     UniswapV3Pair,
     BalancerPool,
-    VelodromeV2Pool
+    VelodromeV2Pool,
+    PendlePair,
+    MellowUnderlyingConfig
 } from "@gearbox-protocol/core-v3/contracts/test/interfaces/ICreditConfig.sol";
 
-contract CONFIG_MAINNET_DAI_V3 is IPoolV3DeployConfig {
-    string public constant id = "mainnet-dai-v3";
+contract CONFIG_MAINNET_DAI_TEST_V3 is IPoolV3DeployConfig {
+    string public constant id = "mainnet-dai-test-v3";
     uint256 public constant chainId = 1;
     Tokens public constant underlying = Tokens.DAI;
     bool public constant supportsQuotas = true;
@@ -28,19 +30,19 @@ contract CONFIG_MAINNET_DAI_V3 is IPoolV3DeployConfig {
 
     // POOL
 
-    string public constant symbol = "dDAIV3";
-    string public constant name = "DAI v3";
+    string public constant symbol = "dDAI-test-V3";
+    string public constant name = "Test DAI v3";
 
     PoolV3DeployParams _poolParams =
         PoolV3DeployParams({withdrawalFee: 0, totalDebtLimit: 100_000_000_000_000_000_000_000_000});
 
     LinearIRMV3DeployParams _irm = LinearIRMV3DeployParams({
-        U_1: 70_00,
-        U_2: 90_00,
+        U_1: 7_000,
+        U_2: 9_000,
         R_base: 0,
-        R_slope1: 1_00,
-        R_slope2: 1_25,
-        R_slope3: 100_00,
+        R_slope1: 100,
+        R_slope2: 125,
+        R_slope3: 10_000,
         _isBorrowingMoreU2Forbidden: true
     });
 
@@ -50,22 +52,22 @@ contract CONFIG_MAINNET_DAI_V3 is IPoolV3DeployConfig {
     CreditManagerV3DeployParams[] _creditManagers;
 
     constructor() {
-        _gaugeRates.push(GaugeRate({token: Tokens.sDAI, minRate: 5, maxRate: 15_00}));
-        _gaugeRates.push(GaugeRate({token: Tokens.USDe, minRate: 5, maxRate: 50_00}));
-        _gaugeRates.push(GaugeRate({token: Tokens.sUSDe, minRate: 5, maxRate: 50_00}));
+        _gaugeRates.push(GaugeRate({token: Tokens.USDS, minRate: 4, maxRate: 1_500}));
+        _gaugeRates.push(GaugeRate({token: Tokens.stkUSDS, minRate: 4, maxRate: 1_500}));
+        _gaugeRates.push(GaugeRate({token: Tokens.SKY, minRate: 4, maxRate: 1_500}));
         _quotaLimits.push(
-            PoolQuotaLimit({token: Tokens.sDAI, quotaIncreaseFee: 0, limit: 30_000_000_000_000_000_000_000_000})
+            PoolQuotaLimit({token: Tokens.USDS, quotaIncreaseFee: 1, limit: 10_000_000_000_000_000_000_000_000})
         );
         _quotaLimits.push(
-            PoolQuotaLimit({token: Tokens.USDe, quotaIncreaseFee: 0, limit: 5_000_000_000_000_000_000_000_000})
+            PoolQuotaLimit({token: Tokens.stkUSDS, quotaIncreaseFee: 1, limit: 10_000_000_000_000_000_000_000_000})
         );
-        _quotaLimits.push(PoolQuotaLimit({token: Tokens.sUSDe, quotaIncreaseFee: 0, limit: 0}));
+        _quotaLimits.push(PoolQuotaLimit({token: Tokens.SKY, quotaIncreaseFee: 1, limit: 0}));
 
         {
             /// CREDIT_MANAGER_0
             CreditManagerV3DeployParams storage cp = _creditManagers.push();
 
-            cp.minDebt = 20_000_000_000_000_000_000_000;
+            cp.minDebt = 50_000_000_000_000_000_000_000;
             cp.maxDebt = 1_000_000_000_000_000_000_000_000;
             cp.feeInterest = 2500;
             cp.feeLiquidation = 150;
@@ -75,25 +77,25 @@ contract CONFIG_MAINNET_DAI_V3 is IPoolV3DeployConfig {
             cp.whitelisted = false;
             cp.expirable = false;
             cp.skipInit = false;
-            cp.poolLimit = 10_000_000_000_000_000_000_000_000;
+            cp.poolLimit = 5_000_000_000_000_000_000_000_000;
+            cp.name = "Test Credit Manager";
 
             CollateralTokenHuman[] storage cts = cp.collateralTokens;
-            cts.push(CollateralTokenHuman({token: Tokens.USDe, lt: 90_00}));
+            cts.push(CollateralTokenHuman({token: Tokens.USDS, lt: 9_000}));
 
-            cts.push(CollateralTokenHuman({token: Tokens.sUSDe, lt: 90_00}));
+            cts.push(CollateralTokenHuman({token: Tokens.stkUSDS, lt: 9_000}));
 
-            cts.push(CollateralTokenHuman({token: Tokens.sDAI, lt: 90_00}));
-
-            cts.push(CollateralTokenHuman({token: Tokens._3Crv, lt: 0}));
-
-            cts.push(CollateralTokenHuman({token: Tokens.USDeDAI, lt: 0}));
-
-            cts.push(CollateralTokenHuman({token: Tokens.MtEthena, lt: 0}));
+            cts.push(CollateralTokenHuman({token: Tokens.SKY, lt: 0}));
             Contracts[] storage cs = cp.contracts;
-            cs.push(Contracts.CURVE_USDE_DAI_POOL);
-            cs.push(Contracts.CURVE_SDAI_SUSDE_POOL);
-            cs.push(Contracts.MAKER_DSR_VAULT);
-            cs.push(Contracts.STAKED_USDE_VAULT);
+            cs.push(Contracts.DAI_USDS);
+            cs.push(Contracts.SKY_STAKING_REWARDS);
+            cs.push(Contracts.UNISWAP_V2_ROUTER);
+            {
+                GenericSwapPair[] storage gsp = cp.adapterConfig.genericSwapPairs;
+                gsp.push(
+                    GenericSwapPair({router: Contracts.UNISWAP_V2_ROUTER, token0: Tokens.SKY, token1: Tokens.USDS})
+                );
+            }
         }
     }
 

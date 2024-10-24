@@ -1051,10 +1051,10 @@
     eslint-plugin-simple-import-sort "^7.0.0"
     eslint-plugin-unused-imports "^2.0.0"
 
-"@gearbox-protocol/oracles-v3@^1.10.3":
-  version "1.10.3"
-  resolved "https://registry.yarnpkg.com/@gearbox-protocol/oracles-v3/-/oracles-v3-1.10.3.tgz#27a9c7ab89536ef79cfc9315b2a3114f1b700159"
-  integrity sha512-6K8ahmik2sFqK0cTDHadq5WXBN/mCeBef7yx7k9j+O4g7gXLf3bYdnQdNTVh3QPwF1hCKQ1dtvi4T9/M5oAWcw==
+"@gearbox-protocol/oracles-v3@^1.11.1":
+  version "1.11.1"
+  resolved "https://registry.yarnpkg.com/@gearbox-protocol/oracles-v3/-/oracles-v3-1.11.1.tgz#9e2cf660ff5845f736cf4b5a6a903a6603e61d62"
+  integrity sha512-ff69kZ8GHVg9ZFXDhtCSclmic0hAI5JNOTXuLojdKGkNnxGXks0vm4qNw0xEemD01IhW/M0cWkY44iX/dtMk1A==
   dependencies:
     redstone-protocol "^1.0.5"
 
@@ -1063,10 +1063,10 @@
   resolved "https://registry.yarnpkg.com/@gearbox-protocol/prettier-config/-/prettier-config-1.5.0.tgz#4df8e9fd2305fee6ab8c1417a02e31343836932a"
   integrity sha512-FUoprSsBdZyBjgxXCKL6mTkbeUJytaLzPJqIOoQpDmBRTX0seCc2o5I9PI9tySoRIlNnd/XXnKCXq1xHDEGbxw==
 
-"@gearbox-protocol/sdk-gov@^2.18.0":
-  version "2.18.0"
-  resolved "https://registry.yarnpkg.com/@gearbox-protocol/sdk-gov/-/sdk-gov-2.18.0.tgz#bfef8a51355434d20d95998abb7cb3cbb84304e1"
-  integrity sha512-Gqf8mHOWFXwn2Nk8f926OsjDYHrTSh3QN3RL9fKCv8uv0vktPDg8KWZFfifljwQQ3nVGNKwqWaa8RcGr/rdAxw==
+"@gearbox-protocol/sdk-gov@^2.24.0":
+  version "2.24.0"
+  resolved "https://registry.yarnpkg.com/@gearbox-protocol/sdk-gov/-/sdk-gov-2.24.0.tgz#beac0328625bf81d12e5afde679cc2356c34299b"
+  integrity sha512-tStCaH3bN2ZCx3sQye/xNjO3zjiyj/V2Elama8qICxKOIGuWdKLwgIX7H+hxGAOBw7lEw5ypELkKZ/mH+eT3YA==
   dependencies:
     ethers "6.12.1"
     humanize-duration-ts "^2.1.1"
