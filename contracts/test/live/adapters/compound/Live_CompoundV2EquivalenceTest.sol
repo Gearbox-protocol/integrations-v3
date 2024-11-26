@@ -14,7 +14,7 @@ import {ICErc20, ICErc20Actions} from "../../../../integrations/compound/ICErc20
 import {ICompoundV2_CTokenAdapter} from "../../../../interfaces/compound/ICompoundV2_CTokenAdapter.sol";
 import {CompoundV2_Calls, CompoundV2_Multicaller} from "../../../multicall/compound/CompoundV2_Calls.sol";
 
-import {Tokens} from "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
+import "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
 import {Contracts} from "@gearbox-protocol/sdk-gov/contracts/SupportedContracts.sol";
 
 import {MultiCall} from "@gearbox-protocol/core-v2/contracts/libraries/MultiCall.sol";
@@ -120,7 +120,7 @@ contract Live_CompoundV2EquivalenceTest is LiveTestHelper {
         tokensToTrack[0] = underlying;
         tokensToTrack[1] = ICompoundV2_CTokenAdapter(cTokenAdapter).targetContract();
 
-        Tokens[] memory _tokensToTrack = new Tokens[](tokensToTrack.length);
+        uint256[] memory _tokensToTrack = new uint256[](tokensToTrack.length);
 
         for (uint256 j = 0; j < tokensToTrack.length; ++j) {
             _tokensToTrack[j] = tokenTestSuite.tokenIndexes(tokensToTrack[j]);
@@ -145,9 +145,7 @@ contract Live_CompoundV2EquivalenceTest is LiveTestHelper {
             uint256 snapshot0 = vm.snapshot();
 
             address underlying = ICompoundV2_CTokenAdapter(adapters[i])._gearboxAdapterType()
-                == AdapterType.COMPOUND_V2_CETHER
-                ? tokenTestSuite.addressOf(Tokens.WETH)
-                : ICErc20(adapters[i]).underlying();
+                == AdapterType.COMPOUND_V2_CETHER ? tokenTestSuite.addressOf(TOKEN_WETH) : ICErc20(adapters[i]).underlying();
 
             address creditAccount =
                 openCreditAccountWithUnderlying(underlying, 3000 * 10 ** IERC20Metadata(underlying).decimals());

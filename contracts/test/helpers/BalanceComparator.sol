@@ -3,7 +3,7 @@
 // (c) Gearbox Foundation, 2023.
 pragma solidity ^0.8.10;
 
-import {Tokens} from "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
+import "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
@@ -14,7 +14,7 @@ import {TokensTestSuite} from "@gearbox-protocol/core-v3/contracts/test/suites/T
 
 struct BalanceBackup {
     string stage;
-    Tokens token;
+    uint256 token;
     uint256 balance;
 }
 
@@ -24,13 +24,13 @@ contract BalanceComparator is Test {
     error StageNotAllowed(string);
 
     TokensTestSuite public tokenTestSuite;
-    Tokens[] public tokensToTrack;
-    mapping(string => mapping(Tokens => mapping(address => uint256))) savedBalances;
+    uint256[] public tokensToTrack;
+    mapping(string => mapping(uint256 => mapping(address => uint256))) savedBalances;
 
     string[] public stages;
     mapping(string => bool) _allowedStages;
 
-    constructor(string[] memory _stages, Tokens[] memory _tokensToTrack, TokensTestSuite _tokenTestSuite) {
+    constructor(string[] memory _stages, uint256[] memory _tokensToTrack, TokensTestSuite _tokenTestSuite) {
         tokenTestSuite = _tokenTestSuite;
         uint256 len = _tokensToTrack.length;
         unchecked {
@@ -53,7 +53,7 @@ contract BalanceComparator is Test {
         uint256 len = tokensToTrack.length;
         unchecked {
             for (uint256 i; i < len; ++i) {
-                Tokens t = tokensToTrack[i];
+                uint256 t = tokensToTrack[i];
                 uint256 balance = IERC20(tokenTestSuite.addressOf(t)).balanceOf(holder);
                 savedBalances[stage][t][holder] = balance;
             }
@@ -68,7 +68,7 @@ contract BalanceComparator is Test {
 
             for (uint256 j; j < lenStages; ++j) {
                 for (uint256 i; i < len; ++i) {
-                    Tokens t = tokensToTrack[i];
+                    uint256 t = tokensToTrack[i];
                     string memory stage = stages[j];
 
                     result[i + j * len] =
@@ -97,7 +97,7 @@ contract BalanceComparator is Test {
         unchecked {
             for (uint256 j; j < lenStages; ++j) {
                 for (uint256 i; i < len; ++i) {
-                    Tokens t = tokensToTrack[i];
+                    uint256 t = tokensToTrack[i];
                     string memory stage = stages[j];
 
                     if (expectedError == 0) {

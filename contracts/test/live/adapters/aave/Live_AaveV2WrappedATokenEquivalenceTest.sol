@@ -12,7 +12,7 @@ import {IAToken} from "../../../../integrations/aave/IAToken.sol";
 import {AdapterType} from "@gearbox-protocol/sdk-gov/contracts/AdapterType.sol";
 import {IAdapter} from "@gearbox-protocol/core-v2/contracts/interfaces/IAdapter.sol";
 
-import {Tokens} from "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
+import "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
 import {Contracts} from "@gearbox-protocol/sdk-gov/contracts/SupportedContracts.sol";
 
 import {MultiCall} from "@gearbox-protocol/core-v2/contracts/libraries/MultiCall.sol";
@@ -41,7 +41,7 @@ contract Live_AaveV2WrappedATokenEquivalenceTest is LiveTestHelper {
         address aToken = WrappedAToken(waToken).aToken();
         address underlying = WrappedAToken(waToken).underlying();
 
-        Tokens[3] memory tokensToTrack = [
+        uint256[3] memory tokensToTrack = [
             tokenTestSuite.tokenIndexes(waToken),
             tokenTestSuite.tokenIndexes(underlying),
             tokenTestSuite.tokenIndexes(aToken)
@@ -68,7 +68,7 @@ contract Live_AaveV2WrappedATokenEquivalenceTest is LiveTestHelper {
         }
 
         len = tokensToTrack.length;
-        Tokens[] memory _tokensToTrack = new Tokens[](len);
+        uint256[] memory _tokensToTrack = new uint256[](len);
         unchecked {
             for (uint256 i; i < len; ++i) {
                 _tokensToTrack[i] = tokensToTrack[i];

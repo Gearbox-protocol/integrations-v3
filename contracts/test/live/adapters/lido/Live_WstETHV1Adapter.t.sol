@@ -11,7 +11,7 @@ import {IwstETHV1Adapter} from "../../../../interfaces/lido/IwstETHV1Adapter.sol
 import {IwstETH} from "../../../../integrations/lido/IwstETH.sol";
 import {WstETHV1_Calls, WstETHV1_Multicaller} from "../../../multicall/lido/WstETHV1_Calls.sol";
 
-import {Tokens} from "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
+import "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
 import {Contracts} from "@gearbox-protocol/sdk-gov/contracts/SupportedContracts.sol";
 
 import {MultiCall} from "@gearbox-protocol/core-v2/contracts/libraries/MultiCall.sol";
@@ -30,7 +30,7 @@ contract LiveWstETHV1AdapterTest is LiveTestHelper {
     BalanceComparator comparator;
 
     function prepareComparator() internal {
-        Tokens[2] memory tokensToTrack = [Tokens.wstETH, Tokens.STETH];
+        uint256[2] memory tokensToTrack = [TOKEN_wstETH, TOKEN_STETH];
 
         // STAGES
         string[4] memory stages = ["after_wrap", "after_wrapDiff", "after_unwrap", "after_unwrapDiff"];
@@ -46,7 +46,7 @@ contract LiveWstETHV1AdapterTest is LiveTestHelper {
         }
 
         len = tokensToTrack.length;
-        Tokens[] memory _tokensToTrack = new Tokens[](len);
+        uint256[] memory _tokensToTrack = new uint256[](len);
         unchecked {
             for (uint256 i; i < len; ++i) {
                 _tokensToTrack[i] = tokensToTrack[i];
@@ -83,14 +83,14 @@ contract LiveWstETHV1AdapterTest is LiveTestHelper {
             wsteth.unwrap(WAD);
             comparator.takeSnapshot("after_unwrap", creditAccount);
 
-            uint256 remainingBalance = tokenTestSuite.balanceOf(Tokens.wstETH, creditAccount);
+            uint256 remainingBalance = tokenTestSuite.balanceOf(TOKEN_wstETH, creditAccount);
             wsteth.unwrap(remainingBalance - WAD);
             comparator.takeSnapshot("after_unwrapDiff", creditAccount);
 
             wsteth.wrap(WAD);
             comparator.takeSnapshot("after_wrap", creditAccount);
 
-            remainingBalance = tokenTestSuite.balanceOf(Tokens.STETH, creditAccount);
+            remainingBalance = tokenTestSuite.balanceOf(TOKEN_STETH, creditAccount);
             wsteth.wrap(remainingBalance - WAD);
             comparator.takeSnapshot("after_wrapDiff", creditAccount);
 
@@ -104,7 +104,7 @@ contract LiveWstETHV1AdapterTest is LiveTestHelper {
         vm.prank(USER);
         creditAccount = creditFacade.openCreditAccount(USER, MultiCallBuilder.build(), 0);
 
-        tokenTestSuite.mint(Tokens.wstETH, creditAccount, amount);
+        tokenTestSuite.mint(TOKEN_wstETH, creditAccount, amount);
     }
 
     /// @dev [L-WSEET-1]: wstETH adapter and normal account works identically
@@ -119,10 +119,10 @@ contract LiveWstETHV1AdapterTest is LiveTestHelper {
         if (wstethAdapter == address(0)) return;
 
         tokenTestSuite.approve(
-            tokenTestSuite.addressOf(Tokens.wstETH), creditAccount, supportedContracts.addressOf(Contracts.LIDO_WSTETH)
+            tokenTestSuite.addressOf(TOKEN_wstETH), creditAccount, supportedContracts.addressOf(Contracts.LIDO_WSTETH)
         );
         tokenTestSuite.approve(
-            tokenTestSuite.addressOf(Tokens.STETH), creditAccount, supportedContracts.addressOf(Contracts.LIDO_WSTETH)
+            tokenTestSuite.addressOf(TOKEN_STETH), creditAccount, supportedContracts.addressOf(Contracts.LIDO_WSTETH)
         );
 
         uint256 snapshot = vm.snapshot();
