@@ -8,7 +8,7 @@ import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {ICreditManagerV3} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditManagerV3.sol";
 import {ICreditConfiguratorV3} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditConfiguratorV3.sol";
 // CONFIG
-import {Tokens} from "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
+import "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
 import {AdapterData} from "@gearbox-protocol/sdk-gov/contracts/AdapterData.sol";
 import {SupportedContracts, Contracts} from "@gearbox-protocol/sdk-gov/contracts/SupportedContracts.sol";
 
@@ -126,9 +126,8 @@ contract AdapterDeployer is AdapterData, Test {
                         adapter = address(new LidoV1Adapter(address(creditManager), targetContract));
                         targetContract = LidoV1Adapter(adapter).targetContract();
                     } else if (at == AdapterType.LIDO_WSTETH_V1) {
-                        adapter = address(
-                            new WstETHV1Adapter(address(creditManager), tokenTestSuite.addressOf(Tokens.wstETH))
-                        );
+                        adapter =
+                            address(new WstETHV1Adapter(address(creditManager), tokenTestSuite.addressOf(TOKEN_wstETH)));
                     } else if (at == AdapterType.COMPOUND_V2_CERC20) {
                         adapter = address(new CompoundV2_CErc20Adapter(address(creditManager), targetContract));
                     } else if (at == AdapterType.COMPOUND_V2_CETHER) {

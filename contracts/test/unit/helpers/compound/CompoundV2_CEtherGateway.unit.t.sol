@@ -9,7 +9,8 @@ import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 
 import {IWETH} from "@gearbox-protocol/core-v2/contracts/interfaces/external/IWETH.sol";
 import {ZeroAddressException} from "@gearbox-protocol/core-v3/contracts/interfaces/IExceptions.sol";
-import {TokensTestSuite, Tokens} from "@gearbox-protocol/core-v3/contracts/test/suites/TokensTestSuite.sol";
+import "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
+import {TokensTestSuite} from "@gearbox-protocol/core-v3/contracts/test/suites/TokensTestSuite.sol";
 
 import {CEtherGateway} from "../../../../helpers/compound/CompoundV2_CEtherGateway.sol";
 import {ICompoundV2_Exceptions} from "../../../../interfaces/compound/ICompoundV2_CTokenAdapter.sol";
@@ -33,7 +34,7 @@ contract CEtherGatewayUnitTest is Test, ICompoundV2_Exceptions {
     function setUp() public {
         tokensTestSuite = new TokensTestSuite();
 
-        weth = IWETH(tokensTestSuite.addressOf(Tokens.WETH));
+        weth = IWETH(tokensTestSuite.addressOf(TOKEN_WETH));
 
         // initial exchange rate 0.02 cETH per ETH, 5% yearly interest
         ceth = new CEtherMock(0.02 ether, 0.05 ether);
@@ -71,8 +72,8 @@ contract CEtherGatewayUnitTest is Test, ICompoundV2_Exceptions {
     /// @notice U:[CEG-3]: `mint` works as expected
     function test_U_CEG_03_mint_works_as_expected() public {
         uint256 mintAmount = 10 ether;
-        tokensTestSuite.mint(Tokens.WETH, user, mintAmount);
-        tokensTestSuite.approve(Tokens.WETH, user, address(gateway), mintAmount);
+        tokensTestSuite.mint(TOKEN_WETH, user, mintAmount);
+        tokensTestSuite.approve(TOKEN_WETH, user, address(gateway), mintAmount);
 
         uint256 cethBalanceExpected = mintAmount * 1 ether / ceth.exchangeRateCurrent();
 
@@ -147,8 +148,8 @@ contract CEtherGatewayUnitTest is Test, ICompoundV2_Exceptions {
 
     /// @dev Deposits given amount of WETH to cETH through gateway for user
     function _mintCEther(uint256 mintAmount) internal returns (uint256 cethBalance) {
-        tokensTestSuite.mint(Tokens.WETH, user, mintAmount);
-        tokensTestSuite.approve(Tokens.WETH, user, address(gateway), mintAmount);
+        tokensTestSuite.mint(TOKEN_WETH, user, mintAmount);
+        tokensTestSuite.approve(TOKEN_WETH, user, address(gateway), mintAmount);
         vm.prank(user);
         gateway.mint(WETH_AMOUNT);
 

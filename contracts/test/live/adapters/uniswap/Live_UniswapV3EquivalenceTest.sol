@@ -8,7 +8,7 @@ import {ICreditFacadeV3} from "@gearbox-protocol/core-v3/contracts/interfaces/IC
 import {ISwapRouter} from "../../../../integrations/uniswap/IUniswapV3.sol";
 import {IUniswapV3Adapter, IUniswapV3AdapterTypes} from "../../../../interfaces/uniswap/IUniswapV3Adapter.sol";
 
-import {Tokens} from "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
+import "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
 import {Contracts} from "@gearbox-protocol/sdk-gov/contracts/SupportedContracts.sol";
 
 import {MultiCall} from "@gearbox-protocol/core-v2/contracts/libraries/MultiCall.sol";
@@ -31,7 +31,7 @@ contract Live_UniswapV3EquivalenceTest is LiveTestHelper {
     /// HELPER
 
     function prepareComparator() internal {
-        Tokens[2] memory tokensToTrack = [Tokens.WETH, Tokens.USDC];
+        uint256[2] memory tokensToTrack = [TOKEN_WETH, TOKEN_USDC];
 
         // STAGES
         string[6] memory stages = [
@@ -54,7 +54,7 @@ contract Live_UniswapV3EquivalenceTest is LiveTestHelper {
         }
 
         len = tokensToTrack.length;
-        Tokens[] memory _tokensToTrack = new Tokens[](len);
+        uint256[] memory _tokensToTrack = new uint256[](len);
         unchecked {
             for (uint256 i; i < len; ++i) {
                 _tokensToTrack[i] = tokensToTrack[i];
@@ -71,8 +71,8 @@ contract Live_UniswapV3EquivalenceTest is LiveTestHelper {
             vm.startPrank(USER);
 
             ISwapRouter.ExactInputSingleParams memory exactInputSingleParams = ISwapRouter.ExactInputSingleParams({
-                tokenIn: tokenTestSuite.addressOf(Tokens.WETH),
-                tokenOut: tokenTestSuite.addressOf(Tokens.USDC),
+                tokenIn: tokenTestSuite.addressOf(TOKEN_WETH),
+                tokenOut: tokenTestSuite.addressOf(TOKEN_USDC),
                 fee: 500,
                 recipient: creditAccount,
                 deadline: block.timestamp + 3600,
@@ -88,8 +88,8 @@ contract Live_UniswapV3EquivalenceTest is LiveTestHelper {
 
             IUniswapV3AdapterTypes.ExactDiffInputSingleParams memory exactDiffInputSingleParams = IUniswapV3AdapterTypes
                 .ExactDiffInputSingleParams({
-                tokenIn: tokenTestSuite.addressOf(Tokens.WETH),
-                tokenOut: tokenTestSuite.addressOf(Tokens.USDC),
+                tokenIn: tokenTestSuite.addressOf(TOKEN_WETH),
+                tokenOut: tokenTestSuite.addressOf(TOKEN_USDC),
                 fee: 500,
                 deadline: block.timestamp + 3600,
                 leftoverAmount: 20 * WAD,
@@ -104,8 +104,8 @@ contract Live_UniswapV3EquivalenceTest is LiveTestHelper {
 
             ISwapRouter.ExactInputParams memory exactInputParams = ISwapRouter.ExactInputParams({
                 path: abi.encodePacked(
-                    tokenTestSuite.addressOf(Tokens.WETH), uint24(500), tokenTestSuite.addressOf(Tokens.USDC)
-                    ),
+                    tokenTestSuite.addressOf(TOKEN_WETH), uint24(500), tokenTestSuite.addressOf(TOKEN_USDC)
+                ),
                 recipient: creditAccount,
                 deadline: block.timestamp + 3600,
                 amountIn: WAD,
@@ -117,8 +117,8 @@ contract Live_UniswapV3EquivalenceTest is LiveTestHelper {
             IUniswapV3AdapterTypes.ExactDiffInputParams memory exactDiffInputParams = IUniswapV3AdapterTypes
                 .ExactDiffInputParams({
                 path: abi.encodePacked(
-                    tokenTestSuite.addressOf(Tokens.WETH), uint24(500), tokenTestSuite.addressOf(Tokens.USDC)
-                    ),
+                    tokenTestSuite.addressOf(TOKEN_WETH), uint24(500), tokenTestSuite.addressOf(TOKEN_USDC)
+                ),
                 deadline: block.timestamp + 3600,
                 leftoverAmount: 10 * WAD,
                 rateMinRAY: 0
@@ -127,8 +127,8 @@ contract Live_UniswapV3EquivalenceTest is LiveTestHelper {
             comparator.takeSnapshot("after_exactDiffInput", creditAccount);
 
             ISwapRouter.ExactOutputSingleParams memory exactOutputSingleParams = ISwapRouter.ExactOutputSingleParams({
-                tokenIn: tokenTestSuite.addressOf(Tokens.WETH),
-                tokenOut: tokenTestSuite.addressOf(Tokens.USDC),
+                tokenIn: tokenTestSuite.addressOf(TOKEN_WETH),
+                tokenOut: tokenTestSuite.addressOf(TOKEN_USDC),
                 fee: 500,
                 recipient: creditAccount,
                 deadline: block.timestamp + 3600,
@@ -143,8 +143,8 @@ contract Live_UniswapV3EquivalenceTest is LiveTestHelper {
 
             ISwapRouter.ExactOutputParams memory exactOutputParams = ISwapRouter.ExactOutputParams({
                 path: abi.encodePacked(
-                    tokenTestSuite.addressOf(Tokens.WETH), uint24(500), tokenTestSuite.addressOf(Tokens.USDC)
-                    ),
+                    tokenTestSuite.addressOf(TOKEN_WETH), uint24(500), tokenTestSuite.addressOf(TOKEN_USDC)
+                ),
                 recipient: creditAccount,
                 deadline: block.timestamp + 3600,
                 amountOut: 100 * 10 ** 6,
@@ -161,8 +161,8 @@ contract Live_UniswapV3EquivalenceTest is LiveTestHelper {
 
             router.exactInputSingle(
                 ISwapRouter.ExactInputSingleParams({
-                    tokenIn: tokenTestSuite.addressOf(Tokens.WETH),
-                    tokenOut: tokenTestSuite.addressOf(Tokens.USDC),
+                    tokenIn: tokenTestSuite.addressOf(TOKEN_WETH),
+                    tokenOut: tokenTestSuite.addressOf(TOKEN_USDC),
                     fee: 500,
                     recipient: creditAccount,
                     deadline: block.timestamp + 3600,
@@ -174,11 +174,11 @@ contract Live_UniswapV3EquivalenceTest is LiveTestHelper {
 
             comparator.takeSnapshot("after_exactInputSingle", creditAccount);
 
-            uint256 balanceToSwap = tokenTestSuite.balanceOf(Tokens.WETH, creditAccount) - 20 * WAD;
+            uint256 balanceToSwap = tokenTestSuite.balanceOf(TOKEN_WETH, creditAccount) - 20 * WAD;
             router.exactInputSingle(
                 ISwapRouter.ExactInputSingleParams({
-                    tokenIn: tokenTestSuite.addressOf(Tokens.WETH),
-                    tokenOut: tokenTestSuite.addressOf(Tokens.USDC),
+                    tokenIn: tokenTestSuite.addressOf(TOKEN_WETH),
+                    tokenOut: tokenTestSuite.addressOf(TOKEN_USDC),
                     fee: 500,
                     recipient: creditAccount,
                     deadline: block.timestamp + 3600,
@@ -192,8 +192,8 @@ contract Live_UniswapV3EquivalenceTest is LiveTestHelper {
             router.exactInput(
                 ISwapRouter.ExactInputParams({
                     path: abi.encodePacked(
-                        tokenTestSuite.addressOf(Tokens.WETH), uint24(500), tokenTestSuite.addressOf(Tokens.USDC)
-                        ),
+                        tokenTestSuite.addressOf(TOKEN_WETH), uint24(500), tokenTestSuite.addressOf(TOKEN_USDC)
+                    ),
                     recipient: creditAccount,
                     deadline: block.timestamp + 3600,
                     amountIn: WAD,
@@ -202,12 +202,12 @@ contract Live_UniswapV3EquivalenceTest is LiveTestHelper {
             );
             comparator.takeSnapshot("after_exactInput", creditAccount);
 
-            balanceToSwap = tokenTestSuite.balanceOf(Tokens.WETH, creditAccount) - 10 * WAD;
+            balanceToSwap = tokenTestSuite.balanceOf(TOKEN_WETH, creditAccount) - 10 * WAD;
             router.exactInput(
                 ISwapRouter.ExactInputParams({
                     path: abi.encodePacked(
-                        tokenTestSuite.addressOf(Tokens.WETH), uint24(500), tokenTestSuite.addressOf(Tokens.USDC)
-                        ),
+                        tokenTestSuite.addressOf(TOKEN_WETH), uint24(500), tokenTestSuite.addressOf(TOKEN_USDC)
+                    ),
                     recipient: creditAccount,
                     deadline: block.timestamp + 3600,
                     amountIn: balanceToSwap,
@@ -218,8 +218,8 @@ contract Live_UniswapV3EquivalenceTest is LiveTestHelper {
 
             router.exactOutputSingle(
                 ISwapRouter.ExactOutputSingleParams({
-                    tokenIn: tokenTestSuite.addressOf(Tokens.WETH),
-                    tokenOut: tokenTestSuite.addressOf(Tokens.USDC),
+                    tokenIn: tokenTestSuite.addressOf(TOKEN_WETH),
+                    tokenOut: tokenTestSuite.addressOf(TOKEN_USDC),
                     fee: 500,
                     recipient: creditAccount,
                     deadline: block.timestamp + 3600,
@@ -233,8 +233,8 @@ contract Live_UniswapV3EquivalenceTest is LiveTestHelper {
             router.exactOutput(
                 ISwapRouter.ExactOutputParams({
                     path: abi.encodePacked(
-                        tokenTestSuite.addressOf(Tokens.WETH), uint24(500), tokenTestSuite.addressOf(Tokens.USDC)
-                        ),
+                        tokenTestSuite.addressOf(TOKEN_WETH), uint24(500), tokenTestSuite.addressOf(TOKEN_USDC)
+                    ),
                     recipient: creditAccount,
                     deadline: block.timestamp + 3600,
                     amountOut: 100 * 10 ** 6,
@@ -252,7 +252,7 @@ contract Live_UniswapV3EquivalenceTest is LiveTestHelper {
     function openCreditAccountWithWeth(uint256 amount) internal returns (address creditAccount) {
         vm.prank(USER);
         creditAccount = creditFacade.openCreditAccount(USER, MultiCallBuilder.build(), 0);
-        tokenTestSuite.mint(Tokens.WETH, creditAccount, amount);
+        tokenTestSuite.mint(TOKEN_WETH, creditAccount, amount);
     }
 
     /// @dev [L-UV3ET-1]: UniswapV3 adapter and normal account works identically
@@ -266,20 +266,20 @@ contract Live_UniswapV3EquivalenceTest is LiveTestHelper {
         if (
             routerAdapter == address(0)
                 || !IUniswapV3Adapter(routerAdapter).isPoolAllowed(
-                    tokenTestSuite.addressOf(Tokens.WETH), tokenTestSuite.addressOf(Tokens.USDC), 500
+                    tokenTestSuite.addressOf(TOKEN_WETH), tokenTestSuite.addressOf(TOKEN_USDC), 500
                 )
         ) {
             return;
         }
 
         tokenTestSuite.approve(
-            tokenTestSuite.addressOf(Tokens.WETH),
+            tokenTestSuite.addressOf(TOKEN_WETH),
             creditAccount,
             supportedContracts.addressOf(Contracts.UNISWAP_V3_ROUTER)
         );
 
         tokenTestSuite.approve(
-            tokenTestSuite.addressOf(Tokens.USDC),
+            tokenTestSuite.addressOf(TOKEN_USDC),
             creditAccount,
             supportedContracts.addressOf(Contracts.UNISWAP_V3_ROUTER)
         );
