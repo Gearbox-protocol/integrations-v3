@@ -13,7 +13,7 @@ import {IYearnV2Adapter} from "../../../../interfaces/yearn/IYearnV2Adapter.sol"
 import {YearnV2_Calls, YearnV2_Multicaller} from "../../../multicall/yearn/YearnV2_Calls.sol";
 import {IAdapter} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IAdapter.sol";
 
-import {Tokens} from "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
+import "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
 import {Contracts} from "@gearbox-protocol/sdk-gov/contracts/SupportedContracts.sol";
 
 import {MultiCall} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacadeV3.sol";
@@ -142,7 +142,7 @@ contract Live_YearnEquivalenceTest is LiveTestHelper {
         tokensToTrack[0] = IYearnV2Adapter(vaultAdapter).token();
         tokensToTrack[1] = IYearnV2Adapter(vaultAdapter).targetContract();
 
-        Tokens[] memory _tokensToTrack = new Tokens[](tokensToTrack.length);
+        uint256[] memory _tokensToTrack = new uint256[](tokensToTrack.length);
 
         for (uint256 j = 0; j < tokensToTrack.length; ++j) {
             _tokensToTrack[j] = tokenTestSuite.tokenIndexes(tokensToTrack[j]);

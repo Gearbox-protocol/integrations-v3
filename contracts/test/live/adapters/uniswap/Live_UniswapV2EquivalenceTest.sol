@@ -8,7 +8,7 @@ import {ICreditFacadeV3} from "@gearbox-protocol/core-v3/contracts/interfaces/IC
 import {IUniswapV2Router02} from "../../../../integrations/uniswap/IUniswapV2Router02.sol";
 import {IUniswapV2Adapter} from "../../../../interfaces/uniswap/IUniswapV2Adapter.sol";
 
-import {Tokens} from "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
+import "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
 import {Contracts} from "@gearbox-protocol/sdk-gov/contracts/SupportedContracts.sol";
 
 import {MultiCall} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacadeV3.sol";
@@ -31,7 +31,7 @@ contract Live_UniswapV2EquivalenceTest is LiveTestHelper {
     /// HELPER
 
     function prepareComparator() internal {
-        Tokens[2] memory tokensToTrack = [Tokens.WETH, Tokens.USDC];
+        uint256[2] memory tokensToTrack = [TOKEN_WETH, TOKEN_USDC];
 
         // STAGES
         string[3] memory stages =
@@ -48,7 +48,7 @@ contract Live_UniswapV2EquivalenceTest is LiveTestHelper {
         }
 
         len = tokensToTrack.length;
-        Tokens[] memory _tokensToTrack = new Tokens[](len);
+        uint256[] memory _tokensToTrack = new uint256[](len);
         unchecked {
             for (uint256 i; i < len; ++i) {
                 _tokensToTrack[i] = tokensToTrack[i];
@@ -65,8 +65,8 @@ contract Live_UniswapV2EquivalenceTest is LiveTestHelper {
             vm.startPrank(USER);
 
             address[] memory path = new address[](2);
-            path[0] = tokenTestSuite.addressOf(Tokens.WETH);
-            path[1] = tokenTestSuite.addressOf(Tokens.USDC);
+            path[0] = tokenTestSuite.addressOf(TOKEN_WETH);
+            path[1] = tokenTestSuite.addressOf(TOKEN_USDC);
 
             creditFacade.multicall(
                 creditAccount,
@@ -99,8 +99,8 @@ contract Live_UniswapV2EquivalenceTest is LiveTestHelper {
             vm.startPrank(creditAccount);
 
             address[] memory path = new address[](2);
-            path[0] = tokenTestSuite.addressOf(Tokens.WETH);
-            path[1] = tokenTestSuite.addressOf(Tokens.USDC);
+            path[0] = tokenTestSuite.addressOf(TOKEN_WETH);
+            path[1] = tokenTestSuite.addressOf(TOKEN_USDC);
 
             router.swapTokensForExactTokens(
                 100 * 10 ** 6, type(uint256).max, path, creditAccount, block.timestamp + 3600
@@ -110,7 +110,7 @@ contract Live_UniswapV2EquivalenceTest is LiveTestHelper {
             router.swapExactTokensForTokens(WAD, 0, path, creditAccount, block.timestamp + 3600);
             comparator.takeSnapshot("after_swapExactTokensForTokens", creditAccount);
 
-            uint256 balanceToSwap = tokenTestSuite.balanceOf(Tokens.WETH, creditAccount) - WAD;
+            uint256 balanceToSwap = tokenTestSuite.balanceOf(TOKEN_WETH, creditAccount) - WAD;
             router.swapExactTokensForTokens(balanceToSwap, 0, path, creditAccount, block.timestamp + 3600);
             comparator.takeSnapshot("after_swapDiffTokensForTokens", creditAccount);
 
@@ -123,7 +123,7 @@ contract Live_UniswapV2EquivalenceTest is LiveTestHelper {
     function openCreditAccountWithWeth(uint256 amount) internal returns (address creditAccount) {
         vm.prank(USER);
         creditAccount = creditFacade.openCreditAccount(USER, MultiCallBuilder.build(), 0);
-        tokenTestSuite.mint(Tokens.WETH, creditAccount, amount);
+        tokenTestSuite.mint(TOKEN_WETH, creditAccount, amount);
     }
 
     /// @dev [L-UV2ET-1]: UniswapV2 adapter and normal account works identically
@@ -137,20 +137,20 @@ contract Live_UniswapV2EquivalenceTest is LiveTestHelper {
         if (
             routerAdapter == address(0)
                 || !IUniswapV2Adapter(routerAdapter).isPairAllowed(
-                    tokenTestSuite.addressOf(Tokens.WETH), tokenTestSuite.addressOf(Tokens.USDC)
+                    tokenTestSuite.addressOf(TOKEN_WETH), tokenTestSuite.addressOf(TOKEN_USDC)
                 )
         ) {
             return;
         }
 
         tokenTestSuite.approve(
-            tokenTestSuite.addressOf(Tokens.WETH),
+            tokenTestSuite.addressOf(TOKEN_WETH),
             creditAccount,
             supportedContracts.addressOf(Contracts.UNISWAP_V2_ROUTER)
         );
 
         tokenTestSuite.approve(
-            tokenTestSuite.addressOf(Tokens.USDC),
+            tokenTestSuite.addressOf(TOKEN_USDC),
             creditAccount,
             supportedContracts.addressOf(Contracts.UNISWAP_V2_ROUTER)
         );

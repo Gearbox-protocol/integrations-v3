@@ -19,7 +19,7 @@ import {ICurveV1_StableNGAdapter} from "../../../../interfaces/curve/ICurveV1_St
 import {IAdapter} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IAdapter.sol";
 import {AddressList} from "@gearbox-protocol/core-v3/contracts/test/lib/AddressList.sol";
 
-import {Tokens} from "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
+import "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
 import {Contracts} from "@gearbox-protocol/sdk-gov/contracts/SupportedContracts.sol";
 
 import {MultiCall} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacadeV3.sol";
@@ -124,7 +124,7 @@ contract Live_CurveEquivalenceTest is LiveTestHelper {
 
         tokensToTrack = tokensToTrack.trim();
 
-        Tokens[] memory _tokensToTrack = new Tokens[](tokensToTrack.length);
+        uint256[] memory _tokensToTrack = new uint256[](tokensToTrack.length);
 
         for (uint256 j = 0; j < tokensToTrack.length; ++j) {
             _tokensToTrack[j] = tokenTestSuite.tokenIndexes(tokensToTrack[j]);

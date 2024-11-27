@@ -6,7 +6,7 @@ pragma solidity ^0.8.23;
 import {IERC20Permit} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Permit.sol";
 
 import {PoolV3} from "@gearbox-protocol/core-v3/contracts/pool/PoolV3.sol";
-import {Tokens} from "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
+import "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
 
 import {IZapper} from "../../interfaces/zappers/IZapper.sol";
 
@@ -88,7 +88,7 @@ contract ZapperLiveTestHelper is LiveTestHelper {
         }
 
         // WETH zapper
-        if (underlying == tokenTestSuite.addressOf(Tokens.WETH)) {
+        if (underlying == tokenTestSuite.addressOf(TOKEN_WETH)) {
             zapperRegister.addZapper(address(new WETHDepositZapper(pool)));
             if (farmingPool != address(0)) {
                 zapperRegister.addZapper(address(new WETHFarmingZapper(pool, farmingPool)));
@@ -96,10 +96,8 @@ contract ZapperLiveTestHelper is LiveTestHelper {
         }
 
         // wstETH zapper
-        if (
-            underlying == tokenTestSuite.addressOf(Tokens.wstETH)
-                && tokenTestSuite.addressOf(Tokens.STETH) != address(0)
-        ) {
+        if (underlying == tokenTestSuite.addressOf(TOKEN_wstETH) && tokenTestSuite.addressOf(TOKEN_STETH) != address(0))
+        {
             zapperRegister.addZapper(address(new WstETHDepositZapper(pool)));
             if (farmingPool != address(0)) {
                 zapperRegister.addZapper(address(new WstETHFarmingZapper(pool, farmingPool)));
@@ -110,22 +108,22 @@ contract ZapperLiveTestHelper is LiveTestHelper {
     function _attachState() internal {
         // TODO: Would be nice to have this information stored in sdk-gov instead.
         // Not exactly clear how to test in case farming pool is not deployed yet.
-        farmingPools[tokenTestSuite.addressOf(Tokens.dWETHV3)] = tokenTestSuite.addressOf(Tokens.sdWETHV3);
-        farmingPools[tokenTestSuite.addressOf(Tokens.dWBTCV3)] = tokenTestSuite.addressOf(Tokens.sdWBTCV3);
-        farmingPools[tokenTestSuite.addressOf(Tokens.dUSDCV3)] = tokenTestSuite.addressOf(Tokens.sdUSDCV3);
-        farmingPools[tokenTestSuite.addressOf(Tokens.dUSDTV3)] = tokenTestSuite.addressOf(Tokens.sdUSDTV3);
-        farmingPools[tokenTestSuite.addressOf(Tokens.dDAIV3)] = tokenTestSuite.addressOf(Tokens.sdDAIV3);
-        farmingPools[tokenTestSuite.addressOf(Tokens.dGHOV3)] = tokenTestSuite.addressOf(Tokens.sdGHOV3);
+        farmingPools[tokenTestSuite.addressOf(TOKEN_dWETHV3)] = tokenTestSuite.addressOf(TOKEN_sdWETHV3);
+        farmingPools[tokenTestSuite.addressOf(TOKEN_dWBTCV3)] = tokenTestSuite.addressOf(TOKEN_sdWBTCV3);
+        farmingPools[tokenTestSuite.addressOf(TOKEN_dUSDCV3)] = tokenTestSuite.addressOf(TOKEN_sdUSDCV3);
+        farmingPools[tokenTestSuite.addressOf(TOKEN_dUSDTV3)] = tokenTestSuite.addressOf(TOKEN_sdUSDTV3);
+        farmingPools[tokenTestSuite.addressOf(TOKEN_dDAIV3)] = tokenTestSuite.addressOf(TOKEN_sdDAIV3);
+        farmingPools[tokenTestSuite.addressOf(TOKEN_dGHOV3)] = tokenTestSuite.addressOf(TOKEN_sdGHOV3);
 
-        legacyPools[tokenTestSuite.addressOf(Tokens.DAI)] = _getLegacyPool(Tokens.DAI);
-        legacyPools[tokenTestSuite.addressOf(Tokens.WETH)] = _getLegacyPool(Tokens.WETH);
-        legacyPools[tokenTestSuite.addressOf(Tokens.WBTC)] = _getLegacyPool(Tokens.WBTC);
-        legacyPools[tokenTestSuite.addressOf(Tokens.USDC)] = _getLegacyPool(Tokens.USDC);
-        legacyPools[tokenTestSuite.addressOf(Tokens.FRAX)] = _getLegacyPool(Tokens.FRAX);
-        legacyPools[tokenTestSuite.addressOf(Tokens.wstETH)] = _getLegacyPool(Tokens.wstETH);
+        legacyPools[tokenTestSuite.addressOf(TOKEN_DAI)] = _getLegacyPool(TOKEN_DAI);
+        legacyPools[tokenTestSuite.addressOf(TOKEN_WETH)] = _getLegacyPool(TOKEN_WETH);
+        legacyPools[tokenTestSuite.addressOf(TOKEN_WBTC)] = _getLegacyPool(TOKEN_WBTC);
+        legacyPools[tokenTestSuite.addressOf(TOKEN_USDC)] = _getLegacyPool(TOKEN_USDC);
+        legacyPools[tokenTestSuite.addressOf(TOKEN_FRAX)] = _getLegacyPool(TOKEN_FRAX);
+        legacyPools[tokenTestSuite.addressOf(TOKEN_wstETH)] = _getLegacyPool(TOKEN_wstETH);
     }
 
-    function _getLegacyPool(Tokens t) internal view returns (address) {
+    function _getLegacyPool(uint256 t) internal view returns (address) {
         address token = tokenTestSuite.addressOf(t);
         if (token == address(0)) return address(0);
         (bool success, bytes memory result) = token.staticcall(abi.encodeWithSignature("owner()"));

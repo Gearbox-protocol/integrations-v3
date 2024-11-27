@@ -6,14 +6,14 @@ pragma solidity ^0.8.23;
 import {TokensTestSuite} from "@gearbox-protocol/core-v3/contracts/test/suites/TokensTestSuite.sol";
 
 import {PriceFeedMock} from "@gearbox-protocol/core-v3/contracts/test/mocks/oracles/PriceFeedMock.sol";
-import {Tokens} from "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
+import "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
 
 import {IntegrationTestHelper} from "@gearbox-protocol/core-v3/contracts/test/helpers/IntegrationTestHelper.sol";
 
 import "../lib/constants.sol";
 
 contract CreditFacadeTestHelper is IntegrationTestHelper {
-    function addCollateral(address, /*creditAccount*/ Tokens t, uint256 amount) internal {
+    function addCollateral(address, /*creditAccount*/ uint256 t, uint256 amount) internal {
         tokenTestSuite.mint(t, USER, amount);
         tokenTestSuite.approve(t, USER, address(creditManager));
 

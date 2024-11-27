@@ -8,7 +8,7 @@ import {ICreditFacadeV3} from "@gearbox-protocol/core-v3/contracts/interfaces/IC
 import {ICamelotV3Router} from "../../../../integrations/camelot/ICamelotV3Router.sol";
 import {ICamelotV3Adapter, ICamelotV3AdapterTypes} from "../../../../interfaces/camelot/ICamelotV3Adapter.sol";
 
-import {Tokens} from "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
+import "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
 import {Contracts} from "@gearbox-protocol/sdk-gov/contracts/SupportedContracts.sol";
 
 import {MultiCall} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacadeV3.sol";
@@ -31,7 +31,7 @@ contract Live_CamelotV3EquivalenceTest is LiveTestHelper {
     /// HELPER
 
     function prepareComparator() internal {
-        Tokens[2] memory tokensToTrack = [Tokens.WETH, Tokens.USDC];
+        uint256[2] memory tokensToTrack = [TOKEN_WETH, TOKEN_USDC];
 
         // STAGES
         string[8] memory stages = [
@@ -56,7 +56,7 @@ contract Live_CamelotV3EquivalenceTest is LiveTestHelper {
         }
 
         len = tokensToTrack.length;
-        Tokens[] memory _tokensToTrack = new Tokens[](len);
+        uint256[] memory _tokensToTrack = new uint256[](len);
         unchecked {
             for (uint256 i; i < len; ++i) {
                 _tokensToTrack[i] = tokensToTrack[i];
@@ -74,8 +74,8 @@ contract Live_CamelotV3EquivalenceTest is LiveTestHelper {
 
             ICamelotV3Router.ExactInputSingleParams memory exactInputSingleParams = ICamelotV3Router
                 .ExactInputSingleParams({
-                tokenIn: tokenTestSuite.addressOf(Tokens.WETH),
-                tokenOut: tokenTestSuite.addressOf(Tokens.USDC),
+                tokenIn: tokenTestSuite.addressOf(TOKEN_WETH),
+                tokenOut: tokenTestSuite.addressOf(TOKEN_USDC),
                 recipient: creditAccount,
                 deadline: block.timestamp + 3600,
                 amountIn: WAD,
@@ -96,8 +96,8 @@ contract Live_CamelotV3EquivalenceTest is LiveTestHelper {
 
             ICamelotV3AdapterTypes.ExactDiffInputSingleParams memory exactDiffInputSingleParams = ICamelotV3AdapterTypes
                 .ExactDiffInputSingleParams({
-                tokenIn: tokenTestSuite.addressOf(Tokens.WETH),
-                tokenOut: tokenTestSuite.addressOf(Tokens.USDC),
+                tokenIn: tokenTestSuite.addressOf(TOKEN_WETH),
+                tokenOut: tokenTestSuite.addressOf(TOKEN_USDC),
                 deadline: block.timestamp + 3600,
                 leftoverAmount: 20 * WAD,
                 rateMinRAY: 0,
@@ -120,7 +120,7 @@ contract Live_CamelotV3EquivalenceTest is LiveTestHelper {
             comparator.takeSnapshot("after_exactDiffInputSingleSupportingFeeOnTransferTokens", creditAccount);
 
             ICamelotV3Router.ExactInputParams memory exactInputParams = ICamelotV3Router.ExactInputParams({
-                path: abi.encodePacked(tokenTestSuite.addressOf(Tokens.WETH), tokenTestSuite.addressOf(Tokens.USDC)),
+                path: abi.encodePacked(tokenTestSuite.addressOf(TOKEN_WETH), tokenTestSuite.addressOf(TOKEN_USDC)),
                 recipient: creditAccount,
                 deadline: block.timestamp + 3600,
                 amountIn: WAD,
@@ -131,7 +131,7 @@ contract Live_CamelotV3EquivalenceTest is LiveTestHelper {
 
             ICamelotV3AdapterTypes.ExactDiffInputParams memory exactDiffInputParams = ICamelotV3AdapterTypes
                 .ExactDiffInputParams({
-                path: abi.encodePacked(tokenTestSuite.addressOf(Tokens.WETH), tokenTestSuite.addressOf(Tokens.USDC)),
+                path: abi.encodePacked(tokenTestSuite.addressOf(TOKEN_WETH), tokenTestSuite.addressOf(TOKEN_USDC)),
                 deadline: block.timestamp + 3600,
                 leftoverAmount: 10 * WAD,
                 rateMinRAY: 0
@@ -141,8 +141,8 @@ contract Live_CamelotV3EquivalenceTest is LiveTestHelper {
 
             ICamelotV3Router.ExactOutputSingleParams memory exactOutputSingleParams = ICamelotV3Router
                 .ExactOutputSingleParams({
-                tokenIn: tokenTestSuite.addressOf(Tokens.WETH),
-                tokenOut: tokenTestSuite.addressOf(Tokens.USDC),
+                tokenIn: tokenTestSuite.addressOf(TOKEN_WETH),
+                tokenOut: tokenTestSuite.addressOf(TOKEN_USDC),
                 fee: 0,
                 recipient: creditAccount,
                 deadline: block.timestamp + 3600,
@@ -156,7 +156,7 @@ contract Live_CamelotV3EquivalenceTest is LiveTestHelper {
             comparator.takeSnapshot("after_exactOutputSingle", creditAccount);
 
             ICamelotV3Router.ExactOutputParams memory exactOutputParams = ICamelotV3Router.ExactOutputParams({
-                path: abi.encodePacked(tokenTestSuite.addressOf(Tokens.WETH), tokenTestSuite.addressOf(Tokens.USDC)),
+                path: abi.encodePacked(tokenTestSuite.addressOf(TOKEN_WETH), tokenTestSuite.addressOf(TOKEN_USDC)),
                 recipient: creditAccount,
                 deadline: block.timestamp + 3600,
                 amountOut: 100 * 10 ** 6,
@@ -173,8 +173,8 @@ contract Live_CamelotV3EquivalenceTest is LiveTestHelper {
 
             router.exactInputSingle(
                 ICamelotV3Router.ExactInputSingleParams({
-                    tokenIn: tokenTestSuite.addressOf(Tokens.WETH),
-                    tokenOut: tokenTestSuite.addressOf(Tokens.USDC),
+                    tokenIn: tokenTestSuite.addressOf(TOKEN_WETH),
+                    tokenOut: tokenTestSuite.addressOf(TOKEN_USDC),
                     recipient: creditAccount,
                     deadline: block.timestamp + 3600,
                     amountIn: WAD,
@@ -187,8 +187,8 @@ contract Live_CamelotV3EquivalenceTest is LiveTestHelper {
 
             router.exactInputSingleSupportingFeeOnTransferTokens(
                 ICamelotV3Router.ExactInputSingleParams({
-                    tokenIn: tokenTestSuite.addressOf(Tokens.WETH),
-                    tokenOut: tokenTestSuite.addressOf(Tokens.USDC),
+                    tokenIn: tokenTestSuite.addressOf(TOKEN_WETH),
+                    tokenOut: tokenTestSuite.addressOf(TOKEN_USDC),
                     recipient: creditAccount,
                     deadline: block.timestamp + 3600,
                     amountIn: WAD,
@@ -199,11 +199,11 @@ contract Live_CamelotV3EquivalenceTest is LiveTestHelper {
 
             comparator.takeSnapshot("after_exactInputSingleSupportingFeeOnTransferTokens", creditAccount);
 
-            uint256 balanceToSwap = tokenTestSuite.balanceOf(Tokens.WETH, creditAccount) - 20 * WAD;
+            uint256 balanceToSwap = tokenTestSuite.balanceOf(TOKEN_WETH, creditAccount) - 20 * WAD;
             router.exactInputSingle(
                 ICamelotV3Router.ExactInputSingleParams({
-                    tokenIn: tokenTestSuite.addressOf(Tokens.WETH),
-                    tokenOut: tokenTestSuite.addressOf(Tokens.USDC),
+                    tokenIn: tokenTestSuite.addressOf(TOKEN_WETH),
+                    tokenOut: tokenTestSuite.addressOf(TOKEN_USDC),
                     recipient: creditAccount,
                     deadline: block.timestamp + 3600,
                     amountIn: balanceToSwap,
@@ -213,11 +213,11 @@ contract Live_CamelotV3EquivalenceTest is LiveTestHelper {
             );
             comparator.takeSnapshot("after_exactDiffInputSingle", creditAccount);
 
-            balanceToSwap = tokenTestSuite.balanceOf(Tokens.WETH, creditAccount) - 19 * WAD;
+            balanceToSwap = tokenTestSuite.balanceOf(TOKEN_WETH, creditAccount) - 19 * WAD;
             router.exactInputSingleSupportingFeeOnTransferTokens(
                 ICamelotV3Router.ExactInputSingleParams({
-                    tokenIn: tokenTestSuite.addressOf(Tokens.WETH),
-                    tokenOut: tokenTestSuite.addressOf(Tokens.USDC),
+                    tokenIn: tokenTestSuite.addressOf(TOKEN_WETH),
+                    tokenOut: tokenTestSuite.addressOf(TOKEN_USDC),
                     recipient: creditAccount,
                     deadline: block.timestamp + 3600,
                     amountIn: balanceToSwap,
@@ -229,7 +229,7 @@ contract Live_CamelotV3EquivalenceTest is LiveTestHelper {
 
             router.exactInput(
                 ICamelotV3Router.ExactInputParams({
-                    path: abi.encodePacked(tokenTestSuite.addressOf(Tokens.WETH), tokenTestSuite.addressOf(Tokens.USDC)),
+                    path: abi.encodePacked(tokenTestSuite.addressOf(TOKEN_WETH), tokenTestSuite.addressOf(TOKEN_USDC)),
                     recipient: creditAccount,
                     deadline: block.timestamp + 3600,
                     amountIn: WAD,
@@ -238,10 +238,10 @@ contract Live_CamelotV3EquivalenceTest is LiveTestHelper {
             );
             comparator.takeSnapshot("after_exactInput", creditAccount);
 
-            balanceToSwap = tokenTestSuite.balanceOf(Tokens.WETH, creditAccount) - 10 * WAD;
+            balanceToSwap = tokenTestSuite.balanceOf(TOKEN_WETH, creditAccount) - 10 * WAD;
             router.exactInput(
                 ICamelotV3Router.ExactInputParams({
-                    path: abi.encodePacked(tokenTestSuite.addressOf(Tokens.WETH), tokenTestSuite.addressOf(Tokens.USDC)),
+                    path: abi.encodePacked(tokenTestSuite.addressOf(TOKEN_WETH), tokenTestSuite.addressOf(TOKEN_USDC)),
                     recipient: creditAccount,
                     deadline: block.timestamp + 3600,
                     amountIn: balanceToSwap,
@@ -252,8 +252,8 @@ contract Live_CamelotV3EquivalenceTest is LiveTestHelper {
 
             router.exactOutputSingle(
                 ICamelotV3Router.ExactOutputSingleParams({
-                    tokenIn: tokenTestSuite.addressOf(Tokens.WETH),
-                    tokenOut: tokenTestSuite.addressOf(Tokens.USDC),
+                    tokenIn: tokenTestSuite.addressOf(TOKEN_WETH),
+                    tokenOut: tokenTestSuite.addressOf(TOKEN_USDC),
                     fee: 0,
                     recipient: creditAccount,
                     deadline: block.timestamp + 3600,
@@ -266,7 +266,7 @@ contract Live_CamelotV3EquivalenceTest is LiveTestHelper {
 
             router.exactOutput(
                 ICamelotV3Router.ExactOutputParams({
-                    path: abi.encodePacked(tokenTestSuite.addressOf(Tokens.WETH), tokenTestSuite.addressOf(Tokens.USDC)),
+                    path: abi.encodePacked(tokenTestSuite.addressOf(TOKEN_WETH), tokenTestSuite.addressOf(TOKEN_USDC)),
                     recipient: creditAccount,
                     deadline: block.timestamp + 3600,
                     amountOut: 100 * 10 ** 6,
@@ -284,7 +284,7 @@ contract Live_CamelotV3EquivalenceTest is LiveTestHelper {
     function openCreditAccountWithWeth(uint256 amount) internal returns (address creditAccount) {
         vm.prank(USER);
         creditAccount = creditFacade.openCreditAccount(USER, MultiCallBuilder.build(), 0);
-        tokenTestSuite.mint(Tokens.WETH, creditAccount, amount);
+        tokenTestSuite.mint(TOKEN_WETH, creditAccount, amount);
     }
 
     /// @dev [L-CAMV3ET-1]: CamelotV3 adapter and normal account works identically
@@ -298,20 +298,20 @@ contract Live_CamelotV3EquivalenceTest is LiveTestHelper {
         if (
             routerAdapter == address(0)
                 || !ICamelotV3Adapter(routerAdapter).isPoolAllowed(
-                    tokenTestSuite.addressOf(Tokens.WETH), tokenTestSuite.addressOf(Tokens.USDC)
+                    tokenTestSuite.addressOf(TOKEN_WETH), tokenTestSuite.addressOf(TOKEN_USDC)
                 )
         ) {
             return;
         }
 
         tokenTestSuite.approve(
-            tokenTestSuite.addressOf(Tokens.WETH),
+            tokenTestSuite.addressOf(TOKEN_WETH),
             creditAccount,
             supportedContracts.addressOf(Contracts.CAMELOT_V3_ROUTER)
         );
 
         tokenTestSuite.approve(
-            tokenTestSuite.addressOf(Tokens.USDC),
+            tokenTestSuite.addressOf(TOKEN_USDC),
             creditAccount,
             supportedContracts.addressOf(Contracts.CAMELOT_V3_ROUTER)
         );

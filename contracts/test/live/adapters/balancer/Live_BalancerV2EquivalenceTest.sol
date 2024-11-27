@@ -30,7 +30,7 @@ import {
 import {IAsset} from "../../../../integrations/balancer/IAsset.sol";
 import {BalancerV2_Calls, BalancerV2_Multicaller} from "../../../multicall/balancer/BalancerV2_Calls.sol";
 
-import {Tokens, TokenType} from "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
+import "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
 import {Contracts} from "@gearbox-protocol/sdk-gov/contracts/SupportedContracts.sol";
 
 import {MultiCall} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacadeV3.sol";
@@ -546,7 +546,7 @@ contract Live_BalancerV2EquivalenceTest is LiveTestHelper {
 
         tokensToTrack = tokensToTrack.trim();
 
-        Tokens[] memory _tokensToTrack = new Tokens[](tokensToTrack.length);
+        uint256[] memory _tokensToTrack = new uint256[](tokensToTrack.length);
 
         for (uint256 j = 0; j < tokensToTrack.length; ++j) {
             _tokensToTrack[j] = tokenTestSuite.tokenIndexes(tokensToTrack[j]);
@@ -590,10 +590,10 @@ contract Live_BalancerV2EquivalenceTest is LiveTestHelper {
 
         if (balancerVaultAdapter == address(0)) return;
 
-        for (uint256 i = 0; i < uint256(type(Tokens).max); ++i) {
-            if (tokenTestSuite.tokenTypes(Tokens(i)) != TokenType.BALANCER_LP_TOKEN) continue;
+        for (uint256 i = 0; i < NUM_TOKENS; ++i) {
+            if (tokenTestSuite.tokenTypes(i) != TokenType.BALANCER_LP_TOKEN) continue;
 
-            address pool = tokenTestSuite.addressOf(Tokens(i));
+            address pool = tokenTestSuite.addressOf(i);
             bytes32 poolId = IBalancerWeightedPool(pool).getPoolId();
 
             if (IBalancerV2VaultAdapter(balancerVaultAdapter).poolStatus(poolId) == PoolStatus.NOT_ALLOWED) continue;

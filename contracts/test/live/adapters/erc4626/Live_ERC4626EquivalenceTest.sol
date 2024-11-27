@@ -13,7 +13,7 @@ import {IERC4626} from "@openzeppelin/contracts/interfaces/IERC4626.sol";
 import {IERC4626Adapter} from "../../../../interfaces/erc4626/IERC4626Adapter.sol";
 import {ERC4626_Calls, ERC4626_Multicaller} from "../../../multicall/erc4626/ERC4626_Calls.sol";
 
-import {Tokens} from "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
+import "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
 import {Contracts} from "@gearbox-protocol/sdk-gov/contracts/SupportedContracts.sol";
 
 import {MultiCall} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacadeV3.sol";
@@ -142,7 +142,7 @@ contract Live_ERC4626EquivalenceTest is LiveTestHelper {
         tokensToTrack[0] = IERC4626Adapter(vaultAdapter).asset();
         tokensToTrack[1] = IERC4626Adapter(vaultAdapter).targetContract();
 
-        Tokens[] memory _tokensToTrack = new Tokens[](tokensToTrack.length);
+        uint256[] memory _tokensToTrack = new uint256[](tokensToTrack.length);
 
         for (uint256 j = 0; j < tokensToTrack.length; ++j) {
             _tokensToTrack[j] = tokenTestSuite.tokenIndexes(tokensToTrack[j]);

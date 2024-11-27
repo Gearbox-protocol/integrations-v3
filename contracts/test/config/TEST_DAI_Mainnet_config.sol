@@ -3,7 +3,7 @@
 // (c) Gearbox Holdings, 2022
 pragma solidity ^0.8.17;
 
-import {Tokens} from "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
+import "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
 import {Contracts} from "@gearbox-protocol/sdk-gov/contracts/SupportedContracts.sol";
 import {
     LinearIRMV3DeployParams,
@@ -24,7 +24,7 @@ import {
 contract CONFIG_MAINNET_DAI_TEST_V3 is IPoolV3DeployConfig {
     string public constant id = "mainnet-dai-test-v3";
     uint256 public constant chainId = 1;
-    Tokens public constant underlying = Tokens.DAI;
+    uint256 public constant underlying = TOKEN_DAI;
     bool public constant supportsQuotas = true;
     uint256 public constant getAccountAmount = 100_000_000_000_000_000_000_000;
 
@@ -52,16 +52,16 @@ contract CONFIG_MAINNET_DAI_TEST_V3 is IPoolV3DeployConfig {
     CreditManagerV3DeployParams[] _creditManagers;
 
     constructor() {
-        _gaugeRates.push(GaugeRate({token: Tokens.USDS, minRate: 4, maxRate: 1_500}));
-        _gaugeRates.push(GaugeRate({token: Tokens.stkUSDS, minRate: 4, maxRate: 1_500}));
-        _gaugeRates.push(GaugeRate({token: Tokens.SKY, minRate: 4, maxRate: 1_500}));
+        _gaugeRates.push(GaugeRate({token: TOKEN_USDS, minRate: 4, maxRate: 1_500}));
+        _gaugeRates.push(GaugeRate({token: TOKEN_stkUSDS, minRate: 4, maxRate: 1_500}));
+        _gaugeRates.push(GaugeRate({token: TOKEN_SKY, minRate: 4, maxRate: 1_500}));
         _quotaLimits.push(
-            PoolQuotaLimit({token: Tokens.USDS, quotaIncreaseFee: 1, limit: 10_000_000_000_000_000_000_000_000})
+            PoolQuotaLimit({token: TOKEN_USDS, quotaIncreaseFee: 1, limit: 10_000_000_000_000_000_000_000_000})
         );
         _quotaLimits.push(
-            PoolQuotaLimit({token: Tokens.stkUSDS, quotaIncreaseFee: 1, limit: 10_000_000_000_000_000_000_000_000})
+            PoolQuotaLimit({token: TOKEN_stkUSDS, quotaIncreaseFee: 1, limit: 10_000_000_000_000_000_000_000_000})
         );
-        _quotaLimits.push(PoolQuotaLimit({token: Tokens.SKY, quotaIncreaseFee: 1, limit: 0}));
+        _quotaLimits.push(PoolQuotaLimit({token: TOKEN_SKY, quotaIncreaseFee: 1, limit: 0}));
 
         {
             /// CREDIT_MANAGER_0
@@ -82,20 +82,18 @@ contract CONFIG_MAINNET_DAI_TEST_V3 is IPoolV3DeployConfig {
             cp.name = "Test Credit Manager";
 
             CollateralTokenHuman[] storage cts = cp.collateralTokens;
-            cts.push(CollateralTokenHuman({token: Tokens.USDS, lt: 9_000}));
+            cts.push(CollateralTokenHuman({token: TOKEN_USDS, lt: 9_000}));
 
-            cts.push(CollateralTokenHuman({token: Tokens.stkUSDS, lt: 9_000}));
+            cts.push(CollateralTokenHuman({token: TOKEN_stkUSDS, lt: 9_000}));
 
-            cts.push(CollateralTokenHuman({token: Tokens.SKY, lt: 0}));
+            cts.push(CollateralTokenHuman({token: TOKEN_SKY, lt: 0}));
             Contracts[] storage cs = cp.contracts;
             cs.push(Contracts.DAI_USDS);
             cs.push(Contracts.SKY_STAKING_REWARDS);
             cs.push(Contracts.UNISWAP_V2_ROUTER);
             {
                 GenericSwapPair[] storage gsp = cp.adapterConfig.genericSwapPairs;
-                gsp.push(
-                    GenericSwapPair({router: Contracts.UNISWAP_V2_ROUTER, token0: Tokens.SKY, token1: Tokens.USDS})
-                );
+                gsp.push(GenericSwapPair({router: Contracts.UNISWAP_V2_ROUTER, token0: TOKEN_SKY, token1: TOKEN_USDS}));
             }
         }
     }

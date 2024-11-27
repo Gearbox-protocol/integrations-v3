@@ -8,7 +8,7 @@ import {ICreditFacadeV3} from "@gearbox-protocol/core-v3/contracts/interfaces/IC
 import {IVelodromeV2Router, Route} from "../../../../integrations/velodrome/IVelodromeV2Router.sol";
 import {IVelodromeV2RouterAdapter} from "../../../../interfaces/velodrome/IVelodromeV2RouterAdapter.sol";
 
-import {Tokens} from "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
+import "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
 import {Contracts} from "@gearbox-protocol/sdk-gov/contracts/SupportedContracts.sol";
 
 import {MultiCall} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacadeV3.sol";
@@ -36,7 +36,7 @@ contract Live_VelodromeV2EquivalenceTest is LiveTestHelper {
     /// HELPER
 
     function prepareComparator() internal {
-        Tokens[2] memory tokensToTrack = [Tokens.OP, Tokens.USDC];
+        uint256[2] memory tokensToTrack = [TOKEN_OP, TOKEN_USDC];
 
         // STAGES
         string[2] memory stages = ["after_swapExactTokensForTokens", "after_swapDiffTokensForTokens"];
@@ -52,7 +52,7 @@ contract Live_VelodromeV2EquivalenceTest is LiveTestHelper {
         }
 
         len = tokensToTrack.length;
-        Tokens[] memory _tokensToTrack = new Tokens[](len);
+        uint256[] memory _tokensToTrack = new uint256[](len);
         unchecked {
             for (uint256 i; i < len; ++i) {
                 _tokensToTrack[i] = tokensToTrack[i];
@@ -71,8 +71,8 @@ contract Live_VelodromeV2EquivalenceTest is LiveTestHelper {
             Route[] memory routes = new Route[](1);
 
             routes[0] = Route({
-                from: tokenTestSuite.addressOf(Tokens.OP),
-                to: tokenTestSuite.addressOf(Tokens.USDC),
+                from: tokenTestSuite.addressOf(TOKEN_OP),
+                to: tokenTestSuite.addressOf(TOKEN_USDC),
                 stable: false,
                 factory: DEFAULT_VELODROME_V2_FACTORY
             });
@@ -100,8 +100,8 @@ contract Live_VelodromeV2EquivalenceTest is LiveTestHelper {
             Route[] memory routes = new Route[](1);
 
             routes[0] = Route({
-                from: tokenTestSuite.addressOf(Tokens.OP),
-                to: tokenTestSuite.addressOf(Tokens.USDC),
+                from: tokenTestSuite.addressOf(TOKEN_OP),
+                to: tokenTestSuite.addressOf(TOKEN_USDC),
                 stable: false,
                 factory: DEFAULT_VELODROME_V2_FACTORY
             });
@@ -109,7 +109,7 @@ contract Live_VelodromeV2EquivalenceTest is LiveTestHelper {
             router.swapExactTokensForTokens(WAD, 0, routes, creditAccount, block.timestamp + 3600);
             comparator.takeSnapshot("after_swapExactTokensForTokens", creditAccount);
 
-            uint256 balanceToSwap = tokenTestSuite.balanceOf(Tokens.OP, creditAccount) - WAD;
+            uint256 balanceToSwap = tokenTestSuite.balanceOf(TOKEN_OP, creditAccount) - WAD;
             router.swapExactTokensForTokens(balanceToSwap, 0, routes, creditAccount, block.timestamp + 3600);
             comparator.takeSnapshot("after_swapDiffTokensForTokens", creditAccount);
 
@@ -122,7 +122,7 @@ contract Live_VelodromeV2EquivalenceTest is LiveTestHelper {
     function openCreditAccountWithOP(uint256 amount) internal returns (address creditAccount) {
         vm.prank(USER);
         creditAccount = creditFacade.openCreditAccount(USER, MultiCallBuilder.build(), 0);
-        tokenTestSuite.mint(Tokens.OP, creditAccount, amount);
+        tokenTestSuite.mint(TOKEN_OP, creditAccount, amount);
     }
 
     /// @dev [L-VELO2ET-1]: VelodromeV2 adapter and normal account works identically
@@ -134,8 +134,8 @@ contract Live_VelodromeV2EquivalenceTest is LiveTestHelper {
         if (
             routerAdapter == address(0)
                 || !IVelodromeV2RouterAdapter(routerAdapter).isPoolAllowed(
-                    tokenTestSuite.addressOf(Tokens.OP),
-                    tokenTestSuite.addressOf(Tokens.USDC),
+                    tokenTestSuite.addressOf(TOKEN_OP),
+                    tokenTestSuite.addressOf(TOKEN_USDC),
                     false,
                     DEFAULT_VELODROME_V2_FACTORY
                 )
@@ -146,7 +146,7 @@ contract Live_VelodromeV2EquivalenceTest is LiveTestHelper {
         address creditAccount = openCreditAccountWithOP(100 * WAD);
 
         tokenTestSuite.approve(
-            tokenTestSuite.addressOf(Tokens.OP),
+            tokenTestSuite.addressOf(TOKEN_OP),
             creditAccount,
             supportedContracts.addressOf(Contracts.VELODROME_V2_ROUTER)
         );
