@@ -30,7 +30,7 @@
     "@commitlint/config-conventional": "^17.1.0",
     "@gearbox-protocol/eslint-config": "^1.6.1",
     "@gearbox-protocol/prettier-config": "^1.5.0",
-    "@gearbox-protocol/sdk-gov": "^2.8.0",
+    "@gearbox-protocol/sdk-gov": "^2.30.0",
     "@redstone-finance/evm-connector": "0.2.5",
     "@typechain/ethers-v5": "^10.1.0",
     "dotenv": "^16.0.3",
