@@ -7,7 +7,7 @@ import {ZapperBase} from "../../../zappers/ZapperBase.sol";
 
 contract ZapperBaseHarness is ZapperBase {
     uint256 public constant override version = 3_10;
-    bytes32 public constant override contractType = "ZAP_HARNESS";
+    bytes32 public constant override contractType = "ZAPPER::HARNESS";
 
     event ConvertTokenInToUnderlying(uint256 tokenInAmount, uint256 assets);
     event ConvertUnderlyingToTokenIn(uint256 assets, uint256 tokenInAmount, address receiver);

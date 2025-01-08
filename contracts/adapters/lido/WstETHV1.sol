@@ -13,7 +13,7 @@ import {IwstETHV1Adapter} from "../../interfaces/lido/IwstETHV1Adapter.sol";
 /// @title wstETH adapter
 /// @notice Implements logic for wrapping / unwrapping stETH
 contract WstETHV1Adapter is AbstractAdapter, IwstETHV1Adapter {
-    bytes32 public constant override contractType = "AD_LIDO_WSTETH_V1";
+    bytes32 public constant override contractType = "ADAPTER::LIDO_WSTETH_V1";
     uint256 public constant override version = 3_10;
 
     /// @notice Address of the stETH token

@@ -10,7 +10,7 @@ import {NotImplementedException} from "@gearbox-protocol/core-v3/contracts/inter
 /// @notice Implements logic allowing CAs to interact with a ERC4626 vaults, but with `withdraw` / `redeem` restricted, to avoid
 ///         CA's being exposed to Mellow's asynchronous withdrawals
 contract Mellow4626VaultAdapter is ERC4626Adapter {
-    bytes32 public constant override contractType = "AD_MELLOW_ERC4626_VAULT";
+    bytes32 public constant override contractType = "ADAPTER::MELLOW_ERC4626_VAULT";
 
     /// @notice Constructor
     /// @param _creditManager Credit manager address

@@ -11,7 +11,7 @@ import {ZapperBase} from "./ZapperBase.sol";
 /// @notice Zapper that allows to deposit ETH directly into a WETH pool and stake shares in 1inch farming contract
 contract WETHFarmingZapper is WETHTrait, FarmingTrait {
     uint256 public constant override version = 3_10;
-    bytes32 public constant override contractType = "ZAP_WETH_FARMING";
+    bytes32 public constant override contractType = "ZAPPER::WETH_FARMING";
 
     constructor(address pool, address farmingPool) ZapperBase(pool) FarmingTrait(farmingPool) {}
 }

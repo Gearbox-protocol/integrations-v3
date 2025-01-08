@@ -13,7 +13,7 @@ import {IYearnV2Adapter} from "../../interfaces/yearn/IYearnV2Adapter.sol";
 /// @title Yearn V2 Vault adapter
 /// @notice Implements logic allowing CAs to deposit into Yearn vaults
 contract YearnV2Adapter is AbstractAdapter, IYearnV2Adapter {
-    bytes32 public constant override contractType = "AD_YEARN_V2";
+    bytes32 public constant override contractType = "ADAPTER::YEARN_V2";
     uint256 public constant override version = 3_10;
 
     /// @notice Vault's underlying token address

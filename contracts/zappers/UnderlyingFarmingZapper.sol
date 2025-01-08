@@ -11,7 +11,7 @@ import {ZapperBase} from "./ZapperBase.sol";
 /// @notice Zapper that allows to deposit underlying token into a pool and stake shares in 1inch farming contract
 contract UnderlyingFarmingZapper is UnderlyingTrait, FarmingTrait {
     uint256 public constant override version = 3_10;
-    bytes32 public constant override contractType = "ZAP_UNDERLYING_FARMING";
+    bytes32 public constant override contractType = "ZAPPER::UNDERLYING_FARMING";
 
     constructor(address pool, address farmingPool) ZapperBase(pool) FarmingTrait(farmingPool) {}
 }

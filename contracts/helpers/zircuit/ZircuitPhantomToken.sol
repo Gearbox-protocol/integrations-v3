@@ -13,9 +13,6 @@ import {IPhantomToken} from "@gearbox-protocol/core-v3/contracts/interfaces/base
 /// @title Zircuit staked position token
 /// @notice Phantom ERC-20 token that represents the balance of the staking position in a Zircuit pool
 contract ZircuitPhantomToken is PhantomERC20, IPhantomToken {
-    uint256 public constant override version = 3_10;
-    bytes32 public constant override contractType = "PT_ZIRCUIT";
-
     address public immutable zircuitPool;
 
     /// @notice Constructor

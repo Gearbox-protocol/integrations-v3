@@ -22,7 +22,7 @@ import {IConvexV1BaseRewardPoolAdapter} from "../../interfaces/convex/IConvexV1B
 contract ConvexV1BoosterAdapter is AbstractAdapter, IConvexV1BoosterAdapter {
     using EnumerableSet for EnumerableSet.UintSet;
 
-    bytes32 public constant override contractType = "AD_CONVEX_V1_BOOSTER";
+    bytes32 public constant override contractType = "ADAPTER::CVX_V1_BOOSTER";
     uint256 public constant override version = 3_10;
 
     /// @dev Set of all pids that have corresponding phantom tokens
@@ -189,7 +189,7 @@ contract ConvexV1BoosterAdapter is AbstractAdapter, IConvexV1BoosterAdapter {
             address poolTargetContract = IAdapter(adapter).targetContract();
 
             if (
-                IAdapter(adapter).contractType() == "AD_CONVEX_V1_BASE_REWARD_POOL"
+                IAdapter(adapter).contractType() == "ADAPTER::CVX_V1_BASE_REWARD_POOL"
                     && IBaseRewardPool(poolTargetContract).operator() == targetContract
             ) {
                 uint256 pid = IBaseRewardPool(poolTargetContract).pid();

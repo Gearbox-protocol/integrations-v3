@@ -17,7 +17,7 @@ import {IMellowVault} from "../../integrations/mellow/IMellowVault.sol";
 contract MellowVaultAdapter is AbstractAdapter, IMellowVaultAdapter {
     using EnumerableSet for EnumerableSet.AddressSet;
 
-    bytes32 public constant override contractType = "AD_MELLOW_LRT_VAULT";
+    bytes32 public constant override contractType = "ADAPTER::MELLOW_LRT_VAULT";
     uint256 public constant override version = 3_10;
 
     /// @dev Set of allowed underlying addresses

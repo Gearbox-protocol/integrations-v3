@@ -133,7 +133,7 @@ contract Live_MellowVaultAdapterTest is LiveTestHelper {
         address[] memory adapters = creditConfigurator.allowedAdapters();
 
         for (uint256 i = 0; i < adapters.length; ++i) {
-            if (IAdapter(adapters[i]).contractType() != "AD_MELLOW_LRT_VAULT") continue;
+            if (IAdapter(adapters[i]).contractType() != "ADAPTER::MELLOW_LRT_VAULT") continue;
 
             uint256 snapshot0 = vm.snapshot();
 

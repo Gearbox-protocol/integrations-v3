@@ -20,7 +20,7 @@ contract CamelotV3Adapter is AbstractAdapter, ICamelotV3Adapter {
     using EnumerableSet for EnumerableSet.Bytes32Set;
     using BytesLib for bytes;
 
-    bytes32 public constant override contractType = "AD_CAMELOT_V3_ROUTER";
+    bytes32 public constant override contractType = "ADAPTER::CAMELOT_V3_ROUTER";
     uint256 public constant override version = 3_10;
 
     /// @dev The length of the bytes encoded address

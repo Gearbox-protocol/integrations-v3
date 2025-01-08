@@ -15,7 +15,7 @@ import {CurveV1Adapter2Assets} from "./CurveV1_2.sol";
 /// @title Curve V1 stETH adapter
 /// @notice Same as `CurveV1Adapter2Assets` but uses stETH gateway and needs to approve LP token
 contract CurveV1AdapterStETH is CurveV1Adapter2Assets {
-    bytes32 public constant override contractType = "AD_CURVE_V1_STECRV_POOL";
+    bytes32 public constant override contractType = "ADAPTER::CURVE_V1_STECRV_POOL";
 
     /// @notice Sets allowance for the pool LP token to max before the operation and to 1 after
     modifier withLPTokenApproval() {

@@ -634,7 +634,7 @@ contract Live_CurveEquivalenceTest is LiveTestHelper {
             CurvePoolParams memory cpp = CurvePoolParams({
                 use256: ICurveV1Adapter(adapters[i]).use256(),
                 hasUnderlying: ICurveV1Adapter(adapters[i]).underlying0() != address(0),
-                isNGPool: IAdapter(adapters[i]).contractType() == "AD_CURVE_STABLE_NG",
+                isNGPool: IAdapter(adapters[i]).contractType() == "ADAPTER::CURVE_STABLE_NG",
                 nCoins: ICurveV1Adapter(adapters[i]).nCoins(),
                 lpToken: ICurveV1Adapter(adapters[i]).token(),
                 lpSupported: creditManager.liquidationThresholds(ICurveV1Adapter(adapters[i]).token()) != 0,

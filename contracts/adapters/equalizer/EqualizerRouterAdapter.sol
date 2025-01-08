@@ -22,7 +22,7 @@ import {
 contract EqualizerRouterAdapter is AbstractAdapter, IEqualizerRouterAdapter {
     using EnumerableSet for EnumerableSet.Bytes32Set;
 
-    bytes32 public constant override contractType = "AD_EQUALIZER_ROUTER";
+    bytes32 public constant override contractType = "ADAPTER::EQUALIZER_ROUTER";
     uint256 public constant override version = 3_10;
 
     /// @dev Mapping from hash(token0, token1, stable) to respective tuple

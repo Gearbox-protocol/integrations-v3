@@ -151,7 +151,7 @@ contract Live_ZircuitEquivalenceTest is LiveTestHelper {
 
             try IPhantomToken(token).getPhantomTokenInfo() returns (address target, address) {
                 address adapter = creditManager.contractToAdapter(target);
-                if (IAdapter(adapter).contractType() != "AD_ZIRCUIT_POOL") continue;
+                if (IAdapter(adapter).contractType() != "ADAPTER::ZIRCUIT_POOL") continue;
             } catch {
                 continue;
             }
@@ -199,7 +199,7 @@ contract Live_ZircuitEquivalenceTest is LiveTestHelper {
 
             try IPhantomToken(token).getPhantomTokenInfo() returns (address target, address) {
                 address adapter = creditManager.contractToAdapter(target);
-                if (IAdapter(adapter).contractType() != "AD_ZIRCUIT_POOL") continue;
+                if (IAdapter(adapter).contractType() != "ADAPTER::ZIRCUIT_POOL") continue;
             } catch {
                 continue;
             }

@@ -3,9 +3,9 @@
 // (c) Gearbox Foundation, 2024.
 pragma solidity ^0.8.23;
 
-import {IVersion} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IVersion.sol";
+import {IZapper as IZapperBase} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IZapper.sol";
 
-interface IZapper is IVersion {
+interface IZapper is IZapperBase {
     function pool() external view returns (address);
 
     function underlying() external view returns (address);

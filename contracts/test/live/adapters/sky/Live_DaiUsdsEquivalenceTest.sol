@@ -136,7 +136,7 @@ contract Live_DaiUsdsEquivalenceTest is LiveTestHelper {
         address[] memory adapters = creditConfigurator.allowedAdapters();
 
         for (uint256 i = 0; i < adapters.length; ++i) {
-            if (IAdapter(adapters[i]).contractType() != "AD_DAI_USDS_EXCHANGE") continue;
+            if (IAdapter(adapters[i]).contractType() != "ADAPTER::DAI_USDS_EXCHANGE") continue;
 
             uint256 snapshot0 = vm.snapshot();
 

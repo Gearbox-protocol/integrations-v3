@@ -11,7 +11,7 @@ import {ZapperBase} from "./ZapperBase.sol";
 /// @notice Zapper that allows to deposit stETH directly into a wstETH pool
 contract WstETHDepositZapper is WstETHTrait, DepositTrait {
     uint256 public constant override version = 3_10;
-    bytes32 public constant override contractType = "ZAP_WSTETH_DEPOSIT";
+    bytes32 public constant override contractType = "ZAPPER::WSTETH_DEPOSIT";
 
     constructor(address pool) ZapperBase(pool) WstETHTrait() {}
 }

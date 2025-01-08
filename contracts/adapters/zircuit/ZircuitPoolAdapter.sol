@@ -17,7 +17,7 @@ import {IZircuitPool} from "../../integrations/zircuit/IZircuitPool.sol";
 contract ZircuitPoolAdapter is AbstractAdapter, IZircuitPoolAdapter {
     using EnumerableSet for EnumerableSet.AddressSet;
 
-    bytes32 public constant override contractType = "AD_ZIRCUIT_POOL";
+    bytes32 public constant override contractType = "ADAPTER::ZIRCUIT_POOL";
     uint256 public constant override version = 3_10;
 
     /// @dev Set of all underlyings that have corresponding phantom tokens

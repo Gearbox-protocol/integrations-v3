@@ -19,7 +19,7 @@ contract ERC4626Adapter is AbstractAdapter, IERC4626Adapter {
     address public immutable override asset;
 
     function contractType() external pure virtual override returns (bytes32) {
-        return "AD_ERC4626_VAULT";
+        return "ADAPTER::ERC4626_VAULT";
     }
 
     /// @notice Constructor

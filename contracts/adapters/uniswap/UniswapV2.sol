@@ -18,7 +18,7 @@ import {IUniswapV2Adapter, UniswapV2PairStatus, UniswapV2Pair} from "../../inter
 contract UniswapV2Adapter is AbstractAdapter, IUniswapV2Adapter {
     using EnumerableSet for EnumerableSet.Bytes32Set;
 
-    bytes32 public constant override contractType = "AD_UNISWAP_V2_ROUTER";
+    bytes32 public constant override contractType = "ADAPTER::UNISWAP_V2_ROUTER";
     uint256 public constant override version = 3_10;
 
     /// @dev Mapping from hash(token0, token1) to respective tuple
