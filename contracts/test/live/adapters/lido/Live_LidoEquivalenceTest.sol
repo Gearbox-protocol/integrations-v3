@@ -11,7 +11,7 @@ import {ILidoV1Adapter} from "../../../../interfaces/lido/ILidoV1Adapter.sol";
 import {LidoV1Gateway} from "../../../../helpers/lido/LidoV1_WETHGateway.sol";
 import {LidoV1_Calls, LidoV1_Multicaller} from "../../../multicall/lido/LidoV1_Calls.sol";
 
-import {Tokens} from "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
+import "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
 import {Contracts} from "@gearbox-protocol/sdk-gov/contracts/SupportedContracts.sol";
 
 import {MultiCall} from "@gearbox-protocol/core-v2/contracts/libraries/MultiCall.sol";
@@ -32,7 +32,7 @@ contract Live_LidoEquivalenceTest is LiveTestHelper {
     /// HELPER
 
     function prepareComparator() internal {
-        Tokens[2] memory tokensToTrack = [Tokens.WETH, Tokens.STETH];
+        uint256[2] memory tokensToTrack = [TOKEN_WETH, TOKEN_STETH];
 
         // STAGES
         string[2] memory stages = ["after_submit", "after_submitDiff"];
@@ -48,7 +48,7 @@ contract Live_LidoEquivalenceTest is LiveTestHelper {
         }
 
         len = tokensToTrack.length;
-        Tokens[] memory _tokensToTrack = new Tokens[](len);
+        uint256[] memory _tokensToTrack = new uint256[](len);
         unchecked {
             for (uint256 i; i < len; ++i) {
                 _tokensToTrack[i] = tokensToTrack[i];
@@ -77,7 +77,7 @@ contract Live_LidoEquivalenceTest is LiveTestHelper {
             lido.submit(WAD, DUMB_ADDRESS);
             comparator.takeSnapshot("after_submit", creditAccount);
 
-            uint256 remainingBalance = tokenTestSuite.balanceOf(Tokens.WETH, creditAccount);
+            uint256 remainingBalance = tokenTestSuite.balanceOf(TOKEN_WETH, creditAccount);
             lido.submit(remainingBalance - WAD, DUMB_ADDRESS);
             comparator.takeSnapshot("after_submitDiff", creditAccount);
 
@@ -91,7 +91,7 @@ contract Live_LidoEquivalenceTest is LiveTestHelper {
         vm.prank(USER);
         creditAccount = creditFacade.openCreditAccount(USER, MultiCallBuilder.build(), 0);
 
-        tokenTestSuite.mint(Tokens.WETH, creditAccount, amount);
+        tokenTestSuite.mint(TOKEN_WETH, creditAccount, amount);
     }
 
     /// @dev [L-LDOET-1]: Lido adapter and normal account works identically
@@ -106,12 +106,12 @@ contract Live_LidoEquivalenceTest is LiveTestHelper {
         if (lidoAdapter == address(0)) return;
 
         tokenTestSuite.approve(
-            tokenTestSuite.addressOf(Tokens.WETH),
+            tokenTestSuite.addressOf(TOKEN_WETH),
             creditAccount,
             supportedContracts.addressOf(Contracts.LIDO_STETH_GATEWAY)
         );
         tokenTestSuite.approve(
-            tokenTestSuite.addressOf(Tokens.STETH),
+            tokenTestSuite.addressOf(TOKEN_STETH),
             creditAccount,
             supportedContracts.addressOf(Contracts.LIDO_STETH_GATEWAY)
         );

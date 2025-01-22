@@ -10,7 +10,7 @@ import {ICreditFacadeV3} from "@gearbox-protocol/core-v3/contracts/interfaces/IC
 import {IVersion} from "@gearbox-protocol/core-v2/contracts/interfaces/IVersion.sol";
 import {DegenNFTV2} from "@gearbox-protocol/core-v2/contracts/tokens/DegenNFTV2.sol";
 
-import {Tokens} from "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
+import "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
 import {SupportedContracts, Contracts} from "@gearbox-protocol/sdk-gov/contracts/SupportedContracts.sol";
 import {
     IPoolV3DeployConfig,
@@ -27,22 +27,8 @@ import {PriceFeedDeployer} from "@gearbox-protocol/oracles-v3/contracts/test/sui
 import {IntegrationTestHelper} from "@gearbox-protocol/core-v3/contracts/test/helpers/IntegrationTestHelper.sol";
 import {AdapterDeployer} from "./AdapterDeployer.sol";
 
-import {CONFIG_MAINNET_USDC_V3} from "../config/USDC_Mainnet_config.sol";
-import {CONFIG_MAINNET_WBTC_V3} from "../config/WBTC_Mainnet_config.sol";
-import {CONFIG_MAINNET_WETH_V3} from "../config/WETH_Mainnet_config.sol";
-import {CONFIG_MAINNET_GHO_V3} from "../config/GHO_Mainnet_config.sol";
-import {CONFIG_MAINNET_DAI_V3} from "../config/DAI_Mainnet_config.sol";
-import {CONFIG_MAINNET_USDT_V3} from "../config/USDT_Mainnet_config.sol";
-
-import {CONFIG_OPTIMISM_USDC_V3} from "../config/USDC_Optimism_config.sol";
-import {CONFIG_OPTIMISM_WETH_V3} from "../config/WETH_Optimism_config.sol";
-
-import {CONFIG_ARBITRUM_USDC_V3} from "../config/USDC_Arbitrum_config.sol";
-import {CONFIG_ARBITRUM_WETH_V3} from "../config/WETH_Arbitrum_config.sol";
-
-import {CONFIG_MAINNET_USDC_TEST_V3} from "../config/TEST_USDC_Mainnet_config.sol";
+import {CONFIG_MAINNET_DAI_TEST_V3} from "../config/TEST_DAI_Mainnet_config.sol";
 import {CONFIG_MAINNET_WETH_TEST_V3} from "../config/TEST_WETH_Mainnet_config.sol";
-import {CONFIG_ARBITRUM_WETH_TEST_V3} from "../config/TEST_WETH_Arbitrum_config.sol";
 
 import {IConvexV1BoosterAdapter} from "../../interfaces/convex/IConvexV1BoosterAdapter.sol";
 import {BalancerV2VaultAdapter} from "../../adapters/balancer/BalancerV2VaultAdapter.sol";
@@ -66,19 +52,8 @@ import "forge-std/console.sol";
 
 contract LiveTestHelper is IntegrationTestHelper {
     constructor() {
-        addDeployConfig(new CONFIG_MAINNET_USDC_V3());
-        addDeployConfig(new CONFIG_MAINNET_WBTC_V3());
-        addDeployConfig(new CONFIG_MAINNET_WETH_V3());
-        addDeployConfig(new CONFIG_OPTIMISM_USDC_V3());
-        addDeployConfig(new CONFIG_OPTIMISM_WETH_V3());
-        addDeployConfig(new CONFIG_ARBITRUM_USDC_V3());
-        addDeployConfig(new CONFIG_ARBITRUM_WETH_V3());
-        addDeployConfig(new CONFIG_MAINNET_USDC_TEST_V3());
         addDeployConfig(new CONFIG_MAINNET_WETH_TEST_V3());
-        addDeployConfig(new CONFIG_ARBITRUM_WETH_TEST_V3());
-        addDeployConfig(new CONFIG_MAINNET_GHO_V3());
-        addDeployConfig(new CONFIG_MAINNET_DAI_V3());
-        addDeployConfig(new CONFIG_MAINNET_USDT_V3());
+        addDeployConfig(new CONFIG_MAINNET_DAI_TEST_V3());
     }
 
     SupportedContracts public supportedContracts;
@@ -417,65 +392,9 @@ contract LiveTestHelper is IntegrationTestHelper {
         return !Pausable(pool).paused() && !Pausable(creditFacade).paused();
     }
 
-    function _setUp() public virtual liveTest {
-        // lts = new LiveEnvTestSuite();
-        // MAINNET_CONFIGURATOR = lts.ROOT_ADDRESS();
-        // tokenTestSuite = lts.tokenTestSuite();
-        // supportedContracts = lts.supportedContracts();
-
-        // TODO: CHANGE
-    }
-
-    //     function getUniV2() internal view returns (IUniswapV2Router02) {
-    //         return IUniswapV2Router02(supportedContracts.addressOf(Contracts.UNISWAP_V2_ROUTER));
-    //     }
-
-    //     function swapEthToTokens(address onBehalfOf, Tokens t, uint256 amount) internal {
-    //         vm.startPrank(onBehalfOf);
-
-    //         getUniV2().swapExactETHForTokens{value: amount}(
-    //             0, arrayOf(tokenTestSuite.addressOf(Tokens.WETH), tokenTestSuite.addressOf(t)), onBehalfOf, block.timestamp
-    //         );
-
-    //         vm.stopPrank();
-    //     }
-
-    //     // [TODO]: add new lib for arrayOf
-    //     function arrayOf(address addr0, address addr1) internal pure returns (address[] memory result) {
-    //         result = new address[](2);
-    //         result[0] = addr0;
-    //         result[1] = addr1;
-    //     }
-
-    //     function getTokensOfType(TokenType tokenType) internal view returns (Tokens[] memory tokens) {
-    //         uint256 tokenCount = tokenTestSuite.tokenCount();
-
-    //         uint256[] memory temp = new uint256[](tokenCount);
-    //         uint256 found;
-
-    //         for (uint256 i = 0; i < tokenCount; ++i) {
-    //             if (tokenTestSuite.tokenTypes(Tokens(i)) == tokenType) {
-    //                 temp[found] = i;
-    //                 ++found;
-    //             }
-    //         }
-
-    //         tokens = new Tokens[](found);
-
-    //         for (uint256 i = 0; i < found; ++i) {
-    //             tokens[i] = Tokens(temp[i]);
-    //         }
-    //     }
+    function _setUp() public virtual liveTest {}
 
     function getAdapter(address creditManager, Contracts target) public view returns (address) {
         return ICreditManagerV3(creditManager).contractToAdapter(supportedContracts.addressOf(target));
     }
-
-    // function getAdapter(Tokens underlying, Contracts target) public view returns (address) {
-    //     return _creditManagers[underlying][0].contractToAdapter(supportedContracts.addressOf(target));
-    // }
-
-    // function getAdapter(Tokens underlying, Contracts target, uint256 cmIdx) public view returns (address) {
-    //     return _creditManagers[underlying][cmIdx].contractToAdapter(supportedContracts.addressOf(target));
-    // }
 }

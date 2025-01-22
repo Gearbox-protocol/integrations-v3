@@ -13,7 +13,7 @@ import {IAaveV2_LendingPoolAdapter} from "../../../../interfaces/aave/IAaveV2_Le
 import {ILendingPool} from "../../../../integrations/aave/ILendingPool.sol";
 import {IAToken} from "../../../../integrations/aave/IAToken.sol";
 
-import {Tokens} from "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
+import "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
 import {Contracts} from "@gearbox-protocol/sdk-gov/contracts/SupportedContracts.sol";
 
 import {MultiCall} from "@gearbox-protocol/core-v2/contracts/libraries/MultiCall.sol";
@@ -38,7 +38,7 @@ contract Live_AaveV2LendingPoolEquivalenceTest is LiveTestHelper {
     BalanceComparator comparator;
 
     function prepareComparator(address aToken, address underlying) internal {
-        Tokens[2] memory tokensToTrack = [tokenTestSuite.tokenIndexes(underlying), tokenTestSuite.tokenIndexes(aToken)];
+        uint256[2] memory tokensToTrack = [tokenTestSuite.tokenIndexes(underlying), tokenTestSuite.tokenIndexes(aToken)];
 
         // STAGES
         string[4] memory stages = ["after_deposit", "after_depositDiff", "after_withdraw", "after_withdrawDiff"];
@@ -54,7 +54,7 @@ contract Live_AaveV2LendingPoolEquivalenceTest is LiveTestHelper {
         }
 
         len = tokensToTrack.length;
-        Tokens[] memory _tokensToTrack = new Tokens[](len);
+        uint256[] memory _tokensToTrack = new uint256[](len);
         unchecked {
             for (uint256 i; i < len; ++i) {
                 _tokensToTrack[i] = tokensToTrack[i];
@@ -180,6 +180,6 @@ contract Live_AaveV2LendingPoolEquivalenceTest is LiveTestHelper {
     }
 
     function test_diag_pf() public attachOrLiveTest {
-        emit log_uint(priceOracle.getPrice(tokenTestSuite.addressOf(Tokens.ezETH)));
+        emit log_uint(priceOracle.getPrice(tokenTestSuite.addressOf(TOKEN_ezETH)));
     }
 }

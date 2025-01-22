@@ -8,7 +8,7 @@ import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {ICreditManagerV3} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditManagerV3.sol";
 import {ICreditConfiguratorV3} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditConfiguratorV3.sol";
 // CONFIG
-import {Tokens} from "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
+import "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
 import {AdapterData} from "@gearbox-protocol/sdk-gov/contracts/AdapterData.sol";
 import {SupportedContracts, Contracts} from "@gearbox-protocol/sdk-gov/contracts/SupportedContracts.sol";
 
@@ -46,6 +46,9 @@ import {CamelotV3Adapter} from "../../adapters/camelot/CamelotV3Adapter.sol";
 
 import {MellowVaultAdapter} from "../../adapters/mellow/MellowVaultAdapter.sol";
 import {PendleRouterAdapter} from "../../adapters/pendle/PendleRouterAdapter.sol";
+
+import {DaiUsdsAdapter} from "../../adapters/sky/DaiUsdsAdapter.sol";
+import {StakingRewardsAdapter} from "../../adapters/sky/StakingRewardsAdapter.sol";
 
 import {TokensTestSuite} from "@gearbox-protocol/core-v3/contracts/test/suites/TokensTestSuite.sol";
 import {Test} from "forge-std/Test.sol";
@@ -123,9 +126,8 @@ contract AdapterDeployer is AdapterData, Test {
                         adapter = address(new LidoV1Adapter(address(creditManager), targetContract));
                         targetContract = LidoV1Adapter(adapter).targetContract();
                     } else if (at == AdapterType.LIDO_WSTETH_V1) {
-                        adapter = address(
-                            new WstETHV1Adapter(address(creditManager), tokenTestSuite.addressOf(Tokens.wstETH))
-                        );
+                        adapter =
+                            address(new WstETHV1Adapter(address(creditManager), tokenTestSuite.addressOf(TOKEN_wstETH)));
                     } else if (at == AdapterType.COMPOUND_V2_CERC20) {
                         adapter = address(new CompoundV2_CErc20Adapter(address(creditManager), targetContract));
                     } else if (at == AdapterType.COMPOUND_V2_CETHER) {
@@ -146,6 +148,8 @@ contract AdapterDeployer is AdapterData, Test {
                         adapter = address(new MellowVaultAdapter(address(creditManager), targetContract));
                     } else if (at == AdapterType.PENDLE_ROUTER) {
                         adapter = address(new PendleRouterAdapter(address(creditManager), targetContract));
+                    } else if (at == AdapterType.DAI_USDS_EXCHANGE) {
+                        adapter = address(new DaiUsdsAdapter(address(creditManager), targetContract));
                     }
 
                     return adapter;
@@ -239,6 +243,21 @@ contract AdapterDeployer is AdapterData, Test {
                             address(creditManager),
                             targetContract,
                             tokenTestSuite.addressOf(convexBasePoolAdapters[i].stakedToken)
+                        )
+                    );
+                    return adapter;
+                }
+            }
+
+            len = stakingRewardsAdapters.length;
+            for (uint256 i; i < len; ++i) {
+                if (cnt == stakingRewardsAdapters[i].targetContract) {
+                    targetContract = supportedContracts.addressOf(cnt);
+                    adapter = address(
+                        new StakingRewardsAdapter(
+                            address(creditManager),
+                            targetContract,
+                            tokenTestSuite.addressOf(stakingRewardsAdapters[i].stakedToken)
                         )
                     );
                     return adapter;
