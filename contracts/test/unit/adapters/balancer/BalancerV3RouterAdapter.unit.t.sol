@@ -61,7 +61,13 @@ contract BalancerV3RouterAdapterUnitTest is
 
     /// @notice U:[BAL3-3]: `swapSingleTokenExactIn` works as expected and ignores wethIsEth and userData
     function test_U_BAL3_03_swapSingleTokenExactIn_works_as_expected() public {
-        _readsActiveAccount();
+        // Check that non-allowed pool reverts
+        address nonAllowedPool = makeAddr("NON_ALLOWED_POOL");
+        vm.expectRevert(InvalidPoolException.selector);
+        vm.prank(creditFacade);
+        adapter.swapSingleTokenExactIn(nonAllowedPool, IERC20(tokens[0]), IERC20(tokens[1]), 0, 0, 0, false, "");
+
+        // Check that allowed pool works
         _executesSwap({
             tokenIn: tokens[0],
             tokenOut: tokens[1],
@@ -91,6 +97,13 @@ contract BalancerV3RouterAdapterUnitTest is
 
     /// @notice U:[BAL3-4]: `swapSingleTokenDiffIn` works as expected
     function test_U_BAL3_04_swapSingleTokenDiffIn_works_as_expected() public diffTestCases {
+        // Check that non-allowed pool reverts
+        address nonAllowedPool = makeAddr("NON_ALLOWED_POOL");
+        vm.expectRevert(InvalidPoolException.selector);
+        vm.prank(creditFacade);
+        adapter.swapSingleTokenDiffIn(nonAllowedPool, IERC20(tokens[0]), IERC20(tokens[1]), 0, 0, 0);
+
+        // Check that allowed pool works
         deal({token: tokens[0], to: creditAccount, give: diffMintedAmount});
 
         _readsActiveAccount();

@@ -51,7 +51,7 @@ contract BalancerV3RouterAdapter is AbstractAdapter, IBalancerV3RouterAdapter {
         bool,
         bytes calldata
     ) external override creditFacadeOnly returns (uint256 tokensToEnable, uint256 tokensToDisable) {
-        address creditAccount = _creditAccount();
+        if (!isPoolAllowed(pool)) revert InvalidPoolException();
 
         (tokensToEnable, tokensToDisable,) = _executeSwapSafeApprove(
             address(tokenIn),
@@ -79,6 +79,8 @@ contract BalancerV3RouterAdapter is AbstractAdapter, IBalancerV3RouterAdapter {
         uint256 rateMinRAY,
         uint256 deadline
     ) external override creditFacadeOnly returns (uint256 tokensToEnable, uint256 tokensToDisable) {
+        if (!isPoolAllowed(pool)) revert InvalidPoolException();
+
         address creditAccount = _creditAccount();
 
         uint256 amount = tokenIn.balanceOf(creditAccount);
@@ -87,7 +89,6 @@ contract BalancerV3RouterAdapter is AbstractAdapter, IBalancerV3RouterAdapter {
             amount -= leftoverAmount;
         }
 
-        // calling `_executeSwap` because we need to check if output token is registered as collateral token in the CM
         (tokensToEnable, tokensToDisable,) = _executeSwapSafeApprove(
             address(tokenIn),
             address(tokenOut),
@@ -128,6 +129,8 @@ contract BalancerV3RouterAdapter is AbstractAdapter, IBalancerV3RouterAdapter {
                 _poolStatus[pools[i]] = statuses[i];
                 if (statuses[i]) {
                     _allowedPools.add(pools[i]);
+                } else {
+                    _allowedPools.remove(pools[i]);
                 }
                 emit SetPoolStatus(pools[i], statuses[i]);
             }

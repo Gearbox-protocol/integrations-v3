@@ -14,6 +14,9 @@ interface IBalancerV3RouterAdapterEvents {
 interface IBalancerV3RouterAdapterExceptions {
     /// @notice Thrown when pool and status array lengths do not match
     error InvalidLengthException();
+
+    /// @notice Thrown when trying to swap through a non-allowed pool
+    error InvalidPoolException();
 }
 
 /// @title Balancer V3 Router adapter interface
