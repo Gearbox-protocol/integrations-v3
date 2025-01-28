@@ -83,7 +83,7 @@ contract BalancerV3RouterAdapter is AbstractAdapter, IBalancerV3RouterAdapter {
 
         address creditAccount = _creditAccount();
 
-        uint256 amount = tokenIn.balanceOf(creditAccount);
+        uint256 amount = IERC20(address(tokenIn)).balanceOf(creditAccount);
         if (amount <= leftoverAmount) return (0, 0);
         unchecked {
             amount -= leftoverAmount;
