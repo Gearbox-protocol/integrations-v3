@@ -25,7 +25,7 @@ contract BalancerV3RouterAdapter is AbstractAdapter, IBalancerV3RouterAdapter {
     /// @dev Mapping from pool address to whether it can be traded through the adapter
     mapping(address => bool) internal _poolStatus;
 
-    /// @dev Set of all pools that were ever allowed
+    /// @dev Set of all pools that are currently allowed
     EnumerableSet.AddressSet internal _allowedPools;
 
     /// @notice Constructor
