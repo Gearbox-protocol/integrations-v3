@@ -153,7 +153,7 @@ contract Live_StakingRewardsEquivalenceTest is LiveTestHelper {
         address[] memory adapters = creditConfigurator.allowedAdapters();
 
         for (uint256 i = 0; i < adapters.length; ++i) {
-            if (IAdapter(adapters[i]).contractType() != "AD_STAKING_REWARDS") continue;
+            if (IAdapter(adapters[i]).contractType() != "ADAPTER::STAKING_REWARDS") continue;
 
             uint256 snapshot0 = vm.snapshot();
 
@@ -206,7 +206,7 @@ contract Live_StakingRewardsEquivalenceTest is LiveTestHelper {
 
             try IPhantomToken(token).getPhantomTokenInfo() returns (address target, address) {
                 adapter = creditManager.contractToAdapter(target);
-                if (IAdapter(adapter).contractType() != "AD_STAKING_REWARDS") continue;
+                if (IAdapter(adapter).contractType() != "ADAPTER::STAKING_REWARDS") continue;
             } catch {
                 continue;
             }

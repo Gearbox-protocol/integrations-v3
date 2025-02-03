@@ -22,7 +22,7 @@ import {
 contract VelodromeV2RouterAdapter is AbstractAdapter, IVelodromeV2RouterAdapter {
     using EnumerableSet for EnumerableSet.Bytes32Set;
 
-    bytes32 public constant override contractType = "AD_VELODROME_V2_ROUTER";
+    bytes32 public constant override contractType = "ADAPTER::VELODROME_V2_ROUTER";
     uint256 public constant override version = 3_10;
 
     /// @dev Mapping from hash(token0, token1, stable, factory) to respective tuple

@@ -17,7 +17,7 @@ import {LidoV1Gateway} from "../../helpers/lido/LidoV1_WETHGateway.sol";
 /// @title Lido V1 adapter
 /// @notice Implements logic for interacting with the Lido contract through the gateway
 contract LidoV1Adapter is AbstractAdapter, ILidoV1Adapter {
-    bytes32 public constant override contractType = "AD_LIDO_V1";
+    bytes32 public constant override contractType = "ADAPTER::LIDO_V1";
     uint256 public constant override version = 3_10;
 
     /// @notice stETH token

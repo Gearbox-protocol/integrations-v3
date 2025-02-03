@@ -11,7 +11,7 @@ import {CurveV1AdapterBase} from "./CurveV1_Base.sol";
 /// @notice Implements logic allowing to interact with Curve pools with 2 assets
 contract CurveV1Adapter2Assets is CurveV1AdapterBase, ICurveV1_2AssetsAdapter {
     function contractType() external pure virtual override returns (bytes32) {
-        return "AD_CURVE_V1_2ASSETS";
+        return "ADAPTER::CURVE_V1_2ASSETS";
     }
 
     /// @notice Constructor

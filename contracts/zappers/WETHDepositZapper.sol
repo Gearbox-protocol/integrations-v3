@@ -11,7 +11,7 @@ import {ZapperBase} from "./ZapperBase.sol";
 /// @notice Zapper that allows to deposit ETH directly into a WETH pool
 contract WETHDepositZapper is WETHTrait, DepositTrait {
     uint256 public constant override version = 3_10;
-    bytes32 public constant override contractType = "ZAP_WETH_DEPOSIT";
+    bytes32 public constant override contractType = "ZAPPER::WETH_DEPOSIT";
 
     constructor(address pool) ZapperBase(pool) {}
 }

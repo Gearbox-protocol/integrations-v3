@@ -156,7 +156,7 @@ contract Live_YearnEquivalenceTest is LiveTestHelper {
         address[] memory adapters = creditConfigurator.allowedAdapters();
 
         for (uint256 i = 0; i < adapters.length; ++i) {
-            if (IAdapter(adapters[i]).contractType() != "AD_YEARN_V2") continue;
+            if (IAdapter(adapters[i]).contractType() != "ADAPTER::YEARN_V2") continue;
 
             uint256 snapshot0 = vm.snapshot();
 

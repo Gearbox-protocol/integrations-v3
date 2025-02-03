@@ -19,7 +19,7 @@ import {IConvexV1BaseRewardPoolAdapter} from "../../interfaces/convex/IConvexV1B
 contract ConvexV1BaseRewardPoolAdapter is AbstractAdapter, IConvexV1BaseRewardPoolAdapter {
     using BitMask for uint256;
 
-    bytes32 public constant override contractType = "AD_CONVEX_V1_BASE_REWARD_POOL";
+    bytes32 public constant override contractType = "ADAPTER::CVX_V1_BASE_REWARD_POOL";
     uint256 public constant override version = 3_10;
 
     /// @notice Address of a Curve LP token deposited into the Convex pool

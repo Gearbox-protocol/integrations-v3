@@ -10,7 +10,7 @@ import {CurveV1AdapterBase} from "./CurveV1_Base.sol";
 /// @title Curve Stable NG adapter
 /// @notice Implements logic allowing to interact with Curve StableNG pools
 contract CurveV1AdapterStableNG is CurveV1AdapterBase, ICurveV1_StableNGAdapter {
-    bytes32 public constant override contractType = "AD_CURVE_STABLE_NG";
+    bytes32 public constant override contractType = "ADAPTER::CURVE_STABLE_NG";
 
     /// @notice Constructor
     /// @param _creditManager Credit manager address

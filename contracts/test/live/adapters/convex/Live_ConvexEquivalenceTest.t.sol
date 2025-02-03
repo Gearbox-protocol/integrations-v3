@@ -251,7 +251,7 @@ contract Live_ConvexEquivalenceTest is LiveTestHelper {
         address[] memory adapters = creditConfigurator.allowedAdapters();
 
         for (uint256 i = 0; i < adapters.length; ++i) {
-            if (IAdapter(adapters[i]).contractType() != "AD_CONVEX_V1_BASE_REWARD_POOL") continue;
+            if (IAdapter(adapters[i]).contractType() != "ADAPTER::CVX_V1_BASE_REWARD_POOL") continue;
 
             uint256 snapshot0 = vm.snapshot();
 
@@ -299,7 +299,7 @@ contract Live_ConvexEquivalenceTest is LiveTestHelper {
 
             try IPhantomToken(token).getPhantomTokenInfo() returns (address target, address) {
                 address adapter = creditManager.contractToAdapter(target);
-                if (IAdapter(adapter).contractType() != "AD_CONVEX_V1_BASE_REWARD_POOL") continue;
+                if (IAdapter(adapter).contractType() != "ADAPTER::CVX_V1_BASE_REWARD_POOL") continue;
             } catch {
                 continue;
             }

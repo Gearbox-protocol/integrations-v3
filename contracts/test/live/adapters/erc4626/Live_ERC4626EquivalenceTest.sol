@@ -156,7 +156,7 @@ contract Live_ERC4626EquivalenceTest is LiveTestHelper {
         address[] memory adapters = creditConfigurator.allowedAdapters();
 
         for (uint256 i = 0; i < adapters.length; ++i) {
-            if (IAdapter(adapters[i]).contractType() != "AD_ERC4626_VAULT") continue;
+            if (IAdapter(adapters[i]).contractType() != "ADAPTER::ERC4626_VAULT") continue;
 
             uint256 snapshot0 = vm.snapshot();
 

@@ -31,7 +31,7 @@ contract BalancerV2VaultAdapter is AbstractAdapter, IBalancerV2VaultAdapter {
     using EnumerableSet for EnumerableSet.Bytes32Set;
     using BitMask for uint256;
 
-    bytes32 public constant override contractType = "AD_BALANCER_VAULT";
+    bytes32 public constant override contractType = "ADAPTER::BALANCER_VAULT";
     uint256 public constant override version = 3_10;
 
     /// @notice Mapping from poolId to status of the pool: whether it is not supported, fully supported or swap-only

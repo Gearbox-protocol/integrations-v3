@@ -17,7 +17,7 @@ import {IStakingRewardsAdapter} from "../../interfaces/sky/IStakingRewardsAdapte
 contract StakingRewardsAdapter is AbstractAdapter, IStakingRewardsAdapter {
     using BitMask for uint256;
 
-    bytes32 public constant override contractType = "AD_STAKING_REWARDS";
+    bytes32 public constant override contractType = "ADAPTER::STAKING_REWARDS";
     uint256 public constant override version = 3_10;
 
     /// @notice Address of the staking token

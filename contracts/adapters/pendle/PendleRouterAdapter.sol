@@ -34,7 +34,7 @@ import {
 contract PendleRouterAdapter is AbstractAdapter, IPendleRouterAdapter {
     using EnumerableSet for EnumerableSet.Bytes32Set;
 
-    bytes32 public constant override contractType = "AD_PENDLE_ROUTER";
+    bytes32 public constant override contractType = "ADAPTER::PENDLE_ROUTER";
     uint256 public constant override version = 3_10;
 
     /// @notice Mapping from (market, inputToken, pendleToken) to whether swaps are allowed, and which directions

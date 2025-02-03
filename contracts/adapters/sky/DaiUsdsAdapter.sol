@@ -15,7 +15,7 @@ import {IDaiUsdsAdapter} from "../../interfaces/sky/IDaiUsdsAdapter.sol";
 /// @title DaiUsds Adapter
 /// @notice Implements logic for interacting with the DAI / USDS wrapping contract
 contract DaiUsdsAdapter is AbstractAdapter, IDaiUsdsAdapter {
-    bytes32 public constant override contractType = "AD_DAI_USDS_EXCHANGE";
+    bytes32 public constant override contractType = "ADAPTER::DAI_USDS_EXCHANGE";
     uint256 public constant override version = 3_10;
 
     /// @notice DAI token

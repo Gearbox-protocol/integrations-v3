@@ -12,7 +12,7 @@ import {CurveV1AdapterBase} from "./CurveV1_Base.sol";
 /// @title Curve V1 DepozitZap adapter
 /// @notice Implements logic for interacting with a Curve zap wrapper (to `remove_liquidity_one_coin` from older pools)
 contract CurveV1AdapterDeposit is CurveV1AdapterBase {
-    bytes32 public constant override contractType = "AD_CURVE_V1_WRAPPER";
+    bytes32 public constant override contractType = "ADAPTER::CURVE_V1_WRAPPER";
 
     /// @notice Sets allowance for the pool LP token to max before the operation and to 1 after
     modifier withLPTokenApproval() {
