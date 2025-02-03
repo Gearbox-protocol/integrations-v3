@@ -25,7 +25,7 @@ contract BalancerV3RouterAdapter is AbstractAdapter, IBalancerV3RouterAdapter {
     /// @dev Mapping from pool address to whether it can be traded through the adapter
     mapping(address => bool) internal _poolStatus;
 
-    /// @dev Set of all pools that were ever allowed
+    /// @dev Set of all pools that are currently allowed
     EnumerableSet.AddressSet internal _allowedPools;
 
     /// @notice Constructor
@@ -126,13 +126,16 @@ contract BalancerV3RouterAdapter is AbstractAdapter, IBalancerV3RouterAdapter {
         if (len != statuses.length) revert InvalidLengthException();
         unchecked {
             for (uint256 i; i < len; ++i) {
-                _poolStatus[pools[i]] = statuses[i];
-                if (statuses[i]) {
-                    _allowedPools.add(pools[i]);
+                address pool = pools[i];
+                bool status = statuses[i];
+
+                _poolStatus[pool] = status;
+                if (status) {
+                    _allowedPools.add(pool);
                 } else {
-                    _allowedPools.remove(pools[i]);
+                    _allowedPools.remove(pool);
                 }
-                emit SetPoolStatus(pools[i], statuses[i]);
+                emit SetPoolStatus(pool, status);
             }
         }
     }
