@@ -19,7 +19,7 @@ import {IBalancerV3RouterAdapter} from "../../interfaces/balancer/IBalancerV3Rou
 contract BalancerV3RouterAdapter is AbstractAdapter, IBalancerV3RouterAdapter {
     using EnumerableSet for EnumerableSet.AddressSet;
 
-    bytes32 public constant override contractType = "AD_BALANCER_V3_ROUTER";
+    bytes32 public constant override contractType = "ADAPTER::BALANCER_V3_ROUTER";
     uint256 public constant override version = 3_10;
 
     /// @dev Mapping from pool address to whether it can be traded through the adapter
