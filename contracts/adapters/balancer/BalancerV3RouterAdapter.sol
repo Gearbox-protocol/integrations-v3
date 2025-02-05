@@ -22,9 +22,6 @@ contract BalancerV3RouterAdapter is AbstractAdapter, IBalancerV3RouterAdapter {
     bytes32 public constant override contractType = "ADAPTER::BALANCER_V3_ROUTER";
     uint256 public constant override version = 3_10;
 
-    /// @dev Mapping from pool address to whether it can be traded through the adapter
-    mapping(address => bool) internal _poolStatus;
-
     /// @dev Set of all pools that are currently allowed
     EnumerableSet.AddressSet internal _allowedPools;
 
@@ -82,7 +79,7 @@ contract BalancerV3RouterAdapter is AbstractAdapter, IBalancerV3RouterAdapter {
 
         address creditAccount = _creditAccount();
 
-        uint256 amount = IERC20(address(tokenIn)).balanceOf(creditAccount);
+        uint256 amount = tokenIn.balanceOf(creditAccount);
         if (amount <= leftoverAmount) return false;
         unchecked {
             amount -= leftoverAmount;
@@ -104,7 +101,7 @@ contract BalancerV3RouterAdapter is AbstractAdapter, IBalancerV3RouterAdapter {
 
     /// @notice Returns whether the pool is allowed to be traded through the adapter
     function isPoolAllowed(address pool) public view override returns (bool) {
-        return _poolStatus[pool];
+        return _allowedPools.contains(pool);
     }
 
     /// @notice Returns the list of all pools that were ever allowed in this adapter
@@ -135,7 +132,6 @@ contract BalancerV3RouterAdapter is AbstractAdapter, IBalancerV3RouterAdapter {
                     }
                 }
 
-                _poolStatus[pool] = status;
                 if (status) {
                     _allowedPools.add(pool);
                 } else {
