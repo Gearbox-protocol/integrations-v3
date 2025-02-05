@@ -1063,10 +1063,10 @@
   resolved "https://registry.yarnpkg.com/@gearbox-protocol/prettier-config/-/prettier-config-1.5.0.tgz#4df8e9fd2305fee6ab8c1417a02e31343836932a"
   integrity sha512-FUoprSsBdZyBjgxXCKL6mTkbeUJytaLzPJqIOoQpDmBRTX0seCc2o5I9PI9tySoRIlNnd/XXnKCXq1xHDEGbxw==
 
-"@gearbox-protocol/sdk-gov@^2.32.0":
-  version "2.32.0"
-  resolved "https://registry.yarnpkg.com/@gearbox-protocol/sdk-gov/-/sdk-gov-2.32.0.tgz#40f16de97139d162996723f7440209b012f51814"
-  integrity sha512-rmot5Lf4bLLl0YICH5hKzXVd3eyc33PTFgMNHGilm1tNHIXdF0eHkauytTEXwMoKol6fB6oZTkVxB9SY9XEowg==
+"@gearbox-protocol/sdk-gov@^2.34.0":
+  version "2.34.0"
+  resolved "https://registry.yarnpkg.com/@gearbox-protocol/sdk-gov/-/sdk-gov-2.34.0.tgz#4240d0385f6b6ffd5f8886467b4827dc3c4d0c57"
+  integrity sha512-uvMIuf8snmlE2M9sHjUwlm7aMlpN9spO9SjdJzY22sciGFCbv1pGsC9waQKwiaHqoMhoOzp6BstSHHG/zgmRPg==
   dependencies:
     ethers "6.12.1"
     humanize-duration-ts "^2.1.1"
