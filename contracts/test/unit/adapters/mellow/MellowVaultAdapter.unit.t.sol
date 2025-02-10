@@ -41,7 +41,7 @@ contract MellowVaultAdapterUnitTest is
     }
 
     /// @notice U:[MEL-1]: Constructor works as expected
-    function test_U_MEL_01_constructor_works_as_expected() public {
+    function test_U_MEL_01_constructor_works_as_expected() public view {
         assertEq(adapter.creditManager(), address(creditManager), "Incorrect creditManager");
         assertEq(adapter.targetContract(), vault, "Incorrect targetContract");
     }
