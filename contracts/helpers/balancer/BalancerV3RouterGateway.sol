@@ -37,7 +37,12 @@ contract BalancerV3RouterGateway is IBalancerV3Router {
         bool wethIsEth,
         bytes calldata userData
     ) external returns (uint256 amountOut) {
+        uint256 balanceBefore = tokenIn.balanceOf(address(this));
+
         tokenIn.safeTransferFrom(msg.sender, address(this), exactAmountIn);
+
+        exactAmountIn = tokenIn.balanceOf(address(this)) - balanceBefore;
+
         tokenIn.forceApprove(permit2, exactAmountIn);
         IPermit2(permit2).approve(address(tokenIn), balancerV3Router, uint160(exactAmountIn), uint48(block.timestamp));
 
