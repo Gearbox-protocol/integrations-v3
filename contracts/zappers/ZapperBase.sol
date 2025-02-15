@@ -36,6 +36,9 @@ abstract contract ZapperBase is IZapper {
     /// @notice Zapper's output token
     function tokenOut() public view virtual returns (address);
 
+    /// @notice Serializes the zapper's state into a bytes array
+    function serialize() public view virtual returns (bytes memory) {}
+
     // ------- //
     // PREVIEW //
     // ------- //

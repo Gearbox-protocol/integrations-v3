@@ -58,7 +58,7 @@ contract PendleRouterAdapterUnitTest is
     }
 
     /// @notice U:[PEND-1]: Constructor works as expected
-    function test_U_PEND_01_constructor_works_as_expected() public {
+    function test_U_PEND_01_constructor_works_as_expected() public view {
         assertEq(adapter.creditManager(), address(creditManager), "Incorrect creditManager");
         assertEq(adapter.targetContract(), pendleRouter, "Incorrect targetContract");
     }

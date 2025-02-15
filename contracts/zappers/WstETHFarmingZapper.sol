@@ -13,5 +13,5 @@ contract WstETHFarmingZapper is WstETHTrait, FarmingTrait {
     uint256 public constant override version = 3_10;
     bytes32 public constant override contractType = "ZAPPER::WSTETH_FARMING";
 
-    constructor(address pool, address farmingPool) ZapperBase(pool) WstETHTrait() FarmingTrait(farmingPool) {}
+    constructor(address pool_, address farmingPool) ZapperBase(pool_) WstETHTrait() FarmingTrait(farmingPool) {}
 }

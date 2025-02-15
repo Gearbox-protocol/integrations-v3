@@ -13,5 +13,5 @@ contract WstETHDepositZapper is WstETHTrait, DepositTrait {
     uint256 public constant override version = 3_10;
     bytes32 public constant override contractType = "ZAPPER::WSTETH_DEPOSIT";
 
-    constructor(address pool) ZapperBase(pool) WstETHTrait() {}
+    constructor(address pool_) ZapperBase(pool_) WstETHTrait() {}
 }

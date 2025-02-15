@@ -13,5 +13,5 @@ contract WETHDepositZapper is WETHTrait, DepositTrait {
     uint256 public constant override version = 3_10;
     bytes32 public constant override contractType = "ZAPPER::WETH_DEPOSIT";
 
-    constructor(address pool) ZapperBase(pool) {}
+    constructor(address pool_) ZapperBase(pool_) {}
 }
