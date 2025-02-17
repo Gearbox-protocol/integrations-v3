@@ -64,4 +64,7 @@ contract BalancerV3RouterGateway is IBalancerV3Router {
         }
         return 0;
     }
+
+    /// @dev The receive function is required in case Balancer sends back ETH. It is intended for received ETH to be unrecoverable.
+    receive() external payable {}
 }
