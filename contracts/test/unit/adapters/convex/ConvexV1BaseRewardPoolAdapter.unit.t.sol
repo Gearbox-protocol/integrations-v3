@@ -4,10 +4,12 @@
 pragma solidity ^0.8.23;
 
 import {ConvexV1BaseRewardPoolAdapter} from "../../../../adapters/convex/ConvexV1_BaseRewardPool.sol";
+import {IBaseRewardPool} from "../../../../integrations/convex/IBaseRewardPool.sol";
 import {BaseRewardPoolMock} from "../../../mocks/integrations/convex/BaseRewardPoolMock.sol";
 import {BoosterMock} from "../../../mocks/integrations/convex/BoosterMock.sol";
 import {ExtraRewardWrapperMock} from "../../../mocks/integrations/convex/ExtraRewardWrapperMock.sol";
 import {RewardsMock} from "../../../mocks/integrations/convex/RewardsMock.sol";
+import {IConvexV1BaseRewardPoolAdapter} from "../../../../interfaces/convex/IConvexV1BaseRewardPoolAdapter.sol";
 import {AdapterUnitTestHelper} from "../AdapterUnitTestHelper.sol";
 
 /// @title Convex v1 base reward pool adapter unit test
@@ -250,5 +252,21 @@ contract ConvexV1BaseRewardPoolAdapterUnitTest is AdapterUnitTestHelper {
             bool useSafePrices = adapter.withdrawDiffAndUnwrap(diffLeftoverAmount, claim);
             assertFalse(useSafePrices);
         }
+    }
+
+    /// @notice U:[CVX1R-11]: `withdrawPhantomToken` works as expected
+    function test_U_CVX1R_11_withdrawPhantomToken_works_as_expected() public {
+        vm.expectRevert(IConvexV1BaseRewardPoolAdapter.IncorrectStakedPhantomTokenException.selector);
+        vm.prank(creditFacade);
+        adapter.withdrawPhantomToken(address(0), 1000);
+
+        _executesSwap({
+            tokenIn: stakedPhantomToken,
+            callData: abi.encodeCall(IBaseRewardPool.withdraw, (1000, false)),
+            requiresApproval: false
+        });
+        vm.prank(creditFacade);
+        bool useSafePrices = adapter.withdrawPhantomToken(stakedPhantomToken, 1000);
+        assertFalse(useSafePrices);
     }
 }
