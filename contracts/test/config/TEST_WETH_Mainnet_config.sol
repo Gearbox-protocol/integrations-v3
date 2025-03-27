@@ -250,7 +250,6 @@ contract CONFIG_MAINNET_WETH_TEST_V3 is IPoolV3DeployConfig {
             cs.push(Contracts.CURVE_PUFETH_WSTETH_POOL);
             cs.push(Contracts.CONVEX_BOOSTER);
             cs.push(Contracts.CONVEX_STECRV_POOL);
-            cs.push(Contracts.ZIRCUIT_POOL);
         }
     }
 
