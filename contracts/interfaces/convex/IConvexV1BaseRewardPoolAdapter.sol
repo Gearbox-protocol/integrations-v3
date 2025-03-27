@@ -8,6 +8,8 @@ import {IPhantomTokenWithdrawer} from "@gearbox-protocol/core-v3/contracts/inter
 
 /// @title Convex V1 BaseRewardPool adapter interface
 interface IConvexV1BaseRewardPoolAdapter is IAdapter, IPhantomTokenWithdrawer {
+    error IncorrectStakedPhantomTokenException();
+
     function curveLPtoken() external view returns (address);
 
     function stakingToken() external view returns (address);

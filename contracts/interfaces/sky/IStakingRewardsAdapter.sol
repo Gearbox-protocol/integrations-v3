@@ -8,6 +8,8 @@ import {IPhantomTokenWithdrawer} from "@gearbox-protocol/core-v3/contracts/inter
 
 /// @title Staking Rewards Adapter Interface
 interface IStakingRewardsAdapter is IAdapter, IPhantomTokenWithdrawer {
+    error IncorrectStakedPhantomTokenException();
+
     function stakingToken() external view returns (address);
 
     function rewardsToken() external view returns (address);
