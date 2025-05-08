@@ -13,6 +13,10 @@ import {IPhantomToken} from "@gearbox-protocol/core-v3/contracts/interfaces/base
 /// @title InfraredVault position token
 /// @notice Phantom ERC-20 token that represents the balance of the staked position in an InfraredVault
 contract InfraredVaultPhantomToken is PhantomERC20, IPhantomToken {
+    bytes32 public constant override contractType = "PHANTOM_TOKEN::INFRARED";
+
+    uint256 public constant override version = 3_10;
+
     /// @notice Address of the InfraredVault contract
     address public immutable vault;
 
@@ -40,5 +44,9 @@ contract InfraredVaultPhantomToken is PhantomERC20, IPhantomToken {
     /// @notice Returns phantom token's target contract and underlying
     function getPhantomTokenInfo() external view override returns (address, address) {
         return (vault, underlying);
+    }
+
+    function serialize() external view override returns (bytes memory) {
+        return abi.encode(vault, underlying);
     }
 }

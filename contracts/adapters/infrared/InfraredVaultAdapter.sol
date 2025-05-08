@@ -122,7 +122,8 @@ contract InfraredVaultAdapter is AbstractAdapter, IInfraredVaultAdapter {
 
     /// @notice Withdraws phantom token for its underlying
     /// @dev `token` parameter is ignored as adapter only handles one token
-    function withdrawPhantomToken(address, uint256 amount) external override creditFacadeOnly returns (bool) {
+    function withdrawPhantomToken(address token, uint256 amount) external override creditFacadeOnly returns (bool) {
+        if (token != stakedPhantomToken) revert IncorrectStakedPhantomTokenException();
         _execute(abi.encodeCall(IInfraredVault.withdraw, (amount)));
         return false;
     }
