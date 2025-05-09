@@ -178,7 +178,7 @@ contract InfraredVaultAdapterUnitTest is AdapterUnitTestHelper {
     }
 
     /// @notice U:[IRV-10]: `rewardTokens` works as expected
-    function test_U_IRV_10_rewardTokens_works_as_expected() public {
+    function test_U_IRV_10_rewardTokens_works_as_expected() public view {
         address[] memory storedRewardTokens = adapter.rewardTokens();
         assertEq(storedRewardTokens.length, rewardTokens.length, "Incorrect number of reward tokens");
         for (uint256 i = 0; i < rewardTokens.length; i++) {
@@ -187,7 +187,7 @@ contract InfraredVaultAdapterUnitTest is AdapterUnitTestHelper {
     }
 
     /// @notice U:[IRV-11]: `serialize` works as expected
-    function test_U_IRV_11_serialize_works_as_expected() public {
+    function test_U_IRV_11_serialize_works_as_expected() public view {
         bytes memory serialized = adapter.serialize();
         (
             address serializedCreditManager,
