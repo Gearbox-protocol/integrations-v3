@@ -13,7 +13,7 @@ import {IPhantomToken} from "@gearbox-protocol/core-v3/contracts/interfaces/base
 /// @title StakingRewards position token
 /// @notice Phantom ERC-20 token that represents the balance of the staked position in a StakingRewards pool
 contract StakingRewardsPhantomToken is PhantomERC20, IPhantomToken {
-    bytes32 public constant override contractType = "PHANTOM_TOKEN::STAKING_REWARDS";
+    bytes32 public constant override contractType = "PHANTOM_TOKEN::SKY";
 
     uint256 public constant override version = 3_10;
 
