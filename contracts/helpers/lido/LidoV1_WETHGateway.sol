@@ -5,6 +5,7 @@ pragma solidity ^0.8.23;
 pragma abicoder v1;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {IVersion} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IVersion.sol";
 import {IWETH} from "@gearbox-protocol/core-v3/contracts/interfaces/external/IWETH.sol";
 import {SanityCheckTrait} from "@gearbox-protocol/core-v3/contracts/traits/SanityCheckTrait.sol";
 import {ReceiveIsNotAllowedException} from "@gearbox-protocol/core-v3/contracts/interfaces/IExceptions.sol";
@@ -13,7 +14,10 @@ import {IstETH} from "../../integrations/lido/IstETH.sol";
 
 /// @title LidoV1 Gateway
 /// @notice Allows to submit WETH directly into stETH contract
-contract LidoV1Gateway is SanityCheckTrait {
+contract LidoV1Gateway is SanityCheckTrait, IVersion {
+    bytes32 public constant override contractType = "GATEWAY::LIDO_V1";
+    uint256 public constant override version = 3_10;
+
     /// @notice WETH token
     address public immutable weth;
 
