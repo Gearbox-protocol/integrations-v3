@@ -5,6 +5,7 @@ pragma solidity ^0.8.23;
 
 import {StakingRewardsAdapter} from "../../../../adapters/sky/StakingRewardsAdapter.sol";
 import {IStakingRewards} from "../../../../integrations/sky/IStakingRewards.sol";
+import {IStakingRewardsAdapter} from "../../../../interfaces/sky/IStakingRewardsAdapter.sol";
 import {AdapterUnitTestHelper} from "../AdapterUnitTestHelper.sol";
 
 /// @title Staking Rewards adapter unit test
@@ -140,13 +141,17 @@ contract StakingRewardsAdapterUnitTest is AdapterUnitTestHelper {
 
     /// @notice U:[SR-8]: `withdrawPhantomToken` works as expected
     function test_U_SR_08_withdrawPhantomToken_works_as_expected() public {
+        vm.expectRevert(IStakingRewardsAdapter.IncorrectStakedPhantomTokenException.selector);
+        vm.prank(creditFacade);
+        adapter.withdrawPhantomToken(address(0), 1000);
+
         _executesSwap({
             tokenIn: stakedPhantomToken,
             callData: abi.encodeCall(IStakingRewards.withdraw, (1000)),
             requiresApproval: false
         });
         vm.prank(creditFacade);
-        bool useSafePrices = adapter.withdrawPhantomToken(address(0), 1000);
+        bool useSafePrices = adapter.withdrawPhantomToken(stakedPhantomToken, 1000);
         assertFalse(useSafePrices);
     }
 }
