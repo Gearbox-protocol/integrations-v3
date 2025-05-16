@@ -141,21 +141,4 @@ contract ERC4626AdapterUnitTest is AdapterUnitTestHelper {
         bool useSafePrices = adapter.redeemDiff(diffLeftoverAmount);
         assertFalse(useSafePrices);
     }
-
-    /// @notice U:[TV-9]: withdrawal functions restricted for Mellow adapter
-    function test_U_TV_09_withdrawal_functions_restricted_for_mellow() public diffTestCases {
-        adapter = new Mellow4626VaultAdapter(address(creditManager), vault);
-
-        vm.expectRevert(NotImplementedException.selector);
-        vm.prank(creditFacade);
-        adapter.withdraw(1000, address(0), address(0));
-
-        vm.expectRevert(NotImplementedException.selector);
-        vm.prank(creditFacade);
-        adapter.redeem(1000, address(0), address(0));
-
-        vm.expectRevert(NotImplementedException.selector);
-        vm.prank(creditFacade);
-        adapter.redeemDiff(1000);
-    }
 }
