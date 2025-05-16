@@ -19,7 +19,7 @@ import {AbstractAdapter} from "../AbstractAdapter.sol";
 abstract contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
     using BitMask for uint256;
 
-    uint256 public constant override version = 3_10;
+    uint256 public constant override version = 3_11;
 
     /// @notice Pool LP token address (added for backward compatibility)
     address public immutable override token;
@@ -52,7 +52,14 @@ abstract contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
     /// @param _lp_token Pool LP token address
     /// @param _metapoolBase Metapool's base pool address (must have 2 or 3 coins) or zero address
     /// @param _nCoins Number of coins in the pool
-    constructor(address _creditManager, address _curvePool, address _lp_token, address _metapoolBase, uint256 _nCoins)
+    constructor(
+        address _creditManager,
+        address _curvePool,
+        address _lp_token,
+        address _metapoolBase,
+        uint256 _nCoins,
+        bool _use256
+    )
         AbstractAdapter(_creditManager, _curvePool) // U:[CRVB-1]
         nonZeroAddress(_lp_token) // U:[CRVB-1]
     {
@@ -62,7 +69,7 @@ abstract contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
         lp_token = _lp_token; // U:[CRVB-1]
         metapoolBase = _metapoolBase; // U:[CRVB-1]
         nCoins = _nCoins; // U:[CRVB-1]
-        use256 = _use256();
+        use256 = _use256;
 
         address[4] memory tokens;
         for (uint256 i; i < nCoins; ++i) {
@@ -404,15 +411,6 @@ abstract contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
     // ------- //
     // HELPERS //
     // ------- //
-
-    /// @dev Returns true if pool is a cryptoswap pool, which is determined by whether it implements `mid_fee`
-    function _use256() internal view returns (bool result) {
-        try ICurvePool(targetContract).mid_fee() returns (uint256) {
-            result = true;
-        } catch {
-            result = false;
-        }
-    }
 
     /// @dev Returns `i`-th coin of the `pool`, tries both signatures
     function _getCoin(address pool, uint256 i) internal view returns (address coin) {

@@ -17,8 +17,8 @@ contract CurveV1Adapter4Assets is CurveV1AdapterBase, ICurveV1_4AssetsAdapter {
     /// @param _curvePool Target Curve pool address
     /// @param _lp_token Pool LP token address
     /// @param _metapoolBase Base pool address (for metapools only) or zero address
-    constructor(address _creditManager, address _curvePool, address _lp_token, address _metapoolBase)
-        CurveV1AdapterBase(_creditManager, _curvePool, _lp_token, _metapoolBase, N_COINS)
+    constructor(address _creditManager, address _curvePool, address _lp_token, address _metapoolBase, bool _use256)
+        CurveV1AdapterBase(_creditManager, _curvePool, _lp_token, _metapoolBase, N_COINS, _use256)
     {}
 
     /// @notice Add liquidity to the pool

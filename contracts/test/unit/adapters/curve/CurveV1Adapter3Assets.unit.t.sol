@@ -33,7 +33,7 @@ contract CurveV1Adapter3AssetsUnitTest is AdapterUnitTestHelper {
         coins[2] = token2;
         curvePool = new PoolMock(PoolType.Stable, coins, new address[](0));
 
-        adapter = new CurveV1Adapter3Assets(address(creditManager), address(curvePool), lpToken, address(0));
+        adapter = new CurveV1Adapter3Assets(address(creditManager), address(curvePool), lpToken, address(0), false);
 
         assertEq(adapter.nCoins(), 3, "Incorrect nCoins");
     }
