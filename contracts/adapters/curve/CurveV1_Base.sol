@@ -52,6 +52,7 @@ abstract contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
     /// @param _lp_token Pool LP token address
     /// @param _metapoolBase Metapool's base pool address (must have 2 or 3 coins) or zero address
     /// @param _nCoins Number of coins in the pool
+    /// @param _use256 Whether the pool uses uint256 or int128 for coin indices
     constructor(
         address _creditManager,
         address _curvePool,

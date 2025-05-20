@@ -25,10 +25,8 @@ contract InfraredVaultPhantomToken is PhantomERC20, IPhantomToken {
     constructor(address _vault)
         PhantomERC20(
             IInfraredVault(_vault).stakingToken(),
-            string(
-                abi.encodePacked("Infrared staked position ", IERC20Metadata(IInfraredVault(_vault).stakingToken()).name())
-            ),
-            string(abi.encodePacked("ir", IERC20Metadata(IInfraredVault(_vault).stakingToken()).symbol())),
+            string.concat("Infrared staked position ", IERC20Metadata(IInfraredVault(_vault).stakingToken()).name()),
+            string.concat("ir", IERC20Metadata(IInfraredVault(_vault).stakingToken()).symbol()),
             IERC20Metadata(IInfraredVault(_vault).stakingToken()).decimals()
         )
     {

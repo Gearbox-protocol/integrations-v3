@@ -8,3 +8,7 @@ interface IMellowSimpleLRTVault {
     function pendingAssetsOf(address account) external view returns (uint256);
     function claimableAssetsOf(address account) external view returns (uint256);
 }
+
+interface IMellowWithdrawalQueue {
+    function balanceOf(address account) external view returns (uint256);
+}

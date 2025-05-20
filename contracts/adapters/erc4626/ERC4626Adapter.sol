@@ -13,10 +13,12 @@ import {IERC4626Adapter} from "../../interfaces/erc4626/IERC4626Adapter.sol";
 /// @title ERC4626 Vault adapter
 /// @notice Implements logic allowing CAs to interact with any standard-compliant ERC4626 vault
 contract ERC4626Adapter is AbstractAdapter, IERC4626Adapter {
-    uint256 public constant override version = 3_10;
-
     /// @notice Address of the underlying asset of the vault
     address public immutable override asset;
+
+    function version() external pure virtual override returns (uint256) {
+        return 3_11;
+    }
 
     function contractType() external pure virtual override returns (bytes32) {
         return "ADAPTER::ERC4626_VAULT";

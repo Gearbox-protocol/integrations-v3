@@ -4,7 +4,7 @@
 pragma solidity ^0.8.23;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {IMellowSimpleLRTVault} from "../../integrations/mellow/IMellowSimpleLRTVault.sol";
+import {IMellowSimpleLRTVault, IMellowWithdrawalQueue} from "../../integrations/mellow/IMellowSimpleLRTVault.sol";
 import {PhantomERC20} from "../PhantomERC20.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {MultiCall} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacadeV3.sol";
@@ -19,24 +19,26 @@ contract MellowWithdrawalPhantomToken is PhantomERC20, IPhantomToken {
 
     address public immutable vault;
 
+    address public immutable withdrawalQueue;
+
     /// @notice Constructor
     /// @param _vault The vault where the balance is tracked
     constructor(address _vault)
         PhantomERC20(
             IMellowSimpleLRTVault(_vault).asset(),
-            string(abi.encodePacked("Mellow withdrawn ", IERC20Metadata(IMellowSimpleLRTVault(_vault).asset()).name())),
-            string(abi.encodePacked("wd", IERC20Metadata(IMellowSimpleLRTVault(_vault).asset()).symbol())),
+            string.concat("Mellow withdrawn ", IERC20Metadata(IMellowSimpleLRTVault(_vault).asset()).name()),
+            string.concat("wd", IERC20Metadata(IMellowSimpleLRTVault(_vault).asset()).symbol()),
             IERC20Metadata(IMellowSimpleLRTVault(_vault).asset()).decimals()
         )
     {
         vault = _vault;
+        withdrawalQueue = IMellowSimpleLRTVault(_vault).withdrawalQueue();
     }
 
-    /// @notice Returns the amount of underlying tokens staked in the pool
+    /// @notice Returns the amount of assets pending/claimable for withdrawal
     /// @param account The account for which the calculation is performed
     function balanceOf(address account) public view returns (uint256) {
-        return IMellowSimpleLRTVault(vault).pendingAssetsOf(account)
-            + IMellowSimpleLRTVault(vault).claimableAssetsOf(account);
+        return IMellowWithdrawalQueue(withdrawalQueue).balanceOf(account);
     }
 
     /// @notice Returns phantom token's target contract and underlying

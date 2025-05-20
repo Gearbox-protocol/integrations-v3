@@ -17,6 +17,7 @@ contract CurveV1AdapterStableNG is CurveV1AdapterBase, ICurveV1_StableNGAdapter 
     /// @param _curvePool Target Curve pool address
     /// @param _lp_token Pool LP token address
     /// @param _metapoolBase Base pool address (for metapools only) or zero address
+    /// @param _use256 Whether the pool uses uint256 or int128 for coin indices
     constructor(address _creditManager, address _curvePool, address _lp_token, address _metapoolBase, bool _use256)
         CurveV1AdapterBase(
             _creditManager,
