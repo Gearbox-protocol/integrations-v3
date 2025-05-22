@@ -29,6 +29,7 @@ struct ConstantViews {
 interface IFluidDex {
     function swapIn(bool swap0to1, uint256 amountIn, uint256 amountOutMin, address to)
         external
+        payable
         returns (uint256 amountOut);
 
     function constantsView() external view returns (ConstantViews memory);
