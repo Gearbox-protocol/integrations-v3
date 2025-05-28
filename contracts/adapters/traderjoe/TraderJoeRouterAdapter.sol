@@ -116,11 +116,12 @@ contract TraderJoeRouterAdapter is AbstractAdapter, ITraderJoeRouterAdapter {
             amount -= leftoverAmount;
         }
 
+        uint256 amountOutMin = (amount * rateMinRAY) / RAY;
+
         _executeSwapSafeApprove(
             tokenIn,
             abi.encodeCall(
-                ITraderJoeRouter.swapExactTokensForTokens,
-                (amount, (amount * rateMinRAY) / RAY, path, creditAccount, deadline)
+                ITraderJoeRouter.swapExactTokensForTokens, (amount, amountOutMin, path, creditAccount, deadline)
             )
         );
 
@@ -151,11 +152,13 @@ contract TraderJoeRouterAdapter is AbstractAdapter, ITraderJoeRouterAdapter {
             amount -= leftoverAmount;
         }
 
+        uint256 amountOutMin = (amount * rateMinRAY) / RAY;
+
         _executeSwapSafeApprove(
             tokenIn,
             abi.encodeCall(
                 ITraderJoeRouter.swapExactTokensForTokensSupportingFeeOnTransferTokens,
-                (amount, (amount * rateMinRAY) / RAY, path, creditAccount, deadline)
+                (amount, amountOutMin, path, creditAccount, deadline)
             )
         );
 
