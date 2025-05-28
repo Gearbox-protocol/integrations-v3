@@ -145,7 +145,7 @@ contract ERC4626Adapter is AbstractAdapter, IERC4626Adapter {
     }
 
     /// @notice Serialized adapter parameters
-    function serialize() external view returns (bytes memory serializedData) {
+    function serialize() external view virtual returns (bytes memory serializedData) {
         serializedData = abi.encode(creditManager, targetContract, asset);
     }
 }

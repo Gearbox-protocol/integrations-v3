@@ -10,7 +10,7 @@ import {IVersion} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IVer
 import {IWETH} from "@gearbox-protocol/core-v3/contracts/interfaces/external/IWETH.sol";
 import {ZeroAddressException} from "@gearbox-protocol/core-v3/contracts/interfaces/IExceptions.sol";
 
-import {IFluidDex, ConstantViews, Implementations} from "../../integrations/fluid/IFluidDex.sol";
+import {IFluidDex, ConstantViews} from "../../integrations/fluid/IFluidDex.sol";
 
 /// @title FluidDexETHGateway
 /// @notice Gateway contract to connect credit accounts with FluidDex pools that use native ETH
@@ -62,7 +62,7 @@ contract FluidDexETHGateway is IVersion {
         }
 
         // Approve the other token to be spent by the pool
-        IERC20(otherToken).approve(_pool, type(uint256).max);
+        IERC20(otherToken).forceApprove(_pool, type(uint256).max);
     }
 
     /// @notice Swaps tokens through the FluidDex pool
@@ -82,10 +82,14 @@ contract FluidDexETHGateway is IVersion {
             IWETH(weth).withdraw(amountIn);
             amountOut = IFluidDex(pool).swapIn{value: amountIn}(swap0to1, amountIn, amountOutMin, to);
         } else {
+            uint256 balance = IERC20(otherToken).balanceOf(address(this));
             IERC20(otherToken).safeTransferFrom(msg.sender, address(this), amountIn);
-            amountOut = IFluidDex(pool).swapIn(swap0to1, amountIn, amountOutMin, address(this));
+
+            amountIn = IERC20(otherToken).balanceOf(address(this)) - balance;
+            IFluidDex(pool).swapIn(swap0to1, amountIn, amountOutMin, address(this));
+
             IWETH(weth).deposit{value: address(this).balance}();
-            _transferAllTokensOf(weth, to);
+            amountOut = _transferAllTokensOf(weth, to);
         }
 
         return amountOut;
@@ -108,13 +112,15 @@ contract FluidDexETHGateway is IVersion {
 
     /// @dev Transfers the current balance of a token to sender (minus 1 for gas savings)
     /// @param _token Token to transfer
-    function _transferAllTokensOf(address _token, address _to) internal {
+    function _transferAllTokensOf(address _token, address _to) internal returns (uint256) {
         uint256 balance = IERC20(_token).balanceOf(address(this));
         if (balance > 1) {
             unchecked {
                 IERC20(_token).safeTransfer(_to, balance - 1);
+                return balance - 1;
             }
         }
+        return 0;
     }
 
     /// @dev Allows the contract to receive ETH

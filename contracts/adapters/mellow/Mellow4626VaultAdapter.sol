@@ -4,6 +4,7 @@
 pragma solidity ^0.8.23;
 
 import {IVersion} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IVersion.sol";
+import {IStateSerializer} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IStateSerializer.sol";
 import {ERC4626Adapter} from "../erc4626/ERC4626Adapter.sol";
 import {IMellowSimpleLRTVault} from "../../integrations/mellow/IMellowSimpleLRTVault.sol";
 import {IMellow4626VaultAdapter} from "../../interfaces/mellow/IMellow4626VaultAdapter.sol";
@@ -43,5 +44,15 @@ contract Mellow4626VaultAdapter is ERC4626Adapter, IMellow4626VaultAdapter {
         address creditAccount = _creditAccount();
         _execute(abi.encodeCall(IMellowSimpleLRTVault.claim, (creditAccount, creditAccount, amount)));
         return false;
+    }
+
+    function serialize()
+        external
+        view
+        virtual
+        override(ERC4626Adapter, IStateSerializer)
+        returns (bytes memory serializedData)
+    {
+        serializedData = abi.encode(creditManager, targetContract, asset, stakedPhantomToken);
     }
 }
