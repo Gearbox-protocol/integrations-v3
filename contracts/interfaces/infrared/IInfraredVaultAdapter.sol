@@ -17,9 +17,6 @@ interface IInfraredVaultAdapter is IAdapter, IPhantomTokenWithdrawer {
     /// @notice Address of the staked phantom token
     function stakedPhantomToken() external view returns (address);
 
-    /// @notice Returns the array of all reward tokens supported by the vault
-    function rewardTokens() external view returns (address[] memory);
-
     /// @notice Stakes tokens in the InfraredVault
     /// @param amount Amount of tokens to stake
     function stake(uint256 amount) external returns (bool useSafePrices);

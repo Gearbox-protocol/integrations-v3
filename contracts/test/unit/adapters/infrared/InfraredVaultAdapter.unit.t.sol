@@ -53,13 +53,6 @@ contract InfraredVaultAdapterUnitTest is AdapterUnitTestHelper {
         assertEq(adapter.targetContract(), infraredVault, "Incorrect targetContract");
         assertEq(adapter.stakingToken(), stakingToken, "Incorrect stakingToken");
         assertEq(adapter.stakedPhantomToken(), stakedPhantomToken, "Incorrect stakedPhantomToken");
-
-        // Verify reward tokens were stored correctly
-        address[] memory storedRewardTokens = adapter.rewardTokens();
-        assertEq(storedRewardTokens.length, rewardTokens.length, "Incorrect number of reward tokens");
-        for (uint256 i = 0; i < rewardTokens.length; i++) {
-            assertEq(storedRewardTokens[i], rewardTokens[i], "Incorrect reward token");
-        }
     }
 
     /// @notice U:[IRV-2]: Wrapper functions revert on wrong caller
@@ -182,15 +175,6 @@ contract InfraredVaultAdapterUnitTest is AdapterUnitTestHelper {
         assertFalse(useSafePrices);
     }
 
-    /// @notice U:[IRV-10]: `rewardTokens` works as expected
-    function test_U_IRV_10_rewardTokens_works_as_expected() public view {
-        address[] memory storedRewardTokens = adapter.rewardTokens();
-        assertEq(storedRewardTokens.length, rewardTokens.length, "Incorrect number of reward tokens");
-        for (uint256 i = 0; i < rewardTokens.length; i++) {
-            assertEq(storedRewardTokens[i], rewardTokens[i], "Incorrect reward token");
-        }
-    }
-
     /// @notice U:[IRV-11]: `serialize` works as expected
     function test_U_IRV_11_serialize_works_as_expected() public view {
         bytes memory serialized = adapter.serialize();
@@ -198,18 +182,12 @@ contract InfraredVaultAdapterUnitTest is AdapterUnitTestHelper {
             address serializedCreditManager,
             address serializedTargetContract,
             address serializedStakingToken,
-            address serializedStakedToken,
-            address[] memory serializedRewardTokens
-        ) = abi.decode(serialized, (address, address, address, address, address[]));
+            address serializedStakedToken
+        ) = abi.decode(serialized, (address, address, address, address));
 
         assertEq(serializedCreditManager, address(creditManager), "Incorrect serialized creditManager");
         assertEq(serializedTargetContract, infraredVault, "Incorrect serialized targetContract");
         assertEq(serializedStakingToken, stakingToken, "Incorrect serialized stakingToken");
         assertEq(serializedStakedToken, stakedPhantomToken, "Incorrect serialized stakedPhantomToken");
-
-        assertEq(serializedRewardTokens.length, rewardTokens.length, "Incorrect serialized reward tokens length");
-        for (uint256 i = 0; i < rewardTokens.length; i++) {
-            assertEq(serializedRewardTokens[i], rewardTokens[i], "Incorrect serialized reward token");
-        }
     }
 }

@@ -196,7 +196,7 @@ contract TraderJoeRouterAdapter is AbstractAdapter, ITraderJoeRouterAdapter {
         returns (bool)
     {
         (token0, token1) = _sortTokens(token0, token1);
-        return _supportedPoolHashes.contains(keccak256(abi.encode(token0, token1, binStep, poolVersion)));
+        return _supportedPoolHashes.contains(_computePoolHash(token0, token1, binStep, poolVersion));
     }
 
     /// @notice Sets status for a batch of pools
@@ -205,7 +205,7 @@ contract TraderJoeRouterAdapter is AbstractAdapter, ITraderJoeRouterAdapter {
         uint256 len = pools.length;
         for (uint256 i; i < len; ++i) {
             (address token0, address token1) = _sortTokens(pools[i].token0, pools[i].token1);
-            bytes32 poolHash = keccak256(abi.encode(token0, token1, pools[i].binStep, pools[i].poolVersion));
+            bytes32 poolHash = _computePoolHash(token0, token1, pools[i].binStep, pools[i].poolVersion);
 
             if (pools[i].allowed) {
                 _getMaskOrRevert(token0);
@@ -260,5 +260,14 @@ contract TraderJoeRouterAdapter is AbstractAdapter, ITraderJoeRouterAdapter {
         } else {
             return (token1, token0);
         }
+    }
+
+    /// @dev Returns the hash of a pool
+    function _computePoolHash(address token0, address token1, uint256 binStep, Version poolVersion)
+        internal
+        pure
+        returns (bytes32)
+    {
+        return keccak256(abi.encode(token0, token1, binStep, poolVersion));
     }
 }

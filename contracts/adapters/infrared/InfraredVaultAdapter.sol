@@ -23,9 +23,6 @@ contract InfraredVaultAdapter is AbstractAdapter, IInfraredVaultAdapter {
     /// @notice Address of a phantom token representing account's stake in the vault
     address public immutable override stakedPhantomToken;
 
-    /// @notice Array of reward tokens supported by the vault
-    address[] internal _rewardTokens;
-
     /// @notice Constructor
     /// @param _creditManager Credit manager address
     /// @param _infraredVault InfraredVault contract address
@@ -42,13 +39,7 @@ contract InfraredVaultAdapter is AbstractAdapter, IInfraredVaultAdapter {
         address[] memory tokens = IInfraredVault(_infraredVault).getAllRewardTokens();
         for (uint256 i = 0; i < tokens.length; ++i) {
             _getMaskOrRevert(tokens[i]);
-            _rewardTokens.push(tokens[i]);
         }
-    }
-
-    /// @notice Returns the array of all reward tokens known for the vault
-    function rewardTokens() external view override returns (address[] memory) {
-        return _rewardTokens;
     }
 
     // ----- //
@@ -130,6 +121,6 @@ contract InfraredVaultAdapter is AbstractAdapter, IInfraredVaultAdapter {
 
     /// @notice Serialized adapter parameters
     function serialize() external view returns (bytes memory serializedData) {
-        serializedData = abi.encode(creditManager, targetContract, stakingToken, stakedPhantomToken, _rewardTokens);
+        serializedData = abi.encode(creditManager, targetContract, stakingToken, stakedPhantomToken);
     }
 }
