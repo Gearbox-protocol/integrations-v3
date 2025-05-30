@@ -5,6 +5,7 @@ pragma solidity ^0.8.23;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IERC4626} from "@openzeppelin/contracts/interfaces/IERC4626.sol";
+import {IERC4626Referral} from "../../integrations/erc4626/IERC4626Referral.sol";
 
 import {AbstractAdapter} from "../AbstractAdapter.sol";
 
@@ -15,6 +16,9 @@ import {IERC4626Adapter} from "../../interfaces/erc4626/IERC4626Adapter.sol";
 contract ERC4626Adapter is AbstractAdapter, IERC4626Adapter {
     /// @notice Address of the underlying asset of the vault
     address public immutable override asset;
+
+    /// @notice Referral code for the protocol
+    uint16 public immutable override referral;
 
     function version() external pure virtual override returns (uint256) {
         return 3_11;
@@ -27,7 +31,7 @@ contract ERC4626Adapter is AbstractAdapter, IERC4626Adapter {
     /// @notice Constructor
     /// @param _creditManager Credit manager address
     /// @param _vault ERC4626 vault address
-    constructor(address _creditManager, address _vault)
+    constructor(address _creditManager, address _vault, uint16 _referral)
         AbstractAdapter(_creditManager, _vault) // U:[TV-1]
     {
         asset = IERC4626(_vault).asset(); // U:[TV-1]
@@ -36,6 +40,8 @@ contract ERC4626Adapter is AbstractAdapter, IERC4626Adapter {
         // in the system before deployment
         _getMaskOrRevert(asset); // U:[TV-1]
         _getMaskOrRevert(_vault); // U:[TV-1]
+
+        referral = _referral;
     }
 
     /// @notice Deposits a specified amount of underlying asset from the credit account
@@ -73,7 +79,11 @@ contract ERC4626Adapter is AbstractAdapter, IERC4626Adapter {
 
     /// @dev Implementation for the deposit function
     function _deposit(address creditAccount, uint256 assets) internal {
-        _executeSwapSafeApprove(asset, abi.encodeCall(IERC4626.deposit, (assets, creditAccount))); // U:[TV-3,4]
+        if (referral == 0) {
+            _executeSwapSafeApprove(asset, abi.encodeCall(IERC4626.deposit, (assets, creditAccount))); // U:[TV-3,4]
+        } else {
+            _executeSwapSafeApprove(asset, abi.encodeCall(IERC4626Referral.deposit, (assets, creditAccount, referral)));
+        }
     }
 
     /// @notice Deposits an amount of asset required to mint exactly 'shares' of vault shares
@@ -86,8 +96,17 @@ contract ERC4626Adapter is AbstractAdapter, IERC4626Adapter {
         returns (bool)
     {
         address creditAccount = _creditAccount(); // U:[TV-5]
-        _executeSwapSafeApprove(asset, abi.encodeCall(IERC4626.mint, (shares, creditAccount))); // U:[TV-5]
+        _mint(creditAccount, shares);
         return false;
+    }
+
+    /// @dev Implementation for the mint function
+    function _mint(address creditAccount, uint256 shares) internal {
+        if (referral == 0) {
+            _executeSwapSafeApprove(asset, abi.encodeCall(IERC4626.mint, (shares, creditAccount))); // U:[TV-5]
+        } else {
+            _executeSwapSafeApprove(asset, abi.encodeCall(IERC4626Referral.mint, (shares, creditAccount, referral)));
+        }
     }
 
     /// @notice Burns an amount of shares required to get exactly `assets` of asset

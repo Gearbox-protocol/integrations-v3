@@ -10,6 +10,7 @@ import {AbstractAdapter} from "../AbstractAdapter.sol";
 import {BitMask} from "@gearbox-protocol/core-v3/contracts/libraries/BitMask.sol";
 
 import {IStakingRewards} from "../../integrations/sky/IStakingRewards.sol";
+import {IStakingRewardsReferral} from "../../integrations/sky/IStakingRewards.sol";
 import {IStakingRewardsAdapter} from "../../interfaces/sky/IStakingRewardsAdapter.sol";
 
 /// @title Staking Rewards adapter
@@ -18,7 +19,7 @@ contract StakingRewardsAdapter is AbstractAdapter, IStakingRewardsAdapter {
     using BitMask for uint256;
 
     bytes32 public constant override contractType = "ADAPTER::STAKING_REWARDS";
-    uint256 public constant override version = 3_10;
+    uint256 public constant override version = 3_11;
 
     /// @notice Address of the staking token
     address public immutable override stakingToken;
@@ -29,11 +30,14 @@ contract StakingRewardsAdapter is AbstractAdapter, IStakingRewardsAdapter {
     /// @notice Address of a phantom token representing account's stake in the reward pool
     address public immutable override stakedPhantomToken;
 
+    /// @notice Referral code for the protocol
+    uint16 public immutable override referral;
+
     /// @notice Constructor
     /// @param _creditManager Credit manager address
     /// @param _stakingRewards StakingRewards contract address
     /// @param _stakedPhantomToken Staked phantom token address
-    constructor(address _creditManager, address _stakingRewards, address _stakedPhantomToken)
+    constructor(address _creditManager, address _stakingRewards, address _stakedPhantomToken, uint16 _referral)
         AbstractAdapter(_creditManager, _stakingRewards)
     {
         stakingToken = IStakingRewards(_stakingRewards).stakingToken();
@@ -44,6 +48,8 @@ contract StakingRewardsAdapter is AbstractAdapter, IStakingRewardsAdapter {
 
         stakedPhantomToken = _stakedPhantomToken;
         _getMaskOrRevert(stakedPhantomToken);
+
+        referral = _referral;
     }
 
     // ----- //
@@ -53,7 +59,7 @@ contract StakingRewardsAdapter is AbstractAdapter, IStakingRewardsAdapter {
     /// @notice Stakes tokens in the StakingRewards contract
     /// @param amount Amount of tokens to stake
     function stake(uint256 amount) external override creditFacadeOnly returns (bool) {
-        _executeSwapSafeApprove(stakingToken, abi.encodeCall(IStakingRewards.stake, (amount)));
+        _stake(amount);
         return false;
     }
 
@@ -66,10 +72,19 @@ contract StakingRewardsAdapter is AbstractAdapter, IStakingRewardsAdapter {
 
         if (balance > leftoverAmount) {
             unchecked {
-                _executeSwapSafeApprove(stakingToken, abi.encodeCall(IStakingRewards.stake, (balance - leftoverAmount)));
+                _stake(balance - leftoverAmount);
             }
         }
         return false;
+    }
+
+    /// @dev Stakes tokens in the StakingRewards contract. Uses a special signature if the referral code is not 0.
+    function _stake(uint256 amount) internal {
+        if (referral == 0) {
+            _executeSwapSafeApprove(stakingToken, abi.encodeCall(IStakingRewards.stake, (amount)));
+        } else {
+            _executeSwapSafeApprove(stakingToken, abi.encodeCall(IStakingRewardsReferral.stake, (amount, referral)));
+        }
     }
 
     // ----- //
