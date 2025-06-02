@@ -8,7 +8,6 @@ import {IStateSerializer} from "@gearbox-protocol/core-v3/contracts/interfaces/b
 import {ERC4626Adapter} from "../erc4626/ERC4626Adapter.sol";
 import {IMellowSimpleLRTVault} from "../../integrations/mellow/IMellowSimpleLRTVault.sol";
 import {IMellow4626VaultAdapter} from "../../interfaces/mellow/IMellow4626VaultAdapter.sol";
-import {NotImplementedException} from "@gearbox-protocol/core-v3/contracts/interfaces/IExceptions.sol";
 
 /// @title Mellow ERC4626 Vault adapter
 /// @notice Implements logic allowing CAs to interact with a ERC4626 vaults, but with `withdraw` / `redeem` restricted, to avoid
@@ -23,7 +22,7 @@ contract Mellow4626VaultAdapter is ERC4626Adapter, IMellow4626VaultAdapter {
     /// @param _creditManager Credit manager address
     /// @param _vault ERC4626 vault address
     constructor(address _creditManager, address _vault, address _stakedPhantomToken)
-        ERC4626Adapter(_creditManager, _vault, 0)
+        ERC4626Adapter(_creditManager, _vault)
     {
         stakedPhantomToken = _stakedPhantomToken;
         _getMaskOrRevert(stakedPhantomToken);

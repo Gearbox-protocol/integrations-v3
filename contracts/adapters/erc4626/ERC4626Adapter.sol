@@ -17,9 +17,6 @@ contract ERC4626Adapter is AbstractAdapter, IERC4626Adapter {
     /// @notice Address of the underlying asset of the vault
     address public immutable override asset;
 
-    /// @notice Referral code for the protocol
-    uint16 public immutable override referral;
-
     function version() external pure virtual override returns (uint256) {
         return 3_11;
     }
@@ -31,7 +28,7 @@ contract ERC4626Adapter is AbstractAdapter, IERC4626Adapter {
     /// @notice Constructor
     /// @param _creditManager Credit manager address
     /// @param _vault ERC4626 vault address
-    constructor(address _creditManager, address _vault, uint16 _referral)
+    constructor(address _creditManager, address _vault)
         AbstractAdapter(_creditManager, _vault) // U:[TV-1]
     {
         asset = IERC4626(_vault).asset(); // U:[TV-1]
@@ -40,8 +37,6 @@ contract ERC4626Adapter is AbstractAdapter, IERC4626Adapter {
         // in the system before deployment
         _getMaskOrRevert(asset); // U:[TV-1]
         _getMaskOrRevert(_vault); // U:[TV-1]
-
-        referral = _referral;
     }
 
     /// @notice Deposits a specified amount of underlying asset from the credit account
@@ -78,12 +73,8 @@ contract ERC4626Adapter is AbstractAdapter, IERC4626Adapter {
     }
 
     /// @dev Implementation for the deposit function
-    function _deposit(address creditAccount, uint256 assets) internal {
-        if (referral == 0) {
-            _executeSwapSafeApprove(asset, abi.encodeCall(IERC4626.deposit, (assets, creditAccount))); // U:[TV-3,4]
-        } else {
-            _executeSwapSafeApprove(asset, abi.encodeCall(IERC4626Referral.deposit, (assets, creditAccount, referral)));
-        }
+    function _deposit(address creditAccount, uint256 assets) internal virtual {
+        _executeSwapSafeApprove(asset, abi.encodeCall(IERC4626.deposit, (assets, creditAccount))); // U:[TV-3,4]
     }
 
     /// @notice Deposits an amount of asset required to mint exactly 'shares' of vault shares
@@ -101,12 +92,8 @@ contract ERC4626Adapter is AbstractAdapter, IERC4626Adapter {
     }
 
     /// @dev Implementation for the mint function
-    function _mint(address creditAccount, uint256 shares) internal {
-        if (referral == 0) {
-            _executeSwapSafeApprove(asset, abi.encodeCall(IERC4626.mint, (shares, creditAccount))); // U:[TV-5]
-        } else {
-            _executeSwapSafeApprove(asset, abi.encodeCall(IERC4626Referral.mint, (shares, creditAccount, referral)));
-        }
+    function _mint(address creditAccount, uint256 shares) internal virtual {
+        _executeSwapSafeApprove(asset, abi.encodeCall(IERC4626.mint, (shares, creditAccount))); // U:[TV-5]
     }
 
     /// @notice Burns an amount of shares required to get exactly `assets` of asset
