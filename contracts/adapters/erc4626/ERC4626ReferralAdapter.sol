@@ -12,7 +12,7 @@ import {IERC4626Referral} from "../../integrations/erc4626/IERC4626Referral.sol"
 /// @notice Implements logic allowing CAs to interact with a ERC4626 vaults, but with `withdraw` / `redeem` restricted, to avoid
 ///         CA's being exposed to Mellow's asynchronous withdrawals
 contract ERC4626ReferralAdapter is ERC4626Adapter {
-    uint256 public constant override version = 3_11;
+    uint256 public constant override version = 3_10;
     bytes32 public constant override contractType = "ADAPTER::ERC4626_VAULT_REFERRAL";
 
     uint16 public immutable referral;
