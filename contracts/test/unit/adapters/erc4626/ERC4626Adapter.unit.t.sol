@@ -4,7 +4,9 @@
 pragma solidity ^0.8.23;
 
 import {IERC4626} from "@openzeppelin/contracts/interfaces/IERC4626.sol";
+import {IERC4626Referral} from "../../../../integrations/erc4626/IERC4626Referral.sol";
 import {ERC4626Adapter} from "../../../../adapters/erc4626/ERC4626Adapter.sol";
+import {ERC4626ReferralAdapter} from "../../../../adapters/erc4626/ERC4626ReferralAdapter.sol";
 import {Mellow4626VaultAdapter} from "../../../../adapters/mellow/Mellow4626VaultAdapter.sol";
 import {AdapterUnitTestHelper} from "../AdapterUnitTestHelper.sol";
 import {NotImplementedException} from "@gearbox-protocol/core-v3/contracts/interfaces/IExceptions.sol";
@@ -142,20 +144,33 @@ contract ERC4626AdapterUnitTest is AdapterUnitTestHelper {
         assertFalse(useSafePrices);
     }
 
-    /// @notice U:[TV-9]: withdrawal functions restricted for Mellow adapter
-    function test_U_TV_09_withdrawal_functions_restricted_for_mellow() public diffTestCases {
-        adapter = new Mellow4626VaultAdapter(address(creditManager), vault);
+    function test_U_TV_09_referral_adapter_works_as_expected() public diffTestCases {
+        deal({token: asset, to: creditAccount, give: diffMintedAmount});
 
-        vm.expectRevert(NotImplementedException.selector);
-        vm.prank(creditFacade);
-        adapter.withdraw(1000, address(0), address(0));
+        adapter = new ERC4626ReferralAdapter(address(creditManager), vault, 1);
 
-        vm.expectRevert(NotImplementedException.selector);
+        _executesSwap({
+            tokenIn: asset,
+            callData: abi.encodeCall(IERC4626Referral.deposit, (1000, creditAccount, 1)),
+            requiresApproval: true
+        });
         vm.prank(creditFacade);
-        adapter.redeem(1000, address(0), address(0));
+        adapter.deposit(1000, address(0));
 
-        vm.expectRevert(NotImplementedException.selector);
+        _executesSwap({
+            tokenIn: asset,
+            callData: abi.encodeCall(IERC4626Referral.mint, (1000, creditAccount, 1)),
+            requiresApproval: true
+        });
         vm.prank(creditFacade);
-        adapter.redeemDiff(1000);
+        adapter.mint(1000, address(0));
+
+        _executesSwap({
+            tokenIn: asset,
+            callData: abi.encodeCall(IERC4626Referral.deposit, (diffInputAmount, creditAccount, 1)),
+            requiresApproval: true
+        });
+        vm.prank(creditFacade);
+        adapter.depositDiff(diffLeftoverAmount);
     }
 }

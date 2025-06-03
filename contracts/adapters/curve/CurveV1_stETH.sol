@@ -29,7 +29,7 @@ contract CurveV1AdapterStETH is CurveV1Adapter2Assets {
     /// @param _curveStETHPoolGateway steCRV pool gateway address
     /// @param _lp_token steCRV LP token address
     constructor(address _creditManager, address _curveStETHPoolGateway, address _lp_token)
-        CurveV1Adapter2Assets(_creditManager, _curveStETHPoolGateway, _lp_token, address(0))
+        CurveV1Adapter2Assets(_creditManager, _curveStETHPoolGateway, _lp_token, address(0), false)
     {}
 
     /// @inheritdoc CurveV1Adapter2Assets

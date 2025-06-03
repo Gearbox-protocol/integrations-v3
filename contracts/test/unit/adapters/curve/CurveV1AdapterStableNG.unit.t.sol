@@ -33,7 +33,7 @@ contract CurveV1AdapterStablNGUnitTest is AdapterUnitTestHelper {
         coins[2] = token2;
         curvePool = new PoolMock(PoolType.Stable, coins, new address[](0));
 
-        adapter = new CurveV1AdapterStableNG(address(creditManager), address(curvePool), lpToken, address(0));
+        adapter = new CurveV1AdapterStableNG(address(creditManager), address(curvePool), lpToken, address(0), false);
 
         assertEq(adapter.nCoins(), 3, "Incorrect nCoins");
     }

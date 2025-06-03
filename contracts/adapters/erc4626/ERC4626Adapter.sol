@@ -13,10 +13,12 @@ import {IERC4626Adapter} from "../../interfaces/erc4626/IERC4626Adapter.sol";
 /// @title ERC4626 Vault adapter
 /// @notice Implements logic allowing CAs to interact with any standard-compliant ERC4626 vault
 contract ERC4626Adapter is AbstractAdapter, IERC4626Adapter {
-    uint256 public constant override version = 3_10;
-
     /// @notice Address of the underlying asset of the vault
     address public immutable override asset;
+
+    function version() external pure virtual override returns (uint256) {
+        return 3_11;
+    }
 
     function contractType() external pure virtual override returns (bytes32) {
         return "ADAPTER::ERC4626_VAULT";
@@ -70,7 +72,7 @@ contract ERC4626Adapter is AbstractAdapter, IERC4626Adapter {
     }
 
     /// @dev Implementation for the deposit function
-    function _deposit(address creditAccount, uint256 assets) internal {
+    function _deposit(address creditAccount, uint256 assets) internal virtual {
         _executeSwapSafeApprove(asset, abi.encodeCall(IERC4626.deposit, (assets, creditAccount))); // U:[TV-3,4]
     }
 
@@ -84,8 +86,13 @@ contract ERC4626Adapter is AbstractAdapter, IERC4626Adapter {
         returns (bool)
     {
         address creditAccount = _creditAccount(); // U:[TV-5]
-        _executeSwapSafeApprove(asset, abi.encodeCall(IERC4626.mint, (shares, creditAccount))); // U:[TV-5]
+        _mint(creditAccount, shares);
         return false;
+    }
+
+    /// @dev Implementation for the mint function
+    function _mint(address creditAccount, uint256 shares) internal virtual {
+        _executeSwapSafeApprove(asset, abi.encodeCall(IERC4626.mint, (shares, creditAccount))); // U:[TV-5]
     }
 
     /// @notice Burns an amount of shares required to get exactly `assets` of asset
@@ -93,14 +100,18 @@ contract ERC4626Adapter is AbstractAdapter, IERC4626Adapter {
     /// @dev `receiver` and `owner` are ignored, since they are always set to the credit account address
     function withdraw(uint256 assets, address, address)
         external
-        virtual
         override
         creditFacadeOnly // U:[TV-2]
         returns (bool)
     {
         address creditAccount = _creditAccount(); // U:[TV-6]
-        _execute(abi.encodeCall(IERC4626.withdraw, (assets, creditAccount, creditAccount))); // U:[TV-6]
+        _withdraw(creditAccount, assets);
         return false;
+    }
+
+    /// @dev Implementation for the withdraw function
+    function _withdraw(address creditAccount, uint256 assets) internal virtual {
+        _execute(abi.encodeCall(IERC4626.withdraw, (assets, creditAccount, creditAccount))); // U:[TV-6]
     }
 
     /// @notice Burns a specified amount of shares from the credit account
@@ -108,7 +119,6 @@ contract ERC4626Adapter is AbstractAdapter, IERC4626Adapter {
     /// @dev `receiver` and `owner` are ignored, since they are always set to the credit account address
     function redeem(uint256 shares, address, address)
         external
-        virtual
         override
         creditFacadeOnly // U:[TV-2]
         returns (bool)
@@ -122,7 +132,6 @@ contract ERC4626Adapter is AbstractAdapter, IERC4626Adapter {
     /// @param leftoverAmount Amount of vault token to keep on the account
     function redeemDiff(uint256 leftoverAmount)
         external
-        virtual
         override
         creditFacadeOnly // U:[TV-2]
         returns (bool)
@@ -138,12 +147,12 @@ contract ERC4626Adapter is AbstractAdapter, IERC4626Adapter {
     }
 
     /// @dev Implementation for the redeem function
-    function _redeem(address creditAccount, uint256 shares) internal {
+    function _redeem(address creditAccount, uint256 shares) internal virtual {
         _execute(abi.encodeCall(IERC4626.redeem, (shares, creditAccount, creditAccount))); // U:[TV-7,8]
     }
 
     /// @notice Serialized adapter parameters
-    function serialize() external view returns (bytes memory serializedData) {
+    function serialize() external view virtual returns (bytes memory serializedData) {
         serializedData = abi.encode(creditManager, targetContract, asset);
     }
 }

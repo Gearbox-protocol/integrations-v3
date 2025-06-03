@@ -13,6 +13,10 @@ import {IPhantomToken} from "@gearbox-protocol/core-v3/contracts/interfaces/base
 /// @title StakingRewards position token
 /// @notice Phantom ERC-20 token that represents the balance of the staked position in a StakingRewards pool
 contract StakingRewardsPhantomToken is PhantomERC20, IPhantomToken {
+    bytes32 public constant override contractType = "PHANTOM_TOKEN::STAKING_REWARDS";
+
+    uint256 public constant override version = 3_10;
+
     address public immutable pool;
 
     /// @notice Constructor
@@ -41,5 +45,9 @@ contract StakingRewardsPhantomToken is PhantomERC20, IPhantomToken {
     /// @notice Returns phantom token's target contract and underlying
     function getPhantomTokenInfo() external view override returns (address, address) {
         return (pool, underlying);
+    }
+
+    function serialize() external view override returns (bytes memory) {
+        return abi.encode(pool, underlying);
     }
 }

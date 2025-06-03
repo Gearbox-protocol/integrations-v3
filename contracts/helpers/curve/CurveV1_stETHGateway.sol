@@ -3,6 +3,7 @@
 // (c) Gearbox Foundation, 2024.
 pragma solidity ^0.8.10;
 
+import {IVersion} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IVersion.sol";
 import {IWETH} from "@gearbox-protocol/core-v3/contracts/interfaces/external/IWETH.sol";
 import {N_COINS, ICurvePool2Assets} from "../../integrations/curve/ICurvePool_2.sol";
 import {ICurvePoolStETH} from "../../integrations/curve/ICurvePoolStETH.sol";
@@ -18,8 +19,11 @@ import {
 /// @title CurveV1StETHPoolGateway
 /// @dev This is connector contract to connect creditAccounts and Curve stETH pool
 /// it converts WETH to ETH and vice versa for operational purposes
-contract CurveV1StETHPoolGateway is ICurvePool2Assets {
+contract CurveV1StETHPoolGateway is ICurvePool2Assets, IVersion {
     using SafeERC20 for IERC20;
+
+    bytes32 public constant override contractType = "GATEWAY::CURVE_V1";
+    uint256 public constant override version = 3_10;
 
     /// @dev Address of the token with index 0 (WETH)
     address public immutable token0;

@@ -27,7 +27,7 @@ contract CurveV1AdapterDeposit is CurveV1AdapterBase {
     /// @param _lp_token Pool LP token address
     /// @param _nCoins Number of coins in the pool
     constructor(address _creditManager, address _curveDeposit, address _lp_token, uint256 _nCoins)
-        CurveV1AdapterBase(_creditManager, _curveDeposit, _lp_token, address(0), _nCoins)
+        CurveV1AdapterBase(_creditManager, _curveDeposit, _lp_token, address(0), _nCoins, false)
     {}
 
     /// @inheritdoc CurveV1AdapterBase

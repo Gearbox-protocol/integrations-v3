@@ -9,9 +9,14 @@ import {ICurvePool3Assets} from "../../../../integrations/curve/ICurvePool_3.sol
 import {ICurvePool4Assets} from "../../../../integrations/curve/ICurvePool_4.sol";
 
 contract CurveV1AdapterBaseHarness is CurveV1AdapterBase {
-    constructor(address _creditManager, address _curvePool, address _lp_token, address _metapoolBase, uint256 _nCoins)
-        CurveV1AdapterBase(_creditManager, _curvePool, _lp_token, _metapoolBase, _nCoins)
-    {}
+    constructor(
+        address _creditManager,
+        address _curvePool,
+        address _lp_token,
+        address _metapoolBase,
+        uint256 _nCoins,
+        bool _use256
+    ) CurveV1AdapterBase(_creditManager, _curvePool, _lp_token, _metapoolBase, _nCoins, _use256) {}
 
     function contractType() public view override returns (bytes32) {
         return (

@@ -16,6 +16,8 @@ interface IStakingRewardsAdapter is IAdapter, IPhantomTokenWithdrawer {
 
     function stakedPhantomToken() external view returns (address);
 
+    function referral() external view returns (uint16);
+
     function stake(uint256 amount) external returns (bool useSafePrices);
 
     function stakeDiff(uint256 leftoverAmount) external returns (bool useSafePrices);

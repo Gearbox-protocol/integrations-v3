@@ -5,6 +5,7 @@ pragma solidity ^0.8.23;
 
 import {StakingRewardsAdapter} from "../../../../adapters/sky/StakingRewardsAdapter.sol";
 import {IStakingRewards} from "../../../../integrations/sky/IStakingRewards.sol";
+import {IStakingRewardsReferral} from "../../../../integrations/sky/IStakingRewards.sol";
 import {IStakingRewardsAdapter} from "../../../../interfaces/sky/IStakingRewardsAdapter.sol";
 import {AdapterUnitTestHelper} from "../AdapterUnitTestHelper.sol";
 
@@ -29,7 +30,7 @@ contract StakingRewardsAdapterUnitTest is AdapterUnitTestHelper {
         vm.mockCall(stakingRewards, abi.encodeCall(IStakingRewards.stakingToken, ()), abi.encode(stakingToken));
         vm.mockCall(stakingRewards, abi.encodeCall(IStakingRewards.rewardsToken, ()), abi.encode(rewardsToken));
 
-        adapter = new StakingRewardsAdapter(address(creditManager), stakingRewards, stakedPhantomToken);
+        adapter = new StakingRewardsAdapter(address(creditManager), stakingRewards, stakedPhantomToken, 0);
     }
 
     /// @notice U:[SR-1]: Constructor works as expected
@@ -37,13 +38,14 @@ contract StakingRewardsAdapterUnitTest is AdapterUnitTestHelper {
         _readsTokenMask(stakingToken);
         _readsTokenMask(rewardsToken);
         _readsTokenMask(stakedPhantomToken);
-        adapter = new StakingRewardsAdapter(address(creditManager), stakingRewards, stakedPhantomToken);
+        adapter = new StakingRewardsAdapter(address(creditManager), stakingRewards, stakedPhantomToken, 1);
 
         assertEq(adapter.creditManager(), address(creditManager), "Incorrect creditManager");
         assertEq(adapter.targetContract(), stakingRewards, "Incorrect targetContract");
         assertEq(adapter.stakingToken(), stakingToken, "Incorrect stakingToken");
         assertEq(adapter.rewardsToken(), rewardsToken, "Incorrect rewardsToken");
         assertEq(adapter.stakedPhantomToken(), stakedPhantomToken, "Incorrect stakedPhantomToken");
+        assertEq(adapter.referral(), 1, "Incorrect referral");
     }
 
     /// @notice U:[SR-2]: Wrapper functions revert on wrong caller
@@ -153,5 +155,27 @@ contract StakingRewardsAdapterUnitTest is AdapterUnitTestHelper {
         vm.prank(creditFacade);
         bool useSafePrices = adapter.withdrawPhantomToken(stakedPhantomToken, 1000);
         assertFalse(useSafePrices);
+    }
+
+    function test_U_SR_09_stake_with_referral_works_as_expected() public diffTestCases {
+        deal({token: stakingToken, to: creditAccount, give: diffMintedAmount});
+
+        adapter = new StakingRewardsAdapter(address(creditManager), stakingRewards, stakedPhantomToken, 1);
+
+        _executesSwap({
+            tokenIn: stakingToken,
+            callData: abi.encodeCall(IStakingRewardsReferral.stake, (1000, 1)),
+            requiresApproval: true
+        });
+        vm.prank(creditFacade);
+        adapter.stake(1000);
+
+        _executesSwap({
+            tokenIn: stakingToken,
+            callData: abi.encodeCall(IStakingRewardsReferral.stake, (diffInputAmount, 1)),
+            requiresApproval: true
+        });
+        vm.prank(creditFacade);
+        adapter.stakeDiff(diffLeftoverAmount);
     }
 }

@@ -69,8 +69,9 @@ contract CurveV1AdapterBaseUnitTest is AdapterUnitTestHelper {
         coins[1] = token1;
         curvePool = new PoolMock(poolType, coins, new address[](0));
 
-        adapter =
-            new CurveV1AdapterBaseHarness(address(creditManager), address(curvePool), lpToken, address(basePool), 2);
+        adapter = new CurveV1AdapterBaseHarness(
+            address(creditManager), address(curvePool), lpToken, address(basePool), 2, poolType == PoolType.Crypto
+        );
 
         assertEq(adapter.use256(), poolType == PoolType.Crypto, "Incorrect use256");
     }
@@ -85,11 +86,11 @@ contract CurveV1AdapterBaseUnitTest is AdapterUnitTestHelper {
 
         // reverts on zero LP token
         vm.expectRevert(ZeroAddressException.selector);
-        new CurveV1AdapterBaseHarness(address(creditManager), address(curvePool), address(0), address(0), 2);
+        new CurveV1AdapterBaseHarness(address(creditManager), address(curvePool), address(0), address(0), 2, false);
 
         // reverts when pool has fewer coins than needed
         vm.expectRevert(IncorrectParameterException.selector);
-        new CurveV1AdapterBaseHarness(address(creditManager), address(curvePool), lpToken, address(0), 2);
+        new CurveV1AdapterBaseHarness(address(creditManager), address(curvePool), lpToken, address(0), 2, false);
 
         // plain pool
         address[] memory coins = new address[](2);
@@ -100,7 +101,8 @@ contract CurveV1AdapterBaseUnitTest is AdapterUnitTestHelper {
         _readsTokenMask(token0);
         _readsTokenMask(token1);
         _readsTokenMask(lpToken);
-        adapter = new CurveV1AdapterBaseHarness(address(creditManager), address(curvePool), lpToken, address(0), 2);
+        adapter =
+            new CurveV1AdapterBaseHarness(address(creditManager), address(curvePool), lpToken, address(0), 2, false);
 
         assertEq(adapter.creditManager(), address(creditManager), "Incorrect creditManager");
         assertEq(adapter.targetContract(), address(curvePool), "Incorrect targetContract");
@@ -123,8 +125,9 @@ contract CurveV1AdapterBaseUnitTest is AdapterUnitTestHelper {
         _readsTokenMask(underlying0);
         _readsTokenMask(underlying1);
         _readsTokenMask(lpToken);
-        adapter =
-            new CurveV1AdapterBaseHarness(address(creditManager), address(curvePool), lpToken, address(basePool), 2);
+        adapter = new CurveV1AdapterBaseHarness(
+            address(creditManager), address(curvePool), lpToken, address(basePool), 2, false
+        );
 
         assertEq(adapter.metapoolBase(), address(basePool), "Incorrect metapoolBase");
         assertEq(adapter.underlying0(), token0, "Incorrect underlying0");
@@ -139,7 +142,8 @@ contract CurveV1AdapterBaseUnitTest is AdapterUnitTestHelper {
         _readsTokenMask(underlying0);
         _readsTokenMask(underlying1);
         _readsTokenMask(lpToken);
-        adapter = new CurveV1AdapterBaseHarness(address(creditManager), address(curvePool), lpToken, address(0), 2);
+        adapter =
+            new CurveV1AdapterBaseHarness(address(creditManager), address(curvePool), lpToken, address(0), 2, false);
         assertEq(adapter.metapoolBase(), address(0), "Incorrect metapoolBase");
         assertEq(adapter.underlying0(), underlying0, "Incorrect underlying0");
         assertEq(adapter.underlying1(), underlying1, "Incorrect underlying1");

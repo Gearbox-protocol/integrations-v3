@@ -3,6 +3,7 @@
 // (c) Gearbox Foundation, 2024.
 pragma solidity ^0.8.23;
 
+import {IVersion} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IVersion.sol";
 import {IBalancerV3Router} from "../../integrations/balancer/IBalancerV3Router.sol";
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -16,8 +17,11 @@ interface IPermit2 {
 /// @dev This is connector contract to allow Gearbox adapters to swap through the Balancer V3 Router.
 ///      Since the router requires the caller to approve inputs in Permit2, we need an intermediate contract,
 ///      which will be approved to spend the inputs and then call the Permit2 and the router.
-contract BalancerV3RouterGateway is IBalancerV3Router {
+contract BalancerV3RouterGateway is IBalancerV3Router, IVersion {
     using SafeERC20 for IERC20;
+
+    bytes32 public constant override contractType = "GATEWAY::BALANCER_V3";
+    uint256 public constant override version = 3_10;
 
     address public immutable balancerV3Router;
     address public immutable permit2;
