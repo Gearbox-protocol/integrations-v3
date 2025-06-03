@@ -3,36 +3,39 @@
 // (c) Gearbox Foundation, 2024.
 pragma solidity ^0.8.23;
 
-import {IVersion} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IVersion.sol";
-import {IStateSerializer} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IStateSerializer.sol";
 import {ERC4626Adapter} from "../erc4626/ERC4626Adapter.sol";
 import {IERC4626Referral} from "../../integrations/erc4626/IERC4626Referral.sol";
 
-/// @title Mellow ERC4626 Vault adapter
-/// @notice Implements logic allowing CAs to interact with a ERC4626 vaults, but with `withdraw` / `redeem` restricted, to avoid
-///         CA's being exposed to Mellow's asynchronous withdrawals
+/// @title ERC4626 Vault Referral adapter
+/// @notice Same as `ERC4626Adapter`, but uses a signature for deposits that allows deployer to specify the referral code
 contract ERC4626ReferralAdapter is ERC4626Adapter {
-    uint256 public constant override version = 3_10;
-    bytes32 public constant override contractType = "ADAPTER::ERC4626_VAULT_REFERRAL";
-
     uint16 public immutable referral;
 
     /// @notice Constructor
     /// @param _creditManager Credit manager address
     /// @param _vault ERC4626 vault address
+    /// @param _referral Referral code
     constructor(address _creditManager, address _vault, uint16 _referral) ERC4626Adapter(_creditManager, _vault) {
         referral = _referral;
     }
 
-    function _deposit(address creditAccount, uint256 assets) internal override {
+    function version() external pure virtual override returns (uint256) {
+        return 3_10;
+    }
+
+    function contractType() external pure virtual override returns (bytes32) {
+        return "ADAPTER::ERC4626_VAULT_REFERRAL";
+    }
+
+    function serialize() external view virtual override returns (bytes memory) {
+        return abi.encode(creditManager, targetContract, asset, referral);
+    }
+
+    function _deposit(address creditAccount, uint256 assets) internal virtual override {
         _executeSwapSafeApprove(asset, abi.encodeCall(IERC4626Referral.deposit, (assets, creditAccount, referral)));
     }
 
-    function _mint(address creditAccount, uint256 shares) internal override {
+    function _mint(address creditAccount, uint256 shares) internal virtual override {
         _executeSwapSafeApprove(asset, abi.encodeCall(IERC4626Referral.mint, (shares, creditAccount, referral)));
-    }
-
-    function serialize() external view virtual override returns (bytes memory serializedData) {
-        serializedData = abi.encode(creditManager, targetContract, asset, referral);
     }
 }

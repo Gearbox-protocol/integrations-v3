@@ -37,6 +37,7 @@ contract StakingRewardsAdapter is AbstractAdapter, IStakingRewardsAdapter {
     /// @param _creditManager Credit manager address
     /// @param _stakingRewards StakingRewards contract address
     /// @param _stakedPhantomToken Staked phantom token address
+    /// @param _referral Referral code
     constructor(address _creditManager, address _stakingRewards, address _stakedPhantomToken, uint16 _referral)
         AbstractAdapter(_creditManager, _stakingRewards)
     {
@@ -132,7 +133,7 @@ contract StakingRewardsAdapter is AbstractAdapter, IStakingRewardsAdapter {
     }
 
     /// @notice Serialized adapter parameters
-    function serialize() external view returns (bytes memory serializedData) {
-        serializedData = abi.encode(creditManager, targetContract, stakingToken, rewardsToken, stakedPhantomToken);
+    function serialize() external view returns (bytes memory) {
+        return abi.encode(creditManager, targetContract, stakingToken, rewardsToken, stakedPhantomToken, referral);
     }
 }
