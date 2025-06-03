@@ -101,14 +101,18 @@ contract ERC4626Adapter is AbstractAdapter, IERC4626Adapter {
     /// @dev `receiver` and `owner` are ignored, since they are always set to the credit account address
     function withdraw(uint256 assets, address, address)
         external
-        virtual
         override
         creditFacadeOnly // U:[TV-2]
         returns (bool)
     {
         address creditAccount = _creditAccount(); // U:[TV-6]
-        _execute(abi.encodeCall(IERC4626.withdraw, (assets, creditAccount, creditAccount))); // U:[TV-6]
+        _withdraw(creditAccount, assets);
         return false;
+    }
+
+    /// @dev Implementation for the withdraw function
+    function _withdraw(address creditAccount, uint256 assets) internal virtual {
+        _execute(abi.encodeCall(IERC4626.withdraw, (assets, creditAccount, creditAccount))); // U:[TV-6]
     }
 
     /// @notice Burns a specified amount of shares from the credit account
@@ -116,7 +120,6 @@ contract ERC4626Adapter is AbstractAdapter, IERC4626Adapter {
     /// @dev `receiver` and `owner` are ignored, since they are always set to the credit account address
     function redeem(uint256 shares, address, address)
         external
-        virtual
         override
         creditFacadeOnly // U:[TV-2]
         returns (bool)
@@ -130,7 +133,6 @@ contract ERC4626Adapter is AbstractAdapter, IERC4626Adapter {
     /// @param leftoverAmount Amount of vault token to keep on the account
     function redeemDiff(uint256 leftoverAmount)
         external
-        virtual
         override
         creditFacadeOnly // U:[TV-2]
         returns (bool)
@@ -146,7 +148,7 @@ contract ERC4626Adapter is AbstractAdapter, IERC4626Adapter {
     }
 
     /// @dev Implementation for the redeem function
-    function _redeem(address creditAccount, uint256 shares) internal {
+    function _redeem(address creditAccount, uint256 shares) internal virtual {
         _execute(abi.encodeCall(IERC4626.redeem, (shares, creditAccount, creditAccount))); // U:[TV-7,8]
     }
 
