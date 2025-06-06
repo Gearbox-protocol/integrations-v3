@@ -3,6 +3,7 @@
 // (c) Gearbox Foundation, 2024.
 pragma solidity ^0.8.23;
 
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {Mellow4626VaultAdapter} from "../../../../adapters/mellow/Mellow4626VaultAdapter.sol";
 import {IMellowSimpleLRTVault} from "../../../../integrations/mellow/IMellowSimpleLRTVault.sol";
 import {IMellow4626VaultAdapter} from "../../../../interfaces/mellow/IMellow4626VaultAdapter.sol";
@@ -61,6 +62,13 @@ contract Mellow4626VaultAdapterUnitTest is AdapterUnitTestHelper {
             callData: abi.encodeCall(IMellowSimpleLRTVault.claim, (creditAccount, creditAccount, 1000))
         });
 
+        bytes[] memory retdatas = new bytes[](2);
+
+        retdatas[0] = abi.encode(2000);
+        retdatas[1] = abi.encode(3000);
+
+        vm.mockCalls(asset, abi.encodeCall(IERC20.balanceOf, (creditAccount)), retdatas);
+
         vm.prank(creditFacade);
         bool useSafePrices = adapter.claim(address(0), address(0), 1000);
         assertFalse(useSafePrices);
@@ -79,6 +87,13 @@ contract Mellow4626VaultAdapterUnitTest is AdapterUnitTestHelper {
             tokensToApprove: new address[](0),
             callData: abi.encodeCall(IMellowSimpleLRTVault.claim, (creditAccount, creditAccount, 1000))
         });
+
+        bytes[] memory retdatas = new bytes[](2);
+
+        retdatas[0] = abi.encode(2000);
+        retdatas[1] = abi.encode(3000);
+
+        vm.mockCalls(asset, abi.encodeCall(IERC20.balanceOf, (creditAccount)), retdatas);
 
         vm.prank(creditFacade);
         bool useSafePrices = adapter.withdrawPhantomToken(stakedPhantomToken, 1000);

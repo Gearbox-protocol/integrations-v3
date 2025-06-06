@@ -11,6 +11,9 @@ interface IMellow4626VaultAdapter is IERC4626Adapter {
     /// @notice Error thrown when an incorrect staked phantom token is provided
     error IncorrectStakedPhantomTokenException();
 
+    /// @notice Error thrown when the actually claimed amount is less than the requested amount
+    error InsufficientClaimedException();
+
     /// @notice Address of the staked phantom token
     function stakedPhantomToken() external view returns (address);
 
