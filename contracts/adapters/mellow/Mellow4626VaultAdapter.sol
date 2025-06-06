@@ -3,6 +3,8 @@
 // (c) Gearbox Foundation, 2024.
 pragma solidity ^0.8.23;
 
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+
 import {IVersion} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IVersion.sol";
 import {IStateSerializer} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IStateSerializer.sol";
 import {ERC4626Adapter} from "../erc4626/ERC4626Adapter.sol";
@@ -33,7 +35,7 @@ contract Mellow4626VaultAdapter is ERC4626Adapter, IMellow4626VaultAdapter {
     /// @dev `account` and `recipient` are ignored, since they are always set to the credit account address
     function claim(address, address, uint256 maxAmount) external override creditFacadeOnly returns (bool) {
         address creditAccount = _creditAccount();
-        _execute(abi.encodeCall(IMellowSimpleLRTVault.claim, (creditAccount, creditAccount, maxAmount)));
+        _claim(creditAccount, maxAmount);
         return false;
     }
 
@@ -41,8 +43,17 @@ contract Mellow4626VaultAdapter is ERC4626Adapter, IMellow4626VaultAdapter {
     function withdrawPhantomToken(address token, uint256 amount) external override creditFacadeOnly returns (bool) {
         if (token != stakedPhantomToken) revert IncorrectStakedPhantomTokenException();
         address creditAccount = _creditAccount();
-        _execute(abi.encodeCall(IMellowSimpleLRTVault.claim, (creditAccount, creditAccount, amount)));
+        _claim(creditAccount, amount);
         return false;
+    }
+
+    /// @dev Internal implementation of `claim`. Checks that the claimed amount is at least the requested amount,
+    ///      to prevent unpredictable behavior during, e.g., liquidations.
+    function _claim(address creditAccount, uint256 amount) internal {
+        uint256 assetBalanceBefore = IERC20(asset).balanceOf(creditAccount);
+        _execute(abi.encodeCall(IMellowSimpleLRTVault.claim, (creditAccount, creditAccount, amount)));
+        uint256 assetBalanceAfter = IERC20(asset).balanceOf(creditAccount);
+        if (assetBalanceAfter - assetBalanceBefore < amount) revert InsufficientClaimedException();
     }
 
     function serialize()
