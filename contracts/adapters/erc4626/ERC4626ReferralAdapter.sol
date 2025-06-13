@@ -31,11 +31,13 @@ contract ERC4626ReferralAdapter is ERC4626Adapter {
         return abi.encode(creditManager, targetContract, asset, referral);
     }
 
-    function _deposit(address creditAccount, uint256 assets) internal virtual override {
+    function _deposit(address creditAccount, uint256 assets) internal virtual override returns (bool) {
         _executeSwapSafeApprove(asset, abi.encodeCall(IERC4626Referral.deposit, (assets, creditAccount, referral)));
+        return false;
     }
 
-    function _mint(address creditAccount, uint256 shares) internal virtual override {
+    function _mint(address creditAccount, uint256 shares) internal virtual override returns (bool) {
         _executeSwapSafeApprove(asset, abi.encodeCall(IERC4626Referral.mint, (shares, creditAccount, referral)));
+        return false;
     }
 }

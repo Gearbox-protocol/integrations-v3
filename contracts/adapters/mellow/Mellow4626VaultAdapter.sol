@@ -32,33 +32,16 @@ contract Mellow4626VaultAdapter is ERC4626Adapter, IMellow4626VaultAdapter {
     }
 
     /// @notice Requests a withdrawal from the Mellow vault for given amount of assets
-    /// @param amount Amount of asset to withdraw
     /// @dev This function is overridden to return `true`, since the withdrawal phantom token should be priced with safe prices
-    /// @dev The function does not need a `creditFacadeOnly` modifier, since it is already applied to `super.withdraw`
-    function withdraw(uint256 amount, address, address)
-        public
-        override(ERC4626Adapter, IERC4626Adapter)
-        returns (bool)
-    {
-        super.withdraw(amount, address(0), address(0));
+    function _withdraw(address creditAccount, uint256 assets) internal override returns (bool) {
+        super._withdraw(creditAccount, assets);
         return true;
     }
 
     /// @notice Requests a withdrawal from the Mellow vault for given amount of shares
-    /// @param shares Amount of shares to redeem
-    /// @dev This function is overridden to return `true`, since the redemption phantom token should be priced with safe prices
-    /// @dev The function does not need a `creditFacadeOnly` modifier, since it is already applied to `super.redeem`
-    function redeem(uint256 shares, address, address) public override(ERC4626Adapter, IERC4626Adapter) returns (bool) {
-        super.redeem(shares, address(0), address(0));
-        return true;
-    }
-
-    /// @notice Requests a withdrawal from the Mellow vault for all shares, except the specified amount
-    /// @param leftoverAmount Amount of shares to keep on the account
-    /// @dev This function is overridden to return `true`, since the redemption phantom token should be priced with safe prices
-    /// @dev The function does not need a `creditFacadeOnly` modifier, since it is already applied to `super.redeemDiff`
-    function redeemDiff(uint256 leftoverAmount) public override(ERC4626Adapter, IERC4626Adapter) returns (bool) {
-        super.redeemDiff(leftoverAmount);
+    /// @dev This function is overridden to return `true`, since the withdrawal phantom token should be priced with safe prices
+    function _redeem(address creditAccount, uint256 shares) internal override returns (bool) {
+        super._redeem(creditAccount, shares);
         return true;
     }
 

@@ -42,22 +42,19 @@ contract ERC4626Adapter is AbstractAdapter, IERC4626Adapter {
     /// @param assets Amount of asset to deposit
     /// @dev `receiver` is ignored as it is always the credit account
     function deposit(uint256 assets, address)
-        public
-        virtual
+        external
         override
         creditFacadeOnly // U:[TV-2]
         returns (bool)
     {
         address creditAccount = _creditAccount(); // U:[TV-3]
-        _deposit(creditAccount, assets); // U:[TV-3]
-        return false;
+        return _deposit(creditAccount, assets); // U:[TV-3]
     }
 
     /// @notice Deposits the entire balance of underlying asset from the credit account, except the specified amount
     /// @param leftoverAmount Amount of underlying to keep on the account
     function depositDiff(uint256 leftoverAmount)
-        public
-        virtual
+        external
         override
         creditFacadeOnly // U:[TV-2]
         returns (bool)
@@ -69,75 +66,70 @@ contract ERC4626Adapter is AbstractAdapter, IERC4626Adapter {
         unchecked {
             balance -= leftoverAmount; // U:[TV-4]
         }
-        _deposit(creditAccount, balance); // U:[TV-4]
-        return false;
+        return _deposit(creditAccount, balance); // U:[TV-4]
     }
 
     /// @dev Implementation for the deposit function
-    function _deposit(address creditAccount, uint256 assets) internal virtual {
+    function _deposit(address creditAccount, uint256 assets) internal virtual returns (bool) {
         _executeSwapSafeApprove(asset, abi.encodeCall(IERC4626.deposit, (assets, creditAccount))); // U:[TV-3,4]
+        return false;
     }
 
     /// @notice Deposits an amount of asset required to mint exactly 'shares' of vault shares
     /// @param shares Amount of shares to mint
     /// @dev `receiver` is ignored as it is always the credit account
     function mint(uint256 shares, address)
-        public
-        virtual
+        external
         override
         creditFacadeOnly // U:[TV-2]
         returns (bool)
     {
         address creditAccount = _creditAccount(); // U:[TV-5]
-        _mint(creditAccount, shares);
-        return false;
+        return _mint(creditAccount, shares);
     }
 
     /// @dev Implementation for the mint function
-    function _mint(address creditAccount, uint256 shares) internal virtual {
+    function _mint(address creditAccount, uint256 shares) internal virtual returns (bool) {
         _executeSwapSafeApprove(asset, abi.encodeCall(IERC4626.mint, (shares, creditAccount))); // U:[TV-5]
+        return false;
     }
 
     /// @notice Burns an amount of shares required to get exactly `assets` of asset
     /// @param assets Amount of asset to withdraw
     /// @dev `receiver` and `owner` are ignored, since they are always set to the credit account address
     function withdraw(uint256 assets, address, address)
-        public
-        virtual
+        external
         override
         creditFacadeOnly // U:[TV-2]
         returns (bool)
     {
         address creditAccount = _creditAccount(); // U:[TV-6]
-        _withdraw(creditAccount, assets);
-        return false;
+        return _withdraw(creditAccount, assets);
     }
 
     /// @dev Implementation for the withdraw function
-    function _withdraw(address creditAccount, uint256 assets) internal virtual {
+    function _withdraw(address creditAccount, uint256 assets) internal virtual returns (bool) {
         _execute(abi.encodeCall(IERC4626.withdraw, (assets, creditAccount, creditAccount))); // U:[TV-6]
+        return false;
     }
 
     /// @notice Burns a specified amount of shares from the credit account
     /// @param shares Amount of shares to burn
     /// @dev `receiver` and `owner` are ignored, since they are always set to the credit account address
     function redeem(uint256 shares, address, address)
-        public
-        virtual
+        external
         override
         creditFacadeOnly // U:[TV-2]
         returns (bool)
     {
         address creditAccount = _creditAccount(); // U:[TV-7]
-        _redeem(creditAccount, shares); // U:[TV-7]
-        return false;
+        return _redeem(creditAccount, shares); // U:[TV-7]
     }
 
     /// @notice Burns the entire balance of shares from the credit account, except the specified amount
     /// @param leftoverAmount Amount of vault token to keep on the account
     function redeemDiff(uint256 leftoverAmount)
-        public
-        virtual
+        external
         override
         creditFacadeOnly // U:[TV-2]
         returns (bool)
@@ -148,13 +140,13 @@ contract ERC4626Adapter is AbstractAdapter, IERC4626Adapter {
         unchecked {
             balance -= leftoverAmount; // U:[TV-8]
         }
-        _redeem(creditAccount, balance); // U:[TV-8]
-        return false;
+        return _redeem(creditAccount, balance); // U:[TV-8]
     }
 
     /// @dev Implementation for the redeem function
-    function _redeem(address creditAccount, uint256 shares) internal virtual {
+    function _redeem(address creditAccount, uint256 shares) internal virtual returns (bool) {
         _execute(abi.encodeCall(IERC4626.redeem, (shares, creditAccount, creditAccount))); // U:[TV-7,8]
+        return false;
     }
 
     /// @notice Serialized adapter parameters
