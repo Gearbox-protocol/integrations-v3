@@ -8,6 +8,7 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IVersion} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IVersion.sol";
 import {IStateSerializer} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IStateSerializer.sol";
 import {ERC4626Adapter} from "../erc4626/ERC4626Adapter.sol";
+import {IERC4626Adapter} from "../../interfaces/erc4626/IERC4626Adapter.sol";
 import {IMellowSimpleLRTVault} from "../../integrations/mellow/IMellowSimpleLRTVault.sol";
 import {IMellow4626VaultAdapter} from "../../interfaces/mellow/IMellow4626VaultAdapter.sol";
 
@@ -28,6 +29,37 @@ contract Mellow4626VaultAdapter is ERC4626Adapter, IMellow4626VaultAdapter {
     {
         stakedPhantomToken = _stakedPhantomToken;
         _getMaskOrRevert(stakedPhantomToken);
+    }
+
+    /// @notice Requests a withdrawal from the Mellow vault for given amount of assets
+    /// @param amount Amount of asset to withdraw
+    /// @dev This function is overridden to return `true`, since the withdrawal phantom token should be priced with safe prices
+    /// @dev The function does not need a `creditFacadeOnly` modifier, since it is already applied to `super.withdraw`
+    function withdraw(uint256 amount, address, address)
+        public
+        override(ERC4626Adapter, IERC4626Adapter)
+        returns (bool)
+    {
+        super.withdraw(amount, address(0), address(0));
+        return true;
+    }
+
+    /// @notice Requests a withdrawal from the Mellow vault for given amount of shares
+    /// @param shares Amount of shares to redeem
+    /// @dev This function is overridden to return `true`, since the redemption phantom token should be priced with safe prices
+    /// @dev The function does not need a `creditFacadeOnly` modifier, since it is already applied to `super.redeem`
+    function redeem(uint256 shares, address, address) public override(ERC4626Adapter, IERC4626Adapter) returns (bool) {
+        super.redeem(shares, address(0), address(0));
+        return true;
+    }
+
+    /// @notice Requests a withdrawal from the Mellow vault for all shares, except the specified amount
+    /// @param leftoverAmount Amount of shares to keep on the account
+    /// @dev This function is overridden to return `true`, since the redemption phantom token should be priced with safe prices
+    /// @dev The function does not need a `creditFacadeOnly` modifier, since it is already applied to `super.redeemDiff`
+    function redeemDiff(uint256 leftoverAmount) public override(ERC4626Adapter, IERC4626Adapter) returns (bool) {
+        super.redeemDiff(leftoverAmount);
+        return true;
     }
 
     /// @notice Claims mature withdrawals from the vault

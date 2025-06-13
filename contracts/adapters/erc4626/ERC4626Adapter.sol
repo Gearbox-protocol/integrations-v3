@@ -42,7 +42,8 @@ contract ERC4626Adapter is AbstractAdapter, IERC4626Adapter {
     /// @param assets Amount of asset to deposit
     /// @dev `receiver` is ignored as it is always the credit account
     function deposit(uint256 assets, address)
-        external
+        public
+        virtual
         override
         creditFacadeOnly // U:[TV-2]
         returns (bool)
@@ -55,7 +56,8 @@ contract ERC4626Adapter is AbstractAdapter, IERC4626Adapter {
     /// @notice Deposits the entire balance of underlying asset from the credit account, except the specified amount
     /// @param leftoverAmount Amount of underlying to keep on the account
     function depositDiff(uint256 leftoverAmount)
-        external
+        public
+        virtual
         override
         creditFacadeOnly // U:[TV-2]
         returns (bool)
@@ -80,7 +82,8 @@ contract ERC4626Adapter is AbstractAdapter, IERC4626Adapter {
     /// @param shares Amount of shares to mint
     /// @dev `receiver` is ignored as it is always the credit account
     function mint(uint256 shares, address)
-        external
+        public
+        virtual
         override
         creditFacadeOnly // U:[TV-2]
         returns (bool)
@@ -99,7 +102,8 @@ contract ERC4626Adapter is AbstractAdapter, IERC4626Adapter {
     /// @param assets Amount of asset to withdraw
     /// @dev `receiver` and `owner` are ignored, since they are always set to the credit account address
     function withdraw(uint256 assets, address, address)
-        external
+        public
+        virtual
         override
         creditFacadeOnly // U:[TV-2]
         returns (bool)
@@ -118,7 +122,8 @@ contract ERC4626Adapter is AbstractAdapter, IERC4626Adapter {
     /// @param shares Amount of shares to burn
     /// @dev `receiver` and `owner` are ignored, since they are always set to the credit account address
     function redeem(uint256 shares, address, address)
-        external
+        public
+        virtual
         override
         creditFacadeOnly // U:[TV-2]
         returns (bool)
@@ -131,7 +136,8 @@ contract ERC4626Adapter is AbstractAdapter, IERC4626Adapter {
     /// @notice Burns the entire balance of shares from the credit account, except the specified amount
     /// @param leftoverAmount Amount of vault token to keep on the account
     function redeemDiff(uint256 leftoverAmount)
-        external
+        public
+        virtual
         override
         creditFacadeOnly // U:[TV-2]
         returns (bool)

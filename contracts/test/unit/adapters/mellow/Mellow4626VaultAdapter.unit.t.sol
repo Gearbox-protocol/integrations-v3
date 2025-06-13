@@ -99,4 +99,51 @@ contract Mellow4626VaultAdapterUnitTest is AdapterUnitTestHelper {
         bool useSafePrices = adapter.withdrawPhantomToken(stakedPhantomToken, 1000);
         assertFalse(useSafePrices);
     }
+
+    function test_U_MV_05_inherited_withdraw_works_as_expected() public {
+        _revertsOnNonFacadeCaller();
+        adapter.withdraw(1000, address(0), address(0));
+
+        _readsActiveAccount();
+        _executesSwap({
+            tokenIn: vault,
+            callData: abi.encodeCall(IERC4626.withdraw, (1000, creditAccount, creditAccount)),
+            requiresApproval: false
+        });
+        vm.prank(creditFacade);
+        bool useSafePrices = adapter.withdraw(1000, address(0), address(0));
+        assertTrue(useSafePrices);
+    }
+
+    function test_U_MV_06_inherited_redeem_works_as_expected() public {
+        _revertsOnNonFacadeCaller();
+        adapter.redeem(1000, address(0), address(0));
+
+        _readsActiveAccount();
+        _executesSwap({
+            tokenIn: vault,
+            callData: abi.encodeCall(IERC4626.redeem, (1000, creditAccount, creditAccount)),
+            requiresApproval: false
+        });
+        vm.prank(creditFacade);
+        bool useSafePrices = adapter.redeem(1000, address(0), address(0));
+        assertTrue(useSafePrices);
+    }
+
+    function test_U_MV_07_inherited_redeemDiff_works_as_expected() public diffTestCases {
+        _revertsOnNonFacadeCaller();
+        adapter.redeemDiff(1000);
+
+        deal({token: vault, to: creditAccount, give: diffMintedAmount});
+
+        _readsActiveAccount();
+        _executesSwap({
+            tokenIn: vault,
+            callData: abi.encodeCall(IERC4626.redeem, (diffInputAmount, creditAccount, creditAccount)),
+            requiresApproval: false
+        });
+        vm.prank(creditFacade);
+        bool useSafePrices = adapter.redeemDiff(diffLeftoverAmount);
+        assertTrue(useSafePrices);
+    }
 }
