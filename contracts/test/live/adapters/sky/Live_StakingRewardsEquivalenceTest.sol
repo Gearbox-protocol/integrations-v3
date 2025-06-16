@@ -12,7 +12,7 @@ import {IStakingRewardsAdapter} from "../../../../interfaces/sky/IStakingRewards
 import {IPhantomToken} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IPhantomToken.sol";
 import {PriceFeedParams} from "@gearbox-protocol/core-v3/contracts/interfaces/IPriceOracleV3.sol";
 import {IPriceFeed} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IPriceFeed.sol";
-import {IPhantomTokenWithdrawer} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IPhantomToken.sol";
+import {IPhantomTokenAdapter} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IPhantomToken.sol";
 
 import {StakingRewards_Calls, StakingRewards_Multicaller} from "../../../multicall/sky/StakingRewards_Calls.sol";
 import {IAdapter} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IAdapter.sol";
@@ -226,7 +226,7 @@ contract Live_StakingRewardsEquivalenceTest is LiveTestHelper {
                 creditAccount, MultiCallBuilder.build(StakingRewards_Multicaller(adapter).stake(WAD))
             );
 
-            vm.expectCall(adapter, abi.encodeCall(IPhantomTokenWithdrawer.withdrawPhantomToken, (token, WAD)));
+            vm.expectCall(adapter, abi.encodeCall(IPhantomTokenAdapter.withdrawPhantomToken, (token, WAD)));
             vm.prank(USER);
             MultiCall memory call = MultiCall({
                 target: address(creditFacade),

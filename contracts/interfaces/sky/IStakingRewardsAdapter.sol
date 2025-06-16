@@ -4,10 +4,10 @@
 pragma solidity ^0.8.23;
 
 import {IAdapter} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IAdapter.sol";
-import {IPhantomTokenWithdrawer} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IPhantomToken.sol";
+import {IPhantomTokenAdapter} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IPhantomToken.sol";
 
 /// @title Staking Rewards Adapter Interface
-interface IStakingRewardsAdapter is IAdapter, IPhantomTokenWithdrawer {
+interface IStakingRewardsAdapter is IAdapter, IPhantomTokenAdapter {
     error IncorrectStakedPhantomTokenException();
 
     function stakingToken() external view returns (address);

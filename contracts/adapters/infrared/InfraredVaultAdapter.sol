@@ -68,6 +68,13 @@ contract InfraredVaultAdapter is AbstractAdapter, IInfraredVaultAdapter {
         return false;
     }
 
+    /// @notice Deposits into a phantom token
+    function depositPhantomToken(address token, uint256 amount) external override creditFacadeOnly returns (bool) {
+        if (token != stakedPhantomToken) revert IncorrectStakedPhantomTokenException();
+        _executeSwapSafeApprove(stakingToken, abi.encodeCall(IInfraredVault.stake, (amount)));
+        return false;
+    }
+
     // ----- //
     // CLAIM //
     // ----- //

@@ -4,10 +4,10 @@
 pragma solidity ^0.8.23;
 
 import {IAdapter} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IAdapter.sol";
-import {IPhantomTokenWithdrawer} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IPhantomToken.sol";
+import {IPhantomTokenAdapter} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IPhantomToken.sol";
 
 /// @title InfraredVault Adapter Interface
-interface IInfraredVaultAdapter is IAdapter, IPhantomTokenWithdrawer {
+interface IInfraredVaultAdapter is IAdapter, IPhantomTokenAdapter {
     /// @notice Thrown when attempting to withdraw a token that is not the staked phantom token
     error IncorrectStakedPhantomTokenException();
 

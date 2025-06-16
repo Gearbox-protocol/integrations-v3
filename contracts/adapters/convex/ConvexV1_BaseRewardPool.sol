@@ -160,6 +160,13 @@ contract ConvexV1BaseRewardPoolAdapter is AbstractAdapter, IConvexV1BaseRewardPo
         return false;
     }
 
+    /// @notice Deposits into a phantom token
+    function depositPhantomToken(address token, uint256 amount) external override creditFacadeOnly returns (bool) {
+        if (token != stakedPhantomToken) revert IncorrectStakedPhantomTokenException();
+        _executeSwapSafeApprove(stakingToken, abi.encodeCall(IBaseRewardPool.stake, (amount)));
+        return false;
+    }
+
     // ----- //
     // CLAIM //
     // ----- //
