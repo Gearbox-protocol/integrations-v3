@@ -8,6 +8,8 @@ import {IAdapter} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IAda
 interface IERC4626Adapter is IAdapter {
     function asset() external view returns (address);
 
+    function vault() external view returns (address);
+
     function deposit(uint256 assets, address) external returns (bool useSafePrices);
 
     function depositDiff(uint256 leftoverAmount) external returns (bool useSafePrices);

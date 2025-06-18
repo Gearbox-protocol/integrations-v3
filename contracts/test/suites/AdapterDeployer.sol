@@ -124,7 +124,7 @@ contract AdapterDeployer is AdapterData, Test {
                         adapter =
                             address(new WstETHV1Adapter(address(creditManager), tokenTestSuite.addressOf(TOKEN_wstETH)));
                     } else if (at == AdapterType.ERC4626_VAULT) {
-                        adapter = address(new ERC4626Adapter(address(creditManager), targetContract));
+                        adapter = address(new ERC4626Adapter(address(creditManager), targetContract, address(0)));
                     } else if (at == AdapterType.BALANCER_VAULT) {
                         adapter = address(new BalancerV2VaultAdapter(address(creditManager), targetContract));
                     } else if (at == AdapterType.VELODROME_V2_ROUTER) {

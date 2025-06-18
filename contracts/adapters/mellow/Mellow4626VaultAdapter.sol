@@ -27,7 +27,7 @@ contract Mellow4626VaultAdapter is ERC4626Adapter, IMellow4626VaultAdapter {
     /// @param _vault ERC4626 vault address
     /// @param _stakedPhantomToken Staked phantom token address
     constructor(address _creditManager, address _vault, address _stakedPhantomToken)
-        ERC4626Adapter(_creditManager, _vault)
+        ERC4626Adapter(_creditManager, _vault, address(0))
     {
         stakedPhantomToken = _stakedPhantomToken;
         _getMaskOrRevert(stakedPhantomToken);
