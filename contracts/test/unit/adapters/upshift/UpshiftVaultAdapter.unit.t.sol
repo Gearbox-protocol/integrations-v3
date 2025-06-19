@@ -4,18 +4,18 @@
 pragma solidity ^0.8.23;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {UpTBTCVaultAdapter} from "../../../../adapters/uptbtc/UpTBTCVaultAdapter.sol";
-import {UpTBTCGateway} from "../../../../helpers/uptbtc/UpTBTCGateway.sol";
-import {IUpTBTCGateway} from "../../../../interfaces/uptbtc/IUpTBTCGateway.sol";
-import {IUpTBTCAdapter} from "../../../../interfaces/uptbtc/IUpTBTCAdapter.sol";
+import {UpshiftVaultAdapter} from "../../../../adapters/upshift/UpshiftVaultAdapter.sol";
+import {UpshiftVaultGateway} from "../../../../helpers/upshift/UpshiftVaultGateway.sol";
+import {IUpshiftVaultGateway} from "../../../../interfaces/upshift/IUpshiftVaultGateway.sol";
+import {IUpshiftVaultAdapter} from "../../../../interfaces/upshift/IUpshiftVaultAdapter.sol";
 import {IERC4626} from "@openzeppelin/contracts/interfaces/IERC4626.sol";
 import {AdapterUnitTestHelper} from "../AdapterUnitTestHelper.sol";
 import {NotImplementedException} from "@gearbox-protocol/core-v3/contracts/interfaces/IExceptions.sol";
 
-/// @title UpTBTCVault adapter unit test
-/// @notice U:[UV]: Unit tests for UpTBTCVault adapter
-contract UpTBTCVaultAdapterUnitTest is AdapterUnitTestHelper {
-    UpTBTCVaultAdapter adapter;
+/// @title UpshiftVault adapter unit test
+/// @notice U:[UV]: Unit tests for UpshiftVault adapter
+contract UpshiftVaultAdapterUnitTest is AdapterUnitTestHelper {
+    UpshiftVaultAdapter adapter;
 
     address gateway;
     address vault;
@@ -31,9 +31,9 @@ contract UpTBTCVaultAdapterUnitTest is AdapterUnitTestHelper {
 
         vm.mockCall(vault, abi.encodeCall(IERC4626.asset, ()), abi.encode(asset));
 
-        gateway = address(new UpTBTCGateway(vault));
+        gateway = address(new UpshiftVaultGateway(vault));
 
-        adapter = new UpTBTCVaultAdapter(address(creditManager), gateway, stakedPhantomToken);
+        adapter = new UpshiftVaultAdapter(address(creditManager), gateway, stakedPhantomToken);
     }
 
     /// @notice U:[UV-1]: Constructor works as expected
@@ -42,7 +42,7 @@ contract UpTBTCVaultAdapterUnitTest is AdapterUnitTestHelper {
         _readsTokenMask(vault);
         _readsTokenMask(stakedPhantomToken);
 
-        adapter = new UpTBTCVaultAdapter(address(creditManager), gateway, stakedPhantomToken);
+        adapter = new UpshiftVaultAdapter(address(creditManager), gateway, stakedPhantomToken);
 
         assertEq(adapter.creditManager(), address(creditManager), "Incorrect creditManager");
         assertEq(adapter.targetContract(), gateway, "Incorrect targetContract");
@@ -81,7 +81,7 @@ contract UpTBTCVaultAdapterUnitTest is AdapterUnitTestHelper {
     function test_U_UV_04_requestRedeem_works_as_expected() public {
         _executesSwap({
             tokenIn: vault,
-            callData: abi.encodeCall(IUpTBTCGateway.requestRedeem, (1000)),
+            callData: abi.encodeCall(IUpshiftVaultGateway.requestRedeem, (1000)),
             requiresApproval: true
         });
 
@@ -94,7 +94,7 @@ contract UpTBTCVaultAdapterUnitTest is AdapterUnitTestHelper {
     function test_U_UV_05_claim_works_as_expected() public {
         _executesSwap({
             tokenIn: address(0),
-            callData: abi.encodeCall(IUpTBTCGateway.claim, (1000)),
+            callData: abi.encodeCall(IUpshiftVaultGateway.claim, (1000)),
             requiresApproval: false
         });
 
@@ -106,14 +106,14 @@ contract UpTBTCVaultAdapterUnitTest is AdapterUnitTestHelper {
     /// @notice U:[UV-6]: `withdrawPhantomToken` works as expected
     function test_U_UV_06_withdrawPhantomToken_works_as_expected() public {
         // Test with incorrect token
-        vm.expectRevert(IUpTBTCAdapter.IncorrectStakedPhantomTokenException.selector);
+        vm.expectRevert(IUpshiftVaultAdapter.IncorrectStakedPhantomTokenException.selector);
         vm.prank(creditFacade);
         adapter.withdrawPhantomToken(address(0), 1000);
 
         // Test with correct token
         _executesSwap({
             tokenIn: address(0),
-            callData: abi.encodeCall(IUpTBTCGateway.claim, (1000)),
+            callData: abi.encodeCall(IUpshiftVaultGateway.claim, (1000)),
             requiresApproval: false
         });
 

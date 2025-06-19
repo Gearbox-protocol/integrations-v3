@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.10;
 
-interface IUpTBTCVault {
+interface IUpshiftVault {
     function requestRedeem(uint256 shares, address receiverAddr, address holderAddr) external;
 
     function claim(uint256 year, uint256 month, uint256 day, address receiverAddr) external;

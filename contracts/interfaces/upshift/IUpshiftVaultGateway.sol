@@ -5,7 +5,7 @@ pragma solidity ^0.8.23;
 
 import {IVersion} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IVersion.sol";
 
-interface IUpTBTCGateway is IVersion {
+interface IUpshiftVaultGateway is IVersion {
     function uptbtcVault() external view returns (address);
     function pendingAssetsOf(address account) external view returns (uint256);
     function requestRedeem(uint256 shares) external;

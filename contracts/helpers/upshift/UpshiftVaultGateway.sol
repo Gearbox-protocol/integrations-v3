@@ -8,8 +8,8 @@ import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {IERC4626} from "@openzeppelin/contracts/interfaces/IERC4626.sol";
-import {IUpTBTCVault} from "../../integrations/uptbtc/IUpTBTCVault.sol";
-import {IUpTBTCGateway} from "../../interfaces/uptbtc/IUpTBTCGateway.sol";
+import {IUpshiftVault} from "../../integrations/upshift/IUpshiftVault.sol";
+import {IUpshiftVaultGateway} from "../../interfaces/upshift/IUpshiftVaultGateway.sol";
 
 struct PendingRedeem {
     uint256 claimableTimestamp;
@@ -19,11 +19,11 @@ struct PendingRedeem {
     uint256 day;
 }
 
-contract UpTBTCGateway is IUpTBTCGateway {
+contract UpshiftVaultGateway is IUpshiftVaultGateway {
     using SafeERC20 for IERC20;
     using EnumerableSet for EnumerableSet.Bytes32Set;
 
-    bytes32 public constant override contractType = "GATEWAY::UPTBTC_GATEWAY";
+    bytes32 public constant override contractType = "GATEWAY::UPSHIFT_VAULT_GATEWAY";
     uint256 public constant override version = 3_10;
 
     address public immutable uptbtcVault;
@@ -53,44 +53,44 @@ contract UpTBTCGateway is IUpTBTCGateway {
 
     function requestRedeem(uint256 shares) external {
         if (pendingRedeems[msg.sender].assets > 0) {
-            revert("UpTBTCGateway: user has a pending redeem");
+            revert("UpshiftVaultGateway: user has a pending redeem");
         }
 
         IERC20(uptbtcVault).safeTransferFrom(msg.sender, address(this), shares);
         IERC20(uptbtcVault).forceApprove(uptbtcVault, shares);
 
         (uint256 year, uint256 month, uint256 day, uint256 claimableTimestamp) =
-            IUpTBTCVault(uptbtcVault).getWithdrawalEpoch();
+            IUpshiftVault(uptbtcVault).getWithdrawalEpoch();
 
         uint256 assets = IERC4626(uptbtcVault).previewRedeem(shares);
 
         pendingRedeems[msg.sender] =
             PendingRedeem({claimableTimestamp: claimableTimestamp, assets: assets, year: year, month: month, day: day});
 
-        IUpTBTCVault(uptbtcVault).requestRedeem(shares, address(this), address(this));
+        IUpshiftVault(uptbtcVault).requestRedeem(shares, address(this), address(this));
     }
 
     function claim(uint256 amount) external {
         PendingRedeem memory pendingRedeem = pendingRedeems[msg.sender];
 
         if (pendingRedeem.assets == 0) {
-            revert("UpTBTCGateway: user does not have a pending redeem");
+            revert("UpshiftVaultGateway: user does not have a pending redeem");
         }
 
         if (amount > pendingRedeem.assets) {
-            revert("UpTBTCGateway: amount is greater than the pending redeem");
+            revert("UpshiftVaultGateway: amount is greater than the pending redeem");
         }
 
         if (pendingRedeem.claimableTimestamp > block.timestamp) {
-            revert("UpTBTCGateway: redeem is not claimable yet");
+            revert("UpshiftVaultGateway: redeem is not claimable yet");
         }
 
-        uint256 totalClaimableAssets = IUpTBTCVault(uptbtcVault).getClaimableAmountByReceiver(
+        uint256 totalClaimableAssets = IUpshiftVault(uptbtcVault).getClaimableAmountByReceiver(
             pendingRedeem.year, pendingRedeem.month, pendingRedeem.day, address(this)
         );
 
         if (totalClaimableAssets > 0) {
-            IUpTBTCVault(uptbtcVault).claim(pendingRedeem.year, pendingRedeem.month, pendingRedeem.day, address(this));
+            IUpshiftVault(uptbtcVault).claim(pendingRedeem.year, pendingRedeem.month, pendingRedeem.day, address(this));
         }
 
         pendingRedeems[msg.sender].assets -= amount;

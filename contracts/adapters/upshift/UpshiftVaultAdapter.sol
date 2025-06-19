@@ -8,25 +8,25 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IVersion} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IVersion.sol";
 import {IStateSerializer} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IStateSerializer.sol";
 import {ERC4626Adapter} from "../erc4626/ERC4626Adapter.sol";
-import {IUpTBTCAdapter} from "../../interfaces/uptbtc/IUpTBTCAdapter.sol";
-import {IUpTBTCGateway} from "../../interfaces/uptbtc/IUpTBTCGateway.sol";
+import {IUpshiftVaultAdapter} from "../../interfaces/upshift/IUpshiftVaultAdapter.sol";
+import {IUpshiftVaultGateway} from "../../interfaces/upshift/IUpshiftVaultGateway.sol";
 
 import {NotImplementedException} from "@gearbox-protocol/core-v3/contracts/interfaces/IExceptions.sol";
 
-/// @title UpTBTC Vault adapter
-/// @notice Implements logic allowing CAs to interact with the UpTBTC vault, accounting for delayed withdrawals
-contract UpTBTCVaultAdapter is ERC4626Adapter, IUpTBTCAdapter {
+/// @title UpshiftVault adapter
+/// @notice Implements logic allowing CAs to interact with the UpshiftVault vault, accounting for delayed withdrawals
+contract UpshiftVaultAdapter is ERC4626Adapter, IUpshiftVaultAdapter {
     uint256 public constant override(ERC4626Adapter, IVersion) version = 3_10;
-    bytes32 public constant override(ERC4626Adapter, IVersion) contractType = "ADAPTER::UPTBTC_VAULT";
+    bytes32 public constant override(ERC4626Adapter, IVersion) contractType = "ADAPTER::UPSHIFT_VAULT";
 
     address public immutable stakedPhantomToken;
 
     /// @notice Constructor
     /// @param _creditManager Credit manager address
-    /// @param _gateway UpTBTC gateway address
+    /// @param _gateway UpshiftVault gateway address
     /// @param _stakedPhantomToken Staked phantom token address
     constructor(address _creditManager, address _gateway, address _stakedPhantomToken)
-        ERC4626Adapter(_creditManager, IUpTBTCGateway(_gateway).uptbtcVault(), _gateway)
+        ERC4626Adapter(_creditManager, IUpshiftVaultGateway(_gateway).uptbtcVault(), _gateway)
     {
         stakedPhantomToken = _stakedPhantomToken;
         _getMaskOrRevert(stakedPhantomToken);
@@ -42,16 +42,16 @@ contract UpTBTCVaultAdapter is ERC4626Adapter, IUpTBTCAdapter {
         revert NotImplementedException();
     }
 
-    /// @notice Requests a redemption from the UpTBTC vault through the gateway
+    /// @notice Requests a redemption from the UpshiftVault vault through the gateway
     /// @param shares Amount of shares to redeem
     /// @dev This function does not accept `receiverAddr` and `holderAddr` parameters,
     ///      since the gateway function only operates on msg.sender
     function requestRedeem(uint256 shares) external override creditFacadeOnly returns (bool) {
-        _executeSwapSafeApprove(vault, abi.encodeCall(IUpTBTCGateway.requestRedeem, (shares)));
+        _executeSwapSafeApprove(vault, abi.encodeCall(IUpshiftVaultGateway.requestRedeem, (shares)));
         return true;
     }
 
-    /// @notice Claims a redemption from the UpTBTC vault through the gateway
+    /// @notice Claims a redemption from the UpshiftVault vault through the gateway
     /// @dev This function does not accept `receiverAddr` and date parameters,
     ///      since the gateway only processes a single redemption at a time.
     ///      However, it allows to specify an amount, to support partial liquidations.
@@ -62,7 +62,7 @@ contract UpTBTCVaultAdapter is ERC4626Adapter, IUpTBTCAdapter {
 
     /// @dev Internal implementation of `claim`.
     function _claim(uint256 amount) internal {
-        _execute(abi.encodeCall(IUpTBTCGateway.claim, (amount)));
+        _execute(abi.encodeCall(IUpshiftVaultGateway.claim, (amount)));
     }
 
     /// @notice Claims mature withdrawals, represented by the phantom token
