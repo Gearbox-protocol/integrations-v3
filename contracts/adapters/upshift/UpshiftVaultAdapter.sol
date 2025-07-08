@@ -26,7 +26,7 @@ contract UpshiftVaultAdapter is ERC4626Adapter, IUpshiftVaultAdapter {
     /// @param _gateway UpshiftVault gateway address
     /// @param _stakedPhantomToken Staked phantom token address
     constructor(address _creditManager, address _gateway, address _stakedPhantomToken)
-        ERC4626Adapter(_creditManager, IUpshiftVaultGateway(_gateway).uptbtcVault(), _gateway)
+        ERC4626Adapter(_creditManager, IUpshiftVaultGateway(_gateway).upshiftVault(), _gateway)
     {
         stakedPhantomToken = _stakedPhantomToken;
         _getMaskOrRevert(stakedPhantomToken);

@@ -23,32 +23,32 @@ contract UpshiftVaultGateway is IUpshiftVaultGateway {
     using SafeERC20 for IERC20;
     using EnumerableSet for EnumerableSet.Bytes32Set;
 
-    bytes32 public constant override contractType = "GATEWAY::UPSHIFT_VAULT_GATEWAY";
+    bytes32 public constant override contractType = "GATEWAY::UPSHIFT_VAULT";
     uint256 public constant override version = 3_10;
 
-    address public immutable uptbtcVault;
+    address public immutable upshiftVault;
 
-    address public immutable tbtc;
+    address public immutable asset;
 
     mapping(address => PendingRedeem) public pendingRedeems;
 
-    constructor(address _uptbtcVault) {
-        uptbtcVault = _uptbtcVault;
-        tbtc = IERC4626(_uptbtcVault).asset();
+    constructor(address _upshiftVault) {
+        upshiftVault = _upshiftVault;
+        asset = IERC4626(_upshiftVault).asset();
     }
 
     function deposit(uint256 assets, address receiver) external {
-        IERC20(tbtc).safeTransferFrom(msg.sender, address(this), assets);
-        IERC20(tbtc).forceApprove(uptbtcVault, assets);
-        IERC4626(uptbtcVault).deposit(assets, receiver);
+        IERC20(asset).safeTransferFrom(msg.sender, address(this), assets);
+        IERC20(asset).forceApprove(upshiftVault, assets);
+        IERC4626(upshiftVault).deposit(assets, receiver);
     }
 
     function mint(uint256 shares, address receiver) external {
-        uint256 amount = IERC4626(uptbtcVault).previewMint(shares);
+        uint256 amount = IERC4626(upshiftVault).previewMint(shares);
 
-        IERC20(tbtc).safeTransferFrom(msg.sender, address(this), amount);
-        IERC20(tbtc).forceApprove(uptbtcVault, amount);
-        IERC4626(uptbtcVault).mint(shares, receiver);
+        IERC20(asset).safeTransferFrom(msg.sender, address(this), amount);
+        IERC20(asset).forceApprove(upshiftVault, amount);
+        IERC4626(upshiftVault).mint(shares, receiver);
     }
 
     function requestRedeem(uint256 shares) external {
@@ -56,18 +56,18 @@ contract UpshiftVaultGateway is IUpshiftVaultGateway {
             revert("UpshiftVaultGateway: user has a pending redeem");
         }
 
-        IERC20(uptbtcVault).safeTransferFrom(msg.sender, address(this), shares);
-        IERC20(uptbtcVault).forceApprove(uptbtcVault, shares);
+        IERC20(upshiftVault).safeTransferFrom(msg.sender, address(this), shares);
+        IERC20(upshiftVault).forceApprove(upshiftVault, shares);
 
         (uint256 year, uint256 month, uint256 day, uint256 claimableTimestamp) =
-            IUpshiftVault(uptbtcVault).getWithdrawalEpoch();
+            IUpshiftVault(upshiftVault).getWithdrawalEpoch();
 
-        uint256 assets = IERC4626(uptbtcVault).previewRedeem(shares);
+        uint256 assets = IERC4626(upshiftVault).previewRedeem(shares);
 
         pendingRedeems[msg.sender] =
             PendingRedeem({claimableTimestamp: claimableTimestamp, assets: assets, year: year, month: month, day: day});
 
-        IUpshiftVault(uptbtcVault).requestRedeem(shares, address(this), address(this));
+        IUpshiftVault(upshiftVault).requestRedeem(shares, address(this), address(this));
     }
 
     function claim(uint256 amount) external {
@@ -85,52 +85,48 @@ contract UpshiftVaultGateway is IUpshiftVaultGateway {
             revert("UpshiftVaultGateway: redeem is not claimable yet");
         }
 
-        uint256 totalClaimableAssets = IUpshiftVault(uptbtcVault).getClaimableAmountByReceiver(
+        uint256 totalClaimableAssets = IUpshiftVault(upshiftVault).getClaimableAmountByReceiver(
             pendingRedeem.year, pendingRedeem.month, pendingRedeem.day, address(this)
         );
 
         if (totalClaimableAssets > 0) {
-            IUpshiftVault(uptbtcVault).claim(pendingRedeem.year, pendingRedeem.month, pendingRedeem.day, address(this));
+            IUpshiftVault(upshiftVault).claim(pendingRedeem.year, pendingRedeem.month, pendingRedeem.day, address(this));
         }
 
         pendingRedeems[msg.sender].assets -= amount;
 
-        IERC20(tbtc).safeTransfer(msg.sender, amount);
+        IERC20(asset).safeTransfer(msg.sender, amount);
     }
 
     function pendingAssetsOf(address holderAddr) external view returns (uint256) {
         return pendingRedeems[holderAddr].assets;
     }
 
-    function asset() external view returns (address) {
-        return tbtc;
-    }
-
     function previewDeposit(uint256 assets) external view returns (uint256) {
-        return IERC4626(uptbtcVault).previewDeposit(assets);
+        return IERC4626(upshiftVault).previewDeposit(assets);
     }
 
     function previewRedeem(uint256 shares) external view returns (uint256) {
-        return IERC4626(uptbtcVault).previewRedeem(shares);
+        return IERC4626(upshiftVault).previewRedeem(shares);
     }
 
     function convertToAssets(uint256 shares) external view returns (uint256) {
-        return IERC4626(uptbtcVault).convertToAssets(shares);
+        return IERC4626(upshiftVault).convertToAssets(shares);
     }
 
     function convertToShares(uint256 assets) external view returns (uint256) {
-        return IERC4626(uptbtcVault).convertToShares(assets);
+        return IERC4626(upshiftVault).convertToShares(assets);
     }
 
     function decimals() external view returns (uint8) {
-        return IERC4626(uptbtcVault).decimals();
+        return IERC4626(upshiftVault).decimals();
     }
 
     function name() external view returns (string memory) {
-        return IERC4626(uptbtcVault).name();
+        return IERC4626(upshiftVault).name();
     }
 
     function symbol() external view returns (string memory) {
-        return IERC4626(uptbtcVault).symbol();
+        return IERC4626(upshiftVault).symbol();
     }
 }
