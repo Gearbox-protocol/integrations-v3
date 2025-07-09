@@ -17,7 +17,7 @@ import {NotImplementedException} from "@gearbox-protocol/core-v3/contracts/inter
 /// @title Mellow ERC4626 Vault adapter
 /// @notice Implements logic allowing CAs to interact with Mellow ERC4626 vaults, accounting for delayed withdrawals
 contract Mellow4626VaultAdapter is ERC4626Adapter, IMellow4626VaultAdapter {
-    uint256 public constant override(ERC4626Adapter, IVersion) version = 3_12;
+    uint256 public constant override(ERC4626Adapter, IVersion) version = 3_11;
     bytes32 public constant override(ERC4626Adapter, IVersion) contractType = "ADAPTER::MELLOW_ERC4626_VAULT";
 
     address public immutable stakedPhantomToken;
