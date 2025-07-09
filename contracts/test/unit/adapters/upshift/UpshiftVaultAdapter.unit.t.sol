@@ -7,8 +7,8 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {UpshiftVaultAdapter} from "../../../../adapters/upshift/UpshiftVaultAdapter.sol";
 import {UpshiftVaultGateway} from "../../../../helpers/upshift/UpshiftVaultGateway.sol";
 import {IUpshiftVaultGateway} from "../../../../interfaces/upshift/IUpshiftVaultGateway.sol";
-import {IUpshiftVaultAdapter} from "../../../../interfaces/upshift/IUpshiftVaultAdapter.sol";
 import {IERC4626} from "@openzeppelin/contracts/interfaces/IERC4626.sol";
+import {IPhantomTokenAdapter} from "../../../../interfaces/IPhantomTokenAdapter.sol";
 import {AdapterUnitTestHelper} from "../AdapterUnitTestHelper.sol";
 import {NotImplementedException} from "@gearbox-protocol/core-v3/contracts/interfaces/IExceptions.sol";
 
@@ -106,7 +106,7 @@ contract UpshiftVaultAdapterUnitTest is AdapterUnitTestHelper {
     /// @notice U:[UV-6]: `withdrawPhantomToken` works as expected
     function test_U_UV_06_withdrawPhantomToken_works_as_expected() public {
         // Test with incorrect token
-        vm.expectRevert(IUpshiftVaultAdapter.IncorrectStakedPhantomTokenException.selector);
+        vm.expectRevert(IPhantomTokenAdapter.IncorrectStakedPhantomTokenException.selector);
         vm.prank(creditFacade);
         adapter.withdrawPhantomToken(address(0), 1000);
 

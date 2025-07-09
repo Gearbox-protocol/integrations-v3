@@ -19,7 +19,7 @@ contract StakingRewardsAdapter is AbstractAdapter, IStakingRewardsAdapter {
     using BitMask for uint256;
 
     bytes32 public constant override contractType = "ADAPTER::STAKING_REWARDS";
-    uint256 public constant override version = 3_11;
+    uint256 public constant override version = 3_12;
 
     /// @notice Address of the staking token
     address public immutable override stakingToken;

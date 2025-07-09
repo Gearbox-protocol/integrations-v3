@@ -5,7 +5,7 @@ pragma solidity ^0.8.23;
 
 import {InfraredVaultAdapter} from "../../../../adapters/infrared/InfraredVaultAdapter.sol";
 import {IInfraredVault, UserReward} from "../../../../integrations/infrared/IInfraredVault.sol";
-import {IInfraredVaultAdapter} from "../../../../interfaces/infrared/IInfraredVaultAdapter.sol";
+import {IPhantomTokenAdapter} from "../../../../interfaces/IPhantomTokenAdapter.sol";
 import {AdapterUnitTestHelper} from "../AdapterUnitTestHelper.sol";
 
 /// @title InfraredVault adapter unit test
@@ -161,7 +161,7 @@ contract InfraredVaultAdapterUnitTest is AdapterUnitTestHelper {
 
     /// @notice U:[IRV-9]: `withdrawPhantomToken` works as expected
     function test_U_IRV_09_withdrawPhantomToken_works_as_expected() public {
-        vm.expectRevert(IInfraredVaultAdapter.IncorrectStakedPhantomTokenException.selector);
+        vm.expectRevert(IPhantomTokenAdapter.IncorrectStakedPhantomTokenException.selector);
         vm.prank(creditFacade);
         adapter.withdrawPhantomToken(address(0), 1000);
 
