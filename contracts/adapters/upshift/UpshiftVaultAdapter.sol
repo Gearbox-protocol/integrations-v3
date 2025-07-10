@@ -26,7 +26,7 @@ contract UpshiftVaultAdapter is ERC4626Adapter, IUpshiftVaultAdapter {
     /// @param _gateway UpshiftVault gateway address
     /// @param _stakedPhantomToken Staked phantom token address
     constructor(address _creditManager, address _gateway, address _stakedPhantomToken)
-        ERC4626Adapter(_creditManager, IUpshiftVaultGateway(_gateway).uptbtcVault(), _gateway)
+        ERC4626Adapter(_creditManager, IUpshiftVaultGateway(_gateway).upshiftVault(), _gateway)
     {
         stakedPhantomToken = _stakedPhantomToken;
         _getMaskOrRevert(stakedPhantomToken);
@@ -73,7 +73,7 @@ contract UpshiftVaultAdapter is ERC4626Adapter, IUpshiftVaultAdapter {
     }
 
     /// @dev It's not possible to deposit from underlying (the vault's asset) into the withdrawal phantom token,
-    ///      hence the function is not implementable.
+    ///      hence the function is not implemented.
     function depositPhantomToken(address, uint256) external view override creditFacadeOnly returns (bool) {
         revert NotImplementedException();
     }

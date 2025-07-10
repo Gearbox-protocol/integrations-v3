@@ -74,7 +74,7 @@ contract Mellow4626VaultAdapter is ERC4626Adapter, IMellow4626VaultAdapter {
     }
 
     /// @dev It's not possible to deposit from underlying (the vault's asset) into the withdrawal phantom token,
-    ///      hence the function is not implementable.
+    ///      hence the function is not implemented.
     function depositPhantomToken(address, uint256) external view override creditFacadeOnly returns (bool) {
         revert NotImplementedException();
     }

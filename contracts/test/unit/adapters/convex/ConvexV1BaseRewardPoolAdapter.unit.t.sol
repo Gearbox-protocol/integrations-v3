@@ -9,7 +9,7 @@ import {BaseRewardPoolMock} from "../../../mocks/integrations/convex/BaseRewardP
 import {BoosterMock} from "../../../mocks/integrations/convex/BoosterMock.sol";
 import {ExtraRewardWrapperMock} from "../../../mocks/integrations/convex/ExtraRewardWrapperMock.sol";
 import {RewardsMock} from "../../../mocks/integrations/convex/RewardsMock.sol";
-import {IConvexV1BaseRewardPoolAdapter} from "../../../../interfaces/convex/IConvexV1BaseRewardPoolAdapter.sol";
+import {IPhantomTokenAdapter} from "../../../../interfaces/IPhantomTokenAdapter.sol";
 import {AdapterUnitTestHelper} from "../AdapterUnitTestHelper.sol";
 
 /// @title Convex v1 base reward pool adapter unit test
@@ -256,7 +256,7 @@ contract ConvexV1BaseRewardPoolAdapterUnitTest is AdapterUnitTestHelper {
 
     /// @notice U:[CVX1R-11]: `withdrawPhantomToken` works as expected
     function test_U_CVX1R_11_withdrawPhantomToken_works_as_expected() public {
-        vm.expectRevert(IConvexV1BaseRewardPoolAdapter.IncorrectStakedPhantomTokenException.selector);
+        vm.expectRevert(IPhantomTokenAdapter.IncorrectStakedPhantomTokenException.selector);
         vm.prank(creditFacade);
         adapter.withdrawPhantomToken(address(0), 1000);
 

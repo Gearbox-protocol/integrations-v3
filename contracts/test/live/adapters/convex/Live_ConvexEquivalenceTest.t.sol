@@ -12,10 +12,13 @@ import {IRewards} from "../../../../integrations/convex/IRewards.sol";
 import {IBooster} from "../../../../integrations/convex/IBooster.sol";
 import {IConvexV1BaseRewardPoolAdapter} from "../../../../interfaces/convex/IConvexV1BaseRewardPoolAdapter.sol";
 import {ConvexStakedPositionToken} from "../../../../helpers/convex/ConvexV1_StakedPositionToken.sol";
-import {IPhantomToken} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IPhantomToken.sol";
+import {
+    IPhantomToken,
+    IPhantomTokenWithdrawer
+} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IPhantomToken.sol";
 import {PriceFeedParams} from "@gearbox-protocol/core-v3/contracts/interfaces/IPriceOracleV3.sol";
 import {IPriceFeed} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IPriceFeed.sol";
-import {IPhantomTokenAdapter} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IPhantomToken.sol";
+import {IPhantomTokenAdapter} from "../../../../interfaces/IPhantomTokenAdapter.sol";
 
 import {
     ConvexV1_BaseRewardPoolCalls,
@@ -327,7 +330,7 @@ contract Live_ConvexEquivalenceTest is LiveTestHelper {
 
             address poolAdapter = creditManager.contractToAdapter(pool);
 
-            vm.expectCall(poolAdapter, abi.encodeCall(IPhantomTokenAdapter.withdrawPhantomToken, (token, WAD)));
+            vm.expectCall(poolAdapter, abi.encodeCall(IPhantomTokenWithdrawer.withdrawPhantomToken, (token, WAD)));
             vm.prank(USER);
             MultiCall memory call = MultiCall({
                 target: address(creditFacade),

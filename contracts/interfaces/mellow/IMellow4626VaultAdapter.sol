@@ -4,14 +4,11 @@
 pragma solidity ^0.8.23;
 
 import {IERC4626Adapter} from "../erc4626/IERC4626Adapter.sol";
-import {IPhantomTokenAdapter} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IPhantomToken.sol";
+import {IPhantomTokenAdapter} from "../IPhantomTokenAdapter.sol";
 
 /// @title Mellow ERC4626 Vault adapter interface
 /// @notice Interface for the adapter to interact with Mellow's ERC4626 vaults
 interface IMellow4626VaultAdapter is IERC4626Adapter, IPhantomTokenAdapter {
-    /// @notice Error thrown when an incorrect staked phantom token is provided
-    error IncorrectStakedPhantomTokenException();
-
     /// @notice Error thrown when the actually claimed amount is less than the requested amount
     error InsufficientClaimedException();
 

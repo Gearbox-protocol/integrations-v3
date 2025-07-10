@@ -3,14 +3,10 @@
 // (c) Gearbox Foundation, 2024.
 pragma solidity ^0.8.23;
 
-import {IAdapter} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IAdapter.sol";
-import {IPhantomTokenAdapter} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IPhantomToken.sol";
+import {IPhantomTokenAdapter} from "../IPhantomTokenAdapter.sol";
 
 /// @title InfraredVault Adapter Interface
-interface IInfraredVaultAdapter is IAdapter, IPhantomTokenAdapter {
-    /// @notice Thrown when attempting to withdraw a token that is not the staked phantom token
-    error IncorrectStakedPhantomTokenException();
-
+interface IInfraredVaultAdapter is IPhantomTokenAdapter {
     /// @notice Address of the staking token
     function stakingToken() external view returns (address);
 
