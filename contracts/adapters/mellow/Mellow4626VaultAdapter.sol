@@ -9,18 +9,17 @@ import {IVersion} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IVer
 import {IStateSerializer} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IStateSerializer.sol";
 import {ERC4626Adapter} from "../erc4626/ERC4626Adapter.sol";
 import {IERC4626Adapter} from "../../interfaces/erc4626/IERC4626Adapter.sol";
-import {IMellowSimpleLRTVault} from "../../integrations/mellow/IMellowSimpleLRTVault.sol";
+import {IMellowMultiVault} from "../../integrations/mellow/IMellowMultiVault.sol";
 import {IMellow4626VaultAdapter} from "../../interfaces/mellow/IMellow4626VaultAdapter.sol";
+import {MellowWithdrawalPhantomToken} from "../../helpers/mellow/MellowWithdrawalPhantomToken.sol";
 
 import {NotImplementedException} from "@gearbox-protocol/core-v3/contracts/interfaces/IExceptions.sol";
 
 /// @title Mellow ERC4626 Vault adapter
-/// @notice Implements logic allowing CAs to interact with Mellow ERC4626 vaults, accounting for delayed withdrawals
+/// @notice Implements logic allowing CAs to interact with Mellow ERC4626 multivauts
 contract Mellow4626VaultAdapter is ERC4626Adapter, IMellow4626VaultAdapter {
-    uint256 public constant override(ERC4626Adapter, IVersion) version = 3_11;
+    uint256 public constant override(ERC4626Adapter, IVersion) version = 3_12;
     bytes32 public constant override(ERC4626Adapter, IVersion) contractType = "ADAPTER::MELLOW_ERC4626_VAULT";
-
-    address public immutable stakedPhantomToken;
 
     /// @notice Constructor
     /// @param _creditManager Credit manager address
@@ -29,8 +28,25 @@ contract Mellow4626VaultAdapter is ERC4626Adapter, IMellow4626VaultAdapter {
     constructor(address _creditManager, address _vault, address _stakedPhantomToken)
         ERC4626Adapter(_creditManager, _vault, address(0))
     {
-        stakedPhantomToken = _stakedPhantomToken;
-        _getMaskOrRevert(stakedPhantomToken);
+        _getMaskOrRevert(_stakedPhantomToken);
+        address vault = MellowWithdrawalPhantomToken(_stakedPhantomToken).multivault();
+        if (vault != _vault) revert InvalidMultivaultException();
+    }
+
+    /// @dev Deposits the asset into the Mellow vault. This is overridden to check whether the Mellow vault
+    ///      has enabled deposits through a wrapper only.
+    function _deposit(address creditAccount, uint256 assets) internal override returns (bool) {
+        if (IMellowMultiVault(targetContract).depositWhitelist()) revert DepositsWhitelistedException();
+        super._deposit(creditAccount, assets);
+        return false;
+    }
+
+    /// @dev Mints the shares of the Mellow vault. This is overridden to check whether the Mellow vault
+    ///      has enabled deposits through a wrapper only.
+    function _mint(address creditAccount, uint256 shares) internal override returns (bool) {
+        if (IMellowMultiVault(targetContract).depositWhitelist()) revert DepositsWhitelistedException();
+        super._mint(creditAccount, shares);
+        return false;
     }
 
     /// @notice Requests a withdrawal from the Mellow vault for given amount of assets
@@ -47,38 +63,6 @@ contract Mellow4626VaultAdapter is ERC4626Adapter, IMellow4626VaultAdapter {
         return true;
     }
 
-    /// @notice Claims mature withdrawals from the vault
-    /// @param maxAmount Amount to claim
-    /// @dev `account` and `recipient` are ignored, since they are always set to the credit account address
-    function claim(address, address, uint256 maxAmount) external override creditFacadeOnly returns (bool) {
-        address creditAccount = _creditAccount();
-        _claim(creditAccount, maxAmount);
-        return false;
-    }
-
-    /// @notice Claims mature withdrawals, represented by the phantom token
-    function withdrawPhantomToken(address token, uint256 amount) external override creditFacadeOnly returns (bool) {
-        if (token != stakedPhantomToken) revert IncorrectStakedPhantomTokenException();
-        address creditAccount = _creditAccount();
-        _claim(creditAccount, amount);
-        return false;
-    }
-
-    /// @dev Internal implementation of `claim`. Checks that the claimed amount is at least the requested amount,
-    ///      to prevent unpredictable behavior during, e.g., liquidations.
-    function _claim(address creditAccount, uint256 amount) internal {
-        uint256 assetBalanceBefore = IERC20(asset).balanceOf(creditAccount);
-        _execute(abi.encodeCall(IMellowSimpleLRTVault.claim, (creditAccount, creditAccount, amount)));
-        uint256 assetBalanceAfter = IERC20(asset).balanceOf(creditAccount);
-        if (assetBalanceAfter - assetBalanceBefore < amount) revert InsufficientClaimedException();
-    }
-
-    /// @dev It's not possible to deposit from underlying (the vault's asset) into the withdrawal phantom token,
-    ///      hence the function is not implemented.
-    function depositPhantomToken(address, uint256) external view override creditFacadeOnly returns (bool) {
-        revert NotImplementedException();
-    }
-
     function serialize()
         external
         view
@@ -86,6 +70,6 @@ contract Mellow4626VaultAdapter is ERC4626Adapter, IMellow4626VaultAdapter {
         override(ERC4626Adapter, IStateSerializer)
         returns (bytes memory serializedData)
     {
-        serializedData = abi.encode(creditManager, targetContract, asset, stakedPhantomToken);
+        serializedData = abi.encode(creditManager, targetContract, asset);
     }
 }
