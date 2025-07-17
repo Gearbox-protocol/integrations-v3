@@ -41,6 +41,7 @@ contract KodiakIslandHelperAdapter is AbstractAdapter, IKodiakIslandHelperAdapte
     function addLiquidityImbalanced(address island, uint256 amount0, uint256 amount1, uint256 minLPAmount, address)
         external
         override
+        creditFacadeOnly
         returns (bool)
     {
         if (!_isDepositAllowed(island)) revert IslandNotAllowedException(island);
@@ -63,7 +64,7 @@ contract KodiakIslandHelperAdapter is AbstractAdapter, IKodiakIslandHelperAdapte
         uint256 minLPAmount,
         address,
         Ratios memory ratios
-    ) external override returns (bool) {
+    ) external override creditFacadeOnly returns (bool) {
         if (!_isDepositAllowed(island)) revert IslandNotAllowedException(island);
 
         (address token0, address token1) = _getIslandTokens(island);
@@ -82,7 +83,7 @@ contract KodiakIslandHelperAdapter is AbstractAdapter, IKodiakIslandHelperAdapte
         uint256 leftoverAmount0,
         uint256 leftoverAmount1,
         uint256[2] memory minRatesRAY
-    ) external override returns (bool) {
+    ) external override creditFacadeOnly returns (bool) {
         if (!_isDepositAllowed(island)) revert IslandNotAllowedException(island);
 
         (address token0, address token1) = _getIslandTokens(island);
@@ -109,7 +110,7 @@ contract KodiakIslandHelperAdapter is AbstractAdapter, IKodiakIslandHelperAdapte
         uint256 leftoverAmount1,
         uint256[2] memory minRatesRAY,
         Ratios memory ratios
-    ) external override returns (bool) {
+    ) external override creditFacadeOnly returns (bool) {
         if (!_isDepositAllowed(island)) revert IslandNotAllowedException(island);
 
         (address token0, address token1) = _getIslandTokens(island);
@@ -184,7 +185,7 @@ contract KodiakIslandHelperAdapter is AbstractAdapter, IKodiakIslandHelperAdapte
         uint256 token0proportion,
         uint256[2] memory minAmounts,
         address
-    ) external override returns (bool) {
+    ) external override creditFacadeOnly returns (bool) {
         if (!_isWithdrawalAllowed(island)) revert IslandNotAllowedException(island);
 
         address creditAccount = _creditAccount();
@@ -201,7 +202,7 @@ contract KodiakIslandHelperAdapter is AbstractAdapter, IKodiakIslandHelperAdapte
         uint256 leftoverLPAmount,
         uint256 token0proportion,
         uint256[2] memory minRatesRAY
-    ) external override returns (bool) {
+    ) external override creditFacadeOnly returns (bool) {
         if (!_isWithdrawalAllowed(island)) revert IslandNotAllowedException(island);
 
         address creditAccount = _creditAccount();
@@ -298,7 +299,7 @@ contract KodiakIslandHelperAdapter is AbstractAdapter, IKodiakIslandHelperAdapte
     // ------------- //
 
     /// @notice Sets allowed status for a batch of Kodiak islands
-    function setIslandStatusBatch(KodiakIslandStatus[] calldata islands) external override {
+    function setIslandStatusBatch(KodiakIslandStatus[] calldata islands) external override configuratorOnly {
         uint256 len = islands.length;
         for (uint256 i; i < len; ++i) {
             if (islands[i].status == IslandStatus.ALLOWED) {
