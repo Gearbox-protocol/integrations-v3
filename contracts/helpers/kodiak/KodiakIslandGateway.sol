@@ -204,6 +204,10 @@ contract KodiakIslandGateway is IKodiakIslandGateway {
     }
 
     /// @dev Internal function to compute the deposit and price ratios required to balance amounts while adding liquidity.
+    /// @return ratios A struct with three values:
+    ///         - depositRatio: The ratio of the underlying balances of token0 and token1, which a balanced deposit must satisfy.
+    ///         - priceRatio: The exchange price between token0 and token1, which is determined by querying a swap with one unit of the token.
+    ///         - is0to1: Whether token0 needs to be swapped to token1, or vice versa.
     function _getRatios(address island, address token0, address token1, uint256 input0, uint256 input1)
         internal
         returns (Ratios memory ratios)
@@ -211,6 +215,8 @@ contract KodiakIslandGateway is IKodiakIslandGateway {
         (uint256 balance0, uint256 balance1) = IKodiakIsland(island).getUnderlyingBalances();
         uint24 fee = IKodiakPool(IKodiakIsland(island).pool()).fee();
 
+        /// If amount0 / amount1 is greater than the required deposit ratio of the island, then we need to swap token0 to token1.
+        /// Otherwise, we need to swap token1 to token0.
         if (balance0 * input1 < balance1 * input0) {
             ratios.depositRatio = balance0.mulDiv(WAD, balance1);
 
@@ -251,6 +257,8 @@ contract KodiakIslandGateway is IKodiakIslandGateway {
     }
 
     /// @dev Internal function to swap or get a quote to adjust the amounts to a given proportion.
+    /// @dev This results in simulating a withdrawal where token0proportion of the LP tokens are withdrawn only as token0,
+    ///      and the rest as token1, while minimizing the amount of tokens swapped.
     function _adjustToProportion(
         address island,
         address token0,
@@ -287,6 +295,7 @@ contract KodiakIslandGateway is IKodiakIslandGateway {
     }
 
     /// @dev Internal function to compute the amount of tokens to swap in order to balance amounts while adding liquidity.
+    /// @dev This returns a solution to the equation (x - dx) / (y + dy) = (x - dx) / (y + dx * p) = r.
     function _getSwappedAmount(uint256 amount0, uint256 amount1, Ratios memory ratios)
         internal
         pure
