@@ -88,6 +88,20 @@ contract MellowClaimerAdapterUnitTest is AdapterUnitTestHelper, IMellowClaimerAd
             abi.encode(0, indices, 0)
         );
 
+        indices = new uint256[](2);
+        indices[0] = 0;
+        indices[1] = 2;
+        vm.mockCall(
+            withdrawalQueue,
+            abi.encodeCall(IEigenLayerWithdrawalQueue.getAccountData, (creditAccount, type(uint256).max, 0, 0, 0)),
+            abi.encode(0, indices, 0)
+        );
+        vm.mockCall(
+            withdrawalQueue,
+            abi.encodeCall(IEigenLayerWithdrawalQueue.getAccountData, (creditAccount, type(uint256).max, 0, 0, 0)),
+            abi.encode(0, indices, 0)
+        );
+
         adapter = new MellowClaimerAdapter(address(creditManager), claimer);
     }
 
@@ -232,7 +246,8 @@ contract MellowClaimerAdapterUnitTest is AdapterUnitTestHelper, IMellowClaimerAd
 
         // Test successful withdrawal
         _readsActiveAccount();
-        (uint256[] memory subvaultIndices, uint256[][] memory indices) = adapter.getSubvaultIndices(multivault1);
+        (uint256[] memory subvaultIndices, uint256[][] memory indices) =
+            adapter.getUserSubvaultIndices(multivault1, creditAccount);
         deal(asset1, creditAccount, 1000); // Simulate claim result
         vm.mockCall(asset1, abi.encodeCall(IERC20.balanceOf, (creditAccount)), abi.encode(0));
         _executesCall({
@@ -260,10 +275,10 @@ contract MellowClaimerAdapterUnitTest is AdapterUnitTestHelper, IMellowClaimerAd
         adapter.depositPhantomToken(stakedPhantomToken1, 1000);
     }
 
-    /// @notice U:[MCA-7]: `getSubvaultIndices` works as expected
-    function test_U_MCA_07_getSubvaultIndices_works_as_expected() public {
+    /// @notice U:[MCA-7]: `getMultiVaultSubvaultIndices` works as expected
+    function test_U_MCA_07_getMultiVaultSubvaultIndices_works_as_expected() public {
         (uint256[] memory subvaultIndices, uint256[][] memory withdrawalIndices) =
-            adapter.getSubvaultIndices(multivault1);
+            adapter.getMultiVaultSubvaultIndices(multivault1);
 
         assertEq(subvaultIndices.length, 1, "Incorrect subvaultIndices length");
         assertEq(subvaultIndices[0], 0, "Incorrect subvault index");
@@ -271,6 +286,19 @@ contract MellowClaimerAdapterUnitTest is AdapterUnitTestHelper, IMellowClaimerAd
         assertEq(withdrawalIndices[0].length, 2, "Incorrect withdrawal indices length");
         assertEq(withdrawalIndices[0][0], 0, "Incorrect withdrawal index 0");
         assertEq(withdrawalIndices[0][1], 1, "Incorrect withdrawal index 1");
+    }
+
+    /// @notice U:[MCA-7A]: `getUserSubvaultIndices` works as expected
+    function test_U_MCA_07A_getUserSubvaultIndices_works_as_expected() public {
+        (uint256[] memory subvaultIndices, uint256[][] memory withdrawalIndices) =
+            adapter.getUserSubvaultIndices(multivault1, creditAccount);
+
+        assertEq(subvaultIndices.length, 1, "Incorrect subvaultIndices length");
+        assertEq(subvaultIndices[0], 0, "Incorrect subvault index");
+        assertEq(withdrawalIndices.length, 1, "Incorrect withdrawalIndices length");
+        assertEq(withdrawalIndices[0].length, 2, "Incorrect withdrawal indices length");
+        assertEq(withdrawalIndices[0][0], 0, "Incorrect withdrawal index 0");
+        assertEq(withdrawalIndices[0][1], 2, "Incorrect withdrawal index 1");
     }
 
     /// @notice U:[MCA-8]: `setMultivaultStatusBatch` works as expected

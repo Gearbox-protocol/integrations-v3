@@ -40,7 +40,12 @@ interface IMellowClaimerAdapter is IPhantomTokenAdapter, IMellowClaimerAdapterEx
         uint256 maxAssets
     ) external returns (bool);
 
-    function getSubvaultIndices(address multiVault)
+    function getMultiVaultSubvaultIndices(address multiVault)
+        external
+        view
+        returns (uint256[] memory subvaultIndices, uint256[][] memory withdrawalIndices);
+
+    function getUserSubvaultIndices(address multiVault, address user)
         external
         view
         returns (uint256[] memory subvaultIndices, uint256[][] memory withdrawalIndices);

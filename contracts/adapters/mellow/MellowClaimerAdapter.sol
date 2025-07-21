@@ -34,6 +34,9 @@ contract MellowClaimerAdapter is AbstractAdapter, IMellowClaimerAdapter {
     /// @notice Set of allowed multiVaults
     EnumerableSet.AddressSet private _allowedMultivaults;
 
+    /// @notice A buffer provided during claims to handle a situation where
+    ///         the actual claimed amount is less than claimed amount reported by the vault,
+    ///         which can happen due to rounding errors or stETH rebasing math.
     uint256 public constant MAX_ASSETS_BUFFER = 100;
 
     constructor(address _creditManager, address _claimer) AbstractAdapter(_creditManager, _claimer) {}
@@ -63,7 +66,9 @@ contract MellowClaimerAdapter is AbstractAdapter, IMellowClaimerAdapter {
         uint256 maxAssets
     ) external creditFacadeOnly returns (bool) {
         if (!_allowedMultivaults.contains(multiVault)) revert MultivaultNotAllowedException();
-        _claim(multiVault, subvaultIndices, indices, maxAssets);
+
+        address creditAccount = _creditAccount();
+        _claim(multiVault, subvaultIndices, indices, creditAccount, maxAssets);
         return false;
     }
 
@@ -77,9 +82,12 @@ contract MellowClaimerAdapter is AbstractAdapter, IMellowClaimerAdapter {
 
         if (!_allowedMultivaults.contains(multiVault)) revert MultivaultNotAllowedException();
 
-        (uint256[] memory subvaultIndices, uint256[][] memory indices) = getSubvaultIndices(multiVault);
+        address creditAccount = _creditAccount();
 
-        _claim(multiVault, subvaultIndices, indices, amount);
+        (uint256[] memory subvaultIndices, uint256[][] memory indices) =
+            getUserSubvaultIndices(multiVault, creditAccount);
+
+        _claim(multiVault, subvaultIndices, indices, creditAccount, amount);
 
         return false;
     }
@@ -92,12 +100,14 @@ contract MellowClaimerAdapter is AbstractAdapter, IMellowClaimerAdapter {
 
     /// @dev Internal implementation for claims.
     /// @dev Withdrawals from Mellow MultiVaults may return slightly less than maxAssets, due to rounding errors or
-    ///      stETH rebalancing math. A buffer of 100 units should be sufficient for most cases.
-    function _claim(address multiVault, uint256[] memory subvaultIndices, uint256[][] memory indices, uint256 maxAssets)
-        internal
-    {
-        address creditAccount = _creditAccount();
-
+    ///      stETH rebasing math. A buffer of 100 units should be sufficient for most cases.
+    function _claim(
+        address multiVault,
+        uint256[] memory subvaultIndices,
+        uint256[][] memory indices,
+        address creditAccount,
+        uint256 maxAssets
+    ) internal {
         address asset = IERC4626(multiVault).asset();
 
         uint256 assetBalanceBefore = IERC20(asset).balanceOf(creditAccount);
@@ -107,7 +117,8 @@ contract MellowClaimerAdapter is AbstractAdapter, IMellowClaimerAdapter {
             )
         );
 
-        maxAssets = maxAssets > MAX_ASSETS_BUFFER ? maxAssets - MAX_ASSETS_BUFFER : 0;
+        if (maxAssets < MAX_ASSETS_BUFFER) return;
+        maxAssets -= MAX_ASSETS_BUFFER;
 
         uint256 assetBalanceAfter = IERC20(asset).balanceOf(creditAccount);
         if (assetBalanceAfter - assetBalanceBefore < maxAssets) {
@@ -115,10 +126,19 @@ contract MellowClaimerAdapter is AbstractAdapter, IMellowClaimerAdapter {
         }
     }
 
-    /// @dev Helper function to get the subvault indices and relevant withdrawal indices for each subvault in a multiVault.
+    /// @dev Helper function to get the subvault indices and relevant withdrawal indices that belong to a multiVault.
     /// @dev If a withdrawal is requested during a rebalance, some withdrawals may arrive in a transferred state, since the vault
     ///      covers the user's withdrawal with its own pending withdrawals.
-    function getSubvaultIndices(address multiVault)
+    function getMultiVaultSubvaultIndices(address multiVault)
+        public
+        view
+        returns (uint256[] memory subvaultIndices, uint256[][] memory withdrawalIndices)
+    {
+        return getUserSubvaultIndices(multiVault, multiVault);
+    }
+
+    /// @dev Helper function to get the subvault indices and relevant withdrawal indices that belong to a user.
+    function getUserSubvaultIndices(address multiVault, address user)
         public
         view
         returns (uint256[] memory subvaultIndices, uint256[][] memory withdrawalIndices)
@@ -132,7 +152,7 @@ contract MellowClaimerAdapter is AbstractAdapter, IMellowClaimerAdapter {
             subvaultIndices[i] = i;
             if (subvault.protocol == MellowProtocol.EIGEN_LAYER) {
                 (, withdrawalIndices[i],) = IEigenLayerWithdrawalQueue(subvault.withdrawalQueue).getAccountData({
-                    account: multiVault,
+                    account: user,
                     withdrawalsLimit: type(uint256).max,
                     withdrawalsOffset: 0,
                     transferredWithdrawalsLimit: 0,

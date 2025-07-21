@@ -71,19 +71,19 @@ contract MellowWithdrawalPhantomToken is PhantomERC20, Ownable, IPhantomToken {
 
     /// @notice Sets the address of the Claimer contract
     function setClaimer(address _claimer) external onlyOwner {
-        uint256 nSubvaults = IMellowMultiVault(multiVault).subvaultsCount();
-
-        for (uint256 i = 0; i < nSubvaults; ++i) {
-            Subvault memory subvault = IMellowMultiVault(multiVault).subvaultAt(i);
-
-            if (subvault.withdrawalQueue == address(0)) continue;
-
-            address queueClaimer = IMellowWithdrawalQueue(subvault.withdrawalQueue).claimer();
-
-            if (queueClaimer != _claimer) revert SubvaultClaimerMismatchException();
-        }
-
         if (_claimer != claimer) {
+            uint256 nSubvaults = IMellowMultiVault(multiVault).subvaultsCount();
+
+            for (uint256 i = 0; i < nSubvaults; ++i) {
+                Subvault memory subvault = IMellowMultiVault(multiVault).subvaultAt(i);
+
+                if (subvault.withdrawalQueue == address(0)) continue;
+
+                address queueClaimer = IMellowWithdrawalQueue(subvault.withdrawalQueue).claimer();
+
+                if (queueClaimer != _claimer) revert SubvaultClaimerMismatchException();
+            }
+
             claimer = _claimer;
             emit SetClaimer(_claimer);
         }
