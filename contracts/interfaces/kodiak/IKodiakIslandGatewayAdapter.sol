@@ -2,7 +2,7 @@
 pragma solidity ^0.8.23;
 
 import {IAdapter} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IAdapter.sol";
-import {Ratios} from "./IKodiakIslandHelper.sol";
+import {Ratios} from "./IKodiakIslandGateway.sol";
 
 enum IslandStatus {
     ALLOWED,
@@ -15,11 +15,11 @@ struct KodiakIslandStatus {
     IslandStatus status;
 }
 
-interface IKodiakIslandHelperAdapterExceptions {
+interface IKodiakIslandGatewayAdapterExceptions {
     error IslandNotAllowedException(address island);
 }
 
-interface IKodiakIslandHelperAdapter is IAdapter, IKodiakIslandHelperAdapterExceptions {
+interface IKodiakIslandGatewayAdapter is IAdapter, IKodiakIslandGatewayAdapterExceptions {
     function addLiquidityImbalanced(
         address island,
         uint256 amount0,

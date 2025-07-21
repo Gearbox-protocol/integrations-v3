@@ -24,6 +24,7 @@ interface IMellowMultiVault {
 interface IMellowWithdrawalQueue {
     function pendingAssetsOf(address account) external view returns (uint256);
     function claimableAssetsOf(address account) external view returns (uint256);
+    function claimer() external view returns (address);
 }
 
 interface IEigenLayerWithdrawalQueue {

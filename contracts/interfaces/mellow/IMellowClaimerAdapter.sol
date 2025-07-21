@@ -6,7 +6,7 @@ pragma solidity ^0.8.23;
 import {IPhantomTokenAdapter} from "../IPhantomTokenAdapter.sol";
 
 struct MellowMultivaultStatus {
-    address multivault;
+    address multiVault;
     address stakedPhantomToken;
     bool allowed;
 }
@@ -17,6 +17,9 @@ interface IMellowClaimerAdapterExceptions {
 
     /// @notice Thrown when the staked phantom token field does not match the multivault
     error InvalidMultivaultException();
+
+    /// @notice Thrown when the staked phantom token added with the vault has incorrect parameters
+    error InvalidStakedPhantomTokenException();
 
     /// @notice Thrown when the multivault is not allowed
     error MultivaultNotAllowedException();

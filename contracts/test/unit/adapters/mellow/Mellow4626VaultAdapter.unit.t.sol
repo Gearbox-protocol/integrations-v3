@@ -28,7 +28,7 @@ contract Mellow4626VaultAdapterUnitTest is AdapterUnitTestHelper {
         stakedPhantomToken = tokens[2];
 
         vm.mockCall(vault, abi.encodeCall(IERC4626.asset, ()), abi.encode(asset));
-        vm.mockCall(stakedPhantomToken, abi.encodeWithSignature("multivault()"), abi.encode(vault));
+        vm.mockCall(stakedPhantomToken, abi.encodeWithSignature("multiVault()"), abi.encode(vault));
 
         adapter = new Mellow4626VaultAdapter(address(creditManager), vault, stakedPhantomToken);
     }
@@ -50,7 +50,7 @@ contract Mellow4626VaultAdapterUnitTest is AdapterUnitTestHelper {
     /// @notice U:[M4626-2]: Constructor reverts on invalid multivault
     function test_U_M4626_02_constructor_reverts_on_invalid_multivault() public {
         address wrongVault = makeAddr("WRONG_VAULT");
-        vm.mockCall(stakedPhantomToken, abi.encodeWithSignature("multivault()"), abi.encode(wrongVault));
+        vm.mockCall(stakedPhantomToken, abi.encodeWithSignature("multiVault()"), abi.encode(wrongVault));
 
         vm.expectRevert(IMellow4626VaultAdapter.InvalidMultivaultException.selector);
         new Mellow4626VaultAdapter(address(creditManager), vault, stakedPhantomToken);

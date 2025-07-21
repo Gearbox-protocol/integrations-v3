@@ -68,8 +68,10 @@ contract MellowClaimerAdapterUnitTest is AdapterUnitTestHelper, IMellowClaimerAd
         );
 
         // Mock phantom tokens
-        vm.mockCall(stakedPhantomToken1, abi.encodeWithSignature("multivault()"), abi.encode(multivault1));
-        vm.mockCall(stakedPhantomToken2, abi.encodeWithSignature("multivault()"), abi.encode(multivault2));
+        vm.mockCall(stakedPhantomToken1, abi.encodeWithSignature("multiVault()"), abi.encode(multivault1));
+        vm.mockCall(stakedPhantomToken1, abi.encodeWithSignature("getPhantomTokenInfo()"), abi.encode(claimer, asset1));
+        vm.mockCall(stakedPhantomToken2, abi.encodeWithSignature("multiVault()"), abi.encode(multivault2));
+        vm.mockCall(stakedPhantomToken2, abi.encodeWithSignature("getPhantomTokenInfo()"), abi.encode(claimer, asset2));
 
         // Mock withdrawal queue
         uint256[] memory indices = new uint256[](2);
@@ -77,12 +79,12 @@ contract MellowClaimerAdapterUnitTest is AdapterUnitTestHelper, IMellowClaimerAd
         indices[1] = 1;
         vm.mockCall(
             withdrawalQueue,
-            abi.encodeCall(IEigenLayerWithdrawalQueue.getAccountData, (multivault1, 0, type(uint256).max, 0, 0)),
+            abi.encodeCall(IEigenLayerWithdrawalQueue.getAccountData, (multivault1, type(uint256).max, 0, 0, 0)),
             abi.encode(0, indices, 0)
         );
         vm.mockCall(
             withdrawalQueue,
-            abi.encodeCall(IEigenLayerWithdrawalQueue.getAccountData, (multivault2, 0, type(uint256).max, 0, 0)),
+            abi.encodeCall(IEigenLayerWithdrawalQueue.getAccountData, (multivault2, type(uint256).max, 0, 0, 0)),
             abi.encode(0, indices, 0)
         );
 
@@ -121,6 +123,7 @@ contract MellowClaimerAdapterUnitTest is AdapterUnitTestHelper, IMellowClaimerAd
         // Setup allowed multivault
         MellowMultivaultStatus[] memory multivaults = new MellowMultivaultStatus[](1);
         multivaults[0] = MellowMultivaultStatus(multivault1, stakedPhantomToken1, true);
+
         _readsTokenMask(stakedPhantomToken1);
         _readsTokenMask(asset1);
         vm.prank(configurator);
@@ -313,7 +316,7 @@ contract MellowClaimerAdapterUnitTest is AdapterUnitTestHelper, IMellowClaimerAd
         assertTrue(_contains(allowedMultivaults, multivault2), "Multivault2 should remain");
 
         // Test invalid multivault (phantom token doesn't match)
-        vm.mockCall(stakedPhantomToken1, abi.encodeWithSignature("multivault()"), abi.encode(multivault2));
+        vm.mockCall(stakedPhantomToken1, abi.encodeWithSignature("multiVault()"), abi.encode(multivault2));
         multivaults[0] = MellowMultivaultStatus(multivault1, stakedPhantomToken1, true);
 
         vm.expectRevert(InvalidMultivaultException.selector);

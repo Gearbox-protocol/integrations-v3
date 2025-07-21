@@ -29,7 +29,7 @@ contract Mellow4626VaultAdapter is ERC4626Adapter, IMellow4626VaultAdapter {
         ERC4626Adapter(_creditManager, _vault, address(0))
     {
         _getMaskOrRevert(_stakedPhantomToken);
-        address vault = MellowWithdrawalPhantomToken(_stakedPhantomToken).multivault();
+        address vault = MellowWithdrawalPhantomToken(_stakedPhantomToken).multiVault();
         if (vault != _vault) revert InvalidMultivaultException();
     }
 

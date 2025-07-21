@@ -10,17 +10,17 @@ import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 
 import {WAD} from "@gearbox-protocol/core-v3/contracts/libraries/Constants.sol";
 
-import {IKodiakIslandHelper, Ratios} from "../../interfaces/kodiak/IKodiakIslandHelper.sol";
+import {IKodiakIslandGateway, Ratios} from "../../interfaces/kodiak/IKodiakIslandGateway.sol";
 import {IKodiakIsland, IKodiakPool} from "../../integrations/kodiak/IKodiakIsland.sol";
 import {IKodiakIslandRouter} from "../../integrations/kodiak/IKodiakIslandRouter.sol";
 import {IKodiakQuoter, QuoteExactInputSingleParams} from "../../integrations/kodiak/IKodiakQuoter.sol";
 import {IKodiakSwapRouter, ExactInputSingleParams} from "../../integrations/kodiak/IKodiakSwapRouter.sol";
 
-contract KodiakIslandHelper is IKodiakIslandHelper {
+contract KodiakIslandGateway is IKodiakIslandGateway {
     using SafeERC20 for IERC20;
     using Math for uint256;
 
-    bytes32 public immutable contractType = "HELPER::KODIAK_ISLAND";
+    bytes32 public immutable contractType = "GATEWAY::KODIAK_ISLAND";
     uint256 public immutable version = 3_10;
 
     /// @notice The Kodiak Island router.
@@ -140,7 +140,7 @@ contract KodiakIslandHelper is IKodiakIslandHelper {
 
         (amount0, amount1) = _sweepTokens(token0, token1, receiver);
 
-        if (amount0 < minAmounts[0] || amount1 < minAmounts[1]) revert("KodiakIslandHelper: Insufficient amount");
+        if (amount0 < minAmounts[0] || amount1 < minAmounts[1]) revert("KodiakIslandGateway: Insufficient amount");
     }
 
     /// @dev Internal function to remove balanced liquidity from an island.
@@ -314,7 +314,7 @@ contract KodiakIslandHelper is IKodiakIslandHelper {
         balance0 = IERC20(token0).balanceOf(address(this));
         balance1 = IERC20(token1).balanceOf(address(this));
 
-        if (balance0 > 0) IERC20(token0).safeTransfer(receiver, balance0);
-        if (balance1 > 0) IERC20(token1).safeTransfer(receiver, balance1);
+        if (balance0 > 1) IERC20(token0).safeTransfer(receiver, balance0 - 1);
+        if (balance1 > 1) IERC20(token1).safeTransfer(receiver, balance1 - 1);
     }
 }

@@ -17,37 +17,41 @@ import {IPhantomToken} from "@gearbox-protocol/core-v3/contracts/interfaces/base
 contract MellowWithdrawalPhantomToken is PhantomERC20, Ownable, IPhantomToken {
     event SetClaimer(address indexed claimer);
 
+    error SubvaultClaimerMismatchException();
+
     bytes32 public constant override contractType = "PHANTOM_TOKEN::MELLOW_WITHDRAWAL";
 
     uint256 public constant override version = 3_11;
 
-    address public immutable multivault;
+    address public immutable multiVault;
 
     address public claimer;
 
     /// @notice Constructor
-    /// @param _multivault The multivault where the pending assets are tracked
-    constructor(address _ioProxy, address _multivault, address _claimer)
+    /// @param _ioProxy The address of the Instance Owner proxy
+    /// @param _multiVault The multiVault where the pending assets are tracked
+    /// @param _claimer The address of the initial Claimer contract
+    constructor(address _ioProxy, address _multiVault, address _claimer)
         PhantomERC20(
-            IERC4626(_multivault).asset(),
-            string.concat("Mellow withdrawn ", IERC20Metadata(IERC4626(_multivault).asset()).name()),
-            string.concat("wd", IERC20Metadata(IERC4626(_multivault).asset()).symbol()),
-            IERC20Metadata(IERC4626(_multivault).asset()).decimals()
+            IERC4626(_multiVault).asset(),
+            string.concat("Mellow withdrawn ", IERC20Metadata(IERC4626(_multiVault).asset()).name()),
+            string.concat("wd", IERC20Metadata(IERC4626(_multiVault).asset()).symbol()),
+            IERC20Metadata(IERC4626(_multiVault).asset()).decimals()
         )
     {
         _transferOwnership(_ioProxy);
 
-        multivault = _multivault;
+        multiVault = _multiVault;
         claimer = _claimer;
     }
 
     /// @notice Returns the amount of assets pending/claimable for withdrawal
     /// @param account The account for which the calculation is performed
     function balanceOf(address account) public view returns (uint256 balance) {
-        uint256 nSubvaults = IMellowMultiVault(multivault).subvaultsCount();
+        uint256 nSubvaults = IMellowMultiVault(multiVault).subvaultsCount();
 
         for (uint256 i = 0; i < nSubvaults; ++i) {
-            Subvault memory subvault = IMellowMultiVault(multivault).subvaultAt(i);
+            Subvault memory subvault = IMellowMultiVault(multiVault).subvaultAt(i);
 
             if (subvault.withdrawalQueue == address(0)) continue;
 
@@ -67,6 +71,18 @@ contract MellowWithdrawalPhantomToken is PhantomERC20, Ownable, IPhantomToken {
 
     /// @notice Sets the address of the Claimer contract
     function setClaimer(address _claimer) external onlyOwner {
+        uint256 nSubvaults = IMellowMultiVault(multiVault).subvaultsCount();
+
+        for (uint256 i = 0; i < nSubvaults; ++i) {
+            Subvault memory subvault = IMellowMultiVault(multiVault).subvaultAt(i);
+
+            if (subvault.withdrawalQueue == address(0)) continue;
+
+            address queueClaimer = IMellowWithdrawalQueue(subvault.withdrawalQueue).claimer();
+
+            if (queueClaimer != _claimer) revert SubvaultClaimerMismatchException();
+        }
+
         if (_claimer != claimer) {
             claimer = _claimer;
             emit SetClaimer(_claimer);

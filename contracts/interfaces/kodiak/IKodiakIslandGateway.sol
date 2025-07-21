@@ -9,7 +9,7 @@ struct Ratios {
     bool is0to1;
 }
 
-interface IKodiakIslandHelper {
+interface IKodiakIslandGateway {
     function addLiquidityImbalanced(
         address island,
         uint256 amount0,

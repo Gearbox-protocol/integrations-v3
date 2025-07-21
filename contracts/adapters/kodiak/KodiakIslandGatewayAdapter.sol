@@ -11,26 +11,26 @@ import {RAY} from "@gearbox-protocol/core-v3/contracts/libraries/Constants.sol";
 import {AbstractAdapter} from "../AbstractAdapter.sol";
 
 import {
-    IKodiakIslandHelperAdapter,
+    IKodiakIslandGatewayAdapter,
     KodiakIslandStatus,
     IslandStatus
-} from "../../interfaces/kodiak/IKodiakIslandHelperAdapter.sol";
-import {IKodiakIslandHelper, Ratios} from "../../interfaces/kodiak/IKodiakIslandHelper.sol";
+} from "../../interfaces/kodiak/IKodiakIslandGatewayAdapter.sol";
+import {IKodiakIslandGateway, Ratios} from "../../interfaces/kodiak/IKodiakIslandGateway.sol";
 import {IKodiakIsland} from "../../integrations/kodiak/IKodiakIsland.sol";
 
-/// @title KodiakIslandHelper adapter
-/// @notice Implements logic for interacting with KodiakIslandHelper contracts
-contract KodiakIslandHelperAdapter is AbstractAdapter, IKodiakIslandHelperAdapter {
+/// @title KodiakIslandGateway adapter
+/// @notice Implements logic for interacting with KodiakIslandGateway contracts
+contract KodiakIslandGatewayAdapter is AbstractAdapter, IKodiakIslandGatewayAdapter {
     using EnumerableSet for EnumerableSet.AddressSet;
 
-    bytes32 public constant override contractType = "ADAPTER::KODIAK_ISLAND_HELPER";
+    bytes32 public constant override contractType = "ADAPTER::KODIAK_ISLAND_GATEWAY";
     uint256 public constant override version = 3_10;
 
     EnumerableSet.AddressSet private _allowedIslands;
 
     mapping(address => IslandStatus) private _islandStatus;
 
-    constructor(address _creditManager, address _kodiakHelper) AbstractAdapter(_creditManager, _kodiakHelper) {}
+    constructor(address _creditManager, address _kodiakGateway) AbstractAdapter(_creditManager, _kodiakGateway) {}
 
     // ------------- //
     // ADD LIQUIDITY //
@@ -143,7 +143,7 @@ contract KodiakIslandHelperAdapter is AbstractAdapter, IKodiakIslandHelperAdapte
         _approveToken(token1, type(uint256).max);
         _execute(
             abi.encodeCall(
-                IKodiakIslandHelper.addLiquidityImbalanced, (island, amount0, amount1, minLPAmount, creditAccount)
+                IKodiakIslandGateway.addLiquidityImbalanced, (island, amount0, amount1, minLPAmount, creditAccount)
             )
         );
         _approveToken(token0, 1);
@@ -165,7 +165,7 @@ contract KodiakIslandHelperAdapter is AbstractAdapter, IKodiakIslandHelperAdapte
         _approveToken(token1, type(uint256).max);
         _execute(
             abi.encodeCall(
-                IKodiakIslandHelper.addLiquidityImbalancedAssisted,
+                IKodiakIslandGateway.addLiquidityImbalancedAssisted,
                 (island, amount0, amount1, minLPAmount, creditAccount, ratios)
             )
         );
@@ -231,7 +231,7 @@ contract KodiakIslandHelperAdapter is AbstractAdapter, IKodiakIslandHelperAdapte
         _approveToken(island, type(uint256).max);
         _execute(
             abi.encodeCall(
-                IKodiakIslandHelper.removeLiquidityImbalanced,
+                IKodiakIslandGateway.removeLiquidityImbalanced,
                 (island, lpAmount, token0proportion, minAmounts, creditAccount)
             )
         );

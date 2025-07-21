@@ -28,11 +28,13 @@ contract MellowClaimerAdapter is AbstractAdapter, IMellowClaimerAdapter {
     bytes32 public constant override contractType = "ADAPTER::MELLOW_CLAIMER";
     uint256 public constant override version = 3_10;
 
-    /// @notice Maps a staked phantom token to the multivault it represents
-    mapping(address stakedPhantomToken => address multivault) public phantomTokenToMultivault;
+    /// @notice Maps a staked phantom token to the multiVault it represents
+    mapping(address stakedPhantomToken => address multiVault) public phantomTokenToMultivault;
 
-    /// @notice Set of allowed multivaults
+    /// @notice Set of allowed multiVaults
     EnumerableSet.AddressSet private _allowedMultivaults;
+
+    uint256 public constant MAX_ASSETS_BUFFER = 100;
 
     constructor(address _creditManager, address _claimer) AbstractAdapter(_creditManager, _claimer) {}
 
@@ -61,8 +63,7 @@ contract MellowClaimerAdapter is AbstractAdapter, IMellowClaimerAdapter {
         uint256 maxAssets
     ) external creditFacadeOnly returns (bool) {
         if (!_allowedMultivaults.contains(multiVault)) revert MultivaultNotAllowedException();
-        address creditAccount = _creditAccount();
-        _claim(multiVault, subvaultIndices, indices, creditAccount, maxAssets);
+        _claim(multiVault, subvaultIndices, indices, maxAssets);
         return false;
     }
 
@@ -72,16 +73,13 @@ contract MellowClaimerAdapter is AbstractAdapter, IMellowClaimerAdapter {
         creditFacadeOnly
         returns (bool)
     {
-        address creditAccount = _creditAccount();
+        address multiVault = phantomTokenToMultivault[stakedPhantomToken];
 
-        address multivault = phantomTokenToMultivault[stakedPhantomToken];
-        if (!_allowedMultivaults.contains(multivault)) {
-            revert MultivaultNotAllowedException();
-        }
+        if (!_allowedMultivaults.contains(multiVault)) revert MultivaultNotAllowedException();
 
-        (uint256[] memory subvaultIndices, uint256[][] memory indices) = getSubvaultIndices(multivault);
+        (uint256[] memory subvaultIndices, uint256[][] memory indices) = getSubvaultIndices(multiVault);
 
-        _claim(multivault, subvaultIndices, indices, creditAccount, amount);
+        _claim(multiVault, subvaultIndices, indices, amount);
 
         return false;
     }
@@ -93,13 +91,13 @@ contract MellowClaimerAdapter is AbstractAdapter, IMellowClaimerAdapter {
     }
 
     /// @dev Internal implementation for claims.
-    function _claim(
-        address multiVault,
-        uint256[] memory subvaultIndices,
-        uint256[][] memory indices,
-        address creditAccount,
-        uint256 maxAssets
-    ) internal {
+    /// @dev Withdrawals from Mellow MultiVaults may return slightly less than maxAssets, due to rounding errors or
+    ///      stETH rebalancing math. A buffer of 100 units should be sufficient for most cases.
+    function _claim(address multiVault, uint256[] memory subvaultIndices, uint256[][] memory indices, uint256 maxAssets)
+        internal
+    {
+        address creditAccount = _creditAccount();
+
         address asset = IERC4626(multiVault).asset();
 
         uint256 assetBalanceBefore = IERC20(asset).balanceOf(creditAccount);
@@ -108,11 +106,18 @@ contract MellowClaimerAdapter is AbstractAdapter, IMellowClaimerAdapter {
                 IMellowClaimer.multiAcceptAndClaim, (multiVault, subvaultIndices, indices, creditAccount, maxAssets)
             )
         );
+
+        maxAssets = maxAssets > MAX_ASSETS_BUFFER ? maxAssets - MAX_ASSETS_BUFFER : 0;
+
         uint256 assetBalanceAfter = IERC20(asset).balanceOf(creditAccount);
-        if (assetBalanceAfter - assetBalanceBefore < maxAssets) revert InsufficientClaimedException();
+        if (assetBalanceAfter - assetBalanceBefore < maxAssets) {
+            revert InsufficientClaimedException();
+        }
     }
 
-    /// @dev Helper function to get the subvault indices and relevant withdrawal indices for each subvault in a multivault.
+    /// @dev Helper function to get the subvault indices and relevant withdrawal indices for each subvault in a multiVault.
+    /// @dev If a withdrawal is requested during a rebalance, some withdrawals may arrive in a transferred state, since the vault
+    ///      covers the user's withdrawal with its own pending withdrawals.
     function getSubvaultIndices(address multiVault)
         public
         view
@@ -126,14 +131,18 @@ contract MellowClaimerAdapter is AbstractAdapter, IMellowClaimerAdapter {
             Subvault memory subvault = IMellowMultiVault(multiVault).subvaultAt(i);
             subvaultIndices[i] = i;
             if (subvault.protocol == MellowProtocol.EIGEN_LAYER) {
-                (, withdrawalIndices[i],) = IEigenLayerWithdrawalQueue(subvault.withdrawalQueue).getAccountData(
-                    multiVault, 0, type(uint256).max, 0, 0
-                );
+                (, withdrawalIndices[i],) = IEigenLayerWithdrawalQueue(subvault.withdrawalQueue).getAccountData({
+                    account: multiVault,
+                    withdrawalsLimit: type(uint256).max,
+                    withdrawalsOffset: 0,
+                    transferredWithdrawalsLimit: 0,
+                    transferredWithdrawalsOffset: 0
+                });
             }
         }
     }
 
-    /// @notice Returns the list of allowed multivaults
+    /// @notice Returns the list of allowed multiVaults
     function allowedMultivaults() public view returns (address[] memory) {
         return _allowedMultivaults.values();
     }
@@ -143,21 +152,28 @@ contract MellowClaimerAdapter is AbstractAdapter, IMellowClaimerAdapter {
         serializedData = abi.encode(creditManager, targetContract, allowedMultivaults());
     }
 
-    /// @notice Sets the allowed status for a batch of multivaults.
-    function setMultivaultStatusBatch(MellowMultivaultStatus[] calldata multivaults) external configuratorOnly {
-        uint256 len = multivaults.length;
+    /// @notice Sets the allowed status for a batch of multiVaults.
+    function setMultivaultStatusBatch(MellowMultivaultStatus[] calldata multiVaults) external configuratorOnly {
+        uint256 len = multiVaults.length;
         for (uint256 i; i < len; ++i) {
-            if (multivaults[i].allowed) {
-                _getMaskOrRevert(multivaults[i].stakedPhantomToken);
-                _getMaskOrRevert(IMellowMultiVault(multivaults[i].multivault).asset());
+            if (multiVaults[i].allowed) {
+                address asset = IMellowMultiVault(multiVaults[i].multiVault).asset();
 
-                address vault = MellowWithdrawalPhantomToken(multivaults[i].stakedPhantomToken).multivault();
+                _getMaskOrRevert(multiVaults[i].stakedPhantomToken);
+                _getMaskOrRevert(asset);
 
-                if (vault != multivaults[i].multivault) revert InvalidMultivaultException();
-                _allowedMultivaults.add(multivaults[i].multivault);
-                phantomTokenToMultivault[multivaults[i].stakedPhantomToken] = multivaults[i].multivault;
+                (address claimer, address underlying) =
+                    MellowWithdrawalPhantomToken(multiVaults[i].stakedPhantomToken).getPhantomTokenInfo();
+
+                if (claimer != targetContract || underlying != asset) revert InvalidStakedPhantomTokenException();
+
+                address vault = MellowWithdrawalPhantomToken(multiVaults[i].stakedPhantomToken).multiVault();
+
+                if (vault != multiVaults[i].multiVault) revert InvalidMultivaultException();
+                _allowedMultivaults.add(multiVaults[i].multiVault);
+                phantomTokenToMultivault[multiVaults[i].stakedPhantomToken] = multiVaults[i].multiVault;
             } else {
-                _allowedMultivaults.remove(multivaults[i].multivault);
+                _allowedMultivaults.remove(multiVaults[i].multiVault);
             }
         }
     }
