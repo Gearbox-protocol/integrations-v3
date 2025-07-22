@@ -32,6 +32,52 @@ contract KodiakIslandGatewayAdapter is AbstractAdapter, IKodiakIslandGatewayAdap
 
     constructor(address _creditManager, address _kodiakGateway) AbstractAdapter(_creditManager, _kodiakGateway) {}
 
+    // -----//
+    // SWAP //
+    // -----//
+
+    /// @notice Swaps tokens through the KodiakIslandGateway.
+    function swap(address island, address tokenIn, uint256 amountIn, uint256 amountOutMin)
+        external
+        override
+        creditFacadeOnly
+        returns (bool)
+    {
+        if (!_isSwapAllowed(island)) revert IslandNotAllowedException(island);
+
+        _swap(island, tokenIn, amountIn, amountOutMin);
+
+        return true;
+    }
+
+    /// @notice Swaps tokens through the KodiakIslandGateway, using the entire balance of the input token,
+    ///         except the specified amount.
+    function swapDiff(address island, address tokenIn, uint256 leftoverAmount, uint256 minRateRAY)
+        external
+        override
+        creditFacadeOnly
+        returns (bool)
+    {
+        if (!_isSwapAllowed(island)) revert IslandNotAllowedException(island);
+
+        address creditAccount = _creditAccount();
+
+        uint256 amountIn = _getAmountOverLeftover(tokenIn, leftoverAmount, creditAccount);
+
+        if (amountIn == 0) return false;
+
+        _swap(island, tokenIn, amountIn, amountIn * minRateRAY / RAY);
+
+        return true;
+    }
+
+    /// @dev Internal function to swap tokens through the KodiakIslandGateway.
+    function _swap(address island, address tokenIn, uint256 amountIn, uint256 amountOutMin) internal {
+        _executeSwapSafeApprove(
+            tokenIn, abi.encodeCall(IKodiakIslandGateway.swap, (island, tokenIn, amountIn, amountOutMin))
+        );
+    }
+
     // ------------- //
     // ADD LIQUIDITY //
     // ------------- //
@@ -269,7 +315,11 @@ contract KodiakIslandGatewayAdapter is AbstractAdapter, IKodiakIslandGatewayAdap
 
     /// @dev Internal function to check if withdrawal is allowed for an island.
     function _isWithdrawalAllowed(address island) internal view returns (bool) {
-        return _islandStatus[island] == IslandStatus.ALLOWED || _islandStatus[island] == IslandStatus.EXIT_ONLY;
+        return _islandStatus[island] != IslandStatus.NOT_ALLOWED;
+    }
+
+    function _isSwapAllowed(address island) internal view returns (bool) {
+        return _islandStatus[island] == IslandStatus.ALLOWED || _islandStatus[island] == IslandStatus.SWAP_AND_EXIT_ONLY;
     }
 
     // ---- //
@@ -302,15 +352,25 @@ contract KodiakIslandGatewayAdapter is AbstractAdapter, IKodiakIslandGatewayAdap
     function setIslandStatusBatch(KodiakIslandStatus[] calldata islands) external override configuratorOnly {
         uint256 len = islands.length;
         for (uint256 i; i < len; ++i) {
+            (address token0, address token1) = _getIslandTokens(islands[i].island);
             if (islands[i].status == IslandStatus.ALLOWED) {
-                (address token0, address token1) = _getIslandTokens(islands[i].island);
                 _getMaskOrRevert(token0);
                 _getMaskOrRevert(token1);
                 _getMaskOrRevert(islands[i].island);
                 _allowedIslands.add(islands[i].island);
                 _islandStatus[islands[i].island] = IslandStatus.ALLOWED;
-            } else if (islands[i].status == IslandStatus.EXIT_ONLY) {
+            } else if (islands[i].status == IslandStatus.SWAP_AND_EXIT_ONLY) {
+                _getMaskOrRevert(token0);
+                _getMaskOrRevert(token1);
+                _getMaskOrRevert(islands[i].island);
+                _allowedIslands.add(islands[i].island);
                 _islandStatus[islands[i].island] = IslandStatus.EXIT_ONLY;
+            } else if (islands[i].status == IslandStatus.SWAP_AND_EXIT_ONLY) {
+                (address token0, address token1) = _getIslandTokens(islands[i].island);
+                _getMaskOrRevert(token0);
+                _getMaskOrRevert(token1);
+                _allowedIslands.add(islands[i].island);
+                _islandStatus[islands[i].island] = IslandStatus.SWAP_AND_EXIT_ONLY;
             } else if (islands[i].status == IslandStatus.NOT_ALLOWED) {
                 _allowedIslands.remove(islands[i].island);
                 _islandStatus[islands[i].island] = IslandStatus.NOT_ALLOWED;

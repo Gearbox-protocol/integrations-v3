@@ -2,12 +2,14 @@
 pragma solidity ^0.8.23;
 
 import {IAdapter} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IAdapter.sol";
+import {ExactInputSingleParams} from "../../integrations/kodiak/IKodiakSwapRouter.sol";
 import {Ratios} from "./IKodiakIslandGateway.sol";
 
 enum IslandStatus {
+    NOT_ALLOWED,
     ALLOWED,
-    EXIT_ONLY,
-    NOT_ALLOWED
+    SWAP_AND_EXIT_ONLY,
+    EXIT_ONLY
 }
 
 struct KodiakIslandStatus {
@@ -20,6 +22,12 @@ interface IKodiakIslandGatewayAdapterExceptions {
 }
 
 interface IKodiakIslandGatewayAdapter is IAdapter, IKodiakIslandGatewayAdapterExceptions {
+    function swap(address island, address tokenIn, uint256 amountIn, uint256 amountOutMin) external returns (bool);
+
+    function swapDiff(address island, address tokenIn, uint256 leftoverAmount, uint256 minRateRAY)
+        external
+        returns (bool);
+
     function addLiquidityImbalanced(
         address island,
         uint256 amount0,

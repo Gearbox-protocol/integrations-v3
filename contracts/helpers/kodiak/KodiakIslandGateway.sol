@@ -40,6 +40,51 @@ contract KodiakIslandGateway is IKodiakIslandGateway {
         kodiakQuoter = _kodiakQuoter;
     }
 
+    /// SWAP
+
+    function swap(address island, address tokenIn, uint256 amountIn, uint256 amountOutMin)
+        external
+        returns (uint256 amountOut)
+    {
+        (address token0, address token1) = _getIslandTokens(island);
+
+        if (tokenIn != token0 && tokenIn != token1) revert("KodiakIslandGateway: Invalid tokenIn");
+
+        uint24 fee = IKodiakPool(IKodiakIsland(island).pool()).fee();
+
+        ExactInputSingleParams memory params = ExactInputSingleParams({
+            tokenIn: tokenIn,
+            tokenOut: tokenIn == token0 ? token1 : token0,
+            fee: fee,
+            recipient: msg.sender,
+            deadline: block.timestamp,
+            amountIn: amountIn,
+            amountOutMinimum: amountOutMin,
+            sqrtPriceLimitX96: 0
+        });
+
+        IERC20(tokenIn).safeTransferFrom(msg.sender, address(this), amountIn);
+        IERC20(tokenIn).forceApprove(kodiakSwapRouter, amountIn);
+        amountOut = IKodiakSwapRouter(kodiakSwapRouter).exactInputSingle(params);
+    }
+
+    function estimateSwap(address island, address tokenIn, uint256 amountIn) external returns (uint256 amountOut) {
+        (address token0, address token1) = _getIslandTokens(island);
+        if (tokenIn != token0 && tokenIn != token1) revert("KodiakIslandGateway: Invalid tokenIn");
+
+        uint24 fee = IKodiakPool(IKodiakIsland(island).pool()).fee();
+
+        QuoteExactInputSingleParams memory params = QuoteExactInputSingleParams({
+            tokenIn: tokenIn,
+            tokenOut: tokenIn == token0 ? token1 : token0,
+            amountIn: amountIn,
+            fee: fee,
+            sqrtPriceLimitX96: 0
+        });
+
+        (uint256 amountOut,,,) = IKodiakQuoter(kodiakQuoter).quoteExactInputSingle(params);
+    }
+
     /// ADD LIQUIDITY
 
     /// @notice Add liquidity to an island with an imbalanced ratio. This function will compute the ratios automatically,
@@ -117,7 +162,7 @@ contract KodiakIslandGateway is IKodiakIslandGateway {
         uint256 depositAmount0 = ratios.is0to1 ? amount0 - amountIn : amount0 + amountOut;
         uint256 depositAmount1 = ratios.is0to1 ? amount1 + amountOut : amount1 - amountIn;
 
-        (,, lpAmount) = IKodiakIsland(island).getMintAmounts(depositAmount0, depositAmount1);
+        lpAmount = _getSwapAdjustedMintAmounts(island, amountIn, amountOut, depositAmount0, depositAmount1, ratios);
     }
 
     /// REMOVE LIQUIDITY
@@ -174,6 +219,8 @@ contract KodiakIslandGateway is IKodiakIslandGateway {
         internal
         returns (uint256 amountOut)
     {
+        if (amountIn == 0) return 0;
+
         uint24 fee = IKodiakPool(IKodiakIsland(island).pool()).fee();
 
         if (isQuote) {
@@ -213,13 +260,26 @@ contract KodiakIslandGateway is IKodiakIslandGateway {
         returns (Ratios memory ratios)
     {
         (uint256 balance0, uint256 balance1) = IKodiakIsland(island).getUnderlyingBalances();
+
+        ratios.balance0 = balance0;
+        ratios.balance1 = balance1;
+
+        /// If the current price is outside the Kodiak Island range, we need to swap one token to another entirely
+        if (balance0 == 0) {
+            ratios.swapAll = true;
+            ratios.is0to1 = true;
+            return ratios;
+        } else if (balance1 == 0) {
+            ratios.swapAll = true;
+            ratios.is0to1 = false;
+            return ratios;
+        }
+
         uint24 fee = IKodiakPool(IKodiakIsland(island).pool()).fee();
 
         /// If amount0 / amount1 is greater than the required deposit ratio of the island, then we need to swap token0 to token1.
         /// Otherwise, we need to swap token1 to token0.
         if (balance0 * input1 < balance1 * input0) {
-            ratios.depositRatio = balance0.mulDiv(WAD, balance1);
-
             uint256 amountIn = 10 ** IERC20Metadata(token0).decimals();
 
             QuoteExactInputSingleParams memory params = QuoteExactInputSingleParams({
@@ -236,8 +296,6 @@ contract KodiakIslandGateway is IKodiakIslandGateway {
 
             ratios.is0to1 = true;
         } else {
-            ratios.depositRatio = balance1.mulDiv(WAD, balance0);
-
             uint256 amountIn = 10 ** IERC20Metadata(token1).decimals();
 
             QuoteExactInputSingleParams memory params = QuoteExactInputSingleParams({
@@ -272,10 +330,10 @@ contract KodiakIslandGateway is IKodiakIslandGateway {
         bool is0to1;
 
         if (token0proportion < BALANCED_PROPORTION) {
-            amountIn = amount0 * (BALANCED_PROPORTION - token0proportion) / WAD;
+            amountIn = amount0 * (BALANCED_PROPORTION - token0proportion) / BALANCED_PROPORTION;
             is0to1 = true;
         } else {
-            amountIn = amount1 * (token0proportion - BALANCED_PROPORTION) / WAD;
+            amountIn = amount1 * (token0proportion - BALANCED_PROPORTION) / BALANCED_PROPORTION;
             is0to1 = false;
         }
 
@@ -295,18 +353,69 @@ contract KodiakIslandGateway is IKodiakIslandGateway {
     }
 
     /// @dev Internal function to compute the amount of tokens to swap in order to balance amounts while adding liquidity.
-    /// @dev This returns a solution to the equation (x - dx) / (y + dy) = (x - dx) / (y + dx * p) = r.
+    /// @dev This returns a solution to the equation (x - dx) / (y + dx * p) = r.
     function _getSwappedAmount(uint256 amount0, uint256 amount1, Ratios memory ratios)
         internal
-        pure
+        view
         returns (uint256 amountIn)
     {
+        if (ratios.swapAll) return ratios.is0to1 ? amount0 : amount1;
+
         if (!ratios.is0to1) (amount0, amount1) = (amount1, amount0);
 
-        uint256 numerator = amount0 - amount1.mulDiv(ratios.depositRatio, WAD);
-        uint256 denominator = WAD + ratios.depositRatio.mulDiv(ratios.priceRatio, WAD);
+        (uint256 balance0, uint256 balance1) = (ratios.balance0, ratios.balance1);
 
-        return numerator.mulDiv(WAD, denominator);
+        if (!ratios.is0to1) (balance0, balance1) = (balance1, balance0);
+
+        uint256 numerator = amount0 * balance1 - amount1 * balance0;
+        uint256 denominator = (amount0 + balance0).mulDiv(ratios.priceRatio, WAD) + balance1 + amount1;
+
+        return numerator / denominator;
+    }
+
+    /// @dev Computes amount of tokens that will be minted with updated island balances after the swap
+    /// @dev In the case where the swap moves the price outside the Island range, we approximate the change in the second token's balance
+    ///      proportionally to the remaining capacity in the first token. Otherwise, we update with exact amounts.
+    function _getSwapAdjustedMintAmounts(
+        address island,
+        uint256 amountIn,
+        uint256 amountOut,
+        uint256 depositAmount0,
+        uint256 depositAmount1,
+        Ratios memory ratios
+    ) internal view returns (uint256 lpAmount) {
+        (uint256 balance0, uint256 balance1) = (ratios.balance0, ratios.balance1);
+
+        if (ratios.is0to1) {
+            if (balance1 < amountOut) {
+                balance0 = balance0 + balance1 * amountIn / amountOut;
+                balance1 = 0;
+            } else {
+                balance0 = balance0 + amountIn;
+                balance1 = balance1 - amountOut;
+            }
+        } else {
+            if (balance0 < amountOut) {
+                balance1 = balance1 + balance0 * amountIn / amountOut;
+                balance0 = 0;
+            } else {
+                balance0 = balance0 - amountOut;
+                balance1 = balance1 + amountIn;
+            }
+        }
+
+        uint256 totalSupply = IERC20(island).totalSupply();
+
+        if (balance0 == 0) {
+            lpAmount == depositAmount1 * totalSupply / balance1;
+        } else if (balance1 == 0) {
+            lpAmount == depositAmount0 * totalSupply / balance0;
+        } else {
+            uint256 amount0Mint = depositAmount0 * totalSupply / balance0;
+            uint256 amount1Mint = depositAmount1 * totalSupply / balance1;
+
+            lpAmount = amount0Mint < amount1Mint ? amount0Mint : amount1Mint;
+        }
     }
 
     /// @dev Internal function to get the island tokens.
