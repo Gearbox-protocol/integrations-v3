@@ -12,7 +12,7 @@ import {IEigenLayerWithdrawalQueue} from "../../../../integrations/mellow/IMello
 import {
     IMellowClaimerAdapter,
     IMellowClaimerAdapterExceptions,
-    MellowMultivaultStatus
+    MellowMultiVaultStatus
 } from "../../../../interfaces/mellow/IMellowClaimerAdapter.sol";
 import {MellowWithdrawalPhantomToken} from "../../../../helpers/mellow/MellowWithdrawalPhantomToken.sol";
 import {IPhantomTokenAdapter} from "../../../../interfaces/IPhantomTokenAdapter.sol";
@@ -111,7 +111,7 @@ contract MellowClaimerAdapterUnitTest is AdapterUnitTestHelper, IMellowClaimerAd
 
         assertEq(adapter.creditManager(), address(creditManager), "Incorrect creditManager");
         assertEq(adapter.targetContract(), claimer, "Incorrect targetContract");
-        assertEq(adapter.allowedMultivaults().length, 0, "Should have no allowed multivaults initially");
+        assertEq(adapter.allowedMultiVaults().length, 0, "Should have no allowed multivaults initially");
     }
 
     /// @notice U:[MCA-2]: Wrapper functions revert on wrong caller
@@ -135,13 +135,13 @@ contract MellowClaimerAdapterUnitTest is AdapterUnitTestHelper, IMellowClaimerAd
     /// @notice U:[MCA-3]: `multiAccept` works as expected
     function test_U_MCA_03_multiAccept_works_as_expected() public {
         // Setup allowed multivault
-        MellowMultivaultStatus[] memory multivaults = new MellowMultivaultStatus[](1);
-        multivaults[0] = MellowMultivaultStatus(multivault1, stakedPhantomToken1, true);
+        MellowMultiVaultStatus[] memory multivaults = new MellowMultiVaultStatus[](1);
+        multivaults[0] = MellowMultiVaultStatus(multivault1, stakedPhantomToken1, true);
 
         _readsTokenMask(stakedPhantomToken1);
         _readsTokenMask(asset1);
         vm.prank(configurator);
-        adapter.setMultivaultStatusBatch(multivaults);
+        adapter.setMultiVaultStatusBatch(multivaults);
 
         uint256[] memory subvaultIndices = new uint256[](1);
         subvaultIndices[0] = 0;
@@ -151,7 +151,7 @@ contract MellowClaimerAdapterUnitTest is AdapterUnitTestHelper, IMellowClaimerAd
         indices[0][1] = 1;
 
         // Test with non-allowed multivault
-        vm.expectRevert(MultivaultNotAllowedException.selector);
+        vm.expectRevert(MultiVaultNotAllowedException.selector);
         vm.prank(creditFacade);
         adapter.multiAccept(multivault2, subvaultIndices, indices);
 
@@ -170,12 +170,12 @@ contract MellowClaimerAdapterUnitTest is AdapterUnitTestHelper, IMellowClaimerAd
     /// @notice U:[MCA-4]: `multiAcceptAndClaim` works as expected
     function test_U_MCA_04_multiAcceptAndClaim_works_as_expected() public {
         // Setup allowed multivault
-        MellowMultivaultStatus[] memory multivaults = new MellowMultivaultStatus[](1);
-        multivaults[0] = MellowMultivaultStatus(multivault1, stakedPhantomToken1, true);
+        MellowMultiVaultStatus[] memory multivaults = new MellowMultiVaultStatus[](1);
+        multivaults[0] = MellowMultiVaultStatus(multivault1, stakedPhantomToken1, true);
         _readsTokenMask(stakedPhantomToken1);
         _readsTokenMask(asset1);
         vm.prank(configurator);
-        adapter.setMultivaultStatusBatch(multivaults);
+        adapter.setMultiVaultStatusBatch(multivaults);
 
         uint256[] memory subvaultIndices = new uint256[](1);
         subvaultIndices[0] = 0;
@@ -185,7 +185,7 @@ contract MellowClaimerAdapterUnitTest is AdapterUnitTestHelper, IMellowClaimerAd
         indices[0][1] = 1;
 
         // Test with non-allowed multivault
-        vm.expectRevert(MultivaultNotAllowedException.selector);
+        vm.expectRevert(MultiVaultNotAllowedException.selector);
         vm.prank(creditFacade);
         adapter.multiAcceptAndClaim(multivault2, subvaultIndices, indices, address(0), 1000);
 
@@ -232,15 +232,15 @@ contract MellowClaimerAdapterUnitTest is AdapterUnitTestHelper, IMellowClaimerAd
     /// @notice U:[MCA-5]: `withdrawPhantomToken` works as expected
     function test_U_MCA_05_withdrawPhantomToken_works_as_expected() public {
         // Setup allowed multivault
-        MellowMultivaultStatus[] memory multivaults = new MellowMultivaultStatus[](1);
-        multivaults[0] = MellowMultivaultStatus(multivault1, stakedPhantomToken1, true);
+        MellowMultiVaultStatus[] memory multivaults = new MellowMultiVaultStatus[](1);
+        multivaults[0] = MellowMultiVaultStatus(multivault1, stakedPhantomToken1, true);
         _readsTokenMask(stakedPhantomToken1);
         _readsTokenMask(asset1);
         vm.prank(configurator);
-        adapter.setMultivaultStatusBatch(multivaults);
+        adapter.setMultiVaultStatusBatch(multivaults);
 
         // Test with non-allowed phantom token
-        vm.expectRevert(MultivaultNotAllowedException.selector);
+        vm.expectRevert(MultiVaultNotAllowedException.selector);
         vm.prank(creditFacade);
         adapter.withdrawPhantomToken(stakedPhantomToken2, 1000);
 
@@ -276,7 +276,7 @@ contract MellowClaimerAdapterUnitTest is AdapterUnitTestHelper, IMellowClaimerAd
     }
 
     /// @notice U:[MCA-7]: `getMultiVaultSubvaultIndices` works as expected
-    function test_U_MCA_07_getMultiVaultSubvaultIndices_works_as_expected() public {
+    function test_U_MCA_07_getMultiVaultSubvaultIndices_works_as_expected() public view {
         (uint256[] memory subvaultIndices, uint256[][] memory withdrawalIndices) =
             adapter.getMultiVaultSubvaultIndices(multivault1);
 
@@ -289,7 +289,7 @@ contract MellowClaimerAdapterUnitTest is AdapterUnitTestHelper, IMellowClaimerAd
     }
 
     /// @notice U:[MCA-7A]: `getUserSubvaultIndices` works as expected
-    function test_U_MCA_07A_getUserSubvaultIndices_works_as_expected() public {
+    function test_U_MCA_07A_getUserSubvaultIndices_works_as_expected() public view {
         (uint256[] memory subvaultIndices, uint256[][] memory withdrawalIndices) =
             adapter.getUserSubvaultIndices(multivault1, creditAccount);
 
@@ -301,15 +301,15 @@ contract MellowClaimerAdapterUnitTest is AdapterUnitTestHelper, IMellowClaimerAd
         assertEq(withdrawalIndices[0][1], 2, "Incorrect withdrawal index 1");
     }
 
-    /// @notice U:[MCA-8]: `setMultivaultStatusBatch` works as expected
+    /// @notice U:[MCA-8]: `setMultiVaultStatusBatch` works as expected
     function test_U_MCA_08_setMultivaultStatusBatch_works_as_expected() public {
         _revertsOnNonConfiguratorCaller();
-        adapter.setMultivaultStatusBatch(new MellowMultivaultStatus[](0));
+        adapter.setMultiVaultStatusBatch(new MellowMultiVaultStatus[](0));
 
         // Test adding multivaults
-        MellowMultivaultStatus[] memory multivaults = new MellowMultivaultStatus[](2);
-        multivaults[0] = MellowMultivaultStatus(multivault1, stakedPhantomToken1, true);
-        multivaults[1] = MellowMultivaultStatus(multivault2, stakedPhantomToken2, true);
+        MellowMultiVaultStatus[] memory multivaults = new MellowMultiVaultStatus[](2);
+        multivaults[0] = MellowMultiVaultStatus(multivault1, stakedPhantomToken1, true);
+        multivaults[1] = MellowMultiVaultStatus(multivault2, stakedPhantomToken2, true);
 
         _readsTokenMask(stakedPhantomToken1);
         _readsTokenMask(asset1);
@@ -317,47 +317,47 @@ contract MellowClaimerAdapterUnitTest is AdapterUnitTestHelper, IMellowClaimerAd
         _readsTokenMask(asset2);
 
         vm.prank(configurator);
-        adapter.setMultivaultStatusBatch(multivaults);
+        adapter.setMultiVaultStatusBatch(multivaults);
 
-        address[] memory allowedMultivaults = adapter.allowedMultivaults();
-        assertEq(allowedMultivaults.length, 2, "Incorrect allowed multivaults length");
-        assertTrue(_contains(allowedMultivaults, multivault1), "Multivault1 not found");
-        assertTrue(_contains(allowedMultivaults, multivault2), "Multivault2 not found");
+        address[] memory allowedMultiVaults = adapter.allowedMultiVaults();
+        assertEq(allowedMultiVaults.length, 2, "Incorrect allowed multivaults length");
+        assertTrue(_contains(allowedMultiVaults, multivault1), "Multivault1 not found");
+        assertTrue(_contains(allowedMultiVaults, multivault2), "Multivault2 not found");
 
         assertEq(
-            adapter.phantomTokenToMultivault(stakedPhantomToken1), multivault1, "Incorrect phantom token mapping 1"
+            adapter.phantomTokenToMultiVault(stakedPhantomToken1), multivault1, "Incorrect phantom token mapping 1"
         );
         assertEq(
-            adapter.phantomTokenToMultivault(stakedPhantomToken2), multivault2, "Incorrect phantom token mapping 2"
+            adapter.phantomTokenToMultiVault(stakedPhantomToken2), multivault2, "Incorrect phantom token mapping 2"
         );
 
         // Test removing multivault
-        multivaults = new MellowMultivaultStatus[](1);
-        multivaults[0] = MellowMultivaultStatus(multivault1, stakedPhantomToken1, false);
+        multivaults = new MellowMultiVaultStatus[](1);
+        multivaults[0] = MellowMultiVaultStatus(multivault1, stakedPhantomToken1, false);
 
         vm.prank(configurator);
-        adapter.setMultivaultStatusBatch(multivaults);
+        adapter.setMultiVaultStatusBatch(multivaults);
 
-        allowedMultivaults = adapter.allowedMultivaults();
-        assertEq(allowedMultivaults.length, 1, "Incorrect allowed multivaults length after removal");
-        assertFalse(_contains(allowedMultivaults, multivault1), "Multivault1 should be removed");
-        assertTrue(_contains(allowedMultivaults, multivault2), "Multivault2 should remain");
+        allowedMultiVaults = adapter.allowedMultiVaults();
+        assertEq(allowedMultiVaults.length, 1, "Incorrect allowed multivaults length after removal");
+        assertFalse(_contains(allowedMultiVaults, multivault1), "Multivault1 should be removed");
+        assertTrue(_contains(allowedMultiVaults, multivault2), "Multivault2 should remain");
 
         // Test invalid multivault (phantom token doesn't match)
         vm.mockCall(stakedPhantomToken1, abi.encodeWithSignature("multiVault()"), abi.encode(multivault2));
-        multivaults[0] = MellowMultivaultStatus(multivault1, stakedPhantomToken1, true);
+        multivaults[0] = MellowMultiVaultStatus(multivault1, stakedPhantomToken1, true);
 
-        vm.expectRevert(InvalidMultivaultException.selector);
+        vm.expectRevert(InvalidMultiVaultException.selector);
         vm.prank(configurator);
-        adapter.setMultivaultStatusBatch(multivaults);
+        adapter.setMultiVaultStatusBatch(multivaults);
     }
 
     /// @notice U:[MCA-9]: `serialize` works as expected
     function test_U_MCA_09_serialize_works_as_expected() public {
         // Add some multivaults
-        MellowMultivaultStatus[] memory multivaults = new MellowMultivaultStatus[](2);
-        multivaults[0] = MellowMultivaultStatus(multivault1, stakedPhantomToken1, true);
-        multivaults[1] = MellowMultivaultStatus(multivault2, stakedPhantomToken2, true);
+        MellowMultiVaultStatus[] memory multivaults = new MellowMultiVaultStatus[](2);
+        multivaults[0] = MellowMultiVaultStatus(multivault1, stakedPhantomToken1, true);
+        multivaults[1] = MellowMultiVaultStatus(multivault2, stakedPhantomToken2, true);
 
         _readsTokenMask(stakedPhantomToken1);
         _readsTokenMask(asset1);
@@ -365,7 +365,7 @@ contract MellowClaimerAdapterUnitTest is AdapterUnitTestHelper, IMellowClaimerAd
         _readsTokenMask(asset2);
 
         vm.prank(configurator);
-        adapter.setMultivaultStatusBatch(multivaults);
+        adapter.setMultiVaultStatusBatch(multivaults);
 
         bytes memory serialized = adapter.serialize();
         (address cm, address tc, address[] memory allowed) = abi.decode(serialized, (address, address, address[]));

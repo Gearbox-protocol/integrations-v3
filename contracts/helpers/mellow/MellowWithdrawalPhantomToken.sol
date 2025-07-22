@@ -29,7 +29,7 @@ contract MellowWithdrawalPhantomToken is PhantomERC20, Ownable, IPhantomToken {
 
     /// @notice Constructor
     /// @param _ioProxy The address of the Instance Owner proxy
-    /// @param _multiVault The multiVault where the pending assets are tracked
+    /// @param _multiVault The MultiVault where the pending assets are tracked
     /// @param _claimer The address of the initial Claimer contract
     constructor(address _ioProxy, address _multiVault, address _claimer)
         PhantomERC20(
