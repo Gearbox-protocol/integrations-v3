@@ -5,7 +5,7 @@ pragma solidity ^0.8.23;
 
 import {IPhantomTokenAdapter} from "../IPhantomTokenAdapter.sol";
 
-struct MellowMultivaultStatus {
+struct MellowMultiVaultStatus {
     address multiVault;
     address stakedPhantomToken;
     bool allowed;
@@ -16,13 +16,13 @@ interface IMellowClaimerAdapterExceptions {
     error InsufficientClaimedException();
 
     /// @notice Thrown when the staked phantom token field does not match the multivault
-    error InvalidMultivaultException();
+    error InvalidMultiVaultException();
 
     /// @notice Thrown when the staked phantom token added with the vault has incorrect parameters
     error InvalidStakedPhantomTokenException();
 
     /// @notice Thrown when the multivault is not allowed
-    error MultivaultNotAllowedException();
+    error MultiVaultNotAllowedException();
 }
 
 /// @title Mellow ERC4626 Vault adapter interface
@@ -50,7 +50,7 @@ interface IMellowClaimerAdapter is IPhantomTokenAdapter, IMellowClaimerAdapterEx
         view
         returns (uint256[] memory subvaultIndices, uint256[][] memory withdrawalIndices);
 
-    function allowedMultivaults() external view returns (address[] memory);
+    function allowedMultiVaults() external view returns (address[] memory);
 
-    function setMultivaultStatusBatch(MellowMultivaultStatus[] calldata multivaults) external;
+    function setMultiVaultStatusBatch(MellowMultiVaultStatus[] calldata multivaults) external;
 }

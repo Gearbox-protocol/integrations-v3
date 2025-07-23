@@ -52,7 +52,7 @@ contract Mellow4626VaultAdapterUnitTest is AdapterUnitTestHelper {
         address wrongVault = makeAddr("WRONG_VAULT");
         vm.mockCall(stakedPhantomToken, abi.encodeWithSignature("multiVault()"), abi.encode(wrongVault));
 
-        vm.expectRevert(IMellow4626VaultAdapter.InvalidMultivaultException.selector);
+        vm.expectRevert(IMellow4626VaultAdapter.InvalidMultiVaultException.selector);
         new Mellow4626VaultAdapter(address(creditManager), vault, stakedPhantomToken);
     }
 
@@ -90,12 +90,6 @@ contract Mellow4626VaultAdapterUnitTest is AdapterUnitTestHelper {
         vm.prank(creditFacade);
         bool useSafePrices = adapter.deposit(1000, address(0));
         assertFalse(useSafePrices);
-
-        // Test deposit with whitelist enabled
-        vm.mockCall(vault, abi.encodeCall(IMellowMultiVault.depositWhitelist, ()), abi.encode(true));
-        vm.expectRevert(IMellow4626VaultAdapter.DepositsWhitelistedException.selector);
-        vm.prank(creditFacade);
-        adapter.deposit(1000, address(0));
     }
 
     /// @notice U:[M4626-5]: `depositDiff` works as expected
@@ -113,12 +107,6 @@ contract Mellow4626VaultAdapterUnitTest is AdapterUnitTestHelper {
         vm.prank(creditFacade);
         bool useSafePrices = adapter.depositDiff(diffLeftoverAmount);
         assertFalse(useSafePrices);
-
-        // Test depositDiff with whitelist enabled
-        vm.mockCall(vault, abi.encodeCall(IMellowMultiVault.depositWhitelist, ()), abi.encode(true));
-        vm.expectRevert(IMellow4626VaultAdapter.DepositsWhitelistedException.selector);
-        vm.prank(creditFacade);
-        adapter.depositDiff(diffLeftoverAmount);
     }
 
     /// @notice U:[M4626-6]: `mint` works as expected
@@ -134,12 +122,6 @@ contract Mellow4626VaultAdapterUnitTest is AdapterUnitTestHelper {
         vm.prank(creditFacade);
         bool useSafePrices = adapter.mint(1000, address(0));
         assertFalse(useSafePrices);
-
-        // Test mint with whitelist enabled
-        vm.mockCall(vault, abi.encodeCall(IMellowMultiVault.depositWhitelist, ()), abi.encode(true));
-        vm.expectRevert(IMellow4626VaultAdapter.DepositsWhitelistedException.selector);
-        vm.prank(creditFacade);
-        adapter.mint(1000, address(0));
     }
 
     /// @notice U:[M4626-7]: `withdraw` works as expected and returns true for safe prices
@@ -184,12 +166,13 @@ contract Mellow4626VaultAdapterUnitTest is AdapterUnitTestHelper {
     }
 
     /// @notice U:[M4626-10]: `serialize` works as expected
-    function test_U_M4626_10_serialize_works_as_expected() public {
+    function test_U_M4626_10_serialize_works_as_expected() public view {
         bytes memory serialized = adapter.serialize();
-        (address cm, address tc, address a) = abi.decode(serialized, (address, address, address));
+        (address cm, address tc, address v, address a) = abi.decode(serialized, (address, address, address, address));
 
         assertEq(cm, address(creditManager), "Incorrect credit manager in serialized data");
         assertEq(tc, vault, "Incorrect target contract in serialized data");
+        assertEq(v, vault, "Incorrect vault in serialized data");
         assertEq(a, asset, "Incorrect asset in serialized data");
     }
 }

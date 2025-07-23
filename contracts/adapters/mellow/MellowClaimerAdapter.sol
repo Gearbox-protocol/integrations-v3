@@ -15,7 +15,7 @@ import {
     Subvault,
     MellowProtocol
 } from "../../integrations/mellow/IMellowMultiVault.sol";
-import {IMellowClaimerAdapter, MellowMultivaultStatus} from "../../interfaces/mellow/IMellowClaimerAdapter.sol";
+import {IMellowClaimerAdapter, MellowMultiVaultStatus} from "../../interfaces/mellow/IMellowClaimerAdapter.sol";
 import {MellowWithdrawalPhantomToken} from "../../helpers/mellow/MellowWithdrawalPhantomToken.sol";
 
 import {NotImplementedException} from "@gearbox-protocol/core-v3/contracts/interfaces/IExceptions.sol";
@@ -29,10 +29,10 @@ contract MellowClaimerAdapter is AbstractAdapter, IMellowClaimerAdapter {
     uint256 public constant override version = 3_10;
 
     /// @notice Maps a staked phantom token to the multiVault it represents
-    mapping(address stakedPhantomToken => address multiVault) public phantomTokenToMultivault;
+    mapping(address stakedPhantomToken => address multiVault) public phantomTokenToMultiVault;
 
     /// @notice Set of allowed multiVaults
-    EnumerableSet.AddressSet private _allowedMultivaults;
+    EnumerableSet.AddressSet private _allowedMultiVaults;
 
     /// @notice A buffer provided during claims to handle a situation where
     ///         the actual claimed amount is less than claimed amount reported by the vault,
@@ -41,16 +41,16 @@ contract MellowClaimerAdapter is AbstractAdapter, IMellowClaimerAdapter {
 
     constructor(address _creditManager, address _claimer) AbstractAdapter(_creditManager, _claimer) {}
 
-    /// @notice Accepts transferred pending assets in the Multivault for the credit account
+    /// @notice Accepts transferred pending assets in the MultiVault for the credit account
     /// @dev During a MultiVault rebalance, a withdrawal request may end up with some withdrawal indices
-    ///      in a transferred state. In order to correctly reflect the in pendingAssetsOf(), these
+    ///      in a transferred state. In order to correctly reflect the in `pendingAssetsOf()`, these
     ///      transfers need to be accepted, so this call must always be coupled with a withdrawal request.
     function multiAccept(address multiVault, uint256[] calldata subvaultIndices, uint256[][] calldata indices)
         external
         creditFacadeOnly
         returns (bool)
     {
-        if (!_allowedMultivaults.contains(multiVault)) revert MultivaultNotAllowedException();
+        if (!_allowedMultiVaults.contains(multiVault)) revert MultiVaultNotAllowedException();
         _execute(
             abi.encodeCall(IMellowClaimer.multiAcceptAndClaim, (multiVault, subvaultIndices, indices, address(0), 0))
         );
@@ -65,7 +65,7 @@ contract MellowClaimerAdapter is AbstractAdapter, IMellowClaimerAdapter {
         address,
         uint256 maxAssets
     ) external creditFacadeOnly returns (bool) {
-        if (!_allowedMultivaults.contains(multiVault)) revert MultivaultNotAllowedException();
+        if (!_allowedMultiVaults.contains(multiVault)) revert MultiVaultNotAllowedException();
 
         address creditAccount = _creditAccount();
         _claim(multiVault, subvaultIndices, indices, creditAccount, maxAssets);
@@ -78,9 +78,9 @@ contract MellowClaimerAdapter is AbstractAdapter, IMellowClaimerAdapter {
         creditFacadeOnly
         returns (bool)
     {
-        address multiVault = phantomTokenToMultivault[stakedPhantomToken];
+        address multiVault = phantomTokenToMultiVault[stakedPhantomToken];
 
-        if (!_allowedMultivaults.contains(multiVault)) revert MultivaultNotAllowedException();
+        if (!_allowedMultiVaults.contains(multiVault)) revert MultiVaultNotAllowedException();
 
         address creditAccount = _creditAccount();
 
@@ -163,17 +163,17 @@ contract MellowClaimerAdapter is AbstractAdapter, IMellowClaimerAdapter {
     }
 
     /// @notice Returns the list of allowed multiVaults
-    function allowedMultivaults() public view returns (address[] memory) {
-        return _allowedMultivaults.values();
+    function allowedMultiVaults() public view returns (address[] memory) {
+        return _allowedMultiVaults.values();
     }
 
     /// @notice Serialized adapter parameters
     function serialize() external view returns (bytes memory serializedData) {
-        serializedData = abi.encode(creditManager, targetContract, allowedMultivaults());
+        serializedData = abi.encode(creditManager, targetContract, allowedMultiVaults());
     }
 
     /// @notice Sets the allowed status for a batch of multiVaults.
-    function setMultivaultStatusBatch(MellowMultivaultStatus[] calldata multiVaults) external configuratorOnly {
+    function setMultiVaultStatusBatch(MellowMultiVaultStatus[] calldata multiVaults) external configuratorOnly {
         uint256 len = multiVaults.length;
         for (uint256 i; i < len; ++i) {
             if (multiVaults[i].allowed) {
@@ -189,11 +189,11 @@ contract MellowClaimerAdapter is AbstractAdapter, IMellowClaimerAdapter {
 
                 address vault = MellowWithdrawalPhantomToken(multiVaults[i].stakedPhantomToken).multiVault();
 
-                if (vault != multiVaults[i].multiVault) revert InvalidMultivaultException();
-                _allowedMultivaults.add(multiVaults[i].multiVault);
-                phantomTokenToMultivault[multiVaults[i].stakedPhantomToken] = multiVaults[i].multiVault;
+                if (vault != multiVaults[i].multiVault) revert InvalidMultiVaultException();
+                _allowedMultiVaults.add(multiVaults[i].multiVault);
+                phantomTokenToMultiVault[multiVaults[i].stakedPhantomToken] = multiVaults[i].multiVault;
             } else {
-                _allowedMultivaults.remove(multiVaults[i].multiVault);
+                _allowedMultiVaults.remove(multiVaults[i].multiVault);
             }
         }
     }

@@ -3,8 +3,6 @@
 // (c) Gearbox Foundation, 2025.
 pragma solidity ^0.8.23;
 
-import {ReentrancyGuardTrait} from "@gearbox-protocol/core-v3/contracts/traits/ReentrancyGuardTrait.sol";
-
 import {IVersion} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IVersion.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -21,7 +19,7 @@ struct PendingRedeem {
     uint256 day;
 }
 
-contract UpshiftVaultGateway is ReentrancyGuardTrait, IUpshiftVaultGateway {
+contract UpshiftVaultGateway is IUpshiftVaultGateway {
     using SafeERC20 for IERC20;
     using EnumerableSet for EnumerableSet.Bytes32Set;
 
@@ -39,13 +37,13 @@ contract UpshiftVaultGateway is ReentrancyGuardTrait, IUpshiftVaultGateway {
         asset = IERC4626(_upshiftVault).asset();
     }
 
-    function deposit(uint256 assets, address receiver) external nonReentrant {
+    function deposit(uint256 assets, address receiver) external {
         IERC20(asset).safeTransferFrom(msg.sender, address(this), assets);
         IERC20(asset).forceApprove(upshiftVault, assets);
         IERC4626(upshiftVault).deposit(assets, receiver);
     }
 
-    function mint(uint256 shares, address receiver) external nonReentrant {
+    function mint(uint256 shares, address receiver) external {
         uint256 amount = IERC4626(upshiftVault).previewMint(shares);
 
         IERC20(asset).safeTransferFrom(msg.sender, address(this), amount);
@@ -53,7 +51,7 @@ contract UpshiftVaultGateway is ReentrancyGuardTrait, IUpshiftVaultGateway {
         IERC4626(upshiftVault).mint(shares, receiver);
     }
 
-    function requestRedeem(uint256 shares) external nonReentrant {
+    function requestRedeem(uint256 shares) external {
         if (pendingRedeems[msg.sender].assets > 0) {
             revert("UpshiftVaultGateway: user has a pending redeem");
         }
@@ -72,7 +70,7 @@ contract UpshiftVaultGateway is ReentrancyGuardTrait, IUpshiftVaultGateway {
         IUpshiftVault(upshiftVault).requestRedeem(shares, address(this), address(this));
     }
 
-    function claim(uint256 amount) external nonReentrant {
+    function claim(uint256 amount) external {
         PendingRedeem memory pendingRedeem = pendingRedeems[msg.sender];
 
         if (pendingRedeem.assets == 0) {
