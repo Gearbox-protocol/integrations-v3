@@ -223,65 +223,58 @@ contract KodiakIslandGatewayAdapter is AbstractAdapter, IKodiakIslandGatewayAdap
     // REMOVE LIQUIDITY //
     // ---------------- //
 
-    /// @notice Removes liquidity from an island with an imbalanced ratio.
+    /// @notice Removes liquidity from an island in a single token.
     /// @dev `receiver` is ignored, since it is always set to the credit account.
-    function removeLiquidityImbalanced(
-        address island,
-        uint256 lpAmount,
-        uint256 token0proportion,
-        uint256[2] memory minAmounts,
-        address
-    ) external override creditFacadeOnly returns (bool) {
+    function removeLiquiditySingle(address island, uint256 lpAmount, address tokenOut, uint256 minAmountOut, address)
+        external
+        override
+        creditFacadeOnly
+        returns (bool)
+    {
         if (!_isWithdrawalAllowed(island)) revert IslandNotAllowedException(island);
 
         address creditAccount = _creditAccount();
 
-        _removeLiquidityImbalanced(island, lpAmount, token0proportion, minAmounts, creditAccount);
+        _removeLiquiditySingle(island, lpAmount, tokenOut, minAmountOut, creditAccount);
 
         return true;
     }
 
-    /// @notice Removes liquidity from an island with an imbalanced ratio, using the entire island balance,
+    /// @notice Removes liquidity from an island in a single token, using the entire island balance,
     ///         except the specified amount.
-    function removeLiquidityImbalancedDiff(
-        address island,
-        uint256 leftoverLPAmount,
-        uint256 token0proportion,
-        uint256[2] memory minRatesRAY
-    ) external override creditFacadeOnly returns (bool) {
+    function removeLiquiditySingleDiff(address island, uint256 leftoverAmount, address tokenOut, uint256 minRateRAY)
+        external
+        override
+        creditFacadeOnly
+        returns (bool)
+    {
         if (!_isWithdrawalAllowed(island)) revert IslandNotAllowedException(island);
 
         address creditAccount = _creditAccount();
 
-        uint256 lpAmount = _getAmountOverLeftover(island, leftoverLPAmount, creditAccount);
+        uint256 lpAmount = _getAmountOverLeftover(island, leftoverAmount, creditAccount);
 
         if (lpAmount == 0) return false;
 
-        uint256[2] memory minAmounts;
-        minAmounts[0] = lpAmount * minRatesRAY[0] / RAY;
-        minAmounts[1] = lpAmount * minRatesRAY[1] / RAY;
-
-        _removeLiquidityImbalanced(island, lpAmount, token0proportion, minAmounts, creditAccount);
+        _removeLiquiditySingle(island, lpAmount, tokenOut, lpAmount * minRateRAY / RAY, creditAccount);
 
         return true;
     }
 
-    /// @dev Internal implementation of `removeLiquidityImbalanced`.
-    function _removeLiquidityImbalanced(
+    /// @dev Internal implementation of `removeLiquiditySingle`.
+    function _removeLiquiditySingle(
         address island,
         uint256 lpAmount,
-        uint256 token0proportion,
-        uint256[2] memory minAmounts,
+        address tokenOut,
+        uint256 minAmountOut,
         address creditAccount
     ) internal {
-        _approveToken(island, type(uint256).max);
-        _execute(
+        _executeSwapSafeApprove(
+            island,
             abi.encodeCall(
-                IKodiakIslandGateway.removeLiquidityImbalanced,
-                (island, lpAmount, token0proportion, minAmounts, creditAccount)
+                IKodiakIslandGateway.removeLiquiditySingle, (island, lpAmount, tokenOut, minAmountOut, creditAccount)
             )
         );
-        _approveToken(island, 1);
     }
 
     // ------- //
@@ -366,7 +359,6 @@ contract KodiakIslandGatewayAdapter is AbstractAdapter, IKodiakIslandGatewayAdap
                 _allowedIslands.add(islands[i].island);
                 _islandStatus[islands[i].island] = IslandStatus.EXIT_ONLY;
             } else if (islands[i].status == IslandStatus.SWAP_AND_EXIT_ONLY) {
-                (address token0, address token1) = _getIslandTokens(islands[i].island);
                 _getMaskOrRevert(token0);
                 _getMaskOrRevert(token1);
                 _allowedIslands.add(islands[i].island);

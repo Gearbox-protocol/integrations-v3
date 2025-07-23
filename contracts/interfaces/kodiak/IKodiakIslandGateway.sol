@@ -39,15 +39,15 @@ interface IKodiakIslandGateway {
         external
         returns (uint256 lpAmount, Ratios memory ratios);
 
-    function removeLiquidityImbalanced(
+    function removeLiquiditySingle(
         address island,
         uint256 lpAmount,
-        uint256 token0proportion,
-        uint256[2] memory minAmounts,
+        address tokenOut,
+        uint256 minAmountOut,
         address receiver
-    ) external returns (uint256 amount0, uint256 amount1);
+    ) external returns (uint256 amountOut);
 
-    function estimateRemoveLiquidityImbalanced(address island, uint256 lpAmount, uint256 token0proportion)
+    function estimateRemoveLiquiditySingle(address island, uint256 lpAmount, address tokenOut)
         external
-        returns (uint256 amount0, uint256 amount1);
+        returns (uint256 amountOut);
 }

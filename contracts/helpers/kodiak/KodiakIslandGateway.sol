@@ -82,7 +82,7 @@ contract KodiakIslandGateway is IKodiakIslandGateway {
             sqrtPriceLimitX96: 0
         });
 
-        (uint256 amountOut,,,) = IKodiakQuoter(kodiakQuoter).quoteExactInputSingle(params);
+        (amountOut,,,) = IKodiakQuoter(kodiakQuoter).quoteExactInputSingle(params);
     }
 
     /// ADD LIQUIDITY
@@ -167,25 +167,30 @@ contract KodiakIslandGateway is IKodiakIslandGateway {
 
     /// REMOVE LIQUIDITY
 
-    /// @notice Remove liquidity from an island with an imbalanced ratio. The withdrawal is roughly equivalent to token0proportion * lpAmount
-    ///         being withdrawn as token0, and the rest as token1, while minimizing the amount of tokens swapped.
-    function removeLiquidityImbalanced(
+    function removeLiquiditySingle(
         address island,
         uint256 lpAmount,
-        uint256 token0proportion,
-        uint256[2] memory minAmounts,
+        address tokenOut,
+        uint256 minAmountOut,
         address receiver
-    ) external returns (uint256 amount0, uint256 amount1) {
+    ) external returns (uint256 amountOut) {
         IERC20(island).safeTransferFrom(msg.sender, address(this), lpAmount);
 
-        (address token0, address token1) = _getIslandTokens(island);
-        (amount0, amount1) = _removeLiquidity(island, lpAmount);
+        (uint256 amount0, uint256 amount1) = _removeLiquidity(island, lpAmount);
 
-        (amount0, amount1) = _adjustToProportion(island, token0, token1, amount0, amount1, token0proportion, false);
+        (address token0, address token1) = _getIslandTokens(island);
+
+        bool is0to1 = tokenOut == token1;
+
+        _swapExtra(island, token0, token1, is0to1 ? amount0 : amount1, false, is0to1);
 
         (amount0, amount1) = _sweepTokens(token0, token1, receiver);
 
-        if (amount0 < minAmounts[0] || amount1 < minAmounts[1]) revert("KodiakIslandGateway: Insufficient amount");
+        amountOut = is0to1 ? amount1 : amount0;
+
+        if (amountOut < minAmountOut) revert("KodiakIslandGateway: Insufficient amount");
+
+        return amountOut;
     }
 
     /// @dev Internal function to remove balanced liquidity from an island.
@@ -196,9 +201,9 @@ contract KodiakIslandGateway is IKodiakIslandGateway {
     }
 
     /// @notice Estimate the amount of tokens that will be received when removing liquidity from an island with an imbalanced ratio.
-    function estimateRemoveLiquidityImbalanced(address island, uint256 lpAmount, uint256 token0proportion)
+    function estimateRemoveLiquiditySingle(address island, uint256 lpAmount, address tokenOut)
         external
-        returns (uint256 amount0, uint256 amount1)
+        returns (uint256 amountOut)
     {
         (address token0, address token1) = _getIslandTokens(island);
 
@@ -206,10 +211,14 @@ contract KodiakIslandGateway is IKodiakIslandGateway {
 
         uint256 totalSupply = IERC20(island).totalSupply();
 
-        amount0 = lpAmount.mulDiv(balance0, totalSupply);
-        amount1 = lpAmount.mulDiv(balance1, totalSupply);
+        uint256 amount0 = lpAmount.mulDiv(balance0, totalSupply);
+        uint256 amount1 = lpAmount.mulDiv(balance1, totalSupply);
 
-        (amount0, amount1) = _adjustToProportion(island, token0, token1, amount0, amount1, token0proportion, true);
+        bool is0to1 = tokenOut == token1;
+
+        amountOut = _swapExtra(island, token0, token1, is0to1 ? amount0 : amount1, true, is0to1);
+
+        amountOut += is0to1 ? amount1 : amount0;
     }
 
     /// HELPERS
@@ -314,49 +323,11 @@ contract KodiakIslandGateway is IKodiakIslandGateway {
         }
     }
 
-    /// @dev Internal function to swap or get a quote to adjust the amounts to a given proportion.
-    /// @dev This results in simulating a withdrawal where token0proportion of the LP tokens are withdrawn only as token0,
-    ///      and the rest as token1, while minimizing the amount of tokens swapped.
-    function _adjustToProportion(
-        address island,
-        address token0,
-        address token1,
-        uint256 amount0,
-        uint256 amount1,
-        uint256 token0proportion,
-        bool isQuote
-    ) internal returns (uint256, uint256) {
-        uint256 amountIn = 0;
-        bool is0to1;
-
-        if (token0proportion < BALANCED_PROPORTION) {
-            amountIn = amount0 * (BALANCED_PROPORTION - token0proportion) / BALANCED_PROPORTION;
-            is0to1 = true;
-        } else {
-            amountIn = amount1 * (token0proportion - BALANCED_PROPORTION) / BALANCED_PROPORTION;
-            is0to1 = false;
-        }
-
-        if (amountIn > 0) {
-            uint256 amountOut = _swapExtra(island, token0, token1, amountIn, isQuote, is0to1);
-
-            if (is0to1) {
-                amount0 = amount0 - amountIn;
-                amount1 = amount1 + amountOut;
-            } else {
-                amount0 = amount0 + amountOut;
-                amount1 = amount1 - amountIn;
-            }
-        }
-
-        return (amount0, amount1);
-    }
-
     /// @dev Internal function to compute the amount of tokens to swap in order to balance amounts while adding liquidity.
     /// @dev This returns a solution to the equation (x - dx) / (y + dx * p) = r.
     function _getSwappedAmount(uint256 amount0, uint256 amount1, Ratios memory ratios)
         internal
-        view
+        pure
         returns (uint256 amountIn)
     {
         if (ratios.swapAll) return ratios.is0to1 ? amount0 : amount1;

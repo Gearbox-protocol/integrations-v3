@@ -60,20 +60,17 @@ interface IKodiakIslandGatewayAdapter is IAdapter, IKodiakIslandGatewayAdapterEx
         Ratios memory ratios
     ) external returns (bool);
 
-    function removeLiquidityImbalanced(
+    function removeLiquiditySingle(
         address island,
         uint256 lpAmount,
-        uint256 token0proportion,
-        uint256[2] memory minAmounts,
+        address tokenOut,
+        uint256 minAmountOut,
         address receiver
     ) external returns (bool);
 
-    function removeLiquidityImbalancedDiff(
-        address island,
-        uint256 leftoverLPAmount,
-        uint256 token0proportion,
-        uint256[2] memory minRatesRAY
-    ) external returns (bool);
+    function removeLiquiditySingleDiff(address island, uint256 leftoverAmount, address tokenOut, uint256 minRateRAY)
+        external
+        returns (bool);
 
     function allowedIslands() external view returns (KodiakIslandStatus[] memory);
 
