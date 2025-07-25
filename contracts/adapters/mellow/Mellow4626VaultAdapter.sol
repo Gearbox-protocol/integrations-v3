@@ -12,6 +12,8 @@ import {IERC4626Adapter} from "../../interfaces/erc4626/IERC4626Adapter.sol";
 import {IMellowSimpleLRTVault} from "../../integrations/mellow/IMellowSimpleLRTVault.sol";
 import {IMellow4626VaultAdapter} from "../../interfaces/mellow/IMellow4626VaultAdapter.sol";
 
+import {NotImplementedException} from "@gearbox-protocol/core-v3/contracts/interfaces/IExceptions.sol";
+
 /// @title Mellow ERC4626 Vault adapter
 /// @notice Implements logic allowing CAs to interact with Mellow ERC4626 vaults, accounting for delayed withdrawals
 contract Mellow4626VaultAdapter is ERC4626Adapter, IMellow4626VaultAdapter {
@@ -25,7 +27,7 @@ contract Mellow4626VaultAdapter is ERC4626Adapter, IMellow4626VaultAdapter {
     /// @param _vault ERC4626 vault address
     /// @param _stakedPhantomToken Staked phantom token address
     constructor(address _creditManager, address _vault, address _stakedPhantomToken)
-        ERC4626Adapter(_creditManager, _vault)
+        ERC4626Adapter(_creditManager, _vault, address(0))
     {
         stakedPhantomToken = _stakedPhantomToken;
         _getMaskOrRevert(stakedPhantomToken);
@@ -69,6 +71,12 @@ contract Mellow4626VaultAdapter is ERC4626Adapter, IMellow4626VaultAdapter {
         _execute(abi.encodeCall(IMellowSimpleLRTVault.claim, (creditAccount, creditAccount, amount)));
         uint256 assetBalanceAfter = IERC20(asset).balanceOf(creditAccount);
         if (assetBalanceAfter - assetBalanceBefore < amount) revert InsufficientClaimedException();
+    }
+
+    /// @dev It's not possible to deposit from underlying (the vault's asset) into the withdrawal phantom token,
+    ///      hence the function is not implemented.
+    function depositPhantomToken(address, uint256) external view override creditFacadeOnly returns (bool) {
+        revert NotImplementedException();
     }
 
     function serialize()

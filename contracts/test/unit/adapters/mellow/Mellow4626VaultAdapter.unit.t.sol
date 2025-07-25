@@ -6,8 +6,8 @@ pragma solidity ^0.8.23;
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {Mellow4626VaultAdapter} from "../../../../adapters/mellow/Mellow4626VaultAdapter.sol";
 import {IMellowSimpleLRTVault} from "../../../../integrations/mellow/IMellowSimpleLRTVault.sol";
-import {IMellow4626VaultAdapter} from "../../../../interfaces/mellow/IMellow4626VaultAdapter.sol";
 import {IERC4626} from "@openzeppelin/contracts/interfaces/IERC4626.sol";
+import {IPhantomTokenAdapter} from "../../../../interfaces/IPhantomTokenAdapter.sol";
 import {AdapterUnitTestHelper} from "../AdapterUnitTestHelper.sol";
 
 /// @title Mellow4626Vault adapter unit test
@@ -77,7 +77,7 @@ contract Mellow4626VaultAdapterUnitTest is AdapterUnitTestHelper {
     /// @notice U:[MV-4]: `withdrawPhantomToken` works as expected
     function test_U_MV_04_withdrawPhantomToken_works_as_expected() public {
         // Test with incorrect token
-        vm.expectRevert(IMellow4626VaultAdapter.IncorrectStakedPhantomTokenException.selector);
+        vm.expectRevert(IPhantomTokenAdapter.IncorrectStakedPhantomTokenException.selector);
         vm.prank(creditFacade);
         adapter.withdrawPhantomToken(address(0), 1000);
 

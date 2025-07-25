@@ -16,8 +16,11 @@ contract ERC4626Adapter is AbstractAdapter, IERC4626Adapter {
     /// @notice Address of the underlying asset of the vault
     address public immutable override asset;
 
+    /// @notice Address of the vault
+    address public immutable override vault;
+
     function version() external pure virtual override returns (uint256) {
-        return 3_11;
+        return 3_12;
     }
 
     function contractType() external pure virtual override returns (bytes32) {
@@ -27,9 +30,11 @@ contract ERC4626Adapter is AbstractAdapter, IERC4626Adapter {
     /// @notice Constructor
     /// @param _creditManager Credit manager address
     /// @param _vault ERC4626 vault address
-    constructor(address _creditManager, address _vault)
-        AbstractAdapter(_creditManager, _vault) // U:[TV-1]
+    /// @param _gateway An optional gateway address. If provided, the adapter will use it as target instead of the vault address.
+    constructor(address _creditManager, address _vault, address _gateway)
+        AbstractAdapter(_creditManager, _gateway == address(0) ? _vault : _gateway) // U:[TV-1]
     {
+        vault = _vault;
         asset = IERC4626(_vault).asset(); // U:[TV-1]
 
         // We verify that the vault asset and shares are valid collaterals
@@ -135,7 +140,7 @@ contract ERC4626Adapter is AbstractAdapter, IERC4626Adapter {
         returns (bool)
     {
         address creditAccount = _creditAccount(); // U:[TV-8]
-        uint256 balance = IERC20(targetContract).balanceOf(creditAccount); // U:[TV-8]
+        uint256 balance = IERC20(vault).balanceOf(creditAccount); // U:[TV-8]
         if (balance <= leftoverAmount) return false;
         unchecked {
             balance -= leftoverAmount; // U:[TV-8]
@@ -151,6 +156,6 @@ contract ERC4626Adapter is AbstractAdapter, IERC4626Adapter {
 
     /// @notice Serialized adapter parameters
     function serialize() external view virtual returns (bytes memory serializedData) {
-        serializedData = abi.encode(creditManager, targetContract, asset);
+        serializedData = abi.encode(creditManager, targetContract, vault, asset);
     }
 }

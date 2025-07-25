@@ -3,13 +3,10 @@
 // (c) Gearbox Foundation, 2024.
 pragma solidity ^0.8.23;
 
-import {IAdapter} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IAdapter.sol";
-import {IPhantomTokenWithdrawer} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IPhantomToken.sol";
+import {IPhantomTokenAdapter} from "../IPhantomTokenAdapter.sol";
 
 /// @title Convex V1 BaseRewardPool adapter interface
-interface IConvexV1BaseRewardPoolAdapter is IAdapter, IPhantomTokenWithdrawer {
-    error IncorrectStakedPhantomTokenException();
-
+interface IConvexV1BaseRewardPoolAdapter is IPhantomTokenAdapter {
     function curveLPtoken() external view returns (address);
 
     function stakingToken() external view returns (address);

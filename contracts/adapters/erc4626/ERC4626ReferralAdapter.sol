@@ -15,7 +15,9 @@ contract ERC4626ReferralAdapter is ERC4626Adapter {
     /// @param _creditManager Credit manager address
     /// @param _vault ERC4626 vault address
     /// @param _referral Referral code
-    constructor(address _creditManager, address _vault, uint16 _referral) ERC4626Adapter(_creditManager, _vault) {
+    constructor(address _creditManager, address _vault, uint16 _referral)
+        ERC4626Adapter(_creditManager, _vault, address(0))
+    {
         referral = _referral;
     }
 

@@ -20,7 +20,7 @@ contract ConvexV1BaseRewardPoolAdapter is AbstractAdapter, IConvexV1BaseRewardPo
     using BitMask for uint256;
 
     bytes32 public constant override contractType = "ADAPTER::CVX_V1_BASE_REWARD_POOL";
-    uint256 public constant override version = 3_10;
+    uint256 public constant override version = 3_11;
 
     /// @notice Address of a Curve LP token deposited into the Convex pool
     address public immutable override curveLPtoken;
@@ -157,6 +157,13 @@ contract ConvexV1BaseRewardPoolAdapter is AbstractAdapter, IConvexV1BaseRewardPo
                 _executeSwapSafeApprove(stakingToken, abi.encodeCall(IBaseRewardPool.stake, (balance - leftoverAmount))); // U:[CVX1R-5]
             }
         }
+        return false;
+    }
+
+    /// @notice Deposits into a phantom token
+    function depositPhantomToken(address token, uint256 amount) external override creditFacadeOnly returns (bool) {
+        if (token != stakedPhantomToken) revert IncorrectStakedPhantomTokenException();
+        _executeSwapSafeApprove(stakingToken, abi.encodeCall(IBaseRewardPool.stake, (amount)));
         return false;
     }
 

@@ -18,26 +18,35 @@ contract ERC4626AdapterUnitTest is AdapterUnitTestHelper {
 
     address asset;
     address vault;
+    address gateway;
 
     function setUp() public {
         _setUp();
 
         asset = tokens[0];
         vault = tokens[1];
+        gateway = tokens[2];
 
         vm.mockCall(vault, abi.encodeCall(IERC4626.asset, ()), abi.encode(asset));
 
-        adapter = new ERC4626Adapter(address(creditManager), vault);
+        adapter = new ERC4626Adapter(address(creditManager), vault, address(0));
     }
 
     /// @notice U:[TV-1]: Constructor works as expected
     function test_U_TV_01_constructor_works_as_expected() public {
         _readsTokenMask(asset);
         _readsTokenMask(vault);
-        adapter = new ERC4626Adapter(address(creditManager), vault);
+        adapter = new ERC4626Adapter(address(creditManager), vault, address(0));
 
         assertEq(adapter.creditManager(), address(creditManager), "Incorrect creditManager");
         assertEq(adapter.targetContract(), vault, "Incorrect targetContract");
+        assertEq(adapter.vault(), vault, "Incorrect vault");
+        assertEq(adapter.asset(), asset, "Incorrect asset");
+
+        adapter = new ERC4626Adapter(address(creditManager), vault, gateway);
+        assertEq(adapter.creditManager(), address(creditManager), "Incorrect creditManager");
+        assertEq(adapter.targetContract(), gateway, "Incorrect targetContract");
+        assertEq(adapter.vault(), vault, "Incorrect vault");
         assertEq(adapter.asset(), asset, "Incorrect asset");
     }
 

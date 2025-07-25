@@ -15,7 +15,7 @@ import {IInfraredVaultAdapter} from "../../interfaces/infrared/IInfraredVaultAda
 /// @notice Implements logic for interacting with Infrared Vault contracts
 contract InfraredVaultAdapter is AbstractAdapter, IInfraredVaultAdapter {
     bytes32 public constant override contractType = "ADAPTER::INFRARED_VAULT";
-    uint256 public constant override version = 3_10;
+    uint256 public constant override version = 3_11;
 
     /// @notice Address of the staking token
     address public immutable override stakingToken;
@@ -65,6 +65,13 @@ contract InfraredVaultAdapter is AbstractAdapter, IInfraredVaultAdapter {
                 _executeSwapSafeApprove(stakingToken, abi.encodeCall(IInfraredVault.stake, (balance - leftoverAmount)));
             }
         }
+        return false;
+    }
+
+    /// @notice Deposits into a phantom token
+    function depositPhantomToken(address token, uint256 amount) external override creditFacadeOnly returns (bool) {
+        if (token != stakedPhantomToken) revert IncorrectStakedPhantomTokenException();
+        _executeSwapSafeApprove(stakingToken, abi.encodeCall(IInfraredVault.stake, (amount)));
         return false;
     }
 

@@ -19,7 +19,7 @@ contract StakingRewardsAdapter is AbstractAdapter, IStakingRewardsAdapter {
     using BitMask for uint256;
 
     bytes32 public constant override contractType = "ADAPTER::STAKING_REWARDS";
-    uint256 public constant override version = 3_11;
+    uint256 public constant override version = 3_12;
 
     /// @notice Address of the staking token
     address public immutable override stakingToken;
@@ -86,6 +86,13 @@ contract StakingRewardsAdapter is AbstractAdapter, IStakingRewardsAdapter {
         } else {
             _executeSwapSafeApprove(stakingToken, abi.encodeCall(IStakingRewardsReferral.stake, (amount, referral)));
         }
+    }
+
+    /// @notice Deposits into a phantom token
+    function depositPhantomToken(address token, uint256 amount) external override creditFacadeOnly returns (bool) {
+        if (token != stakedPhantomToken) revert IncorrectStakedPhantomTokenException();
+        _stake(amount);
+        return false;
     }
 
     // ----- //
