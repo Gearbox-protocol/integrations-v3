@@ -15,3 +15,7 @@
 [submodule "lib/@1inch/farming"]
 	path = lib/@1inch/farming
 	url = https://github.com/1inch/farming
+[submodule "lib/@gearbox-protocol/permissionless"]
+	path = lib/@gearbox-protocol/permissionless
+	url = https://github.com/Gearbox-protocol/permissionless
+	branch = attach-base
