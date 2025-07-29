@@ -195,6 +195,7 @@ contract MellowClaimerAdapter is AbstractAdapter, IMellowClaimerAdapter {
             } else {
                 _allowedMultiVaults.remove(multiVaults[i].multiVault);
             }
+            emit SetMultiVaultStatus(multiVaults[i].multiVault, multiVaults[i].allowed);
         }
     }
 }

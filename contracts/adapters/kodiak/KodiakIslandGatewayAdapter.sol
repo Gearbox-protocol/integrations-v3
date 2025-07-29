@@ -346,27 +346,17 @@ contract KodiakIslandGatewayAdapter is AbstractAdapter, IKodiakIslandGatewayAdap
         uint256 len = islands.length;
         for (uint256 i; i < len; ++i) {
             (address token0, address token1) = _getIslandTokens(islands[i].island);
-            if (islands[i].status == IslandStatus.ALLOWED) {
+            if (islands[i].status != IslandStatus.NOT_ALLOWED) {
                 _getMaskOrRevert(token0);
                 _getMaskOrRevert(token1);
                 _getMaskOrRevert(islands[i].island);
                 _allowedIslands.add(islands[i].island);
-                _islandStatus[islands[i].island] = IslandStatus.ALLOWED;
-            } else if (islands[i].status == IslandStatus.SWAP_AND_EXIT_ONLY) {
-                _getMaskOrRevert(token0);
-                _getMaskOrRevert(token1);
-                _getMaskOrRevert(islands[i].island);
-                _allowedIslands.add(islands[i].island);
-                _islandStatus[islands[i].island] = IslandStatus.EXIT_ONLY;
-            } else if (islands[i].status == IslandStatus.SWAP_AND_EXIT_ONLY) {
-                _getMaskOrRevert(token0);
-                _getMaskOrRevert(token1);
-                _allowedIslands.add(islands[i].island);
-                _islandStatus[islands[i].island] = IslandStatus.SWAP_AND_EXIT_ONLY;
-            } else if (islands[i].status == IslandStatus.NOT_ALLOWED) {
+                _islandStatus[islands[i].island] = islands[i].status;
+            } else {
                 _allowedIslands.remove(islands[i].island);
                 _islandStatus[islands[i].island] = IslandStatus.NOT_ALLOWED;
             }
+            emit SetIslandStatus(islands[i].island, islands[i].status);
         }
     }
 }

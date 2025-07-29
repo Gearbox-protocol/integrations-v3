@@ -11,7 +11,12 @@ struct Ratios {
     bool is0to1;
 }
 
-interface IKodiakIslandGateway {
+interface IKodiakIslandGatewayErrors {
+    error InvalidTokenInException();
+    error InsufficientAmountOutException();
+}
+
+interface IKodiakIslandGateway is IKodiakIslandGatewayErrors {
     function swap(address island, address tokenIn, uint256 amountIn, uint256 amountOutMin)
         external
         returns (uint256 amountOut);

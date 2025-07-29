@@ -11,6 +11,10 @@ struct MellowMultiVaultStatus {
     bool allowed;
 }
 
+interface IMellowClaimerAdapterEvents {
+    event SetMultiVaultStatus(address indexed multiVault, bool allowed);
+}
+
 interface IMellowClaimerAdapterExceptions {
     /// @notice Error thrown when the actually claimed amount is less than the requested amount
     error InsufficientClaimedException();
@@ -27,7 +31,11 @@ interface IMellowClaimerAdapterExceptions {
 
 /// @title Mellow ERC4626 Vault adapter interface
 /// @notice Interface for the adapter to interact with Mellow's ERC4626 vaults
-interface IMellowClaimerAdapter is IPhantomTokenAdapter, IMellowClaimerAdapterExceptions {
+interface IMellowClaimerAdapter is
+    IPhantomTokenAdapter,
+    IMellowClaimerAdapterExceptions,
+    IMellowClaimerAdapterEvents
+{
     function multiAccept(address multiVault, uint256[] calldata subvaultIndices, uint256[][] calldata indices)
         external
         returns (bool);

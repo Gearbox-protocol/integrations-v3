@@ -48,7 +48,7 @@ contract KodiakIslandGateway is IKodiakIslandGateway {
     {
         (address token0, address token1) = _getIslandTokens(island);
 
-        if (tokenIn != token0 && tokenIn != token1) revert("KodiakIslandGateway: Invalid tokenIn");
+        if (tokenIn != token0 && tokenIn != token1) revert InvalidTokenInException();
 
         uint24 fee = IKodiakPool(IKodiakIsland(island).pool()).fee();
 
@@ -70,7 +70,7 @@ contract KodiakIslandGateway is IKodiakIslandGateway {
 
     function estimateSwap(address island, address tokenIn, uint256 amountIn) external returns (uint256 amountOut) {
         (address token0, address token1) = _getIslandTokens(island);
-        if (tokenIn != token0 && tokenIn != token1) revert("KodiakIslandGateway: Invalid tokenIn");
+        if (tokenIn != token0 && tokenIn != token1) revert InvalidTokenInException();
 
         uint24 fee = IKodiakPool(IKodiakIsland(island).pool()).fee();
 
@@ -188,7 +188,7 @@ contract KodiakIslandGateway is IKodiakIslandGateway {
 
         amountOut = is0to1 ? amount1 : amount0;
 
-        if (amountOut < minAmountOut) revert("KodiakIslandGateway: Insufficient amount");
+        if (amountOut < minAmountOut) revert InsufficientAmountOutException();
 
         return amountOut;
     }
@@ -261,8 +261,10 @@ contract KodiakIslandGateway is IKodiakIslandGateway {
 
     /// @dev Internal function to compute the deposit and price ratios required to balance amounts while adding liquidity.
     /// @return ratios A struct with three values:
-    ///         - depositRatio: The ratio of the underlying balances of token0 and token1, which a balanced deposit must satisfy.
     ///         - priceRatio: The exchange price between token0 and token1, which is determined by querying a swap with one unit of the token.
+    ///         - balance0: The balance of token0 in the island.
+    ///         - balance1: The balance of token1 in the island.
+    ///         - swapAll: Whether to swap all of the input amount of the token that needs to be swapped.
     ///         - is0to1: Whether token0 needs to be swapped to token1, or vice versa.
     function _getRatios(address island, address token0, address token1, uint256 input0, uint256 input1)
         internal
@@ -378,9 +380,9 @@ contract KodiakIslandGateway is IKodiakIslandGateway {
         uint256 totalSupply = IERC20(island).totalSupply();
 
         if (balance0 == 0) {
-            lpAmount == depositAmount1 * totalSupply / balance1;
+            lpAmount = depositAmount1 * totalSupply / balance1;
         } else if (balance1 == 0) {
-            lpAmount == depositAmount0 * totalSupply / balance0;
+            lpAmount = depositAmount0 * totalSupply / balance0;
         } else {
             uint256 amount0Mint = depositAmount0 * totalSupply / balance0;
             uint256 amount1Mint = depositAmount1 * totalSupply / balance1;

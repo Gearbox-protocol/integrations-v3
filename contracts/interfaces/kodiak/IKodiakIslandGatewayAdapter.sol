@@ -17,11 +17,15 @@ struct KodiakIslandStatus {
     IslandStatus status;
 }
 
+interface IKodiakIslandGatewayEvents {
+    event SetIslandStatus(address indexed island, IslandStatus status);
+}
+
 interface IKodiakIslandGatewayAdapterExceptions {
     error IslandNotAllowedException(address island);
 }
 
-interface IKodiakIslandGatewayAdapter is IAdapter, IKodiakIslandGatewayAdapterExceptions {
+interface IKodiakIslandGatewayAdapter is IAdapter, IKodiakIslandGatewayAdapterExceptions, IKodiakIslandGatewayEvents {
     function swap(address island, address tokenIn, uint256 amountIn, uint256 amountOutMin) external returns (bool);
 
     function swapDiff(address island, address tokenIn, uint256 leftoverAmount, uint256 minRateRAY)
