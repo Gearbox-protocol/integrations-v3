@@ -49,6 +49,6 @@ contract Upload_2025_08_02_Integrations is UploadBytecode {
         bytecodes[5].version = 3_10;
         bytecodes[5].initCode = type(KodiakIslandPriceFeed).creationCode;
         bytecodes[5].source =
-            "https://github.com/Gearbox-protocol/oracles-v3/blob/4a78b197659ca75de05c8be6c7d87bd54a64504a/contracts/oracles/kodiak/KodiakIslandPriceFeed.sol";
+            "https://github.com/Gearbox-protocol/oracles-v3/blob/4220625c6f46fdb816f3eb52396d8d62c2b96afe/contracts/oracles/kodiak/KodiakIslandPriceFeed.sol";
     }
 }
