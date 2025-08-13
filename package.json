@@ -31,7 +31,7 @@
   "license": "BUSL-1.1",
   "scripts": {
     "clean": "forge clean && rm -rf ./dist ./src/**/*.generated.ts",
-    "build": "forge build && wagmi generate && tsup",
+    "build": "forge build --optimize false && wagmi generate && tsup",
     "prepare": "husky install",
     "prettier": "forge fmt",
     "prettier:ci": "forge fmt",
