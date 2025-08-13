@@ -93,7 +93,7 @@ function listSolFiles(): string[] {
 }
 
 export default defineConfig({
-  out: "src/abi.generated.ts",
+  out: "src/generated/index.ts",
   plugins: [
     foundry({
       project: ".",

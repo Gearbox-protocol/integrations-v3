@@ -14,24 +14,27 @@
     "contracts",
     "dist"
   ],
+  "main": "./dist/cjs/index.js",
+  "module": "./dist/esm/index.js",
+  "types": "./dist/types/index.d.ts",
+  "typings": "./dist/types/index.d.ts",
   "exports": {
     "./package.json": "./package.json",
     ".": {
-      "import": {
-        "types": "./dist/esm/index.d.mts",
-        "default": "./dist/esm/index.mjs"
-      },
-      "require": {
-        "types": "./dist/cjs/index.d.ts",
-        "default": "./dist/cjs/index.cjs"
-      }
+      "types": "./dist/types/index.d.ts",
+      "import": "./dist/esm/index.js",
+      "default": "./dist/cjs/index.js"
     }
   },
   "sideEffects": false,
   "license": "BUSL-1.1",
   "scripts": {
     "clean": "forge clean && rm -rf ./dist ./src/**/*.generated.ts",
-    "build": "forge build --optimize false && wagmi generate && tsup",
+    "build": "forge build --optimize false && wagmi generate && yarn build:ts",
+    "build:types": "tsc -p tsconfig.build.json --emitDeclarationOnly --declaration --outDir dist/types",
+    "build:cjs": "tsc -p tsconfig.build.json --module commonjs --outDir dist/cjs",
+    "build:esm": "tsc -p tsconfig.build.json --module esnext --outDir dist/esm",
+    "build:ts": "yarn build:types && yarn build:cjs && yarn build:esm",
     "prepare": "husky install",
     "prettier": "forge fmt",
     "prettier:ci": "forge fmt",
@@ -53,7 +56,6 @@
     "husky": "^9.1.7",
     "lint-staged": "^16.1.5",
     "prettier": "^3.6.2",
-    "tsup": "^8.5.0",
     "typescript": "^5.9.2"
   },
   "prettier": "@gearbox-protocol/prettier-config",

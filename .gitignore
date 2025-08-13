@@ -6,6 +6,7 @@ cache/
 out/
 dist/
 **/*.generated.*
+**/generated/
 
 # Ignores development broadcast logs
 !/broadcast
