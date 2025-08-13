@@ -12,36 +12,49 @@
   },
   "files": [
     "contracts",
-    "config_scripts"
+    "dist"
   ],
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "import": {
+        "types": "./dist/esm/index.d.mts",
+        "default": "./dist/esm/index.mjs"
+      },
+      "require": {
+        "types": "./dist/cjs/index.d.ts",
+        "default": "./dist/cjs/index.cjs"
+      }
+    }
+  },
+  "sideEffects": false,
   "license": "BUSL-1.1",
   "scripts": {
+    "clean": "forge clean && rm -rf ./dist ./src/**/*.generated.ts",
+    "build": "forge build && wagmi generate && tsup",
     "prepare": "husky install",
     "prettier": "forge fmt",
     "prettier:ci": "forge fmt",
     "lint": "eslint \"**/*.ts\" --fix",
     "lint:ci": "eslint \"**/*.ts\"",
-    "typecheck:ci": "tsc --noEmit",
-    "build": "tsc --p tsconfig.build.json"
+    "typecheck:ci": "tsc --noEmit"
   },
   "dependencies": {},
   "devDependencies": {
-    "@commitlint/cli": "^17.1.2",
-    "@commitlint/config-conventional": "^17.1.0",
-    "@gearbox-protocol/eslint-config": "^1.6.1",
-    "@gearbox-protocol/prettier-config": "^1.5.0",
-    "@gearbox-protocol/sdk-gov": "^2.30.0",
+    "@commitlint/cli": "^19.8.1",
+    "@commitlint/config-conventional": "^19.8.1",
+    "@gearbox-protocol/eslint-config": "^2.0.0-next.2",
+    "@gearbox-protocol/prettier-config": "^2.1.0",
+    "@gearbox-protocol/sdk-gov": "^2.37.0",
     "@redstone-finance/evm-connector": "0.2.5",
-    "@typechain/ethers-v5": "^10.1.0",
-    "dotenv": "^16.0.3",
-    "eslint": "^8.25.0",
-    "ethers": "5.4.4",
-    "husky": "^8.0.1",
-    "lint-staged": "^13.0.3",
-    "prettier": "^2.7.1",
-    "ts-node": "^10.9.1",
-    "typechain": "^8.1.0",
-    "typescript": "^4.8.2"
+    "@types/node": "^24.2.1",
+    "@wagmi/cli": "^2.3.2",
+    "eslint": "^8.57.1",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.1.5",
+    "prettier": "^3.6.2",
+    "tsup": "^8.5.0",
+    "typescript": "^5.9.2"
   },
   "prettier": "@gearbox-protocol/prettier-config",
   "lint-staged": {
@@ -51,5 +64,6 @@
     ],
     "*.sol": "forge fmt",
     "*.{json,md}": "prettier --write"
-  }
+  },
+  "packageManager": "yarn@1.22.22+sha1.ac34549e6aa8e7ead463a7407e1c7390f61a6610"
 }

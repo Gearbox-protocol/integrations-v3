@@ -4,6 +4,8 @@ node_modules/
 # Compiler files
 cache/
 out/
+dist/
+**/*.generated.*
 
 # Ignores development broadcast logs
 !/broadcast
