@@ -11,7 +11,7 @@ interface JsonFile {
 
 const ARTIFACTS_DIR = "out";
 const CONTRACTS_DIR = "contracts";
-const CONTRACTS_SUBDIRS = ["adapters", "helpers"];
+const CONTRACTS_SUBDIRS = ["adapters", "helpers", "interfaces"];
 
 function filterArtifacts(): string[] {
   const result: string[] = [];
@@ -99,6 +99,11 @@ export default defineConfig({
       project: ".",
       artifacts: ARTIFACTS_DIR,
       include: filterArtifacts(),
+      exclude: [
+        "**/IZapper.sol/**",
+        "**/IERC20ZapperDeposits.sol/**",
+        "**/IETHZapperDeposits.sol/**",
+      ],
       forge: {
         clean: false,
         build: false,
