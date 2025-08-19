@@ -27,12 +27,14 @@ contract InfinifiUnwindingPhantomToken is PhantomERC20, Ownable, IPhantomToken {
     /// @param _infinifiUnwindingGateway The Infinifi Unwinding Gateway where the pending assets are tracked
     constructor(address _infinifiUnwindingGateway)
         PhantomERC20(
-            IInfinifiUnwindingGateway(infinifiUnwindingGateway).iUSD(),
+            IInfinifiUnwindingGateway(_infinifiUnwindingGateway).iUSD(),
             "Infinifi Unwinding iUSD",
             "wdiUSD",
-            IERC20Metadata(IInfinifiUnwindingGateway(infinifiUnwindingGateway).iUSD()).decimals()
+            IERC20Metadata(IInfinifiUnwindingGateway(_infinifiUnwindingGateway).iUSD()).decimals()
         )
-    {}
+    {
+        infinifiUnwindingGateway = _infinifiUnwindingGateway;
+    }
 
     /// @notice Returns the amount of assets pending/claimable for withdrawal
     /// @param account The account for which the calculation is performed
