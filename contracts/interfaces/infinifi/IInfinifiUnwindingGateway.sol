@@ -33,6 +33,12 @@ interface IInfinifiUnwindingGatewayExceptions {
 interface IInfinifiUnwindingGateway is IVersion, IInfinifiUnwindingGatewayExceptions {
     function iUSD() external view returns (address);
 
+    function lockingController() external view returns (address);
+
+    function unwindingModule() external view returns (address);
+
+    function getUserUnwindingData(address user) external view returns (UserUnwindingData memory);
+
     function startUnwinding(uint256 shares, uint32 unwindingEpochs) external;
 
     function withdraw(uint256 unwindingTimestamp) external;

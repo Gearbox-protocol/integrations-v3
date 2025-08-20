@@ -34,7 +34,7 @@ contract InfinifiUnwindingGateway is IInfinifiUnwindingGateway {
 
     uint256 public lastUnwindingTimestamp;
 
-    mapping(address => UserUnwindingData) public userToUnwindingData;
+    mapping(address => UserUnwindingData) internal userToUnwindingData;
 
     constructor(address _infinifiGateway) {
         infinifiGateway = _infinifiGateway;
@@ -99,6 +99,10 @@ contract InfinifiUnwindingGateway is IInfinifiUnwindingGateway {
 
     function getPendingAssets(address user) public view returns (uint256) {
         return _getPendingAssets(userToUnwindingData[user]);
+    }
+
+    function getUserUnwindingData(address user) external view returns (UserUnwindingData memory) {
+        return userToUnwindingData[user];
     }
 
     function _getPendingAssets(UserUnwindingData memory userUnwindingData) internal view returns (uint256) {

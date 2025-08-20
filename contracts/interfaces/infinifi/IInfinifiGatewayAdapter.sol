@@ -31,6 +31,8 @@ interface IInfinifiGatewayAdapter is IAdapter, IInfinifiGatewayExceptions, IInfi
 
     function siusd() external view returns (address);
 
+    function lockedTokenToUnwindingEpoch(address lockedToken) external view returns (uint32);
+
     function mint(address to, uint256 amount) external returns (bool useSafePrices);
 
     function mintDiff(uint256 leftoverAmount) external returns (bool useSafePrices);
