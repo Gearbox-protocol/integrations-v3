@@ -60,12 +60,15 @@ contract InfinifiUnwindingGatewayAdapter is AbstractAdapter, IInfinifiUnwindingG
         _executeSwapSafeApprove(
             lockedToken, abi.encodeCall(IInfinifiUnwindingGateway.startUnwinding, (shares, unwindingEpochs))
         );
+
+        return true;
     }
 
     /// @notice Withdraws the assets that finished unwinding
     /// @param amount The amount of assets to withdraw
     function withdraw(uint256 amount) external override creditFacadeOnly returns (bool) {
         _execute(abi.encodeCall(IInfinifiUnwindingGateway.withdraw, (amount)));
+        return false;
     }
 
     /// @notice Withdraws phantom token for its underlying

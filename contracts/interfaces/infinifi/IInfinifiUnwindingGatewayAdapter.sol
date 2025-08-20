@@ -30,9 +30,9 @@ interface IInfinifiUnwindingGatewayAdapter is
 {
     function lockedTokenToUnwindingEpoch(address lockedToken) external view returns (uint32);
 
-    function startUnwinding(uint256 shares, uint32 unwindingEpochs) external;
+    function startUnwinding(uint256 shares, uint32 unwindingEpochs) external returns (bool);
 
-    function withdraw(uint256 amount) external;
+    function withdraw(uint256 amount) external returns (bool);
 
     function getAllowedLockedTokens() external view returns (address[] memory);
 
