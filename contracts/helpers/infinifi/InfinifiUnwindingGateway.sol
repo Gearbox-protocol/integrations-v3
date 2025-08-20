@@ -72,12 +72,10 @@ contract InfinifiUnwindingGateway is IInfinifiUnwindingGateway {
         if (block.timestamp < claimableTimestamp) revert UnwindingNotClaimableException();
 
         if (!userUnwindingData.isWithdrawn) {
-            address lockedToken =
-                IInfinifiLockingController(lockingController).shareToken(userUnwindingData.unwindingEpochs);
-            uint256 balanceBefore = IERC20(lockedToken).balanceOf(address(this));
+            uint256 balanceBefore = IERC20(iUSD).balanceOf(address(this));
             IInfinifiGateway(infinifiGateway).withdraw(userUnwindingData.unwindingTimestamp);
             userUnwindingData.isWithdrawn = true;
-            userUnwindingData.unclaimedAssets = IERC20(lockedToken).balanceOf(address(this)) - balanceBefore;
+            userUnwindingData.unclaimedAssets = IERC20(iUSD).balanceOf(address(this)) - balanceBefore;
         }
 
         uint256 pendingAssets = _getPendingAssets(userUnwindingData);
