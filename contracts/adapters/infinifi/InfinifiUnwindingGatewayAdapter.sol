@@ -50,7 +50,7 @@ contract InfinifiUnwindingGatewayAdapter is AbstractAdapter, IInfinifiUnwindingG
     /// @notice Starts unwinding a locked token position
     /// @param shares The amount of shares to unwinding
     /// @param unwindingEpochs The number of epochs to unwinding
-    function startUnwinding(uint256 shares, uint32 unwindingEpochs) external {
+    function startUnwinding(uint256 shares, uint32 unwindingEpochs) external override creditFacadeOnly returns (bool) {
         address lockedToken = unwindingEpochToLockedToken[unwindingEpochs];
 
         if (!_allowedLockedTokens.contains(lockedToken)) {
@@ -64,7 +64,7 @@ contract InfinifiUnwindingGatewayAdapter is AbstractAdapter, IInfinifiUnwindingG
 
     /// @notice Withdraws the assets that finished unwinding
     /// @param amount The amount of assets to withdraw
-    function withdraw(uint256 amount) external {
+    function withdraw(uint256 amount) external override creditFacadeOnly returns (bool) {
         _execute(abi.encodeCall(IInfinifiUnwindingGateway.withdraw, (amount)));
     }
 
