@@ -39,6 +39,9 @@ contract InfinifiGatewayAdapter is AbstractAdapter, IInfinifiGatewayAdapter {
     /// @notice The mapping of unwinding epochs to locked tokens
     mapping(uint32 => address) public unwindingEpochToLockedToken;
 
+    /// @notice The mapping of locked tokens to unwinding epochs
+    mapping(address => uint32) public lockedTokenToUnwindingEpoch;
+
     /// @notice Constructor
     /// @param _creditManager Credit manager address
     /// @param _infinifiGateway Infinifi Gateway address
@@ -235,8 +238,10 @@ contract InfinifiGatewayAdapter is AbstractAdapter, IInfinifiGatewayAdapter {
                 _allowedLockedTokens.add(lockedTokens[i].lockedToken);
                 _getMaskOrRevert(lockedTokens[i].lockedToken);
                 unwindingEpochToLockedToken[lockedTokens[i].unwindingEpochs] = lockedTokens[i].lockedToken;
+                lockedTokenToUnwindingEpoch[lockedTokens[i].lockedToken] = lockedTokens[i].unwindingEpochs;
             } else {
                 _allowedLockedTokens.remove(lockedTokens[i].lockedToken);
+                delete lockedTokenToUnwindingEpoch[lockedTokens[i].lockedToken];
             }
 
             emit SetLockedTokenStatus(

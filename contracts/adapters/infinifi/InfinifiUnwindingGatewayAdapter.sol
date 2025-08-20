@@ -36,6 +36,9 @@ contract InfinifiUnwindingGatewayAdapter is AbstractAdapter, IInfinifiUnwindingG
     /// @notice The mapping of unwinding epochs to locked tokens
     mapping(uint32 => address) public unwindingEpochToLockedToken;
 
+    /// @notice The mapping of locked tokens to unwinding epochs
+    mapping(address => uint32) public lockedTokenToUnwindingEpoch;
+
     address public immutable infinifiUnwindingPhantomToken;
 
     constructor(address _creditManager, address _infinifiUnwindingGateway, address _infinifiUnwindingPhantomToken)
@@ -88,7 +91,7 @@ contract InfinifiUnwindingGatewayAdapter is AbstractAdapter, IInfinifiUnwindingG
 
     function setLockedTokenBatchStatus(LockedTokenStatus[] calldata lockedTokens) external configuratorOnly {
         uint256 len = lockedTokens.length;
-        address lockingController = IInfinifiGateway(targetContract).getAddress("lockingController");
+        address lockingController = IInfinifiUnwindingGateway(targetContract).lockingController();
         for (uint256 i; i < len; ++i) {
             if (
                 IInfinifiLockingController(lockingController).shareToken(lockedTokens[i].unwindingEpochs)
@@ -101,8 +104,10 @@ contract InfinifiUnwindingGatewayAdapter is AbstractAdapter, IInfinifiUnwindingG
                 _allowedLockedTokens.add(lockedTokens[i].lockedToken);
                 _getMaskOrRevert(lockedTokens[i].lockedToken);
                 unwindingEpochToLockedToken[lockedTokens[i].unwindingEpochs] = lockedTokens[i].lockedToken;
+                lockedTokenToUnwindingEpoch[lockedTokens[i].lockedToken] = lockedTokens[i].unwindingEpochs;
             } else {
                 _allowedLockedTokens.remove(lockedTokens[i].lockedToken);
+                delete lockedTokenToUnwindingEpoch[lockedTokens[i].lockedToken];
             }
 
             emit SetLockedTokenStatus(

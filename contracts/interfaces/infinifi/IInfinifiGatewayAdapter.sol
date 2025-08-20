@@ -25,6 +25,12 @@ interface IInfinifiGatewayExceptions {
 
 /// @title Infinifi Gateway adapter interface
 interface IInfinifiGatewayAdapter is IAdapter, IInfinifiGatewayExceptions, IInfinifiGatewayEvents {
+    function usdc() external view returns (address);
+
+    function iusd() external view returns (address);
+
+    function siusd() external view returns (address);
+
     function mint(address to, uint256 amount) external returns (bool useSafePrices);
 
     function mintDiff(uint256 leftoverAmount) external returns (bool useSafePrices);
@@ -46,6 +52,8 @@ interface IInfinifiGatewayAdapter is IAdapter, IInfinifiGatewayExceptions, IInfi
     function redeemDiff(uint256 leftoverAmount, uint256 minRateRAY) external returns (bool useSafePrices);
 
     function claimRedemption() external returns (bool useSafePrices);
+
+    function getAllowedLockedTokens() external view returns (address[] memory);
 
     function setLockedTokenBatchStatus(LockedTokenStatus[] calldata lockedTokens) external;
 }

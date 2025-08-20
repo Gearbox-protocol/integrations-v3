@@ -31,12 +31,18 @@ interface IInfinifiGateway {
 
 interface IInfinifiMintController {
     function receiptToken() external view returns (address);
+
+    function assetToReceipt(uint256 _assetAmount) external view returns (uint256);
 }
 
 interface IInfinifiLockingController {
+    function getEnabledBuckets() external view returns (uint32[] memory);
+
     function shareToken(uint32 unwindingEpochs) external view returns (address);
 
     function unwindingModule() external view returns (address);
+
+    function exchangeRate(uint32 unwindingEpochs) external view returns (uint256);
 }
 
 interface IInfinifiUnwindingModule {
@@ -47,4 +53,10 @@ interface IInfinifiUnwindingModule {
 
 interface IInfinifiRedeemController {
     function receiptToAsset(uint256 amount) external view returns (uint256);
+
+    function accounting() external view returns (address);
+}
+
+interface IInfinifiAccounting {
+    function totalAssetsOf(address asset, uint256 farmType) external view returns (uint256);
 }

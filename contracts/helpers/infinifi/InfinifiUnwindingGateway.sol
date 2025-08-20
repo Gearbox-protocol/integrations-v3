@@ -36,8 +36,6 @@ contract InfinifiUnwindingGateway is IInfinifiUnwindingGateway {
 
     mapping(address => UserUnwindingData) public userToUnwindingData;
 
-    mapping(address => uint256) public userToTotalRedemptions;
-
     constructor(address _infinifiGateway) {
         infinifiGateway = _infinifiGateway;
         iUSD = IInfinifiGateway(infinifiGateway).getAddress("receiptToken");
