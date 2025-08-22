@@ -84,7 +84,7 @@ contract InfinifiUnwindingGateway is IInfinifiUnwindingGateway {
         userUnwindingData.unclaimedAssets -= amount;
         IERC20(iUSD).transfer(msg.sender, amount);
 
-        if (userUnwindingData.unclaimedAssets == 0) {
+        if (userUnwindingData.unclaimedAssets <= 1) {
             userUnwindingData.unwindingTimestamp = 0;
             userUnwindingData.shares = 0;
             userUnwindingData.unclaimedAssets = 0;
