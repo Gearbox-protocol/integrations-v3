@@ -39,7 +39,11 @@ interface ILidoWithdrawalQueue {
 
     function getLastCheckpointIndex() external view returns (uint256);
 
+    function getLastFinalizedRequestId() external view returns (uint256);
+
     function STETH() external view returns (address);
 
     function WSTETH() external view returns (address);
+
+    function unfinalizedStETH() external view returns (uint256);
 }
