@@ -179,6 +179,11 @@ contract LidoWithdrawalQueueGateway is ILidoWithdrawalQueueGateway {
         return totalAmount;
     }
 
+    /// @notice Returns the IDs of the active withdrawal requests for an account
+    function getRequestIds(address account) external view returns (uint256[] memory requestIds) {
+        return _getRequestIds(account);
+    }
+
     /// @dev Returns the IDs of finalized requests, as well as stETH and share amounts of unfinalized requests
     function _getRequestInfo(uint256[] memory requestIds)
         internal

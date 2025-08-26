@@ -19,6 +19,8 @@ interface ILidoWithdrawalQueueGateway is IVersion {
 
     function getClaimableWETH(address account) external view returns (uint256);
 
+    function getRequestIds(address account) external view returns (uint256[] memory requestIds);
+
     function requestWithdrawals(uint256[] calldata amounts) external returns (uint256[] memory requestIds);
 
     function requestWithdrawalsWstETH(uint256[] calldata amounts) external returns (uint256[] memory requestIds);
