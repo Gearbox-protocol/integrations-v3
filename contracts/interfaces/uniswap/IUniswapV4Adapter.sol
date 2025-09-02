@@ -15,7 +15,7 @@ struct UniswapV4PoolStatus {
 /// @title Uniswap V4 Router adapter interface
 interface IUniswapV4Adapter is IAdapter {
     event SetPoolKeyStatus(
-        address indexed token0, address indexed token1, uint24 fee, uint24 tickSpacing, address hooks, bool allowed
+        address indexed token0, address indexed token1, uint24 fee, int24 tickSpacing, address hooks, bool allowed
     );
 
     error InvalidPoolKeyException();
