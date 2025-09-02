@@ -20,6 +20,8 @@ interface IUniswapV4Adapter is IAdapter {
 
     error InvalidPoolKeyException();
 
+    function weth() external view returns (address);
+
     function swapExactInputSingle(
         PoolKey calldata poolKey,
         bool zeroForOne,

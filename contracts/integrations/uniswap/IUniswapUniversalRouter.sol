@@ -23,5 +23,6 @@ uint256 constant ACTION_SETTLE_ALL = 0x0c;
 uint256 constant ACTION_TAKE_ALL = 0x0f;
 
 interface IUniversalRouter {
+    function poolManager() external view returns (address);
     function execute(bytes calldata commands, bytes[] calldata inputs) external payable;
 }

@@ -34,11 +34,13 @@ contract UniswapV4Gateway is IUniswapV4Gateway, IVersion {
     uint256 public constant override version = 3_10;
 
     address public immutable universalRouter;
+    address public immutable poolManager;
     address public immutable permit2;
     address public immutable weth;
 
     constructor(address _universalRouter, address _permit2, address _weth) {
         universalRouter = _universalRouter;
+        poolManager = IUniversalRouter(_universalRouter).poolManager();
         permit2 = _permit2;
         weth = _weth;
     }
@@ -144,7 +146,7 @@ contract UniswapV4Gateway is IUniswapV4Gateway, IVersion {
     }
 
     receive() external payable {
-        if (msg.sender != universalRouter && msg.sender != weth) {
+        if (msg.sender != poolManager && msg.sender != weth) {
             revert UnexpectedETHTransferException();
         }
     }
