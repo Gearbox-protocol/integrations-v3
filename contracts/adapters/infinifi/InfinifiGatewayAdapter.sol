@@ -241,6 +241,7 @@ contract InfinifiGatewayAdapter is AbstractAdapter, IInfinifiGatewayAdapter {
                 lockedTokenToUnwindingEpoch[lockedTokens[i].lockedToken] = lockedTokens[i].unwindingEpochs;
             } else {
                 _allowedLockedTokens.remove(lockedTokens[i].lockedToken);
+                delete unwindingEpochToLockedToken[lockedTokens[i].unwindingEpochs];
                 delete lockedTokenToUnwindingEpoch[lockedTokens[i].lockedToken];
             }
 
