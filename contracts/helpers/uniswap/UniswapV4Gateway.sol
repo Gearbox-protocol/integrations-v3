@@ -24,9 +24,8 @@ interface IPermit2 {
 }
 
 /// @title UniswapV4Gateway
-/// @dev This is connector contract to allow Gearbox adapters to swap through the Balancer V3 Router.
-///      Since the router requires the caller to approve inputs in Permit2, we need an intermediate contract,
-///      which will be approved to spend the inputs and then call the Permit2 and the router.
+/// @dev This is connector contract to allow Gearbox adapters to swap through Uniswap V4 pools via Uniswap Universal Router.
+///      Since Uniswap V4 works with native ETH and requires approval in Permit2, we need an intermediate contract.
 contract UniswapV4Gateway is IUniswapV4Gateway, IVersion {
     using SafeERC20 for IERC20;
 
