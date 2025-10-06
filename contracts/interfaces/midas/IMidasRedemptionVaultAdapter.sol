@@ -34,6 +34,12 @@ interface IMidasRedemptionVaultAdapter is IAdapter, IPhantomTokenAdapter {
         external
         returns (bool);
 
+    /// @notice Instantly redeems mToken for output token, with a leftover amount
+    /// @param tokenOut Output token address
+    /// @param leftoverAmount Amount of mToken to keep in the account
+    /// @param rateMinRAY Minimum exchange rate from input token to mToken (in RAY format)
+    function redeemInstantDiff(address tokenOut, uint256 leftoverAmount, uint256 rateMinRAY) external returns (bool);
+
     /// @notice Requests a redemption of mToken for output token
     /// @param tokenOut Output token address
     /// @param amountMTokenIn Amount of mToken to redeem

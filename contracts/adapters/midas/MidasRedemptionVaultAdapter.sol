@@ -4,6 +4,7 @@
 pragma solidity ^0.8.23;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {IERC20Metadata} from "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 import {AbstractAdapter} from "../AbstractAdapter.sol";
@@ -12,6 +13,8 @@ import {NotImplementedException} from "@gearbox-protocol/core-v3/contracts/inter
 import {IMidasRedemptionVault} from "../../integrations/midas/IMidasRedemptionVault.sol";
 import {IMidasRedemptionVaultAdapter} from "../../interfaces/midas/IMidasRedemptionVaultAdapter.sol";
 import {IMidasRedemptionVaultGateway} from "../../interfaces/midas/IMidasRedemptionVaultGateway.sol";
+
+import {WAD, RAY} from "@gearbox-protocol/core-v3/contracts/libraries/Constants.sol";
 
 /// @title Midas Redemption Vault adapter
 /// @notice Implements logic for interacting with the Midas Redemption Vault through a gateway
@@ -47,7 +50,6 @@ contract MidasRedemptionVaultAdapter is AbstractAdapter, IMidasRedemptionVaultAd
     /// @param tokenOut Output token address
     /// @param amountMTokenIn Amount of mToken to redeem
     /// @param minReceiveAmount Minimum amount of output token to receive
-    /// @return Always returns false to indicate no approval cleanup needed
     function redeemInstant(address tokenOut, uint256 amountMTokenIn, uint256 minReceiveAmount)
         external
         override
@@ -56,17 +58,51 @@ contract MidasRedemptionVaultAdapter is AbstractAdapter, IMidasRedemptionVaultAd
     {
         if (!isTokenAllowed(tokenOut)) revert TokenNotAllowedException();
 
+        _redeemInstant(tokenOut, amountMTokenIn, minReceiveAmount);
+
+        return false;
+    }
+
+    /// @notice Instantly redeems the entire balance of mToken for output token, except the specified amount
+    /// @param tokenOut Output token address
+    /// @param leftoverAmount Amount of mToken to keep in the account
+    /// @param rateMinRAY Minimum exchange rate from input token to mToken (in RAY format)
+    function redeemInstantDiff(address tokenOut, uint256 leftoverAmount, uint256 rateMinRAY)
+        external
+        override
+        creditFacadeOnly
+        returns (bool)
+    {
+        if (!isTokenAllowed(tokenOut)) revert TokenNotAllowedException();
+
+        address creditAccount = _creditAccount();
+
+        uint256 balance = IERC20(mToken).balanceOf(creditAccount);
+        if (balance > leftoverAmount) {
+            unchecked {
+                uint256 amount = balance - leftoverAmount;
+                uint256 minReceiveAmount = (amount * rateMinRAY) / RAY;
+                _redeemInstant(tokenOut, amount, minReceiveAmount);
+            }
+        }
+        return false;
+    }
+
+    /// @dev Internal implementation of redeemInstant
+    function _redeemInstant(address tokenOut, uint256 amountMTokenIn, uint256 minReceiveAmount) internal {
         _executeSwapSafeApprove(
             mToken,
-            abi.encodeCall(IMidasRedemptionVaultGateway.redeemInstant, (tokenOut, amountMTokenIn, minReceiveAmount))
+            abi.encodeCall(
+                IMidasRedemptionVaultGateway.redeemInstant,
+                (tokenOut, amountMTokenIn, _convertToE18(minReceiveAmount, tokenOut))
+            )
         );
-        return false;
     }
 
     /// @notice Requests a redemption of mToken for output token
     /// @param tokenOut Output token address
     /// @param amountMTokenIn Amount of mToken to redeem
-    /// @return Always returns true to indicate approval might be needed later
+    /// @dev Returns `true` to allow safe pricing for the withdrawal phantom token
     function redeemRequest(address tokenOut, uint256 amountMTokenIn)
         external
         override
@@ -83,7 +119,6 @@ contract MidasRedemptionVaultAdapter is AbstractAdapter, IMidasRedemptionVaultAd
 
     /// @notice Withdraws redeemed tokens from the gateway
     /// @param amount Amount to withdraw
-    /// @return Always returns false to indicate no approval cleanup needed
     function withdraw(uint256 amount) external override creditFacadeOnly returns (bool) {
         _withdraw(amount);
         return false;
@@ -97,7 +132,6 @@ contract MidasRedemptionVaultAdapter is AbstractAdapter, IMidasRedemptionVaultAd
     /// @notice Withdraws phantom token balance
     /// @param token Phantom token address
     /// @param amount Amount to withdraw
-    /// @return Always returns false to indicate no approval cleanup needed
     function withdrawPhantomToken(address token, uint256 amount) external override creditFacadeOnly returns (bool) {
         if (phantomTokenToOutputToken[token] == address(0)) revert IncorrectStakedPhantomTokenException();
         _withdraw(amount);
@@ -109,6 +143,12 @@ contract MidasRedemptionVaultAdapter is AbstractAdapter, IMidasRedemptionVaultAd
     /// @dev Redemption vaults only support withdrawals, not deposits
     function depositPhantomToken(address, uint256) external pure override returns (bool) {
         revert NotImplementedException();
+    }
+
+    /// @dev Converts the token amount to 18 decimals, which is accepted by Midas
+    function _convertToE18(uint256 amount, address token) internal view returns (uint256) {
+        uint256 tokenUnit = 10 ** IERC20Metadata(token).decimals();
+        return amount * WAD / tokenUnit;
     }
 
     /// @notice Returns whether a token is allowed as output for redemptions
