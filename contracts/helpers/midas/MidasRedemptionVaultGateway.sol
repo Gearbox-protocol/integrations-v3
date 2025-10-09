@@ -39,11 +39,14 @@ contract MidasRedemptionVaultGateway is ReentrancyGuardTrait, IMidasRedemptionVa
     function redeemInstant(address tokenOut, uint256 amountMTokenIn, uint256 minReceiveAmount) external nonReentrant {
         IERC20(mToken).safeTransferFrom(msg.sender, address(this), amountMTokenIn);
 
+        uint256 balanceBefore = IERC20(tokenOut).balanceOf(address(this));
+
         IERC20(mToken).forceApprove(midasRedemptionVault, amountMTokenIn);
         IMidasRedemptionVault(midasRedemptionVault).redeemInstant(tokenOut, amountMTokenIn, minReceiveAmount);
 
-        uint256 balance = IERC20(tokenOut).balanceOf(address(this));
-        IERC20(tokenOut).safeTransfer(msg.sender, balance);
+        uint256 amount = IERC20(tokenOut).balanceOf(address(this)) - balanceBefore;
+
+        IERC20(tokenOut).safeTransfer(msg.sender, amount);
     }
 
     /// @notice Requests a redemption of mToken for output token
@@ -51,7 +54,7 @@ contract MidasRedemptionVaultGateway is ReentrancyGuardTrait, IMidasRedemptionVa
     /// @param amountMTokenIn Amount of mToken to redeem
     /// @dev Stores the request ID and timestamp for tracking
     function requestRedeem(address tokenOut, uint256 amountMTokenIn) external nonReentrant {
-        if (pendingRedemptions[msg.sender].requestId > 0) {
+        if (pendingRedemptions[msg.sender].isActive) {
             revert("MidasRedemptionVaultGateway: user has a pending redemption");
         }
 
@@ -63,7 +66,7 @@ contract MidasRedemptionVaultGateway is ReentrancyGuardTrait, IMidasRedemptionVa
         IMidasRedemptionVault(midasRedemptionVault).redeemRequest(tokenOut, amountMTokenIn);
 
         pendingRedemptions[msg.sender] =
-            PendingRedemption({requestId: requestId, timestamp: block.timestamp, remainder: 0});
+            PendingRedemption({isActive: true, requestId: requestId, timestamp: block.timestamp, remainder: 0});
     }
 
     /// @notice Withdraws tokens from a fulfilled redemption request
@@ -72,7 +75,7 @@ contract MidasRedemptionVaultGateway is ReentrancyGuardTrait, IMidasRedemptionVa
     function withdraw(uint256 amount) external nonReentrant {
         PendingRedemption memory pending = pendingRedemptions[msg.sender];
 
-        if (pending.requestId == 0) {
+        if (!pending.isActive) {
             revert("MidasRedemptionVaultGateway: user does not have a pending redemption");
         }
 
@@ -121,7 +124,7 @@ contract MidasRedemptionVaultGateway is ReentrancyGuardTrait, IMidasRedemptionVa
     function pendingTokenOutAmount(address user, address tokenOut) external view returns (uint256) {
         PendingRedemption memory pending = pendingRedemptions[user];
 
-        if (pending.requestId == 0) {
+        if (!pending.isActive) {
             return 0;
         }
 
