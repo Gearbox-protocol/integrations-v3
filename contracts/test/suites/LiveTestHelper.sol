@@ -62,7 +62,7 @@ import {UniswapV2PairStatus} from "../../interfaces/uniswap/IUniswapV2Adapter.so
 import {UniswapV3PoolStatus} from "../../interfaces/uniswap/IUniswapV3Adapter.sol";
 import {VelodromeV2PoolStatus} from "../../interfaces/velodrome/IVelodromeV2RouterAdapter.sol";
 import {CamelotV3PoolStatus} from "../../interfaces/camelot/ICamelotV3Adapter.sol";
-import {PendlePairStatus, PendleStatus} from "../../interfaces/pendle/IPendleRouterAdapter.sol";
+import {PendlePairStatus, PendleStatus, PendleTokenType} from "../../interfaces/pendle/IPendleRouterAdapter.sol";
 import {MellowUnderlyingStatus} from "../../interfaces/mellow/IMellowVaultAdapter.sol";
 
 import "@gearbox-protocol/core-v3/contracts/test/lib/constants.sol";
@@ -235,6 +235,7 @@ contract LiveTestHelper is IntegrationTestHelper {
                     market: pPairs[i].market,
                     inputToken: tokenTestSuite.addressOf(pPairs[i].inputToken),
                     pendleToken: tokenTestSuite.addressOf(pPairs[i].pendleToken),
+                    pendleTokenType: PendleTokenType.PT,
                     status: PendleStatus(pPairs[i].status)
                 });
             }

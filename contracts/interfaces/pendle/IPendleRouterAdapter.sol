@@ -13,10 +13,16 @@ enum PendleStatus {
     EXIT_ONLY
 }
 
+enum PendleTokenType {
+    PT,
+    LP
+}
+
 struct PendlePairStatus {
     address market;
     address inputToken;
     address pendleToken;
+    PendleTokenType pendleTokenType;
     PendleStatus status;
 }
 
@@ -32,7 +38,11 @@ struct TokenDiffOutput {
 
 interface IPendleRouterAdapterEvents {
     event SetPairStatus(
-        address indexed market, address indexed inputToken, address indexed pendleToken, PendleStatus allowed
+        address indexed market,
+        address indexed inputToken,
+        address indexed pendleToken,
+        PendleTokenType pendleTokenType,
+        PendleStatus allowed
     );
 }
 
@@ -42,6 +52,9 @@ interface IPendleRouterAdapterExceptions {
 
     /// @notice Thrown when a pair is not allowed for PT to token redemption after expiry
     error RedemptionNotAllowedException();
+
+    /// @notice Thrown when a Pendle LP token is not equal to Pendle market when allowing the pair
+    error PendleTokenNotEqualToMarketException();
 }
 
 /// @title PendleRouter adapter interface
@@ -79,6 +92,34 @@ interface IPendleRouterAdapter is IAdapter, IPendleRouterAdapterEvents, IPendleR
         returns (bool useSafePrices);
 
     function redeemDiffPyToToken(address yt, uint256 leftoverPt, TokenDiffOutput calldata output)
+        external
+        returns (bool useSafePrices);
+
+    function addLiquiditySingleToken(
+        address receiver,
+        address market,
+        uint256 minLpOut,
+        ApproxParams calldata guessPtReceivedFromSy,
+        TokenInput calldata input,
+        LimitOrderData calldata limit
+    ) external returns (bool useSafePrices);
+
+    function addLiquiditySingleTokenDiff(
+        address market,
+        uint256 minRateRAY,
+        ApproxParams calldata guessPtReceivedFromSy,
+        TokenDiffInput calldata diffInput
+    ) external returns (bool useSafePrices);
+
+    function removeLiquiditySingleToken(
+        address receiver,
+        address market,
+        uint256 netLpToRemove,
+        TokenOutput calldata output,
+        LimitOrderData calldata limit
+    ) external returns (bool useSafePrices);
+
+    function removeLiquiditySingleTokenDiff(address market, uint256 leftoverLp, TokenDiffOutput calldata diffOutput)
         external
         returns (bool useSafePrices);
 
