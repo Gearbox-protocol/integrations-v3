@@ -22,7 +22,7 @@ contract BalancerV3RouterGateway is IBalancerV3Router, IVersion {
     using SafeERC20 for IERC20;
 
     bytes32 public constant override contractType = "GATEWAY::BALANCER_V3";
-    uint256 public constant override version = 3_10;
+    uint256 public constant override version = 3_11;
 
     address public immutable balancerV3Router;
     address public immutable permit2;

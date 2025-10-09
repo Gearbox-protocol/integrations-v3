@@ -24,7 +24,7 @@ contract BalancerV3RouterAdapter is AbstractAdapter, IBalancerV3RouterAdapter {
     using EnumerableSet for EnumerableSet.AddressSet;
 
     bytes32 public constant override contractType = "ADAPTER::BALANCER_V3_ROUTER";
-    uint256 public constant override version = 3_10;
+    uint256 public constant override version = 3_11;
 
     /// @dev Set of all pools that are currently allowed
     EnumerableSet.AddressSet internal _allowedPools;
