@@ -33,6 +33,9 @@ contract MidasRedemptionVaultAdapter is AbstractAdapter, IMidasRedemptionVaultAd
     /// @notice Mapping from phantom token to its tracked output token
     mapping(address => address) public phantomTokenToOutputToken;
 
+    /// @notice Mapping from output token to its tracked phantom token
+    mapping(address => address) public outputTokenToPhantomToken;
+
     /// @dev Set of allowed output tokens for redemptions
     EnumerableSet.AddressSet internal _allowedTokens;
 
@@ -109,7 +112,9 @@ contract MidasRedemptionVaultAdapter is AbstractAdapter, IMidasRedemptionVaultAd
         creditFacadeOnly
         returns (bool)
     {
-        if (!isTokenAllowed(tokenOut)) revert TokenNotAllowedException();
+        if (!isTokenAllowed(tokenOut) || outputTokenToPhantomToken[tokenOut] == address(0)) {
+            revert TokenNotAllowedException();
+        }
 
         _executeSwapSafeApprove(
             mToken, abi.encodeCall(IMidasRedemptionVaultGateway.requestRedeem, (tokenOut, amountMTokenIn))
@@ -184,13 +189,16 @@ contract MidasRedemptionVaultAdapter is AbstractAdapter, IMidasRedemptionVaultAd
                 if (config.phantomToken != address(0)) {
                     _getMaskOrRevert(config.phantomToken);
                     phantomTokenToOutputToken[config.phantomToken] = config.token;
+                    outputTokenToPhantomToken[config.token] = config.phantomToken;
                 }
             } else {
                 _allowedTokens.remove(config.token);
 
-                // Remove any phantom token mappings for this token
-                if (config.phantomToken != address(0)) {
-                    delete phantomTokenToOutputToken[config.phantomToken];
+                address phantomToken = outputTokenToPhantomToken[config.token];
+
+                if (phantomToken != address(0)) {
+                    delete outputTokenToPhantomToken[config.token];
+                    delete phantomTokenToOutputToken[phantomToken];
                 }
             }
 
