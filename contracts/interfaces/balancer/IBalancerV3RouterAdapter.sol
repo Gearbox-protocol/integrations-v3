@@ -53,6 +53,33 @@ interface IBalancerV3RouterAdapter is IAdapter, IBalancerV3RouterAdapterEvents, 
         uint256 deadline
     ) external returns (bool);
 
+    function addLiquidityUnbalanced(
+        address pool,
+        uint256[] calldata exactAmountsIn,
+        uint256 minBptAmountOut,
+        bool,
+        bytes calldata
+    ) external returns (bool);
+
+    function addLiquidityUnbalancedDiff(
+        address pool,
+        uint256[] calldata leftoverAmounts,
+        uint256[] calldata minRatesRAY
+    ) external returns (bool);
+
+    function removeLiquiditySingleTokenExactIn(
+        address pool,
+        uint256 exactBptAmountIn,
+        IERC20 tokenOut,
+        uint256 minAmountOut,
+        bool,
+        bytes calldata
+    ) external returns (bool);
+
+    function removeLiquiditySingleTokenDiff(address pool, uint256 leftoverAmount, IERC20 tokenOut, uint256 minRateRAY)
+        external
+        returns (bool);
+
     // ------------- //
     // CONFIGURATION //
     // ------------- //
