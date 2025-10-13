@@ -17,6 +17,12 @@
       "rev": "78ad827ab9329f2c1d884672120fb61ca9fb67ec"
     }
   },
+  "lib/@gearbox-protocol/permissionless": {
+    "tag": {
+      "name": "v1.5.0",
+      "rev": "ef0b90dbcd41c13555117ea119ef14c413627612"
+    }
+  },
   "lib/@gearbox-protocol/sdk-gov": {
     "rev": "ecc136f4fc0e0e6d19b9505e64de4f56d80899c2"
   }
