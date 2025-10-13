@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 // Gearbox Protocol. Generalized leverage for DeFi protocols
-// (c) Gearbox Foundation, 2023.
-pragma solidity ^0.8.17;
+// (c) Gearbox Foundation, 2024.
+pragma solidity ^0.8.23;
 
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {ICreditFacadeV3} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacadeV3.sol";
 import {ICreditFacadeV3Multicall} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacadeV3Multicall.sol";
@@ -10,19 +11,26 @@ import {IBaseRewardPool} from "../../../../integrations/convex/IBaseRewardPool.s
 import {IRewards} from "../../../../integrations/convex/IRewards.sol";
 import {IBooster} from "../../../../integrations/convex/IBooster.sol";
 import {IConvexV1BaseRewardPoolAdapter} from "../../../../interfaces/convex/IConvexV1BaseRewardPoolAdapter.sol";
+import {ConvexStakedPositionToken} from "../../../../helpers/convex/ConvexV1_StakedPositionToken.sol";
+import {
+    IPhantomToken,
+    IPhantomTokenWithdrawer
+} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IPhantomToken.sol";
+import {PriceFeedParams} from "@gearbox-protocol/core-v3/contracts/interfaces/IPriceOracleV3.sol";
+import {IPriceFeed} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IPriceFeed.sol";
+import {IPhantomTokenAdapter} from "../../../../interfaces/IPhantomTokenAdapter.sol";
 
 import {
     ConvexV1_BaseRewardPoolCalls,
     ConvexV1_BaseRewardPoolMulticaller
 } from "../../../multicall/convex/ConvexV1_BaseRewardPoolCalls.sol";
 import {ConvexV1_BoosterCalls, ConvexV1_BoosterMulticaller} from "../../../multicall/convex/ConvexV1_BoosterCalls.sol";
-import {IAdapter} from "@gearbox-protocol/core-v2/contracts/interfaces/IAdapter.sol";
-import {AdapterType} from "@gearbox-protocol/sdk-gov/contracts/AdapterType.sol";
+import {IAdapter} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IAdapter.sol";
 
 import "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
 import {Contracts} from "@gearbox-protocol/sdk-gov/contracts/SupportedContracts.sol";
 
-import {MultiCall} from "@gearbox-protocol/core-v2/contracts/libraries/MultiCall.sol";
+import {MultiCall} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacadeV3.sol";
 import {MultiCallBuilder} from "@gearbox-protocol/core-v3/contracts/test/lib/MultiCallBuilder.sol";
 
 import {AddressList} from "@gearbox-protocol/core-v3/contracts/test/lib/AddressList.sol";
@@ -246,7 +254,7 @@ contract Live_ConvexEquivalenceTest is LiveTestHelper {
         address[] memory adapters = creditConfigurator.allowedAdapters();
 
         for (uint256 i = 0; i < adapters.length; ++i) {
-            if (IAdapter(adapters[i])._gearboxAdapterType() != AdapterType.CONVEX_V1_BASE_REWARD_POOL) continue;
+            if (IAdapter(adapters[i]).contractType() != "ADAPTER::CVX_V1_BASE_REWARD_POOL") continue;
 
             uint256 snapshot0 = vm.snapshot();
 
@@ -280,6 +288,62 @@ contract Live_ConvexEquivalenceTest is LiveTestHelper {
             comparator.compareAllSnapshots(creditAccount, savedBalanceSnapshots);
 
             vm.revertTo(snapshot0);
+        }
+    }
+
+    /// @dev [L-CVXET-2]: Withdrawals for Convex phantom tokens work correctly
+    function test_live_CVXET_02_Convex_phantom_token_withdrawals_work_correctly() public attachOrLiveTest {
+        uint256 collateralTokensCount = creditManager.collateralTokensCount();
+
+        for (uint256 i = 0; i < collateralTokensCount; ++i) {
+            uint256 snapshot = vm.snapshot();
+
+            address token = creditManager.getTokenByMask(1 << i);
+
+            try IPhantomToken(token).getPhantomTokenInfo() returns (address target, address) {
+                address adapter = creditManager.contractToAdapter(target);
+                if (IAdapter(adapter).contractType() != "ADAPTER::CVX_V1_BASE_REWARD_POOL") continue;
+            } catch {
+                continue;
+            }
+
+            address boosterAdapter = creditManager.contractToAdapter(ConvexStakedPositionToken(token).booster());
+            address pool = ConvexStakedPositionToken(token).pool();
+
+            uint256 pid = IBaseRewardPool(pool).pid();
+
+            if (priceOracle.reservePriceFeeds(token) == address(0)) {
+                PriceFeedParams memory pfParams = priceOracle.priceFeedParams(token);
+                vm.prank(Ownable(address(acl)).owner());
+                priceOracle.setReservePriceFeed(token, pfParams.priceFeed, pfParams.stalenessPeriod);
+            }
+
+            address curveToken = ConvexStakedPositionToken(token).curveToken();
+
+            address creditAccount = openCreditAccountWithUnderlying(curveToken, 100 * WAD);
+
+            vm.prank(USER);
+            creditFacade.multicall(
+                creditAccount,
+                MultiCallBuilder.build(ConvexV1_BoosterMulticaller(boosterAdapter).deposit(pid, WAD, true))
+            );
+
+            address poolAdapter = creditManager.contractToAdapter(pool);
+
+            vm.expectCall(poolAdapter, abi.encodeCall(IPhantomTokenWithdrawer.withdrawPhantomToken, (token, WAD)));
+            vm.prank(USER);
+            MultiCall memory call = MultiCall({
+                target: address(creditFacade),
+                callData: abi.encodeCall(ICreditFacadeV3Multicall.withdrawCollateral, (token, WAD, USER))
+            });
+
+            creditFacade.multicall(creditAccount, MultiCallBuilder.build(call));
+
+            address convexToken = ConvexStakedPositionToken(token).underlying();
+
+            assertEq(IERC20(convexToken).balanceOf(USER), WAD);
+
+            vm.revertTo(snapshot);
         }
     }
 }

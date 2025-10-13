@@ -1,11 +1,14 @@
 // SPDX-License-Identifier: UNLICENSED
 // Gearbox Protocol. Generalized leverage for DeFi protocols
-// (c) Gearbox Foundation, 2023.
-pragma solidity ^0.8.17;
+// (c) Gearbox Foundation, 2024.
+pragma solidity ^0.8.23;
 
 import {ZapperBase} from "../../../zappers/ZapperBase.sol";
 
 contract ZapperBaseHarness is ZapperBase {
+    uint256 public constant override version = 3_10;
+    bytes32 public constant override contractType = "ZAPPER::HARNESS";
+
     event ConvertTokenInToUnderlying(uint256 tokenInAmount, uint256 assets);
     event ConvertUnderlyingToTokenIn(uint256 assets, uint256 tokenInAmount, address receiver);
     event ConvertSharesToTokenOut(uint256 shares, uint256 tokenOutAmount, address receiver);

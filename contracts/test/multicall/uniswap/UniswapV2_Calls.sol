@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 // Gearbox Protocol. Generalized leverage for DeFi protocols
-// (c) Gearbox Foundation, 2023
-pragma solidity ^0.8.17;
+// (c) Gearbox Foundation, 2024
+pragma solidity ^0.8.23;
 
-import {MultiCall} from "@gearbox-protocol/core-v2/contracts/libraries/MultiCall.sol";
+import {MultiCall} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacadeV3.sol";
 import {IUniswapV2Adapter} from "../../../interfaces/uniswap/IUniswapV2Adapter.sol";
 
 interface UniswapV2_Multicaller {}
@@ -21,7 +21,7 @@ library UniswapV2_Calls {
             target: address(c),
             callData: abi.encodeCall(
                 IUniswapV2Adapter.swapTokensForExactTokens, (amountOut, amountInMax, path, address(0), deadline)
-                )
+            )
         });
     }
 
@@ -37,7 +37,7 @@ library UniswapV2_Calls {
             target: address(c),
             callData: abi.encodeCall(
                 IUniswapV2Adapter.swapExactTokensForTokens, (amountIn, amountOutMin, path, address(0), deadline)
-                )
+            )
         });
     }
 
@@ -52,7 +52,7 @@ library UniswapV2_Calls {
             target: address(c),
             callData: abi.encodeCall(
                 IUniswapV2Adapter.swapDiffTokensForTokens, (leftoverAmount, rateMinRAY, path, deadline)
-                )
+            )
         });
     }
 }

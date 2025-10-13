@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 // Gearbox Protocol. Generalized leverage for DeFi protocols
-// (c) Gearbox Foundation, 2023.
-pragma solidity ^0.8.17;
+// (c) Gearbox Foundation, 2024.
+pragma solidity ^0.8.23;
 
 import {YearnV2Adapter} from "../../../../adapters/yearn/YearnV2.sol";
 import {IYVault} from "../../../../integrations/yearn/IYVault.sol";
@@ -15,14 +15,12 @@ contract YearnV2AdapterUnitTest is AdapterUnitTestHelper {
     address token;
     address yToken;
 
-    uint256 tokenMask;
-    uint256 yTokenMask;
-
     function setUp() public {
         _setUp();
 
-        (token, tokenMask) = (tokens[0], 1);
-        (yToken, yTokenMask) = (tokens[1], 2);
+        token = tokens[0];
+        yToken = tokens[1];
+
         vm.mockCall(yToken, abi.encodeCall(IYVault.token, ()), abi.encode(token));
 
         adapter = new YearnV2Adapter(address(creditManager), yToken);
@@ -35,11 +33,8 @@ contract YearnV2AdapterUnitTest is AdapterUnitTestHelper {
         adapter = new YearnV2Adapter(address(creditManager), yToken);
 
         assertEq(adapter.creditManager(), address(creditManager), "Incorrect creditManager");
-        assertEq(adapter.addressProvider(), address(addressProvider), "Incorrect addressProvider");
         assertEq(adapter.targetContract(), yToken, "Incorrect targetContract");
         assertEq(adapter.token(), token, "Incorrect token");
-        assertEq(adapter.tokenMask(), tokenMask, "Incorrect tokenMask");
-        assertEq(adapter.yTokenMask(), yTokenMask, "Incorrect yTokenMask");
     }
 
     /// @notice U:[YFI2-2]: Wrapper functions revert on wrong caller
@@ -73,48 +68,36 @@ contract YearnV2AdapterUnitTest is AdapterUnitTestHelper {
         _readsActiveAccount();
         _executesSwap({
             tokenIn: token,
-            tokenOut: yToken,
             callData: abi.encodeWithSignature("deposit(uint256)", diffInputAmount),
-            requiresApproval: true,
-            validatesTokens: false
+            requiresApproval: true
         });
         vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.depositDiff(diffLeftoverAmount);
-
-        assertEq(tokensToEnable, yTokenMask, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, diffDisableTokenIn ? tokenMask : 0, "Incorrect tokensToDisable");
+        bool useSafePrices = adapter.depositDiff(diffLeftoverAmount);
+        assertFalse(useSafePrices);
     }
 
     /// @notice U:[YFI2-4]: `deposit(uint256)` works as expected
     function test_U_YFI2_04_deposit_uint256_works_as_expected() public {
         _executesSwap({
             tokenIn: token,
-            tokenOut: yToken,
             callData: abi.encodeWithSignature("deposit(uint256)", 1000),
-            requiresApproval: true,
-            validatesTokens: false
+            requiresApproval: true
         });
         vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.deposit(1000);
-
-        assertEq(tokensToEnable, yTokenMask, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
+        bool useSafePrices = adapter.deposit(1000);
+        assertFalse(useSafePrices);
     }
 
     /// @notice U:[YFI2-5]: `deposit(uint256,address)` works as expected
     function test_U_YFI2_05_deposit_uint256_address_works_as_expected() public {
         _executesSwap({
             tokenIn: token,
-            tokenOut: yToken,
             callData: abi.encodeWithSignature("deposit(uint256)", 1000),
-            requiresApproval: true,
-            validatesTokens: false
+            requiresApproval: true
         });
         vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.deposit(1000, address(0));
-
-        assertEq(tokensToEnable, yTokenMask, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
+        bool useSafePrices = adapter.deposit(1000, address(0));
+        assertFalse(useSafePrices);
     }
 
     /// @notice U:[YFI2-6]: `withdrawDiff()` works as expected
@@ -124,48 +107,36 @@ contract YearnV2AdapterUnitTest is AdapterUnitTestHelper {
         _readsActiveAccount();
         _executesSwap({
             tokenIn: yToken,
-            tokenOut: token,
             callData: abi.encodeWithSignature("withdraw(uint256)", diffInputAmount),
-            requiresApproval: false,
-            validatesTokens: false
+            requiresApproval: false
         });
         vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.withdrawDiff(diffLeftoverAmount);
-
-        assertEq(tokensToEnable, tokenMask, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, diffDisableTokenIn ? yTokenMask : 0, "Incorrect tokensToDisable");
+        bool useSafePrices = adapter.withdrawDiff(diffLeftoverAmount);
+        assertFalse(useSafePrices);
     }
 
     /// @notice U:[YFI2-7]: `withdraw(uint256)` works as expected
     function test_U_YFI2_07_withdraw_uint256_works_as_expected() public {
         _executesSwap({
             tokenIn: yToken,
-            tokenOut: token,
             callData: abi.encodeWithSignature("withdraw(uint256)", 1000),
-            requiresApproval: false,
-            validatesTokens: false
+            requiresApproval: false
         });
         vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.withdraw(1000);
-
-        assertEq(tokensToEnable, tokenMask, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
+        bool useSafePrices = adapter.withdraw(1000);
+        assertFalse(useSafePrices);
     }
 
     /// @notice U:[YFI2-8]: `withdraw(uint256,address)` works as expected
     function test_U_YFI2_08_withdraw_uint256_address_works_as_expected() public {
         _executesSwap({
             tokenIn: yToken,
-            tokenOut: token,
             callData: abi.encodeWithSignature("withdraw(uint256)", 1000),
-            requiresApproval: false,
-            validatesTokens: false
+            requiresApproval: false
         });
         vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.withdraw(1000, address(0));
-
-        assertEq(tokensToEnable, tokenMask, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
+        bool useSafePrices = adapter.withdraw(1000, address(0));
+        assertFalse(useSafePrices);
     }
 
     /// @notice U:[YFI2-9]: `withdraw(uint256,address,uint256)` works as expected
@@ -173,15 +144,11 @@ contract YearnV2AdapterUnitTest is AdapterUnitTestHelper {
         _readsActiveAccount();
         _executesSwap({
             tokenIn: yToken,
-            tokenOut: token,
             callData: abi.encodeWithSignature("withdraw(uint256,address,uint256)", 1000, creditAccount, 10),
-            requiresApproval: false,
-            validatesTokens: false
+            requiresApproval: false
         });
         vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.withdraw(1000, address(0), 10);
-
-        assertEq(tokensToEnable, tokenMask, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
+        bool useSafePrices = adapter.withdraw(1000, address(0), 10);
+        assertFalse(useSafePrices);
     }
 }

@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Gearbox Protocol. Generalized leverage for DeFi protocols
 // (c) Gearbox Foundation, 2024.
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.23;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {RAY} from "@gearbox-protocol/core-v2/contracts/libraries/Constants.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
+import {RAY} from "@gearbox-protocol/core-v3/contracts/libraries/Constants.sol";
+
 import {AbstractAdapter} from "../AbstractAdapter.sol";
-import {AdapterType} from "@gearbox-protocol/sdk-gov/contracts/AdapterType.sol";
 
 import {IBalancerV3Router} from "../../integrations/balancer/IBalancerV3Router.sol";
 import {IBalancerV3Pool} from "../../integrations/balancer/IBalancerV3Pool.sol";
@@ -19,8 +19,8 @@ import {IBalancerV3RouterAdapter} from "../../interfaces/balancer/IBalancerV3Rou
 contract BalancerV3RouterAdapter is AbstractAdapter, IBalancerV3RouterAdapter {
     using EnumerableSet for EnumerableSet.AddressSet;
 
-    AdapterType public constant override _gearboxAdapterType = AdapterType.BALANCER_V3_ROUTER;
-    uint16 public constant override _gearboxAdapterVersion = 3_00;
+    bytes32 public constant override contractType = "ADAPTER::BALANCER_V3_ROUTER";
+    uint256 public constant override version = 3_10;
 
     /// @dev Set of all pools that are currently allowed
     EnumerableSet.AddressSet internal _allowedPools;
@@ -47,18 +47,17 @@ contract BalancerV3RouterAdapter is AbstractAdapter, IBalancerV3RouterAdapter {
         uint256 deadline,
         bool,
         bytes calldata
-    ) external override creditFacadeOnly returns (uint256 tokensToEnable, uint256 tokensToDisable) {
+    ) external override creditFacadeOnly returns (bool) {
         if (!isPoolAllowed(pool)) revert InvalidPoolException();
 
-        (tokensToEnable, tokensToDisable,) = _executeSwapSafeApprove(
+        _executeSwapSafeApprove(
             address(tokenIn),
-            address(tokenOut),
             abi.encodeCall(
                 IBalancerV3Router.swapSingleTokenExactIn,
                 (pool, tokenIn, tokenOut, exactAmountIn, minAmountOut, deadline, false, "")
-            ),
-            false
+            )
         );
+        return true;
     }
 
     /// @notice Swaps all balance of input token for output token through a single pool, except the specified amount
@@ -75,26 +74,25 @@ contract BalancerV3RouterAdapter is AbstractAdapter, IBalancerV3RouterAdapter {
         uint256 leftoverAmount,
         uint256 rateMinRAY,
         uint256 deadline
-    ) external override creditFacadeOnly returns (uint256 tokensToEnable, uint256 tokensToDisable) {
+    ) external override creditFacadeOnly returns (bool) {
         if (!isPoolAllowed(pool)) revert InvalidPoolException();
 
         address creditAccount = _creditAccount();
 
         uint256 amount = tokenIn.balanceOf(creditAccount);
-        if (amount <= leftoverAmount) return (0, 0);
+        if (amount <= leftoverAmount) return false;
         unchecked {
             amount -= leftoverAmount;
         }
 
-        (tokensToEnable, tokensToDisable,) = _executeSwapSafeApprove(
+        _executeSwapSafeApprove(
             address(tokenIn),
-            address(tokenOut),
             abi.encodeCall(
                 IBalancerV3Router.swapSingleTokenExactIn,
                 (pool, tokenIn, tokenOut, amount, (amount * rateMinRAY) / RAY, deadline, false, "")
-            ),
-            leftoverAmount <= 1
+            )
         );
+        return true;
     }
 
     // ------------- //
@@ -107,7 +105,7 @@ contract BalancerV3RouterAdapter is AbstractAdapter, IBalancerV3RouterAdapter {
     }
 
     /// @notice Returns the list of all pools that were ever allowed in this adapter
-    function getAllowedPools() external view override returns (address[] memory pools) {
+    function getAllowedPools() public view override returns (address[] memory pools) {
         return _allowedPools.values();
     }
 
@@ -127,6 +125,14 @@ contract BalancerV3RouterAdapter is AbstractAdapter, IBalancerV3RouterAdapter {
                 bool status = statuses[i];
 
                 if (status) {
+                    // Verify that all tokens in the pool are valid collaterals
+                    IERC20[] memory tokens = IBalancerV3Pool(pool).getTokens();
+                    for (uint256 j; j < tokens.length; ++j) {
+                        _getMaskOrRevert(address(tokens[j]));
+                    }
+                }
+
+                if (status) {
                     _allowedPools.add(pool);
                 } else {
                     _allowedPools.remove(pool);
@@ -134,5 +140,14 @@ contract BalancerV3RouterAdapter is AbstractAdapter, IBalancerV3RouterAdapter {
                 emit SetPoolStatus(pool, status);
             }
         }
+    }
+
+    // ---- //
+    // DATA //
+    // ---- //
+
+    /// @notice Serialized adapter parameters
+    function serialize() external view returns (bytes memory serializedData) {
+        serializedData = abi.encode(creditManager, targetContract, getAllowedPools());
     }
 }

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 // Gearbox Protocol. Generalized leverage for DeFi protocols
 // (c) Gearbox Foundation, 2024.
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.23;
 
 import {IERC20Permit} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Permit.sol";
 
@@ -9,22 +9,19 @@ import {PoolV3} from "@gearbox-protocol/core-v3/contracts/pool/PoolV3.sol";
 import "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
 
 import {IZapper} from "../../interfaces/zappers/IZapper.sol";
-import {IZapperRegister} from "../../interfaces/zappers/IZapperRegister.sol";
 
-import {DTokenDepositZapper} from "../../zappers/DTokenDepositZapper.sol";
-import {DTokenFarmingZapper} from "../../zappers/DTokenFarmingZapper.sol";
 import {UnderlyingDepositZapper} from "../../zappers/UnderlyingDepositZapper.sol";
 import {UnderlyingFarmingZapper} from "../../zappers/UnderlyingFarmingZapper.sol";
 import {WETHDepositZapper} from "../../zappers/WETHDepositZapper.sol";
 import {WETHFarmingZapper} from "../../zappers/WETHFarmingZapper.sol";
 import {WstETHDepositZapper} from "../../zappers/WstETHDepositZapper.sol";
 import {WstETHFarmingZapper} from "../../zappers/WstETHFarmingZapper.sol";
-import {ZapperRegister} from "../../zappers/ZapperRegister.sol";
 
+import {ZapperRegister} from "./ZapperRegister.sol";
 import {LiveTestHelper} from "./LiveTestHelper.sol";
 
 contract ZapperLiveTestHelper is LiveTestHelper {
-    IZapperRegister zapperRegister;
+    ZapperRegister zapperRegister;
     mapping(address => address) farmingPools;
     mapping(address => address) legacyPools;
 
@@ -34,45 +31,33 @@ contract ZapperLiveTestHelper is LiveTestHelper {
         // If it fails, the value stays equal to the passed one, and the test can be skipped.
         if (chainId == 1337 || chainId == 31337) return;
 
-        // Either `ATTACH_ADDRESS_PROVIDER` or `LIVE_TEST_CONFIG` must be specified.
-        // The former allows to test zappers on existing pools, while the latter allows to create an arbitrary one.
-        address attachedAddressProvider = vm.envOr("ATTACH_ADDRESS_PROVIDER", address(0));
-        if (attachedAddressProvider != address(0)) {
-            _attachCore();
+        // Either `ATTACH_ZAPPER_REGISTER` or `LIVE_TEST_CONFIG` must be specified.
+        // The former allows to test existing deployed zappers, while the latter allows to create a new pool and test a zappers for it.
+        // If `ATTACH_ZAPPER_REGISTER` is specified, then `ATTACH_POOL` must also be specified
+        address attachedZapperRegister = vm.envOr("ATTACH_ZAPPER_REGISTER", address(0));
+        if (attachedZapperRegister != address(0)) {
+            address acl = ZapperRegister(attachedZapperRegister).acl();
+            address contractsRegister = ZapperRegister(attachedZapperRegister).contractsRegister();
+
             _attachState();
 
             // By default, attach tests are run for already deployed zappers.
             // To test the ones that are not deployed yet, set `REDEPLOY_ZAPPERS` to `true`.
             bool redeployZappers = vm.envOr("REDEPLOY_ZAPPERS", false);
             if (redeployZappers) {
-                zapperRegister = new ZapperRegister(address(addressProvider));
+                zapperRegister = new ZapperRegister(acl, contractsRegister);
             } else {
-                uint256 version = vm.envOr("ATTACH_ZAPPER_REGISTER_VERSION", uint256(300));
-                zapperRegister = IZapperRegister(addressProvider.getAddressOrRevert("ZAPPER_REGISTER", version));
+                zapperRegister = ZapperRegister(attachedZapperRegister);
             }
 
-            // If `ATTACH_POOL` is specified, the tests are executed only for this pool's zappers.
-            // Otherwise, they are run for all v3 pools.
-            address attachedPool = vm.envOr("ATTACH_POOL", address(0));
-            if (attachedPool != address(0)) {
-                _attachPool(attachedPool);
-                if (redeployZappers) _deployZappers(address(pool));
-                _;
-            } else {
-                address[] memory pools = cr.getPools();
-                for (uint256 i; i < pools.length; ++i) {
-                    if (PoolV3(pools[i]).version() >= 3_00 && !PoolV3(pools[i]).paused()) {
-                        _attachPool(pools[i]);
-                        if (redeployZappers) _deployZappers(pools[i]);
-                        _;
-                    }
-                }
-            }
+            _attachPool(vm.envAddress("ATTACH_POOL"));
+            if (redeployZappers) _deployZappers(address(pool));
+            _;
         } else {
             // Deploy the system from scratch using given config.
             _setupCore();
             _attachState();
-            zapperRegister = new ZapperRegister(address(addressProvider));
+            zapperRegister = new ZapperRegister(address(acl), address(cr));
             _deployPool(getDeployConfig(vm.envString("LIVE_TEST_CONFIG")));
             _deployZappers(address(pool));
             _;
@@ -100,15 +85,6 @@ contract ZapperLiveTestHelper is LiveTestHelper {
         } catch {}
         if (farmingPool != address(0)) {
             zapperRegister.addZapper(address(new UnderlyingFarmingZapper(pool, farmingPool)));
-        }
-
-        // dToken zapper
-        address legacyPool = legacyPools[underlying];
-        if (legacyPool != address(0)) {
-            zapperRegister.addZapper(address(new DTokenDepositZapper(pool, legacyPool)));
-            if (farmingPool != address(0)) {
-                zapperRegister.addZapper(address(new DTokenFarmingZapper(pool, legacyPool, farmingPool)));
-            }
         }
 
         // WETH zapper

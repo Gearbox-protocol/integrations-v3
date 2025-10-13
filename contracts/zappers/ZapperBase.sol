@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Gearbox Protocol. Generalized leverage for DeFi protocols
-// (c) Gearbox Foundation, 2023.
-pragma solidity ^0.8.17;
+// (c) Gearbox Foundation, 2024.
+pragma solidity ^0.8.23;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IERC20Permit} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Permit.sol";
@@ -35,6 +35,9 @@ abstract contract ZapperBase is IZapper {
 
     /// @notice Zapper's output token
     function tokenOut() public view virtual returns (address);
+
+    /// @notice Serializes the zapper's state into a bytes array
+    function serialize() public view virtual returns (bytes memory) {}
 
     // ------- //
     // PREVIEW //

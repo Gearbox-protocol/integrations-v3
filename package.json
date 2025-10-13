@@ -3,8 +3,6 @@
   "description": "Integration contracts for Gearbox V3",
   "version": "1.22.0",
   "homepage": "https://gearbox.fi",
-  "main": "./npm-root/index.js",
-  "types": "./npm-root/index.d.ts",
   "keywords": [
     "gearbox"
   ],
@@ -16,42 +14,49 @@
     "contracts",
     "dist"
   ],
+  "main": "./dist/cjs/index.js",
+  "module": "./dist/esm/index.js",
+  "types": "./dist/types/index.d.ts",
+  "typings": "./dist/types/index.d.ts",
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "types": "./dist/types/index.d.ts",
+      "import": "./dist/esm/index.js",
+      "default": "./dist/cjs/index.js"
+    }
+  },
+  "sideEffects": false,
   "license": "BUSL-1.1",
   "scripts": {
+    "clean": "forge clean && rm -rf ./dist ./src/**/*.generated.ts",
+    "build": "forge build --optimize false && wagmi generate && yarn build:ts",
+    "build:types": "tsc -p tsconfig.build.json --emitDeclarationOnly --declaration --outDir dist/types",
+    "build:cjs": "tsc -p tsconfig.build.json --module commonjs --outDir dist/cjs && echo '{\"type\": \"commonjs\"}' > dist/cjs/package.json",
+    "build:esm": "tsc -p tsconfig.build.json --module esnext --outDir dist/esm && echo '{\"type\": \"module\",\"sideEffects\":false}' > dist/esm/package.json",
+    "build:ts": "yarn build:types && yarn build:cjs && yarn build:esm",
     "prepare": "husky install",
     "prettier": "forge fmt",
     "prettier:ci": "forge fmt",
     "lint": "eslint \"**/*.ts\" --fix",
     "lint:ci": "eslint \"**/*.ts\"",
-    "typecheck:ci": "tsc --noEmit",
-    "forge-install": "forge install --no-commit foundry-rs/forge-std",
-    "build": "tsc --p tsconfig.build.json"
+    "typecheck:ci": "tsc --noEmit"
   },
   "dependencies": {},
   "devDependencies": {
-    "@1inch/farming": "3.1.0",
-    "@1inch/solidity-utils": "2.4.0",
-    "@chainlink/contracts": "^0.4.0",
-    "@commitlint/cli": "^17.1.2",
-    "@commitlint/config-conventional": "^17.1.0",
-    "@gearbox-protocol/core-v2": "1.19.0-base.10",
-    "@gearbox-protocol/core-v3": "^1.51.0",
-    "@gearbox-protocol/eslint-config": "^1.6.1",
-    "@gearbox-protocol/oracles-v3": "^1.12.1",
-    "@gearbox-protocol/prettier-config": "^1.5.0",
-    "@gearbox-protocol/sdk-gov": "^2.34.0",
-    "@openzeppelin/contracts": "4.9.3",
+    "@commitlint/cli": "^19.8.1",
+    "@commitlint/config-conventional": "^19.8.1",
+    "@gearbox-protocol/eslint-config": "^2.0.0-next.2",
+    "@gearbox-protocol/prettier-config": "^2.1.0",
+    "@gearbox-protocol/sdk-gov": "^2.37.0",
     "@redstone-finance/evm-connector": "0.2.5",
-    "@typechain/ethers-v5": "^10.1.0",
-    "dotenv": "^16.0.3",
-    "eslint": "^8.25.0",
-    "ethers": "5.4.4",
-    "husky": "^8.0.1",
-    "lint-staged": "^13.0.3",
-    "prettier": "^2.7.1",
-    "ts-node": "^10.9.1",
-    "typechain": "^8.1.0",
-    "typescript": "^4.8.2"
+    "@types/node": "^24.2.1",
+    "@wagmi/cli": "^2.3.2",
+    "eslint": "^8.57.1",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.1.5",
+    "prettier": "^3.6.2",
+    "typescript": "^5.9.2"
   },
   "prettier": "@gearbox-protocol/prettier-config",
   "lint-staged": {
@@ -61,5 +66,6 @@
     ],
     "*.sol": "forge fmt",
     "*.{json,md}": "prettier --write"
-  }
+  },
+  "packageManager": "yarn@1.22.22+sha1.ac34549e6aa8e7ead463a7407e1c7390f61a6610"
 }

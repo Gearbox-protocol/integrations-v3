@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 // Gearbox Protocol. Generalized leverage for DeFi protocols
 // (c) Gearbox Foundation, 2024.
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.23;
 
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {
     IPendleRouter,
     IPendleMarket,
@@ -57,9 +58,8 @@ contract PendleRouterAdapterUnitTest is
     }
 
     /// @notice U:[PEND-1]: Constructor works as expected
-    function test_U_PEND_01_constructor_works_as_expected() public {
+    function test_U_PEND_01_constructor_works_as_expected() public view {
         assertEq(adapter.creditManager(), address(creditManager), "Incorrect creditManager");
-        assertEq(adapter.addressProvider(), address(addressProvider), "Incorrect addressProvider");
         assertEq(adapter.targetContract(), pendleRouter, "Incorrect targetContract");
     }
 
@@ -111,20 +111,16 @@ contract PendleRouterAdapterUnitTest is
         _readsActiveAccount();
         _executesSwap({
             tokenIn: tokens[0],
-            tokenOut: pt,
             callData: abi.encodeCall(
                 IPendleRouter.swapExactTokenForPt, (creditAccount, market, 0, approxParams, input, limitOrderData)
             ),
-            requiresApproval: true,
-            validatesTokens: true
+            requiresApproval: true
         });
 
         vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) =
-            adapter.swapExactTokenForPt(address(0), market, 0, approxParams, input, limitOrderData);
+        bool useSafePrices = adapter.swapExactTokenForPt(address(0), market, 0, approxParams, input, limitOrderData);
 
-        assertEq(tokensToEnable, 2, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
+        assertTrue(useSafePrices, "Should use safe prices");
     }
 
     /// @notice U:[PEND-4]: `swapDiffTokenForPt` works as expected
@@ -151,21 +147,18 @@ contract PendleRouterAdapterUnitTest is
         _readsActiveAccount();
         _executesSwap({
             tokenIn: tokens[0],
-            tokenOut: pt,
             callData: abi.encodeCall(
                 IPendleRouter.swapExactTokenForPt,
                 (creditAccount, market, diffInputAmount / 2, approxParams, input, limitOrderData)
             ),
-            requiresApproval: true,
-            validatesTokens: true
+            requiresApproval: true
         });
 
         vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) =
+        bool useSafePrices =
             adapter.swapDiffTokenForPt(market, 0.5e27, approxParams, TokenDiffInput(tokens[0], diffLeftoverAmount));
 
-        assertEq(tokensToEnable, 2, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, diffDisableTokenIn ? 1 : 0, "Incorrect tokensToDisable");
+        assertTrue(useSafePrices, "Should use safe prices");
     }
 
     /// @notice U:[PEND-5]: `swapExactPtForToken` works as expected
@@ -188,20 +181,16 @@ contract PendleRouterAdapterUnitTest is
         _readsActiveAccount();
         _executesSwap({
             tokenIn: pt,
-            tokenOut: tokens[0],
             callData: abi.encodeCall(
                 IPendleRouter.swapExactPtForToken, (creditAccount, market, 100, output, limitOrderData)
             ),
-            requiresApproval: true,
-            validatesTokens: true
+            requiresApproval: true
         });
 
         vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) =
-            adapter.swapExactPtForToken(address(0), market, 100, output, limitOrderData);
+        bool useSafePrices = adapter.swapExactPtForToken(address(0), market, 100, output, limitOrderData);
 
-        assertEq(tokensToEnable, 1, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
+        assertTrue(useSafePrices, "Should use safe prices");
     }
 
     /// @notice U:[PEND-6]: `swapDiffPtForToken` works as expected
@@ -226,20 +215,16 @@ contract PendleRouterAdapterUnitTest is
         _readsActiveAccount();
         _executesSwap({
             tokenIn: pt,
-            tokenOut: tokens[0],
             callData: abi.encodeCall(
                 IPendleRouter.swapExactPtForToken, (creditAccount, market, diffInputAmount, output, limitOrderData)
             ),
-            requiresApproval: true,
-            validatesTokens: true
+            requiresApproval: true
         });
 
         vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) =
-            adapter.swapDiffPtForToken(market, diffLeftoverAmount, TokenDiffOutput(tokens[0], 0.5e27));
+        bool useSafePrices = adapter.swapDiffPtForToken(market, diffLeftoverAmount, TokenDiffOutput(tokens[0], 0.5e27));
 
-        assertEq(tokensToEnable, 1, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, diffDisableTokenIn ? 2 : 0, "Incorrect tokensToDisable");
+        assertTrue(useSafePrices, "Should use safe prices");
     }
 
     /// @notice U:[PEND-7]: `redeemPyToToken` works as expected
@@ -277,17 +262,14 @@ contract PendleRouterAdapterUnitTest is
         _readsActiveAccount();
         _executesSwap({
             tokenIn: pt,
-            tokenOut: tokens[0],
             callData: abi.encodeCall(IPendleRouter.redeemPyToToken, (creditAccount, yt, 100, output)),
-            requiresApproval: true,
-            validatesTokens: true
+            requiresApproval: true
         });
 
         vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.redeemPyToToken(address(0), yt, 100, output);
+        bool useSafePrices = adapter.redeemPyToToken(address(0), yt, 100, output);
 
-        assertEq(tokensToEnable, 1, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
+        assertTrue(useSafePrices, "Should use safe prices");
     }
 
     /// @notice U:[PEND-8]: `redeemDiffPyToToken` works as expected
@@ -327,18 +309,14 @@ contract PendleRouterAdapterUnitTest is
         _readsActiveAccount();
         _executesSwap({
             tokenIn: pt,
-            tokenOut: tokens[0],
             callData: abi.encodeCall(IPendleRouter.redeemPyToToken, (creditAccount, yt, diffInputAmount, output)),
-            requiresApproval: true,
-            validatesTokens: true
+            requiresApproval: true
         });
 
         vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) =
-            adapter.redeemDiffPyToToken(yt, diffLeftoverAmount, TokenDiffOutput(tokens[0], 0.5e27));
+        bool useSafePrices = adapter.redeemDiffPyToToken(yt, diffLeftoverAmount, TokenDiffOutput(tokens[0], 0.5e27));
 
-        assertEq(tokensToEnable, 1, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, diffDisableTokenIn ? 2 : 0, "Incorrect tokensToDisable");
+        assertTrue(useSafePrices, "Should use safe prices");
     }
 
     /// @notice U:[PEND-9]: `setPairStatusBatch` works as expected
@@ -372,8 +350,8 @@ contract PendleRouterAdapterUnitTest is
             "Second pair status is incorrect"
         );
         assertEq(adapter.ptToMarket(pt), market, "Incorrect market for PT");
-        assertEq(adapter.isRedemptionAllowed(tokens[0], pt), false, "Incorrect redemption status for first pair");
-        assertEq(adapter.isRedemptionAllowed(tokens[1], pt), true, "Incorrect redemption status for second pair");
+        assertFalse(adapter.isRedemptionAllowed(tokens[0], pt), "Incorrect redemption status for first pair");
+        assertTrue(adapter.isRedemptionAllowed(tokens[1], pt), "Incorrect redemption status for second pair");
 
         PendlePairStatus[] memory allowedPairs = adapter.getAllowedPairs();
         assertEq(allowedPairs.length, 1, "Incorrect number of allowed pairs");

@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: UNLICENSED
 // Gearbox Protocol. Generalized leverage for DeFi protocols
-// (c) Gearbox Foundation, 2023.
+// (c) Gearbox Foundation, 2024.
 pragma solidity ^0.8.10;
 
 import {Pausable} from "@openzeppelin/contracts/security/Pausable.sol";
 
 import {ICreditManagerV3} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditManagerV3.sol";
 import {ICreditFacadeV3} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacadeV3.sol";
-import {IVersion} from "@gearbox-protocol/core-v2/contracts/interfaces/IVersion.sol";
-import {DegenNFTV2} from "@gearbox-protocol/core-v2/contracts/tokens/DegenNFTV2.sol";
+import {IVersion} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IVersion.sol";
+import {DegenNFTMock} from "@gearbox-protocol/core-v3/contracts/test/mocks/token/DegenNFTMock.sol";
 
 import "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
 import {SupportedContracts, Contracts} from "@gearbox-protocol/sdk-gov/contracts/SupportedContracts.sol";
@@ -19,16 +19,13 @@ import {
     UniswapV3Pair,
     GenericSwapPair,
     VelodromeV2Pool,
-    PendlePair,
-    MellowUnderlyingConfig
+    MellowUnderlyingConfig,
+    PendlePair
 } from "@gearbox-protocol/core-v3/contracts/test/interfaces/ICreditConfig.sol";
 
 import {PriceFeedDeployer} from "@gearbox-protocol/oracles-v3/contracts/test/suites/PriceFeedDeployer.sol";
 import {IntegrationTestHelper} from "@gearbox-protocol/core-v3/contracts/test/helpers/IntegrationTestHelper.sol";
 import {AdapterDeployer} from "./AdapterDeployer.sol";
-
-import {CONFIG_MAINNET_DAI_TEST_V3} from "../config/TEST_DAI_Mainnet_config.sol";
-import {CONFIG_MAINNET_WETH_TEST_V3} from "../config/TEST_WETH_Mainnet_config.sol";
 
 import {IConvexV1BoosterAdapter} from "../../interfaces/convex/IConvexV1BoosterAdapter.sol";
 import {BalancerV2VaultAdapter} from "../../adapters/balancer/BalancerV2VaultAdapter.sol";
@@ -38,6 +35,7 @@ import {VelodromeV2RouterAdapter} from "../../adapters/velodrome/VelodromeV2Rout
 import {CamelotV3Adapter} from "../../adapters/camelot/CamelotV3Adapter.sol";
 import {PendleRouterAdapter} from "../../adapters/pendle/PendleRouterAdapter.sol";
 import {MellowVaultAdapter} from "../../adapters/mellow/MellowVaultAdapter.sol";
+
 import {PoolStatus} from "../../interfaces/balancer/IBalancerV2VaultAdapter.sol";
 import {UniswapV2PairStatus} from "../../interfaces/uniswap/IUniswapV2Adapter.sol";
 import {UniswapV3PoolStatus} from "../../interfaces/uniswap/IUniswapV3Adapter.sol";
@@ -51,10 +49,7 @@ import "@gearbox-protocol/core-v3/contracts/test/lib/constants.sol";
 import "forge-std/console.sol";
 
 contract LiveTestHelper is IntegrationTestHelper {
-    constructor() {
-        addDeployConfig(new CONFIG_MAINNET_WETH_TEST_V3());
-        addDeployConfig(new CONFIG_MAINNET_DAI_TEST_V3());
-    }
+    constructor() {}
 
     SupportedContracts public supportedContracts;
 
@@ -73,16 +68,7 @@ contract LiveTestHelper is IntegrationTestHelper {
 
     modifier attachOrLiveTest() {
         if (chainId != 1337 && chainId != 31337) {
-            try vm.envAddress("ATTACH_ADDRESS_PROVIDER") returns (address) {
-                _attachCore();
-                supportedContracts = new SupportedContracts(chainId);
-
-                address creditManagerToAttach;
-
-                try vm.envAddress("ATTACH_CREDIT_MANAGER") returns (address val) {
-                    creditManagerToAttach = val;
-                } catch {}
-
+            try vm.envAddress("ATTACH_CREDIT_MANAGER") returns (address creditManagerToAttach) {
                 if (creditManagerToAttach != address(0)) {
                     if (_checkFunctionalSuite(creditManagerToAttach)) {
                         _attachCreditManager(creditManagerToAttach);
@@ -91,8 +77,13 @@ contract LiveTestHelper is IntegrationTestHelper {
                     } else {
                         console.log("Pool or facade for attached CM paused, skipping: %s", creditManagerToAttach);
                     }
-                } else {
-                    address[] memory cms = cr.getCreditManagers();
+                }
+            } catch {
+                try vm.envAddress("ATTACH_POOL") returns (address poolToAttach) {
+                    _attachPool(poolToAttach);
+                    supportedContracts = new SupportedContracts(chainId);
+
+                    address[] memory cms = pool.creditManagers();
                     uint256 len = cms.length;
                     for (uint256 i = 0; i < len; ++i) {
                         if (IVersion(cms[i]).version() >= 3_00) {
@@ -107,20 +98,25 @@ contract LiveTestHelper is IntegrationTestHelper {
                             vm.revertTo(snapshot);
                         }
                     }
-                }
-            } catch {
-                try vm.envString("LIVE_TEST_CONFIG") returns (string memory id) {
-                    _setupLiveCreditTest(id);
-
-                    vm.prank(address(gauge));
-                    poolQuotaKeeper.updateRates();
-
-                    for (uint256 i = 0; i < creditManagers.length; ++i) {
-                        _attachCreditManager(address(creditManagers[i]));
-                        _;
-                    }
+                    console.log("Successfully ran tests on attached pool: %s", poolToAttach);
                 } catch {
-                    revert("Neither attach AP nor live test config was defined.");
+                    try vm.envString("LIVE_TEST_CONFIG") returns (string memory id) {
+                        _setupLiveCreditTest(id);
+
+                        vm.prank(address(gauge));
+                        poolQuotaKeeper.updateRates();
+
+                        for (uint256 i = 0; i < creditManagers.length; ++i) {
+                            uint256 s = vm.snapshot();
+                            _attachCreditManager(address(creditManagers[i]));
+                            _;
+                            vm.revertTo(s);
+                        }
+                    } catch {
+                        revert(
+                            "Live/attach tests require the attached pool/CM address or live test config. Please set one of the env variables: ATTACH_POOL or ATTACH_CREDIT_MANAGER or LIVE_TEST_CONFIG"
+                        );
+                    }
                 }
             }
         }
@@ -131,7 +127,7 @@ contract LiveTestHelper is IntegrationTestHelper {
         supportedContracts = new SupportedContracts(chainId);
 
         PriceFeedDeployer priceFeedDeployer =
-            new PriceFeedDeployer(chainId, address(addressProvider), tokenTestSuite, supportedContracts);
+            new PriceFeedDeployer(chainId, address(acl), tokenTestSuite, supportedContracts);
 
         priceFeedDeployer.addPriceFeeds(address(priceOracle));
 
@@ -151,10 +147,10 @@ contract LiveTestHelper is IntegrationTestHelper {
             address degenNFT = ICreditFacadeV3(ICreditManagerV3(creditManagers[i]).creditFacade()).degenNFT();
 
             if (degenNFT != address(0)) {
-                address minter = DegenNFTV2(degenNFT).minter();
+                address minter = DegenNFTMock(degenNFT).minter();
 
                 vm.prank(minter);
-                DegenNFTV2(degenNFT).mint(USER, 1000);
+                DegenNFTMock(degenNFT).mint(USER, 1000);
             }
         }
     }
@@ -167,14 +163,14 @@ contract LiveTestHelper is IntegrationTestHelper {
 
         if (boosterAdapter != address(0)) {
             vm.prank(CONFIGURATOR);
-            IConvexV1BoosterAdapter(boosterAdapter).updateStakedPhantomTokensMap();
+            IConvexV1BoosterAdapter(boosterAdapter).updateSupportedPids();
         }
 
         boosterAdapter = getAdapter(creditManager, Contracts.AURA_BOOSTER);
 
         if (boosterAdapter != address(0)) {
             vm.prank(CONFIGURATOR);
-            IConvexV1BoosterAdapter(boosterAdapter).updateStakedPhantomTokensMap();
+            IConvexV1BoosterAdapter(boosterAdapter).updateSupportedPids();
         }
 
         // BALANCER VAULT

@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Gearbox Protocol. Generalized leverage for DeFi protocols
-// (c) Gearbox Foundation, 2023.
+// (c) Gearbox Foundation, 2024.
 pragma solidity ^0.8.10;
 
-import {IWETH} from "@gearbox-protocol/core-v2/contracts/interfaces/external/IWETH.sol";
+import {IVersion} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IVersion.sol";
+import {IWETH} from "@gearbox-protocol/core-v3/contracts/interfaces/external/IWETH.sol";
 import {N_COINS, ICurvePool2Assets} from "../../integrations/curve/ICurvePool_2.sol";
 import {ICurvePoolStETH} from "../../integrations/curve/ICurvePoolStETH.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -11,14 +12,18 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 
 // EXCEPTIONS
 import {
-    ZeroAddressException, NotImplementedException
-} from "@gearbox-protocol/core-v2/contracts/interfaces/IErrors.sol";
+    ZeroAddressException,
+    NotImplementedException
+} from "@gearbox-protocol/core-v3/contracts/interfaces/IExceptions.sol";
 
 /// @title CurveV1StETHPoolGateway
 /// @dev This is connector contract to connect creditAccounts and Curve stETH pool
 /// it converts WETH to ETH and vice versa for operational purposes
-contract CurveV1StETHPoolGateway is ICurvePool2Assets {
+contract CurveV1StETHPoolGateway is ICurvePool2Assets, IVersion {
     using SafeERC20 for IERC20;
+
+    bytes32 public constant override contractType = "GATEWAY::CURVE_V1";
+    uint256 public constant override version = 3_10;
 
     /// @dev Address of the token with index 0 (WETH)
     address public immutable token0;

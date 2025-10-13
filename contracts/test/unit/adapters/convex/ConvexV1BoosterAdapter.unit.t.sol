@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: UNLICENSED
 // Gearbox Protocol. Generalized leverage for DeFi protocols
-// (c) Gearbox Foundation, 2023.
-pragma solidity ^0.8.17;
+// (c) Gearbox Foundation, 2024.
+pragma solidity ^0.8.23;
 
 import {BoosterMock} from "../../../mocks/integrations/convex/BoosterMock.sol";
 import {AdapterUnitTestHelper} from "../AdapterUnitTestHelper.sol";
 import {ConvexV1BoosterAdapterHarness} from "./ConvexV1BoosterAdapter.harness.sol";
+import {IConvexV1BoosterAdapter} from "../../../../interfaces/convex/IConvexV1BoosterAdapter.sol";
 
 /// @title Convex v1 booster adapter unit test
 /// @notice U:[CVX1B]: Unit tests for Convex v1 booster adapter
@@ -20,13 +21,13 @@ contract ConvexV1BoosterAdapterUnitTest is AdapterUnitTestHelper {
         booster.setPoolInfo(42, tokens[0], tokens[1]);
 
         adapter = new ConvexV1BoosterAdapterHarness(address(creditManager), address(booster));
-        adapter.hackPidToPhantokToken(42, tokens[2]);
+        adapter.hackSupportedPids(42);
+        adapter.hackPidMappings(42, tokens[2], tokens[0], tokens[1]);
     }
 
     /// @notice U:[CVX1B-1]: Constructor works as expected
-    function test_U_CVX1B_01_constructor_works_as_expected() public {
+    function test_U_CVX1B_01_constructor_works_as_expected() public view {
         assertEq(adapter.creditManager(), address(creditManager), "Incorrect creditManager");
-        assertEq(adapter.addressProvider(), address(addressProvider), "Incorrect addressProvider");
         assertEq(adapter.targetContract(), address(booster), "Incorrect targetContract");
     }
 
@@ -45,6 +46,25 @@ contract ConvexV1BoosterAdapterUnitTest is AdapterUnitTestHelper {
         adapter.withdrawDiff(0, 0);
     }
 
+    /// @notice U:[CVX1B-2A]: Functions revert on unknown pid
+    function test_U_CVX1B_02A_functions_revert_on_unknown_pid() public {
+        vm.expectRevert(IConvexV1BoosterAdapter.UnsupportedPidException.selector);
+        vm.prank(creditFacade);
+        adapter.deposit(90, 0, false);
+
+        vm.expectRevert(IConvexV1BoosterAdapter.UnsupportedPidException.selector);
+        vm.prank(creditFacade);
+        adapter.depositDiff(90, 0, false);
+
+        vm.expectRevert(IConvexV1BoosterAdapter.UnsupportedPidException.selector);
+        vm.prank(creditFacade);
+        adapter.withdraw(90, 0);
+
+        vm.expectRevert(IConvexV1BoosterAdapter.UnsupportedPidException.selector);
+        vm.prank(creditFacade);
+        adapter.withdrawDiff(90, 0);
+    }
+
     /// @notice U:[CVX1B-3]: `deposit` works as expected
     function test_U_CVX1B_03_deposit_works_as_expected() public {
         for (uint256 i; i < 2; ++i) {
@@ -52,17 +72,13 @@ contract ConvexV1BoosterAdapterUnitTest is AdapterUnitTestHelper {
 
             _executesSwap({
                 tokenIn: tokens[0],
-                tokenOut: stake ? tokens[2] : tokens[1],
                 callData: abi.encodeCall(adapter.deposit, (42, 1000, stake)),
-                requiresApproval: true,
-                validatesTokens: true
+                requiresApproval: true
             });
 
             vm.prank(creditFacade);
-            (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.deposit(42, 1000, stake);
-
-            assertEq(tokensToEnable, stake ? 4 : 2, "Incorrect tokensToEnable");
-            assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
+            bool useSafePrices = adapter.deposit(42, 1000, stake);
+            assertFalse(useSafePrices);
         }
     }
 
@@ -74,17 +90,14 @@ contract ConvexV1BoosterAdapterUnitTest is AdapterUnitTestHelper {
             _readsActiveAccount();
             _executesSwap({
                 tokenIn: tokens[0],
-                tokenOut: stake ? tokens[2] : tokens[1],
                 callData: abi.encodeCall(adapter.deposit, (42, diffInputAmount, stake)),
-                requiresApproval: true,
-                validatesTokens: true
+                requiresApproval: true
             });
 
             vm.prank(creditFacade);
-            (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.depositDiff(42, diffLeftoverAmount, stake);
+            bool useSafePrices = adapter.depositDiff(42, diffLeftoverAmount, stake);
 
-            assertEq(tokensToEnable, stake ? 4 : 2, "Incorrect tokensToEnable");
-            assertEq(tokensToDisable, diffDisableTokenIn ? 1 : 0, "Incorrect tokensToDisable");
+            assertFalse(useSafePrices);
         }
     }
 
@@ -92,17 +105,13 @@ contract ConvexV1BoosterAdapterUnitTest is AdapterUnitTestHelper {
     function test_U_CVX1B_05_withdraw_works_as_expected() public {
         _executesSwap({
             tokenIn: tokens[1],
-            tokenOut: tokens[0],
             callData: abi.encodeCall(adapter.withdraw, (42, 1000)),
-            requiresApproval: false,
-            validatesTokens: true
+            requiresApproval: false
         });
 
         vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.withdraw(42, 1000);
-
-        assertEq(tokensToEnable, 1, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
+        bool useSafePrices = adapter.withdraw(42, 1000);
+        assertFalse(useSafePrices);
     }
 
     /// @notice U:[CVX1B-6]: `withdrawDiff` works as expected
@@ -111,22 +120,18 @@ contract ConvexV1BoosterAdapterUnitTest is AdapterUnitTestHelper {
         _readsActiveAccount();
         _executesSwap({
             tokenIn: tokens[1],
-            tokenOut: tokens[0],
             callData: abi.encodeCall(adapter.withdraw, (42, diffInputAmount)),
-            requiresApproval: false,
-            validatesTokens: true
+            requiresApproval: false
         });
 
         vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.withdrawDiff(42, diffLeftoverAmount);
-
-        assertEq(tokensToEnable, 1, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, diffDisableTokenIn ? 2 : 0, "Incorrect tokensToDisable");
+        bool useSafePrices = adapter.withdrawDiff(42, diffLeftoverAmount);
+        assertFalse(useSafePrices);
     }
 
     /// @notice U:[CVX1B-7]: `updatedStakedPhantomTokensMap` reverts on wrong caller
     function test_U_CVX1B_07_updateStakedPhantomTokensMap_reverts_on_wrong_caller() public {
         _revertsOnNonConfiguratorCaller();
-        adapter.updateStakedPhantomTokensMap();
+        adapter.updateSupportedPids();
     }
 }

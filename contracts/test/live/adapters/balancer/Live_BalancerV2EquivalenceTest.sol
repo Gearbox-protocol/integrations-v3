@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: UNLICENSED
 // Gearbox Protocol. Generalized leverage for DeFi protocols
-// (c) Gearbox Foundation, 2023.
-pragma solidity ^0.8.17;
+// (c) Gearbox Foundation, 2024.
+pragma solidity ^0.8.23;
 
+import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {ICreditFacadeV3} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacadeV3.sol";
 import {ICreditFacadeV3Multicall} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacadeV3Multicall.sol";
 
-import {IAdapter} from "@gearbox-protocol/core-v2/contracts/interfaces/IAdapter.sol";
-import {AdapterType} from "@gearbox-protocol/sdk-gov/contracts/AdapterType.sol";
+import {IAdapter} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IAdapter.sol";
 import {
     IBalancerV2Vault,
     SingleSwap,
@@ -33,7 +33,7 @@ import {BalancerV2_Calls, BalancerV2_Multicaller} from "../../../multicall/balan
 import "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
 import {Contracts} from "@gearbox-protocol/sdk-gov/contracts/SupportedContracts.sol";
 
-import {MultiCall} from "@gearbox-protocol/core-v2/contracts/libraries/MultiCall.sol";
+import {MultiCall} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacadeV3.sol";
 import {MultiCallBuilder} from "@gearbox-protocol/core-v3/contracts/test/lib/MultiCallBuilder.sol";
 import {AddressList} from "@gearbox-protocol/core-v3/contracts/test/lib/AddressList.sol";
 // TEST
@@ -55,6 +55,7 @@ struct BalancerPoolParams {
 contract Live_BalancerV2EquivalenceTest is LiveTestHelper {
     using BalancerV2_Calls for BalancerV2_Multicaller;
     using AddressList for address[];
+    using Address for address;
 
     BalanceComparator comparator;
 
@@ -75,16 +76,15 @@ contract Live_BalancerV2EquivalenceTest is LiveTestHelper {
     function setUp() public {
         uint256 len = stages.length;
         _stages = new string[](len);
-        unchecked {
-            for (uint256 i; i < len; ++i) {
-                _stages[i] = stages[i];
-            }
+
+        for (uint256 i; i < len; ++i) {
+            _stages[i] = stages[i];
         }
     }
 
     /// HELPER
 
-    function _getDefaultFundManagement(address creditAccount) internal returns (FundManagement memory) {
+    function _getDefaultFundManagement(address creditAccount) internal pure returns (FundManagement memory) {
         return FundManagement({
             sender: creditAccount,
             fromInternalBalance: false,
@@ -207,13 +207,11 @@ contract Live_BalancerV2EquivalenceTest is LiveTestHelper {
         }
 
         if (isAdapter) {
-            BalancerV2_Multicaller vault = BalancerV2_Multicaller(balancerVaultAddress);
-
             creditFacade.multicall(
                 creditAccount, MultiCallBuilder.build(MultiCall({target: balancerVaultAddress, callData: callData}))
             );
         } else {
-            address(balancerVaultAddress).call(callData);
+            address(balancerVaultAddress).functionCall(callData);
         }
 
         comparator.takeSnapshot("after_batchSwap", creditAccount);
@@ -601,9 +599,6 @@ contract Live_BalancerV2EquivalenceTest is LiveTestHelper {
             if (IBalancerV2VaultAdapter(balancerVaultAdapter).poolStatus(poolId) == PoolStatus.NOT_ALLOWED) continue;
 
             uint256 snapshot0 = vm.snapshot();
-
-            (IERC20[] memory tokens,,) =
-                IBalancerV2Vault(IAdapter(balancerVaultAdapter).targetContract()).getPoolTokens(poolId);
 
             BalancerPoolParams memory params = BalancerPoolParams({
                 poolToken: pool,

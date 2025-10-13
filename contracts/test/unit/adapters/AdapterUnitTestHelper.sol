@@ -1,14 +1,15 @@
 // SPDX-License-Identifier: UNLICENSED
 // Gearbox Protocol. Generalized leverage for DeFi protocols
-// (c) Gearbox Foundation, 2023.
-pragma solidity ^0.8.17;
+// (c) Gearbox Foundation, 2024.
+pragma solidity ^0.8.23;
 
 import {Test} from "forge-std/Test.sol";
 
 import {ICreditManagerV3} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditManagerV3.sol";
 import {
     CallerNotConfiguratorException,
-    CallerNotCreditFacadeException
+    CallerNotCreditFacadeException,
+    TokenNotAllowedException
 } from "@gearbox-protocol/core-v3/contracts/interfaces/IExceptions.sol";
 import {AddressProviderV3ACLMock} from
     "@gearbox-protocol/core-v3/contracts/test/mocks/core/AddressProviderV3ACLMock.sol";
@@ -21,8 +22,9 @@ contract AdapterUnitTestHelper is Test, CreditManagerV3MockEvents {
     address creditFacade;
     address creditAccount;
     address creditConfigurator;
+    address pool;
+    address acl;
     CreditManagerV3Mock creditManager;
-    AddressProviderV3ACLMock addressProvider;
 
     address[10] tokens;
 
@@ -36,11 +38,14 @@ contract AdapterUnitTestHelper is Test, CreditManagerV3MockEvents {
         creditFacade = makeAddr("CREDIT_FACADE");
         creditAccount = makeAddr("CREDIT_ACCOUNT");
         creditConfigurator = makeAddr("CREDIT_CONFIGURATOR");
+        pool = makeAddr("POOL");
 
         vm.prank(configurator);
-        addressProvider = new AddressProviderV3ACLMock();
+        acl = address(new AddressProviderV3ACLMock());
 
-        creditManager = new CreditManagerV3Mock(address(addressProvider), creditFacade, creditConfigurator);
+        vm.mockCall(pool, abi.encodeWithSignature("acl()"), abi.encode(acl));
+
+        creditManager = new CreditManagerV3Mock(pool, creditFacade, creditConfigurator);
 
         for (uint256 i; i < tokens.length; ++i) {
             string memory name = string.concat("Test Token ", vm.toString(i));
@@ -76,6 +81,11 @@ contract AdapterUnitTestHelper is Test, CreditManagerV3MockEvents {
         vm.expectRevert(CallerNotCreditFacadeException.selector);
     }
 
+    function _revertsOnUnknownToken() internal {
+        //vm.expectRevert(TokenNotAllowedException.selector);
+        vm.expectRevert("Token not recognized");
+    }
+
     function _readsTokenMask(address token) internal {
         vm.expectCall(address(creditManager), abi.encodeCall(ICreditManagerV3.getTokenMaskOrRevert, (token)));
     }
@@ -84,21 +94,7 @@ contract AdapterUnitTestHelper is Test, CreditManagerV3MockEvents {
         vm.expectCall(address(creditManager), abi.encodeCall(ICreditManagerV3.getActiveCreditAccountOrRevert, ()));
     }
 
-    function _executesSwap(
-        address tokenIn,
-        address tokenOut,
-        bytes memory callData,
-        bool requiresApproval,
-        bool validatesTokens
-    ) internal {
-        if (validatesTokens) {
-            vm.expectCall(address(creditManager), abi.encodeCall(ICreditManagerV3.getTokenMaskOrRevert, (tokenOut)));
-
-            if (!requiresApproval) {
-                vm.expectCall(address(creditManager), abi.encodeCall(ICreditManagerV3.getTokenMaskOrRevert, (tokenIn)));
-            }
-        }
-
+    function _executesSwap(address tokenIn, bytes memory callData, bool requiresApproval) internal {
         if (requiresApproval) {
             vm.expectCall(
                 address(creditManager),
@@ -120,15 +116,7 @@ contract AdapterUnitTestHelper is Test, CreditManagerV3MockEvents {
         }
     }
 
-    function _executesCall(address[] memory tokensToApprove, address[] memory tokensToValidate, bytes memory callData)
-        internal
-    {
-        for (uint256 i; i < tokensToValidate.length; ++i) {
-            vm.expectCall(
-                address(creditManager), abi.encodeCall(ICreditManagerV3.getTokenMaskOrRevert, (tokensToValidate[i]))
-            );
-        }
-
+    function _executesCall(address[] memory tokensToApprove, bytes memory callData) internal {
         for (uint256 i; i < tokensToApprove.length; ++i) {
             vm.expectCall(
                 address(creditManager),

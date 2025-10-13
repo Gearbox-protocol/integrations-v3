@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: MIT
 // Gearbox Protocol. Generalized leverage for DeFi protocols
-// (c) Gearbox Foundation, 2023.
-pragma solidity ^0.8.17;
+// (c) Gearbox Foundation, 2024.
+pragma solidity ^0.8.23;
 
-interface IZapper {
+import {IZapper as IZapperBase} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IZapper.sol";
+
+interface IZapper is IZapperBase {
     function pool() external view returns (address);
 
     function underlying() external view returns (address);

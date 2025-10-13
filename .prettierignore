@@ -3,3 +3,5 @@ artifacts
 cache
 types
 forge-out
+lib
+dist

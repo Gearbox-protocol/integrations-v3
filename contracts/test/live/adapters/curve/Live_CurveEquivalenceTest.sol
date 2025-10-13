@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 // Gearbox Protocol. Generalized leverage for DeFi protocols
-// (c) Gearbox Foundation, 2023.
-pragma solidity ^0.8.17;
+// (c) Gearbox Foundation, 2024.
+pragma solidity ^0.8.23;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
@@ -16,14 +16,13 @@ import {ICurveV1_2AssetsAdapter} from "../../../../interfaces/curve/ICurveV1_2As
 import {ICurveV1_3AssetsAdapter} from "../../../../interfaces/curve/ICurveV1_3AssetsAdapter.sol";
 import {ICurveV1_4AssetsAdapter} from "../../../../interfaces/curve/ICurveV1_4AssetsAdapter.sol";
 import {ICurveV1_StableNGAdapter} from "../../../../interfaces/curve/ICurveV1_StableNGAdapter.sol";
-import {IAdapter} from "@gearbox-protocol/core-v2/contracts/interfaces/IAdapter.sol";
-import {AdapterType} from "@gearbox-protocol/sdk-gov/contracts/AdapterType.sol";
+import {IAdapter} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IAdapter.sol";
 import {AddressList} from "@gearbox-protocol/core-v3/contracts/test/lib/AddressList.sol";
 
 import "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
 import {Contracts} from "@gearbox-protocol/sdk-gov/contracts/SupportedContracts.sol";
 
-import {MultiCall} from "@gearbox-protocol/core-v2/contracts/libraries/MultiCall.sol";
+import {MultiCall} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacadeV3.sol";
 import {MultiCallBuilder} from "@gearbox-protocol/core-v3/contracts/test/lib/MultiCallBuilder.sol";
 
 import {CurveV1Calls, CurveV1Multicaller} from "../../../multicall/curve/CurveV1_Calls.sol";
@@ -611,10 +610,9 @@ contract Live_CurveEquivalenceTest is LiveTestHelper {
         }
     }
 
-    function isCurveAdapter(AdapterType aType) internal pure returns (bool) {
-        return aType == AdapterType.CURVE_V1_2ASSETS || aType == AdapterType.CURVE_V1_3ASSETS
-            || aType == AdapterType.CURVE_V1_4ASSETS || aType == AdapterType.CURVE_V1_STECRV_POOL
-            || aType == AdapterType.CURVE_STABLE_NG;
+    function isCurveAdapter(bytes32 aType) internal pure returns (bool) {
+        return aType == "AD_CURVE_V1_2ASSETS" || aType == "AD_CURVE_V1_3ASSETS" || aType == "AD_CURVE_V1_4ASSETS"
+            || aType == "AD_CURVE_V1_STECRV_POOL" || aType == "AD_CURVE_STABLE_NG";
     }
 
     /// @dev [L-CRVET-1]: Curve adapter and normal account works identically
@@ -622,7 +620,7 @@ contract Live_CurveEquivalenceTest is LiveTestHelper {
         address[] memory adapters = creditConfigurator.allowedAdapters();
 
         for (uint256 i = 0; i < adapters.length; ++i) {
-            if (!isCurveAdapter(IAdapter(adapters[i])._gearboxAdapterType())) continue;
+            if (!isCurveAdapter(IAdapter(adapters[i]).contractType())) continue;
 
             uint256 snapshot0 = vm.snapshot();
 
@@ -636,7 +634,7 @@ contract Live_CurveEquivalenceTest is LiveTestHelper {
             CurvePoolParams memory cpp = CurvePoolParams({
                 use256: ICurveV1Adapter(adapters[i]).use256(),
                 hasUnderlying: ICurveV1Adapter(adapters[i]).underlying0() != address(0),
-                isNGPool: IAdapter(adapters[i])._gearboxAdapterType() == AdapterType.CURVE_STABLE_NG,
+                isNGPool: IAdapter(adapters[i]).contractType() == "ADAPTER::CURVE_STABLE_NG",
                 nCoins: ICurveV1Adapter(adapters[i]).nCoins(),
                 lpToken: ICurveV1Adapter(adapters[i]).token(),
                 lpSupported: creditManager.liquidationThresholds(ICurveV1Adapter(adapters[i]).token()) != 0,

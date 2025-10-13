@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Gearbox Protocol. Generalized leverage for DeFi protocols
-// (c) Gearbox Foundation, 2023.
-pragma solidity ^0.8.17;
+// (c) Gearbox Foundation, 2024.
+pragma solidity ^0.8.23;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
-import {RAY} from "@gearbox-protocol/core-v2/contracts/libraries/Constants.sol";
+import {RAY} from "@gearbox-protocol/core-v3/contracts/libraries/Constants.sol";
 import {AbstractAdapter} from "../AbstractAdapter.sol";
-import {AdapterType} from "@gearbox-protocol/sdk-gov/contracts/AdapterType.sol";
 
 import {IMellowVaultAdapter, MellowUnderlyingStatus} from "../../interfaces/mellow/IMellowVaultAdapter.sol";
 import {IMellowVault} from "../../integrations/mellow/IMellowVault.sol";
@@ -15,20 +15,19 @@ import {IMellowVault} from "../../integrations/mellow/IMellowVault.sol";
 /// @title Mellow vault adapter
 /// @notice Implements logic for interacting with the Mellow vault contract (deposits only)
 contract MellowVaultAdapter is AbstractAdapter, IMellowVaultAdapter {
-    AdapterType public constant override _gearboxAdapterType = AdapterType.MELLOW_LRT_VAULT;
-    uint16 public constant override _gearboxAdapterVersion = 3_00;
+    using EnumerableSet for EnumerableSet.AddressSet;
 
-    /// @notice Mapping from underlying address to its status
-    mapping(address => bool) public isUnderlyingAllowed;
+    bytes32 public constant override contractType = "ADAPTER::MELLOW_LRT_VAULT";
+    uint256 public constant override version = 3_10;
 
-    /// @notice Collateral token mask of the vault token
-    uint256 public immutable vaultTokenMask;
+    /// @dev Set of allowed underlying addresses
+    EnumerableSet.AddressSet internal _allowedUnderlyings;
 
     /// @notice Constructor
     /// @param _creditManager Credit manager address
     /// @param _mellowVault Mellow vault address
     constructor(address _creditManager, address _mellowVault) AbstractAdapter(_creditManager, _mellowVault) {
-        vaultTokenMask = _getMaskOrRevert(_mellowVault); // U:[MEL-1]
+        _getMaskOrRevert(_mellowVault); // U:[MEL-1]
     }
 
     /// @notice Deposits specified amounts of tokens into the vault in exchange for LP tokens.
@@ -39,7 +38,7 @@ contract MellowVaultAdapter is AbstractAdapter, IMellowVaultAdapter {
     function deposit(address, uint256[] memory amounts, uint256 minLpAmount, uint256 deadline)
         external
         creditFacadeOnly // U:[MEL-2]
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+        returns (bool)
     {
         address creditAccount = _creditAccount();
 
@@ -50,7 +49,7 @@ contract MellowVaultAdapter is AbstractAdapter, IMellowVaultAdapter {
         if (amounts.length != len) revert IncorrectArrayLengthException(); // U:[MEL-3]
 
         for (uint256 i = 0; i < len;) {
-            if (!isUnderlyingAllowed[underlyings[i]]) {
+            if (!_allowedUnderlyings.contains(underlyings[i])) {
                 revert UnderlyingNotAllowedException(underlyings[i]); // U:[MEL-3]
             }
 
@@ -63,7 +62,7 @@ contract MellowVaultAdapter is AbstractAdapter, IMellowVaultAdapter {
         _execute(abi.encodeCall(IMellowVault.deposit, (creditAccount, amounts, minLpAmount, deadline))); // U:[MEL-3]
         _approveAssets(underlyings, amounts, 1);
 
-        (tokensToEnable, tokensToDisable) = (vaultTokenMask, 0);
+        return true;
     }
 
     /// @notice Deposits a specififed amount of one underlying into the vault in exchange for LP tokens.
@@ -74,13 +73,13 @@ contract MellowVaultAdapter is AbstractAdapter, IMellowVaultAdapter {
     function depositOneAsset(address asset, uint256 amount, uint256 minLpAmount, uint256 deadline)
         external
         creditFacadeOnly
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+        returns (bool)
     {
-        if (!isUnderlyingAllowed[asset]) revert UnderlyingNotAllowedException(asset); // U:[MEL-4]
+        if (!_allowedUnderlyings.contains(asset)) revert UnderlyingNotAllowedException(asset); // U:[MEL-4]
 
         address creditAccount = _creditAccount();
 
-        (tokensToEnable, tokensToDisable) = _depositOneAsset(creditAccount, asset, amount, minLpAmount, deadline, false); // U:[MEL-4]
+        return _depositOneAsset(creditAccount, asset, amount, minLpAmount, deadline); // U:[MEL-4]
     }
 
     /// @notice Deposits the entire balance of one underlying, except the specified amount, into the vault in exchange for LP tokens.
@@ -91,22 +90,21 @@ contract MellowVaultAdapter is AbstractAdapter, IMellowVaultAdapter {
     function depositOneAssetDiff(address asset, uint256 leftoverAmount, uint256 rateMinRAY, uint256 deadline)
         external
         creditFacadeOnly
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+        returns (bool)
     {
-        if (!isUnderlyingAllowed[asset]) revert UnderlyingNotAllowedException(asset); // U:[MEL-5]
+        if (!_allowedUnderlyings.contains(asset)) revert UnderlyingNotAllowedException(asset); // U:[MEL-5]
 
         address creditAccount = _creditAccount();
 
         uint256 amount = IERC20(asset).balanceOf(creditAccount);
 
-        if (amount <= leftoverAmount) return (0, 0);
+        if (amount <= leftoverAmount) return false;
 
         unchecked {
             amount = amount - leftoverAmount;
         }
 
-        (tokensToEnable, tokensToDisable) =
-            _depositOneAsset(creditAccount, asset, amount, amount * rateMinRAY / RAY, deadline, leftoverAmount <= 1); // U:[MEL-5]
+        return _depositOneAsset(creditAccount, asset, amount, amount * rateMinRAY / RAY, deadline); // U:[MEL-5]
     }
 
     /// @dev Internal implementation for `depositOneAsset` and `depositOneAssetDiff`
@@ -115,9 +113,8 @@ contract MellowVaultAdapter is AbstractAdapter, IMellowVaultAdapter {
         address asset,
         uint256 amount,
         uint256 minLpAmount,
-        uint256 deadline,
-        bool disableTokenIn
-    ) internal returns (uint256 tokensToEnable, uint256 tokensToDisable) {
+        uint256 deadline
+    ) internal returns (bool) {
         address[] memory underlyings = IMellowVault(targetContract).underlyingTokens();
         uint256 len = underlyings.length;
 
@@ -139,7 +136,7 @@ contract MellowVaultAdapter is AbstractAdapter, IMellowVaultAdapter {
         _approveToken(asset, type(uint256).max);
         _execute(abi.encodeCall(IMellowVault.deposit, (creditAccount, amounts, minLpAmount, deadline))); // U:[MEL-4,5]
         _approveToken(asset, 1);
-        (tokensToEnable, tokensToDisable) = (vaultTokenMask, disableTokenIn ? _getMaskOrRevert(asset) : 0);
+        return true;
     }
 
     /// @dev Internal function that changes approval for a batch of assets
@@ -153,6 +150,20 @@ contract MellowVaultAdapter is AbstractAdapter, IMellowVaultAdapter {
         }
     }
 
+    // ---- //
+    // DATA //
+    // ---- //
+
+    /// @notice Returns the list of allowed underlyings
+    function allowedUnderlyings() public view returns (address[] memory) {
+        return _allowedUnderlyings.values();
+    }
+
+    /// @notice Serialized adapter parameters
+    function serialize() external view returns (bytes memory serializedData) {
+        serializedData = abi.encode(creditManager, targetContract, allowedUnderlyings());
+    }
+
     // ------------- //
     // CONFIGURATION //
     // ------------- //
@@ -164,11 +175,14 @@ contract MellowVaultAdapter is AbstractAdapter, IMellowVaultAdapter {
         configuratorOnly // U:[MEL-6]
     {
         uint256 len = underlyings.length;
-        unchecked {
-            for (uint256 i; i < len; ++i) {
-                isUnderlyingAllowed[underlyings[i].underlying] = underlyings[i].allowed; // U:[MEL-6]
-                emit SetUnderlyingStatus(underlyings[i].underlying, underlyings[i].allowed); // U:[MEL-6]
+        for (uint256 i; i < len; ++i) {
+            if (underlyings[i].allowed) {
+                _getMaskOrRevert(underlyings[i].underlying);
+                _allowedUnderlyings.add(underlyings[i].underlying);
+            } else {
+                _allowedUnderlyings.remove(underlyings[i].underlying);
             }
+            emit SetUnderlyingStatus(underlyings[i].underlying, underlyings[i].allowed); // U:[MEL-6]
         }
     }
 }

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 // Gearbox Protocol. Generalized leverage for DeFi protocols
-// (c) Gearbox Foundation, 2023.
-pragma solidity ^0.8.17;
+// (c) Gearbox Foundation, 2024.
+pragma solidity ^0.8.23;
 
 interface CreditManagerV3MockEvents {
     event Approve(address token, uint256 amount);
@@ -9,7 +9,7 @@ interface CreditManagerV3MockEvents {
 }
 
 contract CreditManagerV3Mock is CreditManagerV3MockEvents {
-    address public addressProvider;
+    address public pool;
     address public creditFacade;
     address public creditConfigurator;
 
@@ -18,8 +18,8 @@ contract CreditManagerV3Mock is CreditManagerV3MockEvents {
 
     bytes _result;
 
-    constructor(address _addressProvider, address _creditFacade, address _creditConfigurator) {
-        addressProvider = _addressProvider;
+    constructor(address _pool, address _creditFacade, address _creditConfigurator) {
+        pool = _pool;
         creditFacade = _creditFacade;
         creditConfigurator = _creditConfigurator;
     }

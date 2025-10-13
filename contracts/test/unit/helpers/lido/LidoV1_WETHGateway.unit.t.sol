@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: UNLICENSED
 // Gearbox Protocol. Generalized leverage for DeFi protocols
-// (c) Gearbox Foundation, 2023.
-pragma solidity ^0.8.17;
+// (c) Gearbox Foundation, 2024.
+pragma solidity ^0.8.23;
 
 import {Test} from "forge-std/Test.sol";
 
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 
-import {IWETH} from "@gearbox-protocol/core-v2/contracts/interfaces/external/IWETH.sol";
+import {IWETH} from "@gearbox-protocol/core-v3/contracts/interfaces/external/IWETH.sol";
 import {
     ReceiveIsNotAllowedException,
     ZeroAddressException

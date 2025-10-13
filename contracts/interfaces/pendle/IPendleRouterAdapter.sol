@@ -3,7 +3,7 @@
 // (c) Gearbox Foundation, 2023.
 pragma solidity ^0.8.17;
 
-import {IAdapter} from "@gearbox-protocol/core-v2/contracts/interfaces/IAdapter.sol";
+import {IAdapter} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IAdapter.sol";
 
 import {ApproxParams, TokenInput, TokenOutput, LimitOrderData} from "../../integrations/pendle/IPendleRouter.sol";
 
@@ -53,14 +53,14 @@ interface IPendleRouterAdapter is IAdapter, IPendleRouterAdapterEvents, IPendleR
         ApproxParams calldata guessPtOut,
         TokenInput calldata input,
         LimitOrderData calldata limit
-    ) external returns (uint256 tokensToEnable, uint256 tokensToDisable);
+    ) external returns (bool useSafePrices);
 
     function swapDiffTokenForPt(
         address market,
         uint256 minRateRAY,
         ApproxParams calldata guessPtOut,
         TokenDiffInput calldata diffInput
-    ) external returns (uint256 tokensToEnable, uint256 tokensToDisable);
+    ) external returns (bool useSafePrices);
 
     function swapExactPtForToken(
         address receiver,
@@ -68,19 +68,19 @@ interface IPendleRouterAdapter is IAdapter, IPendleRouterAdapterEvents, IPendleR
         uint256 exactPtIn,
         TokenOutput calldata output,
         LimitOrderData calldata limit
-    ) external returns (uint256 tokensToEnable, uint256 tokensToDisable);
+    ) external returns (bool useSafePrices);
 
     function swapDiffPtForToken(address market, uint256 leftoverPt, TokenDiffOutput calldata diffOutput)
         external
-        returns (uint256 tokensToEnable, uint256 tokensToDisable);
+        returns (bool useSafePrices);
 
     function redeemPyToToken(address receiver, address yt, uint256 netPyIn, TokenOutput calldata output)
         external
-        returns (uint256 tokensToEnable, uint256 tokensToDisable);
+        returns (bool useSafePrices);
 
     function redeemDiffPyToToken(address yt, uint256 leftoverPt, TokenDiffOutput calldata output)
         external
-        returns (uint256 tokensToEnable, uint256 tokensToDisable);
+        returns (bool useSafePrices);
 
     // ------------- //
     // CONFIGURATION //

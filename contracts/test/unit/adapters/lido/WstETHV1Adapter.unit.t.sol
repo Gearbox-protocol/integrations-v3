@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 // Gearbox Protocol. Generalized leverage for DeFi protocols
-// (c) Gearbox Foundation, 2023.
-pragma solidity ^0.8.17;
+// (c) Gearbox Foundation, 2024.
+pragma solidity ^0.8.23;
 
 import {WstETHV1Adapter} from "../../../../adapters/lido/WstETHV1.sol";
 import {IwstETH, IwstETHGetters} from "../../../../integrations/lido/IwstETH.sol";
@@ -15,14 +15,12 @@ contract WstETHV1AdapterUnitTest is AdapterUnitTestHelper {
     address stETH;
     address wstETH;
 
-    uint256 stETHMask;
-    uint256 wstETHMask;
-
     function setUp() public {
         _setUp();
 
-        (stETH, stETHMask) = (tokens[0], 1);
-        (wstETH, wstETHMask) = (tokens[1], 2);
+        stETH = tokens[0];
+        wstETH = tokens[1];
+
         vm.mockCall(wstETH, abi.encodeCall(IwstETHGetters.stETH, ()), abi.encode(stETH));
 
         adapter = new WstETHV1Adapter(address(creditManager), wstETH);
@@ -35,11 +33,8 @@ contract WstETHV1AdapterUnitTest is AdapterUnitTestHelper {
         adapter = new WstETHV1Adapter(address(creditManager), wstETH);
 
         assertEq(adapter.creditManager(), address(creditManager), "Incorrect creditManager");
-        assertEq(adapter.addressProvider(), address(addressProvider), "Incorrect addressProvider");
         assertEq(adapter.targetContract(), wstETH, "Incorrect targetContract");
         assertEq(adapter.stETH(), stETH, "Incorrect stETH");
-        assertEq(adapter.stETHTokenMask(), stETHMask, "Incorrect stETHMask");
-        assertEq(adapter.wstETHTokenMask(), wstETHMask, "Incorrect wstETHMask");
     }
 
     /// @notice U:[LDO1W-2]: Wrapper functions revert on wrong caller
@@ -59,18 +54,10 @@ contract WstETHV1AdapterUnitTest is AdapterUnitTestHelper {
 
     /// @notice U:[LDO1W-3]: `wrap` works as expected
     function test_U_LDO1W_03_wrap_works_as_expected() public {
-        _executesSwap({
-            tokenIn: stETH,
-            tokenOut: wstETH,
-            callData: abi.encodeCall(IwstETH.wrap, (1000)),
-            requiresApproval: true,
-            validatesTokens: false
-        });
+        _executesSwap({tokenIn: stETH, callData: abi.encodeCall(IwstETH.wrap, (1000)), requiresApproval: true});
         vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.wrap(1000);
-
-        assertEq(tokensToEnable, wstETHMask, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
+        bool useSafePrices = adapter.wrap(1000);
+        assertFalse(useSafePrices);
     }
 
     /// @notice U:[LDO1W-4]: `wrapDiff` works as expected
@@ -80,32 +67,20 @@ contract WstETHV1AdapterUnitTest is AdapterUnitTestHelper {
         _readsActiveAccount();
         _executesSwap({
             tokenIn: stETH,
-            tokenOut: wstETH,
             callData: abi.encodeCall(IwstETH.wrap, (diffInputAmount)),
-            requiresApproval: true,
-            validatesTokens: false
+            requiresApproval: true
         });
         vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.wrapDiff(diffLeftoverAmount);
-
-        assertEq(tokensToEnable, wstETHMask, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, diffDisableTokenIn ? stETHMask : 0, "Incorrect tokensToDisable");
+        bool useSafePrices = adapter.wrapDiff(diffLeftoverAmount);
+        assertFalse(useSafePrices);
     }
 
     /// @notice U:[LDO1W-5]: `unwrap` works as expected
     function test_U_LDO1W_05_unwrap_works_as_expected() public {
-        _executesSwap({
-            tokenIn: wstETH,
-            tokenOut: stETH,
-            callData: abi.encodeCall(IwstETH.unwrap, (1000)),
-            requiresApproval: false,
-            validatesTokens: false
-        });
+        _executesSwap({tokenIn: wstETH, callData: abi.encodeCall(IwstETH.unwrap, (1000)), requiresApproval: false});
         vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.unwrap(1000);
-
-        assertEq(tokensToEnable, stETHMask, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
+        bool useSafePrices = adapter.unwrap(1000);
+        assertFalse(useSafePrices);
     }
 
     /// @notice U:[LDO1W-6]: `unwrapDiff` works as expected
@@ -115,15 +90,11 @@ contract WstETHV1AdapterUnitTest is AdapterUnitTestHelper {
         _readsActiveAccount();
         _executesSwap({
             tokenIn: wstETH,
-            tokenOut: stETH,
             callData: abi.encodeCall(IwstETH.unwrap, (diffInputAmount)),
-            requiresApproval: false,
-            validatesTokens: false
+            requiresApproval: false
         });
         vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.unwrapDiff(diffLeftoverAmount);
-
-        assertEq(tokensToEnable, stETHMask, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, diffDisableTokenIn ? wstETHMask : 0, "Incorrect tokensToDisable");
+        bool useSafePrices = adapter.unwrapDiff(diffLeftoverAmount);
+        assertFalse(useSafePrices);
     }
 }

@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: UNLICENSED
 // Gearbox Protocol. Generalized leverage for DeFi protocols
-// (c) Gearbox Foundation, 2023.
-pragma solidity ^0.8.17;
+// (c) Gearbox Foundation, 2024.
+pragma solidity ^0.8.23;
 
 import {IERC4626} from "@openzeppelin/contracts/interfaces/IERC4626.sol";
+import {IERC4626Referral} from "../../../../integrations/erc4626/IERC4626Referral.sol";
 import {ERC4626Adapter} from "../../../../adapters/erc4626/ERC4626Adapter.sol";
+import {ERC4626ReferralAdapter} from "../../../../adapters/erc4626/ERC4626ReferralAdapter.sol";
 import {Mellow4626VaultAdapter} from "../../../../adapters/mellow/Mellow4626VaultAdapter.sol";
 import {AdapterUnitTestHelper} from "../AdapterUnitTestHelper.sol";
 import {NotImplementedException} from "@gearbox-protocol/core-v3/contracts/interfaces/IExceptions.sol";
@@ -16,32 +18,36 @@ contract ERC4626AdapterUnitTest is AdapterUnitTestHelper {
 
     address asset;
     address vault;
-
-    uint256 assetMask;
-    uint256 sharesMask;
+    address gateway;
 
     function setUp() public {
         _setUp();
 
-        (asset, assetMask) = (tokens[0], 1);
-        (vault, sharesMask) = (tokens[1], 2);
+        asset = tokens[0];
+        vault = tokens[1];
+        gateway = tokens[2];
+
         vm.mockCall(vault, abi.encodeCall(IERC4626.asset, ()), abi.encode(asset));
 
-        adapter = new ERC4626Adapter(address(creditManager), vault);
+        adapter = new ERC4626Adapter(address(creditManager), vault, address(0));
     }
 
     /// @notice U:[TV-1]: Constructor works as expected
     function test_U_TV_01_constructor_works_as_expected() public {
         _readsTokenMask(asset);
         _readsTokenMask(vault);
-        adapter = new ERC4626Adapter(address(creditManager), vault);
+        adapter = new ERC4626Adapter(address(creditManager), vault, address(0));
 
         assertEq(adapter.creditManager(), address(creditManager), "Incorrect creditManager");
-        assertEq(adapter.addressProvider(), address(addressProvider), "Incorrect addressProvider");
         assertEq(adapter.targetContract(), vault, "Incorrect targetContract");
+        assertEq(adapter.vault(), vault, "Incorrect vault");
         assertEq(adapter.asset(), asset, "Incorrect asset");
-        assertEq(adapter.assetMask(), assetMask, "Incorrect assetMask");
-        assertEq(adapter.sharesMask(), sharesMask, "Incorrect sharesMask");
+
+        adapter = new ERC4626Adapter(address(creditManager), vault, gateway);
+        assertEq(adapter.creditManager(), address(creditManager), "Incorrect creditManager");
+        assertEq(adapter.targetContract(), gateway, "Incorrect targetContract");
+        assertEq(adapter.vault(), vault, "Incorrect vault");
+        assertEq(adapter.asset(), asset, "Incorrect asset");
     }
 
     /// @notice U:[TV-2]: Wrapper functions revert on wrong caller
@@ -70,16 +76,12 @@ contract ERC4626AdapterUnitTest is AdapterUnitTestHelper {
         _readsActiveAccount();
         _executesSwap({
             tokenIn: asset,
-            tokenOut: vault,
             callData: abi.encodeCall(IERC4626.deposit, (1000, creditAccount)),
-            requiresApproval: true,
-            validatesTokens: false
+            requiresApproval: true
         });
         vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.deposit(1000, address(0));
-
-        assertEq(tokensToEnable, sharesMask, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
+        bool useSafePrices = adapter.deposit(1000, address(0));
+        assertFalse(useSafePrices);
     }
 
     /// @notice U:[TV-4]: `depositDiff` works as expected
@@ -89,16 +91,12 @@ contract ERC4626AdapterUnitTest is AdapterUnitTestHelper {
         _readsActiveAccount();
         _executesSwap({
             tokenIn: asset,
-            tokenOut: vault,
             callData: abi.encodeCall(IERC4626.deposit, (diffInputAmount, creditAccount)),
-            requiresApproval: true,
-            validatesTokens: false
+            requiresApproval: true
         });
         vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.depositDiff(diffLeftoverAmount);
-
-        assertEq(tokensToEnable, sharesMask, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, diffDisableTokenIn ? assetMask : 0, "Incorrect tokensToDisable");
+        bool useSafePrices = adapter.depositDiff(diffLeftoverAmount);
+        assertFalse(useSafePrices);
     }
 
     /// @notice U:[TV-5]: `mint` works as expected
@@ -106,16 +104,12 @@ contract ERC4626AdapterUnitTest is AdapterUnitTestHelper {
         _readsActiveAccount();
         _executesSwap({
             tokenIn: asset,
-            tokenOut: vault,
             callData: abi.encodeCall(IERC4626.mint, (1000, creditAccount)),
-            requiresApproval: true,
-            validatesTokens: false
+            requiresApproval: true
         });
         vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.mint(1000, address(0));
-
-        assertEq(tokensToEnable, sharesMask, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
+        bool useSafePrices = adapter.mint(1000, address(0));
+        assertFalse(useSafePrices);
     }
 
     /// @notice U:[TV-6]: `withdraw` works as expected
@@ -123,16 +117,12 @@ contract ERC4626AdapterUnitTest is AdapterUnitTestHelper {
         _readsActiveAccount();
         _executesSwap({
             tokenIn: vault,
-            tokenOut: asset,
             callData: abi.encodeCall(IERC4626.withdraw, (1000, creditAccount, creditAccount)),
-            requiresApproval: false,
-            validatesTokens: false
+            requiresApproval: false
         });
         vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.withdraw(1000, address(0), address(0));
-
-        assertEq(tokensToEnable, assetMask, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
+        bool useSafePrices = adapter.withdraw(1000, address(0), address(0));
+        assertFalse(useSafePrices);
     }
 
     /// @notice U:[TV-7]: `redeem` works as expected
@@ -140,16 +130,12 @@ contract ERC4626AdapterUnitTest is AdapterUnitTestHelper {
         _readsActiveAccount();
         _executesSwap({
             tokenIn: vault,
-            tokenOut: asset,
             callData: abi.encodeCall(IERC4626.redeem, (1000, creditAccount, creditAccount)),
-            requiresApproval: false,
-            validatesTokens: false
+            requiresApproval: false
         });
         vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.redeem(1000, address(0), address(0));
-
-        assertEq(tokensToEnable, assetMask, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
+        bool useSafePrices = adapter.redeem(1000, address(0), address(0));
+        assertFalse(useSafePrices);
     }
 
     /// @notice U:[TV-8]: `redeemDiff` works as expected
@@ -159,32 +145,41 @@ contract ERC4626AdapterUnitTest is AdapterUnitTestHelper {
         _readsActiveAccount();
         _executesSwap({
             tokenIn: vault,
-            tokenOut: asset,
             callData: abi.encodeCall(IERC4626.redeem, (diffInputAmount, creditAccount, creditAccount)),
-            requiresApproval: false,
-            validatesTokens: false
+            requiresApproval: false
         });
         vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.redeemDiff(diffLeftoverAmount);
-
-        assertEq(tokensToEnable, assetMask, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, diffDisableTokenIn ? sharesMask : 0, "Incorrect tokensToDisable");
+        bool useSafePrices = adapter.redeemDiff(diffLeftoverAmount);
+        assertFalse(useSafePrices);
     }
 
-    /// @notice U:[TV-9]: withdrawal functions restricted for Mellow adapter
-    function test_U_TV_09_withdrawal_functions_restricted_for_mellow() public diffTestCases {
-        adapter = new Mellow4626VaultAdapter(address(creditManager), vault);
+    function test_U_TV_09_referral_adapter_works_as_expected() public diffTestCases {
+        deal({token: asset, to: creditAccount, give: diffMintedAmount});
 
-        vm.expectRevert(NotImplementedException.selector);
-        vm.prank(creditFacade);
-        adapter.withdraw(1000, address(0), address(0));
+        adapter = new ERC4626ReferralAdapter(address(creditManager), vault, 1);
 
-        vm.expectRevert(NotImplementedException.selector);
+        _executesSwap({
+            tokenIn: asset,
+            callData: abi.encodeCall(IERC4626Referral.deposit, (1000, creditAccount, 1)),
+            requiresApproval: true
+        });
         vm.prank(creditFacade);
-        adapter.redeem(1000, address(0), address(0));
+        adapter.deposit(1000, address(0));
 
-        vm.expectRevert(NotImplementedException.selector);
+        _executesSwap({
+            tokenIn: asset,
+            callData: abi.encodeCall(IERC4626Referral.mint, (1000, creditAccount, 1)),
+            requiresApproval: true
+        });
         vm.prank(creditFacade);
-        adapter.redeemDiff(1000);
+        adapter.mint(1000, address(0));
+
+        _executesSwap({
+            tokenIn: asset,
+            callData: abi.encodeCall(IERC4626Referral.deposit, (diffInputAmount, creditAccount, 1)),
+            requiresApproval: true
+        });
+        vm.prank(creditFacade);
+        adapter.depositDiff(diffLeftoverAmount);
     }
 }

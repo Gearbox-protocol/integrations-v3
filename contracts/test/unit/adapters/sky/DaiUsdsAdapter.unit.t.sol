@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: UNLICENSED
 // Gearbox Protocol. Generalized leverage for DeFi protocols
-// (c) Gearbox Foundation, 2023.
-pragma solidity ^0.8.17;
+// (c) Gearbox Foundation, 2024.
+pragma solidity ^0.8.23;
 
 import {DaiUsdsAdapter} from "../../../../adapters/sky/DaiUsdsAdapter.sol";
 import {IDaiUsds} from "../../../../integrations/sky/IDaiUsds.sol";
 import {AdapterUnitTestHelper} from "../AdapterUnitTestHelper.sol";
 
-/// @title DAI/USDS adapter unit test
+/// @title DaiUsds adapter unit test
 /// @notice U:[DUSDS]: Unit tests for DAI/USDS adapter
 contract DaiUsdsAdapterUnitTest is AdapterUnitTestHelper {
     DaiUsdsAdapter adapter;
@@ -16,14 +16,11 @@ contract DaiUsdsAdapterUnitTest is AdapterUnitTestHelper {
     address usds;
     address daiUsdsExchange;
 
-    uint256 daiMask;
-    uint256 usdsMask;
-
     function setUp() public {
         _setUp();
 
-        (dai, daiMask) = (tokens[0], 1);
-        (usds, usdsMask) = (tokens[1], 2);
+        dai = tokens[0];
+        usds = tokens[1];
         daiUsdsExchange = tokens[2];
 
         vm.mockCall(daiUsdsExchange, abi.encodeCall(IDaiUsds.dai, ()), abi.encode(dai));
@@ -39,12 +36,9 @@ contract DaiUsdsAdapterUnitTest is AdapterUnitTestHelper {
         adapter = new DaiUsdsAdapter(address(creditManager), daiUsdsExchange);
 
         assertEq(adapter.creditManager(), address(creditManager), "Incorrect creditManager");
-        assertEq(adapter.addressProvider(), address(addressProvider), "Incorrect addressProvider");
         assertEq(adapter.targetContract(), daiUsdsExchange, "Incorrect targetContract");
         assertEq(adapter.dai(), dai, "Incorrect dai");
         assertEq(adapter.usds(), usds, "Incorrect usds");
-        assertEq(adapter.daiMask(), daiMask, "Incorrect daiMask");
-        assertEq(adapter.usdsMask(), usdsMask, "Incorrect usdsMask");
     }
 
     /// @notice U:[DUSDS-2]: Wrapper functions revert on wrong caller
@@ -62,73 +56,63 @@ contract DaiUsdsAdapterUnitTest is AdapterUnitTestHelper {
         adapter.usdsToDaiDiff(0);
     }
 
-    /// @notice U:[DUSDS-3]: `daiToUsds` works as expected
+    /// @notice U:[DUSDS-3]: `daiToUsds()` works as expected
     function test_U_DUSDS_03_daiToUsds_works_as_expected() public {
+        uint256 amount = 1000;
+
+        _readsActiveAccount();
         _executesSwap({
             tokenIn: dai,
-            tokenOut: usds,
-            callData: abi.encodeCall(IDaiUsds.daiToUsds, (creditAccount, 1000)),
-            requiresApproval: true,
-            validatesTokens: false
+            callData: abi.encodeCall(IDaiUsds.daiToUsds, (creditAccount, amount)),
+            requiresApproval: true
         });
         vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.daiToUsds(address(0), 1000);
-
-        assertEq(tokensToEnable, usdsMask, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
+        bool useSafePrices = adapter.daiToUsds(address(0), amount);
+        assertFalse(useSafePrices);
     }
 
-    /// @notice U:[DUSDS-4]: `daiToUsdsDiff` works as expected
+    /// @notice U:[DUSDS-4]: `daiToUsdsDiff()` works as expected
     function test_U_DUSDS_04_daiToUsdsDiff_works_as_expected() public diffTestCases {
         deal({token: dai, to: creditAccount, give: diffMintedAmount});
 
         _readsActiveAccount();
         _executesSwap({
             tokenIn: dai,
-            tokenOut: usds,
             callData: abi.encodeCall(IDaiUsds.daiToUsds, (creditAccount, diffInputAmount)),
-            requiresApproval: true,
-            validatesTokens: false
+            requiresApproval: true
         });
         vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.daiToUsdsDiff(diffLeftoverAmount);
-
-        assertEq(tokensToEnable, usdsMask, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, diffDisableTokenIn ? daiMask : 0, "Incorrect tokensToDisable");
+        bool useSafePrices = adapter.daiToUsdsDiff(diffLeftoverAmount);
+        assertFalse(useSafePrices);
     }
 
-    /// @notice U:[DUSDS-5]: `usdsToDai` works as expected
+    /// @notice U:[DUSDS-5]: `usdsToDai()` works as expected
     function test_U_DUSDS_05_usdsToDai_works_as_expected() public {
+        uint256 amount = 1000;
+
+        _readsActiveAccount();
         _executesSwap({
             tokenIn: usds,
-            tokenOut: dai,
-            callData: abi.encodeCall(IDaiUsds.usdsToDai, (creditAccount, 1000)),
-            requiresApproval: true,
-            validatesTokens: false
+            callData: abi.encodeCall(IDaiUsds.usdsToDai, (creditAccount, amount)),
+            requiresApproval: true
         });
         vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.usdsToDai(address(0), 1000);
-
-        assertEq(tokensToEnable, daiMask, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
+        bool useSafePrices = adapter.usdsToDai(address(0), amount);
+        assertFalse(useSafePrices);
     }
 
-    /// @notice U:[DUSDS-6]: `usdsToDaiDiff` works as expected
+    /// @notice U:[DUSDS-6]: `usdsToDaiDiff()` works as expected
     function test_U_DUSDS_06_usdsToDaiDiff_works_as_expected() public diffTestCases {
         deal({token: usds, to: creditAccount, give: diffMintedAmount});
 
         _readsActiveAccount();
         _executesSwap({
             tokenIn: usds,
-            tokenOut: dai,
             callData: abi.encodeCall(IDaiUsds.usdsToDai, (creditAccount, diffInputAmount)),
-            requiresApproval: true,
-            validatesTokens: false
+            requiresApproval: true
         });
         vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.usdsToDaiDiff(diffLeftoverAmount);
-
-        assertEq(tokensToEnable, daiMask, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, diffDisableTokenIn ? usdsMask : 0, "Incorrect tokensToDisable");
+        bool useSafePrices = adapter.usdsToDaiDiff(diffLeftoverAmount);
+        assertFalse(useSafePrices);
     }
 }

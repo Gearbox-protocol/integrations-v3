@@ -1,21 +1,20 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Gearbox Protocol. Generalized leverage for DeFi protocols
-// (c) Gearbox Foundation, 2023.
-pragma solidity ^0.8.17;
+// (c) Gearbox Foundation, 2024.
+pragma solidity ^0.8.23;
 
-import {IAdapter} from "@gearbox-protocol/core-v2/contracts/interfaces/IAdapter.sol";
+import {IAdapter} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IAdapter.sol";
 import {ICreditManagerV3} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditManagerV3.sol";
+import {PoolV3} from "@gearbox-protocol/core-v3/contracts/pool/PoolV3.sol";
 import {CallerNotCreditFacadeException} from "@gearbox-protocol/core-v3/contracts/interfaces/IExceptions.sol";
 import {ACLTrait} from "@gearbox-protocol/core-v3/contracts/traits/ACLTrait.sol";
+import {SanityCheckTrait} from "@gearbox-protocol/core-v3/contracts/traits/SanityCheckTrait.sol";
 
 /// @title Abstract adapter
 /// @dev Inheriting adapters MUST use provided internal functions to perform all operations with credit accounts
-abstract contract AbstractAdapter is IAdapter, ACLTrait {
+abstract contract AbstractAdapter is IAdapter, ACLTrait, SanityCheckTrait {
     /// @notice Credit manager the adapter is connected to
     address public immutable override creditManager;
-
-    /// @notice Address provider contract
-    address public immutable override addressProvider;
 
     /// @notice Address of the contract the adapter is interacting with
     address public immutable override targetContract;
@@ -24,11 +23,10 @@ abstract contract AbstractAdapter is IAdapter, ACLTrait {
     /// @param _creditManager Credit manager to connect the adapter to
     /// @param _targetContract Address of the adapted contract
     constructor(address _creditManager, address _targetContract)
-        ACLTrait(ICreditManagerV3(_creditManager).addressProvider())
+        ACLTrait(PoolV3(ICreditManagerV3(_creditManager).pool()).acl())
         nonZeroAddress(_targetContract)
     {
         creditManager = _creditManager;
-        addressProvider = ICreditManagerV3(_creditManager).addressProvider();
         targetContract = _targetContract;
     }
 
@@ -72,43 +70,13 @@ abstract contract AbstractAdapter is IAdapter, ACLTrait {
         return ICreditManagerV3(creditManager).execute(callData);
     }
 
-    /// @dev Executes a swap operation without input token approval
-    ///      Reverts if active credit account is not set or any of passed tokens is not registered as collateral
-    /// @param tokenIn Input token that credit account spends in the call
-    /// @param tokenOut Output token that credit account receives after the call
-    /// @param callData Data to call the target contract with
-    /// @param disableTokenIn Whether `tokenIn` should be disabled after the call
-    ///        (for operations that spend the entire account's balance of the input token)
-    /// @return tokensToEnable Bit mask of tokens that should be enabled after the call
-    /// @return tokensToDisable Bit mask of tokens that should be disabled after the call
-    /// @return result Call result
-    function _executeSwapNoApprove(address tokenIn, address tokenOut, bytes memory callData, bool disableTokenIn)
-        internal
-        returns (uint256 tokensToEnable, uint256 tokensToDisable, bytes memory result)
-    {
-        tokensToEnable = _getMaskOrRevert(tokenOut);
-        uint256 tokenInMask = _getMaskOrRevert(tokenIn);
-        if (disableTokenIn) tokensToDisable = tokenInMask;
-        result = _execute(callData);
-    }
-
     /// @dev Executes a swap operation with maximum input token approval, and revokes approval after the call
     ///      Reverts if active credit account is not set or any of passed tokens is not registered as collateral
     /// @param tokenIn Input token that credit account spends in the call
-    /// @param tokenOut Output token that credit account receives after the call
     /// @param callData Data to call the target contract with
-    /// @param disableTokenIn Whether `tokenIn` should be disabled after the call
-    ///        (for operations that spend the entire account's balance of the input token)
-    /// @return tokensToEnable Bit mask of tokens that should be enabled after the call
-    /// @return tokensToDisable Bit mask of tokens that should be disabled after the call
     /// @return result Call result
     /// @custom:expects Credit manager reverts when trying to approve non-collateral token
-    function _executeSwapSafeApprove(address tokenIn, address tokenOut, bytes memory callData, bool disableTokenIn)
-        internal
-        returns (uint256 tokensToEnable, uint256 tokensToDisable, bytes memory result)
-    {
-        tokensToEnable = _getMaskOrRevert(tokenOut);
-        if (disableTokenIn) tokensToDisable = _getMaskOrRevert(tokenIn);
+    function _executeSwapSafeApprove(address tokenIn, bytes memory callData) internal returns (bytes memory result) {
         _approveToken(tokenIn, type(uint256).max);
         result = _execute(callData);
         _approveToken(tokenIn, 1);

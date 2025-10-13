@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 // Gearbox Protocol. Generalized leverage for DeFi protocols
-// (c) Gearbox Foundation, 2023.
-pragma solidity ^0.8.17;
+// (c) Gearbox Foundation, 2024.
+pragma solidity ^0.8.23;
 
 import {TokensTestSuite} from "@gearbox-protocol/core-v3/contracts/test/suites/TokensTestSuite.sol";
 
@@ -26,6 +26,6 @@ contract CreditFacadeTestHelper is IntegrationTestHelper {
         address priceFeed = address(new PriceFeedMock(int256(price), 8));
 
         vm.prank(CONFIGURATOR);
-        priceOracle.setPriceFeed(token, priceFeed, 48 hours, false);
+        priceOracle.setPriceFeed(token, priceFeed, 48 hours);
     }
 }

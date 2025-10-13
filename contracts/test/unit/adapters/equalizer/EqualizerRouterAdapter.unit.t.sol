@@ -1,24 +1,22 @@
 // SPDX-License-Identifier: UNLICENSED
 // Gearbox Protocol. Generalized leverage for DeFi protocols
-// (c) Gearbox Foundation, 2023.
-pragma solidity ^0.8.17;
+// (c) Gearbox Foundation, 2024.
+pragma solidity ^0.8.23;
 
 import {IEqualizerRouter, Route} from "../../../../integrations/equalizer/IEqualizerRouter.sol";
 import {
-    IEqualizerRouterAdapterEvents,
-    IEqualizerRouterAdapterExceptions,
-    EqualizerPoolStatus
+    IEqualizerRouterAdapter,
+    EqualizerPoolStatus,
+    EqualizerPool
 } from "../../../../interfaces/equalizer/IEqualizerRouterAdapter.sol";
 import {AdapterUnitTestHelper} from "../AdapterUnitTestHelper.sol";
 import {EqualizerRouterAdapterHarness} from "./EqualizerRouterAdapter.harness.sol";
 
+import "@gearbox-protocol/core-v3/contracts/test/lib/constants.sol";
+
 /// @title Equalizer adapter unit test
-/// @notice U:[EQLZ]: Unit tests for Equalizer swap router adapter
-contract EqualizerRouterAdapterUnitTest is
-    AdapterUnitTestHelper,
-    IEqualizerRouterAdapterEvents,
-    IEqualizerRouterAdapterExceptions
-{
+/// @notice U:[EQLZ-1]: Unit tests for Equalizer swap router adapter
+contract EqualizerRouterAdapterUnitTest is AdapterUnitTestHelper {
     EqualizerRouterAdapterHarness adapter;
     address router;
 
@@ -32,9 +30,8 @@ contract EqualizerRouterAdapterUnitTest is
     }
 
     /// @notice U:[EQLZ-1]: Constructor works as expected
-    function test_U_EQLZ_01_constructor_works_as_expected() public {
+    function test_U_EQLZ_01_constructor_works_as_expected() public view {
         assertEq(adapter.creditManager(), address(creditManager), "Incorrect creditManager");
-        assertEq(adapter.addressProvider(), address(addressProvider), "Incorrect addressProvider");
         assertEq(adapter.targetContract(), router, "Incorrect targetContract");
     }
 
@@ -52,7 +49,7 @@ contract EqualizerRouterAdapterUnitTest is
     /// @notice U:[EQLZ-3]: `swapExactTokensForTokens` works as expected
     function test_U_EQLZ_03_swapExactTokensForTokens_works_as_expected() public {
         Route[] memory routes = _makePath(0);
-        vm.expectRevert(InvalidPathException.selector);
+        vm.expectRevert(IEqualizerRouterAdapter.InvalidPathException.selector);
         vm.prank(creditFacade);
         adapter.swapExactTokensForTokens(123, 456, routes, address(0), 789);
 
@@ -60,18 +57,13 @@ contract EqualizerRouterAdapterUnitTest is
         _readsActiveAccount();
         _executesSwap({
             tokenIn: tokens[0],
-            tokenOut: tokens[1],
             callData: abi.encodeCall(IEqualizerRouter.swapExactTokensForTokens, (123, 456, routes, creditAccount, 789)),
-            requiresApproval: true,
-            validatesTokens: true
+            requiresApproval: true
         });
 
         vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) =
-            adapter.swapExactTokensForTokens(123, 456, routes, address(0), 789);
-
-        assertEq(tokensToEnable, 2, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
+        bool useSafePrices = adapter.swapExactTokensForTokens(123, 456, routes, address(0), 789);
+        assertTrue(useSafePrices);
     }
 
     /// @notice U:[EQLZ-4]: `swapDiffTokensForTokens` works as expected
@@ -79,7 +71,7 @@ contract EqualizerRouterAdapterUnitTest is
         deal({token: tokens[0], to: creditAccount, give: diffMintedAmount});
 
         Route[] memory routes = _makePath(0);
-        vm.expectRevert(InvalidPathException.selector);
+        vm.expectRevert(IEqualizerRouterAdapter.InvalidPathException.selector);
         vm.prank(creditFacade);
         adapter.swapDiffTokensForTokens(diffInputAmount, 0.5e27, routes, 789);
 
@@ -87,59 +79,69 @@ contract EqualizerRouterAdapterUnitTest is
         _readsActiveAccount();
         _executesSwap({
             tokenIn: tokens[0],
-            tokenOut: tokens[1],
             callData: abi.encodeCall(
                 IEqualizerRouter.swapExactTokensForTokens,
                 (diffInputAmount, diffInputAmount / 2, routes, creditAccount, 789)
             ),
-            requiresApproval: true,
-            validatesTokens: true
+            requiresApproval: true
         });
 
         vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) =
-            adapter.swapDiffTokensForTokens(diffLeftoverAmount, 0.5e27, routes, 789);
-
-        assertEq(tokensToEnable, 2, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, diffDisableTokenIn ? 1 : 0, "Incorrect tokensToDisable");
+        bool useSafePrices = adapter.swapDiffTokensForTokens(diffLeftoverAmount, 0.5e27, routes, 789);
+        assertTrue(useSafePrices);
     }
 
     /// @notice U:[EQLZ-5]: `setPoolStatusBatch` works as expected
     function test_U_EQLZ_05_setPoolStatusBatch_works_as_expected() public {
-        EqualizerPoolStatus[] memory pools;
+        _setPoolsStatus(3, 0);
+        EqualizerPoolStatus[] memory pools = new EqualizerPoolStatus[](1);
 
         _revertsOnNonConfiguratorCaller();
+        adapter.setPoolStatusBatch(pools);
+
+        pools[0] = EqualizerPoolStatus(tokens[0], DUMB_ADDRESS, false, true);
+        _revertsOnUnknownToken();
+        vm.prank(configurator);
         adapter.setPoolStatusBatch(pools);
 
         pools = new EqualizerPoolStatus[](2);
         pools[0] = EqualizerPoolStatus(tokens[0], tokens[1], false, false);
         pools[1] = EqualizerPoolStatus(tokens[1], tokens[2], true, true);
 
-        vm.expectEmit(true, true, false, true);
-        emit SetPoolStatus(_min(tokens[0], tokens[1]), _max(tokens[0], tokens[1]), false, false);
+        _readsTokenMask(tokens[1]);
+        _readsTokenMask(tokens[2]);
 
         vm.expectEmit(true, true, false, true);
-        emit SetPoolStatus(_min(tokens[1], tokens[2]), _max(tokens[1], tokens[2]), true, true);
+        emit IEqualizerRouterAdapter.SetPoolStatus(_min(tokens[0], tokens[1]), _max(tokens[0], tokens[1]), false, false);
+
+        vm.expectEmit(true, true, false, true);
+        emit IEqualizerRouterAdapter.SetPoolStatus(_min(tokens[1], tokens[2]), _max(tokens[1], tokens[2]), true, true);
 
         vm.prank(configurator);
         adapter.setPoolStatusBatch(pools);
 
         assertFalse(adapter.isPoolAllowed(tokens[0], tokens[1], false), "First pair incorrectly allowed");
         assertTrue(adapter.isPoolAllowed(tokens[1], tokens[2], true), "Second pair incorrectly not allowed");
+
+        EqualizerPool[] memory allowedPools = adapter.supportedPools();
+
+        assertEq(allowedPools.length, 1, "Incorrect allowed pairs length");
+        assertEq(allowedPools[0].token0, _min(tokens[1], tokens[2]), "Incorrect allowed pool token 0");
+        assertEq(allowedPools[0].token1, _max(tokens[1], tokens[2]), "Incorrect allowed pool token 1");
+        assertTrue(allowedPools[0].stable, "Incorrect allowed pools stable status");
     }
 
     /// @notice U:[EQLZ-6]: `_validatePath` works as expected
     function test_U_EQLZ_06_validatePath_works_as_expected() public {
         bool isValid;
         address tokenIn;
-        address tokenOut;
         Route[] memory routes;
 
         // insane paths
-        (isValid,,) = adapter.validatePath(new Route[](0));
+        (isValid,) = adapter.validatePath(new Route[](0));
         assertFalse(isValid, "Empty path incorrectly valid");
 
-        (isValid,,) = adapter.validatePath(new Route[](4));
+        (isValid,) = adapter.validatePath(new Route[](4));
         assertFalse(isValid, "Long path incorrectly valid");
 
         // exhaustive search
@@ -149,12 +151,11 @@ contract EqualizerRouterAdapterUnitTest is
             uint256 numCases = 1 << (pathLen - 1);
             for (uint256 mask; mask < numCases; ++mask) {
                 _setPoolsStatus(pathLen - 1, mask);
-                (isValid, tokenIn, tokenOut) = adapter.validatePath(routes);
+                (isValid, tokenIn) = adapter.validatePath(routes);
 
                 if (mask == numCases - 1) {
                     assertTrue(isValid, "Path incorrectly invalid");
                     assertEq(tokenIn, tokens[0], "Incorrect tokenIn");
-                    assertEq(tokenOut, tokens[pathLen - 1], "Incorrect tokenOut");
                 } else {
                     assertFalse(isValid, "Path incorrectly valid");
                 }
@@ -166,7 +167,6 @@ contract EqualizerRouterAdapterUnitTest is
     function test_U_EQLZ_07_validatePath_filters_disjunct_paths() public {
         bool isValid;
         address tokenIn;
-        address tokenOut;
         Route[] memory routes;
 
         EqualizerPoolStatus[] memory pools = new EqualizerPoolStatus[](2);
@@ -179,7 +179,7 @@ contract EqualizerRouterAdapterUnitTest is
         routes[0] = Route({from: tokens[0], to: tokens[1], stable: false});
         routes[1] = Route({from: tokens[2], to: tokens[3], stable: false});
 
-        (isValid, tokenIn, tokenOut) = adapter.validatePath(routes);
+        (isValid, tokenIn) = adapter.validatePath(routes);
 
         assertFalse(isValid, "Path incorrectly valid");
     }

@@ -1,26 +1,23 @@
 // SPDX-License-Identifier: UNLICENSED
 // Gearbox Protocol. Generalized leverage for DeFi protocols
-// (c) Gearbox Foundation, 2023.
-pragma solidity ^0.8.17;
+// (c) Gearbox Foundation, 2024.
+pragma solidity ^0.8.23;
 
 import {ISwapRouter} from "../../../../integrations/uniswap/IUniswapV3.sol";
 import {
-    IUniswapV3AdapterEvents,
-    IUniswapV3AdapterExceptions,
+    IUniswapV3Adapter,
     IUniswapV3AdapterTypes,
-    UniswapV3PoolStatus
+    UniswapV3PoolStatus,
+    UniswapV3Pool
 } from "../../../../interfaces/uniswap/IUniswapV3Adapter.sol";
 import {AdapterUnitTestHelper} from "../AdapterUnitTestHelper.sol";
 import {UniswapV3AdapterHarness} from "./UniswapV3Adapter.harness.sol";
 
+import "@gearbox-protocol/core-v3/contracts/test/lib/constants.sol";
+
 /// @title Uniswap v3 adapter unit test
 /// @notice U:[UNI3]: Unit tests for Uniswap v3 swap router adapter
-contract UniswapV3AdapterUnitTest is
-    AdapterUnitTestHelper,
-    IUniswapV3AdapterEvents,
-    IUniswapV3AdapterExceptions,
-    IUniswapV3AdapterTypes
-{
+contract UniswapV3AdapterUnitTest is AdapterUnitTestHelper, IUniswapV3AdapterTypes {
     UniswapV3AdapterHarness adapter;
 
     address router;
@@ -35,9 +32,8 @@ contract UniswapV3AdapterUnitTest is
     }
 
     /// @notice U:[UNI3-1]: Constructor works as expected
-    function test_U_UNI3_01_constructor_works_as_expected() public {
+    function test_U_UNI3_01_constructor_works_as_expected() public view {
         assertEq(adapter.creditManager(), address(creditManager), "Incorrect creditManager");
-        assertEq(adapter.addressProvider(), address(addressProvider), "Incorrect addressProvider");
         assertEq(adapter.targetContract(), router, "Incorrect targetContract");
     }
 
@@ -68,6 +64,31 @@ contract UniswapV3AdapterUnitTest is
         adapter.exactOutput(p6);
     }
 
+    /// @notice U:[UNI3-2A]: Functions not utilizing `validatePath` revert on
+    ///                      unknown pool
+    function test_U_UNI3_02A_functions_revert_on_non_allowed_pool() public {
+        ISwapRouter.ExactInputSingleParams memory p1;
+        p1.tokenIn = DUMB_ADDRESS;
+        p1.tokenOut = tokens[0];
+        vm.expectRevert(IUniswapV3Adapter.InvalidPathException.selector);
+        vm.prank(creditFacade);
+        adapter.exactInputSingle(p1);
+
+        ExactDiffInputSingleParams memory p2_2;
+        p2_2.tokenIn = DUMB_ADDRESS;
+        p2_2.tokenOut = tokens[0];
+        vm.expectRevert(IUniswapV3Adapter.InvalidPathException.selector);
+        vm.prank(creditFacade);
+        adapter.exactDiffInputSingle(p2_2);
+
+        ISwapRouter.ExactOutputSingleParams memory p5;
+        p5.tokenIn = DUMB_ADDRESS;
+        p5.tokenOut = tokens[0];
+        vm.expectRevert(IUniswapV3Adapter.InvalidPathException.selector);
+        vm.prank(creditFacade);
+        adapter.exactOutputSingle(p5);
+    }
+
     /// @notice U:[UNI3-3]: `exactInputSingle` works as expected
     function test_U_UNI3_03_exactInputSingle_works_as_expected() public {
         ISwapRouter.ExactInputSingleParams memory params = ISwapRouter.ExactInputSingleParams({
@@ -84,18 +105,14 @@ contract UniswapV3AdapterUnitTest is
         _readsActiveAccount();
         _executesSwap({
             tokenIn: tokens[0],
-            tokenOut: tokens[1],
             callData: abi.encodeCall(ISwapRouter.exactInputSingle, (params)),
-            requiresApproval: true,
-            validatesTokens: true
+            requiresApproval: true
         });
 
         params.recipient = address(0);
         vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.exactInputSingle(params);
-
-        assertEq(tokensToEnable, 2, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
+        bool useSafePrices = adapter.exactInputSingle(params);
+        assertTrue(useSafePrices);
     }
 
     /// @notice U:[UNI3-4]: `exactDiffInputSingle` works as expected
@@ -105,7 +122,6 @@ contract UniswapV3AdapterUnitTest is
         _readsActiveAccount();
         _executesSwap({
             tokenIn: tokens[0],
-            tokenOut: tokens[1],
             callData: abi.encodeCall(
                 ISwapRouter.exactInputSingle,
                 (
@@ -120,13 +136,12 @@ contract UniswapV3AdapterUnitTest is
                         sqrtPriceLimitX96: 0
                     })
                 )
-                ),
-            requiresApproval: true,
-            validatesTokens: true
+            ),
+            requiresApproval: true
         });
 
         vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.exactDiffInputSingle(
+        bool useSafePrices = adapter.exactDiffInputSingle(
             ExactDiffInputSingleParams({
                 tokenIn: tokens[0],
                 tokenOut: tokens[1],
@@ -137,9 +152,7 @@ contract UniswapV3AdapterUnitTest is
                 sqrtPriceLimitX96: 0
             })
         );
-
-        assertEq(tokensToEnable, 2, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, diffDisableTokenIn ? 1 : 0, "Incorrect tokensToDisable");
+        assertTrue(useSafePrices);
     }
 
     /// @notice U:[UNI3-5]: `exactInput` works as expected
@@ -151,7 +164,7 @@ contract UniswapV3AdapterUnitTest is
             deadline: 789,
             recipient: creditAccount
         });
-        vm.expectRevert(InvalidPathException.selector);
+        vm.expectRevert(IUniswapV3Adapter.InvalidPathException.selector);
         vm.prank(creditFacade);
         adapter.exactInput(params);
 
@@ -159,18 +172,14 @@ contract UniswapV3AdapterUnitTest is
         _readsActiveAccount();
         _executesSwap({
             tokenIn: tokens[0],
-            tokenOut: tokens[2],
             callData: abi.encodeCall(ISwapRouter.exactInput, (params)),
-            requiresApproval: true,
-            validatesTokens: true
+            requiresApproval: true
         });
 
         params.recipient = address(0);
         vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.exactInput(params);
-
-        assertEq(tokensToEnable, 4, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
+        bool useSafePrices = adapter.exactInput(params);
+        assertTrue(useSafePrices);
     }
 
     /// @notice U:[UNI3-6]: `exactDiffInput` works as expected
@@ -183,7 +192,7 @@ contract UniswapV3AdapterUnitTest is
             leftoverAmount: diffLeftoverAmount,
             rateMinRAY: 0.5e27
         });
-        vm.expectRevert(InvalidPathException.selector);
+        vm.expectRevert(IUniswapV3Adapter.InvalidPathException.selector);
         vm.prank(creditFacade);
         adapter.exactDiffInput(params);
 
@@ -191,7 +200,6 @@ contract UniswapV3AdapterUnitTest is
         _readsActiveAccount();
         _executesSwap({
             tokenIn: tokens[0],
-            tokenOut: tokens[2],
             callData: abi.encodeCall(
                 ISwapRouter.exactInput,
                 (
@@ -203,16 +211,13 @@ contract UniswapV3AdapterUnitTest is
                         recipient: creditAccount
                     })
                 )
-                ),
-            requiresApproval: true,
-            validatesTokens: true
+            ),
+            requiresApproval: true
         });
 
         vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.exactDiffInput(params);
-
-        assertEq(tokensToEnable, 4, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, diffDisableTokenIn ? 1 : 0, "Incorrect tokensToDisable");
+        bool useSafePrices = adapter.exactDiffInput(params);
+        assertTrue(useSafePrices);
     }
 
     /// @notice U:[UNI3-7]: `exactOutputSingle` works as expected
@@ -231,18 +236,14 @@ contract UniswapV3AdapterUnitTest is
         _readsActiveAccount();
         _executesSwap({
             tokenIn: tokens[0],
-            tokenOut: tokens[1],
             callData: abi.encodeCall(ISwapRouter.exactOutputSingle, (params)),
-            requiresApproval: true,
-            validatesTokens: true
+            requiresApproval: true
         });
 
         params.recipient = address(0);
         vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.exactOutputSingle(params);
-
-        assertEq(tokensToEnable, 2, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
+        bool useSafePrices = adapter.exactOutputSingle(params);
+        assertTrue(useSafePrices);
     }
 
     /// @notice U:[UNI3-8]: `exactOutput` works as expected
@@ -254,7 +255,7 @@ contract UniswapV3AdapterUnitTest is
             deadline: 789,
             recipient: creditAccount
         });
-        vm.expectRevert(InvalidPathException.selector);
+        vm.expectRevert(IUniswapV3Adapter.InvalidPathException.selector);
         vm.prank(creditFacade);
         adapter.exactOutput(params);
 
@@ -262,42 +263,58 @@ contract UniswapV3AdapterUnitTest is
         _readsActiveAccount();
         _executesSwap({
             tokenIn: tokens[2], // path is reversed for exactOutput
-            tokenOut: tokens[0],
             callData: abi.encodeCall(ISwapRouter.exactOutput, (params)),
-            requiresApproval: true,
-            validatesTokens: true
+            requiresApproval: true
         });
 
         params.recipient = address(0);
         vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.exactOutput(params);
-
-        assertEq(tokensToEnable, 1, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
+        bool useSafePrices = adapter.exactOutput(params);
+        assertTrue(useSafePrices);
     }
 
     /// @notice U:[UNI3-9]: `setPoolStatusBatch` works as expected
     function test_U_UNI3_09_setPoolStatusBatch_works_as_expected() public {
-        UniswapV3PoolStatus[] memory pairs;
+        _setPoolsStatus(3, 0);
+
+        UniswapV3PoolStatus[] memory pairs = new UniswapV3PoolStatus[](1);
 
         _revertsOnNonConfiguratorCaller();
+        adapter.setPoolStatusBatch(pairs);
+
+        pairs[0] = UniswapV3PoolStatus(DUMB_ADDRESS, tokens[2], 3000, true);
+        _revertsOnUnknownToken();
+        vm.prank(configurator);
         adapter.setPoolStatusBatch(pairs);
 
         pairs = new UniswapV3PoolStatus[](2);
         pairs[0] = UniswapV3PoolStatus(tokens[0], tokens[1], 500, false);
         pairs[1] = UniswapV3PoolStatus(tokens[1], tokens[2], 3000, true);
 
-        vm.expectEmit(true, true, true, true);
-        emit SetPoolStatus(_min(tokens[0], tokens[1]), _max(tokens[0], tokens[1]), 500, false);
+        _readsTokenMask(tokens[1]);
+        _readsTokenMask(tokens[2]);
 
         vm.expectEmit(true, true, true, true);
-        emit SetPoolStatus(_min(tokens[1], tokens[2]), _max(tokens[1], tokens[2]), 3000, true);
+        emit IUniswapV3Adapter.SetPoolStatus(_min(tokens[0], tokens[1]), _max(tokens[0], tokens[1]), 500, false);
+
+        vm.expectEmit(true, true, true, true);
+        emit IUniswapV3Adapter.SetPoolStatus(_min(tokens[1], tokens[2]), _max(tokens[1], tokens[2]), 3000, true);
 
         vm.prank(configurator);
         adapter.setPoolStatusBatch(pairs);
 
         assertFalse(adapter.isPoolAllowed(tokens[0], tokens[1], 500), "First pool incorrectly allowed");
         assertTrue(adapter.isPoolAllowed(tokens[1], tokens[2], 3000), "Second pool incorrectly not allowed");
+
+        UniswapV3Pool[] memory allowedPools = adapter.supportedPools();
+
+        assertEq(allowedPools.length, 1, "Incorrect allowed pairs length");
+
+        assertEq(allowedPools[0].token0, _min(tokens[1], tokens[2]), "Incorrect allowed pool token 0");
+
+        assertEq(allowedPools[0].token1, _max(tokens[1], tokens[2]), "Incorrect allowed pool token 1");
+
+        assertEq(allowedPools[0].fee, 3000, "Incorrect allowed pool fee");
     }
 
     /// @notice U:[UNI3-10]: `_validatePath` works as expected

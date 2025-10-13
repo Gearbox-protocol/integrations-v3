@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: UNLICENSED
 // Gearbox Protocol. Generalized leverage for DeFi protocols
 // (c) Gearbox Foundation, 2024.
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.23;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import {IBalancerV3Router} from "../../../../integrations/balancer/IBalancerV3Router.sol";
+import {IBalancerV3Pool} from "../../../../integrations/balancer/IBalancerV3Pool.sol";
 import {
     IBalancerV3RouterAdapter,
     IBalancerV3RouterAdapterEvents,
@@ -25,18 +26,25 @@ contract BalancerV3RouterAdapterUnitTest is
     BalancerV3RouterAdapter adapter;
 
     address router;
-    address pool;
+    address balancerPool;
 
     function setUp() public {
         _setUp();
 
         router = makeAddr("ROUTER");
-        pool = makeAddr("POOL");
+        balancerPool = makeAddr("POOL");
         adapter = new BalancerV3RouterAdapter(address(creditManager), router);
+
+        IERC20[] memory poolTokens = new IERC20[](2);
+        poolTokens[0] = IERC20(tokens[0]);
+        poolTokens[1] = IERC20(tokens[1]);
+
+        // Mock pool token retrieval
+        vm.mockCall(balancerPool, abi.encodeCall(IBalancerV3Pool.getTokens, ()), abi.encode(poolTokens));
 
         // Set pool as allowed
         address[] memory pools = new address[](1);
-        pools[0] = pool;
+        pools[0] = balancerPool;
         bool[] memory statuses = new bool[](1);
         statuses[0] = true;
         vm.prank(configurator);
@@ -44,19 +52,18 @@ contract BalancerV3RouterAdapterUnitTest is
     }
 
     /// @notice U:[BAL3-1]: Constructor works as expected
-    function test_U_BAL3_01_constructor_works_as_expected() public {
+    function test_U_BAL3_01_constructor_works_as_expected() public view {
         assertEq(adapter.creditManager(), address(creditManager), "Incorrect creditManager");
-        assertEq(adapter.addressProvider(), address(addressProvider), "Incorrect addressProvider");
         assertEq(adapter.targetContract(), router, "Incorrect targetContract");
     }
 
     /// @notice U:[BAL3-2]: Wrapper functions revert on wrong caller
     function test_U_BAL3_02_wrapper_functions_revert_on_wrong_caller() public {
         _revertsOnNonFacadeCaller();
-        adapter.swapSingleTokenExactIn(pool, IERC20(tokens[0]), IERC20(tokens[1]), 0, 0, 0, false, "");
+        adapter.swapSingleTokenExactIn(balancerPool, IERC20(tokens[0]), IERC20(tokens[1]), 0, 0, 0, false, "");
 
         _revertsOnNonFacadeCaller();
-        adapter.swapSingleTokenDiffIn(pool, IERC20(tokens[0]), IERC20(tokens[1]), 0, 0, 0);
+        adapter.swapSingleTokenDiffIn(balancerPool, IERC20(tokens[0]), IERC20(tokens[1]), 0, 0, 0);
     }
 
     /// @notice U:[BAL3-3]: `swapSingleTokenExactIn` works as expected and ignores wethIsEth and userData
@@ -70,18 +77,16 @@ contract BalancerV3RouterAdapterUnitTest is
         // Check that allowed pool works
         _executesSwap({
             tokenIn: tokens[0],
-            tokenOut: tokens[1],
             callData: abi.encodeCall(
                 IBalancerV3Router.swapSingleTokenExactIn,
-                (pool, IERC20(tokens[0]), IERC20(tokens[1]), 123, 456, 789, false, "")
+                (balancerPool, IERC20(tokens[0]), IERC20(tokens[1]), 123, 456, 789, false, "")
             ),
-            requiresApproval: true,
-            validatesTokens: true
+            requiresApproval: true
         });
 
         vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.swapSingleTokenExactIn(
-            pool,
+        bool useSafePrices = adapter.swapSingleTokenExactIn(
+            balancerPool,
             IERC20(tokens[0]),
             IERC20(tokens[1]),
             123,
@@ -91,8 +96,7 @@ contract BalancerV3RouterAdapterUnitTest is
             "test" // Should be ignored and set to empty string
         );
 
-        assertEq(tokensToEnable, 2, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
+        assertTrue(useSafePrices, "Should use safe prices");
     }
 
     /// @notice U:[BAL3-4]: `swapSingleTokenDiffIn` works as expected
@@ -106,24 +110,21 @@ contract BalancerV3RouterAdapterUnitTest is
         // Check that allowed pool works
         deal({token: tokens[0], to: creditAccount, give: diffMintedAmount});
 
-        _readsActiveAccount();
         _executesSwap({
             tokenIn: tokens[0],
-            tokenOut: tokens[1],
             callData: abi.encodeCall(
                 IBalancerV3Router.swapSingleTokenExactIn,
-                (pool, IERC20(tokens[0]), IERC20(tokens[1]), diffInputAmount, diffInputAmount / 2, 789, false, "")
+                (balancerPool, IERC20(tokens[0]), IERC20(tokens[1]), diffInputAmount, diffInputAmount / 2, 789, false, "")
             ),
-            requiresApproval: true,
-            validatesTokens: true
+            requiresApproval: true
         });
 
         vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) =
-            adapter.swapSingleTokenDiffIn(pool, IERC20(tokens[0]), IERC20(tokens[1]), diffLeftoverAmount, 0.5e27, 789);
+        bool useSafePrices = adapter.swapSingleTokenDiffIn(
+            balancerPool, IERC20(tokens[0]), IERC20(tokens[1]), diffLeftoverAmount, 0.5e27, 789
+        );
 
-        assertEq(tokensToEnable, 2, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, diffDisableTokenIn ? 1 : 0, "Incorrect tokensToDisable");
+        assertTrue(useSafePrices, "Should use safe prices");
     }
 
     /// @notice U:[BAL3-5]: Pool configuration works as expected
@@ -145,6 +146,17 @@ contract BalancerV3RouterAdapterUnitTest is
         vm.prank(configurator);
         adapter.setPoolStatusBatch(pools, statuses);
 
+        // Mock pool token retrieval for new pools
+        IERC20[] memory pool1Tokens = new IERC20[](2);
+        pool1Tokens[0] = IERC20(tokens[0]);
+        pool1Tokens[1] = IERC20(tokens[1]);
+        vm.mockCall(pools[0], abi.encodeCall(IBalancerV3Pool.getTokens, ()), abi.encode(pool1Tokens));
+
+        IERC20[] memory pool2Tokens = new IERC20[](2);
+        pool2Tokens[0] = IERC20(tokens[1]);
+        pool2Tokens[1] = IERC20(tokens[2]);
+        vm.mockCall(pools[1], abi.encodeCall(IBalancerV3Pool.getTokens, ()), abi.encode(pool2Tokens));
+
         // Test setting pool statuses
         statuses = new bool[](2);
         statuses[0] = false;
@@ -164,10 +176,10 @@ contract BalancerV3RouterAdapterUnitTest is
 
         // Test getAllowedPools
         address[] memory allowedPools = adapter.getAllowedPools();
-        assertEq(allowedPools.length, 2, "Incorrect number of allowed pools"); // pool from setUp + pools[1]
+        assertEq(allowedPools.length, 2, "Incorrect number of allowed pools"); // balancerPool from setUp + pools[1]
         assertTrue(
-            (allowedPools[0] == pool && allowedPools[1] == pools[1])
-                || (allowedPools[0] == pools[1] && allowedPools[1] == pool),
+            (allowedPools[0] == balancerPool && allowedPools[1] == pools[1])
+                || (allowedPools[0] == pools[1] && allowedPools[1] == balancerPool),
             "Incorrect allowed pools"
         );
     }

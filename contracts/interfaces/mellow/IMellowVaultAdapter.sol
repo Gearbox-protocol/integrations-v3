@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 // Gearbox Protocol. Generalized leverage for DeFi protocols
 // (c) Gearbox Foundation, 2023.
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.23;
 
-import {IAdapter} from "@gearbox-protocol/core-v2/contracts/interfaces/IAdapter.sol";
+import {IAdapter} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IAdapter.sol";
 
 struct MellowUnderlyingStatus {
     address underlying;
@@ -35,7 +35,7 @@ interface IMellowVaultAdapter is IAdapter, IMellowVaultAdapterEvents, IMellowVau
     /// @notice `to` is ignored as the recipient is always the credit account
     function deposit(address, uint256[] memory amounts, uint256 minLpAmount, uint256 deadline)
         external
-        returns (uint256 tokensToEnable, uint256 tokensToDisable);
+        returns (bool useSafePrices);
 
     /// @notice Deposits a specififed amount of one underlying into the vault in exchange for LP tokens.
     /// @param asset The asset to deposit
@@ -44,7 +44,7 @@ interface IMellowVaultAdapter is IAdapter, IMellowVaultAdapterEvents, IMellowVau
     /// @param deadline The time before which the operation must be completed.
     function depositOneAsset(address asset, uint256 amount, uint256 minLpAmount, uint256 deadline)
         external
-        returns (uint256 tokensToEnable, uint256 tokensToDisable);
+        returns (bool useSafePrices);
 
     /// @notice Deposits the entire balance of one underlying, except the specified amount, into the vault in exchange for LP tokens.
     /// @param asset The asset to deposit
@@ -53,14 +53,14 @@ interface IMellowVaultAdapter is IAdapter, IMellowVaultAdapterEvents, IMellowVau
     /// @param deadline The time before which the operation must be completed.
     function depositOneAssetDiff(address asset, uint256 leftoverAmount, uint256 rateMinRAY, uint256 deadline)
         external
-        returns (uint256 tokensToEnable, uint256 tokensToDisable);
+        returns (bool useSafePrices);
 
     // ------------- //
     // CONFIGURATION //
     // ------------- //
 
-    /// @notice Whether the underlying token is allowed for deposits
-    function isUnderlyingAllowed(address token) external view returns (bool);
+    /// @notice Returns the list of allowed underlyings
+    function allowedUnderlyings() external view returns (address[] memory);
 
     /// @notice Changes the allowed status of several underlyings
     function setUnderlyingStatusBatch(MellowUnderlyingStatus[] calldata underlyings) external;

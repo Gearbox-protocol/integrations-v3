@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 // Gearbox Protocol. Generalized leverage for DeFi protocols
 // (c) Gearbox Foundation, 2024.
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.23;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IMellowVault} from "../../../../integrations/mellow/IMellowVault.sol";
@@ -41,11 +41,9 @@ contract MellowVaultAdapterUnitTest is
     }
 
     /// @notice U:[MEL-1]: Constructor works as expected
-    function test_U_MEL_01_constructor_works_as_expected() public {
+    function test_U_MEL_01_constructor_works_as_expected() public view {
         assertEq(adapter.creditManager(), address(creditManager), "Incorrect creditManager");
-        assertEq(adapter.addressProvider(), address(addressProvider), "Incorrect addressProvider");
         assertEq(adapter.targetContract(), vault, "Incorrect targetContract");
-        assertEq(adapter.vaultTokenMask(), 8, "Incorrect vault token mask");
     }
 
     /// @notice U:[MEL-2]: Wrapper functions revert on wrong caller
@@ -86,15 +84,13 @@ contract MellowVaultAdapterUnitTest is
         _readsActiveAccount();
         _executesCall({
             tokensToApprove: tokensToApprove,
-            tokensToValidate: new address[](0),
             callData: abi.encodeCall(IMellowVault.deposit, (creditAccount, amounts, 0, 789))
         });
 
         vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.deposit(creditAccount, amounts, 0, 789);
+        bool useSafePrices = adapter.deposit(creditAccount, amounts, 0, 789);
 
-        assertEq(tokensToEnable, 8, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
+        assertTrue(useSafePrices, "Should use safe prices");
     }
 
     /// @notice U:[MEL-4]: `depositOneAsset` works as expected
@@ -104,6 +100,9 @@ contract MellowVaultAdapterUnitTest is
         adapter.depositOneAsset(tokens[1], 100, 0, 789);
 
         address nonExistentToken = makeAddr("WRONG_TOKEN");
+
+        creditManager.setMask(nonExistentToken, 4096);
+
         _allowUnderlying(nonExistentToken);
         vm.expectRevert(abi.encodeWithSelector(UnderlyingNotFoundException.selector, nonExistentToken));
         vm.prank(creditFacade);
@@ -116,17 +115,14 @@ contract MellowVaultAdapterUnitTest is
         _readsActiveAccount();
         _executesSwap({
             tokenIn: tokens[0],
-            tokenOut: tokens[3],
             callData: abi.encodeCall(IMellowVault.deposit, (creditAccount, amounts, 0, 789)),
-            requiresApproval: true,
-            validatesTokens: false
+            requiresApproval: true
         });
 
         vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.depositOneAsset(tokens[0], 100, 0, 789);
+        bool useSafePrices = adapter.depositOneAsset(tokens[0], 100, 0, 789);
 
-        assertEq(tokensToEnable, 8, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
+        assertTrue(useSafePrices, "Should use safe prices");
     }
 
     /// @notice U:[MEL-5]: `depositOneAssetDiff` works as expected
@@ -138,6 +134,9 @@ contract MellowVaultAdapterUnitTest is
         adapter.depositOneAssetDiff(tokens[1], diffLeftoverAmount, 0.5e27, 789);
 
         address nonExistentToken = makeAddr("WRONG_TOKEN");
+
+        creditManager.setMask(nonExistentToken, 4096);
+
         _allowUnderlying(nonExistentToken);
         vm.mockCall(nonExistentToken, abi.encodeCall(IERC20.balanceOf, (creditAccount)), abi.encode(diffMintedAmount));
         vm.expectRevert(abi.encodeWithSelector(UnderlyingNotFoundException.selector, nonExistentToken));
@@ -151,18 +150,14 @@ contract MellowVaultAdapterUnitTest is
         _readsActiveAccount();
         _executesSwap({
             tokenIn: tokens[0],
-            tokenOut: tokens[3],
             callData: abi.encodeCall(IMellowVault.deposit, (creditAccount, amounts, diffInputAmount / 2, 789)),
-            requiresApproval: true,
-            validatesTokens: false
+            requiresApproval: true
         });
 
         vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) =
-            adapter.depositOneAssetDiff(tokens[0], diffLeftoverAmount, 0.5e27, 789);
+        bool useSafePrices = adapter.depositOneAssetDiff(tokens[0], diffLeftoverAmount, 0.5e27, 789);
 
-        assertEq(tokensToEnable, 8, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, diffDisableTokenIn ? 1 : 0, "Incorrect tokensToDisable");
+        assertTrue(useSafePrices, "Should use safe prices");
     }
 
     /// @notice U:[MEL-6]: `setUnderlyingStatusBatch` works as expected
@@ -185,8 +180,9 @@ contract MellowVaultAdapterUnitTest is
         vm.prank(configurator);
         adapter.setUnderlyingStatusBatch(underlyings);
 
-        assertFalse(adapter.isUnderlyingAllowed(tokens[0]), "First token is incorrectly allowed");
-        assertTrue(adapter.isUnderlyingAllowed(tokens[1]), "Second token is incorrectly not allowed");
+        address[] memory allowedUnderlyings = adapter.allowedUnderlyings();
+        assertEq(allowedUnderlyings.length, 1, "Incorrect number of allowed underlyings");
+        assertEq(allowedUnderlyings[0], tokens[1], "Incorrect allowed underlying");
     }
 
     // ------- //

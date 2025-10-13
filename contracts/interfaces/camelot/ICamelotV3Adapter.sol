@@ -1,11 +1,16 @@
 // SPDX-License-Identifier: MIT
 // Gearbox Protocol. Generalized leverage for DeFi protocols
-// (c) Gearbox Foundation, 2023.
-pragma solidity ^0.8.17;
+// (c) Gearbox Foundation, 2024.
+pragma solidity ^0.8.23;
 
-import {IAdapter} from "@gearbox-protocol/core-v2/contracts/interfaces/IAdapter.sol";
+import {IAdapter} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IAdapter.sol";
 
 import {ICamelotV3Router} from "../../integrations/camelot/ICamelotV3Router.sol";
+
+struct CamelotV3Pool {
+    address token0;
+    address token1;
+}
 
 struct CamelotV3PoolStatus {
     address token0;
@@ -43,54 +48,37 @@ interface ICamelotV3AdapterTypes {
     }
 }
 
-interface ICamelotV3AdapterEvents {
+/// @title Camelot V3 Router adapter interface
+interface ICamelotV3Adapter is IAdapter, ICamelotV3AdapterTypes {
     /// @notice Emitted when new status is set for a pool
     event SetPoolStatus(address indexed token0, address indexed token1, bool allowed);
-}
 
-interface ICamelotV3AdapterExceptions {
     /// @notice Thrown when sanity checks on a swap path fail
     error InvalidPathException();
-}
 
-/// @title Camelot V3 Router adapter interface
-interface ICamelotV3Adapter is
-    IAdapter,
-    ICamelotV3AdapterTypes,
-    ICamelotV3AdapterEvents,
-    ICamelotV3AdapterExceptions
-{
     function exactInputSingle(ICamelotV3Router.ExactInputSingleParams calldata params)
         external
-        returns (uint256 tokensToEnable, uint256 tokensToDisable);
+        returns (bool useSafePrices);
 
-    function exactDiffInputSingle(ExactDiffInputSingleParams calldata params)
-        external
-        returns (uint256 tokensToEnable, uint256 tokensToDisable);
+    function exactDiffInputSingle(ExactDiffInputSingleParams calldata params) external returns (bool useSafePrices);
 
     function exactInputSingleSupportingFeeOnTransferTokens(ICamelotV3Router.ExactInputSingleParams calldata params)
         external
-        returns (uint256 tokensToEnable, uint256 tokensToDisable);
+        returns (bool useSafePrices);
 
     function exactDiffInputSingleSupportingFeeOnTransferTokens(ExactDiffInputSingleParams calldata params)
         external
-        returns (uint256 tokensToEnable, uint256 tokensToDisable);
+        returns (bool useSafePrices);
 
-    function exactInput(ICamelotV3Router.ExactInputParams calldata params)
-        external
-        returns (uint256 tokensToEnable, uint256 tokensToDisable);
+    function exactInput(ICamelotV3Router.ExactInputParams calldata params) external returns (bool useSafePrices);
 
-    function exactDiffInput(ExactDiffInputParams calldata params)
-        external
-        returns (uint256 tokensToEnable, uint256 tokensToDisable);
+    function exactDiffInput(ExactDiffInputParams calldata params) external returns (bool useSafePrices);
 
     function exactOutputSingle(ICamelotV3Router.ExactOutputSingleParams calldata params)
         external
-        returns (uint256 tokensToEnable, uint256 tokensToDisable);
+        returns (bool useSafePrices);
 
-    function exactOutput(ICamelotV3Router.ExactOutputParams calldata params)
-        external
-        returns (uint256 tokensToEnable, uint256 tokensToDisable);
+    function exactOutput(ICamelotV3Router.ExactOutputParams calldata params) external returns (bool useSafePrices);
 
     // ------------- //
     // CONFIGURATION //

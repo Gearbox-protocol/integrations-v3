@@ -1,20 +1,20 @@
 // SPDX-License-Identifier: UNLICENSED
 // Gearbox Protocol. Generalized leverage for DeFi protocols
-// (c) Gearbox Foundation, 2023.
-pragma solidity ^0.8.17;
+// (c) Gearbox Foundation, 2024.
+pragma solidity ^0.8.23;
 
 import {IUniswapV2Router01} from "../../../../integrations/uniswap/IUniswapV2Router01.sol";
 import {
-    IUniswapV2AdapterEvents,
-    IUniswapV2AdapterExceptions,
-    UniswapV2PairStatus
+    IUniswapV2Adapter, UniswapV2PairStatus, UniswapV2Pair
 } from "../../../../interfaces/uniswap/IUniswapV2Adapter.sol";
 import {AdapterUnitTestHelper} from "../AdapterUnitTestHelper.sol";
 import {UniswapV2AdapterHarness} from "./UniswapV2Adapter.harness.sol";
 
+import "@gearbox-protocol/core-v3/contracts/test/lib/constants.sol";
+
 /// @title Uniswap v2 adapter unit test
 /// @notice U:[UNI2]: Unit tests for Uniswap v2 swap router adapter
-contract UniswapV2AdapterUnitTest is AdapterUnitTestHelper, IUniswapV2AdapterEvents, IUniswapV2AdapterExceptions {
+contract UniswapV2AdapterUnitTest is AdapterUnitTestHelper {
     UniswapV2AdapterHarness adapter;
 
     address router;
@@ -29,9 +29,8 @@ contract UniswapV2AdapterUnitTest is AdapterUnitTestHelper, IUniswapV2AdapterEve
     }
 
     /// @notice U:[UNI2-1]: Constructor works as expected
-    function test_U_UNI2_01_constructor_works_as_expected() public {
+    function test_U_UNI2_01_constructor_works_as_expected() public view {
         assertEq(adapter.creditManager(), address(creditManager), "Incorrect creditManager");
-        assertEq(adapter.addressProvider(), address(addressProvider), "Incorrect addressProvider");
         assertEq(adapter.targetContract(), router, "Incorrect targetContract");
     }
 
@@ -52,7 +51,7 @@ contract UniswapV2AdapterUnitTest is AdapterUnitTestHelper, IUniswapV2AdapterEve
     /// @notice U:[UNI2-3]: `swapTokensForExactTokens` works as expected
     function test_U_UNI2_03_swapTokensForExactTokens_works_as_expected() public {
         address[] memory path = _makePath(0);
-        vm.expectRevert(InvalidPathException.selector);
+        vm.expectRevert(IUniswapV2Adapter.InvalidPathException.selector);
         vm.prank(creditFacade);
         adapter.swapExactTokensForTokens(123, 456, path, address(0), 789);
 
@@ -60,24 +59,19 @@ contract UniswapV2AdapterUnitTest is AdapterUnitTestHelper, IUniswapV2AdapterEve
         _readsActiveAccount();
         _executesSwap({
             tokenIn: tokens[0],
-            tokenOut: tokens[1],
             callData: abi.encodeCall(IUniswapV2Router01.swapExactTokensForTokens, (123, 456, path, creditAccount, 789)),
-            requiresApproval: true,
-            validatesTokens: true
+            requiresApproval: true
         });
 
         vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) =
-            adapter.swapExactTokensForTokens(123, 456, path, address(0), 789);
-
-        assertEq(tokensToEnable, 2, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
+        bool useSafePrices = adapter.swapExactTokensForTokens(123, 456, path, address(0), 789);
+        assertTrue(useSafePrices);
     }
 
     /// @notice U:[UNI2-4]: `swapExactTokensForTokens` works as expected
     function test_U_UNI2_04_swapExactTokensForTokens_works_as_expected() public {
         address[] memory path = _makePath(0);
-        vm.expectRevert(InvalidPathException.selector);
+        vm.expectRevert(IUniswapV2Adapter.InvalidPathException.selector);
         vm.prank(creditFacade);
         adapter.swapExactTokensForTokens(123, 456, path, address(0), 789);
 
@@ -85,18 +79,13 @@ contract UniswapV2AdapterUnitTest is AdapterUnitTestHelper, IUniswapV2AdapterEve
         _readsActiveAccount();
         _executesSwap({
             tokenIn: tokens[0],
-            tokenOut: tokens[1],
             callData: abi.encodeCall(IUniswapV2Router01.swapExactTokensForTokens, (123, 456, path, creditAccount, 789)),
-            requiresApproval: true,
-            validatesTokens: true
+            requiresApproval: true
         });
 
         vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) =
-            adapter.swapExactTokensForTokens(123, 456, path, address(0), 789);
-
-        assertEq(tokensToEnable, 2, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
+        bool useSafePrices = adapter.swapExactTokensForTokens(123, 456, path, address(0), 789);
+        assertTrue(useSafePrices);
     }
 
     /// @notice U:[UNI2-5]: `swapDiffTokensForTokens` works as expected
@@ -104,7 +93,7 @@ contract UniswapV2AdapterUnitTest is AdapterUnitTestHelper, IUniswapV2AdapterEve
         deal({token: tokens[0], to: creditAccount, give: diffMintedAmount});
 
         address[] memory path = _makePath(0);
-        vm.expectRevert(InvalidPathException.selector);
+        vm.expectRevert(IUniswapV2Adapter.InvalidPathException.selector);
         vm.prank(creditFacade);
         adapter.swapDiffTokensForTokens(diffInputAmount, 0.5e27, path, 789);
 
@@ -112,26 +101,27 @@ contract UniswapV2AdapterUnitTest is AdapterUnitTestHelper, IUniswapV2AdapterEve
         _readsActiveAccount();
         _executesSwap({
             tokenIn: tokens[0],
-            tokenOut: tokens[1],
             callData: abi.encodeCall(
                 IUniswapV2Router01.swapExactTokensForTokens,
                 (diffInputAmount, diffInputAmount / 2, path, creditAccount, 789)
-                ),
-            requiresApproval: true,
-            validatesTokens: true
+            ),
+            requiresApproval: true
         });
 
         vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) =
-            adapter.swapDiffTokensForTokens(diffLeftoverAmount, 0.5e27, path, 789);
-
-        assertEq(tokensToEnable, 2, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, diffDisableTokenIn ? 1 : 0, "Incorrect tokensToDisable");
+        bool useSafePrices = adapter.swapDiffTokensForTokens(diffLeftoverAmount, 0.5e27, path, 789);
+        assertTrue(useSafePrices);
     }
 
     /// @notice U:[UNI2-6]: `setPairStatusBatch` works as expected
     function test_U_UNI2_06_setPairStatusBatch_works_as_expected() public {
-        UniswapV2PairStatus[] memory pairs;
+        _setPairsStatus(3, 0);
+        UniswapV2PairStatus[] memory pairs = new UniswapV2PairStatus[](1);
+
+        pairs[0] = UniswapV2PairStatus(tokens[0], DUMB_ADDRESS, true);
+        _revertsOnUnknownToken();
+        vm.prank(configurator);
+        adapter.setPairStatusBatch(pairs);
 
         _revertsOnNonConfiguratorCaller();
         adapter.setPairStatusBatch(pairs);
@@ -140,34 +130,44 @@ contract UniswapV2AdapterUnitTest is AdapterUnitTestHelper, IUniswapV2AdapterEve
         pairs[0] = UniswapV2PairStatus(tokens[0], tokens[1], false);
         pairs[1] = UniswapV2PairStatus(tokens[1], tokens[2], true);
 
-        vm.expectEmit(true, true, false, true);
-        emit SetPairStatus(_min(tokens[0], tokens[1]), _max(tokens[0], tokens[1]), false);
+        _readsTokenMask(tokens[1]);
+        _readsTokenMask(tokens[2]);
 
         vm.expectEmit(true, true, false, true);
-        emit SetPairStatus(_min(tokens[1], tokens[2]), _max(tokens[1], tokens[2]), true);
+        emit IUniswapV2Adapter.SetPairStatus(_min(tokens[0], tokens[1]), _max(tokens[0], tokens[1]), false);
+
+        vm.expectEmit(true, true, false, true);
+        emit IUniswapV2Adapter.SetPairStatus(_min(tokens[1], tokens[2]), _max(tokens[1], tokens[2]), true);
 
         vm.prank(configurator);
         adapter.setPairStatusBatch(pairs);
 
         assertFalse(adapter.isPairAllowed(tokens[0], tokens[1]), "First pair incorrectly allowed");
         assertTrue(adapter.isPairAllowed(tokens[1], tokens[2]), "Second pair incorrectly not allowed");
+
+        UniswapV2Pair[] memory allowedPairs = adapter.supportedPairs();
+
+        assertEq(allowedPairs.length, 1, "Incorrect allowed pairs length");
+
+        assertEq(allowedPairs[0].token0, _min(tokens[1], tokens[2]), "Incorrect allowed pair token 0");
+
+        assertEq(allowedPairs[0].token1, _max(tokens[1], tokens[2]), "Incorrect allowed pair token 1");
     }
 
     /// @notice U:[UNI2-7]: `_validatePath` works as expected
     function test_U_UNI2_07_validatePath_works_as_expected() public {
         bool isValid;
         address tokenIn;
-        address tokenOut;
         address[] memory path;
 
         // insane paths
-        (isValid,,) = adapter.validatePath(new address[](0));
+        (isValid,) = adapter.validatePath(new address[](0));
         assertFalse(isValid, "Empty path incorrectly valid");
 
-        (isValid,,) = adapter.validatePath(new address[](1));
+        (isValid,) = adapter.validatePath(new address[](1));
         assertFalse(isValid, "Short path incorrectly valid");
 
-        (isValid,,) = adapter.validatePath(new address[](5));
+        (isValid,) = adapter.validatePath(new address[](5));
         assertFalse(isValid, "Long path incorrectly valid");
 
         // exhaustive search
@@ -177,12 +177,11 @@ contract UniswapV2AdapterUnitTest is AdapterUnitTestHelper, IUniswapV2AdapterEve
             uint256 numCases = 1 << (pathLen - 1);
             for (uint256 mask; mask < numCases; ++mask) {
                 _setPairsStatus(pathLen - 1, mask);
-                (isValid, tokenIn, tokenOut) = adapter.validatePath(path);
+                (isValid, tokenIn) = adapter.validatePath(path);
 
                 if (mask == numCases - 1) {
                     assertTrue(isValid, "Path incorrectly invalid");
                     assertEq(tokenIn, tokens[0], "Incorrect tokenIn");
-                    assertEq(tokenOut, tokens[pathLen - 1], "Incorrect tokenOut");
                 } else {
                     assertFalse(isValid, "Path incorrectly valid");
                 }

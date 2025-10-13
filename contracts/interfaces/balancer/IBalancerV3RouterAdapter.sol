@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 // Gearbox Protocol. Generalized leverage for DeFi protocols
 // (c) Gearbox Foundation, 2024.
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.23;
 
-import {IAdapter} from "@gearbox-protocol/core-v2/contracts/interfaces/IAdapter.sol";
+import {IAdapter} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IAdapter.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 interface IBalancerV3RouterAdapterEvents {
@@ -30,7 +30,7 @@ interface IBalancerV3RouterAdapter is IAdapter, IBalancerV3RouterAdapterEvents, 
         uint256 deadline,
         bool wethIsEth,
         bytes calldata userData
-    ) external returns (uint256 tokensToEnable, uint256 tokensToDisable);
+    ) external returns (bool);
 
     function swapSingleTokenDiffIn(
         address pool,
@@ -39,7 +39,7 @@ interface IBalancerV3RouterAdapter is IAdapter, IBalancerV3RouterAdapterEvents, 
         uint256 leftoverAmount,
         uint256 rateMinRAY,
         uint256 deadline
-    ) external returns (uint256 tokensToEnable, uint256 tokensToDisable);
+    ) external returns (bool);
 
     // ------------- //
     // CONFIGURATION //

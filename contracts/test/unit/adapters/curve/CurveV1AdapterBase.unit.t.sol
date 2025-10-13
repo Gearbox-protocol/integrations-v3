@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 // Gearbox Protocol. Generalized leverage for DeFi protocols
-// (c) Gearbox Foundation, 2023.
-pragma solidity ^0.8.17;
+// (c) Gearbox Foundation, 2024.
+pragma solidity ^0.8.23;
 
 import {
     IncorrectParameterException,
@@ -17,19 +17,13 @@ import {CurveV1AdapterBaseHarness} from "./CurveV1AdapterBase.harness.sol";
 contract CurveV1AdapterBaseUnitTest is AdapterUnitTestHelper {
     CurveV1AdapterBaseHarness adapter;
     PoolMock basePool;
-    PoolMock pool;
+    PoolMock curvePool;
 
     address token0;
     address token1;
     address underlying0;
     address underlying1;
     address lpToken;
-
-    uint256 token0Mask;
-    uint256 token1Mask;
-    uint256 underlying0Mask;
-    uint256 underlying1Mask;
-    uint256 lpTokenMask;
 
     // ----- //
     // SETUP //
@@ -57,11 +51,11 @@ contract CurveV1AdapterBaseUnitTest is AdapterUnitTestHelper {
     function setUp() public {
         _setUp();
 
-        (token0, token0Mask) = (tokens[0], 1);
-        (token1, token1Mask) = (tokens[1], 2);
-        (underlying0, underlying0Mask) = (tokens[2], 4);
-        (underlying1, underlying1Mask) = (tokens[3], 8);
-        (lpToken, lpTokenMask) = (tokens[4], 16);
+        token0 = tokens[0];
+        token1 = tokens[1];
+        underlying0 = tokens[2];
+        underlying1 = tokens[3];
+        lpToken = tokens[4];
     }
 
     function _setupPoolAndAdapter(PoolType poolType) internal {
@@ -73,9 +67,11 @@ contract CurveV1AdapterBaseUnitTest is AdapterUnitTestHelper {
         address[] memory coins = new address[](2);
         coins[0] = token0;
         coins[1] = token1;
-        pool = new PoolMock(poolType, coins, new address[](0));
+        curvePool = new PoolMock(poolType, coins, new address[](0));
 
-        adapter = new CurveV1AdapterBaseHarness(address(creditManager), address(pool), lpToken, address(basePool), 2);
+        adapter = new CurveV1AdapterBaseHarness(
+            address(creditManager), address(curvePool), lpToken, address(basePool), 2, poolType == PoolType.Crypto
+        );
 
         assertEq(adapter.use256(), poolType == PoolType.Crypto, "Incorrect use256");
     }
@@ -86,40 +82,37 @@ contract CurveV1AdapterBaseUnitTest is AdapterUnitTestHelper {
 
     /// @notice U:[CRVB-1]: Constructor works as expected
     function test_U_CRVB_01_constructor_works_as_expected() public {
-        pool = new PoolMock(PoolType.Stable, new address[](0), new address[](0));
+        curvePool = new PoolMock(PoolType.Stable, new address[](0), new address[](0));
 
         // reverts on zero LP token
         vm.expectRevert(ZeroAddressException.selector);
-        new CurveV1AdapterBaseHarness(address(creditManager), address(pool), address(0), address(0), 2);
+        new CurveV1AdapterBaseHarness(address(creditManager), address(curvePool), address(0), address(0), 2, false);
 
         // reverts when pool has fewer coins than needed
         vm.expectRevert(IncorrectParameterException.selector);
-        new CurveV1AdapterBaseHarness(address(creditManager), address(pool), lpToken, address(0), 2);
+        new CurveV1AdapterBaseHarness(address(creditManager), address(curvePool), lpToken, address(0), 2, false);
 
         // plain pool
         address[] memory coins = new address[](2);
         coins[0] = token0;
         coins[1] = token1;
-        pool = new PoolMock(PoolType.Stable, coins, new address[](0));
+        curvePool = new PoolMock(PoolType.Stable, coins, new address[](0));
 
         _readsTokenMask(token0);
         _readsTokenMask(token1);
         _readsTokenMask(lpToken);
-        adapter = new CurveV1AdapterBaseHarness(address(creditManager), address(pool), lpToken, address(0), 2);
+        adapter =
+            new CurveV1AdapterBaseHarness(address(creditManager), address(curvePool), lpToken, address(0), 2, false);
 
         assertEq(adapter.creditManager(), address(creditManager), "Incorrect creditManager");
-        assertEq(adapter.addressProvider(), address(addressProvider), "Incorrect addressProvider");
-        assertEq(adapter.targetContract(), address(pool), "Incorrect targetContract");
+        assertEq(adapter.targetContract(), address(curvePool), "Incorrect targetContract");
 
         assertEq(adapter.token(), lpToken, "Incorrect token");
         assertEq(adapter.lp_token(), lpToken, "Incorrect token");
-        assertEq(adapter.lpTokenMask(), lpTokenMask, "Incorrect lpTokenMask");
         assertEq(adapter.metapoolBase(), address(0), "Incorrect metapoolBase");
         assertEq(adapter.nCoins(), 2, "Incorrect nCoins");
         assertEq(adapter.token0(), token0, "Incorrect token0");
         assertEq(adapter.token1(), token1, "Incorrect token1");
-        assertEq(adapter.token0Mask(), token0Mask, "Incorrect token0Mask");
-        assertEq(adapter.token1Mask(), token1Mask, "Incorrect token1Mask");
 
         // metapool
         address[] memory underlyings = new address[](2);
@@ -132,30 +125,28 @@ contract CurveV1AdapterBaseUnitTest is AdapterUnitTestHelper {
         _readsTokenMask(underlying0);
         _readsTokenMask(underlying1);
         _readsTokenMask(lpToken);
-        adapter = new CurveV1AdapterBaseHarness(address(creditManager), address(pool), lpToken, address(basePool), 2);
+        adapter = new CurveV1AdapterBaseHarness(
+            address(creditManager), address(curvePool), lpToken, address(basePool), 2, false
+        );
 
         assertEq(adapter.metapoolBase(), address(basePool), "Incorrect metapoolBase");
         assertEq(adapter.underlying0(), token0, "Incorrect underlying0");
         assertEq(adapter.underlying1(), underlying0, "Incorrect underlying1");
         assertEq(adapter.underlying2(), underlying1, "Incorrect underlying2");
-        assertEq(adapter.underlying0Mask(), token0Mask, "Incorrect underlying0Mask");
-        assertEq(adapter.underlying1Mask(), underlying0Mask, "Incorrect underlying1Mask");
-        assertEq(adapter.underlying2Mask(), underlying1Mask, "Incorrect underlying2Mask");
 
         // lending pool
-        pool = new PoolMock(PoolType.Stable, coins, underlyings);
+        curvePool = new PoolMock(PoolType.Stable, coins, underlyings);
 
         _readsTokenMask(token0);
         _readsTokenMask(token1);
         _readsTokenMask(underlying0);
         _readsTokenMask(underlying1);
         _readsTokenMask(lpToken);
-        adapter = new CurveV1AdapterBaseHarness(address(creditManager), address(pool), lpToken, address(0), 2);
+        adapter =
+            new CurveV1AdapterBaseHarness(address(creditManager), address(curvePool), lpToken, address(0), 2, false);
         assertEq(adapter.metapoolBase(), address(0), "Incorrect metapoolBase");
         assertEq(adapter.underlying0(), underlying0, "Incorrect underlying0");
         assertEq(adapter.underlying1(), underlying1, "Incorrect underlying1");
-        assertEq(adapter.underlying0Mask(), underlying0Mask, "Incorrect underlying0Mask");
-        assertEq(adapter.underlying1Mask(), underlying1Mask, "Incorrect underlying1Mask");
     }
 
     /// @notice U:[CRVB-2]: Wrapper functions revert on wrong caller
@@ -205,27 +196,23 @@ contract CurveV1AdapterBaseUnitTest is AdapterUnitTestHelper {
 
             _executesSwap({
                 tokenIn: token0,
-                tokenOut: token1,
                 callData: abi.encodeWithSignature(
-                    pool.isCrypto()
+                    curvePool.isCrypto()
                         ? "exchange(uint256,uint256,uint256,uint256)"
                         : "exchange(int128,int128,uint256,uint256)",
                     0,
                     1,
                     1000,
                     500
-                    ),
-                requiresApproval: true,
-                validatesTokens: false
+                ),
+                requiresApproval: true
             });
 
             vm.prank(creditFacade);
-            (uint256 tokensToEnable, uint256 tokensToDisable) = use256
+            bool useSafePrices = use256
                 ? adapter.exchange(uint256(0), uint256(1), 1000, 500)
                 : adapter.exchange(int128(0), int128(1), 1000, 500);
-
-            assertEq(tokensToEnable, token1Mask, "Incorrect tokensToEnable");
-            assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
+            assertTrue(useSafePrices);
         }
     }
 
@@ -236,24 +223,22 @@ contract CurveV1AdapterBaseUnitTest is AdapterUnitTestHelper {
         _readsActiveAccount();
         _executesSwap({
             tokenIn: token0,
-            tokenOut: token1,
             callData: abi.encodeWithSignature(
-                pool.isCrypto() ? "exchange(uint256,uint256,uint256,uint256)" : "exchange(int128,int128,uint256,uint256)",
+                curvePool.isCrypto()
+                    ? "exchange(uint256,uint256,uint256,uint256)"
+                    : "exchange(int128,int128,uint256,uint256)",
                 0,
                 1,
                 diffInputAmount,
                 diffInputAmount / 2
-                ),
-            requiresApproval: true,
-            validatesTokens: false
+            ),
+            requiresApproval: true
         });
 
         vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) =
-            adapter.exchange_diff(uint256(0), uint256(1), diffLeftoverAmount, 0.5e27);
+        bool useSafePrices = adapter.exchange_diff(uint256(0), uint256(1), diffLeftoverAmount, 0.5e27);
 
-        assertEq(tokensToEnable, token1Mask, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, diffDisableTokenIn ? token0Mask : 0, "Incorrect tokensToDisable");
+        assertTrue(useSafePrices);
     }
 
     /// @notice U:[CRVB-5]: `exchange_underlying` works as expected
@@ -263,27 +248,24 @@ contract CurveV1AdapterBaseUnitTest is AdapterUnitTestHelper {
 
             _executesSwap({
                 tokenIn: token0,
-                tokenOut: underlying0,
                 callData: abi.encodeWithSignature(
-                    pool.isCrypto()
+                    curvePool.isCrypto()
                         ? "exchange_underlying(uint256,uint256,uint256,uint256)"
                         : "exchange_underlying(int128,int128,uint256,uint256)",
                     0,
                     1,
                     1000,
                     500
-                    ),
-                requiresApproval: true,
-                validatesTokens: false
+                ),
+                requiresApproval: true
             });
 
             vm.prank(creditFacade);
-            (uint256 tokensToEnable, uint256 tokensToDisable) = use256
+            bool useSafePrices = use256
                 ? adapter.exchange_underlying(uint256(0), uint256(1), 1000, 500)
                 : adapter.exchange_underlying(int128(0), int128(1), 1000, 500);
 
-            assertEq(tokensToEnable, underlying0Mask, "Incorrect tokensToEnable");
-            assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
+            assertTrue(useSafePrices);
         }
     }
 
@@ -298,26 +280,21 @@ contract CurveV1AdapterBaseUnitTest is AdapterUnitTestHelper {
         _readsActiveAccount();
         _executesSwap({
             tokenIn: token0,
-            tokenOut: underlying0,
             callData: abi.encodeWithSignature(
-                pool.isCrypto()
+                curvePool.isCrypto()
                     ? "exchange_underlying(uint256,uint256,uint256,uint256)"
                     : "exchange_underlying(int128,int128,uint256,uint256)",
                 0,
                 1,
                 diffInputAmount,
                 diffInputAmount / 2
-                ),
-            requiresApproval: true,
-            validatesTokens: false
+            ),
+            requiresApproval: true
         });
 
         vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) =
-            adapter.exchange_diff_underlying(uint256(0), uint256(1), diffLeftoverAmount, 0.5e27);
-
-        assertEq(tokensToEnable, underlying0Mask, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, diffDisableTokenIn ? token0Mask : 0, "Incorrect tokensToDisable");
+        bool useSafePrices = adapter.exchange_diff_underlying(uint256(0), uint256(1), diffLeftoverAmount, 0.5e27);
+        assertTrue(useSafePrices);
     }
 
     // ------------- //
@@ -328,17 +305,13 @@ contract CurveV1AdapterBaseUnitTest is AdapterUnitTestHelper {
     function test_U_CRVB_07_add_liquidity_one_coin_works_as_expected() public onlyStablePools {
         _executesSwap({
             tokenIn: token0,
-            tokenOut: lpToken,
             callData: abi.encodeWithSignature("add_liquidity(uint256[2],uint256)", 1000, 0, 500),
-            requiresApproval: true,
-            validatesTokens: false
+            requiresApproval: true
         });
 
         vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) = adapter.add_liquidity_one_coin(1000, 0, 500);
-
-        assertEq(tokensToEnable, lpTokenMask, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
+        bool useSafePrices = adapter.add_liquidity_one_coin(1000, 0, 500);
+        assertTrue(useSafePrices);
     }
 
     /// @notice U:[CRVB-8]: `add_diff_liquidity_one_coin` works as expected
@@ -347,18 +320,13 @@ contract CurveV1AdapterBaseUnitTest is AdapterUnitTestHelper {
 
         _executesSwap({
             tokenIn: token0,
-            tokenOut: lpToken,
             callData: abi.encodeWithSignature("add_liquidity(uint256[2],uint256)", diffInputAmount, 0, diffInputAmount / 2),
-            requiresApproval: true,
-            validatesTokens: false
+            requiresApproval: true
         });
 
         vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) =
-            adapter.add_diff_liquidity_one_coin(diffLeftoverAmount, 0, 0.5e27);
-
-        assertEq(tokensToEnable, lpTokenMask, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, diffDisableTokenIn ? token0Mask : 0, "Incorrect tokensToDisable");
+        bool useSafePrices = adapter.add_diff_liquidity_one_coin(diffLeftoverAmount, 0, 0.5e27);
+        assertTrue(useSafePrices);
     }
 
     // ---------------- //
@@ -372,26 +340,23 @@ contract CurveV1AdapterBaseUnitTest is AdapterUnitTestHelper {
 
             _executesSwap({
                 tokenIn: lpToken,
-                tokenOut: token0,
                 callData: abi.encodeWithSignature(
-                    pool.isCrypto()
+                    curvePool.isCrypto()
                         ? "remove_liquidity_one_coin(uint256,uint256,uint256)"
                         : "remove_liquidity_one_coin(uint256,int128,uint256)",
                     1000,
                     0,
                     500
-                    ),
-                requiresApproval: false,
-                validatesTokens: false
+                ),
+                requiresApproval: false
             });
 
             vm.prank(creditFacade);
-            (uint256 tokensToEnable, uint256 tokensToDisable) = use256
+            bool useSafePrices = use256
                 ? adapter.remove_liquidity_one_coin(1000, uint256(0), 500)
                 : adapter.remove_liquidity_one_coin(1000, int128(0), 500);
 
-            assertEq(tokensToEnable, token0Mask, "Incorrect tokensToEnable");
-            assertEq(tokensToDisable, 0, "Incorrect tokensToDisable");
+            assertTrue(useSafePrices);
         }
     }
 
@@ -406,24 +371,19 @@ contract CurveV1AdapterBaseUnitTest is AdapterUnitTestHelper {
         _readsActiveAccount();
         _executesSwap({
             tokenIn: lpToken,
-            tokenOut: token0,
             callData: abi.encodeWithSignature(
-                pool.isCrypto()
+                curvePool.isCrypto()
                     ? "remove_liquidity_one_coin(uint256,uint256,uint256)"
                     : "remove_liquidity_one_coin(uint256,int128,uint256)",
                 diffInputAmount,
                 0,
                 diffInputAmount / 2
-                ),
-            requiresApproval: false,
-            validatesTokens: false
+            ),
+            requiresApproval: false
         });
 
         vm.prank(creditFacade);
-        (uint256 tokensToEnable, uint256 tokensToDisable) =
-            adapter.remove_diff_liquidity_one_coin(diffLeftoverAmount, uint256(0), 0.5e27);
-
-        assertEq(tokensToEnable, token0Mask, "Incorrect tokensToEnable");
-        assertEq(tokensToDisable, diffDisableTokenIn ? lpTokenMask : 0, "Incorrect tokensToDisable");
+        bool useSafePrices = adapter.remove_diff_liquidity_one_coin(diffLeftoverAmount, uint256(0), 0.5e27);
+        assertTrue(useSafePrices);
     }
 }

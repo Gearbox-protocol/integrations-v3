@@ -1,14 +1,13 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Gearbox Protocol. Generalized leverage for DeFi protocols
-// (c) Gearbox Foundation, 2023.
-pragma solidity ^0.8.17;
+// (c) Gearbox Foundation, 2024.
+pragma solidity ^0.8.23;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
-import {RAY} from "@gearbox-protocol/core-v2/contracts/libraries/Constants.sol";
+import {RAY} from "@gearbox-protocol/core-v3/contracts/libraries/Constants.sol";
 import {AbstractAdapter} from "../AbstractAdapter.sol";
-import {AdapterType} from "@gearbox-protocol/sdk-gov/contracts/AdapterType.sol";
 
 import {
     IPendleRouterAdapter,
@@ -35,8 +34,8 @@ import {
 contract PendleRouterAdapter is AbstractAdapter, IPendleRouterAdapter {
     using EnumerableSet for EnumerableSet.Bytes32Set;
 
-    AdapterType public constant override _gearboxAdapterType = AdapterType.PENDLE_ROUTER;
-    uint16 public constant override _gearboxAdapterVersion = 3_00;
+    bytes32 public constant override contractType = "ADAPTER::PENDLE_ROUTER";
+    uint256 public constant override version = 3_10;
 
     /// @notice Mapping from (market, inputToken, pendleToken) to whether swaps are allowed, and which directions
     mapping(address => mapping(address => mapping(address => PendleStatus))) public isPairAllowed;
@@ -63,14 +62,6 @@ contract PendleRouterAdapter is AbstractAdapter, IPendleRouterAdapter {
     /// @param minPtOut Minimal amount of PT token out
     /// @param guessPtOut Search boundaries to save gas on PT amount calculation
     /// @param input Parameters of the input tokens
-    ///        * `tokenIn` - token to swap into PT
-    ///        * `netTokenIn` - amount of tokens to swap
-    ///        * `tokenMintSy` - token used to mint SY. Since the adapter does not use PendleRouter's external routing features,
-    ///                            this is always enforced to be equal to `tokenIn`
-    ///        * `pendleSwap` - address of the swap aggregator. Since the adapter does not use PendleRouter's external routing features,
-    ///                         this is always enforced to be `address(0)`.
-    ///        * `swapData` - off-chain data for external routing. Since the adapter does not use PendleRouter's external routing features,
-    ///                            this is always enforced to be an empty struct
     /// @notice `receiver` and `limit` are ignored, since the recipient is always the Credit Account,
     ///         and Gearbox does not use Pendle's limit orders
     function swapExactTokenForPt(
@@ -83,7 +74,7 @@ contract PendleRouterAdapter is AbstractAdapter, IPendleRouterAdapter {
     )
         external
         creditFacadeOnly // U:[PEND-2]
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+        returns (bool useSafePrices)
     {
         (, address pt,) = IPendleMarket(market).readTokens();
 
@@ -101,14 +92,14 @@ contract PendleRouterAdapter is AbstractAdapter, IPendleRouterAdapter {
             input_m.tokenMintSy = input.tokenIn;
         }
 
-        (tokensToEnable, tokensToDisable,) = _executeSwapSafeApprove(
+        _executeSwapSafeApprove(
             input_m.tokenIn,
-            pt,
             abi.encodeCall(
                 IPendleRouter.swapExactTokenForPt, (creditAccount, market, minPtOut, guessPtOut, input_m, limit)
-            ),
-            false
+            )
         ); // U:[PEND-3]
+
+        useSafePrices = true;
     }
 
     /// @notice Swaps the entire balance of input token into PT, except the specified amount
@@ -116,8 +107,6 @@ contract PendleRouterAdapter is AbstractAdapter, IPendleRouterAdapter {
     /// @param minRateRAY Minimal exchange rate of input to PT, in 1e27 format
     /// @param guessPtOut Search boundaries to save gas on PT amount calculation
     /// @param diffInput Input token parameters
-    ///        * `tokenIn` - token to swap into PT
-    ///        * `leftoverTokenIn` - amount of input token to leave on the account
     function swapDiffTokenForPt(
         address market,
         uint256 minRateRAY,
@@ -126,7 +115,7 @@ contract PendleRouterAdapter is AbstractAdapter, IPendleRouterAdapter {
     )
         external
         creditFacadeOnly // U:[PEND-2]
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+        returns (bool useSafePrices)
     {
         (, address pt,) = IPendleMarket(market).readTokens();
 
@@ -135,7 +124,7 @@ contract PendleRouterAdapter is AbstractAdapter, IPendleRouterAdapter {
         address creditAccount = _creditAccount();
 
         uint256 amount = IERC20(diffInput.tokenIn).balanceOf(creditAccount);
-        if (amount <= diffInput.leftoverTokenIn) return (0, 0);
+        if (amount <= diffInput.leftoverTokenIn) return false;
 
         unchecked {
             amount -= diffInput.leftoverTokenIn;
@@ -148,29 +137,21 @@ contract PendleRouterAdapter is AbstractAdapter, IPendleRouterAdapter {
 
         LimitOrderData memory limit;
 
-        (tokensToEnable, tokensToDisable,) = _executeSwapSafeApprove(
+        _executeSwapSafeApprove(
             diffInput.tokenIn,
-            pt,
             abi.encodeCall(
                 IPendleRouter.swapExactTokenForPt,
                 (creditAccount, market, amount * minRateRAY / RAY, guessPtOut, input, limit)
-            ),
-            diffInput.leftoverTokenIn <= 1
+            )
         ); // U:[PEND-4]
+
+        useSafePrices = true;
     }
 
     /// @notice Swaps a specified amount of PT for token
     /// @param market Address of the market to swap in
     /// @param exactPtIn Amount of PT to swap
-    /// @param output Output token params:
-    ///        * `tokenOut` - token to swap PT into
-    ///        * `minTokenOut` - the minimal amount of token to receive
-    ///        * `tokenRedeemSy` - token received after redeeming SY. Since the adapter does not use PendleRouter's external routing features,
-    ///                            this is always enforced to be equal to `tokenOut`
-    ///        * `pendleSwap` - address of the swap aggregator. Since the adapter does not use PendleRouter's external routing features,
-    ///                         this is always enforced to be `address(0)`.
-    ///        * `swapData` - off-chain data for external routing. Since the adapter does not use PendleRouter's external routing features,
-    ///                            this is always enforced to be an empty struct
+    /// @param output Output token params
     /// @notice `receiver` and `limit` are ignored, since the recipient is always the Credit Account,
     ///         and Gearbox does not use Pendle's limit orders
     function swapExactPtForToken(
@@ -182,7 +163,7 @@ contract PendleRouterAdapter is AbstractAdapter, IPendleRouterAdapter {
     )
         external
         creditFacadeOnly // U:[PEND-2]
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+        returns (bool useSafePrices)
     {
         (, address pt,) = IPendleMarket(market).readTokens();
 
@@ -200,24 +181,21 @@ contract PendleRouterAdapter is AbstractAdapter, IPendleRouterAdapter {
             output_m.minTokenOut = output.minTokenOut;
         }
 
-        (tokensToEnable, tokensToDisable,) = _executeSwapSafeApprove(
-            pt,
-            output_m.tokenOut,
-            abi.encodeCall(IPendleRouter.swapExactPtForToken, (creditAccount, market, exactPtIn, output_m, limit)),
-            false
+        _executeSwapSafeApprove(
+            pt, abi.encodeCall(IPendleRouter.swapExactPtForToken, (creditAccount, market, exactPtIn, output_m, limit))
         ); // U:[PEND-5]
+
+        useSafePrices = true;
     }
 
     /// @notice Swaps the entire balance of PT into input token, except the specified amount
     /// @param market Address of the market to swap in
     /// @param leftoverPt Amount of PT to leave on the Credit Account
-    /// @param diffOutput Output token parameters:
-    ///        * `tokenOut` - token to swap PT into
-    ///        * `minRateRAY` - minimal exchange rate of PT into the output token
+    /// @param diffOutput Output token parameters
     function swapDiffPtForToken(address market, uint256 leftoverPt, TokenDiffOutput calldata diffOutput)
         external
         creditFacadeOnly // U:[PEND-2]
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+        returns (bool useSafePrices)
     {
         (, address pt,) = IPendleMarket(market).readTokens();
 
@@ -228,7 +206,7 @@ contract PendleRouterAdapter is AbstractAdapter, IPendleRouterAdapter {
         address creditAccount = _creditAccount();
 
         uint256 amount = IERC20(pt).balanceOf(creditAccount);
-        if (amount <= leftoverPt) return (0, 0);
+        if (amount <= leftoverPt) return false;
 
         unchecked {
             amount -= leftoverPt;
@@ -241,33 +219,24 @@ contract PendleRouterAdapter is AbstractAdapter, IPendleRouterAdapter {
 
         LimitOrderData memory limit;
 
-        (tokensToEnable, tokensToDisable,) = _executeSwapSafeApprove(
-            pt,
-            diffOutput.tokenOut,
-            abi.encodeCall(IPendleRouter.swapExactPtForToken, (creditAccount, market, amount, output, limit)),
-            leftoverPt <= 1
+        _executeSwapSafeApprove(
+            pt, abi.encodeCall(IPendleRouter.swapExactPtForToken, (creditAccount, market, amount, output, limit))
         ); // U:[PEND-6]
+
+        useSafePrices = true;
     }
 
     /// @notice Redeems a specified amount of PT tokens into underlying after expiry
     /// @param yt YT token associated to PT
     /// @param netPyIn Amount of PT token to redeem
-    /// @param output Output token params:
-    ///        * `tokenOut` - token to swap PT into
-    ///        * `minTokenOut` - the minimal amount of token to receive
-    ///        * `tokenRedeemSy` - token received after redeeming SY. Since the adapter does not use PendleRouter's external routing features,
-    ///                            this is always enforced to be equal to `tokenOut`
-    ///        * `pendleSwap` - address of the swap aggregator. Since the adapter does not use PendleRouter's external routing features,
-    ///                         this is always enforced to be `address(0)`.
-    ///        * `swapData` - off-chain data for external routing. Since the adapter does not use PendleRouter's external routing features,
-    ///                            this is always enforced to be an empty struct
+    /// @param output Output token params
     /// @notice `receiver` is ignored, since the recipient is always the Credit Account
     /// @notice Before expiry PT redemption also spends a corresponding amount of YT. To avoid the CA interacting
     ///         with potentially non-collateral YT tokens, this function is only executable after expiry
     function redeemPyToToken(address, address yt, uint256 netPyIn, TokenOutput calldata output)
         external
         creditFacadeOnly // U:[PEND-2]
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+        returns (bool useSafePrices)
     {
         address pt = IYToken(yt).PT();
 
@@ -288,26 +257,23 @@ contract PendleRouterAdapter is AbstractAdapter, IPendleRouterAdapter {
             output_m.minTokenOut = output.minTokenOut;
         }
 
-        (tokensToEnable, tokensToDisable,) = _executeSwapSafeApprove(
-            pt,
-            output_m.tokenOut,
-            abi.encodeCall(IPendleRouter.redeemPyToToken, (creditAccount, yt, netPyIn, output_m)),
-            false
+        _executeSwapSafeApprove(
+            pt, abi.encodeCall(IPendleRouter.redeemPyToToken, (creditAccount, yt, netPyIn, output_m))
         ); // U:[PEND-7]
+
+        useSafePrices = true;
     }
 
     /// @notice Redeems the entire balance of PT token into underlying after expiry, except the specified amount
     /// @param yt YT token associated to PT
     /// @param leftoverPt Amount of PT to keep on the account
-    /// @param diffOutput Output token parameters:
-    ///        * `tokenOut` - token to swap PT into
-    ///        * `minRateRAY` - minimal exchange rate of PT into the output token
+    /// @param diffOutput Output token parameters
     /// @notice Before expiry PT redemption also spends a corresponding amount of YT. To avoid the CA interacting
     ///         with potentially non-collateral YT tokens, this function is only executable after expiry
     function redeemDiffPyToToken(address yt, uint256 leftoverPt, TokenDiffOutput calldata diffOutput)
         external
         creditFacadeOnly // U:[PEND-2]
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+        returns (bool useSafePrices)
     {
         address pt = IYToken(yt).PT();
 
@@ -321,7 +287,7 @@ contract PendleRouterAdapter is AbstractAdapter, IPendleRouterAdapter {
         address creditAccount = _creditAccount();
 
         uint256 amount = IERC20(pt).balanceOf(creditAccount);
-        if (amount <= leftoverPt) return (0, 0);
+        if (amount <= leftoverPt) return false;
 
         unchecked {
             amount -= leftoverPt;
@@ -332,20 +298,17 @@ contract PendleRouterAdapter is AbstractAdapter, IPendleRouterAdapter {
         output.minTokenOut = amount * diffOutput.minRateRAY / RAY;
         output.tokenRedeemSy = diffOutput.tokenOut;
 
-        (tokensToEnable, tokensToDisable,) = _executeSwapSafeApprove(
-            pt,
-            diffOutput.tokenOut,
-            abi.encodeCall(IPendleRouter.redeemPyToToken, (creditAccount, yt, amount, output)),
-            leftoverPt <= 1
-        ); // U:[PEND-8]
+        _executeSwapSafeApprove(pt, abi.encodeCall(IPendleRouter.redeemPyToToken, (creditAccount, yt, amount, output))); // U:[PEND-8]
+
+        useSafePrices = true;
     }
 
-    // ------------- //
-    // CONFIGURATION //
-    // ------------- //
+    // ---- //
+    // DATA //
+    // ---- //
 
-    /// @notice Return the list of all markets that were ever allowed in this adapter
-    function getAllowedPairs() external view override returns (PendlePairStatus[] memory pairs) {
+    /// @notice Return the list of all pairs currently allowed in the adapter
+    function getAllowedPairs() public view returns (PendlePairStatus[] memory pairs) {
         bytes32[] memory allowedHashes = _allowedPairHashes.values();
         uint256 len = allowedHashes.length;
 
@@ -360,6 +323,15 @@ contract PendleRouterAdapter is AbstractAdapter, IPendleRouterAdapter {
         }
     }
 
+    /// @notice Serialized adapter parameters
+    function serialize() external view returns (bytes memory serializedData) {
+        serializedData = abi.encode(creditManager, targetContract, getAllowedPairs());
+    }
+
+    // ------------- //
+    // CONFIGURATION //
+    // ------------- //
+
     /// @notice Sets the allowed status of several (market, inputToken, pendleToken) tuples
     function setPairStatusBatch(PendlePairStatus[] calldata pairs)
         external
@@ -367,23 +339,23 @@ contract PendleRouterAdapter is AbstractAdapter, IPendleRouterAdapter {
         configuratorOnly // U:[PEND-9]
     {
         uint256 len = pairs.length;
-        unchecked {
-            for (uint256 i; i < len; ++i) {
-                isPairAllowed[pairs[i].market][pairs[i].inputToken][pairs[i].pendleToken] = pairs[i].status; // U:[PEND-9]
-                (, address pt,) = IPendleMarket(pairs[i].market).readTokens();
-                ptToMarket[pt] = pairs[i].market;
-                bytes32 pairHash = keccak256(abi.encode(pairs[i].market, pairs[i].inputToken, pairs[i].pendleToken));
-                if (pairs[i].status != PendleStatus.NOT_ALLOWED) {
-                    _allowedPairHashes.add(pairHash); // U:[PEND-9]
-                    isRedemptionAllowed[pairs[i].inputToken][pairs[i].pendleToken] = true; // U:[PEND-9]
-                } else {
-                    _allowedPairHashes.remove(pairHash); // U:[PEND-9]
-                    isRedemptionAllowed[pairs[i].inputToken][pairs[i].pendleToken] = false; // U:[PEND-9]
-                }
-                _hashToPendlePair[pairHash] = pairs[i]; // U:[PEND-9]
-
-                emit SetPairStatus(pairs[i].market, pairs[i].inputToken, pairs[i].pendleToken, pairs[i].status); // U:[PEND-9]
+        for (uint256 i; i < len; ++i) {
+            isPairAllowed[pairs[i].market][pairs[i].inputToken][pairs[i].pendleToken] = pairs[i].status; // U:[PEND-9]
+            (, address pt,) = IPendleMarket(pairs[i].market).readTokens();
+            ptToMarket[pt] = pairs[i].market;
+            bytes32 pairHash = keccak256(abi.encode(pairs[i].market, pairs[i].inputToken, pairs[i].pendleToken));
+            if (pairs[i].status != PendleStatus.NOT_ALLOWED) {
+                _allowedPairHashes.add(pairHash); // U:[PEND-9]
+                isRedemptionAllowed[pairs[i].inputToken][pairs[i].pendleToken] = true; // U:[PEND-9]
+                _getMaskOrRevert(pairs[i].inputToken);
+                _getMaskOrRevert(pairs[i].pendleToken);
+            } else {
+                _allowedPairHashes.remove(pairHash); // U:[PEND-9]
+                isRedemptionAllowed[pairs[i].inputToken][pairs[i].pendleToken] = false; // U:[PEND-9]
             }
+            _hashToPendlePair[pairHash] = pairs[i]; // U:[PEND-9]
+
+            emit SetPairStatus(pairs[i].market, pairs[i].inputToken, pairs[i].pendleToken, pairs[i].status); // U:[PEND-9]
         }
     }
 }

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 // Gearbox Protocol. Generalized leverage for DeFi protocols
-// (c) Gearbox Foundation, 2023.
-pragma solidity ^0.8.17;
+// (c) Gearbox Foundation, 2024.
+pragma solidity ^0.8.23;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {ICreditFacadeV3} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacadeV3.sol";
@@ -11,7 +11,7 @@ import {IUniswapV2Adapter} from "../../../../interfaces/uniswap/IUniswapV2Adapte
 import "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
 import {Contracts} from "@gearbox-protocol/sdk-gov/contracts/SupportedContracts.sol";
 
-import {MultiCall} from "@gearbox-protocol/core-v2/contracts/libraries/MultiCall.sol";
+import {MultiCall} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacadeV3.sol";
 import {MultiCallBuilder} from "@gearbox-protocol/core-v3/contracts/test/lib/MultiCallBuilder.sol";
 
 import {UniswapV2_Calls, UniswapV2_Multicaller} from "../../../multicall/uniswap/UniswapV2_Calls.sol";

@@ -1,20 +1,18 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Gearbox Protocol. Generalized leverage for DeFi protocols
-// (c) Gearbox Foundation, 2023.
-pragma solidity ^0.8.17;
+// (c) Gearbox Foundation, 2024.
+pragma solidity ^0.8.23;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-import {RAY} from "@gearbox-protocol/core-v2/contracts/libraries/Constants.sol";
-
-import {AdapterType} from "@gearbox-protocol/sdk-gov/contracts/AdapterType.sol";
+import {RAY} from "@gearbox-protocol/core-v3/contracts/libraries/Constants.sol";
 
 import {CurveV1AdapterBase} from "./CurveV1_Base.sol";
 
 /// @title Curve V1 DepozitZap adapter
 /// @notice Implements logic for interacting with a Curve zap wrapper (to `remove_liquidity_one_coin` from older pools)
 contract CurveV1AdapterDeposit is CurveV1AdapterBase {
-    AdapterType public constant override _gearboxAdapterType = AdapterType.CURVE_V1_WRAPPER;
+    bytes32 public constant override contractType = "ADAPTER::CURVE_V1_WRAPPER";
 
     /// @notice Sets allowance for the pool LP token to max before the operation and to 1 after
     modifier withLPTokenApproval() {
@@ -29,7 +27,7 @@ contract CurveV1AdapterDeposit is CurveV1AdapterBase {
     /// @param _lp_token Pool LP token address
     /// @param _nCoins Number of coins in the pool
     constructor(address _creditManager, address _curveDeposit, address _lp_token, uint256 _nCoins)
-        CurveV1AdapterBase(_creditManager, _curveDeposit, _lp_token, address(0), _nCoins)
+        CurveV1AdapterBase(_creditManager, _curveDeposit, _lp_token, address(0), _nCoins, false)
     {}
 
     /// @inheritdoc CurveV1AdapterBase
@@ -40,9 +38,10 @@ contract CurveV1AdapterDeposit is CurveV1AdapterBase {
         override
         creditFacadeOnly
         withLPTokenApproval
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+        returns (bool)
     {
-        (tokensToEnable, tokensToDisable) = _remove_liquidity_one_coin(amount, i, minAmount);
+        _remove_liquidity_one_coin(amount, i, minAmount);
+        return true;
     }
 
     /// @inheritdoc CurveV1AdapterBase
@@ -53,9 +52,10 @@ contract CurveV1AdapterDeposit is CurveV1AdapterBase {
         override
         creditFacadeOnly
         withLPTokenApproval
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+        returns (bool)
     {
-        (tokensToEnable, tokensToDisable) = _remove_liquidity_one_coin(amount, _toU256(i), minAmount);
+        _remove_liquidity_one_coin(amount, _toU256(i), minAmount);
+        return true;
     }
 
     /// @inheritdoc CurveV1AdapterBase
@@ -66,9 +66,9 @@ contract CurveV1AdapterDeposit is CurveV1AdapterBase {
         override
         creditFacadeOnly
         withLPTokenApproval
-        returns (uint256 tokensToEnable, uint256 tokensToDisable)
+        returns (bool)
     {
-        (tokensToEnable, tokensToDisable) = _remove_diff_liquidity_one_coin(i, leftoverAmount, rateMinRAY);
+        return _remove_diff_liquidity_one_coin(i, leftoverAmount, rateMinRAY);
     }
 
     /// @dev Does nothing since this adapter should not be used to add liquidity
@@ -86,4 +86,19 @@ contract CurveV1AdapterDeposit is CurveV1AdapterBase {
         override
         returns (bytes memory, bytes memory)
     {}
+
+    /// @notice Serialized adapter parameters
+    function serialize() external view returns (bytes memory serializedData) {
+        serializedData = abi.encode(
+            creditManager,
+            targetContract,
+            token,
+            lp_token,
+            metapoolBase,
+            nCoins,
+            use256,
+            [token0, token1, token2, token3],
+            [underlying0, underlying1, underlying2, underlying3]
+        );
+    }
 }

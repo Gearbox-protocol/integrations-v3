@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.23;
 
 interface IDaiUsds {
     function daiToUsds(address usr, uint256 wad) external;

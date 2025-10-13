@@ -13,6 +13,7 @@ import {AdapterData} from "@gearbox-protocol/sdk-gov/contracts/AdapterData.sol";
 import {SupportedContracts, Contracts} from "@gearbox-protocol/sdk-gov/contracts/SupportedContracts.sol";
 
 import {AdapterType} from "@gearbox-protocol/sdk-gov/contracts/AdapterType.sol";
+import {ICurvePool} from "../../integrations/curve/ICurvePool.sol";
 
 // SIMPLE ADAPTERS
 import {UniswapV2Adapter} from "../../adapters/uniswap/UniswapV2.sol";
@@ -31,12 +32,6 @@ import {CurveV1AdapterStETH} from "../../adapters/curve/CurveV1_stETH.sol";
 import {CurveV1AdapterDeposit} from "../../adapters/curve/CurveV1_DepositZap.sol";
 
 import {ConvexV1BaseRewardPoolAdapter} from "../../adapters/convex/ConvexV1_BaseRewardPool.sol";
-
-import {CompoundV2_CErc20Adapter} from "../../adapters/compound/CompoundV2_CErc20Adapter.sol";
-import {CompoundV2_CEtherAdapter} from "../../adapters/compound/CompoundV2_CEtherAdapter.sol";
-
-import {AaveV2_LendingPoolAdapter} from "../../adapters/aave/AaveV2_LendingPoolAdapter.sol";
-import {AaveV2_WrappedATokenAdapter} from "../../adapters/aave/AaveV2_WrappedATokenAdapter.sol";
 
 import {ERC4626Adapter} from "../../adapters/erc4626/ERC4626Adapter.sol";
 
@@ -128,16 +123,8 @@ contract AdapterDeployer is AdapterData, Test {
                     } else if (at == AdapterType.LIDO_WSTETH_V1) {
                         adapter =
                             address(new WstETHV1Adapter(address(creditManager), tokenTestSuite.addressOf(TOKEN_wstETH)));
-                    } else if (at == AdapterType.COMPOUND_V2_CERC20) {
-                        adapter = address(new CompoundV2_CErc20Adapter(address(creditManager), targetContract));
-                    } else if (at == AdapterType.COMPOUND_V2_CETHER) {
-                        adapter = address(new CompoundV2_CEtherAdapter(address(creditManager), targetContract));
-                    } else if (at == AdapterType.AAVE_V2_LENDING_POOL) {
-                        adapter = address(new AaveV2_LendingPoolAdapter(address(creditManager), targetContract));
-                    } else if (at == AdapterType.AAVE_V2_WRAPPED_ATOKEN) {
-                        adapter = address(new AaveV2_WrappedATokenAdapter(address(creditManager), targetContract));
                     } else if (at == AdapterType.ERC4626_VAULT) {
-                        adapter = address(new ERC4626Adapter(address(creditManager), targetContract));
+                        adapter = address(new ERC4626Adapter(address(creditManager), targetContract, address(0)));
                     } else if (at == AdapterType.BALANCER_VAULT) {
                         adapter = address(new BalancerV2VaultAdapter(address(creditManager), targetContract));
                     } else if (at == AdapterType.VELODROME_V2_ROUTER) {
@@ -161,6 +148,13 @@ contract AdapterDeployer is AdapterData, Test {
                 if (cnt == curveAdapters[i].targetContract) {
                     AdapterType at = curveAdapters[i].adapterType;
                     targetContract = supportedContracts.addressOf(cnt);
+                    bool use256;
+
+                    try ICurvePool(targetContract).mid_fee() returns (uint256) {
+                        use256 = true;
+                    } catch {
+                        use256 = false;
+                    }
 
                     if (at == AdapterType.CURVE_V1_2ASSETS) {
                         adapter = address(
@@ -168,7 +162,8 @@ contract AdapterDeployer is AdapterData, Test {
                                 address(creditManager),
                                 targetContract,
                                 tokenTestSuite.addressOf(curveAdapters[i].lpToken),
-                                supportedContracts.addressOf(curveAdapters[i].basePool)
+                                supportedContracts.addressOf(curveAdapters[i].basePool),
+                                use256
                             )
                         );
                     } else if (at == AdapterType.CURVE_V1_3ASSETS) {
@@ -177,7 +172,8 @@ contract AdapterDeployer is AdapterData, Test {
                                 address(creditManager),
                                 targetContract,
                                 tokenTestSuite.addressOf(curveAdapters[i].lpToken),
-                                address(0)
+                                address(0),
+                                use256
                             )
                         );
                     } else if (at == AdapterType.CURVE_V1_4ASSETS) {
@@ -186,7 +182,8 @@ contract AdapterDeployer is AdapterData, Test {
                                 address(creditManager),
                                 targetContract,
                                 tokenTestSuite.addressOf(curveAdapters[i].lpToken),
-                                address(0)
+                                address(0),
+                                use256
                             )
                         );
                     } else if (at == AdapterType.CURVE_STABLE_NG) {
@@ -195,7 +192,8 @@ contract AdapterDeployer is AdapterData, Test {
                                 address(creditManager),
                                 targetContract,
                                 tokenTestSuite.addressOf(curveAdapters[i].lpToken),
-                                address(0)
+                                address(0),
+                                use256
                             )
                         );
                     }
@@ -257,7 +255,8 @@ contract AdapterDeployer is AdapterData, Test {
                         new StakingRewardsAdapter(
                             address(creditManager),
                             targetContract,
-                            tokenTestSuite.addressOf(stakingRewardsAdapters[i].stakedToken)
+                            tokenTestSuite.addressOf(stakingRewardsAdapters[i].stakedToken),
+                            0
                         )
                     );
                     return adapter;

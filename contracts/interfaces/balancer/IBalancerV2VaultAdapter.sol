@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 // Gearbox Protocol. Generalized leverage for DeFi protocols
-// (c) Gearbox Foundation, 2023.
-pragma solidity ^0.8.17;
+// (c) Gearbox Foundation, 2024.
+pragma solidity ^0.8.23;
 
-import {IAdapter} from "@gearbox-protocol/core-v2/contracts/interfaces/IAdapter.sol";
+import {IAdapter} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IAdapter.sol";
 
 import {
     IAsset,
@@ -18,7 +18,8 @@ import {
 enum PoolStatus {
     NOT_ALLOWED,
     ALLOWED,
-    SWAP_ONLY
+    SWAP_ONLY,
+    WITHDRAWAL_ONLY
 }
 
 struct SingleSwapDiff {
@@ -29,29 +30,24 @@ struct SingleSwapDiff {
     bytes userData;
 }
 
-interface IBalancerV2VaultAdapterEvents {
+/// @title Balancer V2 Vault adapter interface
+interface IBalancerV2VaultAdapter is IAdapter {
     /// @notice Emitted when new status is set for a pool with given ID
     event SetPoolStatus(bytes32 indexed poolId, PoolStatus newStatus);
-}
 
-interface IBalancerV2VaultAdapterExceptions {
     /// @notice Thrown when attempting to swap or change liqudity in the pool that is not supported for that action
     error PoolNotSupportedException();
-}
-
-/// @title Balancer V2 Vault adapter interface
-interface IBalancerV2VaultAdapter is IAdapter, IBalancerV2VaultAdapterEvents, IBalancerV2VaultAdapterExceptions {
     // ----- //
     // SWAPS //
     // ----- //
 
     function swap(SingleSwap memory singleSwap, FundManagement memory, uint256 limit, uint256 deadline)
         external
-        returns (uint256 tokensToEnable, uint256 tokensToDisable);
+        returns (bool useSafePrices);
 
     function swapDiff(SingleSwapDiff memory singleSwapDiff, uint256 limitRateRAY, uint256 deadline)
         external
-        returns (uint256 tokensToEnable, uint256 tokensToDisable);
+        returns (bool useSafePrices);
 
     function batchSwap(
         SwapKind kind,
@@ -60,7 +56,7 @@ interface IBalancerV2VaultAdapter is IAdapter, IBalancerV2VaultAdapterEvents, IB
         FundManagement memory,
         int256[] memory limits,
         uint256 deadline
-    ) external returns (uint256 tokensToEnable, uint256 tokensToDisable);
+    ) external returns (bool useSafePrices);
 
     // --------- //
     // JOIN POOL //
@@ -68,15 +64,15 @@ interface IBalancerV2VaultAdapter is IAdapter, IBalancerV2VaultAdapterEvents, IB
 
     function joinPool(bytes32 poolId, address, address, JoinPoolRequest memory request)
         external
-        returns (uint256 tokensToEnable, uint256 tokensToDisable);
+        returns (bool useSafePrices);
 
     function joinPoolSingleAsset(bytes32 poolId, IAsset assetIn, uint256 amountIn, uint256 minAmountOut)
         external
-        returns (uint256 tokensToEnable, uint256 tokensToDisable);
+        returns (bool useSafePrices);
 
     function joinPoolSingleAssetDiff(bytes32 poolId, IAsset assetIn, uint256 leftoverAmount, uint256 minRateRAY)
         external
-        returns (uint256 tokensToEnable, uint256 tokensToDisable);
+        returns (bool useSafePrices);
 
     // --------- //
     // EXIT POOL //
@@ -84,15 +80,15 @@ interface IBalancerV2VaultAdapter is IAdapter, IBalancerV2VaultAdapterEvents, IB
 
     function exitPool(bytes32 poolId, address, address payable, ExitPoolRequest memory request)
         external
-        returns (uint256 tokensToEnable, uint256 tokensToDisable);
+        returns (bool useSafePrices);
 
     function exitPoolSingleAsset(bytes32 poolId, IAsset assetOut, uint256 amountIn, uint256 minAmountOut)
         external
-        returns (uint256 tokensToEnable, uint256 tokensToDisable);
+        returns (bool useSafePrices);
 
     function exitPoolSingleAssetDiff(bytes32 poolId, IAsset assetOut, uint256 leftoverAmount, uint256 minRateRAY)
         external
-        returns (uint256 tokensToEnable, uint256 tokensToDisable);
+        returns (bool useSafePrices);
 
     // ------------- //
     // CONFIGURATION //
