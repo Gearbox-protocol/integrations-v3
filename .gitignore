@@ -4,6 +4,9 @@ node_modules/
 # Compiler files
 cache/
 out/
+dist/
+**/*.generated.*
+**/generated/
 
 # Broadcast logs
 /broadcast
