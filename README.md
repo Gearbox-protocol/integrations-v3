@@ -8,7 +8,7 @@ Gearbox Protocol uses Credit Account abstraction to bring together lending and p
 
 ## Documentation
 
-General documentation of the Gearbox Protocol can be found [here](https://docs.gearbox.fi). Developer documentation with more tech-related infromation about the protocol, contract interfaces, integration guides and audits is available on the [Gearbox dev protal](https://dev.gearbox.fi).
+General documentation of the Gearbox Protocol can be found [here](https://docs.gearbox.fi). Developer documentation with more tech-related information about the protocol, contract interfaces, integration guides and audits is available on the [Gearbox dev protal](https://dev.gearbox.fi).
 
 ## Licensing
 

@@ -315,7 +315,7 @@ abstract contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
         }
     }
 
-    /// @dev Returns calldata for adding liquidity in coin `i`, must be overriden in derived adapters
+    /// @dev Returns calldata for adding liquidity in coin `i`, must be overridden in derived adapters
     function _getAddLiquidityOneCoinCallData(uint256 i, uint256 amount, uint256 minAmount)
         internal
         view
@@ -323,7 +323,7 @@ abstract contract CurveV1AdapterBase is AbstractAdapter, ICurveV1Adapter {
         returns (bytes memory callData);
 
     /// @dev Returns calldata for calculating the result of adding liquidity in coin `i`,
-    ///      must be overriden in derived adapters
+    ///      must be overridden in derived adapters
     function _getCalcAddOneCoinCallData(uint256 i, uint256 amount)
         internal
         view
