@@ -124,6 +124,7 @@ contract BalancerV3RouterGateway is IBalancerV3Router, IVersion {
         bytes memory userData
     ) external returns (uint256 amountOut) {
         exactBptAmountIn = _transferTokenIn(IERC20(pool), exactBptAmountIn);
+        minAmountOut = minAmountOut == 0 ? 1 : minAmountOut;
 
         IERC20(pool).forceApprove(balancerV3Router, exactBptAmountIn);
 
