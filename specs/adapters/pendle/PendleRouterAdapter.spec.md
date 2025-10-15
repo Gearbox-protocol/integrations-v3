@@ -22,6 +22,6 @@ PendleRouterAdapter allows users to convert underlying tokens into PTs and Pendl
 - `addLiquiditySingleToken`
 - `removeLiquiditySingleToken`
 
-Each of these functions approves the participating tokens to the target contract (the Router), then instructs the Credit Account to call the target with a specific calldata relevant to the action, then removes the token allowance to prevent any possibility of external `transferFrom`'s on Credit Account tokens.
+Each of these functions approves the participating tokens to the target contract (the Router), then instructs the Credit Account to call the target with a specific calldata relevant to the action, then removes the token allowance to prevent any possibility of external `transferFrom`'s on Credit Account tokens. Each of these functions also has a `diff` counterpart.
 
 Additionally, the adapter contains a whitelist of allowed pairs. The whitelist is controlled with `setPairStatusBatch` and allows to whitelist PTs and LPs in a form of `(inputToken, pendleToken)`pair, where `inputToken` is a token used to enter or exit PTs/LPs, and `pendleToken` is a PT/LP token.
