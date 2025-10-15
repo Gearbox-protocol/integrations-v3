@@ -1,0 +1,62 @@
+name: Savant Smart Contract Analyzer
+on:
+  # Manual trigger with inputs
+  workflow_dispatch:
+    inputs:
+      base_commit:
+        description: 'Base commit SHA for comparison'
+        required: true
+      head_commit:
+        description: 'Head commit SHA for comparison'
+        required: true
+        default: 'HEAD'
+      dry_run:
+        description: 'Dry run mode'
+        required: false
+        default: 'false'
+        type: boolean
+      tier:
+        description: 'Audit tier'
+        required: false
+        default: 'pro'
+        type: choice
+        options:
+          - pro
+          - advanced
+          - lite
+      notification_contacts:
+        description: 'Notification contacts (comma-separated emails and Telegram usernames)'
+        required: false
+        default: ''
+
+  # Automatically trigger on pull requests
+  # pull_request:
+  #   branches:
+  #     - master
+  #     - main
+
+  # Trigger on push to specified branches
+  # push:
+  #   branches:
+  #     - master
+  #     - main
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      
+      - name: Create Savant.Chat audit request
+        uses: auditdbio/savant-smart-contract-analyzer@v1.4
+        with:
+          base_commit: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.base_commit || github.event_name == 'push' && github.event.before || github.event.pull_request.base.sha }}
+          head_commit: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.head_commit || github.event_name == 'push' && github.sha || github.event.pull_request.head.sha }}
+          api_token: ${{ secrets.SAVANT_API_TOKEN }}
+          dry_run: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.dry_run || 'false' }}
+          tier: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.tier || 'advanced' }}
+          notification_contacts: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.notification_contacts || '' }}
+
