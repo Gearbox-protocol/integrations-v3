@@ -272,7 +272,10 @@ contract BalancerV3RouterAdapter is AbstractAdapter, IBalancerV3RouterAdapter {
         unchecked {
             for (uint256 i; i < len; ++i) {
                 _poolStatus[pools[i].pool] = pools[i].status;
-                if (pools[i].status == PoolStatus.ALLOWED || pools[i].status == PoolStatus.EXIT_ONLY) {
+                if (
+                    pools[i].status == PoolStatus.ALLOWED || pools[i].status == PoolStatus.EXIT_ONLY
+                        || pools[i].status == PoolStatus.EXIT_AND_SWAP
+                ) {
                     IERC20[] memory tokens = IBalancerV3Pool(pools[i].pool).getTokens();
                     for (uint256 j; j < tokens.length; ++j) {
                         _getMaskOrRevert(address(tokens[j]));
@@ -299,12 +302,14 @@ contract BalancerV3RouterAdapter is AbstractAdapter, IBalancerV3RouterAdapter {
 
     /// @dev Internal function to check if swaps are allowed for a pool.
     function _swapAllowed(address pool) internal view returns (bool) {
-        return _poolStatus[pool] == PoolStatus.ALLOWED || _poolStatus[pool] == PoolStatus.SWAP_ONLY;
+        return _poolStatus[pool] == PoolStatus.ALLOWED || _poolStatus[pool] == PoolStatus.SWAP_ONLY
+            || _poolStatus[pool] == PoolStatus.EXIT_AND_SWAP;
     }
 
     /// @dev Internal function to check if withdrawals are allowed for a pool.
     function _exitAllowed(address pool) internal view returns (bool) {
-        return _poolStatus[pool] == PoolStatus.ALLOWED || _poolStatus[pool] == PoolStatus.EXIT_ONLY;
+        return _poolStatus[pool] == PoolStatus.ALLOWED || _poolStatus[pool] == PoolStatus.EXIT_ONLY
+            || _poolStatus[pool] == PoolStatus.EXIT_AND_SWAP;
     }
 
     /// @dev Internal function to check if deposits are allowed for a pool.

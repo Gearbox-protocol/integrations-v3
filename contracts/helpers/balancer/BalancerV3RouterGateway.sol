@@ -87,6 +87,7 @@ contract BalancerV3RouterGateway is IBalancerV3Router, IVersion {
         if (exactAmountsIn.length != tokens.length) revert("BalanceV3RouterGateway: amounts array length mismatch");
 
         for (uint256 i; i < tokens.length; ++i) {
+            if (exactAmountsIn[i] == 0) continue;
             exactAmountsIn[i] = _transferTokenIn(tokens[i], exactAmountsIn[i]);
             tokens[i].forceApprove(permit2, exactAmountsIn[i]);
             IPermit2(permit2).approve(

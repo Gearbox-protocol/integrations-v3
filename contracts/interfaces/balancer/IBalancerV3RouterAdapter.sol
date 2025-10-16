@@ -9,6 +9,7 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 enum PoolStatus {
     NOT_ALLOWED,
     ALLOWED,
+    EXIT_AND_SWAP,
     SWAP_ONLY,
     EXIT_ONLY
 }
