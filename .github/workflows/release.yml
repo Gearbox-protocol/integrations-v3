@@ -5,6 +5,7 @@ on:
     branches:
       - "main"
       - "next"
+      - "abi"
 
 env:
   HUSKY: 0
@@ -15,12 +16,18 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
 
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
           cache: "yarn"
           node-version-file: ".nvmrc"
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
 
       - name: Configure access to private npm packages
         run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > .npmrc
@@ -28,22 +35,14 @@ jobs:
       # prepare script runs before publish, and it needs husky
       - name: Install dependencies
         run: |
+          forge install
           yarn install --frozen-lockfile
 
-      - name: Install Foundry
-        uses: foundry-rs/foundry-toolchain@v1
-        with:
-          version: nightly
-
-      - name: Run forge build
-        run: forge build
-        timeout-minutes: 10
-
-      - name: Build dist
+      - name: Build
         run: yarn build
 
       - name: Semantic Release
-        uses: cycjimmy/semantic-release-action@v3
+        uses: cycjimmy/semantic-release-action@v4
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}

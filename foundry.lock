@@ -1,0 +1,23 @@
+{
+  "lib/@1inch/farming": {
+    "rev": "47134f2828225a47183ad40bfc8f06a60bd018cd"
+  },
+  "lib/@1inch/solidity-utils": {
+    "rev": "5fdd4c2c02525855e9f64d9a43d779013c6444ea"
+  },
+  "lib/@gearbox-protocol/core-v3": {
+    "tag": {
+      "name": "v1.52.0",
+      "rev": "5144d61af7d117f86d3fa9b4e2aa05535e2e5433"
+    }
+  },
+  "lib/@gearbox-protocol/oracles-v3": {
+    "tag": {
+      "name": "v1.14.0",
+      "rev": "78ad827ab9329f2c1d884672120fb61ca9fb67ec"
+    }
+  },
+  "lib/@gearbox-protocol/sdk-gov": {
+    "rev": "ecc136f4fc0e0e6d19b9505e64de4f56d80899c2"
+  }
+}

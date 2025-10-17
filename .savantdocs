@@ -1,0 +1,20 @@
+# .savantdocs — file and directory patterns and documentation links
+#
+# Syntax:
+#   - Blank lines and lines starting with '#' are comments and ignored.
+#   - Include patterns (no leading '!') specify files/directories or external URLs to include as documentation.
+#   - Exclude patterns (leading '!') remove matching entries from the documentation scan.
+#   - Glob patterns follow .gitignore-style ("**" for any directories).
+#   - URLs (http:// or https://) are allowed and treated as documentation links.
+#
+
+# Include specs documentation
+specs/**/*.md
+specs/**/*.txt
+specs/**/*.pdf
+https://docs.balancer.fi/developer-reference/contracts/router-api.html
+
+# Exclude dependency documentation
+!node_modules/**/*
+!lib/**/*
+

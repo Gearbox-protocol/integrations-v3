@@ -1,0 +1,28 @@
+# .savantscope — file and directory patterns for scanning Solidity files
+#
+# Syntax:
+#   - Blank lines and lines starting with '#' are comments and ignored.
+#   - Include patterns (no leading '!') specify files/directories to scan.
+#   - Exclude patterns (leading '!') remove matching files from the scan.
+#   - Glob patterns follow .gitignore-style ("**" for any directories).
+#
+
+# Include all contracts (only changed methods will be analyzed)
+contracts/**/*.sol
+
+# Exclude test files and directories
+!contracts/test/**/*.sol
+!**/test/**/*.sol
+!**/tests/**/*.sol
+
+# Exclude mock contracts
+!contracts/test/mocks/**/*.sol
+!**/mock/**/*.sol
+!**/mocks/**/*.sol
+
+# Exclude interfaces
+!contracts/interfaces/**/*.sol
+!contracts/integrations/**/*.sol
+!**/interface/**/*.sol
+!**/interfaces/**/*.sol
+
