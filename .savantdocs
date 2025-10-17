@@ -13,6 +13,8 @@ specs/**/*.md
 specs/**/*.txt
 specs/**/*.pdf
 https://docs.balancer.fi/developer-reference/contracts/router-api.html
+https://docs.pendle.finance/pendle-v2/Developers/Contracts/PendleRouter/ApiReference/PtFunctions
+https://docs.pendle.finance/pendle-v2/Developers/Contracts/PendleRouter/ApiReference/LiquidityFunctions
 
 # Exclude dependency documentation
 !node_modules/**/*
