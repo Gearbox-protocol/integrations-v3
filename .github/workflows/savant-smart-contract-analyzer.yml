@@ -1,4 +1,13 @@
 name: Savant Smart Contract Analyzer
+# 
+# Required secrets:
+#   - SAVANT_API_TOKEN: API token for Savant.Chat (get from https://savant.chat -> Profile -> Settings -> API Keys)
+# 
+# Optional secrets:
+#   - SAVANT_NOTIFICATION_CONTACTS: Default notification contacts (comma-separated emails, Telegram usernames, or chat IDs)
+#                                    These contacts will always receive notifications, regardless of trigger type.
+#                                    Example: 'devops@company.com, @telegram_devops, 123456789'
+#
 on:
   # Manual trigger with inputs
   workflow_dispatch:
@@ -25,7 +34,7 @@ on:
           - advanced
           - lite
       notification_contacts:
-        description: 'Notification contacts (comma-separated emails and Telegram usernames)'
+        description: 'Additional notification contacts (comma-separated emails and Telegram usernames). Will be combined with SAVANT_NOTIFICATION_CONTACTS secret if set.'
         required: false
         default: ''
 
@@ -50,6 +59,27 @@ jobs:
         with:
           fetch-depth: 0
       
+      - name: Combine notification contacts
+        id: notification_contacts
+        shell: bash
+        run: |
+          SECRET_CONTACTS="${{ secrets.SAVANT_NOTIFICATION_CONTACTS }}"
+          INPUT_CONTACTS="${{ github.event_name == 'workflow_dispatch' && github.event.inputs.notification_contacts || '' }}"
+          
+          # Combine contacts if both exist, otherwise use whichever is available
+          if [ -n "$SECRET_CONTACTS" ] && [ -n "$INPUT_CONTACTS" ]; then
+            COMBINED_CONTACTS="${SECRET_CONTACTS}, ${INPUT_CONTACTS}"
+          elif [ -n "$SECRET_CONTACTS" ]; then
+            COMBINED_CONTACTS="$SECRET_CONTACTS"
+          elif [ -n "$INPUT_CONTACTS" ]; then
+            COMBINED_CONTACTS="$INPUT_CONTACTS"
+          else
+            COMBINED_CONTACTS=""
+          fi
+          
+          echo "contacts=$COMBINED_CONTACTS" >> $GITHUB_OUTPUT
+          echo "Combined notification contacts: $COMBINED_CONTACTS"
+      
       - name: Create Savant.Chat audit request
         uses: auditdbio/savant-smart-contract-analyzer@v1.4
         with:
@@ -58,5 +88,5 @@ jobs:
           api_token: ${{ secrets.SAVANT_API_TOKEN }}
           dry_run: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.dry_run || 'false' }}
           tier: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.tier || 'advanced' }}
-          notification_contacts: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.notification_contacts || '' }}
+          notification_contacts: ${{ steps.notification_contacts.outputs.contacts }}
 

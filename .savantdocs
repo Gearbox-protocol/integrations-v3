@@ -12,6 +12,7 @@
 specs/**/*.md
 specs/**/*.txt
 specs/**/*.pdf
+https://docs.balancer.fi/developer-reference/contracts/router-api.html
 
 # Exclude dependency documentation
 !node_modules/**/*
