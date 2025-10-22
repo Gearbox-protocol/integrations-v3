@@ -28,7 +28,7 @@ contract Upload_2025_10_22_Integrations is UploadBytecode {
         bytecodes[2].version = 3_11;
         bytecodes[2].initCode = type(PendleRouterAdapter).creationCode;
         bytecodes[2].source =
-            "https://github.com/Gearbox-protocol/integrations-v3/blob/44dfdca1edba59d0183a4cf0416712d3ee1e847e/contracts/adapters/pendle/PendleRouterAdapter.sol";
+            "https://github.com/Gearbox-protocol/integrations-v3/blob/7f8f1b666e165cc6c55bf890748341b80a5d210c/contracts/adapters/pendle/PendleRouterAdapter.sol";
 
         bytecodes[3].contractType = "GATEWAY::BALANCER_V3";
         bytecodes[3].version = 3_11;
