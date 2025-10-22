@@ -55,6 +55,9 @@ interface IPendleRouterAdapterExceptions {
 
     /// @notice Thrown when a Pendle LP token is not equal to Pendle market when allowing the pair
     error PendleTokenNotEqualToMarketException();
+
+    /// @notice Thrown when a passed Pendle PT token is not equal to Pendle market's PT when allowing the pair
+    error PendleTokenIsNotPTException();
 }
 
 /// @title PendleRouter adapter interface

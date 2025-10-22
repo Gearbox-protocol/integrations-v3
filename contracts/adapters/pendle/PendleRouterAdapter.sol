@@ -521,6 +521,9 @@ contract PendleRouterAdapter is AbstractAdapter, IPendleRouterAdapter {
 
             if (pairs[i].pendleTokenType == PendleTokenType.PT) {
                 (, address pt,) = IPendleMarket(pairs[i].market).readTokens();
+                if (pairs[i].pendleToken != pt) {
+                    revert PendleTokenIsNotPTException();
+                }
                 ptToMarket[pt] = pairs[i].market;
             } else if (pairs[i].pendleTokenType == PendleTokenType.LP) {
                 if (pairs[i].market != pairs[i].pendleToken) {
