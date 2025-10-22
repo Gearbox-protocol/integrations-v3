@@ -14,7 +14,8 @@ import {
     PendlePairStatus,
     TokenDiffInput,
     TokenDiffOutput,
-    PendleStatus
+    PendleStatus,
+    PendleTokenType
 } from "../../interfaces/pendle/IPendleRouterAdapter.sol";
 import {
     IPendleRouter,
@@ -35,7 +36,7 @@ contract PendleRouterAdapter is AbstractAdapter, IPendleRouterAdapter {
     using EnumerableSet for EnumerableSet.Bytes32Set;
 
     bytes32 public constant override contractType = "ADAPTER::PENDLE_ROUTER";
-    uint256 public constant override version = 3_10;
+    uint256 public constant override version = 3_11;
 
     /// @notice Mapping from (market, inputToken, pendleToken) to whether swaps are allowed, and which directions
     mapping(address => mapping(address => mapping(address => PendleStatus))) public isPairAllowed;
@@ -56,6 +57,10 @@ contract PendleRouterAdapter is AbstractAdapter, IPendleRouterAdapter {
     /// @param _creditManager Credit manager address
     /// @param _pendleRouter Pendle router address
     constructor(address _creditManager, address _pendleRouter) AbstractAdapter(_creditManager, _pendleRouter) {}
+
+    /// ----------- ///
+    /// TOKEN TO PT ///
+    /// ----------- ///
 
     /// @notice Swaps exact amount of input token to market's corresponding PT
     /// @param market Address of the market to swap in
@@ -148,6 +153,10 @@ contract PendleRouterAdapter is AbstractAdapter, IPendleRouterAdapter {
         useSafePrices = true;
     }
 
+    /// ----------- ///
+    /// PT TO TOKEN ///
+    /// ----------- ///
+
     /// @notice Swaps a specified amount of PT for token
     /// @param market Address of the market to swap in
     /// @param exactPtIn Amount of PT to swap
@@ -226,6 +235,10 @@ contract PendleRouterAdapter is AbstractAdapter, IPendleRouterAdapter {
         useSafePrices = true;
     }
 
+    /// --------- ///
+    /// REDEEM PT ///
+    /// --------- ///
+
     /// @notice Redeems a specified amount of PT tokens into underlying after expiry
     /// @param yt YT token associated to PT
     /// @param netPyIn Amount of PT token to redeem
@@ -303,6 +316,170 @@ contract PendleRouterAdapter is AbstractAdapter, IPendleRouterAdapter {
         useSafePrices = true;
     }
 
+    /// ----------- ///
+    /// TOKEN TO LP ///
+    /// ----------- ///
+
+    /// @notice Uses an exact amount of input token to mint Pendle LP tokens
+    /// @param market Address of the market to add liquidity to
+    /// @param minLpOut Minimal amount of LP token out
+    /// @param guessPtReceivedFromSy Search boundaries to save gas on PT amount calculation
+    /// @param input Parameters of the input tokens
+    /// @notice `receiver` and `limit` are ignored, since the recipient is always the Credit Account,
+    ///         and Gearbox does not use Pendle's limit orders
+    function addLiquiditySingleToken(
+        address,
+        address market,
+        uint256 minLpOut,
+        ApproxParams calldata guessPtReceivedFromSy,
+        TokenInput calldata input,
+        LimitOrderData calldata
+    ) external creditFacadeOnly returns (bool useSafePrices) {
+        if (isPairAllowed[market][input.tokenIn][market] != PendleStatus.ALLOWED) revert PairNotAllowedException();
+
+        address creditAccount = _creditAccount();
+
+        LimitOrderData memory limit;
+
+        TokenInput memory input_m;
+
+        {
+            input_m.tokenIn = input.tokenIn;
+            input_m.netTokenIn = input.netTokenIn;
+            input_m.tokenMintSy = input.tokenIn;
+        }
+
+        _executeSwapSafeApprove(
+            input_m.tokenIn,
+            abi.encodeCall(
+                IPendleRouter.addLiquiditySingleToken,
+                (creditAccount, market, minLpOut, guessPtReceivedFromSy, input_m, limit)
+            )
+        );
+
+        useSafePrices = true;
+    }
+
+    /// @notice Uses the entire balance of input token to mint Pendle LP tokens, except the specified amount
+    /// @param market Address of the market to add liquidity to
+    /// @param minRateRAY Minimal exchange rate of input to PT, in 1e27 format
+    /// @param guessPtReceivedFromSy Search boundaries to save gas on PT amount calculation
+    /// @param diffInput Input token parameters
+    function addLiquiditySingleTokenDiff(
+        address market,
+        uint256 minRateRAY,
+        ApproxParams calldata guessPtReceivedFromSy,
+        TokenDiffInput calldata diffInput
+    ) external creditFacadeOnly returns (bool useSafePrices) {
+        if (isPairAllowed[market][diffInput.tokenIn][market] != PendleStatus.ALLOWED) revert PairNotAllowedException();
+
+        address creditAccount = _creditAccount();
+
+        uint256 amount = IERC20(diffInput.tokenIn).balanceOf(creditAccount);
+        if (amount <= diffInput.leftoverTokenIn) return false;
+
+        unchecked {
+            amount -= diffInput.leftoverTokenIn;
+        }
+
+        TokenInput memory input;
+        input.tokenIn = diffInput.tokenIn;
+        input.netTokenIn = amount;
+        input.tokenMintSy = diffInput.tokenIn;
+
+        LimitOrderData memory limit;
+
+        _executeSwapSafeApprove(
+            diffInput.tokenIn,
+            abi.encodeCall(
+                IPendleRouter.addLiquiditySingleToken,
+                (creditAccount, market, amount * minRateRAY / RAY, guessPtReceivedFromSy, input, limit)
+            )
+        );
+
+        useSafePrices = true;
+    }
+
+    /// ----------- ///
+    /// LP TO TOKEN ///
+    /// ----------- ///
+
+    /// @notice Uses an exact amount of LP token to withdraw into an underlying token
+    /// @param market Address of the market to redeem liquidity from
+    /// @param netLpToRemove Amount of LP token to redeem
+    /// @param output Output token parameters
+    /// @notice `receiver` and `limit` are ignored, since the recipient is always the Credit Account,
+    ///         and Gearbox does not use Pendle's limit orders
+    function removeLiquiditySingleToken(
+        address,
+        address market,
+        uint256 netLpToRemove,
+        TokenOutput calldata output,
+        LimitOrderData calldata
+    ) external creditFacadeOnly returns (bool useSafePrices) {
+        if (isPairAllowed[market][output.tokenOut][market] == PendleStatus.NOT_ALLOWED) {
+            revert PairNotAllowedException();
+        }
+
+        address creditAccount = _creditAccount();
+
+        LimitOrderData memory limit;
+
+        TokenOutput memory output_m;
+
+        {
+            output_m.tokenOut = output.tokenOut;
+            output_m.tokenRedeemSy = output.tokenOut;
+            output_m.minTokenOut = output.minTokenOut;
+        }
+
+        _executeSwapSafeApprove(
+            market,
+            abi.encodeCall(
+                IPendleRouter.removeLiquiditySingleToken, (creditAccount, market, netLpToRemove, output_m, limit)
+            )
+        );
+
+        useSafePrices = true;
+    }
+
+    /// @notice Uses the entire balance of LP token to withdraw into an underlying token, except the specified amount
+    /// @param market Address of the market to redeem liquidity from
+    /// @param leftoverLp Amount of LP token to leave on the Credit Account
+    /// @param diffOutput Output token parameters
+    function removeLiquiditySingleTokenDiff(address market, uint256 leftoverLp, TokenDiffOutput calldata diffOutput)
+        external
+        creditFacadeOnly
+        returns (bool useSafePrices)
+    {
+        if (isPairAllowed[market][diffOutput.tokenOut][market] == PendleStatus.NOT_ALLOWED) {
+            revert PairNotAllowedException();
+        }
+
+        address creditAccount = _creditAccount();
+
+        uint256 amount = IERC20(market).balanceOf(creditAccount);
+        if (amount <= leftoverLp) return false;
+
+        unchecked {
+            amount -= leftoverLp;
+        }
+
+        TokenOutput memory output;
+        output.tokenOut = diffOutput.tokenOut;
+        output.minTokenOut = amount * diffOutput.minRateRAY / RAY;
+        output.tokenRedeemSy = diffOutput.tokenOut;
+
+        LimitOrderData memory limit;
+
+        _executeSwapSafeApprove(
+            market,
+            abi.encodeCall(IPendleRouter.removeLiquiditySingleToken, (creditAccount, market, amount, output, limit))
+        );
+
+        useSafePrices = true;
+    }
+
     // ---- //
     // DATA //
     // ---- //
@@ -341,12 +518,24 @@ contract PendleRouterAdapter is AbstractAdapter, IPendleRouterAdapter {
         uint256 len = pairs.length;
         for (uint256 i; i < len; ++i) {
             isPairAllowed[pairs[i].market][pairs[i].inputToken][pairs[i].pendleToken] = pairs[i].status; // U:[PEND-9]
-            (, address pt,) = IPendleMarket(pairs[i].market).readTokens();
-            ptToMarket[pt] = pairs[i].market;
-            bytes32 pairHash = keccak256(abi.encode(pairs[i].market, pairs[i].inputToken, pairs[i].pendleToken));
+
+            if (pairs[i].pendleTokenType == PendleTokenType.PT) {
+                (, address pt,) = IPendleMarket(pairs[i].market).readTokens();
+                ptToMarket[pt] = pairs[i].market;
+            } else if (pairs[i].pendleTokenType == PendleTokenType.LP) {
+                if (pairs[i].market != pairs[i].pendleToken) {
+                    revert PendleTokenNotEqualToMarketException();
+                }
+            }
+
+            bytes32 pairHash = keccak256(
+                abi.encode(pairs[i].market, pairs[i].inputToken, pairs[i].pendleToken, pairs[i].pendleTokenType)
+            );
             if (pairs[i].status != PendleStatus.NOT_ALLOWED) {
                 _allowedPairHashes.add(pairHash); // U:[PEND-9]
-                isRedemptionAllowed[pairs[i].inputToken][pairs[i].pendleToken] = true; // U:[PEND-9]
+                if (pairs[i].pendleTokenType == PendleTokenType.PT) {
+                    isRedemptionAllowed[pairs[i].inputToken][pairs[i].pendleToken] = true; // U:[PEND-9]
+                }
                 _getMaskOrRevert(pairs[i].inputToken);
                 _getMaskOrRevert(pairs[i].pendleToken);
             } else {
@@ -355,7 +544,9 @@ contract PendleRouterAdapter is AbstractAdapter, IPendleRouterAdapter {
             }
             _hashToPendlePair[pairHash] = pairs[i]; // U:[PEND-9]
 
-            emit SetPairStatus(pairs[i].market, pairs[i].inputToken, pairs[i].pendleToken, pairs[i].status); // U:[PEND-9]
+            emit SetPairStatus(
+                pairs[i].market, pairs[i].inputToken, pairs[i].pendleToken, pairs[i].pendleTokenType, pairs[i].status
+            ); // U:[PEND-9]
         }
     }
 }

@@ -21,7 +21,7 @@ contract MellowWithdrawalPhantomToken is PhantomERC20, Ownable, IPhantomToken {
 
     bytes32 public constant override contractType = "PHANTOM_TOKEN::MELLOW_WITHDRAWAL";
 
-    uint256 public constant override version = 3_11;
+    uint256 public constant override version = 3_12;
 
     address public immutable multiVault;
 
@@ -34,8 +34,8 @@ contract MellowWithdrawalPhantomToken is PhantomERC20, Ownable, IPhantomToken {
     constructor(address _ioProxy, address _multiVault, address _claimer)
         PhantomERC20(
             IERC4626(_multiVault).asset(),
-            string.concat("Mellow withdrawn ", IERC20Metadata(IERC4626(_multiVault).asset()).name()),
-            string.concat("wd", IERC20Metadata(IERC4626(_multiVault).asset()).symbol()),
+            string.concat("Mellow withdrawn ", IERC20Metadata(_multiVault).name()),
+            string.concat("wd", IERC20Metadata(_multiVault).symbol()),
             IERC20Metadata(IERC4626(_multiVault).asset()).decimals()
         )
     {
