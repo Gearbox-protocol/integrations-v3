@@ -13,8 +13,8 @@
   },
   "lib/@gearbox-protocol/oracles-v3": {
     "tag": {
-      "name": "v1.14.0",
-      "rev": "78ad827ab9329f2c1d884672120fb61ca9fb67ec"
+      "name": "v1.15.0",
+      "rev": "64a386a25d24ad5984926a3f624c93c7c32c92c9"
     }
   },
   "lib/@gearbox-protocol/permissionless": {
