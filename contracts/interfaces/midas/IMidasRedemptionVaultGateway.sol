@@ -9,6 +9,7 @@ interface IMidasRedemptionVaultGateway is IVersion {
     /// @notice Structure to store pending redemption requests
     struct PendingRedemption {
         bool isActive;
+        bool isManuallyCleared;
         uint256 requestId;
         uint256 timestamp;
         uint256 remainder;
@@ -24,7 +25,7 @@ interface IMidasRedemptionVaultGateway is IVersion {
     function pendingRedemptions(address user)
         external
         view
-        returns (bool isActive, uint256 requestId, uint256 timestamp, uint256 remainder);
+        returns (bool isActive, bool isManuallyCleared, uint256 requestId, uint256 timestamp, uint256 remainder);
 
     /// @notice Instantly redeems mToken for output token
     /// @param tokenOut Token to receive from redemption

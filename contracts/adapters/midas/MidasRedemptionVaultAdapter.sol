@@ -169,6 +169,17 @@ contract MidasRedemptionVaultAdapter is AbstractAdapter, IMidasRedemptionVaultAd
         return _allowedTokens.values();
     }
 
+    /// @notice Returns the list of phantom tokens associated to each allowed output token
+    /// @return Array of phantom token addresses
+    function allowedPhantomTokens() public view returns (address[] memory) {
+        address[] memory tokens = allowedTokens();
+        address[] memory phantomTokens = new address[](tokens.length);
+        for (uint256 i; i < tokens.length; ++i) {
+            phantomTokens[i] = outputTokenToPhantomToken[tokens[i]];
+        }
+        return phantomTokens;
+    }
+
     /// @notice Sets the allowed status for a batch of output tokens
     /// @param configs Array of MidasAllowedTokenStatus structs
     /// @dev Can only be called by the configurator
@@ -209,6 +220,7 @@ contract MidasRedemptionVaultAdapter is AbstractAdapter, IMidasRedemptionVaultAd
     /// @notice Serialized adapter parameters
     /// @return serializedData Encoded adapter configuration
     function serialize() external view returns (bytes memory serializedData) {
-        serializedData = abi.encode(creditManager, targetContract, gateway, mToken, allowedTokens());
+        serializedData =
+            abi.encode(creditManager, targetContract, gateway, mToken, allowedTokens(), allowedPhantomTokens());
     }
 }

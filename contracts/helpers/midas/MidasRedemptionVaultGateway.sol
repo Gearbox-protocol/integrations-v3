@@ -65,8 +65,13 @@ contract MidasRedemptionVaultGateway is ReentrancyGuardTrait, IMidasRedemptionVa
         IERC20(mToken).forceApprove(midasRedemptionVault, amountMTokenIn);
         IMidasRedemptionVault(midasRedemptionVault).redeemRequest(tokenOut, amountMTokenIn);
 
-        pendingRedemptions[msg.sender] =
-            PendingRedemption({isActive: true, requestId: requestId, timestamp: block.timestamp, remainder: 0});
+        pendingRedemptions[msg.sender] = PendingRedemption({
+            isActive: true,
+            isManuallyCleared: false,
+            requestId: requestId,
+            timestamp: block.timestamp,
+            remainder: 0
+        });
     }
 
     /// @notice Withdraws tokens from a fulfilled redemption request
@@ -92,7 +97,7 @@ contract MidasRedemptionVaultGateway is ReentrancyGuardTrait, IMidasRedemptionVa
             revert("MidasRedemptionVaultGateway: invalid request");
         }
 
-        if (status != 1) {
+        if (status != 1 && !pending.isManuallyCleared) {
             revert("MidasRedemptionVaultGateway: redemption not fulfilled");
         }
 
@@ -128,16 +133,10 @@ contract MidasRedemptionVaultGateway is ReentrancyGuardTrait, IMidasRedemptionVa
             return 0;
         }
 
-        (
-            address sender,
-            address requestTokenOut,
-            uint8 status,
-            uint256 amountMTokenIn,
-            uint256 mTokenRate,
-            uint256 tokenOutRate
-        ) = IMidasRedemptionVault(midasRedemptionVault).redeemRequests(pending.requestId);
+        (address sender, address requestTokenOut,, uint256 amountMTokenIn, uint256 mTokenRate, uint256 tokenOutRate) =
+            IMidasRedemptionVault(midasRedemptionVault).redeemRequests(pending.requestId);
 
-        if (sender != address(this) || requestTokenOut != tokenOut || status == 2) {
+        if (sender != address(this) || requestTokenOut != tokenOut) {
             return 0;
         }
 
@@ -148,20 +147,35 @@ contract MidasRedemptionVaultGateway is ReentrancyGuardTrait, IMidasRedemptionVa
         }
     }
 
-    function clearCancelledRequest(address user) external {
+    /// @notice Clears a cancelled redemption request
+    /// @param user User address to clear the request for
+    /// @param amount Amount of output token to supply for the request. Must be at least the amount projected when the request was made.
+    /// @dev If Midas rejects a request on accident, this function allows Midas or other interested party
+    ///      to gracefully fulfill the request anyway, by manually supplying the required funds to the gateway.
+    function clearCancelledRequest(address user, uint256 amount) external {
         PendingRedemption memory pending = pendingRedemptions[user];
 
         if (!pending.isActive) {
             revert("MidasRedemptionVaultGateway: user does not have a pending redemption");
         }
 
-        (,, uint8 status,,,) = IMidasRedemptionVault(midasRedemptionVault).redeemRequests(pending.requestId);
+        (, address tokenOut, uint8 status, uint256 amountMTokenIn, uint256 mTokenRate, uint256 tokenOutRate) =
+            IMidasRedemptionVault(midasRedemptionVault).redeemRequests(pending.requestId);
 
-        if (status != 2) {
-            revert("MidasRedemptionVaultGateway: request not cancelled");
+        if (status != 2 || pending.isManuallyCleared) {
+            revert("MidasRedemptionVaultGateway: request not cancelled or already manually cleared");
         }
 
-        delete pendingRedemptions[user];
+        uint256 minAmount = _calculateTokenOutAmount(amountMTokenIn, mTokenRate, tokenOutRate, tokenOut);
+
+        if (amount < minAmount) {
+            revert("MidasRedemptionVaultGateway: amount is less than the amount required by the request");
+        }
+
+        IERC20(tokenOut).safeTransferFrom(msg.sender, address(this), amount);
+
+        pendingRedemptions[user].isManuallyCleared = true;
+        pendingRedemptions[user].remainder = amount;
     }
 
     /// @dev Calculates the output token amount from mToken amount and rates
