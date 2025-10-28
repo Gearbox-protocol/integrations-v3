@@ -11,7 +11,7 @@ import {IMidasRedemptionVault} from "../../integrations/midas/IMidasRedemptionVa
 import {IMidasRedemptionVaultGateway} from "../../interfaces/midas/IMidasRedemptionVaultGateway.sol";
 
 /// @title Midas Redemption Vault Gateway
-/// @notice Gateway contract that manages redemptions from Midas vault on behalf of users
+/// @notice Gateway contract that manages redemptions from Midas vault on behalf of other accounts
 /// @dev Stores pending redemption requests and handles partial withdrawals
 contract MidasRedemptionVaultGateway is ReentrancyGuardTrait, IMidasRedemptionVaultGateway {
     using SafeERC20 for IERC20;
@@ -55,7 +55,7 @@ contract MidasRedemptionVaultGateway is ReentrancyGuardTrait, IMidasRedemptionVa
     /// @dev Stores the request ID and timestamp for tracking
     function requestRedeem(address tokenOut, uint256 amountMTokenIn) external nonReentrant {
         if (pendingRedemptions[msg.sender].isActive) {
-            revert("MidasRedemptionVaultGateway: user has a pending redemption");
+            revert("MidasRedemptionVaultGateway: account has a pending redemption");
         }
 
         uint256 requestId = IMidasRedemptionVault(midasRedemptionVault).currentRequestId();
@@ -81,7 +81,7 @@ contract MidasRedemptionVaultGateway is ReentrancyGuardTrait, IMidasRedemptionVa
         PendingRedemption memory pending = pendingRedemptions[msg.sender];
 
         if (!pending.isActive) {
-            revert("MidasRedemptionVaultGateway: user does not have a pending redemption");
+            revert("MidasRedemptionVaultGateway: account does not have a pending redemption");
         }
 
         (
@@ -122,12 +122,12 @@ contract MidasRedemptionVaultGateway is ReentrancyGuardTrait, IMidasRedemptionVa
         IERC20(tokenOut).safeTransfer(msg.sender, amount);
     }
 
-    /// @notice Returns the expected amount of output token for a user's pending redemption
-    /// @param user User address to check
+    /// @notice Returns the expected amount of output token for a account's pending redemption
+    /// @param account account address to check
     /// @param tokenOut Output token to check
     /// @return Expected amount of output token, considering any partial withdrawals
-    function pendingTokenOutAmount(address user, address tokenOut) external view returns (uint256) {
-        PendingRedemption memory pending = pendingRedemptions[user];
+    function pendingTokenOutAmount(address account, address tokenOut) external view returns (uint256) {
+        PendingRedemption memory pending = pendingRedemptions[account];
 
         if (!pending.isActive) {
             return 0;
@@ -148,15 +148,15 @@ contract MidasRedemptionVaultGateway is ReentrancyGuardTrait, IMidasRedemptionVa
     }
 
     /// @notice Clears a cancelled redemption request
-    /// @param user User address to clear the request for
+    /// @param account account address to clear the request for
     /// @param amount Amount of output token to supply for the request. Must be at least the amount projected when the request was made.
     /// @dev If Midas rejects a request on accident, this function allows Midas or other interested party
     ///      to gracefully fulfill the request anyway, by manually supplying the required funds to the gateway.
-    function clearCancelledRequest(address user, uint256 amount) external {
-        PendingRedemption memory pending = pendingRedemptions[user];
+    function clearCancelledRequest(address account, uint256 amount) external {
+        PendingRedemption memory pending = pendingRedemptions[account];
 
         if (!pending.isActive) {
-            revert("MidasRedemptionVaultGateway: user does not have a pending redemption");
+            revert("MidasRedemptionVaultGateway: account does not have a pending redemption");
         }
 
         (, address tokenOut, uint8 status, uint256 amountMTokenIn, uint256 mTokenRate, uint256 tokenOutRate) =
@@ -174,8 +174,8 @@ contract MidasRedemptionVaultGateway is ReentrancyGuardTrait, IMidasRedemptionVa
 
         IERC20(tokenOut).safeTransferFrom(msg.sender, address(this), amount);
 
-        pendingRedemptions[user].isManuallyCleared = true;
-        pendingRedemptions[user].remainder = amount;
+        pendingRedemptions[account].isManuallyCleared = true;
+        pendingRedemptions[account].remainder = amount;
     }
 
     /// @dev Calculates the output token amount from mToken amount and rates
