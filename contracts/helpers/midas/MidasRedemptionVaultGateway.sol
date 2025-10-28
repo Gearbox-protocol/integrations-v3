@@ -128,10 +128,16 @@ contract MidasRedemptionVaultGateway is ReentrancyGuardTrait, IMidasRedemptionVa
             return 0;
         }
 
-        (address sender, address requestTokenOut,, uint256 amountMTokenIn, uint256 mTokenRate, uint256 tokenOutRate) =
-            IMidasRedemptionVault(midasRedemptionVault).redeemRequests(pending.requestId);
+        (
+            address sender,
+            address requestTokenOut,
+            uint8 status,
+            uint256 amountMTokenIn,
+            uint256 mTokenRate,
+            uint256 tokenOutRate
+        ) = IMidasRedemptionVault(midasRedemptionVault).redeemRequests(pending.requestId);
 
-        if (sender != address(this) || requestTokenOut != tokenOut) {
+        if (sender != address(this) || requestTokenOut != tokenOut || status == 2) {
             return 0;
         }
 
@@ -140,6 +146,22 @@ contract MidasRedemptionVaultGateway is ReentrancyGuardTrait, IMidasRedemptionVa
         } else {
             return _calculateTokenOutAmount(amountMTokenIn, mTokenRate, tokenOutRate, tokenOut);
         }
+    }
+
+    function clearCancelledRequest(address user) external {
+        PendingRedemption memory pending = pendingRedemptions[user];
+
+        if (!pending.isActive) {
+            revert("MidasRedemptionVaultGateway: user does not have a pending redemption");
+        }
+
+        (,, uint8 status,,,) = IMidasRedemptionVault(midasRedemptionVault).redeemRequests(pending.requestId);
+
+        if (status != 2) {
+            revert("MidasRedemptionVaultGateway: request not cancelled");
+        }
+
+        delete pendingRedemptions[user];
     }
 
     /// @dev Calculates the output token amount from mToken amount and rates
