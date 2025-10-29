@@ -10,6 +10,8 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 import {IMidasRedemptionVault} from "../../integrations/midas/IMidasRedemptionVault.sol";
 import {IMidasRedemptionVaultGateway} from "../../interfaces/midas/IMidasRedemptionVaultGateway.sol";
 
+import {WAD} from "@gearbox-protocol/core-v3/contracts/libraries/Constants.sol";
+
 /// @title Midas Redemption Vault Gateway
 /// @notice Gateway contract that manages redemptions from Midas vault on behalf of other accounts
 /// @dev Stores pending redemption requests and handles partial withdrawals
@@ -54,8 +56,12 @@ contract MidasRedemptionVaultGateway is ReentrancyGuardTrait, IMidasRedemptionVa
     /// @param amountMTokenIn Amount of mToken to redeem
     /// @dev Stores the request ID and timestamp for tracking
     function requestRedeem(address tokenOut, uint256 amountMTokenIn) external nonReentrant {
+        if (amountMTokenIn == 0) {
+            revert ZeroAmountException();
+        }
+
         if (pendingRedemptions[msg.sender].isActive) {
-            revert("MidasRedemptionVaultGateway: account has a pending redemption");
+            revert HasPendingRedemptionException();
         }
 
         uint256 requestId = IMidasRedemptionVault(midasRedemptionVault).currentRequestId();
@@ -78,10 +84,14 @@ contract MidasRedemptionVaultGateway is ReentrancyGuardTrait, IMidasRedemptionVa
     /// @param amount Amount of output token to withdraw
     /// @dev Supports partial withdrawals by tracking remainder
     function withdraw(uint256 amount) external nonReentrant {
+        if (amount == 0) {
+            revert ZeroAmountException();
+        }
+
         PendingRedemption memory pending = pendingRedemptions[msg.sender];
 
         if (!pending.isActive) {
-            revert("MidasRedemptionVaultGateway: account does not have a pending redemption");
+            revert NoPendingRedemptionException();
         }
 
         (
@@ -94,11 +104,11 @@ contract MidasRedemptionVaultGateway is ReentrancyGuardTrait, IMidasRedemptionVa
         ) = IMidasRedemptionVault(midasRedemptionVault).redeemRequests(pending.requestId);
 
         if (sender != address(this)) {
-            revert("MidasRedemptionVaultGateway: invalid request");
+            revert InvalidRequestException();
         }
 
         if (status != 1 && !pending.isManuallyCleared) {
-            revert("MidasRedemptionVaultGateway: redemption not fulfilled");
+            revert RedemptionNotFulfilledException();
         }
 
         uint256 availableAmount;
@@ -110,7 +120,7 @@ contract MidasRedemptionVaultGateway is ReentrancyGuardTrait, IMidasRedemptionVa
         }
 
         if (amount > availableAmount) {
-            revert("MidasRedemptionVaultGateway: amount exceeds available");
+            revert AmountExceedsAvailableException();
         }
 
         if (amount == availableAmount) {
@@ -156,20 +166,20 @@ contract MidasRedemptionVaultGateway is ReentrancyGuardTrait, IMidasRedemptionVa
         PendingRedemption memory pending = pendingRedemptions[account];
 
         if (!pending.isActive) {
-            revert("MidasRedemptionVaultGateway: account does not have a pending redemption");
+            revert NoPendingRedemptionException();
         }
 
         (, address tokenOut, uint8 status, uint256 amountMTokenIn, uint256 mTokenRate, uint256 tokenOutRate) =
             IMidasRedemptionVault(midasRedemptionVault).redeemRequests(pending.requestId);
 
         if (status != 2 || pending.isManuallyCleared) {
-            revert("MidasRedemptionVaultGateway: request not cancelled or already manually cleared");
+            revert RequestNotCancelledOrManuallyClearedException();
         }
 
         uint256 minAmount = _calculateTokenOutAmount(amountMTokenIn, mTokenRate, tokenOutRate, tokenOut);
 
         if (amount < minAmount) {
-            revert("MidasRedemptionVaultGateway: amount is less than the amount required by the request");
+            revert AmountIsLessThanRequiredException();
         }
 
         IERC20(tokenOut).safeTransferFrom(msg.sender, address(this), amount);
@@ -194,6 +204,8 @@ contract MidasRedemptionVaultGateway is ReentrancyGuardTrait, IMidasRedemptionVa
 
         uint256 tokenUnit = 10 ** IERC20Metadata(tokenOut).decimals();
 
-        return amount1e18 * tokenUnit / 1e18;
+        if (tokenUnit == WAD) return amount1e18;
+
+        return amount1e18 * tokenUnit / WAD;
     }
 }

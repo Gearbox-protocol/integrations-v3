@@ -6,6 +6,15 @@ pragma solidity ^0.8.23;
 import {IVersion} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IVersion.sol";
 
 interface IMidasRedemptionVaultGateway is IVersion {
+    error RedemptionNotFulfilledException();
+    error InvalidRequestException();
+    error AmountExceedsAvailableException();
+    error RequestNotCancelledOrManuallyClearedException();
+    error NoPendingRedemptionException();
+    error HasPendingRedemptionException();
+    error ZeroAmountException();
+    error AmountIsLessThanRequiredException();
+
     /// @notice Structure to store pending redemption requests
     struct PendingRedemption {
         bool isActive;

@@ -10,7 +10,6 @@ import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet
 import {AbstractAdapter} from "../AbstractAdapter.sol";
 import {NotImplementedException} from "@gearbox-protocol/core-v3/contracts/interfaces/IExceptions.sol";
 
-import {IMidasRedemptionVault} from "../../integrations/midas/IMidasRedemptionVault.sol";
 import {IMidasRedemptionVaultAdapter} from "../../interfaces/midas/IMidasRedemptionVaultAdapter.sol";
 import {IMidasRedemptionVaultGateway} from "../../interfaces/midas/IMidasRedemptionVaultGateway.sol";
 import {MidasRedemptionVaultPhantomToken} from "../../helpers/midas/MidasRedemptionVaultPhantomToken.sol";
@@ -154,6 +153,7 @@ contract MidasRedemptionVaultAdapter is AbstractAdapter, IMidasRedemptionVaultAd
     /// @dev Converts the token amount to 18 decimals, which is accepted by Midas
     function _convertToE18(uint256 amount, address token) internal view returns (uint256) {
         uint256 tokenUnit = 10 ** IERC20Metadata(token).decimals();
+        if (tokenUnit == WAD) return amount;
         return amount * WAD / tokenUnit;
     }
 
