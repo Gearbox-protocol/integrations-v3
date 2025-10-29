@@ -13,6 +13,7 @@ import {NotImplementedException} from "@gearbox-protocol/core-v3/contracts/inter
 import {IMidasRedemptionVault} from "../../integrations/midas/IMidasRedemptionVault.sol";
 import {IMidasRedemptionVaultAdapter} from "../../interfaces/midas/IMidasRedemptionVaultAdapter.sol";
 import {IMidasRedemptionVaultGateway} from "../../interfaces/midas/IMidasRedemptionVaultGateway.sol";
+import {MidasRedemptionVaultPhantomToken} from "../../helpers/midas/MidasRedemptionVaultPhantomToken.sol";
 
 import {WAD, RAY} from "@gearbox-protocol/core-v3/contracts/libraries/Constants.sol";
 
@@ -198,6 +199,9 @@ contract MidasRedemptionVaultAdapter is AbstractAdapter, IMidasRedemptionVaultAd
                 _allowedTokens.add(config.token);
 
                 if (config.phantomToken != address(0)) {
+                    if (MidasRedemptionVaultPhantomToken(config.phantomToken).tokenOut() != config.token) {
+                        revert PhantomTokenTokenOutMismatchException();
+                    }
                     _getMaskOrRevert(config.phantomToken);
                     phantomTokenToOutputToken[config.phantomToken] = config.token;
                     outputTokenToPhantomToken[config.token] = config.phantomToken;
