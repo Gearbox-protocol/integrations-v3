@@ -157,6 +157,21 @@ contract MidasRedemptionVaultGateway is ReentrancyGuardTrait, IMidasRedemptionVa
         }
     }
 
+    /// @notice Returns the output token of the currently pending request
+    /// @param account account address to check
+    /// @return Output token address
+    function getCurrentRequestTokenOut(address account) external view returns (address) {
+        PendingRedemption memory pending = pendingRedemptions[account];
+
+        if (!pending.isActive) {
+            return address(0);
+        }
+
+        (, address requestTokenOut,,,,) = IMidasRedemptionVault(midasRedemptionVault).redeemRequests(pending.requestId);
+
+        return requestTokenOut;
+    }
+
     /// @notice Clears a cancelled redemption request
     /// @param account account address to clear the request for
     /// @param amount Amount of output token to supply for the request. Must be at least the amount projected when the request was made.

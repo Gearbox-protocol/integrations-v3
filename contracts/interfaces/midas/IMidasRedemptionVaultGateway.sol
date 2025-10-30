@@ -55,4 +55,9 @@ interface IMidasRedemptionVaultGateway is IVersion {
     /// @param user User address
     /// @param tokenOut Token to check (returns 0 if different from pending redemption token)
     function pendingTokenOutAmount(address user, address tokenOut) external view returns (uint256);
+
+    /// @notice Returns the output token of the currently pending request
+    /// @param account account address to check
+    /// @return Output token address
+    function getCurrentRequestTokenOut(address account) external view returns (address);
 }

@@ -69,7 +69,7 @@ contract MidasRedemptionVaultAdapter is AbstractAdapter, IMidasRedemptionVaultAd
     /// @notice Instantly redeems the entire balance of mToken for output token, except the specified amount
     /// @param tokenOut Output token address
     /// @param leftoverAmount Amount of mToken to keep in the account
-    /// @param rateMinRAY Minimum exchange rate from input token to mToken (in RAY format)
+    /// @param rateMinRAY Minimum exchange rate from mToken to output token (in RAY format)
     function redeemInstantDiff(address tokenOut, uint256 leftoverAmount, uint256 rateMinRAY)
         external
         override
@@ -138,7 +138,10 @@ contract MidasRedemptionVaultAdapter is AbstractAdapter, IMidasRedemptionVaultAd
     /// @param token Phantom token address
     /// @param amount Amount to withdraw
     function withdrawPhantomToken(address token, uint256 amount) external override creditFacadeOnly returns (bool) {
-        if (phantomTokenToOutputToken[token] == address(0)) revert IncorrectStakedPhantomTokenException();
+        address account = _creditAccount();
+        address requestTokenOut = IMidasRedemptionVaultGateway(gateway).getCurrentRequestTokenOut(account);
+
+        if (phantomTokenToOutputToken[token] != requestTokenOut) revert IncorrectStakedPhantomTokenException();
         _withdraw(amount);
         return false;
     }
