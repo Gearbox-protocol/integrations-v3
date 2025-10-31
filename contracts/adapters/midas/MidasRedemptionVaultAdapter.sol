@@ -10,9 +10,9 @@ import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet
 import {AbstractAdapter} from "../AbstractAdapter.sol";
 import {NotImplementedException} from "@gearbox-protocol/core-v3/contracts/interfaces/IExceptions.sol";
 
-import {IMidasRedemptionVault} from "../../integrations/midas/IMidasRedemptionVault.sol";
 import {IMidasRedemptionVaultAdapter} from "../../interfaces/midas/IMidasRedemptionVaultAdapter.sol";
 import {IMidasRedemptionVaultGateway} from "../../interfaces/midas/IMidasRedemptionVaultGateway.sol";
+import {MidasRedemptionVaultPhantomToken} from "../../helpers/midas/MidasRedemptionVaultPhantomToken.sol";
 
 import {WAD, RAY} from "@gearbox-protocol/core-v3/contracts/libraries/Constants.sol";
 
@@ -32,6 +32,9 @@ contract MidasRedemptionVaultAdapter is AbstractAdapter, IMidasRedemptionVaultAd
 
     /// @notice Mapping from phantom token to its tracked output token
     mapping(address => address) public phantomTokenToOutputToken;
+
+    /// @notice Mapping from output token to its tracked phantom token
+    mapping(address => address) public outputTokenToPhantomToken;
 
     /// @dev Set of allowed output tokens for redemptions
     EnumerableSet.AddressSet internal _allowedTokens;
@@ -66,7 +69,7 @@ contract MidasRedemptionVaultAdapter is AbstractAdapter, IMidasRedemptionVaultAd
     /// @notice Instantly redeems the entire balance of mToken for output token, except the specified amount
     /// @param tokenOut Output token address
     /// @param leftoverAmount Amount of mToken to keep in the account
-    /// @param rateMinRAY Minimum exchange rate from input token to mToken (in RAY format)
+    /// @param rateMinRAY Minimum exchange rate from mToken to output token (in RAY format)
     function redeemInstantDiff(address tokenOut, uint256 leftoverAmount, uint256 rateMinRAY)
         external
         override
@@ -109,7 +112,9 @@ contract MidasRedemptionVaultAdapter is AbstractAdapter, IMidasRedemptionVaultAd
         creditFacadeOnly
         returns (bool)
     {
-        if (!isTokenAllowed(tokenOut)) revert TokenNotAllowedException();
+        if (!isTokenAllowed(tokenOut) || outputTokenToPhantomToken[tokenOut] == address(0)) {
+            revert TokenNotAllowedException();
+        }
 
         _executeSwapSafeApprove(
             mToken, abi.encodeCall(IMidasRedemptionVaultGateway.requestRedeem, (tokenOut, amountMTokenIn))
@@ -133,7 +138,10 @@ contract MidasRedemptionVaultAdapter is AbstractAdapter, IMidasRedemptionVaultAd
     /// @param token Phantom token address
     /// @param amount Amount to withdraw
     function withdrawPhantomToken(address token, uint256 amount) external override creditFacadeOnly returns (bool) {
-        if (phantomTokenToOutputToken[token] == address(0)) revert IncorrectStakedPhantomTokenException();
+        address account = _creditAccount();
+        address requestTokenOut = IMidasRedemptionVaultGateway(gateway).getCurrentRequestTokenOut(account);
+
+        if (phantomTokenToOutputToken[token] != requestTokenOut) revert IncorrectStakedPhantomTokenException();
         _withdraw(amount);
         return false;
     }
@@ -148,6 +156,7 @@ contract MidasRedemptionVaultAdapter is AbstractAdapter, IMidasRedemptionVaultAd
     /// @dev Converts the token amount to 18 decimals, which is accepted by Midas
     function _convertToE18(uint256 amount, address token) internal view returns (uint256) {
         uint256 tokenUnit = 10 ** IERC20Metadata(token).decimals();
+        if (tokenUnit == WAD) return amount;
         return amount * WAD / tokenUnit;
     }
 
@@ -162,6 +171,17 @@ contract MidasRedemptionVaultAdapter is AbstractAdapter, IMidasRedemptionVaultAd
     /// @return Array of allowed token addresses
     function allowedTokens() public view override returns (address[] memory) {
         return _allowedTokens.values();
+    }
+
+    /// @notice Returns the list of phantom tokens associated to each allowed output token
+    /// @return Array of phantom token addresses
+    function allowedPhantomTokens() public view returns (address[] memory) {
+        address[] memory tokens = allowedTokens();
+        address[] memory phantomTokens = new address[](tokens.length);
+        for (uint256 i; i < tokens.length; ++i) {
+            phantomTokens[i] = outputTokenToPhantomToken[tokens[i]];
+        }
+        return phantomTokens;
     }
 
     /// @notice Sets the allowed status for a batch of output tokens
@@ -182,15 +202,21 @@ contract MidasRedemptionVaultAdapter is AbstractAdapter, IMidasRedemptionVaultAd
                 _allowedTokens.add(config.token);
 
                 if (config.phantomToken != address(0)) {
+                    if (MidasRedemptionVaultPhantomToken(config.phantomToken).tokenOut() != config.token) {
+                        revert PhantomTokenTokenOutMismatchException();
+                    }
                     _getMaskOrRevert(config.phantomToken);
                     phantomTokenToOutputToken[config.phantomToken] = config.token;
+                    outputTokenToPhantomToken[config.token] = config.phantomToken;
                 }
             } else {
                 _allowedTokens.remove(config.token);
 
-                // Remove any phantom token mappings for this token
-                if (config.phantomToken != address(0)) {
-                    delete phantomTokenToOutputToken[config.phantomToken];
+                address phantomToken = outputTokenToPhantomToken[config.token];
+
+                if (phantomToken != address(0)) {
+                    delete outputTokenToPhantomToken[config.token];
+                    delete phantomTokenToOutputToken[phantomToken];
                 }
             }
 
@@ -201,6 +227,7 @@ contract MidasRedemptionVaultAdapter is AbstractAdapter, IMidasRedemptionVaultAd
     /// @notice Serialized adapter parameters
     /// @return serializedData Encoded adapter configuration
     function serialize() external view returns (bytes memory serializedData) {
-        serializedData = abi.encode(creditManager, targetContract, gateway, mToken, allowedTokens());
+        serializedData =
+            abi.encode(creditManager, targetContract, gateway, mToken, allowedTokens(), allowedPhantomTokens());
     }
 }

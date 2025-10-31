@@ -10,8 +10,10 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 import {IMidasRedemptionVault} from "../../integrations/midas/IMidasRedemptionVault.sol";
 import {IMidasRedemptionVaultGateway} from "../../interfaces/midas/IMidasRedemptionVaultGateway.sol";
 
+import {WAD} from "@gearbox-protocol/core-v3/contracts/libraries/Constants.sol";
+
 /// @title Midas Redemption Vault Gateway
-/// @notice Gateway contract that manages redemptions from Midas vault on behalf of users
+/// @notice Gateway contract that manages redemptions from Midas vault on behalf of other accounts
 /// @dev Stores pending redemption requests and handles partial withdrawals
 contract MidasRedemptionVaultGateway is ReentrancyGuardTrait, IMidasRedemptionVaultGateway {
     using SafeERC20 for IERC20;
@@ -39,11 +41,14 @@ contract MidasRedemptionVaultGateway is ReentrancyGuardTrait, IMidasRedemptionVa
     function redeemInstant(address tokenOut, uint256 amountMTokenIn, uint256 minReceiveAmount) external nonReentrant {
         IERC20(mToken).safeTransferFrom(msg.sender, address(this), amountMTokenIn);
 
+        uint256 balanceBefore = IERC20(tokenOut).balanceOf(address(this));
+
         IERC20(mToken).forceApprove(midasRedemptionVault, amountMTokenIn);
         IMidasRedemptionVault(midasRedemptionVault).redeemInstant(tokenOut, amountMTokenIn, minReceiveAmount);
 
-        uint256 balance = IERC20(tokenOut).balanceOf(address(this));
-        IERC20(tokenOut).safeTransfer(msg.sender, balance);
+        uint256 amount = IERC20(tokenOut).balanceOf(address(this)) - balanceBefore;
+
+        IERC20(tokenOut).safeTransfer(msg.sender, amount);
     }
 
     /// @notice Requests a redemption of mToken for output token
@@ -51,8 +56,12 @@ contract MidasRedemptionVaultGateway is ReentrancyGuardTrait, IMidasRedemptionVa
     /// @param amountMTokenIn Amount of mToken to redeem
     /// @dev Stores the request ID and timestamp for tracking
     function requestRedeem(address tokenOut, uint256 amountMTokenIn) external nonReentrant {
-        if (pendingRedemptions[msg.sender].requestId > 0) {
-            revert("MidasRedemptionVaultGateway: user has a pending redemption");
+        if (amountMTokenIn == 0) {
+            revert ZeroAmountException();
+        }
+
+        if (pendingRedemptions[msg.sender].isActive) {
+            revert HasPendingRedemptionException();
         }
 
         uint256 requestId = IMidasRedemptionVault(midasRedemptionVault).currentRequestId();
@@ -62,18 +71,27 @@ contract MidasRedemptionVaultGateway is ReentrancyGuardTrait, IMidasRedemptionVa
         IERC20(mToken).forceApprove(midasRedemptionVault, amountMTokenIn);
         IMidasRedemptionVault(midasRedemptionVault).redeemRequest(tokenOut, amountMTokenIn);
 
-        pendingRedemptions[msg.sender] =
-            PendingRedemption({requestId: requestId, timestamp: block.timestamp, remainder: 0});
+        pendingRedemptions[msg.sender] = PendingRedemption({
+            isActive: true,
+            isManuallyCleared: false,
+            requestId: requestId,
+            timestamp: block.timestamp,
+            remainder: 0
+        });
     }
 
     /// @notice Withdraws tokens from a fulfilled redemption request
     /// @param amount Amount of output token to withdraw
     /// @dev Supports partial withdrawals by tracking remainder
     function withdraw(uint256 amount) external nonReentrant {
+        if (amount == 0) {
+            revert ZeroAmountException();
+        }
+
         PendingRedemption memory pending = pendingRedemptions[msg.sender];
 
-        if (pending.requestId == 0) {
-            revert("MidasRedemptionVaultGateway: user does not have a pending redemption");
+        if (!pending.isActive) {
+            revert NoPendingRedemptionException();
         }
 
         (
@@ -86,11 +104,11 @@ contract MidasRedemptionVaultGateway is ReentrancyGuardTrait, IMidasRedemptionVa
         ) = IMidasRedemptionVault(midasRedemptionVault).redeemRequests(pending.requestId);
 
         if (sender != address(this)) {
-            revert("MidasRedemptionVaultGateway: invalid request");
+            revert InvalidRequestException();
         }
 
-        if (status != 1) {
-            revert("MidasRedemptionVaultGateway: redemption not fulfilled");
+        if (status != 1 && !pending.isManuallyCleared) {
+            revert RedemptionNotFulfilledException();
         }
 
         uint256 availableAmount;
@@ -102,7 +120,7 @@ contract MidasRedemptionVaultGateway is ReentrancyGuardTrait, IMidasRedemptionVa
         }
 
         if (amount > availableAmount) {
-            revert("MidasRedemptionVaultGateway: amount exceeds available");
+            revert AmountExceedsAvailableException();
         }
 
         if (amount == availableAmount) {
@@ -114,14 +132,14 @@ contract MidasRedemptionVaultGateway is ReentrancyGuardTrait, IMidasRedemptionVa
         IERC20(tokenOut).safeTransfer(msg.sender, amount);
     }
 
-    /// @notice Returns the expected amount of output token for a user's pending redemption
-    /// @param user User address to check
+    /// @notice Returns the expected amount of output token for a account's pending redemption
+    /// @param account account address to check
     /// @param tokenOut Output token to check
     /// @return Expected amount of output token, considering any partial withdrawals
-    function pendingTokenOutAmount(address user, address tokenOut) external view returns (uint256) {
-        PendingRedemption memory pending = pendingRedemptions[user];
+    function pendingTokenOutAmount(address account, address tokenOut) external view returns (uint256) {
+        PendingRedemption memory pending = pendingRedemptions[account];
 
-        if (pending.requestId == 0) {
+        if (!pending.isActive) {
             return 0;
         }
 
@@ -137,6 +155,52 @@ contract MidasRedemptionVaultGateway is ReentrancyGuardTrait, IMidasRedemptionVa
         } else {
             return _calculateTokenOutAmount(amountMTokenIn, mTokenRate, tokenOutRate, tokenOut);
         }
+    }
+
+    /// @notice Returns the output token of the currently pending request
+    /// @param account account address to check
+    /// @return Output token address
+    function getCurrentRequestTokenOut(address account) external view returns (address) {
+        PendingRedemption memory pending = pendingRedemptions[account];
+
+        if (!pending.isActive) {
+            return address(0);
+        }
+
+        (, address requestTokenOut,,,,) = IMidasRedemptionVault(midasRedemptionVault).redeemRequests(pending.requestId);
+
+        return requestTokenOut;
+    }
+
+    /// @notice Clears a cancelled redemption request
+    /// @param account account address to clear the request for
+    /// @param amount Amount of output token to supply for the request. Must be at least the amount projected when the request was made.
+    /// @dev If Midas rejects a request on accident, this function allows Midas or other interested party
+    ///      to gracefully fulfill the request anyway, by manually supplying the required funds to the gateway.
+    function clearCancelledRequest(address account, uint256 amount) external {
+        PendingRedemption memory pending = pendingRedemptions[account];
+
+        if (!pending.isActive) {
+            revert NoPendingRedemptionException();
+        }
+
+        (, address tokenOut, uint8 status, uint256 amountMTokenIn, uint256 mTokenRate, uint256 tokenOutRate) =
+            IMidasRedemptionVault(midasRedemptionVault).redeemRequests(pending.requestId);
+
+        if (status != 2 || pending.isManuallyCleared) {
+            revert RequestNotCancelledOrManuallyClearedException();
+        }
+
+        uint256 minAmount = _calculateTokenOutAmount(amountMTokenIn, mTokenRate, tokenOutRate, tokenOut);
+
+        if (amount < minAmount) {
+            revert AmountIsLessThanRequiredException();
+        }
+
+        IERC20(tokenOut).safeTransferFrom(msg.sender, address(this), amount);
+
+        pendingRedemptions[account].isManuallyCleared = true;
+        pendingRedemptions[account].remainder = amount;
     }
 
     /// @dev Calculates the output token amount from mToken amount and rates
@@ -155,6 +219,8 @@ contract MidasRedemptionVaultGateway is ReentrancyGuardTrait, IMidasRedemptionVa
 
         uint256 tokenUnit = 10 ** IERC20Metadata(tokenOut).decimals();
 
-        return amount1e18 * tokenUnit / 1e18;
+        if (tokenUnit == WAD) return amount1e18;
+
+        return amount1e18 * tokenUnit / WAD;
     }
 }
