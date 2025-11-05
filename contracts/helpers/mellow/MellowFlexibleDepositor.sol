@@ -11,10 +11,13 @@ import {IMellowDepositQueue} from "../../integrations/mellow/IMellowDepositQueue
 
 /// @title MellowFlexibleDepositor
 /// @notice As Mellow's deposit queue only accepts a single deposit per account, this contract is used
-///         as a disposable proxy by the queue in order to make deposits on behalf of users.
+///         as a disposable proxy by the queue in order to make deposits on behalf of users. This also simplifies queue logic,
+///         as Mellow's own per-address deposit indexing can be used to track balances.
 contract MellowFlexibleDepositor is Ownable {
+    using SafeERC20 for IERC20;
+
     /// @notice Thrown when attempting to claim when there are no shares to claim.
-    error NothingToClaimException();
+    error NotEnoughToClaimException();
 
     /// @notice Thrown when attempting to deposit when a deposit is already in progress.
     error DepositInProgressException();
@@ -34,12 +37,8 @@ contract MellowFlexibleDepositor is Ownable {
     /// @notice The LP token of the vault.
     address public immutable vaultToken;
 
-    /// @notice The amount of currently pending deposited assets.
-    uint256 public assetsDeposited;
-
-    constructor(address _mellowDepositQueue, address _asset, address _vaultToken, address _account)
-        Ownable(msg.sender)
-    {
+    constructor(address _mellowDepositQueue, address _asset, address _vaultToken, address _account) {
+        _transferOwnership(msg.sender);
         mellowDepositQueue = _mellowDepositQueue;
         asset = _asset;
         vaultToken = _vaultToken;
@@ -50,45 +49,62 @@ contract MellowFlexibleDepositor is Ownable {
     /// @param assets The amount of assets to deposit.
     /// @param referral The referral address.
     function deposit(uint256 assets, address referral) external onlyOwner {
-        if (assetsDeposited > 0) {
+        if (_getPendingAssets() > 0) {
             revert DepositInProgressException();
         }
 
         IERC20(asset).forceApprove(mellowDepositQueue, assets);
-        IMellowDepositQueue(mellowDepositQueue).deposit(assets, referral, new bytes32[](0));
-
-        assetsDeposited = assets;
+        IMellowDepositQueue(mellowDepositQueue).deposit(uint224(assets), referral, new bytes32[](0));
     }
 
     /// @notice Cancels the deposit request.
     function cancelDepositRequest() external onlyOwner {
-        if (assetsDeposited == 0) {
+        uint256 pendingAssets = _getPendingAssets();
+
+        if (pendingAssets == 0) {
             revert DepositNotInProgressException();
         }
 
         IMellowDepositQueue(mellowDepositQueue).cancelDepositRequest();
-        IERC20(asset).safeTransfer(account, assetsDeposited);
-
-        assetsDeposited = 0;
+        IERC20(asset).safeTransfer(account, pendingAssets);
     }
 
     /// @notice Claims a specific amount from a matured deposit on behalf of the account.
     function claim(uint256 amount) external onlyOwner {
-        uint256 sharesBalance = IERC20(vaultToken).balanceOf(address(this));
+        (uint256 inQueue, uint256 onDepositor) = _getClaimableShares();
 
-        if (sharesBalance == 0) {
+        if (inQueue != 0) {
             IMellowDepositQueue(mellowDepositQueue).claim(account);
-            sharesBalance = IERC20(vaultToken).balanceOf(address(this));
+            onDepositor = IERC20(vaultToken).balanceOf(address(this));
         }
 
-        if (sharesBalance < amount) {
+        if (onDepositor < amount) {
             revert NotEnoughToClaimException();
         }
 
         IERC20(vaultToken).safeTransfer(account, amount);
+    }
 
-        if (sharesBalance == amount) {
-            assetsDeposited = 0;
-        }
+    /// @notice Returns the amount of assets pending for a deposit
+    function getPendingAssets() external view returns (uint256) {
+        return _getPendingAssets();
+    }
+
+    /// @notice Returns the amount of shares claimable from mature deposits
+    function getClaimableShares() external view returns (uint256 shares) {
+        (uint256 inQueue, uint256 onDepositor) = _getClaimableShares();
+        return inQueue + onDepositor;
+    }
+
+    /// @dev Internal function to get the amount of assets pending for a deposit
+    function _getPendingAssets() internal view returns (uint256) {
+        (, uint256 assets) = IMellowDepositQueue(mellowDepositQueue).requestOf(address(this));
+        return assets;
+    }
+
+    /// @dev Internal function to get the amount of shares claimable from mature deposits, still in the queue and already on the depositor
+    function _getClaimableShares() internal view returns (uint256 inQueue, uint256 onDepositor) {
+        return
+            (IMellowDepositQueue(mellowDepositQueue).claimableOf(account), IERC20(vaultToken).balanceOf(address(this)));
     }
 }
