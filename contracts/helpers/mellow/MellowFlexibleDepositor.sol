@@ -11,12 +11,12 @@ import {IMellowDepositQueue} from "../../integrations/mellow/IMellowDepositQueue
 
 /// @title MellowFlexibleDepositor
 /// @notice As Mellow's deposit queue only accepts a single deposit per account, this contract is used
-///         as a disposable proxy by the queue in order to make deposits on behalf of users. This also simplifies queue logic,
+///         as a disposable proxy by the queue in order to make deposits on behalf of users. This also simplifies gateway logic,
 ///         as Mellow's own per-address deposit indexing can be used to track balances.
 contract MellowFlexibleDepositor is Ownable {
     using SafeERC20 for IERC20;
 
-    /// @notice Thrown when attempting to claim when there are no shares to claim.
+    /// @notice Thrown when attempting to claim when there are not enough shares to claim.
     error NotEnoughToClaimException();
 
     /// @notice Thrown when attempting to deposit when a deposit is already in progress.

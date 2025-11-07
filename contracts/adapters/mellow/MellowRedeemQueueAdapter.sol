@@ -10,7 +10,7 @@ import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet
 import {AbstractAdapter} from "../AbstractAdapter.sol";
 import {IMellowRedeemQueueAdapter} from "../../interfaces/mellow/IMellowRedeemQueueAdapter.sol";
 import {IMellowFlexibleRedeemGateway} from "../../interfaces/mellow/IMellowFlexibleRedeemGateway.sol";
-import {MellowFlexibleRedeemPhantomToken} from "../../helpers/mellow/MellowFlexbileRedeemPhantomToken.sol";
+import {MellowFlexibleRedeemPhantomToken} from "../../helpers/mellow/MellowFlexibleRedeemPhantomToken.sol";
 
 import {NotImplementedException} from "@gearbox-protocol/core-v3/contracts/interfaces/IExceptions.sol";
 

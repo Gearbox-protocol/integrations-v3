@@ -10,7 +10,7 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 import {IMellowRedeemQueue, Request} from "../../integrations/mellow/IMellowRedeemQueue.sol";
 
 /// @title Mellow Flexible Vaults redeemer
-/// @notice Having a separate redeemer address simplifies queue logic,
+/// @notice Having a separate redeemer address simplifies gateway logic,
 ///         as Mellow's own per-address redemption indexing can be used to track balances.
 contract MellowFlexibleRedeemer is Ownable {
     using SafeERC20 for IERC20;
@@ -19,7 +19,7 @@ contract MellowFlexibleRedeemer is Ownable {
     ///         gas expenditure to retrieve pending/claimable amounts.
     error TooManyRequestsException();
 
-    /// @notice Thrown when attempting to claim when there are no assets to claim.
+    /// @notice Thrown when attempting to claim when there are not enough assets to claim.
     error NotEnoughToClaimException();
 
     /// @notice The account to make redemptions on behalf of.
