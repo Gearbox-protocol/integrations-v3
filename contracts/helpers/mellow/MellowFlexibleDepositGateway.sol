@@ -3,6 +3,8 @@
 // (c) Gearbox Foundation, 2025.
 pragma solidity ^0.8.23;
 
+import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
+
 import {IMellowFlexibleDepositGateway} from "../../interfaces/mellow/IMellowFlexibleDepositGateway.sol";
 import {IMellowDepositQueue} from "../../integrations/mellow/IMellowDepositQueue.sol";
 import {IMellowFlexibleVault} from "../../integrations/mellow/IMellowFlexibleVault.sol";
@@ -30,6 +32,9 @@ contract MellowFlexibleDepositGateway is IMellowFlexibleDepositGateway {
     /// @notice The vault token received from deposits
     address public immutable vaultToken;
 
+    /// @notice The master depositor contract
+    address public immutable masterDepositor;
+
     /// @notice Mapping of accounts to corresponding depositor contracts,
     ///         which interact directly with the queue
     mapping(address => address) public accountToDepositor;
@@ -38,6 +43,7 @@ contract MellowFlexibleDepositGateway is IMellowFlexibleDepositGateway {
         mellowDepositQueue = _mellowDepositQueue;
         asset = IMellowDepositQueue(mellowDepositQueue).asset();
         vaultToken = IMellowFlexibleVault(IMellowDepositQueue(mellowDepositQueue).vault()).shareManager();
+        masterDepositor = address(new MellowFlexibleDepositor(mellowDepositQueue, asset, vaultToken));
     }
 
     /// @notice Deposits assets into the vault through the queue
@@ -83,7 +89,8 @@ contract MellowFlexibleDepositGateway is IMellowFlexibleDepositGateway {
     function _getDepositorForAccount(address account) internal returns (address) {
         address depositor = accountToDepositor[account];
         if (depositor == address(0)) {
-            depositor = address(new MellowFlexibleDepositor(mellowDepositQueue, asset, vaultToken, account));
+            depositor = Clones.clone(masterDepositor);
+            MellowFlexibleDepositor(depositor).setAccount(account);
             accountToDepositor[account] = depositor;
         }
         return depositor;

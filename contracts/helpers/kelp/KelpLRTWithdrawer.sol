@@ -3,7 +3,6 @@
 // (c) Gearbox Foundation, 2025.
 pragma solidity ^0.8.23;
 
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {IWETH} from "@gearbox-protocol/core-v3/contracts/interfaces/external/IWETH.sol";
@@ -14,7 +13,7 @@ address constant ETH = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
 /// @title KelpLRTWithdrawer
 /// @notice This contract simplifies gateway logic, as Kelp's own per-address withdrawal indexing can be used to track balances.
-contract KelpLRTWithdrawer is Ownable {
+contract KelpLRTWithdrawer {
     using SafeERC20 for IERC20;
 
     /// @notice Thrown when attempting to withdraw when there are too many requests already, to avoid large
@@ -27,8 +26,14 @@ contract KelpLRTWithdrawer is Ownable {
     /// @notice Thrown when receiving ETH from an address that is not the withdrawal manager.
     error IncorrectETHSenderException();
 
+    /// @notice Thrown when attempting to call a function from a caller other than the gateway.
+    error CallerNotGatewayException();
+
     /// @notice The account to make withdrawals on behalf of.
-    address public immutable account;
+    address public account;
+
+    /// @notice The gateway that is using this withdrawer
+    address public immutable gateway;
 
     /// @notice Kelp LRT Withdrawal Manager.
     address public immutable withdrawalManager;
@@ -39,19 +44,34 @@ contract KelpLRTWithdrawer is Ownable {
     /// @notice The WETH token.
     address public immutable weth;
 
-    constructor(address _withdrawalManager, address _rsETH, address _weth, address _account) {
-        _transferOwnership(msg.sender);
+    modifier gatewayOnly() {
+        if (msg.sender != gateway) {
+            revert CallerNotGatewayException();
+        }
+        _;
+    }
+
+    constructor(address _withdrawalManager, address _rsETH, address _weth) {
+        gateway = msg.sender;
         withdrawalManager = _withdrawalManager;
         rsETH = _rsETH;
-        account = _account;
         weth = _weth;
+    }
+
+    /// @notice Sets the account for this withdrawer
+    /// @dev Intended to be called only once by the gateway on creation
+    function setAccount(address _account) external gatewayOnly {
+        account = _account;
     }
 
     /// @notice Initiates a withdrawal for a specific amount of rsETH
     /// @param asset The asset to initiate the withdrawal for
     /// @param rsETHUnstaked The amount of rsETH to unstake
     /// @param referralId The referral ID
-    function initiateWithdrawal(address asset, uint256 rsETHUnstaked, string calldata referralId) external onlyOwner {
+    function initiateWithdrawal(address asset, uint256 rsETHUnstaked, string calldata referralId)
+        external
+        gatewayOnly
+    {
         if (_getNumRequests(asset) >= 5) {
             revert TooManyRequestsException();
         }
@@ -66,7 +86,7 @@ contract KelpLRTWithdrawer is Ownable {
     /// @param asset The asset to complete outstanding withdrawals for
     /// @param amount The amount of assets to transfer
     /// @param referralId The referral ID
-    function completeWithdrawal(address asset, uint256 amount, string calldata referralId) external onlyOwner {
+    function completeWithdrawal(address asset, uint256 amount, string calldata referralId) external gatewayOnly {
         (uint256 inWithdrawalManager, uint256 onWithdrawer, uint256 numClaimableRequests) = _getClaimableAssets(asset);
         if (inWithdrawalManager != 0) {
             for (uint256 i = 0; i < numClaimableRequests; i++) {

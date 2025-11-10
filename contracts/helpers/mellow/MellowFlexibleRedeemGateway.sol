@@ -3,6 +3,8 @@
 // (c) Gearbox Foundation, 2025.
 pragma solidity ^0.8.23;
 
+import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
+
 import {IMellowFlexibleRedeemGateway} from "../../interfaces/mellow/IMellowFlexibleRedeemGateway.sol";
 import {IMellowRedeemQueue} from "../../integrations/mellow/IMellowRedeemQueue.sol";
 import {IMellowFlexibleVault} from "../../integrations/mellow/IMellowFlexibleVault.sol";
@@ -28,6 +30,9 @@ contract MellowFlexibleRedeemGateway is IMellowFlexibleRedeemGateway {
     /// @notice The vault token that is redeemed
     address public immutable vaultToken;
 
+    /// @notice The master redeemer contract
+    address public immutable masterRedeemer;
+
     /// @notice Mapping of accounts to corresponding redeemer contracts,
     ///         which interact directly with the queue
     mapping(address => address) public accountToRedeemer;
@@ -36,6 +41,7 @@ contract MellowFlexibleRedeemGateway is IMellowFlexibleRedeemGateway {
         mellowRedeemQueue = _mellowRedeemQueue;
         asset = IMellowRedeemQueue(mellowRedeemQueue).asset();
         vaultToken = IMellowFlexibleVault(IMellowRedeemQueue(mellowRedeemQueue).vault()).shareManager();
+        masterRedeemer = address(new MellowFlexibleRedeemer(mellowRedeemQueue, asset, vaultToken));
     }
 
     /// @notice Initiates a redemption through the queue with exact amount of shares
@@ -74,7 +80,8 @@ contract MellowFlexibleRedeemGateway is IMellowFlexibleRedeemGateway {
     function _getRedeemerForAccount(address account) internal returns (address) {
         address redeemer = accountToRedeemer[account];
         if (redeemer == address(0)) {
-            redeemer = address(new MellowFlexibleRedeemer(mellowRedeemQueue, asset, vaultToken, account));
+            redeemer = Clones.clone(masterRedeemer);
+            MellowFlexibleRedeemer(redeemer).setAccount(account);
             accountToRedeemer[account] = redeemer;
         }
         return redeemer;

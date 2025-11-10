@@ -3,6 +3,8 @@
 // (c) Gearbox Foundation, 2025.
 pragma solidity ^0.8.23;
 
+import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
+
 import {IKelpLRTWithdrawalManagerGateway} from "../../interfaces/kelp/IKelpLRTWithdrawalManagerGateway.sol";
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -27,6 +29,9 @@ contract KelpLRTWithdrawalManagerGateway is IKelpLRTWithdrawalManagerGateway {
     /// @notice The WETH token
     address public immutable weth;
 
+    /// @notice The master withdrawer contract
+    address public immutable masterWithdrawer;
+
     /// @notice Mapping of accounts to corresponding withdrawer contracts,
     ///         which interact directly with the withdrawal manager
     mapping(address => address payable) public accountToWithdrawer;
@@ -35,6 +40,7 @@ contract KelpLRTWithdrawalManagerGateway is IKelpLRTWithdrawalManagerGateway {
         withdrawalManager = _withdrawalManager;
         rsETH = _rsETH;
         weth = _weth;
+        masterWithdrawer = address(new KelpLRTWithdrawer(withdrawalManager, rsETH, weth));
     }
 
     /// @notice Initiates a withdrawal for a specific amount of rsETH
@@ -84,7 +90,8 @@ contract KelpLRTWithdrawalManagerGateway is IKelpLRTWithdrawalManagerGateway {
     function _getWithdrawerForAccount(address account) internal returns (address payable) {
         address payable withdrawer = accountToWithdrawer[account];
         if (withdrawer == address(0)) {
-            withdrawer = payable(address(new KelpLRTWithdrawer(withdrawalManager, rsETH, weth, account)));
+            withdrawer = payable(Clones.clone(masterWithdrawer));
+            KelpLRTWithdrawer(withdrawer).setAccount(account);
             accountToWithdrawer[account] = withdrawer;
         }
         return withdrawer;

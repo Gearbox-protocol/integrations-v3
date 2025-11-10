@@ -3,7 +3,6 @@
 // (c) Gearbox Foundation, 2025.
 pragma solidity ^0.8.23;
 
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
@@ -12,7 +11,7 @@ import {IMellowRedeemQueue, Request} from "../../integrations/mellow/IMellowRede
 /// @title Mellow Flexible Vaults redeemer
 /// @notice Having a separate redeemer address simplifies gateway logic,
 ///         as Mellow's own per-address redemption indexing can be used to track balances.
-contract MellowFlexibleRedeemer is Ownable {
+contract MellowFlexibleRedeemer {
     using SafeERC20 for IERC20;
 
     /// @notice Thrown when attempting to redeem when there are too many requests already, to avoid large
@@ -22,8 +21,14 @@ contract MellowFlexibleRedeemer is Ownable {
     /// @notice Thrown when attempting to claim when there are not enough assets to claim.
     error NotEnoughToClaimException();
 
+    /// @notice Thrown when attempting to call a function from a caller other than the gateway.
+    error CallerNotGatewayException();
+
     /// @notice The account to make redemptions on behalf of.
-    address public immutable account;
+    address public account;
+
+    /// @notice The gateway that is using this redeemer
+    address public immutable gateway;
 
     /// @notice Mellow redeem queue.
     address public immutable mellowRedeemQueue;
@@ -34,27 +39,38 @@ contract MellowFlexibleRedeemer is Ownable {
     /// @notice The LP token of the vault.
     address public immutable vaultToken;
 
-    constructor(address _mellowRedeemQueue, address _asset, address _vaultToken, address _account) {
-        _transferOwnership(msg.sender);
+    modifier gatewayOnly() {
+        if (msg.sender != gateway) {
+            revert CallerNotGatewayException();
+        }
+        _;
+    }
+
+    constructor(address _mellowRedeemQueue, address _asset, address _vaultToken) {
+        gateway = msg.sender;
         mellowRedeemQueue = _mellowRedeemQueue;
         asset = _asset;
         vaultToken = _vaultToken;
+    }
+
+    /// @notice Sets the account for this redeemer
+    /// @dev Intended to be called only once by the gateway on creation
+    function setAccount(address _account) external gatewayOnly {
         account = _account;
     }
 
     /// @notice Initiates a redemption through the queue with exact amount of shares
     /// @param shares The amount of shares to redeem
-    function redeem(uint256 shares) external onlyOwner {
+    function redeem(uint256 shares) external gatewayOnly {
         if (_getNumRequests() >= 5) {
             revert TooManyRequestsException();
         }
 
-        IERC20(vaultToken).forceApprove(mellowRedeemQueue, shares);
         IMellowRedeemQueue(mellowRedeemQueue).redeem(shares);
     }
 
     /// @notice Claims a specific amount from mature redemptions
-    function claim(uint256 amount) external onlyOwner {
+    function claim(uint256 amount) external gatewayOnly {
         (uint256 inQueue, uint256 onRedeemer, uint32[] memory timestamps) = _getClaimableAssetsAndTimestamps();
         if (inQueue != 0) {
             IMellowRedeemQueue(mellowRedeemQueue).claim(address(this), timestamps);
