@@ -85,7 +85,7 @@ contract KelpLRTWithdrawalManagerAdapter is AbstractAdapter, IKelpLRTWithdrawalM
 
         address creditAccount = _creditAccount();
 
-        uint256 amount = IERC20(asset).balanceOf(creditAccount);
+        uint256 amount = IERC20(rsETH).balanceOf(creditAccount);
 
         if (amount < leftoverAmount) return false;
 
