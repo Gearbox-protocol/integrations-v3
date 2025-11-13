@@ -22,7 +22,8 @@ import {
     PendlePairStatus,
     TokenDiffInput,
     TokenDiffOutput,
-    PendleStatus
+    PendleStatus,
+    PendleTokenType
 } from "../../../../interfaces/pendle/IPendleRouterAdapter.sol";
 import {PendleRouterAdapter} from "../../../../adapters/pendle/PendleRouterAdapter.sol";
 import {AdapterUnitTestHelper} from "../AdapterUnitTestHelper.sol";
@@ -45,7 +46,7 @@ contract PendleRouterAdapterUnitTest is
         _setUp();
 
         pendleRouter = makeAddr("PENDLE_ROUTER");
-        market = makeAddr("PENDLE_MARKET");
+        market = tokens[2];
         pt = tokens[1];
         yt = makeAddr("YT_TOKEN");
 
@@ -88,6 +89,18 @@ contract PendleRouterAdapterUnitTest is
 
         _revertsOnNonFacadeCaller();
         adapter.redeemDiffPyToToken(yt, 0, TokenDiffOutput(address(0), 0));
+
+        _revertsOnNonFacadeCaller();
+        adapter.addLiquiditySingleToken(address(0), market, 0, approxParams, input, limitOrderData);
+
+        _revertsOnNonFacadeCaller();
+        adapter.addLiquiditySingleTokenDiff(market, 0, approxParams, TokenDiffInput(address(0), 0));
+
+        _revertsOnNonFacadeCaller();
+        adapter.removeLiquiditySingleToken(address(0), market, 0, output, limitOrderData);
+
+        _revertsOnNonFacadeCaller();
+        adapter.removeLiquiditySingleTokenDiff(market, 0, TokenDiffOutput(address(0), 0));
     }
 
     /// @notice U:[PEND-3]: `swapExactTokenForPt` works as expected
@@ -319,22 +332,162 @@ contract PendleRouterAdapterUnitTest is
         assertTrue(useSafePrices, "Should use safe prices");
     }
 
-    /// @notice U:[PEND-9]: `setPairStatusBatch` works as expected
-    function test_U_PEND_09_setPairStatusBatch_works_as_expected() public {
+    /// @notice U:[PEND-9]: `addLiquiditySingleToken` works as expected
+    function test_U_PEND_09_addLiquiditySingleToken_works_as_expected() public {
+        TokenInput memory input;
+        input.tokenIn = tokens[0];
+        input.netTokenIn = 100;
+        input.tokenMintSy = tokens[0];
+
+        LimitOrderData memory limitOrderData;
+        ApproxParams memory approxParams;
+
+        address wrongMarket = makeAddr("WRONG_MARKET");
+
+        _setLpPairStatus(market, tokens[0], PendleStatus.ALLOWED);
+
+        vm.expectRevert(PairNotAllowedException.selector);
+        vm.prank(creditFacade);
+        adapter.addLiquiditySingleToken(address(0), wrongMarket, 0, approxParams, input, limitOrderData);
+
+        _readsActiveAccount();
+        _executesSwap({
+            tokenIn: tokens[0],
+            callData: abi.encodeCall(
+                IPendleRouter.addLiquiditySingleToken, (creditAccount, market, 0, approxParams, input, limitOrderData)
+            ),
+            requiresApproval: true
+        });
+
+        vm.prank(creditFacade);
+        bool useSafePrices = adapter.addLiquiditySingleToken(address(0), market, 0, approxParams, input, limitOrderData);
+
+        assertTrue(useSafePrices, "Should use safe prices");
+    }
+
+    /// @notice U:[PEND-10]: `addLiquiditySingleTokenDiff` works as expected
+    function test_U_PEND_10_addLiquiditySingleTokenDiff_works_as_expected() public diffTestCases {
+        deal({token: tokens[0], to: creditAccount, give: diffMintedAmount});
+
+        ApproxParams memory approxParams;
+
+        address wrongMarket = makeAddr("WRONG_MARKET");
+
+        _setLpPairStatus(market, tokens[0], PendleStatus.ALLOWED);
+
+        vm.expectRevert(PairNotAllowedException.selector);
+        vm.prank(creditFacade);
+        adapter.addLiquiditySingleTokenDiff(wrongMarket, 0, approxParams, TokenDiffInput(tokens[0], diffLeftoverAmount));
+
+        TokenInput memory input;
+        input.tokenIn = tokens[0];
+        input.netTokenIn = diffInputAmount;
+        input.tokenMintSy = tokens[0];
+
+        LimitOrderData memory limitOrderData;
+
+        _readsActiveAccount();
+        _executesSwap({
+            tokenIn: tokens[0],
+            callData: abi.encodeCall(
+                IPendleRouter.addLiquiditySingleToken,
+                (creditAccount, market, diffInputAmount / 2, approxParams, input, limitOrderData)
+            ),
+            requiresApproval: true
+        });
+
+        vm.prank(creditFacade);
+        bool useSafePrices = adapter.addLiquiditySingleTokenDiff(
+            market, 0.5e27, approxParams, TokenDiffInput(tokens[0], diffLeftoverAmount)
+        );
+
+        assertTrue(useSafePrices, "Should use safe prices");
+    }
+
+    /// @notice U:[PEND-11]: `removeLiquiditySingleToken` works as expected
+    function test_U_PEND_11_removeLiquiditySingleToken_works_as_expected() public {
+        TokenOutput memory output;
+        output.tokenOut = tokens[0];
+        output.minTokenOut = 90;
+        output.tokenRedeemSy = tokens[0];
+
+        LimitOrderData memory limitOrderData;
+
+        address wrongMarket = makeAddr("WRONG_MARKET");
+
+        _setLpPairStatus(market, tokens[0], PendleStatus.ALLOWED);
+
+        vm.expectRevert(PairNotAllowedException.selector);
+        vm.prank(creditFacade);
+        adapter.removeLiquiditySingleToken(address(0), wrongMarket, 100, output, limitOrderData);
+
+        _readsActiveAccount();
+        _executesSwap({
+            tokenIn: market,
+            callData: abi.encodeCall(
+                IPendleRouter.removeLiquiditySingleToken, (creditAccount, market, 100, output, limitOrderData)
+            ),
+            requiresApproval: true
+        });
+
+        vm.prank(creditFacade);
+        bool useSafePrices = adapter.removeLiquiditySingleToken(address(0), market, 100, output, limitOrderData);
+
+        assertTrue(useSafePrices, "Should use safe prices");
+    }
+
+    /// @notice U:[PEND-12]: `removeLiquiditySingleTokenDiff` works as expected
+    function test_U_PEND_12_removeLiquiditySingleTokenDiff_works_as_expected() public diffTestCases {
+        // Mock the balanceOf call for the market token
+        vm.mockCall(market, abi.encodeCall(IERC20.balanceOf, (creditAccount)), abi.encode(diffMintedAmount));
+
+        address wrongMarket = makeAddr("WRONG_MARKET");
+
+        _setLpPairStatus(market, tokens[0], PendleStatus.ALLOWED);
+
+        vm.expectRevert(PairNotAllowedException.selector);
+        vm.prank(creditFacade);
+        adapter.removeLiquiditySingleTokenDiff(wrongMarket, diffLeftoverAmount, TokenDiffOutput(tokens[0], 0.5e27));
+
+        TokenOutput memory output;
+        output.tokenOut = tokens[0];
+        output.minTokenOut = diffInputAmount / 2;
+        output.tokenRedeemSy = tokens[0];
+
+        LimitOrderData memory limitOrderData;
+
+        _readsActiveAccount();
+        _executesSwap({
+            tokenIn: market,
+            callData: abi.encodeCall(
+                IPendleRouter.removeLiquiditySingleToken, (creditAccount, market, diffInputAmount, output, limitOrderData)
+            ),
+            requiresApproval: true
+        });
+
+        vm.prank(creditFacade);
+        bool useSafePrices =
+            adapter.removeLiquiditySingleTokenDiff(market, diffLeftoverAmount, TokenDiffOutput(tokens[0], 0.5e27));
+
+        assertTrue(useSafePrices, "Should use safe prices");
+    }
+
+    /// @notice U:[PEND-13]: `setPairStatusBatch` works as expected
+    function test_U_PEND_13_setPairStatusBatch_works_as_expected() public {
         PendlePairStatus[] memory pairs;
 
         _revertsOnNonConfiguratorCaller();
         adapter.setPairStatusBatch(pairs);
 
         pairs = new PendlePairStatus[](2);
-        pairs[0] = PendlePairStatus(market, tokens[0], pt, PendleStatus.NOT_ALLOWED);
-        pairs[1] = PendlePairStatus(market, tokens[1], pt, PendleStatus.ALLOWED);
+        pairs[0] = PendlePairStatus(market, tokens[0], pt, PendleTokenType.PT, PendleStatus.NOT_ALLOWED);
+        pairs[1] = PendlePairStatus(market, tokens[1], pt, PendleTokenType.PT, PendleStatus.ALLOWED);
 
         vm.expectEmit(true, true, true, true);
-        emit SetPairStatus(market, tokens[0], pt, PendleStatus.NOT_ALLOWED);
+        emit SetPairStatus(market, tokens[0], pt, PendleTokenType.PT, PendleStatus.NOT_ALLOWED);
 
         vm.expectEmit(true, true, true, true);
-        emit SetPairStatus(market, tokens[1], pt, PendleStatus.ALLOWED);
+        emit SetPairStatus(market, tokens[1], pt, PendleTokenType.PT, PendleStatus.ALLOWED);
 
         vm.prank(configurator);
         adapter.setPairStatusBatch(pairs);
@@ -358,7 +511,39 @@ contract PendleRouterAdapterUnitTest is
         assertEq(allowedPairs[0].market, market, "Incorrect market in allowed pairs");
         assertEq(allowedPairs[0].inputToken, tokens[1], "Incorrect input token in allowed pairs");
         assertEq(allowedPairs[0].pendleToken, pt, "Incorrect pendle token in allowed pairs");
+        assertEq(
+            uint256(allowedPairs[0].pendleTokenType),
+            uint256(PendleTokenType.PT),
+            "Incorrect token type in allowed pairs"
+        );
         assertEq(uint256(allowedPairs[0].status), uint256(PendleStatus.ALLOWED), "Incorrect status in allowed pairs");
+
+        // Test LP pair validation
+        pairs = new PendlePairStatus[](2);
+        // This should fail because pendleToken != market for LP type
+        pairs[0] = PendlePairStatus(market, tokens[0], tokens[1], PendleTokenType.LP, PendleStatus.ALLOWED);
+        // This should succeed because pendleToken == market for LP type
+        pairs[1] = PendlePairStatus(market, tokens[0], market, PendleTokenType.LP, PendleStatus.ALLOWED);
+
+        vm.expectRevert(PendleTokenNotEqualToMarketException.selector);
+        vm.prank(configurator);
+        adapter.setPairStatusBatch(pairs);
+
+        // Now test with valid LP pair only
+        pairs = new PendlePairStatus[](1);
+        pairs[0] = PendlePairStatus(market, tokens[0], market, PendleTokenType.LP, PendleStatus.ALLOWED);
+
+        vm.expectEmit(true, true, true, true);
+        emit SetPairStatus(market, tokens[0], market, PendleTokenType.LP, PendleStatus.ALLOWED);
+
+        vm.prank(configurator);
+        adapter.setPairStatusBatch(pairs);
+
+        assertEq(
+            uint256(adapter.isPairAllowed(market, tokens[0], market)),
+            uint256(PendleStatus.ALLOWED),
+            "LP pair status is incorrect"
+        );
     }
 
     // ------- //
@@ -368,7 +553,15 @@ contract PendleRouterAdapterUnitTest is
     /// @dev Sets status for a Pendle pair
     function _setPairStatus(address _market, address _inputToken, address _pt, PendleStatus _status) internal {
         PendlePairStatus[] memory pairs = new PendlePairStatus[](1);
-        pairs[0] = PendlePairStatus(_market, _inputToken, _pt, _status);
+        pairs[0] = PendlePairStatus(_market, _inputToken, _pt, PendleTokenType.PT, _status);
+        vm.prank(configurator);
+        adapter.setPairStatusBatch(pairs);
+    }
+
+    /// @dev Sets status for a Pendle LP pair
+    function _setLpPairStatus(address _market, address _inputToken, PendleStatus _status) internal {
+        PendlePairStatus[] memory pairs = new PendlePairStatus[](1);
+        pairs[0] = PendlePairStatus(_market, _inputToken, _market, PendleTokenType.LP, _status);
         vm.prank(configurator);
         adapter.setPairStatusBatch(pairs);
     }

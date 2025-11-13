@@ -100,6 +100,23 @@ interface IPendleRouter {
     function redeemPyToToken(address receiver, address YT, uint256 netPyIn, TokenOutput calldata output)
         external
         returns (uint256 netTokenOut, uint256 netSyInterm);
+
+    function addLiquiditySingleToken(
+        address receiver,
+        address market,
+        uint256 minLpOut,
+        ApproxParams calldata guessPtReceivedFromSy,
+        TokenInput calldata input,
+        LimitOrderData calldata limit
+    ) external payable returns (uint256 netLpOut, uint256 netSyFee, uint256 netSyInterm);
+
+    function removeLiquiditySingleToken(
+        address receiver,
+        address market,
+        uint256 netLpToRemove,
+        TokenOutput calldata output,
+        LimitOrderData calldata limit
+    ) external returns (uint256 netTokenOut, uint256 netSyFee, uint256 netSyInterm);
 }
 
 interface IPendleMarket {
