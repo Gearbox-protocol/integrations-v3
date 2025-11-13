@@ -41,26 +41,27 @@ contract KelpLRTDepositPoolAdapterUnitTest is AdapterUnitTestHelper {
 
         gateway = address(new KelpLRTDepositPoolGateway(weth, depositPool));
 
-        adapter = new KelpLRTDepositPoolAdapter(address(creditManager), gateway);
+        adapter = new KelpLRTDepositPoolAdapter(address(creditManager), gateway, "ref");
     }
 
     /// @notice U:[KDP-1]: Constructor works as expected
     function test_U_KDP_01_constructor_works_as_expected() public {
         _readsTokenMask(rsETH);
 
-        adapter = new KelpLRTDepositPoolAdapter(address(creditManager), gateway);
+        adapter = new KelpLRTDepositPoolAdapter(address(creditManager), gateway, "ref");
 
         assertEq(adapter.creditManager(), address(creditManager), "Incorrect creditManager");
         assertEq(adapter.targetContract(), gateway, "Incorrect targetContract");
+        assertEq(adapter.referralId(), "ref", "Incorrect referralId");
     }
 
     /// @notice U:[KDP-2]: Wrapper functions revert on wrong caller
     function test_U_KDP_02_wrapper_functions_revert_on_wrong_caller() public {
         _revertsOnNonFacadeCaller();
-        adapter.depositAsset(stETH, 1000, 900, "ref");
+        adapter.depositAsset(stETH, 1000, 900, "");
 
         _revertsOnNonFacadeCaller();
-        adapter.depositAssetDiff(stETH, 100, 9e26, "ref");
+        adapter.depositAssetDiff(stETH, 100, 9e26);
 
         _revertsOnNonConfiguratorCaller();
         adapter.setAssetStatusBatch(new address[](0), new bool[](0));
@@ -70,7 +71,7 @@ contract KelpLRTDepositPoolAdapterUnitTest is AdapterUnitTestHelper {
     function test_U_KDP_03_depositAsset_works_as_expected() public {
         vm.expectRevert(abi.encodeWithSelector(IKelpLRTDepositPoolAdapter.AssetNotAllowedException.selector, stETH));
         vm.prank(creditFacade);
-        adapter.depositAsset(stETH, 1000, 900, "ref");
+        adapter.depositAsset(stETH, 1000, 900, "");
 
         _setAssetStatus(stETH, true);
 
@@ -81,7 +82,7 @@ contract KelpLRTDepositPoolAdapterUnitTest is AdapterUnitTestHelper {
         });
 
         vm.prank(creditFacade);
-        bool useSafePrices = adapter.depositAsset(stETH, 1000, 900, "ref");
+        bool useSafePrices = adapter.depositAsset(stETH, 1000, 900, "");
         assertTrue(useSafePrices);
     }
 
@@ -89,7 +90,7 @@ contract KelpLRTDepositPoolAdapterUnitTest is AdapterUnitTestHelper {
     function test_U_KDP_04_depositAssetDiff_works_as_expected() public diffTestCases {
         vm.expectRevert(abi.encodeWithSelector(IKelpLRTDepositPoolAdapter.AssetNotAllowedException.selector, stETH));
         vm.prank(creditFacade);
-        adapter.depositAssetDiff(stETH, 100, 9e26, "ref");
+        adapter.depositAssetDiff(stETH, 100, 9e26);
 
         _setAssetStatus(stETH, true);
 
@@ -105,7 +106,7 @@ contract KelpLRTDepositPoolAdapterUnitTest is AdapterUnitTestHelper {
         });
 
         vm.prank(creditFacade);
-        bool useSafePrices = adapter.depositAssetDiff(stETH, diffLeftoverAmount, 9e26, "ref");
+        bool useSafePrices = adapter.depositAssetDiff(stETH, diffLeftoverAmount, 9e26);
         assertTrue(useSafePrices);
     }
 
@@ -118,7 +119,7 @@ contract KelpLRTDepositPoolAdapterUnitTest is AdapterUnitTestHelper {
         _readsActiveAccount();
 
         vm.prank(creditFacade);
-        bool useSafePrices = adapter.depositAssetDiff(stETH, 101, 9e26, "ref");
+        bool useSafePrices = adapter.depositAssetDiff(stETH, 101, 9e26);
         assertFalse(useSafePrices);
     }
 

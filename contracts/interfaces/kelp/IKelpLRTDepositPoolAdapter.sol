@@ -16,13 +16,13 @@ interface IKelpLRTDepositPoolAdapter is IAdapter {
     /// @notice Emitted when the array lengths do not match
     error IncorrectArrayLengthException();
 
+    function referralId() external view returns (string memory);
+
     function depositAsset(address asset, uint256 amount, uint256 minRSETHAmountExpected, string calldata referralId)
         external
         returns (bool);
 
-    function depositAssetDiff(address asset, uint256 leftoverAmount, uint256 minRateRAY, string calldata referralId)
-        external
-        returns (bool);
+    function depositAssetDiff(address asset, uint256 leftoverAmount, uint256 minRateRAY) external returns (bool);
 
     function setAssetStatusBatch(address[] calldata assets, bool[] calldata allowed) external;
 

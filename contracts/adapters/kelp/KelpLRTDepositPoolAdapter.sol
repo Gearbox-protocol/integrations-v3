@@ -23,13 +23,17 @@ contract KelpLRTDepositPoolAdapter is AbstractAdapter, IKelpLRTDepositPoolAdapte
     /// @dev Set of allowed underlying addresses
     EnumerableSet.AddressSet internal _allowedAssets;
 
+    /// @notice Referral ID for the adapter
+    string public override referralId;
+
     /// @notice Constructor
     /// @param _creditManager Credit manager address
     /// @param _depositPoolGateway Deposit pool gateway address
-    constructor(address _creditManager, address _depositPoolGateway)
+    constructor(address _creditManager, address _depositPoolGateway, string memory _referralId)
         AbstractAdapter(_creditManager, _depositPoolGateway)
     {
         address rsETH = IKelpLRTDepositPoolGateway(_depositPoolGateway).rsETH();
+        referralId = _referralId;
         _getMaskOrRevert(rsETH);
     }
 
@@ -37,15 +41,15 @@ contract KelpLRTDepositPoolAdapter is AbstractAdapter, IKelpLRTDepositPoolAdapte
     /// @param asset Asset to deposit
     /// @param amount Amount of asset to deposit
     /// @param minRSETHAmountExpected Minimum amount of rsETH to receive
-    /// @param referralId Referral ID
-    function depositAsset(address asset, uint256 amount, uint256 minRSETHAmountExpected, string calldata referralId)
+    /// @dev `referralId` is ignored as it is hardcoded
+    function depositAsset(address asset, uint256 amount, uint256 minRSETHAmountExpected, string calldata)
         external
         creditFacadeOnly
         returns (bool)
     {
         if (!_allowedAssets.contains(asset)) revert AssetNotAllowedException(asset);
 
-        _depositAsset(asset, amount, minRSETHAmountExpected, referralId);
+        _depositAsset(asset, amount, minRSETHAmountExpected);
         return true;
     }
 
@@ -53,8 +57,7 @@ contract KelpLRTDepositPoolAdapter is AbstractAdapter, IKelpLRTDepositPoolAdapte
     /// @param asset Asset to deposit
     /// @param leftoverAmount Amount of asset to leave on the credit account
     /// @param minRateRAY Minimum rate of rsETH to receive
-    /// @param referralId Referral ID
-    function depositAssetDiff(address asset, uint256 leftoverAmount, uint256 minRateRAY, string calldata referralId)
+    function depositAssetDiff(address asset, uint256 leftoverAmount, uint256 minRateRAY)
         external
         creditFacadeOnly
         returns (bool)
@@ -70,14 +73,12 @@ contract KelpLRTDepositPoolAdapter is AbstractAdapter, IKelpLRTDepositPoolAdapte
             amount -= leftoverAmount;
         }
 
-        _depositAsset(asset, amount, amount * minRateRAY / RAY, referralId);
+        _depositAsset(asset, amount, amount * minRateRAY / RAY);
         return true;
     }
 
     /// @notice Internal implementation of the `depositAsset` function
-    function _depositAsset(address asset, uint256 amount, uint256 minRSETHAmountExpected, string calldata referralId)
-        internal
-    {
+    function _depositAsset(address asset, uint256 amount, uint256 minRSETHAmountExpected) internal {
         _executeSwapSafeApprove(
             asset,
             abi.encodeCall(IKelpLRTDepositPoolGateway.depositAsset, (asset, amount, minRSETHAmountExpected, referralId))
