@@ -86,13 +86,15 @@ contract MellowFlexibleRedeemer {
 
     /// @dev Internal function to get the number of existing requests for the account
     function _getNumRequests() internal view returns (uint256) {
-        Request[] memory requests = IMellowRedeemQueue(mellowRedeemQueue).requestsOf(account, 0, type(uint256).max);
+        Request[] memory requests =
+            IMellowRedeemQueue(mellowRedeemQueue).requestsOf(address(this), 0, type(uint256).max);
         return requests.length;
     }
 
     /// @notice Returns the amount of shares pending for a redemption
     function getPendingShares() external view returns (uint256 pendingShares) {
-        Request[] memory requests = IMellowRedeemQueue(mellowRedeemQueue).requestsOf(account, 0, type(uint256).max);
+        Request[] memory requests =
+            IMellowRedeemQueue(mellowRedeemQueue).requestsOf(address(this), 0, type(uint256).max);
         for (uint256 i = 0; i < requests.length; i++) {
             if (!requests[i].isClaimable) {
                 pendingShares += requests[i].shares;
@@ -113,7 +115,8 @@ contract MellowFlexibleRedeemer {
         view
         returns (uint256 inQueue, uint256 onRedeemer, uint32[] memory timestamps)
     {
-        Request[] memory requests = IMellowRedeemQueue(mellowRedeemQueue).requestsOf(account, 0, type(uint256).max);
+        Request[] memory requests =
+            IMellowRedeemQueue(mellowRedeemQueue).requestsOf(address(this), 0, type(uint256).max);
         timestamps = new uint32[](requests.length);
         for (uint256 i = 0; i < requests.length; i++) {
             if (requests[i].isClaimable) {
