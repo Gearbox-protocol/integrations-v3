@@ -10,6 +10,8 @@ import {IVersion} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IVer
 interface IMellowFlexibleRedeemGateway is IVersion {
     function vaultToken() external view returns (address);
     function asset() external view returns (address);
+    function mellowRedeemQueue() external view returns (address);
+    function accountToRedeemer(address account) external view returns (address);
     function getPendingShares(address account) external view returns (uint256);
     function getClaimableAssets(address account) external view returns (uint256);
 

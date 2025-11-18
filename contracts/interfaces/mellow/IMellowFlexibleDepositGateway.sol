@@ -10,6 +10,8 @@ import {IVersion} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IVer
 interface IMellowFlexibleDepositGateway is IVersion {
     function vaultToken() external view returns (address);
     function asset() external view returns (address);
+    function mellowDepositQueue() external view returns (address);
+    function accountToDepositor(address account) external view returns (address);
     function getPendingAssets(address account) external view returns (uint256);
     function getClaimableShares(address account) external view returns (uint256);
 
