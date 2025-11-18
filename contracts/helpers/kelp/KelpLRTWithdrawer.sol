@@ -109,7 +109,7 @@ contract KelpLRTWithdrawer {
 
         for (uint256 i = 0; i < numRequests; i++) {
             (, uint256 expectedAssetAmount,, uint256 userNonce) =
-                IKelpLRTWithdrawalManager(withdrawalManager).getUserWithdrawalRequest(asset, account, i);
+                IKelpLRTWithdrawalManager(withdrawalManager).getUserWithdrawalRequest(asset, address(this), i);
 
             if (userNonce >= nextLockedNonce) {
                 pendingAssets += expectedAssetAmount;
@@ -125,7 +125,8 @@ contract KelpLRTWithdrawer {
 
     /// @dev Internal function to get the number of existing requests for an asset
     function _getNumRequests(address asset) internal view returns (uint256) {
-        (uint128 start, uint128 end) = IKelpLRTWithdrawalManager(withdrawalManager).userAssociatedNonces(asset, account);
+        (uint128 start, uint128 end) =
+            IKelpLRTWithdrawalManager(withdrawalManager).userAssociatedNonces(asset, address(this));
         return uint256(end - start);
     }
 
@@ -143,7 +144,7 @@ contract KelpLRTWithdrawer {
 
         for (uint256 i = 0; i < numRequests; i++) {
             (, uint256 expectedAssetAmount,, uint256 userNonce) =
-                IKelpLRTWithdrawalManager(withdrawalManager).getUserWithdrawalRequest(asset, account, i);
+                IKelpLRTWithdrawalManager(withdrawalManager).getUserWithdrawalRequest(asset, address(this), i);
 
             if (userNonce < nextLockedNonce) {
                 inWithdrawalManager += expectedAssetAmount;

@@ -91,7 +91,7 @@ contract MellowFlexibleDepositor {
         (uint256 inQueue, uint256 onDepositor) = _getClaimableShares();
 
         if (inQueue != 0) {
-            IMellowDepositQueue(mellowDepositQueue).claim(account);
+            IMellowDepositQueue(mellowDepositQueue).claim(address(this));
             onDepositor = IERC20(vaultToken).balanceOf(address(this));
         }
 
@@ -114,7 +114,7 @@ contract MellowFlexibleDepositor {
     }
 
     function _getNonClaimablePendingAssets() internal view returns (uint256) {
-        uint256 claimable = IMellowDepositQueue(mellowDepositQueue).claimableOf(account);
+        uint256 claimable = IMellowDepositQueue(mellowDepositQueue).claimableOf(address(this));
         if (claimable > 0) return 0;
         return _getPendingAssets();
     }
@@ -127,7 +127,9 @@ contract MellowFlexibleDepositor {
 
     /// @dev Internal function to get the amount of shares claimable from mature deposits, still in the queue and already on the depositor
     function _getClaimableShares() internal view returns (uint256 inQueue, uint256 onDepositor) {
-        return
-            (IMellowDepositQueue(mellowDepositQueue).claimableOf(account), IERC20(vaultToken).balanceOf(address(this)));
+        return (
+            IMellowDepositQueue(mellowDepositQueue).claimableOf(address(this)),
+            IERC20(vaultToken).balanceOf(address(this))
+        );
     }
 }
