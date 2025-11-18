@@ -10,7 +10,7 @@ import {IVersion} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IVer
 interface IKelpLRTWithdrawalManagerGateway is IVersion {
     function rsETH() external view returns (address);
     function withdrawalManager() external view returns (address);
-    function accountToWithdrawer(address account) external view returns (address);
+    function accountToWithdrawer(address account) external view returns (address payable);
     function initiateWithdrawal(address asset, uint256 rsETHUnstaked, string calldata referralId) external;
     function completeWithdrawal(address asset, uint256 amount, string calldata referralId) external;
     function getPendingAssetAmount(address account, address asset) external view returns (uint256);

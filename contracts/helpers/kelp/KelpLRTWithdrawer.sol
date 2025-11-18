@@ -108,11 +108,11 @@ contract KelpLRTWithdrawer {
         uint256 nextLockedNonce = IKelpLRTWithdrawalManager(withdrawalManager).nextLockedNonce(asset);
 
         for (uint256 i = 0; i < numRequests; i++) {
-            (, uint256 expectedAssetAmount,, uint256 userNonce) =
+            (uint256 rsETHAmount,,, uint256 userNonce) =
                 IKelpLRTWithdrawalManager(withdrawalManager).getUserWithdrawalRequest(asset, address(this), i);
 
             if (userNonce >= nextLockedNonce) {
-                pendingAssets += expectedAssetAmount;
+                pendingAssets += IKelpLRTWithdrawalManager(withdrawalManager).getExpectedAssetAmount(asset, rsETHAmount);
             }
         }
     }
