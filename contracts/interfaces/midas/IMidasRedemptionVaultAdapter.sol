@@ -10,6 +10,9 @@ interface IMidasRedemptionVaultAdapter is IAdapter, IPhantomTokenAdapter {
     /// @dev Thrown when trying to redeem with a non-whitelisted token
     error TokenNotAllowedException();
 
+    /// @dev Thrown when trying to set a phantom token that does not match the output token
+    error PhantomTokenTokenOutMismatchException();
+
     /// @notice Midas allowed token status structure
     struct MidasAllowedTokenStatus {
         address token; // Output token address

@@ -7,7 +7,6 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
-import {ICreditManagerV3} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditManagerV3.sol";
 import {WAD, RAY} from "@gearbox-protocol/core-v3/contracts/libraries/Constants.sol";
 
 import {AbstractAdapter} from "../AbstractAdapter.sol";
@@ -102,6 +101,7 @@ contract MidasIssuanceVaultAdapter is AbstractAdapter, IMidasIssuanceVaultAdapte
     /// @dev Converts the token amount to 18 decimals, which is accepted by Midas
     function _convertToE18(uint256 amount, address token) internal view returns (uint256) {
         uint256 tokenUnit = 10 ** IERC20Metadata(token).decimals();
+        if (tokenUnit == WAD) return amount;
         return amount * WAD / tokenUnit;
     }
 

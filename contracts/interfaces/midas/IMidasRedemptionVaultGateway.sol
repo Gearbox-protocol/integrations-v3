@@ -6,8 +6,19 @@ pragma solidity ^0.8.23;
 import {IVersion} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IVersion.sol";
 
 interface IMidasRedemptionVaultGateway is IVersion {
+    error RedemptionNotFulfilledException();
+    error InvalidRequestException();
+    error AmountExceedsAvailableException();
+    error RequestNotCancelledOrManuallyClearedException();
+    error NoPendingRedemptionException();
+    error HasPendingRedemptionException();
+    error ZeroAmountException();
+    error AmountIsLessThanRequiredException();
+
     /// @notice Structure to store pending redemption requests
     struct PendingRedemption {
+        bool isActive;
+        bool isManuallyCleared;
         uint256 requestId;
         uint256 timestamp;
         uint256 remainder;
@@ -23,7 +34,7 @@ interface IMidasRedemptionVaultGateway is IVersion {
     function pendingRedemptions(address user)
         external
         view
-        returns (uint256 requestId, uint256 timestamp, uint256 remainder);
+        returns (bool isActive, bool isManuallyCleared, uint256 requestId, uint256 timestamp, uint256 remainder);
 
     /// @notice Instantly redeems mToken for output token
     /// @param tokenOut Token to receive from redemption
@@ -44,4 +55,9 @@ interface IMidasRedemptionVaultGateway is IVersion {
     /// @param user User address
     /// @param tokenOut Token to check (returns 0 if different from pending redemption token)
     function pendingTokenOutAmount(address user, address tokenOut) external view returns (uint256);
+
+    /// @notice Returns the output token of the currently pending request
+    /// @param account account address to check
+    /// @return Output token address
+    function getCurrentRequestTokenOut(address account) external view returns (address);
 }
