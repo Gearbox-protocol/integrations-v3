@@ -14,6 +14,8 @@ import {
     UnwindingPosition
 } from "../../integrations/infinifi/IInfinifiGateway.sol";
 
+import {WAD} from "@gearbox-protocol/core-v3/contracts/libraries/Constants.sol";
+
 import {IInfinifiUnwindingGateway, UserUnwindingData} from "../../interfaces/infinifi/IInfinifiUnwindingGateway.sol";
 
 /// @title Infinifi Withdrawal Gateway
@@ -23,6 +25,7 @@ contract InfinifiUnwindingGateway is IInfinifiUnwindingGateway {
 
     uint256 internal constant EPOCH = 1 weeks;
     uint256 internal constant EPOCH_OFFSET = 3 days;
+    uint256 internal constant MIN_UNWINDING_SHARES = WAD;
 
     address public immutable iUSD;
 
@@ -44,6 +47,8 @@ contract InfinifiUnwindingGateway is IInfinifiUnwindingGateway {
     }
 
     function startUnwinding(uint256 shares, uint32 unwindingEpochs) external {
+        if (shares < MIN_UNWINDING_SHARES) revert InsufficientSharesException();
+
         if (block.timestamp == lastUnwindingTimestamp) revert MoreThanOneUnwindingPerBlockException();
 
         UserUnwindingData storage userUnwindingData = userToUnwindingData[msg.sender];
