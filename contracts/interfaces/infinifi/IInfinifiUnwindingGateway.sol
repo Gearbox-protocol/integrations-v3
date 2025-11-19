@@ -28,6 +28,9 @@ interface IInfinifiUnwindingGatewayExceptions {
 
     /// @notice Thrown when a user attempts to withdraw an unwinding for more assets than are pending
     error InsufficientPendingAssetsException();
+
+    /// @notice Thrown when a user attempts to unwind less than the minimum number of shares
+    error InsufficientSharesException();
 }
 
 interface IInfinifiUnwindingGateway is IVersion, IInfinifiUnwindingGatewayExceptions {
