@@ -76,10 +76,8 @@ contract KelpLRTWithdrawer {
             revert TooManyRequestsException();
         }
 
-        IERC20(asset).forceApprove(withdrawalManager, rsETHUnstaked);
-        IKelpLRTWithdrawalManager(withdrawalManager).initiateWithdrawal(
-            asset == weth ? ETH : asset, rsETHUnstaked, referralId
-        );
+        IERC20(rsETH).forceApprove(withdrawalManager, rsETHUnstaked);
+        IKelpLRTWithdrawalManager(withdrawalManager).initiateWithdrawal(_assetOrETH(asset), rsETHUnstaked, referralId);
     }
 
     /// @notice Completes a withdrawal for a specific amount of assets
@@ -90,7 +88,7 @@ contract KelpLRTWithdrawer {
         (uint256 inWithdrawalManager, uint256 onWithdrawer, uint256 numClaimableRequests) = _getClaimableAssets(asset);
         if (inWithdrawalManager != 0) {
             for (uint256 i = 0; i < numClaimableRequests; i++) {
-                IKelpLRTWithdrawalManager(withdrawalManager).completeWithdrawal(asset, referralId);
+                IKelpLRTWithdrawalManager(withdrawalManager).completeWithdrawal(_assetOrETH(asset), referralId);
             }
             onWithdrawer = IERC20(asset).balanceOf(address(this));
         }
@@ -105,14 +103,15 @@ contract KelpLRTWithdrawer {
     /// @notice Returns the amount of assets pending withdrawal
     function getPendingAssetAmount(address asset) external view returns (uint256 pendingAssets) {
         uint256 numRequests = _getNumRequests(asset);
-        uint256 nextLockedNonce = IKelpLRTWithdrawalManager(withdrawalManager).nextLockedNonce(asset);
+        uint256 nextLockedNonce = IKelpLRTWithdrawalManager(withdrawalManager).nextLockedNonce(_assetOrETH(asset));
 
         for (uint256 i = 0; i < numRequests; i++) {
-            (uint256 rsETHAmount,,, uint256 userNonce) =
-                IKelpLRTWithdrawalManager(withdrawalManager).getUserWithdrawalRequest(asset, address(this), i);
+            (uint256 rsETHAmount,,, uint256 userNonce) = IKelpLRTWithdrawalManager(withdrawalManager)
+                .getUserWithdrawalRequest(_assetOrETH(asset), address(this), i);
 
             if (userNonce >= nextLockedNonce) {
-                pendingAssets += IKelpLRTWithdrawalManager(withdrawalManager).getExpectedAssetAmount(asset, rsETHAmount);
+                pendingAssets +=
+                    IKelpLRTWithdrawalManager(withdrawalManager).getExpectedAssetAmount(_assetOrETH(asset), rsETHAmount);
             }
         }
     }
@@ -126,7 +125,7 @@ contract KelpLRTWithdrawer {
     /// @dev Internal function to get the number of existing requests for an asset
     function _getNumRequests(address asset) internal view returns (uint256) {
         (uint128 start, uint128 end) =
-            IKelpLRTWithdrawalManager(withdrawalManager).userAssociatedNonces(asset, address(this));
+            IKelpLRTWithdrawalManager(withdrawalManager).userAssociatedNonces(_assetOrETH(asset), address(this));
         return uint256(end - start);
     }
 
@@ -140,17 +139,22 @@ contract KelpLRTWithdrawer {
         onWithdrawer = IERC20(asset).balanceOf(address(this));
 
         uint256 numRequests = _getNumRequests(asset);
-        uint256 nextLockedNonce = IKelpLRTWithdrawalManager(withdrawalManager).nextLockedNonce(asset);
+        uint256 nextLockedNonce = IKelpLRTWithdrawalManager(withdrawalManager).nextLockedNonce(_assetOrETH(asset));
 
         for (uint256 i = 0; i < numRequests; i++) {
-            (, uint256 expectedAssetAmount,, uint256 userNonce) =
-                IKelpLRTWithdrawalManager(withdrawalManager).getUserWithdrawalRequest(asset, address(this), i);
+            (, uint256 expectedAssetAmount,, uint256 userNonce) = IKelpLRTWithdrawalManager(withdrawalManager)
+                .getUserWithdrawalRequest(_assetOrETH(asset), address(this), i);
 
             if (userNonce < nextLockedNonce) {
                 inWithdrawalManager += expectedAssetAmount;
                 numClaimableRequests++;
             }
         }
+    }
+
+    /// @dev Internal function that converts WETH to ETH and returns other asset addresses as is
+    function _assetOrETH(address asset) internal view returns (address) {
+        return asset == weth ? ETH : asset;
     }
 
     receive() external payable {

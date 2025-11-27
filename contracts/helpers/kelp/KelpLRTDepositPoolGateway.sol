@@ -67,6 +67,7 @@ contract KelpLRTDepositPoolGateway is IKelpLRTDepositPoolGateway {
     function _depositAsset(address asset, uint256 amount, uint256 minRSETHAmountExpected, string calldata referralId)
         internal
     {
+        IERC20(asset).forceApprove(depositPool, amount);
         IKelpLRTDepositPool(depositPool).depositAsset(asset, amount, minRSETHAmountExpected, referralId);
     }
 
