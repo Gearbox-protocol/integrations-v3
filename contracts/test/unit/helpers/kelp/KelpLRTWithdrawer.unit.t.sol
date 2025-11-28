@@ -53,7 +53,7 @@ contract KelpLRTWithdrawerUnitTest is Test {
     function test_U_KLW_02_initiateWithdrawal_works() public {
         vm.mockCall(
             withdrawalManager,
-            abi.encodeCall(IKelpLRTWithdrawalManager.userAssociatedNonces, (stETH, account)),
+            abi.encodeCall(IKelpLRTWithdrawalManager.userAssociatedNonces, (stETH, address(withdrawer))),
             abi.encode(uint128(0), uint128(1))
         );
 
@@ -67,7 +67,7 @@ contract KelpLRTWithdrawerUnitTest is Test {
 
         vm.mockCall(
             withdrawalManager,
-            abi.encodeCall(IKelpLRTWithdrawalManager.userAssociatedNonces, (weth, account)),
+            abi.encodeCall(IKelpLRTWithdrawalManager.userAssociatedNonces, (ETH, address(withdrawer))),
             abi.encode(uint128(0), uint128(0))
         );
 
@@ -82,7 +82,7 @@ contract KelpLRTWithdrawerUnitTest is Test {
     function test_U_KLW_03_initiateWithdrawal_reverts_too_many_requests() public {
         vm.mockCall(
             withdrawalManager,
-            abi.encodeCall(IKelpLRTWithdrawalManager.userAssociatedNonces, (stETH, account)),
+            abi.encodeCall(IKelpLRTWithdrawalManager.userAssociatedNonces, (stETH, address(withdrawer))),
             abi.encode(uint128(0), uint128(5))
         );
 
@@ -94,7 +94,7 @@ contract KelpLRTWithdrawerUnitTest is Test {
     function test_U_KLW_04_completeWithdrawal_works() public {
         vm.mockCall(
             withdrawalManager,
-            abi.encodeCall(IKelpLRTWithdrawalManager.userAssociatedNonces, (stETH, account)),
+            abi.encodeCall(IKelpLRTWithdrawalManager.userAssociatedNonces, (stETH, address(withdrawer))),
             abi.encode(uint128(0), uint128(2))
         );
 
@@ -106,13 +106,13 @@ contract KelpLRTWithdrawerUnitTest is Test {
 
         vm.mockCall(
             withdrawalManager,
-            abi.encodeCall(IKelpLRTWithdrawalManager.getUserWithdrawalRequest, (stETH, account, 0)),
+            abi.encodeCall(IKelpLRTWithdrawalManager.getUserWithdrawalRequest, (stETH, address(withdrawer), 0)),
             abi.encode(uint256(0), uint256(100), uint256(0), uint256(0))
         );
 
         vm.mockCall(
             withdrawalManager,
-            abi.encodeCall(IKelpLRTWithdrawalManager.getUserWithdrawalRequest, (stETH, account, 1)),
+            abi.encodeCall(IKelpLRTWithdrawalManager.getUserWithdrawalRequest, (stETH, address(withdrawer), 1)),
             abi.encode(uint256(0), uint256(200), uint256(0), uint256(1))
         );
 
@@ -131,7 +131,7 @@ contract KelpLRTWithdrawerUnitTest is Test {
     function test_U_KLW_05_completeWithdrawal_with_existing_balance() public {
         vm.mockCall(
             withdrawalManager,
-            abi.encodeCall(IKelpLRTWithdrawalManager.userAssociatedNonces, (stETH, account)),
+            abi.encodeCall(IKelpLRTWithdrawalManager.userAssociatedNonces, (stETH, address(withdrawer))),
             abi.encode(uint128(0), uint128(0))
         );
 
@@ -153,7 +153,7 @@ contract KelpLRTWithdrawerUnitTest is Test {
     function test_U_KLW_06_completeWithdrawal_reverts_not_enough() public {
         vm.mockCall(
             withdrawalManager,
-            abi.encodeCall(IKelpLRTWithdrawalManager.userAssociatedNonces, (stETH, account)),
+            abi.encodeCall(IKelpLRTWithdrawalManager.userAssociatedNonces, (stETH, address(withdrawer))),
             abi.encode(uint128(0), uint128(0))
         );
 
@@ -173,7 +173,7 @@ contract KelpLRTWithdrawerUnitTest is Test {
     function test_U_KLW_07_getPendingAssetAmount_works() public {
         vm.mockCall(
             withdrawalManager,
-            abi.encodeCall(IKelpLRTWithdrawalManager.userAssociatedNonces, (stETH, account)),
+            abi.encodeCall(IKelpLRTWithdrawalManager.userAssociatedNonces, (stETH, address(withdrawer))),
             abi.encode(uint128(0), uint128(3))
         );
 
@@ -185,31 +185,49 @@ contract KelpLRTWithdrawerUnitTest is Test {
 
         vm.mockCall(
             withdrawalManager,
-            abi.encodeCall(IKelpLRTWithdrawalManager.getUserWithdrawalRequest, (stETH, account, 0)),
-            abi.encode(uint256(0), uint256(100), uint256(0), uint256(0))
+            abi.encodeCall(IKelpLRTWithdrawalManager.getUserWithdrawalRequest, (stETH, address(withdrawer), 0)),
+            abi.encode(uint256(100), uint256(110), uint256(0), uint256(0))
         );
 
         vm.mockCall(
             withdrawalManager,
-            abi.encodeCall(IKelpLRTWithdrawalManager.getUserWithdrawalRequest, (stETH, account, 1)),
-            abi.encode(uint256(0), uint256(200), uint256(0), uint256(1))
+            abi.encodeCall(IKelpLRTWithdrawalManager.getUserWithdrawalRequest, (stETH, address(withdrawer), 1)),
+            abi.encode(uint256(200), uint256(220), uint256(0), uint256(1))
         );
 
         vm.mockCall(
             withdrawalManager,
-            abi.encodeCall(IKelpLRTWithdrawalManager.getUserWithdrawalRequest, (stETH, account, 2)),
-            abi.encode(uint256(0), uint256(300), uint256(0), uint256(2))
+            abi.encodeCall(IKelpLRTWithdrawalManager.getUserWithdrawalRequest, (stETH, address(withdrawer), 2)),
+            abi.encode(uint256(300), uint256(330), uint256(0), uint256(2))
+        );
+
+        vm.mockCall(
+            withdrawalManager,
+            abi.encodeCall(IKelpLRTWithdrawalManager.getExpectedAssetAmount, (stETH, 100)),
+            abi.encode(110)
+        );
+
+        vm.mockCall(
+            withdrawalManager,
+            abi.encodeCall(IKelpLRTWithdrawalManager.getExpectedAssetAmount, (stETH, 200)),
+            abi.encode(220)
+        );
+
+        vm.mockCall(
+            withdrawalManager,
+            abi.encodeCall(IKelpLRTWithdrawalManager.getExpectedAssetAmount, (stETH, 300)),
+            abi.encode(330)
         );
 
         uint256 pending = withdrawer.getPendingAssetAmount(stETH);
-        assertEq(pending, 300);
+        assertEq(pending, 330);
     }
 
     /// @notice U:[KLW-8]: getClaimableAssetAmount works as expected
     function test_U_KLW_08_getClaimableAssetAmount_works() public {
         vm.mockCall(
             withdrawalManager,
-            abi.encodeCall(IKelpLRTWithdrawalManager.userAssociatedNonces, (stETH, account)),
+            abi.encodeCall(IKelpLRTWithdrawalManager.userAssociatedNonces, (stETH, address(withdrawer))),
             abi.encode(uint128(0), uint128(2))
         );
 
@@ -221,13 +239,13 @@ contract KelpLRTWithdrawerUnitTest is Test {
 
         vm.mockCall(
             withdrawalManager,
-            abi.encodeCall(IKelpLRTWithdrawalManager.getUserWithdrawalRequest, (stETH, account, 0)),
+            abi.encodeCall(IKelpLRTWithdrawalManager.getUserWithdrawalRequest, (stETH, address(withdrawer), 0)),
             abi.encode(uint256(0), uint256(100), uint256(0), uint256(0))
         );
 
         vm.mockCall(
             withdrawalManager,
-            abi.encodeCall(IKelpLRTWithdrawalManager.getUserWithdrawalRequest, (stETH, account, 1)),
+            abi.encodeCall(IKelpLRTWithdrawalManager.getUserWithdrawalRequest, (stETH, address(withdrawer), 1)),
             abi.encode(uint256(0), uint256(200), uint256(0), uint256(1))
         );
 

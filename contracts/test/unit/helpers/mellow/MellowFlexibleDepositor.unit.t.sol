@@ -89,7 +89,9 @@ contract MellowFlexibleDepositorUnitTest is Test {
         );
 
         vm.mockCall(
-            mellowDepositQueue, abi.encodeCall(IMellowDepositQueue.claimableOf, (account)), abi.encode(uint256(0))
+            mellowDepositQueue,
+            abi.encodeCall(IMellowDepositQueue.claimableOf, (address(depositor))),
+            abi.encode(uint256(0))
         );
 
         vm.expectCall(mellowDepositQueue, abi.encodeCall(IMellowDepositQueue.cancelDepositRequest, ()));
@@ -111,7 +113,9 @@ contract MellowFlexibleDepositorUnitTest is Test {
         );
 
         vm.mockCall(
-            mellowDepositQueue, abi.encodeCall(IMellowDepositQueue.claimableOf, (account)), abi.encode(uint256(0))
+            mellowDepositQueue,
+            abi.encodeCall(IMellowDepositQueue.claimableOf, (address(depositor))),
+            abi.encode(uint256(0))
         );
 
         vm.expectRevert(MellowFlexibleDepositor.DepositNotInProgressException.selector);
@@ -121,10 +125,12 @@ contract MellowFlexibleDepositorUnitTest is Test {
     /// @notice U:[MFD-6]: claim works with claimable shares
     function test_U_MFD_06_claim_works() public {
         vm.mockCall(
-            mellowDepositQueue, abi.encodeCall(IMellowDepositQueue.claimableOf, (account)), abi.encode(uint256(300))
+            mellowDepositQueue,
+            abi.encodeCall(IMellowDepositQueue.claimableOf, (address(depositor))),
+            abi.encode(uint256(300))
         );
 
-        vm.expectCall(mellowDepositQueue, abi.encodeCall(IMellowDepositQueue.claim, (account)));
+        vm.expectCall(mellowDepositQueue, abi.encodeCall(IMellowDepositQueue.claim, (address(depositor))));
 
         deal(vaultToken, address(depositor), 300);
 
@@ -137,7 +143,9 @@ contract MellowFlexibleDepositorUnitTest is Test {
     /// @notice U:[MFD-7]: claim works with existing balance
     function test_U_MFD_07_claim_with_existing_balance() public {
         vm.mockCall(
-            mellowDepositQueue, abi.encodeCall(IMellowDepositQueue.claimableOf, (account)), abi.encode(uint256(0))
+            mellowDepositQueue,
+            abi.encodeCall(IMellowDepositQueue.claimableOf, (address(depositor))),
+            abi.encode(uint256(0))
         );
 
         deal(vaultToken, address(depositor), 500);
@@ -151,7 +159,9 @@ contract MellowFlexibleDepositorUnitTest is Test {
     /// @notice U:[MFD-8]: claim reverts when not enough to claim
     function test_U_MFD_08_claim_reverts_not_enough() public {
         vm.mockCall(
-            mellowDepositQueue, abi.encodeCall(IMellowDepositQueue.claimableOf, (account)), abi.encode(uint256(0))
+            mellowDepositQueue,
+            abi.encodeCall(IMellowDepositQueue.claimableOf, (address(depositor))),
+            abi.encode(uint256(0))
         );
 
         deal(vaultToken, address(depositor), 100);
@@ -163,7 +173,9 @@ contract MellowFlexibleDepositorUnitTest is Test {
     /// @notice U:[MFD-9]: getPendingAssets works as expected
     function test_U_MFD_09_getPendingAssets_works() public {
         vm.mockCall(
-            mellowDepositQueue, abi.encodeCall(IMellowDepositQueue.claimableOf, (account)), abi.encode(uint256(0))
+            mellowDepositQueue,
+            abi.encodeCall(IMellowDepositQueue.claimableOf, (address(depositor))),
+            abi.encode(uint256(0))
         );
 
         vm.mockCall(
@@ -176,7 +188,9 @@ contract MellowFlexibleDepositorUnitTest is Test {
         assertEq(pending, 1000);
 
         vm.mockCall(
-            mellowDepositQueue, abi.encodeCall(IMellowDepositQueue.claimableOf, (account)), abi.encode(uint256(100))
+            mellowDepositQueue,
+            abi.encodeCall(IMellowDepositQueue.claimableOf, (address(depositor))),
+            abi.encode(uint256(100))
         );
 
         pending = depositor.getPendingAssets();
@@ -186,7 +200,9 @@ contract MellowFlexibleDepositorUnitTest is Test {
     /// @notice U:[MFD-10]: getClaimableShares works as expected
     function test_U_MFD_10_getClaimableShares_works() public {
         vm.mockCall(
-            mellowDepositQueue, abi.encodeCall(IMellowDepositQueue.claimableOf, (account)), abi.encode(uint256(100))
+            mellowDepositQueue,
+            abi.encodeCall(IMellowDepositQueue.claimableOf, (address(depositor))),
+            abi.encode(uint256(100))
         );
 
         deal(vaultToken, address(depositor), 50);

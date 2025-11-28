@@ -50,7 +50,7 @@ contract MellowFlexibleRedeemerUnitTest is Test {
 
         vm.mockCall(
             mellowRedeemQueue,
-            abi.encodeCall(IMellowRedeemQueue.requestsOf, (account, 0, type(uint256).max)),
+            abi.encodeCall(IMellowRedeemQueue.requestsOf, (address(redeemer), 0, type(uint256).max)),
             abi.encode(requests)
         );
 
@@ -65,7 +65,7 @@ contract MellowFlexibleRedeemerUnitTest is Test {
 
         vm.mockCall(
             mellowRedeemQueue,
-            abi.encodeCall(IMellowRedeemQueue.requestsOf, (account, 0, type(uint256).max)),
+            abi.encodeCall(IMellowRedeemQueue.requestsOf, (address(redeemer), 0, type(uint256).max)),
             abi.encode(requests)
         );
 
@@ -79,7 +79,7 @@ contract MellowFlexibleRedeemerUnitTest is Test {
 
         vm.mockCall(
             mellowRedeemQueue,
-            abi.encodeCall(IMellowRedeemQueue.requestsOf, (account, 0, type(uint256).max)),
+            abi.encodeCall(IMellowRedeemQueue.requestsOf, (address(redeemer), 0, type(uint256).max)),
             abi.encode(requests)
         );
 
@@ -100,7 +100,7 @@ contract MellowFlexibleRedeemerUnitTest is Test {
 
         vm.mockCall(
             mellowRedeemQueue,
-            abi.encodeCall(IMellowRedeemQueue.requestsOf, (account, 0, type(uint256).max)),
+            abi.encodeCall(IMellowRedeemQueue.requestsOf, (address(redeemer), 0, type(uint256).max)),
             abi.encode(requests)
         );
 
@@ -134,7 +134,7 @@ contract MellowFlexibleRedeemerUnitTest is Test {
 
         vm.mockCall(
             mellowRedeemQueue,
-            abi.encodeCall(IMellowRedeemQueue.requestsOf, (account, 0, type(uint256).max)),
+            abi.encodeCall(IMellowRedeemQueue.requestsOf, (address(redeemer), 0, type(uint256).max)),
             abi.encode(requests)
         );
 
@@ -149,7 +149,7 @@ contract MellowFlexibleRedeemerUnitTest is Test {
 
         vm.mockCall(
             mellowRedeemQueue,
-            abi.encodeCall(IMellowRedeemQueue.requestsOf, (account, 0, type(uint256).max)),
+            abi.encodeCall(IMellowRedeemQueue.requestsOf, (address(redeemer), 0, type(uint256).max)),
             abi.encode(requests)
         );
 
@@ -168,7 +168,7 @@ contract MellowFlexibleRedeemerUnitTest is Test {
 
         vm.mockCall(
             mellowRedeemQueue,
-            abi.encodeCall(IMellowRedeemQueue.requestsOf, (account, 0, type(uint256).max)),
+            abi.encodeCall(IMellowRedeemQueue.requestsOf, (address(redeemer), 0, type(uint256).max)),
             abi.encode(requests)
         );
 
@@ -184,7 +184,7 @@ contract MellowFlexibleRedeemerUnitTest is Test {
 
         vm.mockCall(
             mellowRedeemQueue,
-            abi.encodeCall(IMellowRedeemQueue.requestsOf, (account, 0, type(uint256).max)),
+            abi.encodeCall(IMellowRedeemQueue.requestsOf, (address(redeemer), 0, type(uint256).max)),
             abi.encode(requests)
         );
 
@@ -203,7 +203,7 @@ contract MellowFlexibleRedeemerUnitTest is Test {
 
         vm.mockCall(
             mellowRedeemQueue,
-            abi.encodeCall(IMellowRedeemQueue.requestsOf, (account, 0, type(uint256).max)),
+            abi.encodeCall(IMellowRedeemQueue.requestsOf, (address(redeemer), 0, type(uint256).max)),
             abi.encode(requests)
         );
 
