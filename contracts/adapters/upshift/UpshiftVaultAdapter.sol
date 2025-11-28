@@ -16,7 +16,7 @@ import {NotImplementedException} from "@gearbox-protocol/core-v3/contracts/inter
 /// @title UpshiftVault adapter
 /// @notice Implements logic allowing CAs to interact with the UpshiftVault vault, accounting for delayed withdrawals
 contract UpshiftVaultAdapter is ERC4626Adapter, IUpshiftVaultAdapter {
-    uint256 public constant override(ERC4626Adapter, IVersion) version = 3_10;
+    uint256 public constant override(ERC4626Adapter, IVersion) version = 3_11;
     bytes32 public constant override(ERC4626Adapter, IVersion) contractType = "ADAPTER::UPSHIFT_VAULT";
 
     address public immutable stakedPhantomToken;
