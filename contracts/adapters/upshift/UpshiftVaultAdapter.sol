@@ -47,8 +47,29 @@ contract UpshiftVaultAdapter is ERC4626Adapter, IUpshiftVaultAdapter {
     /// @dev This function does not accept `receiverAddr` and `holderAddr` parameters,
     ///      since the gateway function only operates on msg.sender
     function requestRedeem(uint256 shares) external override creditFacadeOnly returns (bool) {
-        _executeSwapSafeApprove(vault, abi.encodeCall(IUpshiftVaultGateway.requestRedeem, (shares)));
+        _requestRedeem(shares);
         return true;
+    }
+
+    /// @notice Requests a redemption from the UpshiftVault vault through the gateway, with a specified leftover amount
+    /// @param leftoverAmount Amount of shares to keep on the account
+    function requestRedeemDiff(uint256 leftoverAmount) external override creditFacadeOnly returns (bool) {
+        address creditAccount = _creditAccount();
+
+        uint256 amount = IERC20(vault).balanceOf(creditAccount);
+        if (amount <= leftoverAmount) return false;
+
+        unchecked {
+            amount -= leftoverAmount;
+        }
+
+        _requestRedeem(amount);
+        return true;
+    }
+
+    /// @dev Internal implementation of `requestRedeem`.
+    function _requestRedeem(uint256 shares) internal {
+        _executeSwapSafeApprove(vault, abi.encodeCall(IUpshiftVaultGateway.requestRedeem, (shares)));
     }
 
     /// @notice Claims a redemption from the UpshiftVault vault through the gateway
