@@ -89,6 +89,21 @@ contract UpshiftVaultAdapterUnitTest is AdapterUnitTestHelper {
         bool useSafePrices = adapter.requestRedeem(1000);
         assertTrue(useSafePrices);
     }
+    /// @notice U:[UV-8]: `requestRedeemDiff` works as expected
+
+    function test_U_UV_08_requestRedeemDiff_works_as_expected() public diffTestCases {
+        deal({token: vault, to: creditAccount, give: diffMintedAmount});
+
+        _readsActiveAccount();
+        _executesSwap({
+            tokenIn: vault,
+            callData: abi.encodeCall(IUpshiftVaultGateway.requestRedeem, (diffInputAmount)),
+            requiresApproval: true
+        });
+        vm.prank(creditFacade);
+        bool useSafePrices = adapter.requestRedeemDiff(diffLeftoverAmount);
+        assertTrue(useSafePrices);
+    }
 
     /// @notice U:[UV-5]: `claim` works as expected
     function test_U_UV_05_claim_works_as_expected() public {

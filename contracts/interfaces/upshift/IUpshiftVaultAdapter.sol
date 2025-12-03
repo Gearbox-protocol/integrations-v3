@@ -13,6 +13,9 @@ interface IUpshiftVaultAdapter is IERC4626Adapter, IPhantomTokenAdapter {
     /// @notice Requests a redemption from the Upshift vault through the gateway
     function requestRedeem(uint256 shares) external returns (bool);
 
+    /// @notice Requests a redemption from the Upshift vault through the gateway, with a specified leftover amount
+    function requestRedeemDiff(uint256 leftoverAmount) external returns (bool);
+
     /// @notice Claims a redemption from the Upshift vault through the gateway
     function claim(uint256 amount) external returns (bool);
 }
