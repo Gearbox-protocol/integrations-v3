@@ -55,6 +55,7 @@ contract KelpLRTDepositPoolGateway is IKelpLRTDepositPoolGateway {
         external
     {
         IERC20(asset).safeTransferFrom(msg.sender, address(this), amount);
+        amount = IERC20(asset).balanceOf(address(this));
         if (asset == weth) {
             _depositWETH(amount, minRSETHAmountExpected, referralId);
         } else {
