@@ -10,9 +10,11 @@ import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IER
 import {MultiCall} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacadeV3.sol";
 import {IPhantomToken} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IPhantomToken.sol";
 
-import {IMellowRateOracle} from "../../integrations/mellow/IMellowRateOracle.sol";
+import {IMellowRateOracle, OracleReport} from "../../integrations/mellow/IMellowRateOracle.sol";
 import {IMellowFlexibleRedeemGateway} from "../../interfaces/mellow/IMellowFlexibleRedeemGateway.sol";
 import {WAD} from "@gearbox-protocol/core-v3/contracts/libraries/Constants.sol";
+
+uint256 constant PRICE_NUMERATOR = 1e36;
 
 /// @title Mellow Flexible Vaults redemption phantom token
 /// @notice Phantom ERC-20 token that represents the balance of the pending and claimable redemptions in Mellow Flexible Vaults
@@ -22,6 +24,8 @@ contract MellowFlexibleRedeemPhantomToken is PhantomERC20, Ownable, IPhantomToke
     uint256 public constant override version = 3_10;
 
     address public immutable redeemQueueGateway;
+
+    address public immutable asset;
 
     address public immutable mellowRateOracle;
 
@@ -46,18 +50,34 @@ contract MellowFlexibleRedeemPhantomToken is PhantomERC20, Ownable, IPhantomToke
     {
         redeemQueueGateway = _redeemQueueGateway;
         mellowRateOracle = _mellowRateOracle;
+        asset = IMellowFlexibleRedeemGateway(_redeemQueueGateway).asset();
     }
 
     /// @notice Returns the amount of assets pending/claimable for redemption
     /// @param account The account for which the calculation is performed
     function balanceOf(address account) public view returns (uint256 balance) {
-        uint256 sharesRate = IMellowRateOracle(mellowRateOracle).getRate();
+        uint256 sharesRate = _getLastAcceptedRate();
 
         uint256 pendingShares = IMellowFlexibleRedeemGateway(redeemQueueGateway).getPendingShares(account);
 
         uint256 claimableAssets = IMellowFlexibleRedeemGateway(redeemQueueGateway).getClaimableAssets(account);
 
         return pendingShares * sharesRate / WAD + claimableAssets;
+    }
+
+    /// @notice Retrieves the last non-suspicious report from Mellow's OracleSubmitter for the queue's asset
+    function _getLastAcceptedRate() internal view returns (uint256) {
+        uint256 reportNum = IMellowRateOracle(mellowRateOracle).reports(asset);
+
+        for (uint256 i = reportNum; i > 0; i--) {
+            OracleReport memory report = IMellowRateOracle(mellowRateOracle).reportAt(asset, i - 1);
+
+            if (!report.isSuspicious || IMellowRateOracle(mellowRateOracle).acceptedAt(asset, i - 1) != 0) {
+                return PRICE_NUMERATOR / report.priceD18;
+            }
+        }
+
+        return 0;
     }
 
     /// @notice Returns phantom token's target contract and underlying
