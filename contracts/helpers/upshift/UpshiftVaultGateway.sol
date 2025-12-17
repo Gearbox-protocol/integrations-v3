@@ -22,7 +22,7 @@ contract UpshiftVaultGateway is ReentrancyGuardTrait, IUpshiftVaultGateway {
     using SafeERC20 for IERC20;
 
     bytes32 public constant override contractType = "GATEWAY::UPSHIFT_VAULT";
-    uint256 public constant override version = 3_10;
+    uint256 public constant override version = 3_11;
 
     address public immutable upshiftVault;
 
@@ -54,15 +54,16 @@ contract UpshiftVaultGateway is ReentrancyGuardTrait, IUpshiftVaultGateway {
             revert("UpshiftVaultGateway: user has a pending redeem");
         }
 
-        (uint256 year, uint256 month, uint256 day, uint256 claimableTimestamp) =
-            IUpshiftVault(upshiftVault).getWithdrawalEpoch();
+        (uint256 year, uint256 month, uint256 day,) = IUpshiftVault(upshiftVault).getWithdrawalEpoch();
 
-        uint256 assets = IERC4626(upshiftVault).previewRedeem(shares);
+        (uint256 assets, uint256 claimableTimestamp) = IUpshiftVault(upshiftVault).requestRedeem({
+            shares: shares,
+            receiverAddr: address(this),
+            holderAddr: msg.sender
+        });
 
         pendingRedeems[msg.sender] =
             PendingRedeem({claimableTimestamp: claimableTimestamp, assets: assets, year: year, month: month, day: day});
-
-        IUpshiftVault(upshiftVault).requestRedeem({shares: shares, receiverAddr: address(this), holderAddr: msg.sender});
     }
 
     function claim(uint256 amount) external nonReentrant {
