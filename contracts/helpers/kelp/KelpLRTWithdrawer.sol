@@ -91,6 +91,7 @@ contract KelpLRTWithdrawer {
                 IKelpLRTWithdrawalManager(withdrawalManager).completeWithdrawal(_assetOrETH(asset), referralId);
             }
             onWithdrawer = IERC20(asset).balanceOf(address(this));
+            if (onWithdrawer < amount && onWithdrawer > amount - 10) amount = onWithdrawer;
         }
 
         if (onWithdrawer < amount) {
