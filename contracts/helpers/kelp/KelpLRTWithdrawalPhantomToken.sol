@@ -39,10 +39,9 @@ contract KelpLRTWithdrawalPhantomToken is PhantomERC20, Ownable, IPhantomToken {
     /// @notice Returns the amount of assets pending/claimable for a withdrawal
     /// @param account The account for which the calculation is performed
     function balanceOf(address account) public view returns (uint256 balance) {
-        uint256 pendingAssetAmount =
-            IKelpLRTWithdrawalManagerGateway(withdrawalManagerGateway).getPendingAssetAmount(account, tokenOut);
-        uint256 claimableAssetAmount =
-            IKelpLRTWithdrawalManagerGateway(withdrawalManagerGateway).getClaimableAssetAmount(account, tokenOut);
+        (uint256 pendingAssetAmount, uint256 claimableAssetAmount) = IKelpLRTWithdrawalManagerGateway(
+            withdrawalManagerGateway
+        ).getPendingAndClaimableAssetAmounts(account, tokenOut);
         return pendingAssetAmount + claimableAssetAmount;
     }
 

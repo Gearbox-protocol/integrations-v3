@@ -15,4 +15,8 @@ interface IKelpLRTWithdrawalManagerGateway is IVersion {
     function completeWithdrawal(address asset, uint256 amount, string calldata referralId) external;
     function getPendingAssetAmount(address account, address asset) external view returns (uint256);
     function getClaimableAssetAmount(address account, address asset) external view returns (uint256);
+    function getPendingAndClaimableAssetAmounts(address account, address asset)
+        external
+        view
+        returns (uint256 pendingAssets, uint256 claimableAssets);
 }

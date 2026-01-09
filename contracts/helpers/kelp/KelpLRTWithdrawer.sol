@@ -85,7 +85,8 @@ contract KelpLRTWithdrawer {
     /// @param amount The amount of assets to transfer
     /// @param referralId The referral ID
     function completeWithdrawal(address asset, uint256 amount, string calldata referralId) external gatewayOnly {
-        (uint256 inWithdrawalManager, uint256 onWithdrawer, uint256 numClaimableRequests) = _getClaimableAssets(asset);
+        (, uint256 inWithdrawalManager, uint256 onWithdrawer, uint256 numClaimableRequests) =
+            _getClaimableAndPendingAssets(asset, false, true);
         if (inWithdrawalManager != 0) {
             for (uint256 i = 0; i < numClaimableRequests; i++) {
                 IKelpLRTWithdrawalManager(withdrawalManager).completeWithdrawal(_assetOrETH(asset), referralId);
@@ -103,24 +104,25 @@ contract KelpLRTWithdrawer {
 
     /// @notice Returns the amount of assets pending withdrawal
     function getPendingAssetAmount(address asset) external view returns (uint256 pendingAssets) {
-        uint256 numRequests = _getNumRequests(asset);
-        uint256 nextLockedNonce = IKelpLRTWithdrawalManager(withdrawalManager).nextLockedNonce(_assetOrETH(asset));
-
-        for (uint256 i = 0; i < numRequests; i++) {
-            (uint256 rsETHAmount,,, uint256 userNonce) = IKelpLRTWithdrawalManager(withdrawalManager)
-                .getUserWithdrawalRequest(_assetOrETH(asset), address(this), i);
-
-            if (userNonce >= nextLockedNonce) {
-                pendingAssets +=
-                    IKelpLRTWithdrawalManager(withdrawalManager).getExpectedAssetAmount(_assetOrETH(asset), rsETHAmount);
-            }
-        }
+        (pendingAssets,,,) = _getClaimableAndPendingAssets(asset, true, false);
     }
 
     /// @notice Returns the amount of shares claimable from mature deposits
     function getClaimableAssetAmount(address asset) external view returns (uint256 shares) {
-        (uint256 inWithdrawalManager, uint256 onWithdrawer,) = _getClaimableAssets(asset);
+        (, uint256 inWithdrawalManager, uint256 onWithdrawer,) = _getClaimableAndPendingAssets(asset, false, true);
         return inWithdrawalManager + onWithdrawer;
+    }
+
+    /// @notice Returns the pending and claimable asset amounts
+    function getPendingAndClaimableAssetAmounts(address asset)
+        external
+        view
+        returns (uint256 pendingAssets, uint256 claimableAssets)
+    {
+        uint256 inWithdrawalManager;
+        uint256 onWithdrawer;
+        (pendingAssets, inWithdrawalManager, onWithdrawer,) = _getClaimableAndPendingAssets(asset, true, true);
+        claimableAssets = inWithdrawalManager + onWithdrawer;
     }
 
     /// @dev Internal function to get the number of existing requests for an asset
@@ -130,26 +132,39 @@ contract KelpLRTWithdrawer {
         return uint256(end - start);
     }
 
-    /// @dev Internal function to get the amount of shares claimable from mature deposits,
+    /// @dev Internal function to get the pending asset amount, the amount of assets claimable from mature deposits,
     ///      still in the withdrawal manager and already on the withdrawer
-    function _getClaimableAssets(address asset)
+    function _getClaimableAndPendingAssets(address asset, bool calcPending, bool calcClaimable)
         internal
         view
-        returns (uint256 inWithdrawalManager, uint256 onWithdrawer, uint256 numClaimableRequests)
+        returns (
+            uint256 pendingAssets,
+            uint256 claimableInWithdrawalManager,
+            uint256 claimableOnWithdrawer,
+            uint256 numClaimableRequests
+        )
     {
-        onWithdrawer = IERC20(asset).balanceOf(address(this));
-
         uint256 numRequests = _getNumRequests(asset);
         uint256 nextLockedNonce = IKelpLRTWithdrawalManager(withdrawalManager).nextLockedNonce(_assetOrETH(asset));
 
         for (uint256 i = 0; i < numRequests; i++) {
-            (, uint256 expectedAssetAmount,, uint256 userNonce) = IKelpLRTWithdrawalManager(withdrawalManager)
-                .getUserWithdrawalRequest(_assetOrETH(asset), address(this), i);
+            (uint256 rsETHAmount, uint256 expectedAssetAmount,, uint256 userNonce) = IKelpLRTWithdrawalManager(
+                withdrawalManager
+            ).getUserWithdrawalRequest(_assetOrETH(asset), address(this), i);
 
-            if (userNonce < nextLockedNonce) {
-                inWithdrawalManager += expectedAssetAmount;
+            if (calcPending && userNonce >= nextLockedNonce) {
+                pendingAssets +=
+                    IKelpLRTWithdrawalManager(withdrawalManager).getExpectedAssetAmount(_assetOrETH(asset), rsETHAmount);
+            }
+
+            if (calcClaimable && userNonce < nextLockedNonce) {
+                claimableInWithdrawalManager += expectedAssetAmount;
                 numClaimableRequests++;
             }
+        }
+
+        if (calcClaimable) {
+            claimableOnWithdrawer = IERC20(asset).balanceOf(address(this));
         }
     }
 

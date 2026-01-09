@@ -83,6 +83,22 @@ contract KelpLRTWithdrawalManagerGateway is IKelpLRTWithdrawalManagerGateway {
         }
         return KelpLRTWithdrawer(withdrawer).getClaimableAssetAmount(asset);
     }
+    /// @notice Returns the amount of assets pending and claimable from mature deposits
+    /// @param asset The asset to get the amounts for
+    /// @return pendingAssets The amount of assets pending withdrawal
+    /// @return claimableAssets The amount of assets claimable from mature deposits
+
+    function getPendingAndClaimableAssetAmounts(address account, address asset)
+        external
+        view
+        returns (uint256 pendingAssets, uint256 claimableAssets)
+    {
+        address payable withdrawer = accountToWithdrawer[account];
+        if (withdrawer == address(0)) {
+            return (0, 0);
+        }
+        return KelpLRTWithdrawer(withdrawer).getPendingAndClaimableAssetAmounts(asset);
+    }
 
     /// @dev Internal function to get the withdrawer for an account, or create a new one if it doesn't exist
     /// @param account The account to get the withdrawer for
