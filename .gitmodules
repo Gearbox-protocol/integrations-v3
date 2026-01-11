@@ -16,3 +16,4 @@
 [submodule "lib/@gearbox-protocol/permissionless"]
 	path = lib/@gearbox-protocol/permissionless
 	url = https://github.com/Gearbox-protocol/permissionless
+	branch = attach-test-base

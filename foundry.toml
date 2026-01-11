@@ -14,5 +14,5 @@ block_base_fee_per_gas = 100
 fs_permissions = [{ access = "read-write", path = "./"}]
 ffi=true
 
-[profile.attach-test]
-evm_version = 'cancun'
+[lint]
+lint_on_build = false
