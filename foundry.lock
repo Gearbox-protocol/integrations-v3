@@ -13,8 +13,14 @@
   },
   "lib/@gearbox-protocol/oracles-v3": {
     "tag": {
-      "name": "v1.14.0",
-      "rev": "78ad827ab9329f2c1d884672120fb61ca9fb67ec"
+      "name": "v1.15.1",
+      "rev": "69c12f58da99281f03ac2c650c0793ba7c30ae38"
+    }
+  },
+  "lib/@gearbox-protocol/permissionless": {
+    "branch": {
+      "name": "attach-test-base",
+      "rev": "dae649ab8e10d11d24d4575a90365de1d0408a3b"
     }
   },
   "lib/@gearbox-protocol/sdk-gov": {
