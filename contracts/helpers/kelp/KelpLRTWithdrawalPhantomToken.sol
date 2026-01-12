@@ -3,7 +3,6 @@
 // (c) Gearbox Foundation, 2024.
 pragma solidity ^0.8.23;
 
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {PhantomERC20} from "../PhantomERC20.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
@@ -14,7 +13,7 @@ import {IKelpLRTWithdrawalManagerGateway} from "../../interfaces/kelp/IKelpLRTWi
 
 /// @title Kelp LRT Withdrawal Phantom token
 /// @notice Phantom ERC-20 token that represents the balance of the pending and claimable withdrawals in Kelp LRT Withdrawal Manager
-contract KelpLRTWithdrawalPhantomToken is PhantomERC20, Ownable, IPhantomToken {
+contract KelpLRTWithdrawalPhantomToken is PhantomERC20, IPhantomToken {
     bytes32 public constant override contractType = "PHANTOM_TOKEN::KELP_WITHDRAWAL";
 
     uint256 public constant override version = 3_10;
