@@ -136,9 +136,8 @@ contract Live_UniswapV2EquivalenceTest is LiveTestHelper {
 
         if (
             routerAdapter == address(0)
-                || !IUniswapV2Adapter(routerAdapter).isPairAllowed(
-                    tokenTestSuite.addressOf(TOKEN_WETH), tokenTestSuite.addressOf(TOKEN_USDC)
-                )
+                || !IUniswapV2Adapter(routerAdapter)
+                    .isPairAllowed(tokenTestSuite.addressOf(TOKEN_WETH), tokenTestSuite.addressOf(TOKEN_USDC))
         ) {
             return;
         }
@@ -155,14 +154,14 @@ contract Live_UniswapV2EquivalenceTest is LiveTestHelper {
             supportedContracts.addressOf(Contracts.UNISWAP_V2_ROUTER)
         );
 
-        uint256 snapshot = vm.snapshot();
+        uint256 snapshot = vm.snapshotState();
 
         compareBehavior(creditAccount, supportedContracts.addressOf(Contracts.UNISWAP_V2_ROUTER), false);
 
         /// Stores save balances in memory, because all state data would be reverted afer snapshot
         BalanceBackup[] memory savedBalanceSnapshots = comparator.exportSnapshots(creditAccount);
 
-        vm.revertTo(snapshot);
+        vm.revertToState(snapshot);
 
         compareBehavior(creditAccount, getAdapter(address(creditManager), Contracts.UNISWAP_V2_ROUTER), true);
 

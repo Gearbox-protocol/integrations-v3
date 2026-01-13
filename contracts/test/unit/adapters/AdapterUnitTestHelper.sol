@@ -11,8 +11,9 @@ import {
     CallerNotCreditFacadeException,
     TokenNotAllowedException
 } from "@gearbox-protocol/core-v3/contracts/interfaces/IExceptions.sol";
-import {AddressProviderV3ACLMock} from
-    "@gearbox-protocol/core-v3/contracts/test/mocks/core/AddressProviderV3ACLMock.sol";
+import {
+    AddressProviderV3ACLMock
+} from "@gearbox-protocol/core-v3/contracts/test/mocks/core/AddressProviderV3ACLMock.sol";
 import {ERC20Mock} from "@gearbox-protocol/core-v3/contracts/test/mocks/token/ERC20Mock.sol";
 
 import {CreditManagerV3Mock, CreditManagerV3MockEvents} from "../../mocks/credit/CreditManagerV3Mock.sol";
@@ -58,14 +59,14 @@ contract AdapterUnitTestHelper is Test, CreditManagerV3MockEvents {
     }
 
     modifier diffTestCases() {
-        uint256 snapshot = vm.snapshot();
+        uint256 snapshot = vm.snapshotState();
 
         diffLeftoverAmount = 501;
         diffInputAmount = 500;
         diffDisableTokenIn = false;
         _;
 
-        vm.revertTo(snapshot);
+        vm.revertToState(snapshot);
 
         diffLeftoverAmount = 1;
         diffInputAmount = 1000;

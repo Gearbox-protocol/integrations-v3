@@ -158,7 +158,7 @@ contract Live_ERC4626EquivalenceTest is LiveTestHelper {
         for (uint256 i = 0; i < adapters.length; ++i) {
             if (IAdapter(adapters[i]).contractType() != "ADAPTER::ERC4626_VAULT") continue;
 
-            uint256 snapshot0 = vm.snapshot();
+            uint256 snapshot0 = vm.snapshotState();
 
             address asset = IERC4626Adapter(adapters[i]).asset();
 
@@ -167,7 +167,7 @@ contract Live_ERC4626EquivalenceTest is LiveTestHelper {
 
             tokenTestSuite.approve(asset, creditAccount, IAdapter(adapters[i]).targetContract());
 
-            uint256 snapshot1 = vm.snapshot();
+            uint256 snapshot1 = vm.snapshotState();
 
             BalanceComparator comparator = prepareComparator(adapters[i]);
 
@@ -181,7 +181,7 @@ contract Live_ERC4626EquivalenceTest is LiveTestHelper {
 
             BalanceBackup[] memory savedBalanceSnapshots = comparator.exportSnapshots(creditAccount);
 
-            vm.revertTo(snapshot1);
+            vm.revertToState(snapshot1);
 
             comparator = prepareComparator(adapters[i]);
 
@@ -189,7 +189,7 @@ contract Live_ERC4626EquivalenceTest is LiveTestHelper {
 
             comparator.compareAllSnapshots(creditAccount, savedBalanceSnapshots, 0);
 
-            vm.revertTo(snapshot0);
+            vm.revertToState(snapshot0);
         }
     }
 }

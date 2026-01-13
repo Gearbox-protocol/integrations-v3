@@ -622,7 +622,7 @@ contract Live_CurveEquivalenceTest is LiveTestHelper {
         for (uint256 i = 0; i < adapters.length; ++i) {
             if (!isCurveAdapter(IAdapter(adapters[i]).contractType())) continue;
 
-            uint256 snapshot0 = vm.snapshot();
+            uint256 snapshot0 = vm.snapshotState();
 
             address coin0 = ICurveV1Adapter(adapters[i]).token0();
             address underlying0 = ICurveV1Adapter(adapters[i]).underlying0();
@@ -663,7 +663,7 @@ contract Live_CurveEquivalenceTest is LiveTestHelper {
                 ICurveV1Adapter(adapters[i]).token(), creditAccount, ICurveV1Adapter(adapters[i]).targetContract()
             );
 
-            uint256 snapshot1 = vm.snapshot();
+            uint256 snapshot1 = vm.snapshotState();
 
             prepareComparator(adapters[i]);
 
@@ -671,7 +671,7 @@ contract Live_CurveEquivalenceTest is LiveTestHelper {
 
             BalanceBackup[] memory savedBalanceSnapshots = comparator.exportSnapshots(creditAccount);
 
-            vm.revertTo(snapshot1);
+            vm.revertToState(snapshot1);
 
             prepareComparator(adapters[i]);
 
@@ -679,7 +679,7 @@ contract Live_CurveEquivalenceTest is LiveTestHelper {
 
             comparator.compareAllSnapshots(creditAccount, savedBalanceSnapshots, 0);
 
-            vm.revertTo(snapshot0);
+            vm.revertToState(snapshot0);
         }
     }
 }

@@ -86,16 +86,16 @@ contract Live_UniswapV3EquivalenceTest is LiveTestHelper {
             );
             comparator.takeSnapshot("after_exactInputSingle", creditAccount);
 
-            IUniswapV3AdapterTypes.ExactDiffInputSingleParams memory exactDiffInputSingleParams = IUniswapV3AdapterTypes
-                .ExactDiffInputSingleParams({
-                tokenIn: tokenTestSuite.addressOf(TOKEN_WETH),
-                tokenOut: tokenTestSuite.addressOf(TOKEN_USDC),
-                fee: 500,
-                deadline: block.timestamp + 3600,
-                leftoverAmount: 20 * WAD,
-                rateMinRAY: 0,
-                sqrtPriceLimitX96: 0
-            });
+            IUniswapV3AdapterTypes.ExactDiffInputSingleParams memory exactDiffInputSingleParams =
+                IUniswapV3AdapterTypes.ExactDiffInputSingleParams({
+                    tokenIn: tokenTestSuite.addressOf(TOKEN_WETH),
+                    tokenOut: tokenTestSuite.addressOf(TOKEN_USDC),
+                    fee: 500,
+                    deadline: block.timestamp + 3600,
+                    leftoverAmount: 20 * WAD,
+                    rateMinRAY: 0,
+                    sqrtPriceLimitX96: 0
+                });
 
             creditFacade.multicall(
                 creditAccount, MultiCallBuilder.build(router.exactDiffInputSingle(exactDiffInputSingleParams))
@@ -114,15 +114,15 @@ contract Live_UniswapV3EquivalenceTest is LiveTestHelper {
             creditFacade.multicall(creditAccount, MultiCallBuilder.build(router.exactInput(exactInputParams)));
             comparator.takeSnapshot("after_exactInput", creditAccount);
 
-            IUniswapV3AdapterTypes.ExactDiffInputParams memory exactDiffInputParams = IUniswapV3AdapterTypes
-                .ExactDiffInputParams({
-                path: abi.encodePacked(
-                    tokenTestSuite.addressOf(TOKEN_WETH), uint24(500), tokenTestSuite.addressOf(TOKEN_USDC)
-                ),
-                deadline: block.timestamp + 3600,
-                leftoverAmount: 10 * WAD,
-                rateMinRAY: 0
-            });
+            IUniswapV3AdapterTypes.ExactDiffInputParams memory exactDiffInputParams =
+                IUniswapV3AdapterTypes.ExactDiffInputParams({
+                    path: abi.encodePacked(
+                        tokenTestSuite.addressOf(TOKEN_WETH), uint24(500), tokenTestSuite.addressOf(TOKEN_USDC)
+                    ),
+                    deadline: block.timestamp + 3600,
+                    leftoverAmount: 10 * WAD,
+                    rateMinRAY: 0
+                });
             creditFacade.multicall(creditAccount, MultiCallBuilder.build(router.exactDiffInput(exactDiffInputParams)));
             comparator.takeSnapshot("after_exactDiffInput", creditAccount);
 
@@ -265,9 +265,8 @@ contract Live_UniswapV3EquivalenceTest is LiveTestHelper {
 
         if (
             routerAdapter == address(0)
-                || !IUniswapV3Adapter(routerAdapter).isPoolAllowed(
-                    tokenTestSuite.addressOf(TOKEN_WETH), tokenTestSuite.addressOf(TOKEN_USDC), 500
-                )
+                || !IUniswapV3Adapter(routerAdapter)
+                    .isPoolAllowed(tokenTestSuite.addressOf(TOKEN_WETH), tokenTestSuite.addressOf(TOKEN_USDC), 500)
         ) {
             return;
         }
@@ -284,14 +283,14 @@ contract Live_UniswapV3EquivalenceTest is LiveTestHelper {
             supportedContracts.addressOf(Contracts.UNISWAP_V3_ROUTER)
         );
 
-        uint256 snapshot = vm.snapshot();
+        uint256 snapshot = vm.snapshotState();
 
         compareBehavior(creditAccount, supportedContracts.addressOf(Contracts.UNISWAP_V3_ROUTER), false);
 
         /// Stores save balances in memory, because all state data would be reverted afer snapshot
         BalanceBackup[] memory savedBalanceSnapshots = comparator.exportSnapshots(creditAccount);
 
-        vm.revertTo(snapshot);
+        vm.revertToState(snapshot);
 
         compareBehavior(creditAccount, getAdapter(address(creditManager), Contracts.UNISWAP_V3_ROUTER), true);
 
