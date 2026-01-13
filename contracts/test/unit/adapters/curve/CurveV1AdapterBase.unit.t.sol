@@ -40,10 +40,10 @@ contract CurveV1AdapterBaseUnitTest is AdapterUnitTestHelper {
     }
 
     modifier bothStableAndCryptoPools() {
-        uint256 snapshot = vm.snapshot();
+        uint256 snapshot = vm.snapshotState();
         _setupPoolAndAdapter(PoolType.Stable);
         _;
-        vm.revertTo(snapshot);
+        vm.revertToState(snapshot);
         _setupPoolAndAdapter(PoolType.Crypto);
         _;
     }
@@ -270,11 +270,7 @@ contract CurveV1AdapterBaseUnitTest is AdapterUnitTestHelper {
     }
 
     /// @notice U:[CRVB-6]: `exchange_diff_underlying` works as expected
-    function test_U_CRVB_06_exchange_diff_underlying_works_as_expected()
-        public
-        bothStableAndCryptoPools
-        diffTestCases
-    {
+    function test_U_CRVB_06_exchange_diff_underlying_works_as_expected() public bothStableAndCryptoPools diffTestCases {
         deal({token: token0, to: creditAccount, give: diffMintedAmount});
 
         _readsActiveAccount();
@@ -320,7 +316,9 @@ contract CurveV1AdapterBaseUnitTest is AdapterUnitTestHelper {
 
         _executesSwap({
             tokenIn: token0,
-            callData: abi.encodeWithSignature("add_liquidity(uint256[2],uint256)", diffInputAmount, 0, diffInputAmount / 2),
+            callData: abi.encodeWithSignature(
+                "add_liquidity(uint256[2],uint256)", diffInputAmount, 0, diffInputAmount / 2
+            ),
             requiresApproval: true
         });
 

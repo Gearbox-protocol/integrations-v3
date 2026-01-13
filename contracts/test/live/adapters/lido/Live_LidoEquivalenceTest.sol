@@ -116,13 +116,13 @@ contract Live_LidoEquivalenceTest is LiveTestHelper {
             supportedContracts.addressOf(Contracts.LIDO_STETH_GATEWAY)
         );
 
-        uint256 snapshot = vm.snapshot();
+        uint256 snapshot = vm.snapshotState();
 
         compareBehavior(creditAccount, lidoGateway, false);
 
         BalanceBackup[] memory savedBalanceSnapshots = comparator.exportSnapshots(creditAccount);
 
-        vm.revertTo(snapshot);
+        vm.revertToState(snapshot);
 
         compareBehavior(creditAccount, lidoAdapter, true);
 

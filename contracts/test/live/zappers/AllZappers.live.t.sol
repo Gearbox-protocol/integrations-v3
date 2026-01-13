@@ -35,11 +35,11 @@ contract AllZappersLiveTest is ZapperLiveTestHelper {
             emit log_named_address("Input token", tokenIn);
             emit log_named_address("Output token", tokenOut);
 
-            uint256 snapshot = vm.snapshot();
+            uint256 snapshot = vm.snapshotState();
             _test_deposit(zappers[i], tokenIn, tokenOut);
-            vm.revertTo(snapshot);
+            vm.revertToState(snapshot);
             _test_redeem(zappers[i], tokenIn, tokenOut);
-            vm.revertTo(snapshot);
+            vm.revertToState(snapshot);
         }
     }
 

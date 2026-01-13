@@ -125,13 +125,13 @@ contract LiveWstETHV1AdapterTest is LiveTestHelper {
             tokenTestSuite.addressOf(TOKEN_STETH), creditAccount, supportedContracts.addressOf(Contracts.LIDO_WSTETH)
         );
 
-        uint256 snapshot = vm.snapshot();
+        uint256 snapshot = vm.snapshotState();
 
         compareBehavior(creditAccount, wsteth, false);
 
         BalanceBackup[] memory savedBalanceSnapshots = comparator.exportSnapshots(creditAccount);
 
-        vm.revertTo(snapshot);
+        vm.revertToState(snapshot);
 
         compareBehavior(creditAccount, wstethAdapter, true);
 

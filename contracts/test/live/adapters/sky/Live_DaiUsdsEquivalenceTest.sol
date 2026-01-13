@@ -105,10 +105,7 @@ contract Live_DaiUsdsEquivalenceTest is LiveTestHelper {
         }
     }
 
-    function openCreditAccountWithDai(address daiUsdsAdapter, uint256 amount)
-        internal
-        returns (address creditAccount)
-    {
+    function openCreditAccountWithDai(address daiUsdsAdapter, uint256 amount) internal returns (address creditAccount) {
         vm.prank(USER);
         creditAccount = creditFacade.openCreditAccount(USER, MultiCallBuilder.build(), 0);
 
@@ -138,7 +135,7 @@ contract Live_DaiUsdsEquivalenceTest is LiveTestHelper {
         for (uint256 i = 0; i < adapters.length; ++i) {
             if (IAdapter(adapters[i]).contractType() != "ADAPTER::DAI_USDS_EXCHANGE") continue;
 
-            uint256 snapshot0 = vm.snapshot();
+            uint256 snapshot0 = vm.snapshotState();
 
             address dai = IDaiUsdsAdapter(adapters[i]).dai();
             address usds = IDaiUsdsAdapter(adapters[i]).usds();
@@ -148,7 +145,7 @@ contract Live_DaiUsdsEquivalenceTest is LiveTestHelper {
             tokenTestSuite.approve(dai, creditAccount, IAdapter(adapters[i]).targetContract());
             tokenTestSuite.approve(usds, creditAccount, IAdapter(adapters[i]).targetContract());
 
-            uint256 snapshot1 = vm.snapshot();
+            uint256 snapshot1 = vm.snapshotState();
 
             BalanceComparator comparator = prepareComparator(adapters[i]);
 
@@ -162,7 +159,7 @@ contract Live_DaiUsdsEquivalenceTest is LiveTestHelper {
 
             BalanceBackup[] memory savedBalanceSnapshots = comparator.exportSnapshots(creditAccount);
 
-            vm.revertTo(snapshot1);
+            vm.revertToState(snapshot1);
 
             comparator = prepareComparator(adapters[i]);
 
@@ -170,7 +167,7 @@ contract Live_DaiUsdsEquivalenceTest is LiveTestHelper {
 
             comparator.compareAllSnapshots(creditAccount, savedBalanceSnapshots, 0);
 
-            vm.revertTo(snapshot0);
+            vm.revertToState(snapshot0);
         }
     }
 }

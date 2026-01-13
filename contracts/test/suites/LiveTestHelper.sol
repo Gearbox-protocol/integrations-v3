@@ -82,7 +82,7 @@ contract LiveTestHelper is IntegrationTestHelper {
                     uint256 len = cms.length;
                     for (uint256 i = 0; i < len; ++i) {
                         if (IVersion(cms[i]).version() >= 3_00) {
-                            uint256 snapshot = vm.snapshot();
+                            uint256 snapshot = vm.snapshotState();
                             if (_checkFunctionalSuite(cms[i])) {
                                 _attachCreditManager(cms[i]);
                                 _;
@@ -90,7 +90,7 @@ contract LiveTestHelper is IntegrationTestHelper {
                             } else {
                                 console.log("Pool or facade for attached CM paused, skipping: %s", cms[i]);
                             }
-                            vm.revertTo(snapshot);
+                            vm.revertToState(snapshot);
                         }
                     }
                     console.log("Successfully ran tests on attached pool: %s", poolToAttach);
@@ -102,10 +102,10 @@ contract LiveTestHelper is IntegrationTestHelper {
                         poolQuotaKeeper.updateRates();
 
                         for (uint256 i = 0; i < creditManagers.length; ++i) {
-                            uint256 s = vm.snapshot();
+                            uint256 s = vm.snapshotState();
                             _attachCreditManager(address(creditManagers[i]));
                             _;
-                            vm.revertTo(s);
+                            vm.revertToState(s);
                         }
                     } catch {
                         revert(
