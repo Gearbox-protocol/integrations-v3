@@ -29,7 +29,6 @@ import {CurveV1Adapter4Assets} from "../../adapters/curve/CurveV1_4.sol";
 import {CurveV1AdapterStableNG} from "../../adapters/curve/CurveV1_StableNG.sol";
 
 import {CurveV1AdapterStETH} from "../../adapters/curve/CurveV1_stETH.sol";
-import {CurveV1AdapterDeposit} from "../../adapters/curve/CurveV1_DepositZap.sol";
 
 import {ConvexV1BaseRewardPoolAdapter} from "../../adapters/convex/ConvexV1_BaseRewardPool.sol";
 
@@ -121,8 +120,9 @@ contract AdapterDeployer is AdapterData, Test {
                         adapter = address(new LidoV1Adapter(address(creditManager), targetContract));
                         targetContract = LidoV1Adapter(adapter).targetContract();
                     } else if (at == AdapterType.LIDO_WSTETH_V1) {
-                        adapter =
-                            address(new WstETHV1Adapter(address(creditManager), tokenTestSuite.addressOf(TOKEN_wstETH)));
+                        adapter = address(
+                            new WstETHV1Adapter(address(creditManager), tokenTestSuite.addressOf(TOKEN_wstETH))
+                        );
                     } else if (at == AdapterType.ERC4626_VAULT) {
                         adapter = address(new ERC4626Adapter(address(creditManager), targetContract, address(0)));
                     } else if (at == AdapterType.BALANCER_VAULT) {
@@ -210,22 +210,6 @@ contract AdapterDeployer is AdapterData, Test {
                             address(creditManager),
                             supportedContracts.addressOf(curveStEthAdapters[i].curveETHGateway),
                             tokenTestSuite.addressOf(curveStEthAdapters[i].lpToken)
-                        )
-                    );
-                    return adapter;
-                }
-            }
-
-            len = curveWrappers.length;
-            for (uint256 i; i < len; ++i) {
-                if (cnt == curveWrappers[i].targetContract) {
-                    targetContract = supportedContracts.addressOf(cnt);
-                    adapter = address(
-                        new CurveV1AdapterDeposit(
-                            address(creditManager),
-                            targetContract,
-                            tokenTestSuite.addressOf(curveWrappers[i].lpToken),
-                            curveWrappers[i].nCoins
                         )
                     );
                     return adapter;
