@@ -158,7 +158,7 @@ contract Live_StakingRewardsEquivalenceTest is LiveTestHelper {
         for (uint256 i = 0; i < adapters.length; ++i) {
             if (IAdapter(adapters[i]).contractType() != "ADAPTER::STAKING_REWARDS") continue;
 
-            uint256 snapshot0 = vm.snapshot();
+            uint256 snapshot0 = vm.snapshotState();
 
             address creditAccount =
                 openCreditAccountWithUnderlying(IStakingRewardsAdapter(adapters[i]).stakingToken(), 3000 * WAD);
@@ -169,7 +169,7 @@ contract Live_StakingRewardsEquivalenceTest is LiveTestHelper {
                 IAdapter(adapters[i]).targetContract()
             );
 
-            uint256 snapshot1 = vm.snapshot();
+            uint256 snapshot1 = vm.snapshotState();
 
             BalanceComparator comparator = prepareComparator(adapters[i]);
 
@@ -183,7 +183,7 @@ contract Live_StakingRewardsEquivalenceTest is LiveTestHelper {
 
             BalanceBackup[] memory savedBalanceSnapshots = comparator.exportSnapshots(creditAccount);
 
-            vm.revertTo(snapshot1);
+            vm.revertToState(snapshot1);
 
             comparator = prepareComparator(adapters[i]);
 
@@ -193,7 +193,7 @@ contract Live_StakingRewardsEquivalenceTest is LiveTestHelper {
 
             comparator.compareAllSnapshots(creditAccount, savedBalanceSnapshots);
 
-            vm.revertTo(snapshot0);
+            vm.revertToState(snapshot0);
         }
     }
 
@@ -202,7 +202,7 @@ contract Live_StakingRewardsEquivalenceTest is LiveTestHelper {
         uint256 collateralTokensCount = creditManager.collateralTokensCount();
 
         for (uint256 i = 0; i < collateralTokensCount; ++i) {
-            uint256 snapshot = vm.snapshot();
+            uint256 snapshot = vm.snapshotState();
 
             address token = creditManager.getTokenByMask(1 << i);
             address adapter;
@@ -240,7 +240,7 @@ contract Live_StakingRewardsEquivalenceTest is LiveTestHelper {
 
             assertEq(IERC20(stakingToken).balanceOf(USER), WAD);
 
-            vm.revertTo(snapshot);
+            vm.revertToState(snapshot);
         }
     }
 }

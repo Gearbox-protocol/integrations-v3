@@ -256,7 +256,7 @@ contract Live_ConvexEquivalenceTest is LiveTestHelper {
         for (uint256 i = 0; i < adapters.length; ++i) {
             if (IAdapter(adapters[i]).contractType() != "ADAPTER::CVX_V1_BASE_REWARD_POOL") continue;
 
-            uint256 snapshot0 = vm.snapshot();
+            uint256 snapshot0 = vm.snapshotState();
 
             address creditAccount =
                 openCreditAccountWithUnderlying(IConvexV1BaseRewardPoolAdapter(adapters[i]).curveLPtoken(), 3000 * WAD);
@@ -271,7 +271,7 @@ contract Live_ConvexEquivalenceTest is LiveTestHelper {
                 IAdapter(adapters[i]).targetContract()
             );
 
-            uint256 snapshot1 = vm.snapshot();
+            uint256 snapshot1 = vm.snapshotState();
 
             BalanceComparator comparator = prepareComparator(adapters[i], booster);
 
@@ -279,7 +279,7 @@ contract Live_ConvexEquivalenceTest is LiveTestHelper {
 
             BalanceBackup[] memory savedBalanceSnapshots = comparator.exportSnapshots(creditAccount);
 
-            vm.revertTo(snapshot1);
+            vm.revertToState(snapshot1);
 
             comparator = prepareComparator(adapters[i], booster);
 
@@ -287,7 +287,7 @@ contract Live_ConvexEquivalenceTest is LiveTestHelper {
 
             comparator.compareAllSnapshots(creditAccount, savedBalanceSnapshots);
 
-            vm.revertTo(snapshot0);
+            vm.revertToState(snapshot0);
         }
     }
 
@@ -296,7 +296,7 @@ contract Live_ConvexEquivalenceTest is LiveTestHelper {
         uint256 collateralTokensCount = creditManager.collateralTokensCount();
 
         for (uint256 i = 0; i < collateralTokensCount; ++i) {
-            uint256 snapshot = vm.snapshot();
+            uint256 snapshot = vm.snapshotState();
 
             address token = creditManager.getTokenByMask(1 << i);
 
@@ -343,7 +343,7 @@ contract Live_ConvexEquivalenceTest is LiveTestHelper {
 
             assertEq(IERC20(convexToken).balanceOf(USER), WAD);
 
-            vm.revertTo(snapshot);
+            vm.revertToState(snapshot);
         }
     }
 }

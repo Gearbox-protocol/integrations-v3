@@ -89,7 +89,9 @@ contract Live_PendleRouterAdapterTest is LiveTestHelper {
                     netTokenIn: 10 * baseUnit,
                     tokenMintSy: pair.inputToken,
                     pendleSwap: address(0),
-                    swapData: SwapData({swapType: SwapType.NONE, extRouter: address(0), extCalldata: "", needScale: false})
+                    swapData: SwapData({
+                        swapType: SwapType.NONE, extRouter: address(0), extCalldata: "", needScale: false
+                    })
                 });
                 creditFacade.multicall(
                     creditAccount,
@@ -99,11 +101,7 @@ contract Live_PendleRouterAdapterTest is LiveTestHelper {
                             pair.market,
                             0,
                             ApproxParams({
-                                guessMin: 0,
-                                guessMax: type(uint256).max,
-                                guessOffchain: 0,
-                                maxIteration: 256,
-                                eps: 1e14
+                                guessMin: 0, guessMax: type(uint256).max, guessOffchain: 0, maxIteration: 256, eps: 1e14
                             }),
                             input,
                             lod
@@ -121,11 +119,7 @@ contract Live_PendleRouterAdapterTest is LiveTestHelper {
                             pair.market,
                             0,
                             ApproxParams({
-                                guessMin: 0,
-                                guessMax: type(uint256).max,
-                                guessOffchain: 0,
-                                maxIteration: 256,
-                                eps: 1e14
+                                guessMin: 0, guessMax: type(uint256).max, guessOffchain: 0, maxIteration: 256, eps: 1e14
                             }),
                             diffInput
                         )
@@ -176,18 +170,16 @@ contract Live_PendleRouterAdapterTest is LiveTestHelper {
                     netTokenIn: 10 * baseUnit,
                     tokenMintSy: pair.inputToken,
                     pendleSwap: address(0),
-                    swapData: SwapData({swapType: SwapType.NONE, extRouter: address(0), extCalldata: "", needScale: false})
+                    swapData: SwapData({
+                        swapType: SwapType.NONE, extRouter: address(0), extCalldata: "", needScale: false
+                    })
                 });
                 router.swapExactTokenForPt(
                     creditAccount,
                     pair.market,
                     0,
                     ApproxParams({
-                        guessMin: 0,
-                        guessMax: type(uint256).max,
-                        guessOffchain: 0,
-                        maxIteration: 256,
-                        eps: 1e14
+                        guessMin: 0, guessMax: type(uint256).max, guessOffchain: 0, maxIteration: 256, eps: 1e14
                     }),
                     input,
                     lod
@@ -202,11 +194,7 @@ contract Live_PendleRouterAdapterTest is LiveTestHelper {
                     pair.market,
                     0,
                     ApproxParams({
-                        guessMin: 0,
-                        guessMax: type(uint256).max,
-                        guessOffchain: 0,
-                        maxIteration: 256,
-                        eps: 1e14
+                        guessMin: 0, guessMax: type(uint256).max, guessOffchain: 0, maxIteration: 256, eps: 1e14
                     }),
                     input,
                     lod
@@ -289,7 +277,7 @@ contract Live_PendleRouterAdapterTest is LiveTestHelper {
             tokenTestSuite.approve(pair.inputToken, creditAccount, pendleRouter);
             tokenTestSuite.approve(pair.pendleToken, creditAccount, pendleRouter);
 
-            uint256 snapshot = vm.snapshot();
+            uint256 snapshot = vm.snapshotState();
 
             prepareComparator(pair.inputToken, pair.pendleToken);
 
@@ -297,7 +285,7 @@ contract Live_PendleRouterAdapterTest is LiveTestHelper {
 
             BalanceBackup[] memory savedBalanceSnapshots = comparator.exportSnapshots(creditAccount);
 
-            vm.revertTo(snapshot);
+            vm.revertToState(snapshot);
 
             prepareComparator(pair.inputToken, pair.pendleToken);
 

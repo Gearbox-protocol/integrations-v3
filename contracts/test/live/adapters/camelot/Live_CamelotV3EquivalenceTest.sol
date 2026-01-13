@@ -72,16 +72,16 @@ contract Live_CamelotV3EquivalenceTest is LiveTestHelper {
 
             vm.startPrank(USER);
 
-            ICamelotV3Router.ExactInputSingleParams memory exactInputSingleParams = ICamelotV3Router
-                .ExactInputSingleParams({
-                tokenIn: tokenTestSuite.addressOf(TOKEN_WETH),
-                tokenOut: tokenTestSuite.addressOf(TOKEN_USDC),
-                recipient: creditAccount,
-                deadline: block.timestamp + 3600,
-                amountIn: WAD,
-                amountOutMinimum: 0,
-                limitSqrtPrice: 0
-            });
+            ICamelotV3Router.ExactInputSingleParams memory exactInputSingleParams =
+                ICamelotV3Router.ExactInputSingleParams({
+                    tokenIn: tokenTestSuite.addressOf(TOKEN_WETH),
+                    tokenOut: tokenTestSuite.addressOf(TOKEN_USDC),
+                    recipient: creditAccount,
+                    deadline: block.timestamp + 3600,
+                    amountIn: WAD,
+                    amountOutMinimum: 0,
+                    limitSqrtPrice: 0
+                });
 
             creditFacade.multicall(
                 creditAccount, MultiCallBuilder.build(router.exactInputSingle(exactInputSingleParams))
@@ -94,15 +94,15 @@ contract Live_CamelotV3EquivalenceTest is LiveTestHelper {
             );
             comparator.takeSnapshot("after_exactInputSingleSupportingFeeOnTransferTokens", creditAccount);
 
-            ICamelotV3AdapterTypes.ExactDiffInputSingleParams memory exactDiffInputSingleParams = ICamelotV3AdapterTypes
-                .ExactDiffInputSingleParams({
-                tokenIn: tokenTestSuite.addressOf(TOKEN_WETH),
-                tokenOut: tokenTestSuite.addressOf(TOKEN_USDC),
-                deadline: block.timestamp + 3600,
-                leftoverAmount: 20 * WAD,
-                rateMinRAY: 0,
-                limitSqrtPrice: 0
-            });
+            ICamelotV3AdapterTypes.ExactDiffInputSingleParams memory exactDiffInputSingleParams =
+                ICamelotV3AdapterTypes.ExactDiffInputSingleParams({
+                    tokenIn: tokenTestSuite.addressOf(TOKEN_WETH),
+                    tokenOut: tokenTestSuite.addressOf(TOKEN_USDC),
+                    deadline: block.timestamp + 3600,
+                    leftoverAmount: 20 * WAD,
+                    rateMinRAY: 0,
+                    limitSqrtPrice: 0
+                });
 
             creditFacade.multicall(
                 creditAccount, MultiCallBuilder.build(router.exactDiffInputSingle(exactDiffInputSingleParams))
@@ -129,27 +129,27 @@ contract Live_CamelotV3EquivalenceTest is LiveTestHelper {
             creditFacade.multicall(creditAccount, MultiCallBuilder.build(router.exactInput(exactInputParams)));
             comparator.takeSnapshot("after_exactInput", creditAccount);
 
-            ICamelotV3AdapterTypes.ExactDiffInputParams memory exactDiffInputParams = ICamelotV3AdapterTypes
-                .ExactDiffInputParams({
-                path: abi.encodePacked(tokenTestSuite.addressOf(TOKEN_WETH), tokenTestSuite.addressOf(TOKEN_USDC)),
-                deadline: block.timestamp + 3600,
-                leftoverAmount: 10 * WAD,
-                rateMinRAY: 0
-            });
+            ICamelotV3AdapterTypes.ExactDiffInputParams memory exactDiffInputParams =
+                ICamelotV3AdapterTypes.ExactDiffInputParams({
+                    path: abi.encodePacked(tokenTestSuite.addressOf(TOKEN_WETH), tokenTestSuite.addressOf(TOKEN_USDC)),
+                    deadline: block.timestamp + 3600,
+                    leftoverAmount: 10 * WAD,
+                    rateMinRAY: 0
+                });
             creditFacade.multicall(creditAccount, MultiCallBuilder.build(router.exactDiffInput(exactDiffInputParams)));
             comparator.takeSnapshot("after_exactDiffInput", creditAccount);
 
-            ICamelotV3Router.ExactOutputSingleParams memory exactOutputSingleParams = ICamelotV3Router
-                .ExactOutputSingleParams({
-                tokenIn: tokenTestSuite.addressOf(TOKEN_WETH),
-                tokenOut: tokenTestSuite.addressOf(TOKEN_USDC),
-                fee: 0,
-                recipient: creditAccount,
-                deadline: block.timestamp + 3600,
-                amountOut: 100 * 10 ** 6,
-                amountInMaximum: type(uint256).max,
-                limitSqrtPrice: 0
-            });
+            ICamelotV3Router.ExactOutputSingleParams memory exactOutputSingleParams =
+                ICamelotV3Router.ExactOutputSingleParams({
+                    tokenIn: tokenTestSuite.addressOf(TOKEN_WETH),
+                    tokenOut: tokenTestSuite.addressOf(TOKEN_USDC),
+                    fee: 0,
+                    recipient: creditAccount,
+                    deadline: block.timestamp + 3600,
+                    amountOut: 100 * 10 ** 6,
+                    amountInMaximum: type(uint256).max,
+                    limitSqrtPrice: 0
+                });
             creditFacade.multicall(
                 creditAccount, MultiCallBuilder.build(router.exactOutputSingle(exactOutputSingleParams))
             );
@@ -297,9 +297,8 @@ contract Live_CamelotV3EquivalenceTest is LiveTestHelper {
 
         if (
             routerAdapter == address(0)
-                || !ICamelotV3Adapter(routerAdapter).isPoolAllowed(
-                    tokenTestSuite.addressOf(TOKEN_WETH), tokenTestSuite.addressOf(TOKEN_USDC)
-                )
+                || !ICamelotV3Adapter(routerAdapter)
+                    .isPoolAllowed(tokenTestSuite.addressOf(TOKEN_WETH), tokenTestSuite.addressOf(TOKEN_USDC))
         ) {
             return;
         }
@@ -316,14 +315,14 @@ contract Live_CamelotV3EquivalenceTest is LiveTestHelper {
             supportedContracts.addressOf(Contracts.CAMELOT_V3_ROUTER)
         );
 
-        uint256 snapshot = vm.snapshot();
+        uint256 snapshot = vm.snapshotState();
 
         compareBehavior(creditAccount, supportedContracts.addressOf(Contracts.CAMELOT_V3_ROUTER), false);
 
         /// Stores save balances in memory, because all state data would be reverted afer snapshot
         BalanceBackup[] memory savedBalanceSnapshots = comparator.exportSnapshots(creditAccount);
 
-        vm.revertTo(snapshot);
+        vm.revertToState(snapshot);
 
         compareBehavior(creditAccount, getAdapter(address(creditManager), Contracts.CAMELOT_V3_ROUTER), true);
 

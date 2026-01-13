@@ -2,7 +2,9 @@
 pragma solidity ^0.8.10;
 
 interface IUpshiftVault {
-    function requestRedeem(uint256 shares, address receiverAddr, address holderAddr) external;
+    function requestRedeem(uint256 shares, address receiverAddr, address holderAddr)
+        external
+        returns (uint256 assets, uint256 claimableTimestamp);
 
     function claim(uint256 year, uint256 month, uint256 day, address receiverAddr) external;
 
