@@ -32,14 +32,12 @@ import {UniswapV3Adapter} from "../../adapters/uniswap/UniswapV3.sol";
 import {VelodromeV2RouterAdapter} from "../../adapters/velodrome/VelodromeV2RouterAdapter.sol";
 import {CamelotV3Adapter} from "../../adapters/camelot/CamelotV3Adapter.sol";
 import {PendleRouterAdapter} from "../../adapters/pendle/PendleRouterAdapter.sol";
-import {MellowVaultAdapter} from "../../adapters/mellow/MellowVaultAdapter.sol";
 
 import {UniswapV2PairStatus} from "../../interfaces/uniswap/IUniswapV2Adapter.sol";
 import {UniswapV3PoolStatus} from "../../interfaces/uniswap/IUniswapV3Adapter.sol";
 import {VelodromeV2PoolStatus} from "../../interfaces/velodrome/IVelodromeV2RouterAdapter.sol";
 import {CamelotV3PoolStatus} from "../../interfaces/camelot/ICamelotV3Adapter.sol";
 import {PendlePairStatus, PendleStatus, PendleTokenType} from "../../interfaces/pendle/IPendleRouterAdapter.sol";
-import {MellowUnderlyingStatus} from "../../interfaces/mellow/IMellowVaultAdapter.sol";
 
 import "@gearbox-protocol/core-v3/contracts/test/lib/constants.sol";
 
@@ -189,23 +187,6 @@ contract LiveTestHelper is IntegrationTestHelper {
             address pendleRouterAdapter = getAdapter(creditManager, Contracts.PENDLE_ROUTER);
             vm.prank(CONFIGURATOR);
             PendleRouterAdapter(pendleRouterAdapter).setPairStatusBatch(pairs);
-        }
-
-        // MELLOW VAULTS
-        MellowUnderlyingConfig[] memory mellowConfigs = creditManagerParams.adapterConfig.mellowUnderlyings;
-
-        if (mellowConfigs.length != 0) {
-            for (uint256 i = 0; i < mellowConfigs.length; ++i) {
-                address mellowAdapter = getAdapter(creditManager, mellowConfigs[i].vault);
-
-                MellowUnderlyingStatus[] memory ms = new MellowUnderlyingStatus[](1);
-                ms[0] = MellowUnderlyingStatus({
-                    underlying: tokenTestSuite.addressOf(mellowConfigs[i].underlying), allowed: true
-                });
-
-                vm.prank(CONFIGURATOR);
-                MellowVaultAdapter(mellowAdapter).setUnderlyingStatusBatch(ms);
-            }
         }
 
         // UNISWAP V3 ROUTER
