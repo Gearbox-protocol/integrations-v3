@@ -34,7 +34,6 @@ import {ConvexV1BaseRewardPoolAdapter} from "../../adapters/convex/ConvexV1_Base
 
 import {ERC4626Adapter} from "../../adapters/erc4626/ERC4626Adapter.sol";
 
-import {BalancerV2VaultAdapter} from "../../adapters/balancer/BalancerV2VaultAdapter.sol";
 import {VelodromeV2RouterAdapter} from "../../adapters/velodrome/VelodromeV2RouterAdapter.sol";
 import {CamelotV3Adapter} from "../../adapters/camelot/CamelotV3Adapter.sol";
 
@@ -125,8 +124,6 @@ contract AdapterDeployer is AdapterData, Test {
                         );
                     } else if (at == AdapterType.ERC4626_VAULT) {
                         adapter = address(new ERC4626Adapter(address(creditManager), targetContract, address(0)));
-                    } else if (at == AdapterType.BALANCER_VAULT) {
-                        adapter = address(new BalancerV2VaultAdapter(address(creditManager), targetContract));
                     } else if (at == AdapterType.VELODROME_V2_ROUTER) {
                         adapter = address(new VelodromeV2RouterAdapter(address(creditManager), targetContract));
                     } else if (at == AdapterType.CAMELOT_V3_ROUTER) {
