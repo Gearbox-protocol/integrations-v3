@@ -4,14 +4,9 @@
       "name": "main"
     },
     {
-      "name": "next",
-      "channel": "next",
-      "prerelease": "next"
-    },
-    {
-      "name": "abi",
-      "channel": "abi",
-      "prerelease": "abi"
+      "name": "dev",
+      "channel": "dev",
+      "prerelease": "dev"
     }
   ],
   "plugins": [
