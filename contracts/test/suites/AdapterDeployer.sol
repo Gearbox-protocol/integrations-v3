@@ -18,7 +18,6 @@ import {ICurvePool} from "../../integrations/curve/ICurvePool.sol";
 // SIMPLE ADAPTERS
 import {UniswapV2Adapter} from "../../adapters/uniswap/UniswapV2.sol";
 import {UniswapV3Adapter} from "../../adapters/uniswap/UniswapV3.sol";
-import {YearnV2Adapter} from "../../adapters/yearn/YearnV2.sol";
 import {ConvexV1BoosterAdapter} from "../../adapters/convex/ConvexV1_Booster.sol";
 import {LidoV1Adapter} from "../../adapters/lido/LidoV1.sol";
 import {WstETHV1Adapter} from "../../adapters/lido/WstETHV1.sol";
@@ -109,9 +108,6 @@ contract AdapterDeployer is AdapterData, Test {
                         adapter = address(new UniswapV2Adapter(address(creditManager), targetContract));
                     } else if (at == AdapterType.UNISWAP_V3_ROUTER) {
                         adapter = address(new UniswapV3Adapter(address(creditManager), targetContract));
-                    }
-                    if (at == AdapterType.YEARN_V2) {
-                        adapter = address(new YearnV2Adapter(address(creditManager), targetContract));
                     } else if (at == AdapterType.CONVEX_V1_BOOSTER) {
                         adapter = address(new ConvexV1BoosterAdapter(address(creditManager), targetContract));
                     } else if (at == AdapterType.LIDO_V1) {
