@@ -11,16 +11,10 @@
       "rev": "5144d61af7d117f86d3fa9b4e2aa05535e2e5433"
     }
   },
-  "lib/@gearbox-protocol/oracles-v3": {
-    "tag": {
-      "name": "v1.15.1",
-      "rev": "69c12f58da99281f03ac2c650c0793ba7c30ae38"
-    }
-  },
   "lib/@gearbox-protocol/permissionless": {
     "tag": {
-      "name": "v1.6.0",
-      "rev": "3ba16c017863ba2d68d957b32ffeed9778f481b8"
+      "name": "v1.7.0",
+      "rev": "0aab5ecec6de72176d7d2a8fae2cfa905d0206af"
     }
   },
   "lib/@gearbox-protocol/sdk-gov": {
