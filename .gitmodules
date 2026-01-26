@@ -4,9 +4,6 @@
 [submodule "lib/@gearbox-protocol/core-v3"]
 	path = lib/@gearbox-protocol/core-v3
 	url = https://github.com/Gearbox-protocol/core-v3
-[submodule "lib/@gearbox-protocol/oracles-v3"]
-	path = lib/@gearbox-protocol/oracles-v3
-	url = https://github.com/Gearbox-protocol/oracles-v3
 [submodule "lib/@1inch/solidity-utils"]
 	path = lib/@1inch/solidity-utils
 	url = https://github.com/1inch/solidity-utils
@@ -16,4 +13,3 @@
 [submodule "lib/@gearbox-protocol/permissionless"]
 	path = lib/@gearbox-protocol/permissionless
 	url = https://github.com/Gearbox-protocol/permissionless
-	branch = attach-test-base

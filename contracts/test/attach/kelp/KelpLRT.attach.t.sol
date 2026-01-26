@@ -32,7 +32,6 @@ contract KelpLRTAttachTest is IntegrationsAttachTestBase {
     mapping(address token => address) withdrawalTokens;
 
     function setUp() public {
-        vm.setEvmVersion("osaka");
         super._setUp();
 
         vm.skip(block.chainid != 1, "Not Ethereum mainnet");
