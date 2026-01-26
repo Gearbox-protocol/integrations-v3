@@ -6,7 +6,7 @@ import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {ICreditFacadeV3, MultiCall} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacadeV3.sol";
 import {ICreditManagerV3} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditManagerV3.sol";
 
-import {ConstantPriceFeed} from "@gearbox-protocol/oracles-v3/contracts/oracles/ConstantPriceFeed.sol";
+import {ConstantPriceFeed} from "@gearbox-protocol/permissionless/contracts/helpers/ConstantPriceFeed.sol";
 
 import {AttachTestBase} from "@gearbox-protocol/permissionless/contracts/test/suite/AttachTestBase.sol";
 
@@ -31,7 +31,7 @@ abstract contract IntegrationsAttachTestBase is AttachTestBase {
 
         zeroPriceFeed = priceFeedStore.zeroPriceFeed();
         if (bytecodeRepository.getAllowedBytecodeHash("PRICE_FEED::CONSTANT", 3_10) == 0) {
-            // NOTE: this would fail on deployment if we bump `ConstantPriceFeed` to v3.1.1 in the oracles repo,
+            // NOTE: this would fail on deployment if we bump `ConstantPriceFeed` to v3.1.1 in the permissionless repo,
             // but we assume that in this case v3.1.0 would already be uploaded to the bytecode repository
             _uploadContract("PRICE_FEED::CONSTANT", 3_10, type(ConstantPriceFeed).creationCode);
         }
