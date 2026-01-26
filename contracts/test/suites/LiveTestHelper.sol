@@ -22,7 +22,7 @@ import {
     PendlePair
 } from "@gearbox-protocol/core-v3/contracts/test/interfaces/ICreditConfig.sol";
 
-import {PriceFeedDeployer} from "@gearbox-protocol/oracles-v3/contracts/test/suites/PriceFeedDeployer.sol";
+// import {PriceFeedDeployer} from "@gearbox-protocol/oracles-v3/contracts/test/suites/PriceFeedDeployer.sol";
 import {IntegrationTestHelper} from "@gearbox-protocol/core-v3/contracts/test/helpers/IntegrationTestHelper.sol";
 import {AdapterDeployer} from "./AdapterDeployer.sol";
 
@@ -121,10 +121,10 @@ contract LiveTestHelper is IntegrationTestHelper {
         _setupCore();
         supportedContracts = new SupportedContracts(chainId);
 
-        PriceFeedDeployer priceFeedDeployer =
-            new PriceFeedDeployer(chainId, address(acl), tokenTestSuite, supportedContracts);
+        // PriceFeedDeployer priceFeedDeployer =
+        //     new PriceFeedDeployer(chainId, address(acl), tokenTestSuite, supportedContracts);
 
-        priceFeedDeployer.addPriceFeeds(address(priceOracle));
+        // priceFeedDeployer.addPriceFeeds(address(priceOracle));
 
         IPoolV3DeployConfig config = getDeployConfig(id);
 
