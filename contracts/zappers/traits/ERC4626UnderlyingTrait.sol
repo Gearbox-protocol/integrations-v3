@@ -19,6 +19,7 @@ abstract contract ERC4626UnderlyingTrait is ERC20ZapperBase {
     /// @notice Constructor
     constructor() {
         ASSET = IERC4626(underlying).asset();
+        _resetAllowance(ASSET, underlying);
     }
 
     /// @inheritdoc ZapperBase
