@@ -4,6 +4,7 @@
 pragma solidity ^0.8.23;
 
 import {IVersion} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IVersion.sol";
+import {ISecuritizeWhitelister, Signature} from "../../integrations/securitize/ISecuritizeWhitelister.sol";
 
 interface ISecuritizeRedemptionGateway is IVersion {
     error RedeemerNotOwnedByAccountException();
@@ -15,7 +16,7 @@ interface ISecuritizeRedemptionGateway is IVersion {
     function securitizeWhitelister() external view returns (address);
     function masterRedeemer() external view returns (address);
     function transferMaster() external view returns (address);
-    function redeem(uint256 dsTokenAmount) external;
+    function redeem(uint256 dsTokenAmount, Signature calldata userSignature) external;
     function claim(address[] calldata redeemers) external;
     function transferRedeemer(address redeemer, address newAccount) external;
     function getRedemptionAmount(address account) external view returns (uint256);

@@ -25,7 +25,13 @@ contract SecuritizeSwapAdapter is AbstractAdapter, ISecuritizeSwapAdapter {
     /// @notice Constructor
     /// @param _creditManager Credit manager address
     /// @param _targetContract SecuritizeSwap contract
-    constructor(address _creditManager, address _targetContract) AbstractAdapter(_creditManager, _targetContract) {}
+    constructor(address _creditManager, address _targetContract) AbstractAdapter(_creditManager, _targetContract) {
+        dsToken = ISecuritizeSwap(_targetContract).dsToken();
+        stableCoinToken = ISecuritizeSwap(_targetContract).stableCoinToken();
+
+        _getMaskOrRevert(dsToken);
+        _getMaskOrRevert(stableCoinToken);
+    }
 
     /// @notice Buys a given amount of DS tokens
     function buy(uint256, uint256) external override creditFacadeOnly returns (bool) {

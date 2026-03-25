@@ -21,17 +21,17 @@ contract SecuritizeOnRampAdapter is AbstractAdapter, ISecuritizeOnRampAdapter {
 
     address public immutable override dsToken;
 
-    address public immutable override stableCoinToken;
+    address public immutable override liquidityToken;
 
     /// @notice Constructor
     /// @param _creditManager Credit manager address
     /// @param _targetContract SecuritizeOnRamp contract
     constructor(address _creditManager, address _targetContract) AbstractAdapter(_creditManager, _targetContract) {
         dsToken = ISecuritizeOnRamp(_targetContract).dsToken();
-        stableCoinToken = ISecuritizeOnRamp(_targetContract).stableCoinToken();
+        liquidityToken = ISecuritizeOnRamp(_targetContract).liquidityToken();
 
         _getMaskOrRevert(dsToken);
-        _getMaskOrRevert(stableCoinToken);
+        _getMaskOrRevert(liquidityToken);
     }
 
     /// @notice Performs an exact-in swap on the Securitize on-ramp
@@ -48,7 +48,7 @@ contract SecuritizeOnRampAdapter is AbstractAdapter, ISecuritizeOnRampAdapter {
     /// @param rateMinRAY Minimum acceptable rate (dsToken per stablecoin), scaled by 1e27
     function swapDiff(uint256 leftoverAmount, uint256 rateMinRAY) external override creditFacadeOnly returns (bool) {
         address creditAccount = _creditAccount();
-        uint256 liquidityAmount = IERC20(stableCoinToken).balanceOf(creditAccount);
+        uint256 liquidityAmount = IERC20(liquidityToken).balanceOf(creditAccount);
         if (liquidityAmount <= leftoverAmount) return false;
         unchecked {
             liquidityAmount -= leftoverAmount;
@@ -60,14 +60,12 @@ contract SecuritizeOnRampAdapter is AbstractAdapter, ISecuritizeOnRampAdapter {
 
     /// @dev Internal implementation for `swap` and `swapDiff`
     function _swap(uint256 liquidityAmount, uint256 minOutAmount) internal {
-        _executeSwapSafeApprove(
-            stableCoinToken, abi.encodeCall(ISecuritizeOnRamp.swap, (liquidityAmount, minOutAmount))
-        );
+        _executeSwapSafeApprove(liquidityToken, abi.encodeCall(ISecuritizeOnRamp.swap, (liquidityAmount, minOutAmount)));
     }
 
     /// @notice Serialized adapter parameters
     function serialize() external view returns (bytes memory serializedData) {
-        serializedData = abi.encode(creditManager, targetContract, dsToken, stableCoinToken);
+        serializedData = abi.encode(creditManager, targetContract, dsToken, liquidityToken);
     }
 }
 

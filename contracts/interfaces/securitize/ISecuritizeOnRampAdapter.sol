@@ -10,8 +10,8 @@ interface ISecuritizeOnRampAdapter is IAdapter {
     /// @notice DS token minted by the on-ramp
     function dsToken() external view returns (address);
 
-    /// @notice Stablecoin (liquidity token) spent in the on-ramp
-    function stableCoinToken() external view returns (address);
+    /// @notice Liquidity token spent in the on-ramp
+    function liquidityToken() external view returns (address);
 
     /// @notice Performs an exact-in swap on the on-ramp
     /// @param liquidityAmount Amount of stablecoin to spend

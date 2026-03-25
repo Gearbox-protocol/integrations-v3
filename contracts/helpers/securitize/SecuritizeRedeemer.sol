@@ -79,7 +79,6 @@ contract SecuritizeRedeemer {
     }
 
     /// @notice Sets the account for this withdrawer
-    /// @dev Intended to be called only once by the gateway on creation
     function setAccount(address _account) external gatewayOnly {
         account = _account;
     }
