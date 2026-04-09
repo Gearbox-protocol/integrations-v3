@@ -10,11 +10,7 @@ import {ERC20Mock} from "@gearbox-protocol/core-v3/contracts/test/mocks/token/ER
 import {SecuritizeRedemptionGateway} from "../../../../helpers/securitize/SecuritizeRedemptionGateway.sol";
 import {SecuritizeRedeemer} from "../../../../helpers/securitize/SecuritizeRedeemer.sol";
 import {ISecuritizeNAVProvider} from "../../../../integrations/securitize/ISecuritizeNAVProvider.sol";
-import {
-    ISecuritizeWhitelister,
-    Signature,
-    RegisterMessage
-} from "../../../../integrations/securitize/ISecuritizeWhitelister.sol";
+import {ISecuritizeWhitelister} from "../../../../integrations/securitize/ISecuritizeWhitelister.sol";
 import {ISecuritizeGatewayTransferMaster} from "../../../../interfaces/securitize/ISecuritizeGatewayTransferMaster.sol";
 import {ISecuritizeRedemptionGateway} from "../../../../interfaces/securitize/ISecuritizeRedemptionGateway.sol";
 
@@ -39,18 +35,12 @@ contract SecuritizeWhitelisterMock is ISecuritizeWhitelister {
     address public lastCreditAccount;
     address public lastHelperAccount;
     address public lastToken;
-    uint256 public lastDeadline;
-    bytes public lastSignature;
 
-    function registerHelperAccount(address creditAccount, address helperAccount, RegisterMessage calldata message)
-        external
-    {
+    function registerHelperAccount(address creditAccount, address helperAccount, address token) external {
         calls++;
         lastCreditAccount = creditAccount;
         lastHelperAccount = helperAccount;
-        lastToken = message.token;
-        lastDeadline = message.signature.deadline;
-        lastSignature = message.signature.signature;
+        lastToken = token;
     }
 }
 
@@ -82,7 +72,6 @@ contract SecuritizeRedemptionGatewayUnitTest is Test {
     address redemptionAccount;
     address account;
     address newAccount;
-    Signature userSignature;
 
     function setUp() public {
         dsToken = address(new ERC20Mock("DS", "DS", 18));
@@ -90,7 +79,6 @@ contract SecuritizeRedemptionGatewayUnitTest is Test {
         redemptionAccount = makeAddr("REDEMPTION_ACCOUNT");
         account = makeAddr("ACCOUNT");
         newAccount = makeAddr("NEW_ACCOUNT");
-        userSignature = Signature({deadline: 1, signature: hex"deadbeef"});
 
         navProvider = new SecuritizeNAVProviderMock(1e18);
         whitelister = new SecuritizeWhitelisterMock();
@@ -127,7 +115,7 @@ contract SecuritizeRedemptionGatewayUnitTest is Test {
         IERC20(dsToken).approve(address(gateway), 100e18);
 
         vm.prank(account);
-        gateway.redeem(100e18, userSignature);
+        gateway.redeem(100e18);
 
         address[] memory redeemers = gateway.getRedeemers(account);
         assertEq(redeemers.length, 1);
@@ -138,8 +126,6 @@ contract SecuritizeRedemptionGatewayUnitTest is Test {
         assertEq(whitelister.lastCreditAccount(), account);
         assertEq(whitelister.lastHelperAccount(), redeemer);
         assertEq(whitelister.lastToken(), dsToken);
-        assertEq(whitelister.lastDeadline(), userSignature.deadline);
-        assertEq(whitelister.lastSignature(), userSignature.signature);
 
         assertEq(IERC20(dsToken).balanceOf(redemptionAccount), 100e18);
         assertEq(SecuritizeRedeemer(redeemer).account(), account);
@@ -154,8 +140,8 @@ contract SecuritizeRedemptionGatewayUnitTest is Test {
 
         vm.startPrank(account);
         IERC20(dsToken).approve(address(gateway), 300e18);
-        gateway.redeem(100e18, userSignature);
-        gateway.redeem(200e18, userSignature);
+        gateway.redeem(100e18);
+        gateway.redeem(200e18);
         vm.stopPrank();
 
         address[] memory redeemers = gateway.getRedeemers(account);
@@ -171,7 +157,7 @@ contract SecuritizeRedemptionGatewayUnitTest is Test {
         vm.prank(account);
         IERC20(dsToken).approve(address(gateway), 100e18);
         vm.prank(account);
-        gateway.redeem(100e18, userSignature);
+        gateway.redeem(100e18);
 
         address redeemer = gateway.getRedeemers(account)[0];
         deal(stableCoinToken, redeemer, 123e6);
@@ -190,7 +176,7 @@ contract SecuritizeRedemptionGatewayUnitTest is Test {
         vm.prank(account);
         IERC20(dsToken).approve(address(gateway), 100e18);
         vm.prank(account);
-        gateway.redeem(100e18, userSignature);
+        gateway.redeem(100e18);
 
         address redeemer = gateway.getRedeemers(account)[0];
 
@@ -206,10 +192,10 @@ contract SecuritizeRedemptionGatewayUnitTest is Test {
         IERC20(dsToken).approve(address(gateway), 150e18);
 
         navProvider.setRate(1e18);
-        gateway.redeem(100e18, userSignature);
+        gateway.redeem(100e18);
 
         navProvider.setRate(2e18);
-        gateway.redeem(50e18, userSignature);
+        gateway.redeem(50e18);
         vm.stopPrank();
 
         navProvider.setRate(1e18);
@@ -229,7 +215,7 @@ contract SecuritizeRedemptionGatewayUnitTest is Test {
         vm.prank(account);
         IERC20(dsToken).approve(address(gateway), 100e18);
         vm.prank(account);
-        gateway.redeem(100e18, userSignature);
+        gateway.redeem(100e18);
 
         address redeemer = gateway.getRedeemers(account)[0];
         transferMaster.setTransferAllowed(true);
@@ -261,7 +247,7 @@ contract SecuritizeRedemptionGatewayUnitTest is Test {
         vm.prank(account);
         IERC20(dsToken).approve(address(gateway), 100e18);
         vm.prank(account);
-        gateway.redeem(100e18, userSignature);
+        gateway.redeem(100e18);
 
         address redeemer = gateway.getRedeemers(account)[0];
         transferMaster.setTransferAllowed(false);
@@ -285,7 +271,7 @@ contract SecuritizeRedemptionGatewayUnitTest is Test {
         IERC20(dsToken).approve(address(gateway), 100e18);
 
         vm.prank(account);
-        gateway.redeem(100e18, userSignature);
+        gateway.redeem(100e18);
 
         address redeemer = gateway.getRedeemers(account)[0];
         transferMaster.setTransferAllowed(true);

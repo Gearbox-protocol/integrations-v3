@@ -11,7 +11,6 @@ import {SecuritizeRedemptionPhantomToken} from "../../../../helpers/securitize/S
 import {NotImplementedException} from "@gearbox-protocol/core-v3/contracts/interfaces/IExceptions.sol";
 
 import {ISecuritizeRedemptionGateway} from "../../../../interfaces/securitize/ISecuritizeRedemptionGateway.sol";
-import {ISecuritizeWhitelister, Signature} from "../../../../integrations/securitize/ISecuritizeWhitelister.sol";
 import {AdapterUnitTestHelper} from "../AdapterUnitTestHelper.sol";
 
 contract SecuritizeRedemptionGatewayMock is ISecuritizeRedemptionGateway {
@@ -55,7 +54,7 @@ contract SecuritizeRedemptionGatewayMock is ISecuritizeRedemptionGateway {
         return address(0);
     }
 
-    function redeem(uint256, Signature calldata) external override {}
+    function redeem(uint256) external override {}
 
     function claim(address[] calldata) external override {}
 
@@ -85,14 +84,12 @@ contract SecuritizeRedemptionGatewayAdapterUnitTest is AdapterUnitTestHelper {
 
     address dsToken;
     address stableCoinToken;
-    Signature userSignature;
 
     function setUp() public {
         _setUp();
 
         dsToken = tokens[0];
         stableCoinToken = tokens[1];
-        userSignature = Signature({deadline: 1, signature: hex"deadbeef"});
 
         gateway = new SecuritizeRedemptionGatewayMock(dsToken, stableCoinToken);
         phantomToken = new SecuritizeRedemptionPhantomToken(address(gateway));
@@ -123,10 +120,10 @@ contract SecuritizeRedemptionGatewayAdapterUnitTest is AdapterUnitTestHelper {
     /// @notice U:[SRG-A-2]: Wrapper functions revert on wrong caller
     function test_U_SRG_A_02_wrapper_functions_revert_on_wrong_caller() public {
         _revertsOnNonFacadeCaller();
-        adapter.redeem(1000, userSignature);
+        adapter.redeem(1000);
 
         _revertsOnNonFacadeCaller();
-        adapter.redeemDiff(100, userSignature);
+        adapter.redeemDiff(100);
 
         _revertsOnNonFacadeCaller();
         adapter.claim(new address[](0));
@@ -147,12 +144,12 @@ contract SecuritizeRedemptionGatewayAdapterUnitTest is AdapterUnitTestHelper {
 
         _executesSwap({
             tokenIn: dsToken,
-            callData: abi.encodeCall(ISecuritizeRedemptionGateway.redeem, (dsTokenAmount, userSignature)),
+            callData: abi.encodeCall(ISecuritizeRedemptionGateway.redeem, (dsTokenAmount)),
             requiresApproval: true
         });
 
         vm.prank(creditFacade);
-        bool useSafePrices = adapter.redeem(dsTokenAmount, userSignature);
+        bool useSafePrices = adapter.redeem(dsTokenAmount);
         assertFalse(useSafePrices);
     }
 
@@ -161,7 +158,7 @@ contract SecuritizeRedemptionGatewayAdapterUnitTest is AdapterUnitTestHelper {
         deal(dsToken, creditAccount, 1_000);
 
         vm.prank(creditFacade);
-        bool useSafePrices = adapter.redeemDiff(1_000, userSignature);
+        bool useSafePrices = adapter.redeemDiff(1_000);
         assertFalse(useSafePrices);
     }
 
@@ -173,12 +170,12 @@ contract SecuritizeRedemptionGatewayAdapterUnitTest is AdapterUnitTestHelper {
 
         _executesSwap({
             tokenIn: dsToken,
-            callData: abi.encodeCall(ISecuritizeRedemptionGateway.redeem, (dsTokenAmount, userSignature)),
+            callData: abi.encodeCall(ISecuritizeRedemptionGateway.redeem, (dsTokenAmount)),
             requiresApproval: true
         });
 
         vm.prank(creditFacade);
-        bool useSafePrices = adapter.redeemDiff(leftoverAmount, userSignature);
+        bool useSafePrices = adapter.redeemDiff(leftoverAmount);
         assertFalse(useSafePrices);
     }
 

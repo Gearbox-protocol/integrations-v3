@@ -4,7 +4,6 @@
 pragma solidity ^0.8.23;
 
 import {IPhantomTokenAdapter} from "../IPhantomTokenAdapter.sol";
-import {ISecuritizeWhitelister, Signature} from "../../integrations/securitize/ISecuritizeWhitelister.sol";
 
 /// @title Securitize Redemption Gateway adapter interface
 interface ISecuritizeRedemptionGatewayAdapter is IPhantomTokenAdapter {
@@ -16,9 +15,9 @@ interface ISecuritizeRedemptionGatewayAdapter is IPhantomTokenAdapter {
 
     function redemptionPhantomToken() external view returns (address);
 
-    function redeem(uint256 dsTokenAmount, Signature calldata userSignature) external returns (bool);
+    function redeem(uint256 dsTokenAmount) external returns (bool);
 
-    function redeemDiff(uint256 leftoverAmount, Signature calldata userSignature) external returns (bool);
+    function redeemDiff(uint256 leftoverAmount) external returns (bool);
 
     function claim(address[] calldata redeemers) external returns (bool);
 

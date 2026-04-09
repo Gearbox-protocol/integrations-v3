@@ -13,7 +13,6 @@ import {NotImplementedException} from "@gearbox-protocol/core-v3/contracts/inter
 
 import {ISecuritizeRedemptionGateway} from "../../interfaces/securitize/ISecuritizeRedemptionGateway.sol";
 import {ISecuritizeRedemptionGatewayAdapter} from "../../interfaces/securitize/ISecuritizeRedemptionGatewayAdapter.sol";
-import {ISecuritizeWhitelister, Signature} from "../../integrations/securitize/ISecuritizeWhitelister.sol";
 import {SecuritizeRedemptionPhantomToken} from "../../helpers/securitize/SecuritizeRedemptionPhantomToken.sol";
 
 /// @title SecuritizeSwap Adapter
@@ -47,36 +46,24 @@ contract SecuritizeRedemptionGatewayAdapter is AbstractAdapter, ISecuritizeRedem
         _getMaskOrRevert(redemptionPhantomToken);
     }
 
-    function redeem(uint256 dsTokenAmount, Signature calldata userSignature)
-        external
-        override
-        creditFacadeOnly
-        returns (bool)
-    {
-        _redeem(dsTokenAmount, userSignature);
+    function redeem(uint256 dsTokenAmount) external override creditFacadeOnly returns (bool) {
+        _redeem(dsTokenAmount);
         return false;
     }
 
-    function redeemDiff(uint256 leftoverAmount, Signature calldata userSignature)
-        external
-        override
-        creditFacadeOnly
-        returns (bool)
-    {
+    function redeemDiff(uint256 leftoverAmount) external override creditFacadeOnly returns (bool) {
         address creditAccount = _creditAccount();
         uint256 dsTokenAmount = IERC20(dsToken).balanceOf(creditAccount);
         if (dsTokenAmount <= leftoverAmount) return false;
         unchecked {
             dsTokenAmount -= leftoverAmount;
         }
-        _redeem(dsTokenAmount, userSignature);
+        _redeem(dsTokenAmount);
         return false;
     }
 
-    function _redeem(uint256 dsTokenAmount, Signature calldata userSignature) internal {
-        _executeSwapSafeApprove(
-            dsToken, abi.encodeCall(ISecuritizeRedemptionGateway.redeem, (dsTokenAmount, userSignature))
-        );
+    function _redeem(uint256 dsTokenAmount) internal {
+        _executeSwapSafeApprove(dsToken, abi.encodeCall(ISecuritizeRedemptionGateway.redeem, (dsTokenAmount)));
     }
 
     function claim(address[] calldata redeemers) external override creditFacadeOnly returns (bool) {

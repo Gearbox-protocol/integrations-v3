@@ -9,11 +9,7 @@ import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 import {ISecuritizeRedemptionGateway} from "../../interfaces/securitize/ISecuritizeRedemptionGateway.sol";
-import {
-    ISecuritizeWhitelister,
-    Signature,
-    RegisterMessage
-} from "../../integrations/securitize/ISecuritizeWhitelister.sol";
+import {ISecuritizeWhitelister} from "../../integrations/securitize/ISecuritizeWhitelister.sol";
 import {ISecuritizeGatewayTransferMaster} from "../../interfaces/securitize/ISecuritizeGatewayTransferMaster.sol";
 import {SecuritizeRedeemer} from "./SecuritizeRedeemer.sol";
 
@@ -64,8 +60,8 @@ contract SecuritizeRedemptionGateway is ISecuritizeRedemptionGateway {
 
     /// @notice Redeem DS tokens for stablecoins
     /// @param dsTokenAmount The amount of DS tokens to redeem
-    function redeem(uint256 dsTokenAmount, Signature calldata userSignature) external {
-        address redeemer = _makeNewRedeemerForAccount(msg.sender, userSignature);
+    function redeem(uint256 dsTokenAmount) external {
+        address redeemer = _makeNewRedeemerForAccount(msg.sender);
         IERC20(dsToken).safeTransferFrom(msg.sender, redeemer, dsTokenAmount);
         SecuritizeRedeemer(redeemer).redeem(dsTokenAmount);
     }
@@ -119,16 +115,10 @@ contract SecuritizeRedemptionGateway is ISecuritizeRedemptionGateway {
 
     /// @dev Internal function to get the redeemer for an account, or create a new one if it doesn't exist
     /// @param account The account to get the redeemer for
-    function _makeNewRedeemerForAccount(address account, Signature calldata userSignature)
-        internal
-        returns (address redeemer)
-    {
+    function _makeNewRedeemerForAccount(address account) internal returns (address redeemer) {
         redeemer = Clones.clone(masterRedeemer);
         SecuritizeRedeemer(redeemer).setAccount(account);
-
-        RegisterMessage memory message = RegisterMessage({token: dsToken, signature: userSignature});
-
-        ISecuritizeWhitelister(securitizeWhitelister).registerHelperAccount(account, redeemer, message);
+        ISecuritizeWhitelister(securitizeWhitelister).registerHelperAccount(account, redeemer, dsToken);
 
         redeemersByAccount[account].add(redeemer);
         unclaimedRedeemers[account].add(redeemer);
