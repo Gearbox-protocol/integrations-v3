@@ -71,7 +71,10 @@ contract SecuritizeRedemptionGateway is ISecuritizeRedemptionGateway {
             revert RedeemerNotOwnedByAccountException();
         }
 
-        if (!ISecuritizeGatewayTransferMaster(transferMaster).isTransferAllowed()) {
+        if (
+            !ISecuritizeGatewayTransferMaster(transferMaster).isTransferAllowed()
+                || !unclaimedRedeemers[msg.sender].contains(redeemer)
+        ) {
             revert RedeemerTransferNotAllowedException();
         }
 

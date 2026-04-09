@@ -53,6 +53,9 @@ contract SecuritizeRedeemer {
     /// @notice The NAV rate at beginning of redemption
     uint256 public startingNavRate;
 
+    /// @notice The timestamp at beginning of redemption
+    uint256 public startingTimestamp;
+
     modifier whenNotAlreadyRedeemed() {
         if (alreadyRedeemed) {
             revert AlreadyRedeemedException();
@@ -85,6 +88,7 @@ contract SecuritizeRedeemer {
 
     function redeem(uint256 dsTokenAmount) external gatewayOnly whenNotAlreadyRedeemed {
         IERC20(dsToken).safeTransfer(redemptionAccount, dsTokenAmount);
+        startingTimestamp = block.timestamp;
         startingNavRate = ISecuritizeNAVProvider(navProvider).rate();
         pendingDsTokenAmount = dsTokenAmount;
         alreadyRedeemed = true;
