@@ -18,6 +18,7 @@ import {
 } from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditManagerV3.sol";
 import {ICreditFacadeV3, MultiCall} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacadeV3.sol";
 import {ICreditAccountV3} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditAccountV3.sol";
+import {IPriceFeedStore, PriceUpdate} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IPriceFeedStore.sol";
 import {CreditLogic} from "@gearbox-protocol/core-v3/contracts/libraries/CreditLogic.sol";
 
 import {ISecuritizeRedemptionGateway} from "../../interfaces/securitize/ISecuritizeRedemptionGateway.sol";
@@ -45,16 +46,20 @@ contract SecuritizeLiquidator is ISecuritizeLiquidator {
         isTransferAllowed = false;
     }
 
-    function liquidatePendingRedemption(address creditAccount, address redemptionGateway, uint256 underlyingAmount)
-        external
-        enableRedemptionTransfer
-    {
+    function liquidatePendingRedemption(
+        address creditAccount,
+        address redemptionGateway,
+        PriceUpdate[] memory priceUpdates
+    ) external enableRedemptionTransfer {
         if (ISecuritizeRedemptionGateway(redemptionGateway).transferMaster() != address(this)) {
             revert NotValidGatewayException();
         }
 
         address creditManager = ICreditAccountV3(creditAccount).creditManager();
         address creditFacade = ICreditManagerV3(creditManager).creditFacade();
+
+        _applyPriceUpdates(creditFacade, priceUpdates);
+
         address underlying = ICreditManagerV3(creditManager).underlying();
 
         CollateralDebtData memory cdd =
@@ -72,9 +77,7 @@ contract SecuritizeLiquidator is ISecuritizeLiquidator {
         (uint256 redemptionValue, uint256 liquidityAmount) =
             _calcRedemptionAndLiquidityValues(creditAccount, underlying, redemptionGateway, redeemers);
 
-        if (underlyingAmount * PERCENTAGE_FACTOR < redemptionValue * liquidationDiscount) {
-            revert InsufficientUnderlyingAmountException();
-        }
+        uint256 underlyingAmount = redemptionValue * liquidationDiscount / PERCENTAGE_FACTOR;
 
         if (liquidityAmount >= cdd.calcTotalDebt()) {
             revert AccountHasSufficientLiquidityException();
@@ -121,5 +124,11 @@ contract SecuritizeLiquidator is ISecuritizeLiquidator {
             });
         }
         return calls;
+    }
+
+    function _applyPriceUpdates(address creditFacade, PriceUpdate[] memory priceUpdates) internal {
+        if (priceUpdates.length == 0) return;
+        address priceFeedStore = ICreditFacadeV3(creditFacade).priceFeedStore();
+        IPriceFeedStore(priceFeedStore).updatePrices(priceUpdates);
     }
 }
