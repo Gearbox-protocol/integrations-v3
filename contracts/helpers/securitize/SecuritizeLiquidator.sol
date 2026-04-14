@@ -83,11 +83,14 @@ contract SecuritizeLiquidator is ISecuritizeLiquidator {
             revert AccountHasSufficientLiquidityException();
         }
 
-        MultiCall[] memory calls = _getLiquidationCalls(creditManager, redemptionGateway, redeemers, msg.sender);
+        MultiCall[] memory calls = _getLiquidationCalls(
+            creditManager, creditFacade, redemptionGateway, underlying, underlyingAmount, redeemers, msg.sender
+        );
+        
+        IERC20(underlying).safeTransferFrom(msg.sender, address(this), underlyingAmount);
+        IERC20(underlying).approve(creditManager, underlyingAmount);
 
-        IERC20(underlying).safeTransferFrom(msg.sender, creditAccount, underlyingAmount);
-
-        ICreditFacadeV3(creditFacade).liquidateCreditAccount(creditAccount, address(this), calls, "");
+        ICreditFacadeV3(creditFacade).liquidateCreditAccount(creditAccount, msg.sender, calls, "");
     }
 
     function _calcRedemptionAndLiquidityValues(
@@ -110,19 +113,26 @@ contract SecuritizeLiquidator is ISecuritizeLiquidator {
 
     function _getLiquidationCalls(
         address creditManager,
+        address creditFacade,
         address redemptionGateway,
+        address underlying,
+        uint256 underlyingAmount,
         address[] memory redeemers,
         address to
     ) internal view returns (MultiCall[] memory) {
         address gatewayAdapter = ICreditManagerV3(creditManager).contractToAdapter(redemptionGateway);
 
-        MultiCall[] memory calls = new MultiCall[](redeemers.length);
+        MultiCall[] memory calls = new MultiCall[](redeemers.length + 1);
         for (uint256 i = 0; i < redeemers.length; i++) {
             calls[i] = MultiCall({
                 target: address(gatewayAdapter),
                 callData: abi.encodeCall(ISecuritizeRedemptionGatewayAdapter.transferRedeemer, (redeemers[i], to))
             });
         }
+        calls[redeemers.length] = MultiCall({
+            target: creditFacade,
+            callData: abi.encodeCall(ICreditFacadeV3Multicall.addCollateral, (underlying, underlyingAmount))
+        });
         return calls;
     }
 
