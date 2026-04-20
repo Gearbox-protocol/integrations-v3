@@ -19,7 +19,10 @@ import {
 import {ICreditFacadeV3, MultiCall} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacadeV3.sol";
 import {ICreditAccountV3} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditAccountV3.sol";
 import {IPriceFeedStore, PriceUpdate} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IPriceFeedStore.sol";
+import {IPriceOracleV3} from "@gearbox-protocol/core-v3/contracts/interfaces/IPriceOracleV3.sol";
 import {CreditLogic} from "@gearbox-protocol/core-v3/contracts/libraries/CreditLogic.sol";
+
+import {IERC4626Adapter} from "../../interfaces/erc4626/IERC4626Adapter.sol";
 
 import {ISecuritizeRedemptionGateway} from "../../interfaces/securitize/ISecuritizeRedemptionGateway.sol";
 import {ISecuritizeRedemptionGatewayAdapter} from "../../interfaces/securitize/ISecuritizeRedemptionGatewayAdapter.sol";
@@ -74,44 +77,60 @@ contract SecuritizeLiquidator is ISecuritizeLiquidator {
         address[] memory redeemers =
             ISecuritizeRedemptionGateway(redemptionGateway).getUnclaimedRedeemers(creditAccount);
 
-        (uint256 redemptionValue, uint256 liquidityAmount) =
-            _calcRedemptionAndLiquidityValues(creditAccount, underlying, redemptionGateway, redeemers);
+        (uint256 collateralValue, uint256 liquidityAmount) =
+            _calcCollateralAndLiquidityValues(creditAccount, creditManager, underlying, redemptionGateway, redeemers);
 
-        uint256 underlyingAmount = redemptionValue * liquidationDiscount / PERCENTAGE_FACTOR;
+        uint256 underlyingAmount = collateralValue * liquidationDiscount / PERCENTAGE_FACTOR;
 
         if (liquidityAmount >= cdd.calcTotalDebt()) {
             revert AccountHasSufficientLiquidityException();
         }
 
         MultiCall[] memory calls = _getLiquidationCalls(
-            creditManager, creditFacade, redemptionGateway, underlying, underlyingAmount, redeemers, msg.sender
+            creditAccount,
+            creditManager,
+            creditFacade,
+            redemptionGateway,
+            underlying,
+            underlyingAmount,
+            redeemers,
+            msg.sender
         );
-        
+
         IERC20(underlying).safeTransferFrom(msg.sender, address(this), underlyingAmount);
         IERC20(underlying).approve(creditManager, underlyingAmount);
 
         ICreditFacadeV3(creditFacade).liquidateCreditAccount(creditAccount, msg.sender, calls, "");
     }
 
-    function _calcRedemptionAndLiquidityValues(
+    function _calcCollateralAndLiquidityValues(
         address creditAccount,
+        address creditManager,
         address underlying,
         address redemptionGateway,
         address[] memory redeemers
-    ) internal view returns (uint256 redemptionValue, uint256 liquidityAmount) {
+    ) internal view returns (uint256 collateralValue, uint256 liquidityAmount) {
         address stableCoinToken = ISecuritizeRedemptionGateway(redemptionGateway).stableCoinToken();
+        address dsToken = ISecuritizeRedemptionGateway(redemptionGateway).dsToken();
 
         for (uint256 i = 0; i < redeemers.length; i++) {
-            redemptionValue += SecuritizeRedeemer(redeemers[i]).getCurrentRedemptionValue();
+            collateralValue += SecuritizeRedeemer(redeemers[i]).getCurrentRedemptionValue();
             liquidityAmount += IERC20(stableCoinToken).balanceOf(redeemers[i]);
         }
 
         liquidityAmount += IERC20(underlying).balanceOf(creditAccount);
+        liquidityAmount += IERC20(stableCoinToken).balanceOf(creditAccount);
 
-        return (redemptionValue, liquidityAmount);
+        address priceOracle = ICreditManagerV3(creditManager).priceOracle();
+
+        uint256 dsTokenBalance = IERC20(dsToken).balanceOf(creditAccount);
+        collateralValue += IPriceOracleV3(priceOracle).convert(dsTokenBalance, dsToken, underlying);
+
+        return (collateralValue, liquidityAmount);
     }
 
     function _getLiquidationCalls(
+        address creditAccount,
         address creditManager,
         address creditFacade,
         address redemptionGateway,
@@ -122,7 +141,7 @@ contract SecuritizeLiquidator is ISecuritizeLiquidator {
     ) internal view returns (MultiCall[] memory) {
         address gatewayAdapter = ICreditManagerV3(creditManager).contractToAdapter(redemptionGateway);
 
-        MultiCall[] memory calls = new MultiCall[](redeemers.length + 1);
+        MultiCall[] memory calls = new MultiCall[](redeemers.length + 3);
         for (uint256 i = 0; i < redeemers.length; i++) {
             calls[i] = MultiCall({
                 target: address(gatewayAdapter),
@@ -133,6 +152,20 @@ contract SecuritizeLiquidator is ISecuritizeLiquidator {
             target: creditFacade,
             callData: abi.encodeCall(ICreditFacadeV3Multicall.addCollateral, (underlying, underlyingAmount))
         });
+
+        uint256 dsTokenBalance =
+            IERC20(ISecuritizeRedemptionGateway(redemptionGateway).dsToken()).balanceOf(creditAccount);
+        uint256 stableCoinBalance =
+            IERC20(ISecuritizeRedemptionGateway(redemptionGateway).stableCoinToken()).balanceOf(creditAccount);
+        address underlyingAdapter = ICreditManagerV3(creditManager).contractToAdapter(underlying);
+
+        calls[redeemers.length + 1] = MultiCall({
+            target: creditFacade,
+            callData: abi.encodeCall(ICreditFacadeV3Multicall.withdrawCollateral, (dsToken, dsTokenBalance, to))
+        });
+        calls[redeemers.length + 2] =
+            MultiCall({target: creditFacade, callData: abi.encodeCall(IERC4626Adapter.depositDiff, (1))});
+
         return calls;
     }
 

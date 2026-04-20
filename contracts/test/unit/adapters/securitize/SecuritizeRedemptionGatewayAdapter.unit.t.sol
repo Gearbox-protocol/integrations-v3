@@ -17,9 +17,11 @@ contract SecuritizeRedemptionGatewayMock is ISecuritizeRedemptionGateway {
     address internal _dsToken;
     address internal _stableCoinToken;
 
-    constructor(address dsToken, address stableCoinToken) {
-        _dsToken = dsToken;
-        _stableCoinToken = stableCoinToken;
+    address public navProvider;
+
+    constructor(address dsToken_, address stableCoinToken_) {
+        _dsToken = dsToken_;
+        _stableCoinToken = stableCoinToken_;
     }
 
     function contractType() external pure override returns (bytes32) {
@@ -38,19 +40,19 @@ contract SecuritizeRedemptionGatewayMock is ISecuritizeRedemptionGateway {
         return _stableCoinToken;
     }
 
-    function redemptionAccount() external view override returns (address) {
+    function redemptionAccount() external pure override returns (address) {
         return address(0);
     }
 
-    function securitizeWhitelister() external view override returns (address) {
+    function securitizeWhitelister() external pure override returns (address) {
         return address(0);
     }
 
-    function masterRedeemer() external view override returns (address) {
+    function masterRedeemer() external pure override returns (address) {
         return address(0);
     }
 
-    function transferMaster() external view override returns (address) {
+    function transferMaster() external pure override returns (address) {
         return address(0);
     }
 
@@ -58,18 +60,18 @@ contract SecuritizeRedemptionGatewayMock is ISecuritizeRedemptionGateway {
 
     function claim(address[] calldata) external override {}
 
-    function transferRedeemer(address, address) external override {}
+    function transferRedeemer(address, address) external pure override {}
 
-    function getRedemptionAmount(address) external view override returns (uint256) {
+    function getRedemptionAmount(address) external pure override returns (uint256) {
         return 0;
     }
 
-    function getRedeemers(address) external view override returns (address[] memory) {
+    function getRedeemers(address) external pure override returns (address[] memory) {
         address[] memory empty;
         return empty;
     }
 
-    function getUnclaimedRedeemers(address) external view override returns (address[] memory) {
+    function getUnclaimedRedeemers(address) external pure override returns (address[] memory) {
         address[] memory empty;
         return empty;
     }
