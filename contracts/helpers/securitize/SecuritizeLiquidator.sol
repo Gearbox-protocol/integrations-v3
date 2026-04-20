@@ -39,8 +39,6 @@ contract SecuritizeLiquidator is ISecuritizeLiquidator {
     bytes32 public constant override contractType = "HELPER::SECURITIZE_LIQUIDATOR";
     uint256 public constant override version = 3_10;
 
-    address public immutable dsToken;
-
     bool public isTransferAllowed;
 
     modifier enableRedemptionTransfer() {
@@ -141,30 +139,46 @@ contract SecuritizeLiquidator is ISecuritizeLiquidator {
     ) internal view returns (MultiCall[] memory) {
         address gatewayAdapter = ICreditManagerV3(creditManager).contractToAdapter(redemptionGateway);
 
-        MultiCall[] memory calls = new MultiCall[](redeemers.length + 3);
+        MultiCall[] memory calls = new MultiCall[](redeemers.length + 1);
+
         for (uint256 i = 0; i < redeemers.length; i++) {
             calls[i] = MultiCall({
                 target: address(gatewayAdapter),
                 callData: abi.encodeCall(ISecuritizeRedemptionGatewayAdapter.transferRedeemer, (redeemers[i], to))
             });
         }
+
         calls[redeemers.length] = MultiCall({
             target: creditFacade,
             callData: abi.encodeCall(ICreditFacadeV3Multicall.addCollateral, (underlying, underlyingAmount))
         });
+        {
+            address dsToken = ISecuritizeRedemptionGateway(redemptionGateway).dsToken();
+            uint256 dsTokenBalance = IERC20(dsToken).balanceOf(creditAccount);
+            if (dsTokenBalance > 0) {
+                calls = _append(
+                    calls,
+                    MultiCall({
+                        target: creditFacade,
+                        callData: abi.encodeCall(
+                            ICreditFacadeV3Multicall.withdrawCollateral, (dsToken, dsTokenBalance, to)
+                        )
+                    })
+                );
+            }
+        }
 
-        uint256 dsTokenBalance =
-            IERC20(ISecuritizeRedemptionGateway(redemptionGateway).dsToken()).balanceOf(creditAccount);
-        uint256 stableCoinBalance =
-            IERC20(ISecuritizeRedemptionGateway(redemptionGateway).stableCoinToken()).balanceOf(creditAccount);
-        address underlyingAdapter = ICreditManagerV3(creditManager).contractToAdapter(underlying);
-
-        calls[redeemers.length + 1] = MultiCall({
-            target: creditFacade,
-            callData: abi.encodeCall(ICreditFacadeV3Multicall.withdrawCollateral, (dsToken, dsTokenBalance, to))
-        });
-        calls[redeemers.length + 2] =
-            MultiCall({target: creditFacade, callData: abi.encodeCall(IERC4626Adapter.depositDiff, (1))});
+        {
+            uint256 stableCoinBalance =
+                IERC20(ISecuritizeRedemptionGateway(redemptionGateway).stableCoinToken()).balanceOf(creditAccount);
+            address underlyingAdapter = ICreditManagerV3(creditManager).contractToAdapter(underlying);
+            if (stableCoinBalance > 0) {
+                calls = _append(
+                    calls,
+                    MultiCall({target: underlyingAdapter, callData: abi.encodeCall(IERC4626Adapter.depositDiff, (1))})
+                );
+            }
+        }
 
         return calls;
     }
@@ -173,5 +187,19 @@ contract SecuritizeLiquidator is ISecuritizeLiquidator {
         if (priceUpdates.length == 0) return;
         address priceFeedStore = ICreditFacadeV3(creditFacade).priceFeedStore();
         IPriceFeedStore(priceFeedStore).updatePrices(priceUpdates);
+    }
+
+    function _append(MultiCall[] memory calls, MultiCall memory call)
+        internal
+        pure
+        returns (MultiCall[] memory newCalls)
+    {
+        uint256 len = calls.length;
+        newCalls = new MultiCall[](len + 1);
+        for (uint256 i = 0; i < len; i++) {
+            newCalls[i] = calls[i];
+        }
+        newCalls[len] = call;
+        return newCalls;
     }
 }
