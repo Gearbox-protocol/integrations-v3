@@ -61,6 +61,7 @@ contract SecuritizeRedemptionGateway is ISecuritizeRedemptionGateway {
     /// @notice Redeem DS tokens for stablecoins
     /// @param dsTokenAmount The amount of DS tokens to redeem
     function redeem(uint256 dsTokenAmount) external {
+        if (dsTokenAmount == 0) return;
         address redeemer = _makeNewRedeemerForAccount(msg.sender);
         IERC20(dsToken).safeTransferFrom(msg.sender, redeemer, dsTokenAmount);
         SecuritizeRedeemer(redeemer).redeem(dsTokenAmount);

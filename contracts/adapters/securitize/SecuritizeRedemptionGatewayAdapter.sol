@@ -48,7 +48,7 @@ contract SecuritizeRedemptionGatewayAdapter is AbstractAdapter, ISecuritizeRedem
 
     function redeem(uint256 dsTokenAmount) external override creditFacadeOnly returns (bool) {
         _redeem(dsTokenAmount);
-        return false;
+        return true;
     }
 
     function redeemDiff(uint256 leftoverAmount) external override creditFacadeOnly returns (bool) {
@@ -59,7 +59,7 @@ contract SecuritizeRedemptionGatewayAdapter is AbstractAdapter, ISecuritizeRedem
             dsTokenAmount -= leftoverAmount;
         }
         _redeem(dsTokenAmount);
-        return false;
+        return true;
     }
 
     function _redeem(uint256 dsTokenAmount) internal {
