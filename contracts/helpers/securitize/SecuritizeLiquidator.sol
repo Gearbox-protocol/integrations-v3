@@ -99,7 +99,7 @@ contract SecuritizeLiquidator is ISecuritizeLiquidator {
         );
 
         IERC20(underlying).safeTransferFrom(msg.sender, address(this), underlyingAmount);
-        IERC20(underlying).approve(creditManager, underlyingAmount);
+        IERC20(underlying).forceApprove(creditManager, underlyingAmount);
 
         isTransferAllowed = true;
         ICreditFacadeV3(creditFacade).liquidateCreditAccount(creditAccount, msg.sender, calls, "");
