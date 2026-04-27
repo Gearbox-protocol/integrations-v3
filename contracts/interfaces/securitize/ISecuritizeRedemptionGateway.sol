@@ -8,6 +8,7 @@ import {IVersion} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IVer
 interface ISecuritizeRedemptionGateway is IVersion {
     error RedeemerNotOwnedByAccountException();
     error RedeemerTransferNotAllowedException();
+    error MaxUnclaimedRedeemersPerAccountException();
 
     function dsToken() external view returns (address);
     function stableCoinToken() external view returns (address);

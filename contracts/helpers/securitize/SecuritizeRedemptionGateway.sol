@@ -124,6 +124,10 @@ contract SecuritizeRedemptionGateway is ISecuritizeRedemptionGateway {
         SecuritizeRedeemer(redeemer).setAccount(account);
         ISecuritizeWhitelister(securitizeWhitelister).registerHelperAccount(account, redeemer, dsToken);
 
+        if (unclaimedRedeemers[account].length() >= 10) {
+            revert MaxUnclaimedRedeemersPerAccountException();
+        }
+
         redeemersByAccount[account].add(redeemer);
         unclaimedRedeemers[account].add(redeemer);
     }
