@@ -5,8 +5,6 @@ pragma solidity ^0.8.23;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
-import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 import {ISecuritizeLiquidator} from "../../interfaces/securitize/ISecuritizeLiquidator.sol";
 
@@ -36,7 +34,7 @@ contract SecuritizeLiquidator is ISecuritizeLiquidator {
     using SafeERC20 for IERC20;
     using CreditLogic for CollateralDebtData;
 
-    bytes32 public constant override contractType = "HELPER::SECURITIZE_LIQUIDATOR";
+    bytes32 public constant override contractType = "KYC_LIQUIDATOR::SECURITIZE";
     uint256 public constant override version = 3_10;
 
     bool public isTransferAllowed;
