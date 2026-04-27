@@ -36,6 +36,10 @@ contract SecuritizeOnRampMock is ISecuritizeOnRamp {
         rate = 0;
         fee = 0;
     }
+
+    function navProvider() external view returns (address) {
+        return address(0);
+    }
 }
 
     /// @title Securitize On-Ramp Adapter unit test

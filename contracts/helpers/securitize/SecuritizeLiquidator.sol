@@ -22,6 +22,7 @@ import {CreditLogic} from "@gearbox-protocol/core-v3/contracts/libraries/CreditL
 
 import {IERC4626Adapter} from "../../interfaces/erc4626/IERC4626Adapter.sol";
 
+import {ISecuritizeKYCFactory} from "../../integrations/securitize/ISecuritizeKYCFactory.sol";
 import {ISecuritizeRedemptionGateway} from "../../interfaces/securitize/ISecuritizeRedemptionGateway.sol";
 import {ISecuritizeRedemptionGatewayAdapter} from "../../interfaces/securitize/ISecuritizeRedemptionGatewayAdapter.sol";
 import {ISecuritizeWhitelister} from "../../integrations/securitize/ISecuritizeWhitelister.sol";
@@ -39,17 +40,21 @@ contract SecuritizeLiquidator is ISecuritizeLiquidator {
 
     bool public isTransferAllowed;
 
-    modifier enableRedemptionTransfer() {
-        isTransferAllowed = true;
-        _;
-        isTransferAllowed = false;
+    address public immutable securitizeKycFactory;
+
+    constructor(address _securitizeKycFactory) {
+        securitizeKycFactory = _securitizeKycFactory;
     }
 
     function liquidatePendingRedemption(
         address creditAccount,
         address redemptionGateway,
         PriceUpdate[] memory priceUpdates
-    ) external enableRedemptionTransfer {
+    ) external {
+        if (ISecuritizeKYCFactory(securitizeKycFactory).isCreditAccount(creditAccount)) {
+            revert UnknownCreditAccountException();
+        }
+
         if (ISecuritizeRedemptionGateway(redemptionGateway).transferMaster() != address(this)) {
             revert NotValidGatewayException();
         }
@@ -96,7 +101,9 @@ contract SecuritizeLiquidator is ISecuritizeLiquidator {
         IERC20(underlying).safeTransferFrom(msg.sender, address(this), underlyingAmount);
         IERC20(underlying).approve(creditManager, underlyingAmount);
 
+        isTransferAllowed = true;
         ICreditFacadeV3(creditFacade).liquidateCreditAccount(creditAccount, msg.sender, calls, "");
+        isTransferAllowed = false;
     }
 
     function _calcCollateralAndLiquidityValues(
