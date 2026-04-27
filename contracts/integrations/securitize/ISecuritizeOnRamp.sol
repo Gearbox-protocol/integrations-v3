@@ -12,4 +12,6 @@ interface ISecuritizeOnRamp {
     function dsToken() external view returns (address);
 
     function liquidityToken() external view returns (address);
+
+    function navProvider() external view returns (address);
 }
