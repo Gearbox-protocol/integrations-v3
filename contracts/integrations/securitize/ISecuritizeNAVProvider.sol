@@ -3,4 +3,5 @@ pragma solidity ^0.8.23;
 
 interface ISecuritizeNAVProvider {
     function rate() external view returns (uint256);
+    function priceFeed() external view returns (address);
 }
