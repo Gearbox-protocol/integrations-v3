@@ -78,8 +78,9 @@ contract SecuritizeLiquidator is ISecuritizeLiquidator {
         address[] memory redeemers =
             ISecuritizeRedemptionGateway(redemptionGateway).getUnclaimedRedeemers(creditAccount);
 
-        (uint256 collateralValue, uint256 liquidityAmount) =
-            _calcCollateralAndLiquidityValues(creditAccount, creditManager, underlying, redemptionGateway, redeemers);
+        (uint256 collateralValue, uint256 liquidityAmount) = _calcCollateralAndLiquidityValues(
+            creditAccount, creditManager, underlying, redemptionGateway, redeemers, liquidationDiscount
+        );
 
         uint256 underlyingAmount = collateralValue * liquidationDiscount / PERCENTAGE_FACTOR;
 
@@ -111,7 +112,8 @@ contract SecuritizeLiquidator is ISecuritizeLiquidator {
         address creditManager,
         address underlying,
         address redemptionGateway,
-        address[] memory redeemers
+        address[] memory redeemers,
+        uint16 liquidationDiscount
     ) internal view returns (uint256 collateralValue, uint256 liquidityAmount) {
         address stableCoinToken = ISecuritizeRedemptionGateway(redemptionGateway).stableCoinToken();
         address dsToken = ISecuritizeRedemptionGateway(redemptionGateway).dsToken();
@@ -123,6 +125,7 @@ contract SecuritizeLiquidator is ISecuritizeLiquidator {
 
         liquidityAmount += IERC20(underlying).balanceOf(creditAccount);
         liquidityAmount += IERC20(stableCoinToken).balanceOf(creditAccount);
+        liquidityAmount = liquidityAmount * liquidationDiscount / PERCENTAGE_FACTOR;
 
         address priceOracle = ICreditManagerV3(creditManager).priceOracle();
 
