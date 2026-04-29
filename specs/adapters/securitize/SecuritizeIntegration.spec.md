@@ -75,11 +75,12 @@ Key behavior:
 - `claim()` transfers all stablecoin balance from redeemer to `account` and zeroes `pendingDsTokenAmount`.
 - Valuation functions:
   - `getCurrentRedemptionValue()` uses current NAV.
-  - `getRedemptionAmount()` returns `min(current-based value, starting-based value)`.
+  - `getRedemptionAmount()` returns `max(currentStablecoinBalance, min(current-based value, starting-based value))`.
 
 Security and pricing rationale:
 
 - `min(startingNAV, currentNAV)` protects against overpricing when post-redemption NAV rises and no definitive settlement callback exists.
+- Taking `max(..., currentStablecoinBalance)` ensures already-received balances on redeemers are never understated in phantom valuation.
 - Request-level separation prevents cross-request state contamination and enables selective transfer/liquidation.
 
 ### `SecuritizeRedemptionGateway`
@@ -97,6 +98,7 @@ State model:
 Key behavior:
 
 - `redeem(dsTokenAmount)`:
+  - returns early for zero amount (no-op),
   - clones `masterRedeemer`,
   - assigns CA ownership via `setAccount`,
   - registers helper account with whitelister,
@@ -110,6 +112,7 @@ Key behavior:
 - `transferRedeemer(redeemer, newAccount)`:
   - only if caller owns redeemer,
   - only if transfer master allows transfer and redeemer is still unclaimed,
+  - only if `newAccount` is an approved wallet in Securitize registry service,
   - moves ownership and unclaimed status from old to new account,
   - updates redeemer `account`.
 - `getRedemptionAmount(account)`:
@@ -120,6 +123,7 @@ Access and transfer restrictions:
 
 - Gateway itself does not expose privileged admin logic for transfer.
 - Transfer authorization is delegated to external `transferMaster` (`isTransferAllowed()`), expected to be the liquidator in this integration.
+- Gateway enforces a hard limit of 10 unclaimed redeemers per account.
 
 ### `SecuritizeRedemptionPhantomToken`
 
@@ -198,25 +202,28 @@ Liquidator-specific assumptions:
 Execution flow (`liquidatePendingRedemption`):
 
 1. Validates gateway transfer master equals the liquidator contract.
-2. Loads credit manager/facade from CA.
-3. Optionally applies provided price updates through `PriceFeedStore`.
-4. Requires account is currently liquidatable (`debt > 0` and TWV < total debt).
-5. Reads liquidation discount from credit manager fees.
-6. Fetches all unclaimed redeemers of CA.
-7. Computes:
+2. Validates the address is a known Securitize KYC credit account (`securitizeKycFactory.isCreditAccount`).
+3. Loads credit manager/facade from CA.
+4. Optionally applies provided price updates through `PriceFeedStore`.
+5. Requires account is currently liquidatable (`debt > 0` and TWV < total debt).
+6. Reads liquidation discount from credit manager fees.
+7. Fetches all unclaimed redeemers of CA.
+8. Computes:
    - `collateralValue`: sum of current redeemer value + DS balance converted to underlying,
-   - `liquidityAmount`: underlying + stablecoin balances on CA plus settled stablecoin balances already on redeemers.
-8. Reverts if `liquidityAmount >= totalDebt` (normal liquidation should be used; no redeemer transfer needed).
-9. Computes required liquidator payment amount:
-   - `underlyingAmount = collateralValue * liquidationDiscount / PERCENTAGE_FACTOR`.
-10. Enables transfer window (`isTransferAllowed = true`) for duration of function and executes liquidation multicall:
+   - `liquidityAmount`: underlying + stablecoin balances on CA plus settled stablecoin balances already on redeemers, then discounted by liquidation discount.
+9. Reverts if `liquidityAmount >= totalDebt` (normal liquidation should be used; no redeemer transfer needed).
+10. Computes required liquidator payment amount:
+
+- `underlyingAmount = collateralValue * liquidationDiscount / PERCENTAGE_FACTOR`.
+
+11. Sets `isTransferAllowed = true`, executes liquidation multicall through `liquidateCreditAccount`, then sets `isTransferAllowed = false` on success:
 
 - transfer each redeemer to liquidator recipient through adapter,
 - add provided underlying collateral,
 - withdraw DS tokens from CA to recipient **only if DS balance is non-zero**,
 - call underlying adapter `depositDiff(1)` **only if stablecoin balance on CA is non-zero**.
 
-11. Calls `CreditFacade.liquidateCreditAccount`.
+12. Calls `CreditFacade.liquidateCreditAccount`.
 
 Fairness and risk intent:
 
@@ -233,6 +240,7 @@ Fairness and risk intent:
 - **Adapter call restrictions**: state-changing adapter methods are `creditFacadeOnly`.
 - **Token allowlist assumptions**: constructors call `_getMaskOrRevert` for all touched tokens/phantom token.
 - **Liquidation preconditions**:
+  - only for credit accounts recognized by Securitize KYC factory,
   - only for truly liquidatable accounts,
   - only when transfer master binding is correct,
   - only when account+redeemer liquid balances do not already cover debt.

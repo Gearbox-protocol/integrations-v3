@@ -24,6 +24,10 @@ contract SecuritizeNAVProviderMock is ISecuritizeNAVProvider {
     function rate() external view returns (uint256) {
         return _rate;
     }
+
+    function priceFeed() external pure returns (address) {
+        return address(0);
+    }
 }
 
 /// @title SecuritizeRedeemer unit test
@@ -137,5 +141,16 @@ contract SecuritizeRedeemerUnitTest is Test {
 
         navProvider.setRate(15e17);
         assertEq(redeemer.getRedemptionAmount(), 150e6);
+    }
+
+    /// @notice U:[SR-8]: getRedemptionAmount is floored by actual stablecoin balance
+    function test_U_SR_08_getRedemptionAmount_uses_current_balance_floor() public {
+        navProvider.setRate(1e18);
+        deal(dsToken, address(redeemer), 100e18);
+        redeemer.redeem(100e18);
+
+        // Base estimated value = 100e6, but redeemer currently holds more.
+        deal(stableCoinToken, address(redeemer), 130e6);
+        assertEq(redeemer.getRedemptionAmount(), 130e6);
     }
 }

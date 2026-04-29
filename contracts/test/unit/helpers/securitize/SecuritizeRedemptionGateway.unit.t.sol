@@ -13,6 +13,7 @@ import {ISecuritizeNAVProvider} from "../../../../integrations/securitize/ISecur
 import {ISecuritizeWhitelister} from "../../../../integrations/securitize/ISecuritizeWhitelister.sol";
 import {ISecuritizeGatewayTransferMaster} from "../../../../interfaces/securitize/ISecuritizeGatewayTransferMaster.sol";
 import {ISecuritizeRedemptionGateway} from "../../../../interfaces/securitize/ISecuritizeRedemptionGateway.sol";
+import {ISecuritizeRegistryService} from "../../../../integrations/securitize/ISecuritizeRegistryService.sol";
 
 contract SecuritizeNAVProviderMock is ISecuritizeNAVProvider {
     uint256 internal _rate;
@@ -27,6 +28,10 @@ contract SecuritizeNAVProviderMock is ISecuritizeNAVProvider {
 
     function rate() external view returns (uint256) {
         return _rate;
+    }
+
+    function priceFeed() external pure returns (address) {
+        return address(0);
     }
 }
 
@@ -59,6 +64,18 @@ contract SecuritizeGatewayTransferMasterMock is ISecuritizeGatewayTransferMaster
     }
 }
 
+contract SecuritizeRegistryServiceMock is ISecuritizeRegistryService {
+    mapping(address => bool) internal _isWallet;
+
+    function setWallet(address wallet, bool isWallet_) external {
+        _isWallet[wallet] = isWallet_;
+    }
+
+    function isWallet(address wallet) external view returns (bool) {
+        return _isWallet[wallet];
+    }
+}
+
 /// @title SecuritizeRedemptionGateway unit test
 /// @notice U:[SRG]: Unit tests for SecuritizeRedemptionGateway
 contract SecuritizeRedemptionGatewayUnitTest is Test {
@@ -66,6 +83,7 @@ contract SecuritizeRedemptionGatewayUnitTest is Test {
     SecuritizeNAVProviderMock navProvider;
     SecuritizeWhitelisterMock whitelister;
     SecuritizeGatewayTransferMasterMock transferMaster;
+    SecuritizeRegistryServiceMock registryService;
 
     address dsToken;
     address stableCoinToken;
@@ -83,6 +101,8 @@ contract SecuritizeRedemptionGatewayUnitTest is Test {
         navProvider = new SecuritizeNAVProviderMock(1e18);
         whitelister = new SecuritizeWhitelisterMock();
         transferMaster = new SecuritizeGatewayTransferMasterMock();
+        registryService = new SecuritizeRegistryServiceMock();
+        registryService.setWallet(newAccount, true);
 
         gateway = new SecuritizeRedemptionGateway(
             dsToken,
@@ -90,7 +110,8 @@ contract SecuritizeRedemptionGatewayUnitTest is Test {
             redemptionAccount,
             address(whitelister),
             address(transferMaster),
-            address(navProvider)
+            address(navProvider),
+            address(registryService)
         );
     }
 
@@ -103,7 +124,18 @@ contract SecuritizeRedemptionGatewayUnitTest is Test {
         assertEq(gateway.redemptionAccount(), redemptionAccount);
         assertEq(gateway.securitizeWhitelister(), address(whitelister));
         assertEq(gateway.transferMaster(), address(transferMaster));
+        assertEq(gateway.registryService(), address(registryService));
         assertTrue(gateway.masterRedeemer() != address(0));
+    }
+
+    /// @notice U:[SRG-1A]: zero redeem is a no-op
+    function test_U_SRG_01A_redeem_zero_is_noop() public {
+        vm.prank(account);
+        gateway.redeem(0);
+
+        assertEq(gateway.getRedeemers(account).length, 0);
+        assertEq(gateway.getUnclaimedRedeemers(account).length, 0);
+        assertEq(whitelister.calls(), 0);
     }
 
     /// @notice U:[SRG-2]: redeem creates a redeemer and executes redemption flow
@@ -241,6 +273,23 @@ contract SecuritizeRedemptionGatewayUnitTest is Test {
         assertEq(IERC20(stableCoinToken).balanceOf(newAccount), 123e6);
     }
 
+    /// @notice U:[SRG-7A]: transferRedeemer reverts when new account is not registered
+    function test_U_SRG_07A_transferRedeemer_reverts_when_new_account_not_registered() public {
+        deal(dsToken, account, 100e18);
+        vm.prank(account);
+        IERC20(dsToken).approve(address(gateway), 100e18);
+        vm.prank(account);
+        gateway.redeem(100e18);
+
+        address redeemer = gateway.getRedeemers(account)[0];
+        transferMaster.setTransferAllowed(true);
+        address unregisteredAccount = makeAddr("UNREGISTERED_ACCOUNT");
+
+        vm.expectRevert(ISecuritizeRedemptionGateway.NewAccountNotRegisteredException.selector);
+        vm.prank(account);
+        gateway.transferRedeemer(redeemer, unregisteredAccount);
+    }
+
     /// @notice U:[SRG-8]: transferRedeemer reverts when transfer is not allowed
     function test_U_SRG_08_transferRedeemer_reverts_when_not_allowed() public {
         deal(dsToken, account, 100e18);
@@ -288,6 +337,19 @@ contract SecuritizeRedemptionGatewayUnitTest is Test {
         assertEq(IERC20(stableCoinToken).balanceOf(newAccount), 55e6);
         assertEq(gateway.getRedeemers(newAccount).length, 1);
         assertEq(gateway.getUnclaimedRedeemers(newAccount).length, 0);
+    }
+
+    /// @notice U:[SRG-11]: redeem reverts when max unclaimed redeemers is reached
+    function test_U_SRG_11_redeem_reverts_on_max_unclaimed_redeemers() public {
+        deal(dsToken, account, 11e18);
+        vm.startPrank(account);
+        IERC20(dsToken).approve(address(gateway), 11e18);
+        for (uint256 i = 0; i < 10; ++i) {
+            gateway.redeem(1e18);
+        }
+        vm.expectRevert(ISecuritizeRedemptionGateway.MaxUnclaimedRedeemersPerAccountException.selector);
+        gateway.redeem(1e18);
+        vm.stopPrank();
     }
 
     function _toArray(address value) internal pure returns (address[] memory arr) {

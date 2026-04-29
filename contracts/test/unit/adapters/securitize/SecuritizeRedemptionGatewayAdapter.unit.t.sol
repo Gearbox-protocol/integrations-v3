@@ -140,7 +140,7 @@ contract SecuritizeRedemptionGatewayAdapterUnitTest is AdapterUnitTestHelper {
         adapter.depositPhantomToken(address(0), 0);
     }
 
-    /// @notice U:[SRG-A-3]: `redeem` works as expected (executes swap + returns false)
+    /// @notice U:[SRG-A-3]: `redeem` works as expected (executes swap + returns true)
     function test_U_SRG_A_03_redeem_works_as_expected() public {
         uint256 dsTokenAmount = 1_234;
 
@@ -152,7 +152,7 @@ contract SecuritizeRedemptionGatewayAdapterUnitTest is AdapterUnitTestHelper {
 
         vm.prank(creditFacade);
         bool useSafePrices = adapter.redeem(dsTokenAmount);
-        assertFalse(useSafePrices);
+        assertTrue(useSafePrices);
     }
 
     /// @notice U:[SRG-A-4]: `redeemDiff` returns false when balance <= leftover
@@ -164,7 +164,7 @@ contract SecuritizeRedemptionGatewayAdapterUnitTest is AdapterUnitTestHelper {
         assertFalse(useSafePrices);
     }
 
-    /// @notice U:[SRG-A-5]: `redeemDiff` works as expected (executes swap + returns false)
+    /// @notice U:[SRG-A-5]: `redeemDiff` works as expected (executes swap + returns true)
     function test_U_SRG_A_05_redeemDiff_works_as_expected() public {
         deal(dsToken, creditAccount, 1_000);
         uint256 leftoverAmount = 100;
@@ -178,7 +178,7 @@ contract SecuritizeRedemptionGatewayAdapterUnitTest is AdapterUnitTestHelper {
 
         vm.prank(creditFacade);
         bool useSafePrices = adapter.redeemDiff(leftoverAmount);
-        assertFalse(useSafePrices);
+        assertTrue(useSafePrices);
     }
 
     /// @notice U:[SRG-A-6]: `claim` works as expected

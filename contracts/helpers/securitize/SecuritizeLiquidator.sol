@@ -51,7 +51,7 @@ contract SecuritizeLiquidator is ISecuritizeLiquidator {
         address redemptionGateway,
         PriceUpdate[] memory priceUpdates
     ) external {
-        if (ISecuritizeKYCFactory(securitizeKycFactory).isCreditAccount(creditAccount)) {
+        if (!ISecuritizeKYCFactory(securitizeKycFactory).isCreditAccount(creditAccount)) {
             revert UnknownCreditAccountException();
         }
 

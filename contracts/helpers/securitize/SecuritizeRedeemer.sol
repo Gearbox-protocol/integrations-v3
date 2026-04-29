@@ -109,11 +109,16 @@ contract SecuritizeRedeemer {
 
     /// @notice Returns the minimal amount of stablecoins that is estimated to be received from redemption
     function getRedemptionAmount() external view returns (uint256) {
+        uint256 currentBalance = IERC20(stableCoinToken).balanceOf(address(this));
+
         uint256 maxRedemptionAmount = pendingDsTokenAmount * stableCoinDecimalsMultiplier * startingNavRate
             / (dsTokenDecimalsMultiplier * dsTokenDecimalsMultiplier);
 
         uint256 currentRedemptionAmount = getCurrentRedemptionValue();
 
-        return currentRedemptionAmount > maxRedemptionAmount ? maxRedemptionAmount : currentRedemptionAmount;
+        uint256 redemptionAmount =
+            currentRedemptionAmount > maxRedemptionAmount ? maxRedemptionAmount : currentRedemptionAmount;
+
+        return currentBalance > redemptionAmount ? currentBalance : redemptionAmount;
     }
 }

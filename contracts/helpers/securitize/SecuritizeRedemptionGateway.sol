@@ -11,6 +11,7 @@ import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet
 import {ISecuritizeRedemptionGateway} from "../../interfaces/securitize/ISecuritizeRedemptionGateway.sol";
 import {ISecuritizeWhitelister} from "../../integrations/securitize/ISecuritizeWhitelister.sol";
 import {ISecuritizeGatewayTransferMaster} from "../../interfaces/securitize/ISecuritizeGatewayTransferMaster.sol";
+import {ISecuritizeRegistryService} from "../../integrations/securitize/ISecuritizeRegistryService.sol";
 import {SecuritizeRedeemer} from "./SecuritizeRedeemer.sol";
 
 /// @title SecuritizeRedemptionGateway
@@ -36,6 +37,8 @@ contract SecuritizeRedemptionGateway is ISecuritizeRedemptionGateway {
 
     address public immutable masterRedeemer;
 
+    address public immutable registryService;
+
     mapping(address => EnumerableSet.AddressSet) internal redeemersByAccount;
 
     mapping(address => EnumerableSet.AddressSet) internal unclaimedRedeemers;
@@ -47,7 +50,8 @@ contract SecuritizeRedemptionGateway is ISecuritizeRedemptionGateway {
         address _redemptionAccount,
         address _securitizeWhitelister,
         address _transferMaster,
-        address _navProvider
+        address _navProvider,
+        address _registryService
     ) {
         dsToken = _dsToken;
         stableCoinToken = _stableCoinToken;
@@ -55,6 +59,7 @@ contract SecuritizeRedemptionGateway is ISecuritizeRedemptionGateway {
         securitizeWhitelister = _securitizeWhitelister;
         transferMaster = _transferMaster;
         navProvider = _navProvider;
+        registryService = _registryService;
         masterRedeemer = address(new SecuritizeRedeemer(_dsToken, _stableCoinToken, _redemptionAccount, _navProvider));
     }
 
@@ -77,6 +82,10 @@ contract SecuritizeRedemptionGateway is ISecuritizeRedemptionGateway {
                 || !unclaimedRedeemers[msg.sender].contains(redeemer)
         ) {
             revert RedeemerTransferNotAllowedException();
+        }
+
+        if (!ISecuritizeRegistryService(registryService).isWallet(newAccount)) {
+            revert NewAccountNotRegisteredException();
         }
 
         redeemersByAccount[msg.sender].remove(redeemer);
