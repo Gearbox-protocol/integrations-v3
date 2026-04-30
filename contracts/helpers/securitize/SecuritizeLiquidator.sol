@@ -49,7 +49,8 @@ contract SecuritizeLiquidator is ISecuritizeLiquidator {
     function liquidatePendingRedemption(
         address creditAccount,
         address redemptionGateway,
-        PriceUpdate[] memory priceUpdates
+        PriceUpdate[] memory priceUpdates,
+        bytes memory lossPolicyData
     ) external {
         if (!ISecuritizeKYCFactory(securitizeKycFactory).isCreditAccount(creditAccount)) {
             revert UnknownCreditAccountException();
@@ -66,26 +67,26 @@ contract SecuritizeLiquidator is ISecuritizeLiquidator {
 
         address underlying = ICreditManagerV3(creditManager).underlying();
 
-        CollateralDebtData memory cdd =
-            ICreditManagerV3(creditManager).calcDebtAndCollateral(creditAccount, CollateralCalcTask.DEBT_COLLATERAL);
-
-        if (cdd.debt == 0 || (cdd.twvUSD >= cdd.totalDebtUSD)) {
-            revert CreditAccountNotLiquidatableException();
-        }
-
         (,, uint16 liquidationDiscount,,) = ICreditManagerV3(creditManager).fees();
 
         address[] memory redeemers =
             ISecuritizeRedemptionGateway(redemptionGateway).getUnclaimedRedeemers(creditAccount);
 
-        (uint256 collateralValue, uint256 liquidityAmount) = _calcCollateralAndLiquidityValues(
-            creditAccount, creditManager, underlying, redemptionGateway, redeemers, liquidationDiscount
-        );
+        uint256 underlyingAmount;
 
-        uint256 underlyingAmount = collateralValue * liquidationDiscount / PERCENTAGE_FACTOR;
+        {
+            (uint256 collateralValue, uint256 liquidityAmount) = _calcCollateralAndLiquidityValues(
+                creditAccount, creditManager, underlying, redemptionGateway, redeemers, liquidationDiscount
+            );
 
-        if (liquidityAmount >= cdd.calcTotalDebt()) {
-            revert AccountHasSufficientLiquidityException();
+            underlyingAmount = collateralValue * liquidationDiscount / PERCENTAGE_FACTOR;
+
+            CollateralDebtData memory cdd = ICreditManagerV3(creditManager)
+                .calcDebtAndCollateral(creditAccount, CollateralCalcTask.DEBT_COLLATERAL);
+
+            if (liquidityAmount >= cdd.calcTotalDebt()) {
+                revert AccountHasSufficientLiquidityException();
+            }
         }
 
         MultiCall[] memory calls = _getLiquidationCalls(
@@ -103,7 +104,7 @@ contract SecuritizeLiquidator is ISecuritizeLiquidator {
         IERC20(underlying).forceApprove(creditManager, underlyingAmount);
 
         isTransferAllowed = true;
-        ICreditFacadeV3(creditFacade).liquidateCreditAccount(creditAccount, creditAccount, calls, "");
+        ICreditFacadeV3(creditFacade).liquidateCreditAccount(creditAccount, creditAccount, calls, lossPolicyData);
         isTransferAllowed = false;
     }
 

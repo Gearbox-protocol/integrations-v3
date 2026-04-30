@@ -73,10 +73,6 @@ contract SecuritizeRedemptionGateway is ISecuritizeRedemptionGateway {
     }
 
     function transferRedeemer(address redeemer, address newAccount) external {
-        if (!redeemersByAccount[msg.sender].contains(redeemer)) {
-            revert RedeemerNotOwnedByAccountException();
-        }
-
         if (
             !ISecuritizeGatewayTransferMaster(transferMaster).isTransferAllowed()
                 || !unclaimedRedeemers[msg.sender].contains(redeemer)

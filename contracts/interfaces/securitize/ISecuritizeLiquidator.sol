@@ -15,6 +15,7 @@ interface ISecuritizeLiquidator is IVersion {
     function liquidatePendingRedemption(
         address creditAccount,
         address redemptionGateway,
-        PriceUpdate[] memory priceUpdates
+        PriceUpdate[] memory priceUpdates,
+        bytes memory lossPolicyData
     ) external;
 }

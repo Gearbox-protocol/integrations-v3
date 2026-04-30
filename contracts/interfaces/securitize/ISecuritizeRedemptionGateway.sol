@@ -6,7 +6,6 @@ pragma solidity ^0.8.23;
 import {IVersion} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IVersion.sol";
 
 interface ISecuritizeRedemptionGateway is IVersion {
-    error RedeemerNotOwnedByAccountException();
     error RedeemerTransferNotAllowedException();
     error MaxUnclaimedRedeemersPerAccountException();
     error NewAccountNotRegisteredException();
