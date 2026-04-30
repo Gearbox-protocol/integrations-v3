@@ -9,6 +9,7 @@ interface ISecuritizeRedemptionGateway is IVersion {
     error RedeemerTransferNotAllowedException();
     error MaxUnclaimedRedeemersPerAccountException();
     error NewAccountNotRegisteredException();
+    error RedeemerNotOwnedByAccountException();
 
     function dsToken() external view returns (address);
     function stableCoinToken() external view returns (address);

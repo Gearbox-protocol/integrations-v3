@@ -9,8 +9,8 @@ import {PriceUpdate} from "@gearbox-protocol/core-v3/contracts/interfaces/base/I
 interface ISecuritizeLiquidator is IVersion {
     error NotValidGatewayException();
     error UnknownCreditAccountException();
-    error CreditAccountNotLiquidatableException();
     error AccountHasSufficientLiquidityException();
+    error StableCoinIsNotConvertibleException();
 
     function liquidatePendingRedemption(
         address creditAccount,

@@ -4,6 +4,7 @@
 pragma solidity ^0.8.23;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {IERC4626} from "@openzeppelin/contracts/interfaces/IERC4626.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 import {ISecuritizeLiquidator} from "../../interfaces/securitize/ISecuritizeLiquidator.sol";
@@ -122,6 +123,10 @@ contract SecuritizeLiquidator is ISecuritizeLiquidator {
         for (uint256 i = 0; i < redeemers.length; i++) {
             collateralValue += SecuritizeRedeemer(redeemers[i]).getCurrentRedemptionValue();
             liquidityAmount += IERC20(stableCoinToken).balanceOf(redeemers[i]);
+        }
+
+        if (IERC4626(underlying).asset() != stableCoinToken) {
+            revert StableCoinIsNotConvertibleException();
         }
 
         liquidityAmount += IERC20(underlying).balanceOf(creditAccount);

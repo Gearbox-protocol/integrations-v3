@@ -211,7 +211,7 @@ contract SecuritizeRedemptionGatewayAdapterUnitTest is AdapterUnitTestHelper {
 
         vm.prank(creditFacade);
         bool useSafePrices = adapter.transferRedeemer(redeemer, newAccount);
-        assertTrue(useSafePrices);
+        assertFalse(useSafePrices);
     }
 
     /// @notice U:[SRG-A-8]: withdrawPhantomToken reverts as expected

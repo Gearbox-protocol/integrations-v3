@@ -110,8 +110,7 @@ Key behavior:
   - removes redeemer from `unclaimedRedeemers`.
 - Claimed redeemers are intentionally retained in `redeemersByAccount` forever, so users can still claim any late or accidentally sent stablecoins from previously used redeemers.
 - `transferRedeemer(redeemer, newAccount)`:
-  - only if caller owns redeemer,
-  - only if transfer master allows transfer and redeemer is still unclaimed,
+  - only if transfer master allows transfer and redeemer is still unclaimed for caller account,
   - only if `newAccount` is an approved wallet in Securitize registry service,
   - moves ownership and unclaimed status from old to new account,
   - updates redeemer `account`.
@@ -162,7 +161,7 @@ Adapter return semantics:
 - `redeem` and successful `redeemDiff` return `true` (safe prices required, as redemption is treated as a swap into phantom-tokenized pending claim value).
 - Safe pricing for redemption is intentional: post-redeem collateral checks should use `min(mainPrice, reservePrice)` to enforce a buffer (e.g., against interest accrual risk during the delayed redemption window).
 - `claim` returns `false` (claiming settled stablecoins does not require safe-price mode).
-- `transferRedeemer` returns `true` (safe prices requested in Gearbox multicall pipeline).
+- `transferRedeemer` returns `false` (transfer operation itself does not require safe-price mode in the updated adapter behavior).
 
 ### `SecuritizeOnRampAdapter`
 
@@ -205,18 +204,18 @@ Execution flow (`liquidatePendingRedemption`):
 2. Validates the address is a known Securitize KYC credit account (`securitizeKycFactory.isCreditAccount`).
 3. Loads credit manager/facade from CA.
 4. Optionally applies provided price updates through `PriceFeedStore`.
-5. Requires account is currently liquidatable (`debt > 0` and TWV < total debt).
-6. Reads liquidation discount from credit manager fees.
-7. Fetches all unclaimed redeemers of CA.
-8. Computes:
+5. Reads liquidation discount from credit manager fees.
+6. Fetches all unclaimed redeemers of CA.
+7. Computes:
    - `collateralValue`: sum of current redeemer value + DS balance converted to underlying,
    - `liquidityAmount`: underlying + stablecoin balances on CA plus settled stablecoin balances already on redeemers, then discounted by liquidation discount.
+8. Requires convertibility invariant `IERC4626(underlying).asset() == stableCoinToken`; otherwise reverts.
 9. Reverts if `liquidityAmount >= totalDebt` (normal liquidation should be used; no redeemer transfer needed).
 10. Computes required liquidator payment amount:
 
 - `underlyingAmount = collateralValue * liquidationDiscount / PERCENTAGE_FACTOR`.
 
-11. Sets `isTransferAllowed = true`, executes liquidation multicall through `liquidateCreditAccount`, then sets `isTransferAllowed = false` on success:
+11. Sets `isTransferAllowed = true`, executes liquidation multicall through `liquidateCreditAccount(creditAccount, creditAccount, calls, lossPolicyData)`, then sets `isTransferAllowed = false` on success:
 
 - transfer each redeemer to liquidator recipient through adapter,
 - add provided underlying collateral,
@@ -241,8 +240,8 @@ Fairness and risk intent:
 - **Token allowlist assumptions**: constructors call `_getMaskOrRevert` for all touched tokens/phantom token.
 - **Liquidation preconditions**:
   - only for credit accounts recognized by Securitize KYC factory,
-  - only for truly liquidatable accounts,
   - only when transfer master binding is correct,
+  - only when wrapper `underlying` is convertible from/to the same stablecoin used by redemption gateway,
   - only when account+redeemer liquid balances do not already cover debt.
 - **Constrained collateral universe**: liquidation math and call composition rely on the manager using only wrapper underlying, stablecoin, DS token, and phantom token as collateral assets.
 - **Single gateway configuration**: liquidation path assumes one canonical redemption gateway per Credit Manager.
@@ -273,6 +272,7 @@ Fairness and risk intent:
 ## Potential audit hotspots
 
 - Consistency between comments/intended behavior and actual liquidation multicall composition.
+- Correctness of `lossPolicyData` propagation to `CreditFacade.liquidateCreditAccount`.
 - Correctness of conditional liquidation calls (`withdrawCollateral` for DS token and `depositDiff(1)` for stablecoin wrapping) and whether they can fail unexpectedly for specific adapter setups.
 - Correctness of stablecoin-wrapper accounting assumptions (underlying is an ERC4626 wrapper over the same stablecoin used in redemption).
 - Oracle desync risk between NAV provider and Gearbox price oracle during stressed conditions.

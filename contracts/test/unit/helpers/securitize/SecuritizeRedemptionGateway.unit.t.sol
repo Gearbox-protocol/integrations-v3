@@ -308,7 +308,7 @@ contract SecuritizeRedemptionGatewayUnitTest is Test {
 
     /// @notice U:[SRG-9]: transferRedeemer reverts when redeemer is not owned
     function test_U_SRG_09_transferRedeemer_reverts_if_not_owned() public {
-        vm.expectRevert(ISecuritizeRedemptionGateway.RedeemerNotOwnedByAccountException.selector);
+        vm.expectRevert(ISecuritizeRedemptionGateway.RedeemerTransferNotAllowedException.selector);
         vm.prank(account);
         gateway.transferRedeemer(makeAddr("UNKNOWN_REDEEMER"), newAccount);
     }
