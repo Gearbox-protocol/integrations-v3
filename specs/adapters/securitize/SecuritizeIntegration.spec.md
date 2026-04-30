@@ -12,7 +12,6 @@ Scope covered in this spec:
 - `SecuritizeRedemptionPhantomToken`
 - `SecuritizeRedemptionGatewayAdapter`
 - `SecuritizeOnRampAdapter`
-- `SecuritizeSwapAdapter`
 
 The design combines immediate swaps (onramp) with delayed, quarter-based redemptions (offramp). For delayed redemptions, each request is represented by a dedicated redeemer contract and collateralized via a phantom token.
 
@@ -42,7 +41,7 @@ Main components:
 High-level data flow:
 
 1. Onramp:
-   - User submits adapter calls via `CreditFacade.multicall` (e.g. `SecuritizeOnRampAdapter.swap/swapDiff` or `SecuritizeSwapAdapter.buy...`).
+   - User submits adapter calls via `CreditFacade.multicall` (using `SecuritizeOnRampAdapter.swap/swapDiff`).
    - `CreditFacade` calls the adapter, and adapter routes target calldata through `CreditManager` for CA execution.
 2. Offramp request:
    - User submits `SecuritizeRedemptionGatewayAdapter.redeem/redeemDiff` through `CreditFacade.multicall`.
@@ -174,18 +173,6 @@ Key behavior:
 - `swap(liquidityAmount, minOutAmount)` exact-in with min output protection.
 - `swapDiff(leftoverAmount, rateMinRAY)` spends full stablecoin balance minus leftover; computes `minOutAmount = amount * rateMinRAY / RAY`.
 - Uses safe approve/execute pattern from `AbstractAdapter`.
-
-### `SecuritizeSwapAdapter`
-
-Purpose:
-
-- Immediate stablecoin -> DS token buy flow via Securitize swap contract.
-
-Key behavior:
-
-- `buy(uint256,uint256)` forwards calldata directly with approval.
-- `buyExactIn(stableCoinAmount)` computes DS amount via `calculateDsTokenAmount`, then calls `buy(dsAmount, stableAmount)`.
-- `buyExactInDiff(leftoverAmount)` spends full stablecoin balance minus leftover.
 
 ## Liquidation-specific logic (`SecuritizeLiquidator`)
 
