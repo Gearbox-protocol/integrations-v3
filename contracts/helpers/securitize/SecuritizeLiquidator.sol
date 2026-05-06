@@ -23,7 +23,7 @@ import {CreditLogic} from "@gearbox-protocol/core-v3/contracts/libraries/CreditL
 
 import {IERC4626Adapter} from "../../interfaces/erc4626/IERC4626Adapter.sol";
 
-import {ISecuritizeKYCFactory} from "../../integrations/securitize/ISecuritizeKYCFactory.sol";
+import {ISecuritizeRWAFactory} from "../../integrations/securitize/ISecuritizeRWAFactory.sol";
 import {ISecuritizeRedemptionGateway} from "../../interfaces/securitize/ISecuritizeRedemptionGateway.sol";
 import {ISecuritizeRedemptionGatewayAdapter} from "../../interfaces/securitize/ISecuritizeRedemptionGatewayAdapter.sol";
 import {ISecuritizeWhitelister} from "../../integrations/securitize/ISecuritizeWhitelister.sol";
@@ -36,15 +36,15 @@ contract SecuritizeLiquidator is ISecuritizeLiquidator {
     using SafeERC20 for IERC20;
     using CreditLogic for CollateralDebtData;
 
-    bytes32 public constant override contractType = "KYC_LIQUIDATOR::SECURITIZE";
+    bytes32 public constant override contractType = "RWA_LIQUIDATOR::SECURITIZE";
     uint256 public constant override version = 3_10;
 
     bool public isTransferAllowed;
 
-    address public immutable securitizeKycFactory;
+    address public immutable securitizeRWAFactory;
 
-    constructor(address _securitizeKycFactory) {
-        securitizeKycFactory = _securitizeKycFactory;
+    constructor(address _securitizeRWAFactory) {
+        securitizeRWAFactory = _securitizeRWAFactory;
     }
 
     function liquidatePendingRedemption(
@@ -53,7 +53,7 @@ contract SecuritizeLiquidator is ISecuritizeLiquidator {
         PriceUpdate[] memory priceUpdates,
         bytes memory lossPolicyData
     ) external {
-        if (!ISecuritizeKYCFactory(securitizeKycFactory).isCreditAccount(creditAccount)) {
+        if (!ISecuritizeRWAFactory(securitizeRWAFactory).isCreditAccount(creditAccount)) {
             revert UnknownCreditAccountException();
         }
 
