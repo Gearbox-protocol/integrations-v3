@@ -188,7 +188,7 @@ Liquidator-specific assumptions:
 Execution flow (`liquidatePendingRedemption`):
 
 1. Validates gateway transfer master equals the liquidator contract.
-2. Validates the address is a known Securitize KYC credit account (`securitizeKycFactory.isCreditAccount`).
+2. Validates the address is a known Securitize RWA credit account (`securitizeRWAFactory.isCreditAccount`).
 3. Loads credit manager/facade from CA.
 4. Optionally applies provided price updates through `PriceFeedStore`.
 5. Reads liquidation discount from credit manager fees.
@@ -226,7 +226,7 @@ Fairness and risk intent:
 - **Adapter call restrictions**: state-changing adapter methods are `creditFacadeOnly`.
 - **Token allowlist assumptions**: constructors call `_getMaskOrRevert` for all touched tokens/phantom token.
 - **Liquidation preconditions**:
-  - only for credit accounts recognized by Securitize KYC factory,
+  - only for credit accounts recognized by Securitize RWA factory,
   - only when transfer master binding is correct,
   - only when wrapper `underlying` is convertible from/to the same stablecoin used by redemption gateway,
   - only when account+redeemer liquid balances do not already cover debt.
