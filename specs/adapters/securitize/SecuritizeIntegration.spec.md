@@ -190,26 +190,27 @@ Execution flow (`liquidatePendingRedemption`):
 1. Validates gateway transfer master equals the liquidator contract.
 2. Validates the address is a known Securitize RWA credit account (`securitizeRWAFactory.isCreditAccount`).
 3. Loads credit manager/facade from CA.
-4. Optionally applies provided price updates through `PriceFeedStore`.
-5. Reads liquidation discount from credit manager fees.
-6. Fetches all unclaimed redeemers of CA.
-7. Computes:
-   - `collateralValue`: sum of current redeemer value + DS balance converted to underlying,
+4. Validates the redemption gateway is enabled in the credit manager (`contractToAdapter(gateway) != 0`).
+5. Optionally applies provided price updates through `PriceFeedStore`.
+6. Reads liquidation discount from credit manager fees.
+7. Fetches all unclaimed redeemers of CA.
+8. Computes:
+   - `collateralValue`: sum over redeemers of `max(currentStablecoinBalance, currentRedemptionValue)` + DS balance converted to underlying,
    - `liquidityAmount`: underlying + stablecoin balances on CA plus settled stablecoin balances already on redeemers, then discounted by liquidation discount.
-8. Requires convertibility invariant `IERC4626(underlying).asset() == stableCoinToken`; otherwise reverts.
-9. Reverts if `liquidityAmount >= totalDebt` (normal liquidation should be used; no redeemer transfer needed).
-10. Computes required liquidator payment amount:
+9. Requires convertibility invariant `IERC4626(underlying).asset() == stableCoinToken`; otherwise reverts.
+10. Reverts if `liquidityAmount >= totalDebt` (normal liquidation should be used; no redeemer transfer needed).
+11. Computes required liquidator payment amount:
 
 - `underlyingAmount = collateralValue * liquidationDiscount / PERCENTAGE_FACTOR`.
 
-11. Sets `isTransferAllowed = true`, executes liquidation multicall through `liquidateCreditAccount(creditAccount, creditAccount, calls, lossPolicyData)`, then sets `isTransferAllowed = false` on success:
+12. Sets `isTransferAllowed = true`, executes liquidation multicall through `liquidateCreditAccount(creditAccount, creditAccount, calls, lossPolicyData)`, then sets `isTransferAllowed = false` on success:
 
 - transfer each redeemer to liquidator recipient through adapter,
 - add provided underlying collateral,
 - withdraw DS tokens from CA to recipient **only if DS balance is non-zero**,
 - call underlying adapter `depositDiff(1)` **only if stablecoin balance on CA is non-zero**.
 
-12. Calls `CreditFacade.liquidateCreditAccount`.
+13. Calls `CreditFacade.liquidateCreditAccount`.
 
 Fairness and risk intent:
 
@@ -228,6 +229,7 @@ Fairness and risk intent:
 - **Liquidation preconditions**:
   - only for credit accounts recognized by Securitize RWA factory,
   - only when transfer master binding is correct,
+  - only when redemption gateway has a non-zero adapter in the account's credit manager,
   - only when wrapper `underlying` is convertible from/to the same stablecoin used by redemption gateway,
   - only when account+redeemer liquid balances do not already cover debt.
 - **Constrained collateral universe**: liquidation math and call composition rely on the manager using only wrapper underlying, stablecoin, DS token, and phantom token as collateral assets.

@@ -62,6 +62,11 @@ contract SecuritizeLiquidator is ISecuritizeLiquidator {
         }
 
         address creditManager = ICreditAccountV3(creditAccount).creditManager();
+
+        if (ICreditManagerV3(creditManager).contractToAdapter(redemptionGateway) == address(0)) {
+            revert NotValidGatewayException();
+        }
+
         address creditFacade = ICreditManagerV3(creditManager).creditFacade();
 
         _applyPriceUpdates(creditFacade, priceUpdates);
@@ -121,8 +126,11 @@ contract SecuritizeLiquidator is ISecuritizeLiquidator {
         address dsToken = ISecuritizeRedemptionGateway(redemptionGateway).dsToken();
 
         for (uint256 i = 0; i < redeemers.length; i++) {
-            collateralValue += SecuritizeRedeemer(redeemers[i]).getCurrentRedemptionValue();
-            liquidityAmount += IERC20(stableCoinToken).balanceOf(redeemers[i]);
+            uint256 stablecoinAmount = IERC20(stableCoinToken).balanceOf(redeemers[i]);
+            uint256 redemptionValue = SecuritizeRedeemer(redeemers[i]).getCurrentRedemptionValue();
+
+            collateralValue += stablecoinAmount > redemptionValue ? stablecoinAmount : redemptionValue;
+            liquidityAmount += stablecoinAmount;
         }
 
         if (IERC4626(underlying).asset() != stableCoinToken) {
