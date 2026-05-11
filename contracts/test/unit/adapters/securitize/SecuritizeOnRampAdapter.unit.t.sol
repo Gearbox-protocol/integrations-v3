@@ -22,14 +22,14 @@ contract SecuritizeOnRampMock is ISecuritizeOnRamp {
         liquidityToken = _liquidityToken;
     }
 
-    function swap(uint256 _liquidityAmount, uint256 _minOutAmount) external {
+    function swap(uint256 _liquidityAmount, uint256 _minOutAmount) external pure {
         _liquidityAmount;
         _minOutAmount;
     }
 
     function calculateDsTokenAmount(uint256 _liquidityAmount)
         external
-        view
+        pure
         returns (uint256 dsTokenAmount, uint256 rate, uint256 fee)
     {
         dsTokenAmount = _liquidityAmount;
@@ -37,7 +37,7 @@ contract SecuritizeOnRampMock is ISecuritizeOnRamp {
         fee = 0;
     }
 
-    function navProvider() external view returns (address) {
+    function navProvider() external pure returns (address) {
         return address(0);
     }
 }
@@ -133,7 +133,7 @@ contract SecuritizeOnRampMock is ISecuritizeOnRamp {
         }
 
         /// @notice U:[SOR-6]: `serialize` works as expected
-        function test_U_SOR_06_serialize_works_as_expected() public {
+        function test_U_SOR_06_serialize_works_as_expected() public view {
             bytes memory serializedData = adapter.serialize();
 
             (address cm, address tc, address ds, address sc) =

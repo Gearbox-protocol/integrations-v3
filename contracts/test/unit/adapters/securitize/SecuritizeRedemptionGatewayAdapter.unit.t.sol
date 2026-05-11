@@ -229,7 +229,7 @@ contract SecuritizeRedemptionGatewayAdapterUnitTest is AdapterUnitTestHelper {
     }
 
     /// @notice U:[SRG-A-10]: `serialize` works as expected
-    function test_U_SRG_A_10_serialize_works_as_expected() public {
+    function test_U_SRG_A_10_serialize_works_as_expected() public view {
         bytes memory serializedData = adapter.serialize();
         (address cm, address tc, address ds, address sc, address phantom) =
             abi.decode(serializedData, (address, address, address, address, address));

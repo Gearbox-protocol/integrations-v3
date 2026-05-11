@@ -116,7 +116,7 @@ contract SecuritizeRedemptionGatewayUnitTest is Test {
     }
 
     /// @notice U:[SRG-1]: Constructor works as expected
-    function test_U_SRG_01_constructor_works() public {
+    function test_U_SRG_01_constructor_works() public view {
         assertEq(gateway.contractType(), "GATEWAY::SECURITIZE_REDEMPTION");
         assertEq(gateway.version(), 3_10);
         assertEq(gateway.dsToken(), dsToken);
