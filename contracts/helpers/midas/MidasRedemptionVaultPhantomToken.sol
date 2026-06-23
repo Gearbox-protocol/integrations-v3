@@ -7,14 +7,14 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {PhantomERC20} from "../PhantomERC20.sol";
 import {IPhantomToken} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IPhantomToken.sol";
-import {IMidasRedemptionVaultGateway} from "../../interfaces/midas/IMidasRedemptionVaultGateway.sol";
+import {IMidasGateway} from "../../interfaces/midas/IMidasGateway.sol";
 
 /// @title Midas Redemption Vault phantom token
 /// @notice Phantom ERC-20 token that represents expected redemption amounts for a specific output token
 contract MidasRedemptionVaultPhantomToken is PhantomERC20, IPhantomToken {
     bytes32 public constant override contractType = "PHANTOM_TOKEN::MIDAS_REDEMPTION";
 
-    uint256 public constant override version = 3_10;
+    uint256 public constant override version = 3_11;
 
     address public immutable gateway;
 
@@ -27,14 +27,12 @@ contract MidasRedemptionVaultPhantomToken is PhantomERC20, IPhantomToken {
         PhantomERC20(
             _tokenOut,
             string.concat(
-                IERC20Metadata(IMidasRedemptionVaultGateway(_gateway).mToken()).symbol(),
+                IERC20Metadata(IMidasGateway(_gateway).mToken()).symbol(),
                 " redeemed to ",
                 IERC20Metadata(_tokenOut).name()
             ),
             string.concat(
-                IERC20Metadata(IMidasRedemptionVaultGateway(_gateway).mToken()).symbol(),
-                "rd",
-                IERC20Metadata(_tokenOut).symbol()
+                IERC20Metadata(IMidasGateway(_gateway).mToken()).symbol(), "rd", IERC20Metadata(_tokenOut).symbol()
             ),
             IERC20Metadata(_tokenOut).decimals()
         )
@@ -47,7 +45,10 @@ contract MidasRedemptionVaultPhantomToken is PhantomERC20, IPhantomToken {
     /// @param account The account for which the calculation is performed
     /// @return Expected amount of tokenOut that can be withdrawn
     function balanceOf(address account) public view override returns (uint256) {
-        return IMidasRedemptionVaultGateway(gateway).pendingTokenOutAmount(account, tokenOut);
+        (uint256 pendingAmount, uint256 claimableAmount) =
+            IMidasGateway(gateway).pendingAndClaimableTokenOutAmounts(account, tokenOut);
+
+        return pendingAmount + claimableAmount;
     }
 
     /// @notice Returns phantom token's target contract and underlying
