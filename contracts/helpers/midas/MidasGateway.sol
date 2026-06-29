@@ -111,6 +111,7 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
         masterRedeemer = address(new MidasRedeemer(_midasRedemptionVault));
         transferMaster = _transferMaster;
         allowedMarketConfigurator = _allowedMarketConfigurator;
+        expectedRedemptionDuration = _expectedRedemptionDuration;
     }
 
     /// @notice Performs instant issuance of mToken for input token
@@ -259,7 +260,7 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
             claimableAmount += MidasRedeemer(redeemers[i]).claimableTokenOutAmount(tokenOut);
         }
     }
-    
+
     /// @notice Returns the pending redeemers for an account
     /// @param account The account to check
     /// @return redeemers The pending redeemers for the account

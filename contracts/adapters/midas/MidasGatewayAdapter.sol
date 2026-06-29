@@ -217,7 +217,7 @@ contract MidasGatewayAdapter is AbstractAdapter, IMidasGatewayAdapter {
 
     /// @notice Deposits phantom token (not implemented for redemptions)
     /// @dev Redemptions only support withdrawals, not deposits
-    function depositPhantomToken(address, uint256) external pure override returns (bool) {
+    function depositPhantomToken(address, uint256) external view override creditFacadeOnly returns (bool) {
         revert NotImplementedException();
     }
 
