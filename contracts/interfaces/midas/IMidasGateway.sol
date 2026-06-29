@@ -67,4 +67,9 @@ interface IMidasGateway is IVersion {
         external
         view
         returns (uint256 pendingAmount, uint256 claimableAmount);
+
+    /// @notice Returns the pending redeemers for an account
+    /// @param account The account to check
+    /// @return redeemers The pending redeemers for the account
+    function pendingRedeemers(address account) external view returns (address[] memory redeemers);
 }

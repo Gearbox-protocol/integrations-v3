@@ -61,6 +61,9 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
     /// @notice Address of the market configurator of credit accounts that are allowed to interact with the gateway
     address public immutable allowedMarketConfigurator;
 
+    /// @notice Expected duration of a redemption request (for informational purposes)
+    uint256 public immutable expectedRedemptionDuration;
+
     /// @notice Mapping of accounts to corresponding redeemer contracts
     mapping(address => EnumerableSet.AddressSet) internal accountToRedeemers;
 
@@ -79,13 +82,15 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
     /// @param _transferMaster Address of the transfer master contract
     /// @param _allowedMarketConfigurator Address of the market configurator of credit accounts that are allowed to interact with the gateway
     /// @param _checkBorrowerGreenlist Whether to check that the borrower is greenlisted
+    /// @param _expectedRedemptionDuration Expected duration of a redemption request (for informational purposes)
     constructor(
         address _midasIssuanceVault,
         address _midasRedemptionVault,
         address _accessControl,
         address _transferMaster,
         address _allowedMarketConfigurator,
-        bool _checkBorrowerGreenlist
+        bool _checkBorrowerGreenlist,
+        uint256 _expectedRedemptionDuration
     ) {
         midasIssuanceVault = _midasIssuanceVault;
         midasRedemptionVault = _midasRedemptionVault;
@@ -253,6 +258,13 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
             pendingAmount += MidasRedeemer(redeemers[i]).pendingTokenOutAmount(tokenOut);
             claimableAmount += MidasRedeemer(redeemers[i]).claimableTokenOutAmount(tokenOut);
         }
+    }
+    
+    /// @notice Returns the pending redeemers for an account
+    /// @param account The account to check
+    /// @return redeemers The pending redeemers for the account
+    function pendingRedeemers(address account) external view returns (address[] memory redeemers) {
+        return accountToPendingRedeemers[account].values();
     }
 
     /// @dev Internal function to get the redeemer for an account, or create a new one if it doesn't exist

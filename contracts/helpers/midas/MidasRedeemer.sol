@@ -50,6 +50,9 @@ contract MidasRedeemer {
 
     /// @notice Whether this redeemer was already used
     bool public alreadyRedeemed;
+    
+    /// @notice The timestamp when the redemption request was started
+    uint256 public redemptionStartTimestamp;
 
     /// @notice Whether this redemption request was manually cleared
     bool public isManuallyCleared;
@@ -71,6 +74,7 @@ contract MidasRedeemer {
         midasRedemptionVault = _midasRedemptionVault;
         mToken = IMidasRedemptionVault(_midasRedemptionVault).mToken();
         mTokenDataFeed = IMidasRedemptionVault(_midasRedemptionVault).mTokenDataFeed();
+        redemptionStartTimestamp = block.timestamp;
     }
 
     /// @notice Sets the account for this redeemer
