@@ -36,7 +36,7 @@ interface IMidasGateway is IVersion {
     function transferMaster() external view returns (address);
 
     /// @notice Address of the Midas access control contract
-    function midasAccessControl() external view returns (address);
+    function accessControl() external view returns (address);
 
     /// @notice Performs instant issuance of mToken for input token
     /// @param tokenIn Input token to deposit
