@@ -14,6 +14,7 @@ import {ICreditManagerV3} from "@gearbox-protocol/core-v3/contracts/interfaces/I
 import {IVersion} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IVersion.sol";
 import {IMarketConfigurator} from "@gearbox-protocol/permissionless/contracts/interfaces/IMarketConfigurator.sol";
 import {IContractsRegister} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IContractsRegister.sol";
+import {WAD} from "@gearbox-protocol/core-v3/contracts/libraries/Constants.sol";
 
 import {MidasRedeemer} from "./MidasRedeemer.sol";
 import {ReentrancyGuardTrait} from "@gearbox-protocol/core-v3/contracts/traits/ReentrancyGuardTrait.sol";
@@ -131,7 +132,8 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
 
         IERC20(tokenIn).forceApprove(midasIssuanceVault, amountToken);
         _grantGreenlistIfRequired(address(this));
-        IMidasIssuanceVault(midasIssuanceVault).depositInstant(tokenIn, amountToken, minReceiveAmount, referrerId);
+        IMidasIssuanceVault(midasIssuanceVault)
+            .depositInstant(tokenIn, _convertToE18(amountToken, tokenIn), minReceiveAmount, referrerId);
         _revokeGreenlistIfRequired(address(this));
 
         uint256 amount = IERC20(mToken).balanceOf(address(this)) - balanceBefore;
@@ -156,7 +158,8 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
         IERC20(mToken).forceApprove(midasRedemptionVault, amountMTokenIn);
 
         _grantGreenlistIfRequired(address(this));
-        IMidasRedemptionVault(midasRedemptionVault).redeemInstant(tokenOut, amountMTokenIn, minReceiveAmount);
+        IMidasRedemptionVault(midasRedemptionVault)
+            .redeemInstant(tokenOut, amountMTokenIn, _convertToE18(minReceiveAmount, tokenOut));
         _revokeGreenlistIfRequired(address(this));
 
         uint256 amount = IERC20(tokenOut).balanceOf(address(this)) - balanceBefore;
@@ -280,6 +283,13 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
 
         accountToRedeemers[account].add(redeemer);
         accountToPendingRedeemers[account].add(redeemer);
+    }
+
+    /// @dev Converts the token amount to 18 decimals, which is accepted by Midas
+    function _convertToE18(uint256 amount, address token) internal view returns (uint256) {
+        uint256 tokenUnit = 10 ** IERC20Metadata(token).decimals();
+        if (tokenUnit == WAD) return amount;
+        return amount * WAD / tokenUnit;
     }
 
     /// @dev Checks if a caller is eligible to interact with the gateway

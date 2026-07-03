@@ -35,6 +35,9 @@ interface IMidasGateway is IVersion {
     /// @notice Address of the transfer master that can enable redeemer transfers (e.g. during liquidations)
     function transferMaster() external view returns (address);
 
+    /// @notice Address of the Midas access control contract
+    function midasAccessControl() external view returns (address);
+
     /// @notice Performs instant issuance of mToken for input token
     /// @param tokenIn Input token to deposit
     /// @param amountToken Amount of input token to deposit

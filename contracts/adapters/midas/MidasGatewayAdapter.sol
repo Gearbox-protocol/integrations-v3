@@ -4,7 +4,6 @@
 pragma solidity ^0.8.23;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {IERC20Metadata} from "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 import {WAD, RAY} from "@gearbox-protocol/core-v3/contracts/libraries/Constants.sol";
@@ -111,11 +110,7 @@ contract MidasGatewayAdapter is AbstractAdapter, IMidasGatewayAdapter {
     /// @dev Internal implementation of `depositInstant`.
     function _depositInstant(address tokenIn, uint256 amountToken, uint256 minReceiveAmount) internal {
         _executeSwapSafeApprove(
-            tokenIn,
-            abi.encodeCall(
-                IMidasGateway.depositInstant,
-                (tokenIn, _convertToE18(amountToken, tokenIn), minReceiveAmount, referrerId)
-            )
+            tokenIn, abi.encodeCall(IMidasGateway.depositInstant, (tokenIn, amountToken, minReceiveAmount, referrerId))
         );
     }
 
@@ -167,10 +162,7 @@ contract MidasGatewayAdapter is AbstractAdapter, IMidasGatewayAdapter {
     /// @dev Internal implementation of `redeemInstant`
     function _redeemInstant(address tokenOut, uint256 amountMTokenIn, uint256 minReceiveAmount) internal {
         _executeSwapSafeApprove(
-            mToken,
-            abi.encodeCall(
-                IMidasGateway.redeemInstant, (tokenOut, amountMTokenIn, _convertToE18(minReceiveAmount, tokenOut))
-            )
+            mToken, abi.encodeCall(IMidasGateway.redeemInstant, (tokenOut, amountMTokenIn, minReceiveAmount))
         );
     }
 
@@ -320,13 +312,6 @@ contract MidasGatewayAdapter is AbstractAdapter, IMidasGatewayAdapter {
 
             emit SetOutputTokenAllowedStatus(config.token, config.phantomToken, config.allowed);
         }
-    }
-
-    /// @dev Converts the token amount to 18 decimals, which is accepted by Midas
-    function _convertToE18(uint256 amount, address token) internal view returns (uint256) {
-        uint256 tokenUnit = 10 ** IERC20Metadata(token).decimals();
-        if (tokenUnit == WAD) return amount;
-        return amount * WAD / tokenUnit;
     }
 
     /// @notice Serialized adapter parameters
