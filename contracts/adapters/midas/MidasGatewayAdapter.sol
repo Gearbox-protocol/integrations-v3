@@ -192,6 +192,32 @@ contract MidasGatewayAdapter is AbstractAdapter, IMidasGatewayAdapter {
         _execute(abi.encodeCall(IMidasGateway.withdraw, (tokenOut, amount)));
     }
 
+    /// @notice Withdraws tokens from a specific redeemer
+    /// @param redeemer The redeemer to withdraw from
+    /// @param tokenOut The token to withdraw
+    /// @param amount The amount to withdraw
+    function withdrawFromRedeemer(address redeemer, address tokenOut, uint256 amount)
+        external
+        override
+        creditFacadeOnly
+        returns (bool)
+    {
+        _execute(abi.encodeCall(IMidasGateway.withdrawFromRedeemer, (redeemer, tokenOut, amount)));
+        return false;
+    }
+
+    // ----------------- //
+    // TRANSFER REDEEMER //
+    // ----------------- //
+
+    /// @notice Transfers a redeemer to a new account
+    /// @param redeemer The redeemer to transfer
+    /// @param newAccount The new account to transfer the redeemer to
+    function transferRedeemer(address redeemer, address newAccount) external override creditFacadeOnly returns (bool) {
+        _execute(abi.encodeCall(IMidasGateway.transferRedeemer, (redeemer, newAccount)));
+        return false;
+    }
+
     // ------------- //
     // PHANTOM TOKEN //
     // ------------- //

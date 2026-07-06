@@ -61,6 +61,17 @@ interface IMidasGateway is IVersion {
     /// @param amount Amount of output token to withdraw
     function withdraw(address tokenOut, uint256 amount) external;
 
+    /// @notice Withdraws tokens from a specific redeemer
+    /// @param redeemer The redeemer to withdraw from
+    /// @param tokenOut The token to withdraw
+    /// @param amount The amount to withdraw
+    function withdrawFromRedeemer(address redeemer, address tokenOut, uint256 amount) external;
+
+    /// @notice Transfers a redeemer to a new account
+    /// @param redeemer The redeemer to transfer
+    /// @param newAccount The new account to transfer the redeemer to
+    function transferRedeemer(address redeemer, address newAccount) external;
+
     /// @notice Returns the pending and claimable amounts of output token for an account, across all counted redeemers
     /// @param account Account to check
     /// @param tokenOut Output token to check

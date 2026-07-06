@@ -142,18 +142,11 @@ contract CreditManagerMock {
     function creditAccountInfo(address creditAccount)
         external
         view
-        returns (
-            uint256 debt,
-            uint256 cumulativeIndexLastUpdate,
-            uint128 cumulativeQuotaInterest,
-            uint128 quotaFees,
-            uint256 enabledTokensMask,
-            uint16 flags,
-            uint64 lastDebtUpdate,
-            address borrower
-        )
+        returns (uint256, uint256, uint128, uint128, uint256, uint16, uint64, address borrower)
     {
         borrower = _borrowers[creditAccount];
+
+        return (0, 0, 0, 0, 0, 0, 0, borrower);
     }
 }
 

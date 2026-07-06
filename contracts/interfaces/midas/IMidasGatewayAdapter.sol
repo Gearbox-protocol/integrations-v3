@@ -101,6 +101,12 @@ interface IMidasGatewayAdapter is IAdapter, IPhantomTokenAdapter {
     /// @param amount Amount to withdraw
     function withdraw(address tokenOut, uint256 amount) external returns (bool);
 
+    /// @notice Withdraws tokens from a specific redeemer
+    /// @param redeemer The redeemer to withdraw from
+    /// @param tokenOut The token to withdraw
+    /// @param amount The amount to withdraw
+    function withdrawFromRedeemer(address redeemer, address tokenOut, uint256 amount) external returns (bool);
+
     /// @notice Returns whether a token is allowed as output for redemptions
     /// @param token Token address to check
     function isOutputTokenAllowed(address token) external view returns (bool);
@@ -123,4 +129,13 @@ interface IMidasGatewayAdapter is IAdapter, IPhantomTokenAdapter {
     /// @param configs Array of MidasAllowedTokenStatus structs
     /// @dev Can only be called by the configurator
     function setOutputTokenAllowedStatusBatch(MidasAllowedTokenStatus[] calldata configs) external;
+
+    // ----------------- //
+    // TRANSFER REDEEMER //
+    // ----------------- //
+
+    /// @notice Transfers a redeemer to a new account
+    /// @param redeemer The redeemer to transfer
+    /// @param newAccount The new account to transfer the redeemer to
+    function transferRedeemer(address redeemer, address newAccount) external returns (bool);
 }
