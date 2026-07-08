@@ -96,6 +96,25 @@ interface IMidasGatewayAdapter is IAdapter, IPhantomTokenAdapter {
     /// @param amountMTokenIn Amount of mToken to redeem
     function redeemRequest(address tokenOut, uint256 amountMTokenIn) external returns (bool);
 
+    /// @notice Requests a redemption of mToken for output token with extra logging data
+    /// @param tokenOut Output token address
+    /// @param amountMTokenIn Amount of mToken to redeem
+    /// @param extraData Additional redemption data to log
+    function redeemRequest(address tokenOut, uint256 amountMTokenIn, bytes calldata extraData) external returns (bool);
+
+    /// @notice Requests a redemption of the entire mToken balance, except the specified amount
+    /// @param tokenOut Output token address
+    /// @param leftoverAmount Amount of mToken to keep in the account
+    function redeemRequestDiff(address tokenOut, uint256 leftoverAmount) external returns (bool);
+
+    /// @notice Requests a redemption of the entire mToken balance, except the specified amount
+    /// @param tokenOut Output token address
+    /// @param leftoverAmount Amount of mToken to keep in the account
+    /// @param extraData Additional redemption data to log
+    function redeemRequestDiff(address tokenOut, uint256 leftoverAmount, bytes calldata extraData)
+        external
+        returns (bool);
+
     /// @notice Withdraws redeemed tokens from the gateway
     /// @param tokenOut Output token to withdraw
     /// @param amount Amount to withdraw

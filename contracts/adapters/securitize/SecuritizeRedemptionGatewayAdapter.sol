@@ -47,23 +47,48 @@ contract SecuritizeRedemptionGatewayAdapter is AbstractAdapter, ISecuritizeRedem
     }
 
     function redeem(uint256 dsTokenAmount) external override creditFacadeOnly returns (bool) {
-        _redeem(dsTokenAmount);
+        _redeem(dsTokenAmount, "");
+        return true;
+    }
+
+    function redeem(uint256 dsTokenAmount, bytes calldata extraData) external override creditFacadeOnly returns (bool) {
+        _redeem(dsTokenAmount, extraData);
         return true;
     }
 
     function redeemDiff(uint256 leftoverAmount) external override creditFacadeOnly returns (bool) {
         address creditAccount = _creditAccount();
-        uint256 dsTokenAmount = IERC20(dsToken).balanceOf(creditAccount);
-        if (dsTokenAmount <= leftoverAmount) return false;
-        unchecked {
-            dsTokenAmount -= leftoverAmount;
+        uint256 balance = IERC20(dsToken).balanceOf(creditAccount);
+        if (balance > leftoverAmount) {
+            unchecked {
+                _redeem(balance - leftoverAmount, "");
+            }
+            return true;
         }
-        _redeem(dsTokenAmount);
-        return true;
+        return false;
     }
 
-    function _redeem(uint256 dsTokenAmount) internal {
-        _executeSwapSafeApprove(dsToken, abi.encodeCall(ISecuritizeRedemptionGateway.redeem, (dsTokenAmount, "")));
+    function redeemDiff(uint256 leftoverAmount, bytes calldata extraData)
+        external
+        override
+        creditFacadeOnly
+        returns (bool)
+    {
+        address creditAccount = _creditAccount();
+        uint256 balance = IERC20(dsToken).balanceOf(creditAccount);
+        if (balance > leftoverAmount) {
+            unchecked {
+                _redeem(balance - leftoverAmount, extraData);
+            }
+            return true;
+        }
+        return false;
+    }
+
+    function _redeem(uint256 dsTokenAmount, bytes memory extraData) internal {
+        _executeSwapSafeApprove(
+            dsToken, abi.encodeCall(ISecuritizeRedemptionGateway.redeem, (dsTokenAmount, extraData))
+        );
     }
 
     function claim(address[] calldata redeemers) external override creditFacadeOnly returns (bool) {

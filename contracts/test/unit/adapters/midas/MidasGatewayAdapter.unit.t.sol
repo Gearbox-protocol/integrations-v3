@@ -121,6 +121,15 @@ contract MidasGatewayAdapterUnitTest is AdapterUnitTestHelper {
         adapter.redeemRequest(outputToken0, 1000);
 
         _revertsOnNonFacadeCaller();
+        adapter.redeemRequest(outputToken0, 1000, "");
+
+        _revertsOnNonFacadeCaller();
+        adapter.redeemRequestDiff(outputToken0, 1);
+
+        _revertsOnNonFacadeCaller();
+        adapter.redeemRequestDiff(outputToken0, 1, "");
+
+        _revertsOnNonFacadeCaller();
         adapter.withdraw(outputToken0, 1000);
 
         _revertsOnNonFacadeCaller();
@@ -257,6 +266,65 @@ contract MidasGatewayAdapterUnitTest is AdapterUnitTestHelper {
         vm.prank(creditFacade);
         vm.expectRevert(IMidasGatewayAdapter.TokenNotAllowedException.selector);
         adapter.redeemRequest(outputToken1, 1000);
+    }
+
+    /// @notice U:[MID-A-12A]: `redeemRequest` with extraData works as expected
+    function test_U_MID_A_12A_redeemRequest_with_extraData_works() public {
+        bytes memory extraData = abi.encode(uint256(42));
+
+        _executesSwap({
+            tokenIn: mToken,
+            callData: abi.encodeCall(IMidasGateway.requestRedeem, (outputToken0, 1000, extraData)),
+            requiresApproval: true
+        });
+
+        vm.prank(creditFacade);
+        bool useSafePrices = adapter.redeemRequest(outputToken0, 1000, extraData);
+        assertTrue(useSafePrices);
+    }
+
+    /// @notice U:[MID-A-12B]: `redeemRequestDiff` works as expected
+    function test_U_MID_A_12B_redeemRequestDiff_works() public {
+        deal(mToken, creditAccount, 1000);
+        uint256 leftover = 100;
+        uint256 amount = 900;
+
+        _executesSwap({
+            tokenIn: mToken,
+            callData: abi.encodeCall(IMidasGateway.requestRedeem, (outputToken0, amount, "")),
+            requiresApproval: true
+        });
+
+        vm.prank(creditFacade);
+        bool useSafePrices = adapter.redeemRequestDiff(outputToken0, leftover);
+        assertTrue(useSafePrices);
+    }
+
+    /// @notice U:[MID-A-12C]: `redeemRequestDiff` with extraData works as expected
+    function test_U_MID_A_12C_redeemRequestDiff_with_extraData_works() public {
+        deal(mToken, creditAccount, 1000);
+        uint256 leftover = 100;
+        uint256 amount = 900;
+        bytes memory extraData = abi.encode(uint256(42));
+
+        _executesSwap({
+            tokenIn: mToken,
+            callData: abi.encodeCall(IMidasGateway.requestRedeem, (outputToken0, amount, extraData)),
+            requiresApproval: true
+        });
+
+        vm.prank(creditFacade);
+        bool useSafePrices = adapter.redeemRequestDiff(outputToken0, leftover, extraData);
+        assertTrue(useSafePrices);
+    }
+
+    /// @notice U:[MID-A-12D]: `redeemRequestDiff` is a no-op when balance <= leftover
+    function test_U_MID_A_12D_redeemRequestDiff_noop_when_nothing_to_redeem() public {
+        deal(mToken, creditAccount, 100);
+
+        vm.prank(creditFacade);
+        bool useSafePrices = adapter.redeemRequestDiff(outputToken0, 100);
+        assertFalse(useSafePrices);
     }
 
     /// @notice U:[MID-A-14]: `withdraw` works as expected

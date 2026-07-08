@@ -171,12 +171,75 @@ contract MidasGatewayAdapter is AbstractAdapter, IMidasGatewayAdapter {
     /// @param amountMTokenIn Amount of mToken to redeem
     /// @dev Returns `true` to allow safe pricing for the withdrawal phantom token
     function redeemRequest(address tokenOut, uint256 amountMTokenIn) external override creditFacadeOnly returns (bool) {
+        _validateRedeemRequestTokenOut(tokenOut);
+        _redeemRequest(tokenOut, amountMTokenIn, "");
+        return true;
+    }
+
+    /// @inheritdoc IMidasGatewayAdapter
+    function redeemRequest(address tokenOut, uint256 amountMTokenIn, bytes calldata extraData)
+        external
+        override
+        creditFacadeOnly
+        returns (bool)
+    {
+        _validateRedeemRequestTokenOut(tokenOut);
+        _redeemRequest(tokenOut, amountMTokenIn, extraData);
+        return true;
+    }
+
+    /// @inheritdoc IMidasGatewayAdapter
+    function redeemRequestDiff(address tokenOut, uint256 leftoverAmount)
+        external
+        override
+        creditFacadeOnly
+        returns (bool)
+    {
+        _validateRedeemRequestTokenOut(tokenOut);
+
+        address creditAccount = _creditAccount();
+        uint256 balance = IERC20(mToken).balanceOf(creditAccount);
+        if (balance > leftoverAmount) {
+            unchecked {
+                _redeemRequest(tokenOut, balance - leftoverAmount, "");
+            }
+            return true;
+        }
+        return false;
+    }
+
+    /// @inheritdoc IMidasGatewayAdapter
+    function redeemRequestDiff(address tokenOut, uint256 leftoverAmount, bytes calldata extraData)
+        external
+        override
+        creditFacadeOnly
+        returns (bool)
+    {
+        _validateRedeemRequestTokenOut(tokenOut);
+
+        address creditAccount = _creditAccount();
+        uint256 balance = IERC20(mToken).balanceOf(creditAccount);
+        if (balance > leftoverAmount) {
+            unchecked {
+                _redeemRequest(tokenOut, balance - leftoverAmount, extraData);
+            }
+            return true;
+        }
+        return false;
+    }
+
+    /// @dev Internal implementation of `redeemRequest`
+    function _redeemRequest(address tokenOut, uint256 amountMTokenIn, bytes memory extraData) internal {
+        _executeSwapSafeApprove(
+            mToken, abi.encodeCall(IMidasGateway.requestRedeem, (tokenOut, amountMTokenIn, extraData))
+        );
+    }
+
+    /// @dev Validates that a token is allowed for redemption requests
+    function _validateRedeemRequestTokenOut(address tokenOut) internal view {
         if (!isOutputTokenAllowed(tokenOut) || outputTokenToPhantomToken[tokenOut] == address(0)) {
             revert TokenNotAllowedException();
         }
-
-        _executeSwapSafeApprove(mToken, abi.encodeCall(IMidasGateway.requestRedeem, (tokenOut, amountMTokenIn, "")));
-        return true;
     }
 
     /// @notice Withdraws redeemed tokens from the gateway

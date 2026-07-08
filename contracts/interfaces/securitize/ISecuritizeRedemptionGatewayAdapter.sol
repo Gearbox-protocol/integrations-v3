@@ -17,7 +17,11 @@ interface ISecuritizeRedemptionGatewayAdapter is IPhantomTokenAdapter {
 
     function redeem(uint256 dsTokenAmount) external returns (bool);
 
+    function redeem(uint256 dsTokenAmount, bytes calldata extraData) external returns (bool);
+
     function redeemDiff(uint256 leftoverAmount) external returns (bool);
+
+    function redeemDiff(uint256 leftoverAmount, bytes calldata extraData) external returns (bool);
 
     function claim(address[] calldata redeemers) external returns (bool);
 

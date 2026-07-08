@@ -129,7 +129,13 @@ contract SecuritizeRedemptionGatewayAdapterUnitTest is AdapterUnitTestHelper {
         adapter.redeem(1000);
 
         _revertsOnNonFacadeCaller();
+        adapter.redeem(1000, "");
+
+        _revertsOnNonFacadeCaller();
         adapter.redeemDiff(100);
+
+        _revertsOnNonFacadeCaller();
+        adapter.redeemDiff(100, "");
 
         _revertsOnNonFacadeCaller();
         adapter.claim(new address[](0));
@@ -159,6 +165,22 @@ contract SecuritizeRedemptionGatewayAdapterUnitTest is AdapterUnitTestHelper {
         assertTrue(useSafePrices);
     }
 
+    /// @notice U:[SRG-A-3A]: `redeem` with extraData works as expected
+    function test_U_SRG_A_03A_redeem_with_extraData_works_as_expected() public {
+        uint256 dsTokenAmount = 1_234;
+        bytes memory extraData = abi.encode(uint256(42));
+
+        _executesSwap({
+            tokenIn: dsToken,
+            callData: abi.encodeCall(ISecuritizeRedemptionGateway.redeem, (dsTokenAmount, extraData)),
+            requiresApproval: true
+        });
+
+        vm.prank(creditFacade);
+        bool useSafePrices = adapter.redeem(dsTokenAmount, extraData);
+        assertTrue(useSafePrices);
+    }
+
     /// @notice U:[SRG-A-4]: `redeemDiff` returns false when balance <= leftover
     function test_U_SRG_A_04_redeemDiff_returns_false_when_nothing_to_redeem() public {
         deal(dsToken, creditAccount, 1_000);
@@ -182,6 +204,24 @@ contract SecuritizeRedemptionGatewayAdapterUnitTest is AdapterUnitTestHelper {
 
         vm.prank(creditFacade);
         bool useSafePrices = adapter.redeemDiff(leftoverAmount);
+        assertTrue(useSafePrices);
+    }
+
+    /// @notice U:[SRG-A-5A]: `redeemDiff` with extraData works as expected
+    function test_U_SRG_A_05A_redeemDiff_with_extraData_works_as_expected() public {
+        deal(dsToken, creditAccount, 1_000);
+        uint256 leftoverAmount = 100;
+        uint256 dsTokenAmount = 900;
+        bytes memory extraData = abi.encode(uint256(42));
+
+        _executesSwap({
+            tokenIn: dsToken,
+            callData: abi.encodeCall(ISecuritizeRedemptionGateway.redeem, (dsTokenAmount, extraData)),
+            requiresApproval: true
+        });
+
+        vm.prank(creditFacade);
+        bool useSafePrices = adapter.redeemDiff(leftoverAmount, extraData);
         assertTrue(useSafePrices);
     }
 
