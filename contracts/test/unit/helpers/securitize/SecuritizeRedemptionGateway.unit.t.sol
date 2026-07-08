@@ -369,6 +369,7 @@ contract SecuritizeRedemptionGatewayUnitTest is Test {
             address(registryService),
             address(logger)
         );
+        logger.setGatewayAllowed(address(gatewayWithLogger), true);
 
         deal(dsToken, account, 100e18);
         vm.prank(account);

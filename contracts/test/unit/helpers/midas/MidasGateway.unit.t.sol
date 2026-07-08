@@ -452,6 +452,7 @@ contract MidasGatewayUnitTest is Test {
             REDEMPTION_DURATION,
             address(logger)
         );
+        logger.setGatewayAllowed(address(gatewayWithLogger), true);
 
         uint256 amountMToken = 100e18;
         bytes memory extraData = abi.encode(uint256(42));

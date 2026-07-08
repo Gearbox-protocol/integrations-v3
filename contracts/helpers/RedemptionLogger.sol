@@ -3,12 +3,15 @@
 // (c) Gearbox Foundation, 2026.
 pragma solidity ^0.8.23;
 
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+
 import {IRedemptionLogger} from "../interfaces/IRedemptionLogger.sol";
 
 /// @title Redemption Logger
 /// @notice Stores and emits redemption events for off-chain indexing
-contract RedemptionLogger is IRedemptionLogger {
+contract RedemptionLogger is Ownable, IRedemptionLogger {
     mapping(address => RedemptionLog) internal _redemptionLogs;
+    mapping(address => bool) public override allowedGateways;
 
     /// @inheritdoc IRedemptionLogger
     function redemptionLogs(address redeemer) external view override returns (RedemptionLog memory) {
@@ -16,7 +19,14 @@ contract RedemptionLogger is IRedemptionLogger {
     }
 
     /// @inheritdoc IRedemptionLogger
+    function setGatewayAllowed(address gateway, bool allowed) external override onlyOwner {
+        allowedGateways[gateway] = allowed;
+    }
+
+    /// @inheritdoc IRedemptionLogger
     function logRedemption(address creditAccount, address redeemer, bytes calldata extraData) external override {
+        if (!allowedGateways[msg.sender]) revert GatewayNotAllowedException();
+
         _redemptionLogs[redeemer] =
             RedemptionLog({creditAccount: creditAccount, redeemer: redeemer, extraData: extraData});
         emit RedemptionLogged(creditAccount, redeemer, extraData);

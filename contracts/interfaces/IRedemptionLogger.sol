@@ -5,6 +5,9 @@ pragma solidity ^0.8.23;
 
 /// @title Redemption Logger interface
 interface IRedemptionLogger {
+    /// @dev Thrown when `logRedemption` is called by a non-allowed gateway
+    error GatewayNotAllowedException();
+
     /// @notice Logged redemption data
     /// @param creditAccount Credit account address
     /// @param redeemer Redeemer contract address
@@ -24,6 +27,16 @@ interface IRedemptionLogger {
     /// @notice Returns logged redemption data for a redeemer
     /// @param redeemer Redeemer contract address
     function redemptionLogs(address redeemer) external view returns (RedemptionLog memory);
+
+    /// @notice Returns whether a gateway is allowed to log redemptions
+    /// @param gateway Gateway address
+    function allowedGateways(address gateway) external view returns (bool);
+
+    /// @notice Sets whether a gateway is allowed to log redemptions
+    /// @param gateway Gateway address
+    /// @param allowed Whether the gateway is allowed to log redemptions
+    /// @dev Can only be called by the owner
+    function setGatewayAllowed(address gateway, bool allowed) external;
 
     /// @notice Logs a redemption event
     /// @param creditAccount Credit account address
