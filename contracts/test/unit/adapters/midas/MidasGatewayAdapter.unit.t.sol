@@ -237,7 +237,7 @@ contract MidasGatewayAdapterUnitTest is AdapterUnitTestHelper {
     function test_U_MID_A_12_redeemRequest_works() public {
         _executesSwap({
             tokenIn: mToken,
-            callData: abi.encodeCall(IMidasGateway.requestRedeem, (outputToken0, 1000)),
+            callData: abi.encodeCall(IMidasGateway.requestRedeem, (outputToken0, 1000, "")),
             requiresApproval: true
         });
 

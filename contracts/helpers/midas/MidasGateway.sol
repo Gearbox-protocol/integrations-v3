@@ -27,6 +27,7 @@ import {
     CREDIT_ACCOUNT_TYPE
 } from "../../interfaces/midas/IMidasGateway.sol";
 import {IMidasTransferMaster} from "../../interfaces/midas/IMidasTransferMaster.sol";
+import {IRedemptionLogger} from "../../interfaces/IRedemptionLogger.sol";
 
 /// @title Midas Gateway
 /// @notice Gateway contract that manages issuances and redemptions from Midas vaults on behalf of Credit Accounts
@@ -65,6 +66,9 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
     /// @notice Expected duration of a redemption request (for informational purposes)
     uint256 public immutable expectedRedemptionDuration;
 
+    /// @notice Address of the redemption logger contract
+    address public immutable redemptionLogger;
+
     /// @notice Mapping of accounts to corresponding redeemer contracts
     mapping(address => EnumerableSet.AddressSet) internal accountToRedeemers;
 
@@ -84,6 +88,7 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
     /// @param _allowedMarketConfigurator Address of the market configurator of credit accounts that are allowed to interact with the gateway
     /// @param _checkBorrowerGreenlist Whether to check that the borrower is greenlisted
     /// @param _expectedRedemptionDuration Expected duration of a redemption request (for informational purposes)
+    /// @param _redemptionLogger Address of the redemption logger contract
     constructor(
         address _midasIssuanceVault,
         address _midasRedemptionVault,
@@ -91,7 +96,8 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
         address _transferMaster,
         address _allowedMarketConfigurator,
         bool _checkBorrowerGreenlist,
-        uint256 _expectedRedemptionDuration
+        uint256 _expectedRedemptionDuration,
+        address _redemptionLogger
     ) {
         midasIssuanceVault = _midasIssuanceVault;
         midasRedemptionVault = _midasRedemptionVault;
@@ -113,6 +119,7 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
         transferMaster = _transferMaster;
         allowedMarketConfigurator = _allowedMarketConfigurator;
         expectedRedemptionDuration = _expectedRedemptionDuration;
+        redemptionLogger = _redemptionLogger;
     }
 
     /// @notice Performs instant issuance of mToken for input token
@@ -170,13 +177,20 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
     /// @notice Requests a redemption of mToken for output token
     /// @param tokenOut Output token to receive
     /// @param amountMTokenIn Amount of mToken to redeem
-    function requestRedeem(address tokenOut, uint256 amountMTokenIn) external nonReentrant onlyEligibleAccount {
+    /// @param extraData Additional redemption data to log
+    function requestRedeem(address tokenOut, uint256 amountMTokenIn, bytes calldata extraData)
+        external
+        nonReentrant
+        onlyEligibleAccount
+    {
         address redeemer = _makeNewRedeemerForAccount(msg.sender);
         IERC20(mToken).safeTransferFrom(msg.sender, redeemer, amountMTokenIn);
 
         _grantGreenlistIfRequired(redeemer);
         MidasRedeemer(redeemer).requestRedeem(tokenOut, amountMTokenIn);
         _revokeGreenlistIfRequired(redeemer);
+
+        _logRedemptionIfConfigured(msg.sender, redeemer, extraData);
     }
 
     /// @notice Withdraws tokens from funded redeemers
@@ -283,6 +297,13 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
 
         accountToRedeemers[account].add(redeemer);
         accountToPendingRedeemers[account].add(redeemer);
+    }
+
+    /// @dev Logs redemption initiation if a logger is configured
+    function _logRedemptionIfConfigured(address creditAccount, address redeemer, bytes calldata extraData) internal {
+        if (redemptionLogger != address(0)) {
+            IRedemptionLogger(redemptionLogger).logRedemption(creditAccount, redeemer, extraData);
+        }
     }
 
     /// @dev Converts the token amount to 18 decimals, which is accepted by Midas

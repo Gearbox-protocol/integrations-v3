@@ -12,6 +12,7 @@ import {ISecuritizeRedemptionGateway} from "../../interfaces/securitize/ISecurit
 import {ISecuritizeWhitelister} from "../../integrations/securitize/ISecuritizeWhitelister.sol";
 import {ISecuritizeGatewayTransferMaster} from "../../interfaces/securitize/ISecuritizeGatewayTransferMaster.sol";
 import {ISecuritizeRegistryService} from "../../integrations/securitize/ISecuritizeRegistryService.sol";
+import {IRedemptionLogger} from "../../interfaces/IRedemptionLogger.sol";
 import {SecuritizeRedeemer} from "./SecuritizeRedeemer.sol";
 
 /// @title SecuritizeRedemptionGateway
@@ -39,6 +40,8 @@ contract SecuritizeRedemptionGateway is ISecuritizeRedemptionGateway {
 
     address public immutable registryService;
 
+    address public immutable redemptionLogger;
+
     mapping(address => EnumerableSet.AddressSet) internal redeemersByAccount;
 
     mapping(address => EnumerableSet.AddressSet) internal unclaimedRedeemers;
@@ -51,7 +54,8 @@ contract SecuritizeRedemptionGateway is ISecuritizeRedemptionGateway {
         address _securitizeWhitelister,
         address _transferMaster,
         address _navProvider,
-        address _registryService
+        address _registryService,
+        address _redemptionLogger
     ) {
         dsToken = _dsToken;
         stableCoinToken = _stableCoinToken;
@@ -60,16 +64,19 @@ contract SecuritizeRedemptionGateway is ISecuritizeRedemptionGateway {
         transferMaster = _transferMaster;
         navProvider = _navProvider;
         registryService = _registryService;
+        redemptionLogger = _redemptionLogger;
         masterRedeemer = address(new SecuritizeRedeemer(_dsToken, _stableCoinToken, _redemptionAccount, _navProvider));
     }
 
     /// @notice Redeem DS tokens for stablecoins
     /// @param dsTokenAmount The amount of DS tokens to redeem
-    function redeem(uint256 dsTokenAmount) external {
+    /// @param extraData Additional redemption data to log
+    function redeem(uint256 dsTokenAmount, bytes calldata extraData) external {
         if (dsTokenAmount == 0) return;
         address redeemer = _makeNewRedeemerForAccount(msg.sender);
         IERC20(dsToken).safeTransferFrom(msg.sender, redeemer, dsTokenAmount);
         SecuritizeRedeemer(redeemer).redeem(dsTokenAmount);
+        _logRedemptionIfConfigured(msg.sender, redeemer, extraData);
     }
 
     function transferRedeemer(address redeemer, address newAccount) external {
@@ -135,5 +142,12 @@ contract SecuritizeRedemptionGateway is ISecuritizeRedemptionGateway {
 
         redeemersByAccount[account].add(redeemer);
         unclaimedRedeemers[account].add(redeemer);
+    }
+
+    /// @dev Logs redemption initiation if a logger is configured
+    function _logRedemptionIfConfigured(address creditAccount, address redeemer, bytes calldata extraData) internal {
+        if (redemptionLogger != address(0)) {
+            IRedemptionLogger(redemptionLogger).logRedemption(creditAccount, redeemer, extraData);
+        }
     }
 }

@@ -14,6 +14,8 @@ import {ISecuritizeWhitelister} from "../../../../integrations/securitize/ISecur
 import {ISecuritizeGatewayTransferMaster} from "../../../../interfaces/securitize/ISecuritizeGatewayTransferMaster.sol";
 import {ISecuritizeRedemptionGateway} from "../../../../interfaces/securitize/ISecuritizeRedemptionGateway.sol";
 import {ISecuritizeRegistryService} from "../../../../integrations/securitize/ISecuritizeRegistryService.sol";
+import {RedemptionLogger} from "../../../../helpers/RedemptionLogger.sol";
+import {IRedemptionLogger} from "../../../../interfaces/IRedemptionLogger.sol";
 
 contract SecuritizeNAVProviderMock is ISecuritizeNAVProvider {
     uint256 internal _rate;
@@ -111,7 +113,8 @@ contract SecuritizeRedemptionGatewayUnitTest is Test {
             address(whitelister),
             address(transferMaster),
             address(navProvider),
-            address(registryService)
+            address(registryService),
+            address(0) // redemption logger (none)
         );
     }
 
@@ -125,13 +128,14 @@ contract SecuritizeRedemptionGatewayUnitTest is Test {
         assertEq(gateway.securitizeWhitelister(), address(whitelister));
         assertEq(gateway.transferMaster(), address(transferMaster));
         assertEq(gateway.registryService(), address(registryService));
+        assertEq(gateway.redemptionLogger(), address(0), "Incorrect redemption logger");
         assertTrue(gateway.masterRedeemer() != address(0));
     }
 
     /// @notice U:[SRG-1A]: zero redeem is a no-op
     function test_U_SRG_01A_redeem_zero_is_noop() public {
         vm.prank(account);
-        gateway.redeem(0);
+        gateway.redeem(0, "");
 
         assertEq(gateway.getRedeemers(account).length, 0);
         assertEq(gateway.getUnclaimedRedeemers(account).length, 0);
@@ -147,7 +151,7 @@ contract SecuritizeRedemptionGatewayUnitTest is Test {
         IERC20(dsToken).approve(address(gateway), 100e18);
 
         vm.prank(account);
-        gateway.redeem(100e18);
+        gateway.redeem(100e18, "");
 
         address[] memory redeemers = gateway.getRedeemers(account);
         assertEq(redeemers.length, 1);
@@ -172,8 +176,8 @@ contract SecuritizeRedemptionGatewayUnitTest is Test {
 
         vm.startPrank(account);
         IERC20(dsToken).approve(address(gateway), 300e18);
-        gateway.redeem(100e18);
-        gateway.redeem(200e18);
+        gateway.redeem(100e18, "");
+        gateway.redeem(200e18, "");
         vm.stopPrank();
 
         address[] memory redeemers = gateway.getRedeemers(account);
@@ -189,7 +193,7 @@ contract SecuritizeRedemptionGatewayUnitTest is Test {
         vm.prank(account);
         IERC20(dsToken).approve(address(gateway), 100e18);
         vm.prank(account);
-        gateway.redeem(100e18);
+        gateway.redeem(100e18, "");
 
         address redeemer = gateway.getRedeemers(account)[0];
         deal(stableCoinToken, redeemer, 123e6);
@@ -208,7 +212,7 @@ contract SecuritizeRedemptionGatewayUnitTest is Test {
         vm.prank(account);
         IERC20(dsToken).approve(address(gateway), 100e18);
         vm.prank(account);
-        gateway.redeem(100e18);
+        gateway.redeem(100e18, "");
 
         address redeemer = gateway.getRedeemers(account)[0];
 
@@ -224,10 +228,10 @@ contract SecuritizeRedemptionGatewayUnitTest is Test {
         IERC20(dsToken).approve(address(gateway), 150e18);
 
         navProvider.setRate(1e18);
-        gateway.redeem(100e18);
+        gateway.redeem(100e18, "");
 
         navProvider.setRate(2e18);
-        gateway.redeem(50e18);
+        gateway.redeem(50e18, "");
         vm.stopPrank();
 
         navProvider.setRate(1e18);
@@ -247,7 +251,7 @@ contract SecuritizeRedemptionGatewayUnitTest is Test {
         vm.prank(account);
         IERC20(dsToken).approve(address(gateway), 100e18);
         vm.prank(account);
-        gateway.redeem(100e18);
+        gateway.redeem(100e18, "");
 
         address redeemer = gateway.getRedeemers(account)[0];
         transferMaster.setTransferAllowed(true);
@@ -279,7 +283,7 @@ contract SecuritizeRedemptionGatewayUnitTest is Test {
         vm.prank(account);
         IERC20(dsToken).approve(address(gateway), 100e18);
         vm.prank(account);
-        gateway.redeem(100e18);
+        gateway.redeem(100e18, "");
 
         address redeemer = gateway.getRedeemers(account)[0];
         transferMaster.setTransferAllowed(true);
@@ -296,7 +300,7 @@ contract SecuritizeRedemptionGatewayUnitTest is Test {
         vm.prank(account);
         IERC20(dsToken).approve(address(gateway), 100e18);
         vm.prank(account);
-        gateway.redeem(100e18);
+        gateway.redeem(100e18, "");
 
         address redeemer = gateway.getRedeemers(account)[0];
         transferMaster.setTransferAllowed(false);
@@ -320,7 +324,7 @@ contract SecuritizeRedemptionGatewayUnitTest is Test {
         IERC20(dsToken).approve(address(gateway), 100e18);
 
         vm.prank(account);
-        gateway.redeem(100e18);
+        gateway.redeem(100e18, "");
 
         address redeemer = gateway.getRedeemers(account)[0];
         transferMaster.setTransferAllowed(true);
@@ -345,11 +349,40 @@ contract SecuritizeRedemptionGatewayUnitTest is Test {
         vm.startPrank(account);
         IERC20(dsToken).approve(address(gateway), 11e18);
         for (uint256 i = 0; i < 10; ++i) {
-            gateway.redeem(1e18);
+            gateway.redeem(1e18, "");
         }
         vm.expectRevert(ISecuritizeRedemptionGateway.MaxUnclaimedRedeemersPerAccountException.selector);
-        gateway.redeem(1e18);
+        gateway.redeem(1e18, "");
         vm.stopPrank();
+    }
+
+    /// @notice U:[SRG-12]: `redeem` logs redemption when logger is configured
+    function test_U_SRG_12_redeem_logs_when_logger_configured() public {
+        RedemptionLogger logger = new RedemptionLogger();
+        SecuritizeRedemptionGateway gatewayWithLogger = new SecuritizeRedemptionGateway(
+            dsToken,
+            stableCoinToken,
+            redemptionAccount,
+            address(whitelister),
+            address(transferMaster),
+            address(navProvider),
+            address(registryService),
+            address(logger)
+        );
+
+        deal(dsToken, account, 100e18);
+        vm.prank(account);
+        IERC20(dsToken).approve(address(gatewayWithLogger), 100e18);
+
+        bytes memory extraData = abi.encode(uint256(42));
+        vm.prank(account);
+        gatewayWithLogger.redeem(100e18, extraData);
+
+        address redeemer = gatewayWithLogger.getRedeemers(account)[0];
+        IRedemptionLogger.RedemptionLog memory log = logger.redemptionLogs(redeemer);
+        assertEq(log.creditAccount, account, "Incorrect logged credit account");
+        assertEq(log.redeemer, redeemer, "Incorrect logged redeemer");
+        assertEq(log.extraData, extraData, "Incorrect logged extraData");
     }
 
     function _toArray(address value) internal pure returns (address[] memory arr) {

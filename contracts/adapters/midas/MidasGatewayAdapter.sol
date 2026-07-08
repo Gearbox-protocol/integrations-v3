@@ -175,7 +175,7 @@ contract MidasGatewayAdapter is AbstractAdapter, IMidasGatewayAdapter {
             revert TokenNotAllowedException();
         }
 
-        _executeSwapSafeApprove(mToken, abi.encodeCall(IMidasGateway.requestRedeem, (tokenOut, amountMTokenIn)));
+        _executeSwapSafeApprove(mToken, abi.encodeCall(IMidasGateway.requestRedeem, (tokenOut, amountMTokenIn, "")));
         return true;
     }
 

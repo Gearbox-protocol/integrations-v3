@@ -38,6 +38,9 @@ interface IMidasGateway is IVersion {
     /// @notice Address of the Midas access control contract
     function accessControl() external view returns (address);
 
+    /// @notice Address of the redemption logger contract
+    function redemptionLogger() external view returns (address);
+
     /// @notice Performs instant issuance of mToken for input token
     /// @param tokenIn Input token to deposit
     /// @param amountToken Amount of input token to deposit
@@ -54,7 +57,8 @@ interface IMidasGateway is IVersion {
     /// @notice Requests a redemption of mToken for output token
     /// @param tokenOut Output token to receive
     /// @param amountMTokenIn Amount of mToken to redeem
-    function requestRedeem(address tokenOut, uint256 amountMTokenIn) external;
+    /// @param extraData Additional redemption data to log
+    function requestRedeem(address tokenOut, uint256 amountMTokenIn, bytes calldata extraData) external;
 
     /// @notice Withdraws tokens from fulfilled redemption requests
     /// @param tokenOut Output token to withdraw

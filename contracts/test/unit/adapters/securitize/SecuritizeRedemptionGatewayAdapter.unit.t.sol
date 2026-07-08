@@ -56,7 +56,11 @@ contract SecuritizeRedemptionGatewayMock is ISecuritizeRedemptionGateway {
         return address(0);
     }
 
-    function redeem(uint256) external override {}
+    function redemptionLogger() external pure override returns (address) {
+        return address(0);
+    }
+
+    function redeem(uint256, bytes calldata) external override {}
 
     function claim(address[] calldata) external override {}
 
@@ -146,7 +150,7 @@ contract SecuritizeRedemptionGatewayAdapterUnitTest is AdapterUnitTestHelper {
 
         _executesSwap({
             tokenIn: dsToken,
-            callData: abi.encodeCall(ISecuritizeRedemptionGateway.redeem, (dsTokenAmount)),
+            callData: abi.encodeCall(ISecuritizeRedemptionGateway.redeem, (dsTokenAmount, "")),
             requiresApproval: true
         });
 
@@ -172,7 +176,7 @@ contract SecuritizeRedemptionGatewayAdapterUnitTest is AdapterUnitTestHelper {
 
         _executesSwap({
             tokenIn: dsToken,
-            callData: abi.encodeCall(ISecuritizeRedemptionGateway.redeem, (dsTokenAmount)),
+            callData: abi.encodeCall(ISecuritizeRedemptionGateway.redeem, (dsTokenAmount, "")),
             requiresApproval: true
         });
 

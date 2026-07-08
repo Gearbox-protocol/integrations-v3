@@ -63,7 +63,7 @@ contract SecuritizeRedemptionGatewayAdapter is AbstractAdapter, ISecuritizeRedem
     }
 
     function _redeem(uint256 dsTokenAmount) internal {
-        _executeSwapSafeApprove(dsToken, abi.encodeCall(ISecuritizeRedemptionGateway.redeem, (dsTokenAmount)));
+        _executeSwapSafeApprove(dsToken, abi.encodeCall(ISecuritizeRedemptionGateway.redeem, (dsTokenAmount, "")));
     }
 
     function claim(address[] calldata redeemers) external override creditFacadeOnly returns (bool) {
