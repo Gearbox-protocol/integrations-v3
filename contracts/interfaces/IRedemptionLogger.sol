@@ -3,8 +3,10 @@
 // (c) Gearbox Foundation, 2026.
 pragma solidity ^0.8.23;
 
+import {IVersion} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IVersion.sol";
+
 /// @title Redemption Logger interface
-interface IRedemptionLogger {
+interface IRedemptionLogger is IVersion {
     /// @dev Thrown when `logRedemption` is called by a non-allowed gateway
     error GatewayNotAllowedException();
 

@@ -18,7 +18,7 @@ contract RedemptionLoggerUnitTest is Test {
     address gateway;
 
     function setUp() public {
-        logger = new RedemptionLogger();
+        logger = new RedemptionLogger(address(this));
         creditAccount = makeAddr("CREDIT_ACCOUNT");
         redeemer = makeAddr("REDEEMER");
         gateway = makeAddr("GATEWAY");

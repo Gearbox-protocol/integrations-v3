@@ -441,7 +441,7 @@ contract MidasGatewayUnitTest is Test {
 
     /// @notice U:[MID-G-15]: `requestRedeem` logs redemption when logger is configured
     function test_U_MID_G_15_requestRedeem_logs_when_logger_configured() public {
-        RedemptionLogger logger = new RedemptionLogger();
+        RedemptionLogger logger = new RedemptionLogger(address(this));
         MidasGateway gatewayWithLogger = new MidasGateway(
             address(issuanceVault),
             address(redemptionVault),

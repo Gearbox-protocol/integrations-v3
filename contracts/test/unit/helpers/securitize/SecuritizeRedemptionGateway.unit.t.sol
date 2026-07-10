@@ -358,7 +358,7 @@ contract SecuritizeRedemptionGatewayUnitTest is Test {
 
     /// @notice U:[SRG-12]: `redeem` logs redemption when logger is configured
     function test_U_SRG_12_redeem_logs_when_logger_configured() public {
-        RedemptionLogger logger = new RedemptionLogger();
+        RedemptionLogger logger = new RedemptionLogger(address(this));
         SecuritizeRedemptionGateway gatewayWithLogger = new SecuritizeRedemptionGateway(
             dsToken,
             stableCoinToken,
