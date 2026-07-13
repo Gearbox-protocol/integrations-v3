@@ -469,4 +469,44 @@ contract MidasGatewayUnitTest is Test {
         assertEq(log.redeemer, redeemer, "Incorrect logged redeemer");
         assertEq(log.extraData, extraData, "Incorrect logged extraData");
     }
+
+    /// @notice U:[MID-G-16]: `withdraw` for one tokenOut does not evict redeemers for another tokenOut
+    function test_U_MID_G_16_withdraw_does_not_evict_unrelated_tokenOut_redeemer() public {
+        uint256 daiAmountMToken = 100e18;
+        uint256 usdcAmountMToken = 50e18;
+        uint256 usdcClaimable = 49e6;
+
+        deal(mToken, address(account), daiAmountMToken + usdcAmountMToken);
+        account.approveToken(mToken, address(gateway), daiAmountMToken + usdcAmountMToken);
+
+        vm.startPrank(address(account));
+        gateway.requestRedeem(outputToken, daiAmountMToken, "");
+        gateway.requestRedeem(inputToken, usdcAmountMToken, "");
+        vm.stopPrank();
+
+        address[] memory redeemers = gateway.pendingRedeemers(address(account));
+        assertEq(redeemers.length, 2, "Expected two pending redeemers");
+
+        address daiRedeemer = redeemers[0];
+        address usdcRedeemer = redeemers[1];
+
+        deal(inputToken, usdcRedeemer, usdcClaimable);
+        redemptionVault.setStatus(2, 1);
+
+        (uint256 daiPendingBefore,) = gateway.pendingAndClaimableTokenOutAmounts(address(account), outputToken);
+
+        vm.prank(address(account));
+        gateway.withdraw(inputToken, usdcClaimable);
+
+        (uint256 daiPendingAfter, uint256 daiClaimableAfter) =
+            gateway.pendingAndClaimableTokenOutAmounts(address(account), outputToken);
+
+        assertEq(daiPendingAfter, daiPendingBefore, "DAI pending amount should be unchanged");
+        assertEq(daiClaimableAfter, 0, "DAI claimable should still be zero");
+
+        redeemers = gateway.pendingRedeemers(address(account));
+        assertEq(redeemers.length, 1, "Only the drained USDC redeemer should be evicted");
+        assertEq(redeemers[0], daiRedeemer, "DAI redeemer should not be evicted");
+        assertEq(IERC20(inputToken).balanceOf(address(account)), usdcClaimable, "USDC should be withdrawn");
+    }
 }

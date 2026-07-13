@@ -50,7 +50,7 @@ contract MidasRedeemer {
 
     /// @notice Whether this redeemer was already used
     bool public alreadyRedeemed;
-    
+
     /// @notice The timestamp when the redemption request was started
     uint256 public redemptionStartTimestamp;
 
@@ -74,7 +74,6 @@ contract MidasRedeemer {
         midasRedemptionVault = _midasRedemptionVault;
         mToken = IMidasRedemptionVault(_midasRedemptionVault).mToken();
         mTokenDataFeed = IMidasRedemptionVault(_midasRedemptionVault).mTokenDataFeed();
-        redemptionStartTimestamp = block.timestamp;
     }
 
     /// @notice Sets the account for this redeemer
@@ -89,6 +88,7 @@ contract MidasRedeemer {
         IERC20(mToken).forceApprove(midasRedemptionVault, amountMTokenIn);
         requestId = IMidasRedemptionVault(midasRedemptionVault).redeemRequest(tokenOut, amountMTokenIn);
         alreadyRedeemed = true;
+        redemptionStartTimestamp = block.timestamp;
     }
 
     /// @notice Withdraws tokens to the connected account

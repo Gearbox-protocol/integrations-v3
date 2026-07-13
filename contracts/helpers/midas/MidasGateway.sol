@@ -201,6 +201,7 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
         uint256 remainder = amount;
         for (uint256 i = 0; i < redeemers.length && remainder > 0; i++) {
             uint256 redeemerBalance = MidasRedeemer(redeemers[i]).claimableTokenOutAmount(tokenOut);
+            if (redeemerBalance == 0) continue;
             if (remainder < redeemerBalance) {
                 MidasRedeemer(redeemers[i]).withdraw(tokenOut, remainder);
                 remainder = 0;
