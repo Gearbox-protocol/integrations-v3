@@ -19,7 +19,7 @@ import {SecuritizeRedemptionPhantomToken} from "../../helpers/securitize/Securit
 /// @notice Implements logic for interacting with the DAI / USDS wrapping contract
 contract SecuritizeRedemptionGatewayAdapter is AbstractAdapter, ISecuritizeRedemptionGatewayAdapter {
     bytes32 public constant override contractType = "ADAPTER::SECURITIZE_REDEMPTION";
-    uint256 public constant override version = 3_10;
+    uint256 public constant override version = 3_11;
 
     address public immutable override dsToken;
 

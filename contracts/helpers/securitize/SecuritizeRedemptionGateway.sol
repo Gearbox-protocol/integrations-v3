@@ -22,7 +22,7 @@ contract SecuritizeRedemptionGateway is ISecuritizeRedemptionGateway {
     using EnumerableSet for EnumerableSet.AddressSet;
 
     bytes32 public constant override contractType = "GATEWAY::SECURITIZE_REDEMPTION";
-    uint256 public constant override version = 3_10;
+    uint256 public constant override version = 3_11;
 
     address public immutable dsToken;
 
