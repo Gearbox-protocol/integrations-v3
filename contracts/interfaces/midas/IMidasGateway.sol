@@ -28,6 +28,8 @@ interface IMidasGateway is IVersion {
     error CreditAccountNotEligibleException();
     /// @dev Thrown when attempting to withdraw more tokens than all account's redeemers have
     error InsufficientBalanceException();
+    /// @dev Thrown when attempting to withdraw tokens from a redeemer with an invalid token out
+    error InvalidTokenOutException();
 
     /// @notice Address of the mToken
     function mToken() external view returns (address);

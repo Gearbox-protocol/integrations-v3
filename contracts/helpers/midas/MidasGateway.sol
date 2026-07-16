@@ -200,14 +200,18 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
         address[] memory redeemers = accountToPendingRedeemers[msg.sender].values();
         uint256 remainder = amount;
         for (uint256 i = 0; i < redeemers.length && remainder > 0; i++) {
+            if (MidasRedeemer(redeemers[i]).requestTokenOut() != tokenOut) continue;
+
             uint256 redeemerBalance = MidasRedeemer(redeemers[i]).claimableTokenOutAmount(tokenOut);
-            if (redeemerBalance == 0) continue;
             if (remainder < redeemerBalance) {
                 MidasRedeemer(redeemers[i]).withdraw(tokenOut, remainder);
                 remainder = 0;
             } else {
-                MidasRedeemer(redeemers[i]).withdraw(tokenOut, redeemerBalance);
-                remainder -= redeemerBalance;
+                if (redeemerBalance > 0) {
+                    MidasRedeemer(redeemers[i]).withdraw(tokenOut, redeemerBalance);
+                    remainder -= redeemerBalance;
+                }
+
                 if (MidasRedeemer(redeemers[i]).pendingTokenOutAmount(tokenOut) == 0) {
                     accountToPendingRedeemers[msg.sender].remove(redeemers[i]);
                 }
@@ -227,6 +231,11 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
         if (!accountToRedeemers[msg.sender].contains(redeemer)) {
             revert RedeemerNotOwnedByAccountException();
         }
+
+        if (MidasRedeemer(redeemer).requestTokenOut() != tokenOut) {
+            revert InvalidTokenOutException();
+        }
+
         MidasRedeemer(redeemer).withdraw(tokenOut, amount);
 
         if (

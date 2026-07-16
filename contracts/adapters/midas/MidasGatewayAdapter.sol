@@ -121,7 +121,7 @@ contract MidasGatewayAdapter is AbstractAdapter, IMidasGatewayAdapter {
     /// @notice Instantly redeems mToken for output token
     /// @param tokenOut Output token address
     /// @param amountMTokenIn Amount of mToken to redeem
-    /// @param minReceiveAmount Minimum amount of output token to receive (in 18 decimals)
+    /// @param minReceiveAmount Minimum amount of output token to receive
     function redeemInstant(address tokenOut, uint256 amountMTokenIn, uint256 minReceiveAmount)
         external
         override

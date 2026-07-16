@@ -112,7 +112,6 @@ contract MidasRedeemerUnitTest is Test {
         assertEq(redeemer.mToken(), mToken, "Incorrect mToken");
         assertEq(redeemer.mTokenDataFeed(), address(dataFeed), "Incorrect data feed");
         assertEq(redeemer.account(), account, "Incorrect account");
-        assertEq(redeemer.redemptionStartTimestamp(), block.timestamp, "Incorrect start timestamp");
         assertFalse(redeemer.alreadyRedeemed(), "Should not be redeemed yet");
 
         vm.expectRevert(MidasRedeemer.CallerNotGatewayException.selector);
@@ -127,6 +126,7 @@ contract MidasRedeemerUnitTest is Test {
         assertEq(redeemer.requestId(), 1, "Incorrect requestId");
         assertTrue(redeemer.alreadyRedeemed(), "Should be marked as redeemed");
         assertEq(IERC20(mToken).allowance(address(redeemer), address(vault)), 100e18, "Vault not approved");
+        assertEq(redeemer.redemptionStartTimestamp(), block.timestamp, "Incorrect start timestamp");
     }
 
     /// @notice U:[MID-R-3]: `requestRedeem` reverts if already redeemed

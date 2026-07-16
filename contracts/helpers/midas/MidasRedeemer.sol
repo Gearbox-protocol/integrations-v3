@@ -48,6 +48,9 @@ contract MidasRedeemer {
     /// @notice The request ID for the redemption request
     uint256 public requestId;
 
+    /// @notice The token out for the redemption request
+    address public requestTokenOut;
+
     /// @notice Whether this redeemer was already used
     bool public alreadyRedeemed;
 
@@ -89,6 +92,7 @@ contract MidasRedeemer {
         requestId = IMidasRedemptionVault(midasRedemptionVault).redeemRequest(tokenOut, amountMTokenIn);
         alreadyRedeemed = true;
         redemptionStartTimestamp = block.timestamp;
+        requestTokenOut = tokenOut;
     }
 
     /// @notice Withdraws tokens to the connected account
@@ -102,7 +106,7 @@ contract MidasRedeemer {
     /// @notice Returns the expected amount of output token for the pending redemption request
     /// @param tokenOut Output token to check
     function pendingTokenOutAmount(address tokenOut) external view returns (uint256) {
-        (, address requestTokenOut, uint8 status, uint256 amountMTokenIn,, uint256 tokenOutRate) =
+        (,, uint8 status, uint256 amountMTokenIn,, uint256 tokenOutRate) =
             IMidasRedemptionVault(midasRedemptionVault).redeemRequests(requestId);
 
         if (requestTokenOut != tokenOut || status == 1 || isManuallyCleared) return 0;
