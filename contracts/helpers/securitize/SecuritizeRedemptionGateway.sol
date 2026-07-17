@@ -16,6 +16,8 @@ import {IRedemptionLogger} from "../../interfaces/IRedemptionLogger.sol";
 import {SecuritizeRedeemer} from "./SecuritizeRedeemer.sol";
 import {SecuritizeRedemptionPhantomToken} from "./SecuritizeRedemptionPhantomToken.sol";
 
+bytes32 constant SALT = keccak256("SecuritizeRedemptionGateway");
+
 /// @title SecuritizeRedemptionGateway
 /// @notice Allows Credit Accounts to redeem DS tokens to stablecoins using the EOA redemption flow
 contract SecuritizeRedemptionGateway is ISecuritizeRedemptionGateway {
@@ -68,8 +70,10 @@ contract SecuritizeRedemptionGateway is ISecuritizeRedemptionGateway {
         navProvider = _navProvider;
         registryService = _registryService;
         redemptionLogger = _redemptionLogger;
-        masterRedeemer = address(new SecuritizeRedeemer(_dsToken, _stableCoinToken, _redemptionAccount, _navProvider));
-        phantomToken = address(new SecuritizeRedemptionPhantomToken(address(this), _dsToken, _stableCoinToken));
+        masterRedeemer =
+            address(new SecuritizeRedeemer{salt: SALT}(_dsToken, _stableCoinToken, _redemptionAccount, _navProvider));
+        phantomToken =
+            address(new SecuritizeRedemptionPhantomToken{salt: SALT}(address(this), _dsToken, _stableCoinToken));
     }
 
     /// @notice Redeem DS tokens for stablecoins

@@ -31,6 +31,8 @@ import {
 import {IMidasTransferMaster} from "../../interfaces/midas/IMidasTransferMaster.sol";
 import {IRedemptionLogger} from "../../interfaces/IRedemptionLogger.sol";
 
+bytes32 constant SALT = keccak256("MidasGateway");
+
 /// @title Midas Gateway
 /// @notice Gateway contract that manages issuances and redemptions from Midas vaults on behalf of Credit Accounts
 /// @dev Can optionally greenlist Credit Accounts and redeemers for permissioned tokens
@@ -133,8 +135,8 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
             revert AccessControlNotSetException();
         }
 
-        masterRedeemer = address(new MidasRedeemer(_midasRedemptionVault, _quoteToken));
-        transferMaster = address(new MidasLiquidator());
+        masterRedeemer = address(new MidasRedeemer{salt: SALT}(_midasRedemptionVault, _quoteToken));
+        transferMaster = address(new MidasLiquidator{salt: SALT}());
         phantomToken = _withDelayedWithdrawals
             ? address(new MidasRedemptionVaultPhantomToken(address(this), mToken, _quoteToken))
             : address(0);
