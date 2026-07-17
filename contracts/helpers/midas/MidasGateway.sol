@@ -138,7 +138,7 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
         masterRedeemer = address(new MidasRedeemer{salt: SALT}(_midasRedemptionVault, _quoteToken));
         transferMaster = address(new MidasLiquidator{salt: SALT}());
         phantomToken = _withDelayedWithdrawals
-            ? address(new MidasRedemptionVaultPhantomToken(address(this), mToken, _quoteToken))
+            ? address(new MidasRedemptionVaultPhantomToken{salt: SALT}(address(this), mToken, _quoteToken))
             : address(0);
         allowedMarketConfigurator = _allowedMarketConfigurator;
         expectedRedemptionDuration = _expectedRedemptionDuration;
