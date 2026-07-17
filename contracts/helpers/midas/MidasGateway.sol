@@ -17,6 +17,8 @@ import {IContractsRegister} from "@gearbox-protocol/core-v3/contracts/interfaces
 import {WAD} from "@gearbox-protocol/core-v3/contracts/libraries/Constants.sol";
 
 import {MidasRedeemer} from "./MidasRedeemer.sol";
+import {MidasLiquidator} from "./MidasLiquidator.sol";
+import {MidasRedemptionVaultPhantomToken} from "./MidasRedemptionVaultPhantomToken.sol";
 import {ReentrancyGuardTrait} from "@gearbox-protocol/core-v3/contracts/traits/ReentrancyGuardTrait.sol";
 import {IMidasIssuanceVault} from "../../integrations/midas/IMidasIssuanceVault.sol";
 import {IMidasRedemptionVault} from "../../integrations/midas/IMidasRedemptionVault.sol";
@@ -47,6 +49,12 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
 
     /// @notice Address of the mToken
     address public immutable mToken;
+
+    /// @notice Address of the quote token used for issuance and redemption
+    address public immutable quoteToken;
+
+    /// @notice Address of the redemption phantom token
+    address public immutable phantomToken;
 
     /// @notice Whether to check that the borrower is greenlisted
     bool public immutable checkBorrowerGreenlist;
@@ -83,8 +91,8 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
     /// @notice Constructor
     /// @param _midasIssuanceVault Address of the Midas Issuance Vault
     /// @param _midasRedemptionVault Address of the Midas Redemption Vault
-    /// @param _accessControl Address of the mToken access control contract
-    /// @param _transferMaster Address of the transfer master contract
+    /// @param _quoteToken Address of the quote token used for issuance and redemption
+    /// @param _isAccessControlled Whether to read and validate access control from the Midas vaults
     /// @param _allowedMarketConfigurator Address of the market configurator of credit accounts that are allowed to interact with the gateway
     /// @param _checkBorrowerGreenlist Whether to check that the borrower is greenlisted
     /// @param _expectedRedemptionDuration Expected duration of a redemption request (for informational purposes)
@@ -92,8 +100,8 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
     constructor(
         address _midasIssuanceVault,
         address _midasRedemptionVault,
-        address _accessControl,
-        address _transferMaster,
+        address _quoteToken,
+        bool _isAccessControlled,
         address _allowedMarketConfigurator,
         bool _checkBorrowerGreenlist,
         uint256 _expectedRedemptionDuration,
@@ -101,6 +109,7 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
     ) {
         midasIssuanceVault = _midasIssuanceVault;
         midasRedemptionVault = _midasRedemptionVault;
+        quoteToken = _quoteToken;
         mToken = IMidasRedemptionVault(_midasRedemptionVault).mToken();
         address issuanceMToken = IMidasIssuanceVault(_midasIssuanceVault).mToken();
 
@@ -108,39 +117,46 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
             revert IncompatibleIssuanceAndRedemptionVaultsException();
         }
 
-        accessControl = _accessControl;
+        address accessControl_;
+        if (_isAccessControlled) {
+            accessControl_ = IMidasIssuanceVault(_midasIssuanceVault).accessControl();
+            if (accessControl_ != IMidasRedemptionVault(_midasRedemptionVault).accessControl()) {
+                revert IncompatibleAccessControlsException();
+            }
+        }
+        accessControl = accessControl_;
         checkBorrowerGreenlist = _checkBorrowerGreenlist;
 
-        if (accessControl == address(0) && checkBorrowerGreenlist) {
+        if (accessControl_ == address(0) && _checkBorrowerGreenlist) {
             revert AccessControlNotSetException();
         }
 
-        masterRedeemer = address(new MidasRedeemer(_midasRedemptionVault));
-        transferMaster = _transferMaster;
+        masterRedeemer = address(new MidasRedeemer(_midasRedemptionVault, _quoteToken));
+        transferMaster = address(new MidasLiquidator());
+        phantomToken = address(new MidasRedemptionVaultPhantomToken(address(this), mToken, _quoteToken));
         allowedMarketConfigurator = _allowedMarketConfigurator;
         expectedRedemptionDuration = _expectedRedemptionDuration;
         redemptionLogger = _redemptionLogger;
     }
 
-    /// @notice Performs instant issuance of mToken for input token
-    /// @param tokenIn Input token to deposit
-    /// @param amountToken Amount of input token to deposit
+    /// @notice Performs instant issuance of mToken for quote token
+    /// @param amountToken Amount of quote token to deposit
     /// @param minReceiveAmount Minimum amount of mToken to receive
     /// @param referrerId Referrer ID
     /// @dev Transfers input token from sender, issues, and transfers mToken back
-    function depositInstant(address tokenIn, uint256 amountToken, uint256 minReceiveAmount, bytes32 referrerId)
+    function depositInstant(uint256 amountToken, uint256 minReceiveAmount, bytes32 referrerId)
         external
         nonReentrant
         onlyEligibleAccount
     {
-        IERC20(tokenIn).safeTransferFrom(msg.sender, address(this), amountToken);
+        IERC20(quoteToken).safeTransferFrom(msg.sender, address(this), amountToken);
 
         uint256 balanceBefore = IERC20(mToken).balanceOf(address(this));
 
-        IERC20(tokenIn).forceApprove(midasIssuanceVault, amountToken);
+        IERC20(quoteToken).forceApprove(midasIssuanceVault, amountToken);
         _grantGreenlistIfRequired(address(this));
         IMidasIssuanceVault(midasIssuanceVault)
-            .depositInstant(tokenIn, _convertToE18(amountToken, tokenIn), minReceiveAmount, referrerId);
+            .depositInstant(quoteToken, _convertToE18(amountToken), minReceiveAmount, referrerId);
         _revokeGreenlistIfRequired(address(this));
 
         uint256 amount = IERC20(mToken).balanceOf(address(this)) - balanceBefore;
@@ -148,71 +164,58 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
         IERC20(mToken).safeTransfer(msg.sender, amount);
     }
 
-    /// @notice Performs instant redemption of mToken for output token
-    /// @param tokenOut Output token to receive
+    /// @notice Performs instant redemption of mToken for quote token
     /// @param amountMTokenIn Amount of mToken to redeem
-    /// @param minReceiveAmount Minimum amount of output token to receive
-    /// @dev Transfers mToken from sender, redeems, and transfers output token back
-    function redeemInstant(address tokenOut, uint256 amountMTokenIn, uint256 minReceiveAmount)
-        external
-        nonReentrant
-        onlyEligibleAccount
-    {
+    /// @param minReceiveAmount Minimum amount of quote token to receive
+    /// @dev Transfers mToken from sender, redeems, and transfers quote token back
+    function redeemInstant(uint256 amountMTokenIn, uint256 minReceiveAmount) external nonReentrant onlyEligibleAccount {
         IERC20(mToken).safeTransferFrom(msg.sender, address(this), amountMTokenIn);
 
-        uint256 balanceBefore = IERC20(tokenOut).balanceOf(address(this));
+        uint256 balanceBefore = IERC20(quoteToken).balanceOf(address(this));
 
         IERC20(mToken).forceApprove(midasRedemptionVault, amountMTokenIn);
 
         _grantGreenlistIfRequired(address(this));
         IMidasRedemptionVault(midasRedemptionVault)
-            .redeemInstant(tokenOut, amountMTokenIn, _convertToE18(minReceiveAmount, tokenOut));
+            .redeemInstant(quoteToken, amountMTokenIn, _convertToE18(minReceiveAmount));
         _revokeGreenlistIfRequired(address(this));
 
-        uint256 amount = IERC20(tokenOut).balanceOf(address(this)) - balanceBefore;
+        uint256 amount = IERC20(quoteToken).balanceOf(address(this)) - balanceBefore;
 
-        IERC20(tokenOut).safeTransfer(msg.sender, amount);
+        IERC20(quoteToken).safeTransfer(msg.sender, amount);
     }
 
-    /// @notice Requests a redemption of mToken for output token
-    /// @param tokenOut Output token to receive
+    /// @notice Requests a redemption of mToken for quote token
     /// @param amountMTokenIn Amount of mToken to redeem
     /// @param extraData Additional redemption data to log
-    function requestRedeem(address tokenOut, uint256 amountMTokenIn, bytes calldata extraData)
-        external
-        nonReentrant
-        onlyEligibleAccount
-    {
+    function requestRedeem(uint256 amountMTokenIn, bytes calldata extraData) external nonReentrant onlyEligibleAccount {
         address redeemer = _makeNewRedeemerForAccount(msg.sender);
         IERC20(mToken).safeTransferFrom(msg.sender, redeemer, amountMTokenIn);
 
         _grantGreenlistIfRequired(redeemer);
-        MidasRedeemer(redeemer).requestRedeem(tokenOut, amountMTokenIn);
+        MidasRedeemer(redeemer).requestRedeem(amountMTokenIn);
         _revokeGreenlistIfRequired(redeemer);
 
         _logRedemptionIfConfigured(msg.sender, redeemer, extraData);
     }
 
     /// @notice Withdraws tokens from funded redeemers
-    /// @param tokenOut Output token to withdraw
-    /// @param amount Amount of output token to withdraw
-    function withdraw(address tokenOut, uint256 amount) external nonReentrant {
+    /// @param amount Amount of quote token to withdraw
+    function withdraw(uint256 amount) external nonReentrant {
         address[] memory redeemers = accountToPendingRedeemers[msg.sender].values();
         uint256 remainder = amount;
         for (uint256 i = 0; i < redeemers.length && remainder > 0; i++) {
-            if (MidasRedeemer(redeemers[i]).requestTokenOut() != tokenOut) continue;
-
-            uint256 redeemerBalance = MidasRedeemer(redeemers[i]).claimableTokenOutAmount(tokenOut);
+            uint256 redeemerBalance = MidasRedeemer(redeemers[i]).claimableTokenOutAmount();
             if (remainder < redeemerBalance) {
-                MidasRedeemer(redeemers[i]).withdraw(tokenOut, remainder);
+                MidasRedeemer(redeemers[i]).withdraw(remainder);
                 remainder = 0;
             } else {
                 if (redeemerBalance > 0) {
-                    MidasRedeemer(redeemers[i]).withdraw(tokenOut, redeemerBalance);
+                    MidasRedeemer(redeemers[i]).withdraw(redeemerBalance);
                     remainder -= redeemerBalance;
                 }
 
-                if (MidasRedeemer(redeemers[i]).pendingTokenOutAmount(tokenOut) == 0) {
+                if (MidasRedeemer(redeemers[i]).pendingTokenOutAmount() == 0) {
                     accountToPendingRedeemers[msg.sender].remove(redeemers[i]);
                 }
             }
@@ -223,24 +226,19 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
 
     /// @notice Withdraws tokens from a specific redeemer
     /// @param redeemer The redeemer to withdraw from
-    /// @param tokenOut The token to withdraw
     /// @param amount The amount to withdraw
     /// @dev Can be used to withdraw from a redeemer that no longer counts as collateral,
     ///      if there are funds stranded on it
-    function withdrawFromRedeemer(address redeemer, address tokenOut, uint256 amount) external nonReentrant {
+    function withdrawFromRedeemer(address redeemer, uint256 amount) external nonReentrant {
         if (!accountToRedeemers[msg.sender].contains(redeemer)) {
             revert RedeemerNotOwnedByAccountException();
         }
 
-        if (MidasRedeemer(redeemer).requestTokenOut() != tokenOut) {
-            revert InvalidTokenOutException();
-        }
-
-        MidasRedeemer(redeemer).withdraw(tokenOut, amount);
+        MidasRedeemer(redeemer).withdraw(amount);
 
         if (
-            MidasRedeemer(redeemer).pendingTokenOutAmount(tokenOut) == 0
-                && MidasRedeemer(redeemer).claimableTokenOutAmount(tokenOut) == 0
+            MidasRedeemer(redeemer).pendingTokenOutAmount() == 0
+                && MidasRedeemer(redeemer).claimableTokenOutAmount() == 0
         ) {
             accountToPendingRedeemers[msg.sender].remove(redeemer);
         }
@@ -271,20 +269,19 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
         MidasRedeemer(redeemer).setAccount(newAccount);
     }
 
-    /// @notice Returns the pending and claimable amounts of output token for an account, for all currently counted redeemers
+    /// @notice Returns the pending and claimable amounts of quote token for an account, for all currently counted redeemers
     /// @param account The account to check
-    /// @param tokenOut The token to check
-    /// @return pendingAmount The pending amount of output token
-    /// @return claimableAmount The claimable amount of output token
-    function pendingAndClaimableTokenOutAmounts(address account, address tokenOut)
+    /// @return pendingAmount The pending amount of quote token
+    /// @return claimableAmount The claimable amount of quote token
+    function pendingAndClaimableTokenOutAmounts(address account)
         external
         view
         returns (uint256 pendingAmount, uint256 claimableAmount)
     {
         address[] memory redeemers = accountToPendingRedeemers[account].values();
         for (uint256 i = 0; i < redeemers.length; i++) {
-            pendingAmount += MidasRedeemer(redeemers[i]).pendingTokenOutAmount(tokenOut);
-            claimableAmount += MidasRedeemer(redeemers[i]).claimableTokenOutAmount(tokenOut);
+            pendingAmount += MidasRedeemer(redeemers[i]).pendingTokenOutAmount();
+            claimableAmount += MidasRedeemer(redeemers[i]).claimableTokenOutAmount();
         }
     }
 
@@ -317,8 +314,8 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
     }
 
     /// @dev Converts the token amount to 18 decimals, which is accepted by Midas
-    function _convertToE18(uint256 amount, address token) internal view returns (uint256) {
-        uint256 tokenUnit = 10 ** IERC20Metadata(token).decimals();
+    function _convertToE18(uint256 amount) internal view returns (uint256) {
+        uint256 tokenUnit = 10 ** IERC20Metadata(quoteToken).decimals();
         if (tokenUnit == WAD) return amount;
         return amount * WAD / tokenUnit;
     }

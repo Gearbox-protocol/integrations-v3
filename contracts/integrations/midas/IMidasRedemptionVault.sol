@@ -19,4 +19,5 @@ interface IMidasRedemptionVault {
     function mToken() external view returns (address);
 
     function mTokenDataFeed() external view returns (address);
+    function accessControl() external view returns (address);
 }

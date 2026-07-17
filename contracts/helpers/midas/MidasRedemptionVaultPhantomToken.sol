@@ -10,7 +10,7 @@ import {IPhantomToken} from "@gearbox-protocol/core-v3/contracts/interfaces/base
 import {IMidasGateway} from "../../interfaces/midas/IMidasGateway.sol";
 
 /// @title Midas Redemption Vault phantom token
-/// @notice Phantom ERC-20 token that represents expected redemption amounts for a specific output token
+/// @notice Phantom ERC-20 token that represents expected redemption amounts for a gateway's quote token
 contract MidasRedemptionVaultPhantomToken is PhantomERC20, IPhantomToken {
     bytes32 public constant override contractType = "PHANTOM_TOKEN::MIDAS_REDEMPTION";
 
@@ -18,42 +18,34 @@ contract MidasRedemptionVaultPhantomToken is PhantomERC20, IPhantomToken {
 
     address public immutable gateway;
 
-    address public immutable tokenOut;
-
     /// @notice Constructor
     /// @param _gateway The gateway where redemptions are tracked
-    /// @param _tokenOut The specific output token this phantom token tracks
-    constructor(address _gateway, address _tokenOut)
+    /// @param _mToken The Midas token being redeemed
+    /// @param _quoteToken The quote token this phantom token tracks
+    constructor(address _gateway, address _mToken, address _quoteToken)
         PhantomERC20(
-            _tokenOut,
-            string.concat(
-                IERC20Metadata(IMidasGateway(_gateway).mToken()).symbol(),
-                " redeemed to ",
-                IERC20Metadata(_tokenOut).name()
-            ),
-            string.concat(
-                IERC20Metadata(IMidasGateway(_gateway).mToken()).symbol(), "rd", IERC20Metadata(_tokenOut).symbol()
-            ),
-            IERC20Metadata(_tokenOut).decimals()
+            _quoteToken,
+            string.concat(IERC20Metadata(_mToken).symbol(), " redeemed to ", IERC20Metadata(_quoteToken).name()),
+            string.concat(IERC20Metadata(_mToken).symbol(), "rd", IERC20Metadata(_quoteToken).symbol()),
+            IERC20Metadata(_quoteToken).decimals()
         )
     {
         gateway = _gateway;
-        tokenOut = _tokenOut;
     }
 
-    /// @notice Returns the expected amount of tokenOut from pending redemptions
+    /// @notice Returns the expected amount of quote token from pending redemptions
     /// @param account The account for which the calculation is performed
     /// @return Expected amount of tokenOut that can be withdrawn
     function balanceOf(address account) public view override returns (uint256) {
         (uint256 pendingAmount, uint256 claimableAmount) =
-            IMidasGateway(gateway).pendingAndClaimableTokenOutAmounts(account, tokenOut);
+            IMidasGateway(gateway).pendingAndClaimableTokenOutAmounts(account);
 
         return pendingAmount + claimableAmount;
     }
 
     /// @notice Returns phantom token's target contract and underlying
     /// @return gateway Gateway contract address
-    /// @return underlying Underlying token address (tokenOut)
+    /// @return underlying Underlying token address (quote token)
     function getPhantomTokenInfo() external view override returns (address, address) {
         return (gateway, underlying);
     }

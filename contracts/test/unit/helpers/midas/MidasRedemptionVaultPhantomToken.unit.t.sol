@@ -11,11 +11,13 @@ import {MidasRedemptionVaultPhantomToken} from "../../../../helpers/midas/MidasR
 /// @dev Minimal gateway exposing only what the phantom token reads.
 contract MidasGatewayMock {
     address public immutable mToken;
+    address public immutable quoteToken;
     uint256 public pendingAmount;
     uint256 public claimableAmount;
 
-    constructor(address _mToken) {
+    constructor(address _mToken, address _quoteToken) {
         mToken = _mToken;
+        quoteToken = _quoteToken;
     }
 
     function setAmounts(uint256 pending, uint256 claimable) external {
@@ -23,7 +25,7 @@ contract MidasGatewayMock {
         claimableAmount = claimable;
     }
 
-    function pendingAndClaimableTokenOutAmounts(address, address) external view returns (uint256, uint256) {
+    function pendingAndClaimableTokenOutAmounts(address) external view returns (uint256, uint256) {
         return (pendingAmount, claimableAmount);
     }
 }
@@ -35,14 +37,14 @@ contract MidasRedemptionVaultPhantomTokenUnitTest is Test {
     MidasGatewayMock gateway;
 
     address mToken;
-    address tokenOut;
+    address quoteToken;
 
     function setUp() public {
         mToken = address(new ERC20Mock("mTBILL", "mTBILL", 18));
-        tokenOut = address(new ERC20Mock("USD Coin", "USDC", 6));
+        quoteToken = address(new ERC20Mock("USD Coin", "USDC", 6));
 
-        gateway = new MidasGatewayMock(mToken);
-        phantomToken = new MidasRedemptionVaultPhantomToken(address(gateway), tokenOut);
+        gateway = new MidasGatewayMock(mToken, quoteToken);
+        phantomToken = new MidasRedemptionVaultPhantomToken(address(gateway), mToken, quoteToken);
     }
 
     /// @notice U:[MID-PT-1]: Constructor works as expected
@@ -50,8 +52,7 @@ contract MidasRedemptionVaultPhantomTokenUnitTest is Test {
         assertEq(phantomToken.contractType(), "PHANTOM_TOKEN::MIDAS_REDEMPTION", "Incorrect contract type");
         assertEq(phantomToken.version(), 3_11, "Incorrect version");
         assertEq(phantomToken.gateway(), address(gateway), "Incorrect gateway");
-        assertEq(phantomToken.tokenOut(), tokenOut, "Incorrect tokenOut");
-        assertEq(phantomToken.underlying(), tokenOut, "Incorrect underlying");
+        assertEq(phantomToken.underlying(), quoteToken, "Incorrect underlying");
         assertEq(phantomToken.decimals(), 6, "Incorrect decimals");
         assertEq(phantomToken.name(), "mTBILL redeemed to USD Coin", "Incorrect name");
         assertEq(phantomToken.symbol(), "mTBILLrdUSDC", "Incorrect symbol");
@@ -69,10 +70,10 @@ contract MidasRedemptionVaultPhantomTokenUnitTest is Test {
     function test_U_MID_PT_03_info_and_serialize_work() public view {
         (address gw, address underlying) = phantomToken.getPhantomTokenInfo();
         assertEq(gw, address(gateway), "Incorrect gateway from getPhantomTokenInfo");
-        assertEq(underlying, tokenOut, "Incorrect underlying from getPhantomTokenInfo");
+        assertEq(underlying, quoteToken, "Incorrect underlying from getPhantomTokenInfo");
 
         (address sgw, address sunderlying) = abi.decode(phantomToken.serialize(), (address, address));
         assertEq(sgw, address(gateway), "Incorrect gateway in serialized data");
-        assertEq(sunderlying, tokenOut, "Incorrect underlying in serialized data");
+        assertEq(sunderlying, quoteToken, "Incorrect underlying in serialized data");
     }
 }

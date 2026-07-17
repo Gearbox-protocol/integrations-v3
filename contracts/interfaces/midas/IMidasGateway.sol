@@ -20,6 +20,8 @@ interface IMidasGateway is IVersion {
     error RedeemerNotOwnedByAccountException();
     /// @dev Thrown when attempting to instantiate a gateway with issuance and redemption vaults that have different mTokens
     error IncompatibleIssuanceAndRedemptionVaultsException();
+    /// @dev Thrown when access-controlled issuance and redemption vaults use different access control contracts
+    error IncompatibleAccessControlsException();
     /// @dev Thrown when attempting to instantiate a greenlist-only gateway without setting the access control
     error AccessControlNotSetException();
     /// @dev Thrown when attempting to create a new redeemer for an account that has too many pending redeemers
@@ -28,11 +30,14 @@ interface IMidasGateway is IVersion {
     error CreditAccountNotEligibleException();
     /// @dev Thrown when attempting to withdraw more tokens than all account's redeemers have
     error InsufficientBalanceException();
-    /// @dev Thrown when attempting to withdraw tokens from a redeemer with an invalid token out
-    error InvalidTokenOutException();
-
     /// @notice Address of the mToken
     function mToken() external view returns (address);
+
+    /// @notice Address of the quote token used for issuance and redemption
+    function quoteToken() external view returns (address);
+
+    /// @notice Address of the redemption phantom token
+    function phantomToken() external view returns (address);
 
     /// @notice Address of the transfer master that can enable redeemer transfers (e.g. during liquidations)
     function transferMaster() external view returns (address);
@@ -43,47 +48,41 @@ interface IMidasGateway is IVersion {
     /// @notice Address of the redemption logger contract
     function redemptionLogger() external view returns (address);
 
-    /// @notice Performs instant issuance of mToken for input token
-    /// @param tokenIn Input token to deposit
-    /// @param amountToken Amount of input token to deposit
+    /// @notice Performs instant issuance of mToken for quote token
+    /// @param amountToken Amount of quote token to deposit
     /// @param minReceiveAmount Minimum amount of mToken to receive
     /// @param referrerId Referrer ID
-    function depositInstant(address tokenIn, uint256 amountToken, uint256 minReceiveAmount, bytes32 referrerId) external;
+    function depositInstant(uint256 amountToken, uint256 minReceiveAmount, bytes32 referrerId) external;
 
-    /// @notice Performs instant redemption of mToken for output token
-    /// @param tokenOut Output token to receive
+    /// @notice Performs instant redemption of mToken for quote token
     /// @param amountMTokenIn Amount of mToken to redeem
-    /// @param minReceiveAmount Minimum amount of output token to receive
-    function redeemInstant(address tokenOut, uint256 amountMTokenIn, uint256 minReceiveAmount) external;
+    /// @param minReceiveAmount Minimum amount of quote token to receive
+    function redeemInstant(uint256 amountMTokenIn, uint256 minReceiveAmount) external;
 
-    /// @notice Requests a redemption of mToken for output token
-    /// @param tokenOut Output token to receive
+    /// @notice Requests a redemption of mToken for quote token
     /// @param amountMTokenIn Amount of mToken to redeem
     /// @param extraData Additional redemption data to log
-    function requestRedeem(address tokenOut, uint256 amountMTokenIn, bytes calldata extraData) external;
+    function requestRedeem(uint256 amountMTokenIn, bytes calldata extraData) external;
 
     /// @notice Withdraws tokens from fulfilled redemption requests
-    /// @param tokenOut Output token to withdraw
-    /// @param amount Amount of output token to withdraw
-    function withdraw(address tokenOut, uint256 amount) external;
+    /// @param amount Amount of quote token to withdraw
+    function withdraw(uint256 amount) external;
 
     /// @notice Withdraws tokens from a specific redeemer
     /// @param redeemer The redeemer to withdraw from
-    /// @param tokenOut The token to withdraw
     /// @param amount The amount to withdraw
-    function withdrawFromRedeemer(address redeemer, address tokenOut, uint256 amount) external;
+    function withdrawFromRedeemer(address redeemer, uint256 amount) external;
 
     /// @notice Transfers a redeemer to a new account
     /// @param redeemer The redeemer to transfer
     /// @param newAccount The new account to transfer the redeemer to
     function transferRedeemer(address redeemer, address newAccount) external;
 
-    /// @notice Returns the pending and claimable amounts of output token for an account, across all counted redeemers
+    /// @notice Returns the pending and claimable amounts of quote token for an account, across all counted redeemers
     /// @param account Account to check
-    /// @param tokenOut Output token to check
-    /// @return pendingAmount Pending amount of output token
-    /// @return claimableAmount Claimable amount of output token
-    function pendingAndClaimableTokenOutAmounts(address account, address tokenOut)
+    /// @return pendingAmount Pending amount of quote token
+    /// @return claimableAmount Claimable amount of quote token
+    function pendingAndClaimableTokenOutAmounts(address account)
         external
         view
         returns (uint256 pendingAmount, uint256 claimableAmount);

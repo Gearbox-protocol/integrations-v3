@@ -10,9 +10,11 @@ import {ERC20Mock} from "@gearbox-protocol/core-v3/contracts/test/mocks/token/ER
 
 import {MidasGateway} from "../../../../helpers/midas/MidasGateway.sol";
 import {MidasRedeemer} from "../../../../helpers/midas/MidasRedeemer.sol";
+import {MidasRedemptionVaultPhantomToken} from "../../../../helpers/midas/MidasRedemptionVaultPhantomToken.sol";
 import {IMidasGateway} from "../../../../interfaces/midas/IMidasGateway.sol";
 import {RedemptionLogger} from "../../../../helpers/RedemptionLogger.sol";
 import {IRedemptionLogger} from "../../../../interfaces/IRedemptionLogger.sol";
+import {IVersion} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IVersion.sol";
 
 contract MidasDataFeedMock {
     function getDataInBase18() external pure returns (uint256) {
@@ -23,6 +25,7 @@ contract MidasDataFeedMock {
 /// @dev Minimal issuance vault: pulls input token from the caller (gateway) and sends back a fixed amount of mToken.
 contract MidasIssuanceVaultMock {
     address public immutable mToken;
+    address public accessControl;
     uint256 public mTokenAmountOut;
 
     constructor(address _mToken) {
@@ -31,6 +34,10 @@ contract MidasIssuanceVaultMock {
 
     function setMTokenAmountOut(uint256 amount) external {
         mTokenAmountOut = amount;
+    }
+
+    function setAccessControl(address accessControl_) external {
+        accessControl = accessControl_;
     }
 
     function depositInstant(address tokenIn, uint256 amountToken, uint256, bytes32) external {
@@ -59,6 +66,7 @@ contract MidasRedemptionVaultMock {
 
     address public immutable mToken;
     address public immutable mTokenDataFeed;
+    address public accessControl;
     uint256 public tokenOutAmount;
 
     uint256 public currentRequestId;
@@ -71,6 +79,10 @@ contract MidasRedemptionVaultMock {
 
     function setTokenOutAmount(uint256 amount) external {
         tokenOutAmount = amount;
+    }
+
+    function setAccessControl(address accessControl_) external {
+        accessControl = accessControl_;
     }
 
     function redeemInstant(address tokenOut, uint256 amountMTokenIn, uint256) external {
@@ -102,21 +114,6 @@ contract MidasRedemptionVaultMock {
     {
         Request memory r = _requests[requestId];
         return (r.sender, r.tokenOut, r.status, r.amountMTokenIn, r.mTokenRate, r.tokenOutRate);
-    }
-}
-
-contract MidasTransferMasterMock {
-    bool internal _isTransferAllowed;
-
-    bytes32 public constant contractType = "MOCK::TRANSFER_MASTER";
-    uint256 public constant version = 3_11;
-
-    function setTransferAllowed(bool allowed) external {
-        _isTransferAllowed = allowed;
-    }
-
-    function isTransferAllowed() external view returns (bool) {
-        return _isTransferAllowed;
     }
 }
 
@@ -167,44 +164,47 @@ contract MidasGatewayUnitTest is Test {
     MidasIssuanceVaultMock issuanceVault;
     MidasRedemptionVaultMock redemptionVault;
     MidasDataFeedMock dataFeed;
-    MidasTransferMasterMock transferMaster;
     CreditManagerMock creditManager;
     CreditAccountMock account;
 
     address mToken;
-    address inputToken;
-    address outputToken;
+    address quoteToken;
     address borrower;
     address newAccount;
+    address transferMaster;
 
     uint256 constant REDEMPTION_DURATION = 1 days;
 
     function setUp() public {
         mToken = address(new ERC20Mock("mTBILL", "mTBILL", 18));
-        inputToken = address(new ERC20Mock("USDC", "USDC", 6));
-        outputToken = address(new ERC20Mock("DAI", "DAI", 18));
+        quoteToken = address(new ERC20Mock("DAI", "DAI", 18));
         borrower = makeAddr("BORROWER");
         newAccount = makeAddr("NEW_ACCOUNT");
 
         dataFeed = new MidasDataFeedMock();
         issuanceVault = new MidasIssuanceVaultMock(mToken);
         redemptionVault = new MidasRedemptionVaultMock(mToken, address(dataFeed));
-        transferMaster = new MidasTransferMasterMock();
         creditManager = new CreditManagerMock();
 
         gateway = new MidasGateway(
             address(issuanceVault),
             address(redemptionVault),
-            address(0), // access control (none)
-            address(transferMaster),
+            quoteToken,
+            false, // isAccessControlled
             address(0), // allowed market configurator (none => skip registration check)
             false, // checkBorrowerGreenlist
             REDEMPTION_DURATION,
             address(0) // redemption logger (none)
         );
+        transferMaster = gateway.transferMaster();
 
         account = new CreditAccountMock(address(creditManager));
         creditManager.setBorrower(address(account), borrower);
+    }
+
+    function _setTransferAllowed(bool allowed) internal {
+        // `MidasLiquidator.isTransferAllowed` is the sole storage variable (slot 0).
+        vm.store(transferMaster, bytes32(uint256(0)), bytes32(uint256(allowed ? 1 : 0)));
     }
 
     /// @notice U:[MID-G-1]: Constructor works as expected
@@ -214,10 +214,39 @@ contract MidasGatewayUnitTest is Test {
         assertEq(gateway.midasIssuanceVault(), address(issuanceVault), "Incorrect issuance vault");
         assertEq(gateway.midasRedemptionVault(), address(redemptionVault), "Incorrect redemption vault");
         assertEq(gateway.mToken(), mToken, "Incorrect mToken");
-        assertEq(gateway.transferMaster(), address(transferMaster), "Incorrect transfer master");
+        assertEq(gateway.quoteToken(), quoteToken, "Incorrect quote token");
+        assertTrue(gateway.phantomToken() != address(0), "Phantom token not deployed");
+        assertEq(
+            MidasRedemptionVaultPhantomToken(gateway.phantomToken()).gateway(), address(gateway), "Incorrect PT gateway"
+        );
+        assertTrue(gateway.transferMaster() != address(0), "Transfer master not deployed");
+        assertEq(
+            IVersion(gateway.transferMaster()).contractType(), "RWA_LIQUIDATOR::MIDAS", "Incorrect transfer master type"
+        );
         assertEq(gateway.expectedRedemptionDuration(), REDEMPTION_DURATION, "Incorrect redemption duration");
         assertEq(gateway.redemptionLogger(), address(0), "Incorrect redemption logger");
         assertTrue(gateway.masterRedeemer() != address(0), "Master redeemer not set");
+    }
+
+    /// @notice U:[MID-G-1A]: Phantom token deployed in constructor has correct parameters
+    function test_U_MID_G_01A_constructor_deploys_phantom_token_with_correct_params() public view {
+        MidasRedemptionVaultPhantomToken phantomToken = MidasRedemptionVaultPhantomToken(gateway.phantomToken());
+
+        assertEq(phantomToken.contractType(), "PHANTOM_TOKEN::MIDAS_REDEMPTION", "Incorrect contract type");
+        assertEq(phantomToken.version(), 3_11, "Incorrect version");
+        assertEq(phantomToken.gateway(), address(gateway), "Incorrect gateway");
+        assertEq(phantomToken.underlying(), quoteToken, "Incorrect underlying");
+        assertEq(phantomToken.decimals(), 18, "Incorrect decimals");
+        assertEq(phantomToken.name(), "mTBILL redeemed to DAI", "Incorrect name");
+        assertEq(phantomToken.symbol(), "mTBILLrdDAI", "Incorrect symbol");
+
+        (address gw, address underlying) = phantomToken.getPhantomTokenInfo();
+        assertEq(gw, address(gateway), "Incorrect gateway from getPhantomTokenInfo");
+        assertEq(underlying, quoteToken, "Incorrect underlying from getPhantomTokenInfo");
+
+        (address sgw, address sunderlying) = abi.decode(phantomToken.serialize(), (address, address));
+        assertEq(sgw, address(gateway), "Incorrect gateway in serialized data");
+        assertEq(sunderlying, quoteToken, "Incorrect underlying in serialized data");
     }
 
     /// @notice U:[MID-G-2]: Constructor reverts when issuance/redemption mTokens differ
@@ -229,8 +258,46 @@ contract MidasGatewayUnitTest is Test {
         new MidasGateway(
             address(badIssuanceVault),
             address(redemptionVault),
+            quoteToken,
+            false,
             address(0),
-            address(transferMaster),
+            false,
+            REDEMPTION_DURATION,
+            address(0)
+        );
+    }
+
+    /// @notice U:[MID-G-2A]: Constructor reads matching access control from the vaults
+    function test_U_MID_G_02A_constructor_reads_matching_access_control() public {
+        address accessControl = makeAddr("ACCESS_CONTROL");
+        issuanceVault.setAccessControl(accessControl);
+        redemptionVault.setAccessControl(accessControl);
+
+        MidasGateway controlledGateway = new MidasGateway(
+            address(issuanceVault),
+            address(redemptionVault),
+            quoteToken,
+            true,
+            address(0),
+            false,
+            REDEMPTION_DURATION,
+            address(0)
+        );
+
+        assertEq(controlledGateway.accessControl(), accessControl, "Incorrect access control");
+    }
+
+    /// @notice U:[MID-G-2B]: Constructor reverts when vault access controls differ
+    function test_U_MID_G_02B_constructor_reverts_on_incompatible_access_controls() public {
+        issuanceVault.setAccessControl(makeAddr("ISSUANCE_ACCESS_CONTROL"));
+        redemptionVault.setAccessControl(makeAddr("REDEMPTION_ACCESS_CONTROL"));
+
+        vm.expectRevert(IMidasGateway.IncompatibleAccessControlsException.selector);
+        new MidasGateway(
+            address(issuanceVault),
+            address(redemptionVault),
+            quoteToken,
+            true,
             address(0),
             false,
             REDEMPTION_DURATION,
@@ -244,8 +311,8 @@ contract MidasGatewayUnitTest is Test {
         new MidasGateway(
             address(issuanceVault),
             address(redemptionVault),
-            address(0),
-            address(transferMaster),
+            quoteToken,
+            true,
             address(0),
             true, // checkBorrowerGreenlist with no access control
             REDEMPTION_DURATION,
@@ -255,38 +322,40 @@ contract MidasGatewayUnitTest is Test {
 
     /// @notice U:[MID-G-4]: `depositInstant` issues mToken to the account
     function test_U_MID_G_04_depositInstant_works() public {
-        uint256 amountIn = 1000e6;
+        uint256 amountIn = 1000e18;
         uint256 mTokenOut = 950e18;
 
-        deal(inputToken, address(account), amountIn);
-        account.approveToken(inputToken, address(gateway), amountIn);
+        deal(quoteToken, address(account), amountIn);
+        account.approveToken(quoteToken, address(gateway), amountIn);
         deal(mToken, address(issuanceVault), mTokenOut);
         issuanceVault.setMTokenAmountOut(mTokenOut);
 
         vm.prank(address(account));
-        gateway.depositInstant(inputToken, amountIn, 0, bytes32(0));
+        gateway.depositInstant(amountIn, 0, bytes32(0));
 
         assertEq(IERC20(mToken).balanceOf(address(account)), mTokenOut, "Account did not receive mToken");
-        assertEq(IERC20(inputToken).balanceOf(address(issuanceVault)), amountIn, "Vault did not receive input token");
+        assertEq(IERC20(quoteToken).balanceOf(address(issuanceVault)), amountIn, "Vault did not receive quote token");
         assertEq(IERC20(mToken).balanceOf(address(gateway)), 0, "mToken stuck in gateway");
     }
 
     /// @notice U:[MID-G-5]: `redeemInstant` redeems mToken for output token
     function test_U_MID_G_05_redeemInstant_works() public {
         uint256 amountMToken = 100e18;
-        uint256 tokenOut = 99e18;
+        uint256 amountQuoteToken = 99e18;
 
         deal(mToken, address(account), amountMToken);
         account.approveToken(mToken, address(gateway), amountMToken);
-        deal(outputToken, address(redemptionVault), tokenOut);
-        redemptionVault.setTokenOutAmount(tokenOut);
+        deal(quoteToken, address(redemptionVault), amountQuoteToken);
+        redemptionVault.setTokenOutAmount(amountQuoteToken);
 
         vm.prank(address(account));
-        gateway.redeemInstant(outputToken, amountMToken, 0);
+        gateway.redeemInstant(amountMToken, 0);
 
-        assertEq(IERC20(outputToken).balanceOf(address(account)), tokenOut, "Account did not receive output token");
+        assertEq(
+            IERC20(quoteToken).balanceOf(address(account)), amountQuoteToken, "Account did not receive quote token"
+        );
         assertEq(IERC20(mToken).balanceOf(address(redemptionVault)), amountMToken, "Vault did not receive mToken");
-        assertEq(IERC20(outputToken).balanceOf(address(gateway)), 0, "Output token stuck in gateway");
+        assertEq(IERC20(quoteToken).balanceOf(address(gateway)), 0, "Quote token stuck in gateway");
     }
 
     /// @notice U:[MID-G-6]: Eligibility-gated functions revert for non-credit-account callers
@@ -295,15 +364,15 @@ contract MidasGatewayUnitTest is Test {
 
         vm.prank(notCreditAccount);
         vm.expectRevert(IMidasGateway.CreditAccountNotEligibleException.selector);
-        gateway.depositInstant(inputToken, 1, 0, bytes32(0));
+        gateway.depositInstant(1, 0, bytes32(0));
 
         vm.prank(notCreditAccount);
         vm.expectRevert(IMidasGateway.CreditAccountNotEligibleException.selector);
-        gateway.redeemInstant(outputToken, 1, 0);
+        gateway.redeemInstant(1, 0);
 
         vm.prank(notCreditAccount);
         vm.expectRevert(IMidasGateway.CreditAccountNotEligibleException.selector);
-        gateway.requestRedeem(outputToken, 1, "");
+        gateway.requestRedeem(1, "");
     }
 
     /// @notice U:[MID-G-7]: Eligibility reverts when borrower is not set
@@ -312,7 +381,7 @@ contract MidasGatewayUnitTest is Test {
 
         vm.prank(address(accountNoBorrower));
         vm.expectRevert(IMidasGateway.CreditAccountNotEligibleException.selector);
-        gateway.redeemInstant(outputToken, 1, 0);
+        gateway.redeemInstant(1, 0);
     }
 
     /// @notice U:[MID-G-8]: `requestRedeem` creates a redeemer and forwards the request
@@ -323,7 +392,7 @@ contract MidasGatewayUnitTest is Test {
         account.approveToken(mToken, address(gateway), amountMToken);
 
         vm.prank(address(account));
-        gateway.requestRedeem(outputToken, amountMToken, "");
+        gateway.requestRedeem(amountMToken, "");
 
         address[] memory redeemers = gateway.pendingRedeemers(address(account));
         assertEq(redeemers.length, 1, "Redeemer not created");
@@ -342,18 +411,18 @@ contract MidasGatewayUnitTest is Test {
         account.approveToken(mToken, address(gateway), amountMToken);
 
         vm.prank(address(account));
-        gateway.requestRedeem(outputToken, amountMToken, "");
+        gateway.requestRedeem(amountMToken, "");
 
         address redeemer = gateway.pendingRedeemers(address(account))[0];
 
         // Simulate the request being fulfilled: output tokens land on the redeemer and the request is processed.
-        deal(outputToken, redeemer, 99e18);
+        deal(quoteToken, redeemer, 99e18);
         redemptionVault.setStatus(1, 1);
 
         vm.prank(address(account));
-        gateway.withdraw(outputToken, 99e18);
+        gateway.withdraw(99e18);
 
-        assertEq(IERC20(outputToken).balanceOf(address(account)), 99e18, "Account did not receive output token");
+        assertEq(IERC20(quoteToken).balanceOf(address(account)), 99e18, "Account did not receive quote token");
         assertEq(gateway.pendingRedeemers(address(account)).length, 0, "Redeemer not removed from pending list");
     }
 
@@ -364,15 +433,15 @@ contract MidasGatewayUnitTest is Test {
         account.approveToken(mToken, address(gateway), amountMToken);
 
         vm.prank(address(account));
-        gateway.requestRedeem(outputToken, amountMToken, "");
+        gateway.requestRedeem(amountMToken, "");
 
         address redeemer = gateway.pendingRedeemers(address(account))[0];
-        deal(outputToken, redeemer, 50e18);
+        deal(quoteToken, redeemer, 50e18);
         redemptionVault.setStatus(1, 1);
 
         vm.prank(address(account));
         vm.expectRevert(IMidasGateway.InsufficientBalanceException.selector);
-        gateway.withdraw(outputToken, 99e18);
+        gateway.withdraw(99e18);
     }
 
     /// @notice U:[MID-G-11]: `transferRedeemer` reassigns ownership when allowed
@@ -382,10 +451,10 @@ contract MidasGatewayUnitTest is Test {
         account.approveToken(mToken, address(gateway), amountMToken);
 
         vm.prank(address(account));
-        gateway.requestRedeem(outputToken, amountMToken, "");
+        gateway.requestRedeem(amountMToken, "");
 
         address redeemer = gateway.pendingRedeemers(address(account))[0];
-        transferMaster.setTransferAllowed(true);
+        _setTransferAllowed(true);
 
         vm.prank(address(account));
         gateway.transferRedeemer(redeemer, newAccount);
@@ -404,10 +473,10 @@ contract MidasGatewayUnitTest is Test {
         account.approveToken(mToken, address(gateway), amountMToken);
 
         vm.prank(address(account));
-        gateway.requestRedeem(outputToken, amountMToken, "");
+        gateway.requestRedeem(amountMToken, "");
 
         address redeemer = gateway.pendingRedeemers(address(account))[0];
-        transferMaster.setTransferAllowed(false);
+        _setTransferAllowed(false);
 
         vm.prank(address(account));
         vm.expectRevert(IMidasGateway.RedeemerTransferNotAllowedException.selector);
@@ -416,7 +485,7 @@ contract MidasGatewayUnitTest is Test {
 
     /// @notice U:[MID-G-13]: `transferRedeemer` reverts when redeemer is not owned by caller
     function test_U_MID_G_13_transferRedeemer_reverts_when_not_owned() public {
-        transferMaster.setTransferAllowed(true);
+        _setTransferAllowed(true);
 
         vm.prank(address(account));
         vm.expectRevert(IMidasGateway.RedeemerTransferNotAllowedException.selector);
@@ -431,11 +500,11 @@ contract MidasGatewayUnitTest is Test {
 
         vm.startPrank(address(account));
         for (uint256 i = 0; i < count; ++i) {
-            gateway.requestRedeem(outputToken, 1e18, "");
+            gateway.requestRedeem(1e18, "");
         }
 
         vm.expectRevert(IMidasGateway.MaxPendingRedeemersPerAccountException.selector);
-        gateway.requestRedeem(outputToken, 1e18, "");
+        gateway.requestRedeem(1e18, "");
         vm.stopPrank();
     }
 
@@ -445,8 +514,8 @@ contract MidasGatewayUnitTest is Test {
         MidasGateway gatewayWithLogger = new MidasGateway(
             address(issuanceVault),
             address(redemptionVault),
-            address(0),
-            address(transferMaster),
+            quoteToken,
+            false,
             address(0),
             false,
             REDEMPTION_DURATION,
@@ -461,52 +530,12 @@ contract MidasGatewayUnitTest is Test {
         account.approveToken(mToken, address(gatewayWithLogger), amountMToken);
 
         vm.prank(address(account));
-        gatewayWithLogger.requestRedeem(outputToken, amountMToken, extraData);
+        gatewayWithLogger.requestRedeem(amountMToken, extraData);
 
         address redeemer = gatewayWithLogger.pendingRedeemers(address(account))[0];
         IRedemptionLogger.RedemptionLog memory log = logger.redemptionLogs(redeemer);
         assertEq(log.creditAccount, address(account), "Incorrect logged credit account");
         assertEq(log.redeemer, redeemer, "Incorrect logged redeemer");
         assertEq(log.extraData, extraData, "Incorrect logged extraData");
-    }
-
-    /// @notice U:[MID-G-16]: `withdraw` for one tokenOut does not evict redeemers for another tokenOut
-    function test_U_MID_G_16_withdraw_does_not_evict_unrelated_tokenOut_redeemer() public {
-        uint256 daiAmountMToken = 100e18;
-        uint256 usdcAmountMToken = 50e18;
-        uint256 usdcClaimable = 49e6;
-
-        deal(mToken, address(account), daiAmountMToken + usdcAmountMToken);
-        account.approveToken(mToken, address(gateway), daiAmountMToken + usdcAmountMToken);
-
-        vm.startPrank(address(account));
-        gateway.requestRedeem(outputToken, daiAmountMToken, "");
-        gateway.requestRedeem(inputToken, usdcAmountMToken, "");
-        vm.stopPrank();
-
-        address[] memory redeemers = gateway.pendingRedeemers(address(account));
-        assertEq(redeemers.length, 2, "Expected two pending redeemers");
-
-        address daiRedeemer = redeemers[0];
-        address usdcRedeemer = redeemers[1];
-
-        deal(inputToken, usdcRedeemer, usdcClaimable);
-        redemptionVault.setStatus(2, 1);
-
-        (uint256 daiPendingBefore,) = gateway.pendingAndClaimableTokenOutAmounts(address(account), outputToken);
-
-        vm.prank(address(account));
-        gateway.withdraw(inputToken, usdcClaimable);
-
-        (uint256 daiPendingAfter, uint256 daiClaimableAfter) =
-            gateway.pendingAndClaimableTokenOutAmounts(address(account), outputToken);
-
-        assertEq(daiPendingAfter, daiPendingBefore, "DAI pending amount should be unchanged");
-        assertEq(daiClaimableAfter, 0, "DAI claimable should still be zero");
-
-        redeemers = gateway.pendingRedeemers(address(account));
-        assertEq(redeemers.length, 1, "Only the drained USDC redeemer should be evicted");
-        assertEq(redeemers[0], daiRedeemer, "DAI redeemer should not be evicted");
-        assertEq(IERC20(inputToken).balanceOf(address(account)), usdcClaimable, "USDC should be withdrawn");
     }
 }

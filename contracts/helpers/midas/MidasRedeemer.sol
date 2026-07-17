@@ -45,11 +45,11 @@ contract MidasRedeemer {
     /// @notice Address of the mToken
     address public immutable mToken;
 
+    /// @notice Address of the quote token redeemed from Midas
+    address public immutable quoteToken;
+
     /// @notice The request ID for the redemption request
     uint256 public requestId;
-
-    /// @notice The token out for the redemption request
-    address public requestTokenOut;
 
     /// @notice Whether this redeemer was already used
     bool public alreadyRedeemed;
@@ -72,11 +72,13 @@ contract MidasRedeemer {
 
     /// @notice Constructor
     /// @param _midasRedemptionVault Address of the Midas Redemption Vault
-    constructor(address _midasRedemptionVault) {
+    /// @param _quoteToken Address of the quote token redeemed from Midas
+    constructor(address _midasRedemptionVault, address _quoteToken) {
         gateway = msg.sender;
         midasRedemptionVault = _midasRedemptionVault;
         mToken = IMidasRedemptionVault(_midasRedemptionVault).mToken();
         mTokenDataFeed = IMidasRedemptionVault(_midasRedemptionVault).mTokenDataFeed();
+        quoteToken = _quoteToken;
     }
 
     /// @notice Sets the account for this redeemer
@@ -84,42 +86,37 @@ contract MidasRedeemer {
         account = _account;
     }
 
-    /// @notice Requests a redemption of mToken for output token
-    /// @param tokenOut Output token to receive
+    /// @notice Requests a redemption of mToken for quote token
     /// @param amountMTokenIn Amount of mToken to redeem
-    function requestRedeem(address tokenOut, uint256 amountMTokenIn) external gatewayOnly whenNotAlreadyRedeemed {
+    function requestRedeem(uint256 amountMTokenIn) external gatewayOnly whenNotAlreadyRedeemed {
         IERC20(mToken).forceApprove(midasRedemptionVault, amountMTokenIn);
-        requestId = IMidasRedemptionVault(midasRedemptionVault).redeemRequest(tokenOut, amountMTokenIn);
+        requestId = IMidasRedemptionVault(midasRedemptionVault).redeemRequest(quoteToken, amountMTokenIn);
         alreadyRedeemed = true;
         redemptionStartTimestamp = block.timestamp;
-        requestTokenOut = tokenOut;
     }
 
     /// @notice Withdraws tokens to the connected account
-    /// @param tokenOut Output token to withdraw
-    /// @param amount Amount of output token to withdraw
-    function withdraw(address tokenOut, uint256 amount) external gatewayOnly {
-        if (IERC20(tokenOut).balanceOf(address(this)) < amount) revert InsufficientBalanceException();
-        IERC20(tokenOut).safeTransfer(account, amount);
+    /// @param amount Amount of quote token to withdraw
+    function withdraw(uint256 amount) external gatewayOnly {
+        if (IERC20(quoteToken).balanceOf(address(this)) < amount) revert InsufficientBalanceException();
+        IERC20(quoteToken).safeTransfer(account, amount);
     }
 
-    /// @notice Returns the expected amount of output token for the pending redemption request
-    /// @param tokenOut Output token to check
-    function pendingTokenOutAmount(address tokenOut) external view returns (uint256) {
+    /// @notice Returns the expected amount of quote token for the pending redemption request
+    function pendingTokenOutAmount() external view returns (uint256) {
         (,, uint8 status, uint256 amountMTokenIn,, uint256 tokenOutRate) =
             IMidasRedemptionVault(midasRedemptionVault).redeemRequests(requestId);
 
-        if (requestTokenOut != tokenOut || status == 1 || isManuallyCleared) return 0;
+        if (status == 1 || isManuallyCleared) return 0;
 
         uint256 mTokenRate = IMidasDataFeed(mTokenDataFeed).getDataInBase18();
 
-        return _calculateTokenOutAmount(amountMTokenIn, mTokenRate, tokenOutRate, tokenOut);
+        return _calculateTokenOutAmount(amountMTokenIn, mTokenRate, tokenOutRate);
     }
 
-    /// @notice Returns the amount of output token that can be claimed
-    /// @param tokenOut Output token to check
-    function claimableTokenOutAmount(address tokenOut) external view returns (uint256) {
-        return IERC20(tokenOut).balanceOf(address(this));
+    /// @notice Returns the amount of quote token that can be claimed
+    function claimableTokenOutAmount() external view returns (uint256) {
+        return IERC20(quoteToken).balanceOf(address(this));
     }
 
     /// @notice Clears a cancelled redemption request
@@ -127,20 +124,20 @@ contract MidasRedeemer {
     /// @dev If Midas rejects a request on accident, this function allows Midas or other interested party
     ///      to gracefully fulfill the request anyway, by manually supplying the required funds to the gateway.
     function clearCancelledRequest(uint256 amount) external {
-        (, address tokenOut, uint8 status, uint256 amountMTokenIn, uint256 mTokenRate, uint256 tokenOutRate) =
+        (,, uint8 status, uint256 amountMTokenIn, uint256 mTokenRate, uint256 tokenOutRate) =
             IMidasRedemptionVault(midasRedemptionVault).redeemRequests(requestId);
 
         if (status != 2 || isManuallyCleared) {
             revert RequestNotCancelledOrManuallyClearedException();
         }
 
-        uint256 minAmount = _calculateTokenOutAmount(amountMTokenIn, mTokenRate, tokenOutRate, tokenOut);
+        uint256 minAmount = _calculateTokenOutAmount(amountMTokenIn, mTokenRate, tokenOutRate);
 
         if (amount < minAmount) {
             revert AmountIsLessThanRequiredException();
         }
 
-        IERC20(tokenOut).safeTransferFrom(msg.sender, address(this), amount);
+        IERC20(quoteToken).safeTransferFrom(msg.sender, address(this), amount);
 
         isManuallyCleared = true;
     }
@@ -148,18 +145,16 @@ contract MidasRedeemer {
     /// @dev Calculates the output token amount from mToken amount and rates
     /// @param amountMTokenIn Amount of mToken
     /// @param mTokenRate Rate of mToken
-    /// @param tokenOutRate Rate of output token
-    /// @param tokenOut Address of output token
-    /// @return Amount of output token in its native decimals
-    function _calculateTokenOutAmount(
-        uint256 amountMTokenIn,
-        uint256 mTokenRate,
-        uint256 tokenOutRate,
-        address tokenOut
-    ) internal view returns (uint256) {
+    /// @param tokenOutRate Rate of quote token
+    /// @return Amount of quote token in its native decimals
+    function _calculateTokenOutAmount(uint256 amountMTokenIn, uint256 mTokenRate, uint256 tokenOutRate)
+        internal
+        view
+        returns (uint256)
+    {
         uint256 amount1e18 = (amountMTokenIn * mTokenRate) / tokenOutRate;
 
-        uint256 tokenUnit = 10 ** IERC20Metadata(tokenOut).decimals();
+        uint256 tokenUnit = 10 ** IERC20Metadata(quoteToken).decimals();
 
         if (tokenUnit == WAD) return amount1e18;
 
