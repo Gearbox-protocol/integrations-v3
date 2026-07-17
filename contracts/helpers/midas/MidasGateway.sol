@@ -97,6 +97,7 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
     /// @param _checkBorrowerGreenlist Whether to check that the borrower is greenlisted
     /// @param _expectedRedemptionDuration Expected duration of a redemption request (for informational purposes)
     /// @param _redemptionLogger Address of the redemption logger contract
+    /// @param _withDelayedWithdrawals Whether to deploy a redemption phantom token for delayed withdrawals
     constructor(
         address _midasIssuanceVault,
         address _midasRedemptionVault,
@@ -105,7 +106,8 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
         address _allowedMarketConfigurator,
         bool _checkBorrowerGreenlist,
         uint256 _expectedRedemptionDuration,
-        address _redemptionLogger
+        address _redemptionLogger,
+        bool _withDelayedWithdrawals
     ) {
         midasIssuanceVault = _midasIssuanceVault;
         midasRedemptionVault = _midasRedemptionVault;
@@ -133,7 +135,9 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
 
         masterRedeemer = address(new MidasRedeemer(_midasRedemptionVault, _quoteToken));
         transferMaster = address(new MidasLiquidator());
-        phantomToken = address(new MidasRedemptionVaultPhantomToken(address(this), mToken, _quoteToken));
+        phantomToken = _withDelayedWithdrawals
+            ? address(new MidasRedemptionVaultPhantomToken(address(this), mToken, _quoteToken))
+            : address(0);
         allowedMarketConfigurator = _allowedMarketConfigurator;
         expectedRedemptionDuration = _expectedRedemptionDuration;
         redemptionLogger = _redemptionLogger;

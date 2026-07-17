@@ -48,10 +48,9 @@ contract MidasGatewayAdapter is AbstractAdapter, IMidasGatewayAdapter {
         quoteToken = IMidasGateway(_gateway).quoteToken();
         phantomToken = IMidasGateway(_gateway).phantomToken();
 
-        // We check that mToken is a valid collateral
         _getMaskOrRevert(mToken);
         _getMaskOrRevert(quoteToken);
-        _getMaskOrRevert(phantomToken);
+        if (phantomToken != address(0)) _getMaskOrRevert(phantomToken);
 
         referrerId = _referrerId;
     }
@@ -198,6 +197,7 @@ contract MidasGatewayAdapter is AbstractAdapter, IMidasGatewayAdapter {
 
     /// @dev Internal implementation of `redeemRequest`
     function _redeemRequest(uint256 amountMTokenIn, bytes memory extraData) internal {
+        if (phantomToken == address(0)) revert PhantomTokenNotSetException();
         _executeSwapSafeApprove(mToken, abi.encodeCall(IMidasGateway.requestRedeem, (amountMTokenIn, extraData)));
     }
 

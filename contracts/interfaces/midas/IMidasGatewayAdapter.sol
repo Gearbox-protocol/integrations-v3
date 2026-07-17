@@ -9,6 +9,8 @@ import {IPhantomTokenAdapter} from "../IPhantomTokenAdapter.sol";
 /// @title Midas Gateway adapter interface
 /// @notice Combines the issuance and redemption scope of the standalone Midas adapters behind a single gateway
 interface IMidasGatewayAdapter is IAdapter, IPhantomTokenAdapter {
+    error PhantomTokenNotSetException();
+
     // -------- //
     // GENERAL  //
     // -------- //

@@ -116,6 +116,7 @@ Key behavior:
 - `getRedemptionAmount(account)`:
   - sums `getRedemptionAmount()` across unclaimed redeemers.
 - Zero-amount `redeem` is treated as allowed/no-op from an economic perspective (no meaningful redemption exposure is created).
+- Constructor deploys `SecuritizeRedeemer` (master clone implementation) and `SecuritizeRedemptionPhantomToken`.
 
 Access and transfer restrictions:
 
@@ -131,6 +132,7 @@ Purpose:
 
 Key behavior:
 
+- One phantom token per gateway, deployed in `SecuritizeRedemptionGateway` constructor.
 - Underlying token metadata comes from gateway stablecoin.
 - `balanceOf(account)` proxies to `gateway.getRedemptionAmount(account)`.
 - Non-transferable phantom semantics inherited from `PhantomERC20`.
@@ -148,7 +150,7 @@ Purpose:
 
 Key behavior:
 
-- Constructor caches DS/stablecoin and validates phantom token belongs to the same gateway.
+- Constructor caches DS/stablecoin and reads the gateway-deployed phantom token.
 - `redeem(dsTokenAmount)` and `redeemDiff(leftoverAmount)`:
   - approve DS token and call gateway `redeem`.
 - `claim(redeemers[])`: calls gateway `claim`.

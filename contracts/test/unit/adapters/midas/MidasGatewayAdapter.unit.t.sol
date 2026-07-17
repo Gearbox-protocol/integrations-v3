@@ -74,6 +74,19 @@ contract MidasGatewayAdapterUnitTest is AdapterUnitTestHelper {
         assertEq(adapter.referrerId(), REFERRER_ID, "Incorrect referrerId");
     }
 
+    /// @notice U:[MID-A-1A]: Constructor works when gateway has no phantom token
+    function test_U_MID_A_01A_constructor_works_without_phantom_token() public {
+        MidasGatewayMock gatewayWithoutPhantomToken = new MidasGatewayMock(mToken, quoteToken, address(0));
+
+        _readsTokenMask(mToken);
+        _readsTokenMask(quoteToken);
+
+        MidasGatewayAdapter adapterWithoutPhantomToken =
+            new MidasGatewayAdapter(address(creditManager), address(gatewayWithoutPhantomToken), REFERRER_ID);
+
+        assertEq(adapterWithoutPhantomToken.phantomToken(), address(0), "Incorrect phantomToken");
+    }
+
     /// @notice U:[MID-A-2]: Wrapper functions revert on wrong caller
     function test_U_MID_A_02_wrapper_functions_revert_on_wrong_caller() public {
         _revertsOnNonFacadeCaller();
@@ -254,6 +267,17 @@ contract MidasGatewayAdapterUnitTest is AdapterUnitTestHelper {
         vm.prank(creditFacade);
         bool useSafePrices = adapter.redeemRequestDiff(100);
         assertFalse(useSafePrices);
+    }
+
+    /// @notice U:[MID-A-12E]: `redeemRequest` reverts when phantom token is not set
+    function test_U_MID_A_12E_redeemRequest_reverts_without_phantom_token() public {
+        MidasGatewayMock gatewayWithoutPhantomToken = new MidasGatewayMock(mToken, quoteToken, address(0));
+        MidasGatewayAdapter adapterWithoutPhantomToken =
+            new MidasGatewayAdapter(address(creditManager), address(gatewayWithoutPhantomToken), REFERRER_ID);
+
+        vm.expectRevert(IMidasGatewayAdapter.PhantomTokenNotSetException.selector);
+        vm.prank(creditFacade);
+        adapterWithoutPhantomToken.redeemRequest(1000);
     }
 
     /// @notice U:[MID-A-14]: `withdraw` works as expected

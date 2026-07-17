@@ -16,12 +16,14 @@ import {AdapterUnitTestHelper} from "../AdapterUnitTestHelper.sol";
 contract SecuritizeRedemptionGatewayMock is ISecuritizeRedemptionGateway {
     address internal _dsToken;
     address internal _stableCoinToken;
+    address internal _phantomToken;
 
     address public navProvider;
 
-    constructor(address dsToken_, address stableCoinToken_) {
+    constructor(address dsToken_, address stableCoinToken_, address phantomToken_) {
         _dsToken = dsToken_;
         _stableCoinToken = stableCoinToken_;
+        _phantomToken = phantomToken_;
     }
 
     function contractType() external pure override returns (bytes32) {
@@ -58,6 +60,10 @@ contract SecuritizeRedemptionGatewayMock is ISecuritizeRedemptionGateway {
 
     function redemptionLogger() external pure override returns (address) {
         return address(0);
+    }
+
+    function phantomToken() external view override returns (address) {
+        return _phantomToken;
     }
 
     function redeem(uint256, bytes calldata) external override {}
@@ -97,14 +103,12 @@ contract SecuritizeRedemptionGatewayAdapterUnitTest is AdapterUnitTestHelper {
         dsToken = tokens[0];
         stableCoinToken = tokens[1];
 
-        gateway = new SecuritizeRedemptionGatewayMock(dsToken, stableCoinToken);
-        phantomToken = new SecuritizeRedemptionPhantomToken(address(gateway));
+        gateway = new SecuritizeRedemptionGatewayMock(dsToken, stableCoinToken, address(phantomToken));
 
         // Adapter constructor requires the phantom token to be a known collateral.
         creditManager.setMask(address(phantomToken), 1 << 5);
 
-        adapter =
-            new SecuritizeRedemptionGatewayAdapter(address(creditManager), address(gateway), address(phantomToken));
+        adapter = new SecuritizeRedemptionGatewayAdapter(address(creditManager), address(gateway));
     }
 
     /// @notice U:[SRG-A-1]: Constructor works as expected
@@ -113,8 +117,7 @@ contract SecuritizeRedemptionGatewayAdapterUnitTest is AdapterUnitTestHelper {
         _readsTokenMask(stableCoinToken);
         _readsTokenMask(address(phantomToken));
 
-        adapter =
-            new SecuritizeRedemptionGatewayAdapter(address(creditManager), address(gateway), address(phantomToken));
+        adapter = new SecuritizeRedemptionGatewayAdapter(address(creditManager), address(gateway));
 
         assertEq(adapter.creditManager(), address(creditManager), "Incorrect creditManager");
         assertEq(adapter.targetContract(), address(gateway), "Incorrect targetContract");

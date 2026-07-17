@@ -13,7 +13,6 @@ import {NotImplementedException} from "@gearbox-protocol/core-v3/contracts/inter
 
 import {ISecuritizeRedemptionGateway} from "../../interfaces/securitize/ISecuritizeRedemptionGateway.sol";
 import {ISecuritizeRedemptionGatewayAdapter} from "../../interfaces/securitize/ISecuritizeRedemptionGatewayAdapter.sol";
-import {SecuritizeRedemptionPhantomToken} from "../../helpers/securitize/SecuritizeRedemptionPhantomToken.sol";
 
 /// @title SecuritizeSwap Adapter
 /// @notice Implements logic for interacting with the DAI / USDS wrapping contract
@@ -29,17 +28,11 @@ contract SecuritizeRedemptionGatewayAdapter is AbstractAdapter, ISecuritizeRedem
 
     /// @notice Constructor
     /// @param _creditManager Credit manager address
-    /// @param _targetContract SecuritizeSwap contract
-    constructor(address _creditManager, address _targetContract, address _redemptionPhantomToken)
-        AbstractAdapter(_creditManager, _targetContract)
-    {
+    /// @param _targetContract Securitize redemption gateway
+    constructor(address _creditManager, address _targetContract) AbstractAdapter(_creditManager, _targetContract) {
         dsToken = ISecuritizeRedemptionGateway(_targetContract).dsToken();
         stableCoinToken = ISecuritizeRedemptionGateway(_targetContract).stableCoinToken();
-        redemptionPhantomToken = _redemptionPhantomToken;
-
-        if (SecuritizeRedemptionPhantomToken(redemptionPhantomToken).redemptionGateway() != _targetContract) {
-            revert InvalidRedemptionGatewayException();
-        }
+        redemptionPhantomToken = ISecuritizeRedemptionGateway(_targetContract).phantomToken();
 
         _getMaskOrRevert(dsToken);
         _getMaskOrRevert(stableCoinToken);

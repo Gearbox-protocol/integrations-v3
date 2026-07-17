@@ -144,7 +144,7 @@ Key behavior:
   - moves redeemer between accounts in both redeemer sets and updates redeemer `account`.
 - `pendingAndClaimableTokenOutAmounts(account)`: sums pending and claimable across pending redeemers.
 - Hard limit of `MAX_PENDING_REDEEMERS_PER_ACCOUNT` (10) pending redeemers per account.
-- Constructor deploys `MidasRedeemer` (master clone implementation), `MidasLiquidator` (set as `transferMaster`), and `MidasRedemptionVaultPhantomToken`.
+- Constructor deploys `MidasRedeemer` (master clone implementation), `MidasLiquidator` (set as `transferMaster`), and optionally `MidasRedemptionVaultPhantomToken` when `withDelayedWithdrawals` is true.
 
 Access and transfer restrictions:
 
@@ -159,7 +159,7 @@ Purpose:
 
 Key behavior:
 
-- One phantom token per gateway, deployed in `MidasGateway` constructor.
+- One phantom token per gateway when delayed withdrawals are enabled, deployed in `MidasGateway` constructor.
 - Underlying token metadata comes from `quoteToken` (name, symbol, decimals).
 - `balanceOf(account)` = `pendingAmount + claimableAmount` from `gateway.pendingAndClaimableTokenOutAmounts(account)`.
 - Non-transferable phantom semantics inherited from `PhantomERC20`.
@@ -178,7 +178,7 @@ Purpose:
 
 Key behavior:
 
-- Constructor caches `mToken`, `quoteToken`, and `phantomToken`, validating all three via `_getMaskOrRevert`.
+- Constructor caches `mToken`, `quoteToken`, and `phantomToken` from the gateway; validates `mToken` and `quoteToken` via `_getMaskOrRevert`, and validates `phantomToken` only when it is non-zero.
 - **Issuance**:
   - `depositInstant(amountToken, minReceiveAmount, _)`: approves quote token and calls gateway `depositInstant` with immutable `referrerId`.
   - `depositInstantDiff(leftoverAmount, rateMinRAY)`: spends full quote-token balance minus leftover; computes `minReceiveAmount = amount * rateMinRAY / RAY`.
@@ -198,7 +198,7 @@ Key behavior:
   - `transferRedeemer(redeemer, newAccount)`: calls gateway `transferRedeemer`.
     Adapter return semantics (safe pricing flag):
 
-- `redeemRequest` / `redeemRequestDiff` (and `extraData` variants): return `true` when a redemption is executed (safe prices required, as redemption is treated as a swap into phantom-tokenized pending claim value).
+- `redeemRequest` / `redeemRequestDiff` (and `extraData` variants): revert with `PhantomTokenNotSetException` when the gateway has no phantom token; otherwise return `true` when a redemption is executed (safe prices required, as redemption is treated as a swap into phantom-tokenized pending claim value).
 - `redeemRequestDiff` when balance `<= leftover`: returns `false` (no-op).
 - All other operations (`depositInstant`, `depositInstantDiff`, `redeemInstant`, `redeemInstantDiff`, `withdraw`, `withdrawFromRedeemer`, `transferRedeemer`, `withdrawPhantomToken`): return `false`.
 

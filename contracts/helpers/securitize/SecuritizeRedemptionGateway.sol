@@ -14,6 +14,7 @@ import {ISecuritizeGatewayTransferMaster} from "../../interfaces/securitize/ISec
 import {ISecuritizeRegistryService} from "../../integrations/securitize/ISecuritizeRegistryService.sol";
 import {IRedemptionLogger} from "../../interfaces/IRedemptionLogger.sol";
 import {SecuritizeRedeemer} from "./SecuritizeRedeemer.sol";
+import {SecuritizeRedemptionPhantomToken} from "./SecuritizeRedemptionPhantomToken.sol";
 
 /// @title SecuritizeRedemptionGateway
 /// @notice Allows Credit Accounts to redeem DS tokens to stablecoins using the EOA redemption flow
@@ -42,6 +43,8 @@ contract SecuritizeRedemptionGateway is ISecuritizeRedemptionGateway {
 
     address public immutable redemptionLogger;
 
+    address public immutable phantomToken;
+
     mapping(address => EnumerableSet.AddressSet) internal redeemersByAccount;
 
     mapping(address => EnumerableSet.AddressSet) internal unclaimedRedeemers;
@@ -66,6 +69,7 @@ contract SecuritizeRedemptionGateway is ISecuritizeRedemptionGateway {
         registryService = _registryService;
         redemptionLogger = _redemptionLogger;
         masterRedeemer = address(new SecuritizeRedeemer(_dsToken, _stableCoinToken, _redemptionAccount, _navProvider));
+        phantomToken = address(new SecuritizeRedemptionPhantomToken(address(this), _dsToken, _stableCoinToken));
     }
 
     /// @notice Redeem DS tokens for stablecoins

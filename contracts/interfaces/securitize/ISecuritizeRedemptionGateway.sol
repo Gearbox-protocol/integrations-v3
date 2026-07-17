@@ -19,6 +19,7 @@ interface ISecuritizeRedemptionGateway is IVersion {
     function transferMaster() external view returns (address);
     function navProvider() external view returns (address);
     function redemptionLogger() external view returns (address);
+    function phantomToken() external view returns (address);
     function redeem(uint256 dsTokenAmount, bytes calldata extraData) external;
     function claim(address[] calldata redeemers) external;
     function transferRedeemer(address redeemer, address newAccount) external;

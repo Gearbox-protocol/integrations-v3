@@ -23,26 +23,24 @@ contract SecuritizeRedemptionPhantomToken is PhantomERC20, IPhantomToken {
     address public immutable stableCoinToken;
 
     /// @notice Constructor
-    constructor(address _redemptionGateway)
+    /// @param _redemptionGateway The gateway where redemptions are tracked
+    /// @param _dsToken The DS token being redeemed
+    /// @param _stableCoinToken The stablecoin token this phantom token tracks
+    constructor(address _redemptionGateway, address _dsToken, address _stableCoinToken)
         PhantomERC20(
-            ISecuritizeRedemptionGateway(_redemptionGateway).stableCoinToken(),
+            _stableCoinToken,
             string.concat(
                 "Securitize pending redemption ",
-                IERC20Metadata(ISecuritizeRedemptionGateway(_redemptionGateway).dsToken()).name(),
+                IERC20Metadata(_dsToken).name(),
                 " to ",
-                IERC20Metadata(ISecuritizeRedemptionGateway(_redemptionGateway).stableCoinToken()).name()
+                IERC20Metadata(_stableCoinToken).name()
             ),
-            string.concat(
-                "srp",
-                IERC20Metadata(ISecuritizeRedemptionGateway(_redemptionGateway).dsToken()).symbol(),
-                "_",
-                IERC20Metadata(ISecuritizeRedemptionGateway(_redemptionGateway).stableCoinToken()).symbol()
-            ),
-            IERC20Metadata(ISecuritizeRedemptionGateway(_redemptionGateway).stableCoinToken()).decimals()
+            string.concat("srp", IERC20Metadata(_dsToken).symbol(), "_", IERC20Metadata(_stableCoinToken).symbol()),
+            IERC20Metadata(_stableCoinToken).decimals()
         )
     {
         redemptionGateway = _redemptionGateway;
-        stableCoinToken = ISecuritizeRedemptionGateway(_redemptionGateway).stableCoinToken();
+        stableCoinToken = _stableCoinToken;
     }
 
     /// @notice Returns the amount of assets pending/claimable for a withdrawal

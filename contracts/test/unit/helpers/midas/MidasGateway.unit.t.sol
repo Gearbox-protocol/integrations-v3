@@ -194,7 +194,8 @@ contract MidasGatewayUnitTest is Test {
             address(0), // allowed market configurator (none => skip registration check)
             false, // checkBorrowerGreenlist
             REDEMPTION_DURATION,
-            address(0) // redemption logger (none)
+            address(0), // redemption logger (none)
+            true // withDelayedWithdrawals
         );
         transferMaster = gateway.transferMaster();
 
@@ -249,6 +250,23 @@ contract MidasGatewayUnitTest is Test {
         assertEq(sunderlying, quoteToken, "Incorrect underlying in serialized data");
     }
 
+    /// @notice U:[MID-G-1B]: Constructor skips phantom token when delayed withdrawals are disabled
+    function test_U_MID_G_01B_constructor_skips_phantom_token_without_delayed_withdrawals() public {
+        MidasGateway gatewayWithoutPhantomToken = new MidasGateway(
+            address(issuanceVault),
+            address(redemptionVault),
+            quoteToken,
+            false,
+            address(0),
+            false,
+            REDEMPTION_DURATION,
+            address(0),
+            false
+        );
+
+        assertEq(gatewayWithoutPhantomToken.phantomToken(), address(0), "Phantom token should not be deployed");
+    }
+
     /// @notice U:[MID-G-2]: Constructor reverts when issuance/redemption mTokens differ
     function test_U_MID_G_02_constructor_reverts_on_incompatible_vaults() public {
         address otherMToken = address(new ERC20Mock("OTHER", "OTHER", 18));
@@ -263,7 +281,8 @@ contract MidasGatewayUnitTest is Test {
             address(0),
             false,
             REDEMPTION_DURATION,
-            address(0)
+            address(0),
+            true
         );
     }
 
@@ -281,7 +300,8 @@ contract MidasGatewayUnitTest is Test {
             address(0),
             false,
             REDEMPTION_DURATION,
-            address(0)
+            address(0),
+            true
         );
 
         assertEq(controlledGateway.accessControl(), accessControl, "Incorrect access control");
@@ -301,7 +321,8 @@ contract MidasGatewayUnitTest is Test {
             address(0),
             false,
             REDEMPTION_DURATION,
-            address(0)
+            address(0),
+            true
         );
     }
 
@@ -316,7 +337,8 @@ contract MidasGatewayUnitTest is Test {
             address(0),
             true, // checkBorrowerGreenlist with no access control
             REDEMPTION_DURATION,
-            address(0)
+            address(0),
+            true
         );
     }
 
@@ -519,7 +541,8 @@ contract MidasGatewayUnitTest is Test {
             address(0),
             false,
             REDEMPTION_DURATION,
-            address(logger)
+            address(logger),
+            true
         );
         logger.setGatewayAllowed(address(gatewayWithLogger), true);
 

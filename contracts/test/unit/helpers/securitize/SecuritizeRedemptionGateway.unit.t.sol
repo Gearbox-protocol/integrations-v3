@@ -8,6 +8,7 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {ERC20Mock} from "@gearbox-protocol/core-v3/contracts/test/mocks/token/ERC20Mock.sol";
 
 import {SecuritizeRedemptionGateway} from "../../../../helpers/securitize/SecuritizeRedemptionGateway.sol";
+import {SecuritizeRedemptionPhantomToken} from "../../../../helpers/securitize/SecuritizeRedemptionPhantomToken.sol";
 import {SecuritizeRedeemer} from "../../../../helpers/securitize/SecuritizeRedeemer.sol";
 import {ISecuritizeNAVProvider} from "../../../../integrations/securitize/ISecuritizeNAVProvider.sol";
 import {ISecuritizeWhitelister} from "../../../../integrations/securitize/ISecuritizeWhitelister.sol";
@@ -130,6 +131,28 @@ contract SecuritizeRedemptionGatewayUnitTest is Test {
         assertEq(gateway.registryService(), address(registryService));
         assertEq(gateway.redemptionLogger(), address(0), "Incorrect redemption logger");
         assertTrue(gateway.masterRedeemer() != address(0));
+        assertTrue(gateway.phantomToken() != address(0), "Phantom token not deployed");
+    }
+
+    /// @notice U:[SRG-1B]: Phantom token deployed in constructor has correct parameters
+    function test_U_SRG_01B_constructor_deploys_phantom_token_with_correct_params() public view {
+        SecuritizeRedemptionPhantomToken phantomToken = SecuritizeRedemptionPhantomToken(gateway.phantomToken());
+
+        assertEq(phantomToken.contractType(), "PHANTOM_TOKEN::SECURITIZE_RD", "Incorrect contract type");
+        assertEq(phantomToken.version(), 3_10, "Incorrect version");
+        assertEq(phantomToken.redemptionGateway(), address(gateway), "Incorrect redemption gateway");
+        assertEq(phantomToken.stableCoinToken(), stableCoinToken, "Incorrect stablecoin token");
+        assertEq(phantomToken.decimals(), 6, "Incorrect decimals");
+        assertEq(phantomToken.name(), "Securitize pending redemption DS to USDC", "Incorrect name");
+        assertEq(phantomToken.symbol(), "srpDS_USDC", "Incorrect symbol");
+
+        (address gw, address underlying) = phantomToken.getPhantomTokenInfo();
+        assertEq(gw, address(gateway), "Incorrect gateway from getPhantomTokenInfo");
+        assertEq(underlying, stableCoinToken, "Incorrect underlying from getPhantomTokenInfo");
+
+        (address sgw, address sunderlying) = abi.decode(phantomToken.serialize(), (address, address));
+        assertEq(sgw, address(gateway), "Incorrect gateway in serialized data");
+        assertEq(sunderlying, stableCoinToken, "Incorrect stablecoin in serialized data");
     }
 
     /// @notice U:[SRG-1A]: zero redeem is a no-op
