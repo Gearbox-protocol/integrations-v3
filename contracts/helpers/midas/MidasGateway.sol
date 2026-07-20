@@ -9,6 +9,7 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
 
+import {IAddressProvider} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IAddressProvider.sol";
 import {ICreditAccountV3} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditAccountV3.sol";
 import {ICreditManagerV3} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditManagerV3.sol";
 import {IVersion} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IVersion.sol";
@@ -29,7 +30,7 @@ import {
     CREDIT_ACCOUNT_TYPE
 } from "../../interfaces/midas/IMidasGateway.sol";
 import {IMidasTransferMaster} from "../../interfaces/midas/IMidasTransferMaster.sol";
-import {IRedemptionLogger} from "../../interfaces/IRedemptionLogger.sol";
+import {IRedemptionLogger, AP_REDEMPTION_LOGGER} from "../../interfaces/IRedemptionLogger.sol";
 
 bytes32 constant SALT = keccak256("MidasGateway");
 
@@ -98,8 +99,8 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
     /// @param _allowedMarketConfigurator Address of the market configurator of credit accounts that are allowed to interact with the gateway
     /// @param _checkBorrowerGreenlist Whether to check that the borrower is greenlisted
     /// @param _expectedRedemptionDuration Expected duration of a redemption request (for informational purposes)
-    /// @param _redemptionLogger Address of the redemption logger contract
     /// @param _withDelayedWithdrawals Whether to deploy a redemption phantom token for delayed withdrawals
+    /// @param _addressProvider Address of the Gearbox AddressProviderV3
     constructor(
         address _midasIssuanceVault,
         address _midasRedemptionVault,
@@ -108,8 +109,8 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
         address _allowedMarketConfigurator,
         bool _checkBorrowerGreenlist,
         uint256 _expectedRedemptionDuration,
-        address _redemptionLogger,
-        bool _withDelayedWithdrawals
+        bool _withDelayedWithdrawals,
+        address _addressProvider
     ) {
         midasIssuanceVault = _midasIssuanceVault;
         midasRedemptionVault = _midasRedemptionVault;
@@ -142,7 +143,13 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
             : address(0);
         allowedMarketConfigurator = _allowedMarketConfigurator;
         expectedRedemptionDuration = _expectedRedemptionDuration;
-        redemptionLogger = _redemptionLogger;
+        try IAddressProvider(_addressProvider).getAddressOrRevert(AP_REDEMPTION_LOGGER, 3_10) returns (
+            address _redemptionLogger
+        ) {
+            redemptionLogger = _redemptionLogger;
+        } catch {
+            redemptionLogger = address(0);
+        }
     }
 
     /// @notice Performs instant issuance of mToken for quote token
@@ -157,17 +164,13 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
     {
         IERC20(quoteToken).safeTransferFrom(msg.sender, address(this), amountToken);
 
-        uint256 balanceBefore = IERC20(mToken).balanceOf(address(this));
-
         IERC20(quoteToken).forceApprove(midasIssuanceVault, amountToken);
         _grantGreenlistIfRequired(address(this));
         IMidasIssuanceVault(midasIssuanceVault)
             .depositInstant(quoteToken, _convertToE18(amountToken), minReceiveAmount, referrerId);
         _revokeGreenlistIfRequired(address(this));
 
-        uint256 amount = IERC20(mToken).balanceOf(address(this)) - balanceBefore;
-
-        IERC20(mToken).safeTransfer(msg.sender, amount);
+        _sweepTokens(msg.sender);
     }
 
     /// @notice Performs instant redemption of mToken for quote token
@@ -177,18 +180,13 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
     function redeemInstant(uint256 amountMTokenIn, uint256 minReceiveAmount) external nonReentrant onlyEligibleAccount {
         IERC20(mToken).safeTransferFrom(msg.sender, address(this), amountMTokenIn);
 
-        uint256 balanceBefore = IERC20(quoteToken).balanceOf(address(this));
-
         IERC20(mToken).forceApprove(midasRedemptionVault, amountMTokenIn);
-
         _grantGreenlistIfRequired(address(this));
         IMidasRedemptionVault(midasRedemptionVault)
             .redeemInstant(quoteToken, amountMTokenIn, _convertToE18(minReceiveAmount));
         _revokeGreenlistIfRequired(address(this));
 
-        uint256 amount = IERC20(quoteToken).balanceOf(address(this)) - balanceBefore;
-
-        IERC20(quoteToken).safeTransfer(msg.sender, amount);
+        _sweepTokens(msg.sender);
     }
 
     /// @notice Requests a redemption of mToken for quote token
@@ -310,6 +308,11 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
 
         accountToRedeemers[account].add(redeemer);
         accountToPendingRedeemers[account].add(redeemer);
+    }
+
+    function _sweepTokens(address to) internal {
+        IERC20(quoteToken).safeTransfer(to, IERC20(quoteToken).balanceOf(address(this)));
+        IERC20(mToken).safeTransfer(to, IERC20(mToken).balanceOf(address(this)));
     }
 
     /// @dev Logs redemption initiation if a logger is configured

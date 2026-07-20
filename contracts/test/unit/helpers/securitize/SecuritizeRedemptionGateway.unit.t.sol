@@ -10,13 +10,14 @@ import {ERC20Mock} from "@gearbox-protocol/core-v3/contracts/test/mocks/token/ER
 import {SecuritizeRedemptionGateway} from "../../../../helpers/securitize/SecuritizeRedemptionGateway.sol";
 import {SecuritizeRedemptionPhantomToken} from "../../../../helpers/securitize/SecuritizeRedemptionPhantomToken.sol";
 import {SecuritizeRedeemer} from "../../../../helpers/securitize/SecuritizeRedeemer.sol";
+import {IAddressProvider} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IAddressProvider.sol";
 import {ISecuritizeNAVProvider} from "../../../../integrations/securitize/ISecuritizeNAVProvider.sol";
 import {ISecuritizeWhitelister} from "../../../../integrations/securitize/ISecuritizeWhitelister.sol";
 import {ISecuritizeGatewayTransferMaster} from "../../../../interfaces/securitize/ISecuritizeGatewayTransferMaster.sol";
 import {ISecuritizeRedemptionGateway} from "../../../../interfaces/securitize/ISecuritizeRedemptionGateway.sol";
 import {ISecuritizeRegistryService} from "../../../../integrations/securitize/ISecuritizeRegistryService.sol";
 import {RedemptionLogger} from "../../../../helpers/RedemptionLogger.sol";
-import {IRedemptionLogger} from "../../../../interfaces/IRedemptionLogger.sol";
+import {IRedemptionLogger, AP_REDEMPTION_LOGGER} from "../../../../interfaces/IRedemptionLogger.sol";
 
 contract SecuritizeNAVProviderMock is ISecuritizeNAVProvider {
     uint256 internal _rate;
@@ -79,6 +80,19 @@ contract SecuritizeRegistryServiceMock is ISecuritizeRegistryService {
     }
 }
 
+contract RedemptionLoggerAddressProviderMock is IAddressProvider {
+    address internal _redemptionLogger;
+
+    constructor(address redemptionLogger_) {
+        _redemptionLogger = redemptionLogger_;
+    }
+
+    function getAddressOrRevert(bytes32 key, uint256 version) external view returns (address) {
+        if (key == AP_REDEMPTION_LOGGER && version == 3_10) return _redemptionLogger;
+        revert("Address not found");
+    }
+}
+
 /// @title SecuritizeRedemptionGateway unit test
 /// @notice U:[SRG]: Unit tests for SecuritizeRedemptionGateway
 contract SecuritizeRedemptionGatewayUnitTest is Test {
@@ -87,6 +101,7 @@ contract SecuritizeRedemptionGatewayUnitTest is Test {
     SecuritizeWhitelisterMock whitelister;
     SecuritizeGatewayTransferMasterMock transferMaster;
     SecuritizeRegistryServiceMock registryService;
+    RedemptionLoggerAddressProviderMock addressProvider;
 
     address dsToken;
     address stableCoinToken;
@@ -106,6 +121,7 @@ contract SecuritizeRedemptionGatewayUnitTest is Test {
         transferMaster = new SecuritizeGatewayTransferMasterMock();
         registryService = new SecuritizeRegistryServiceMock();
         registryService.setWallet(newAccount, true);
+        addressProvider = new RedemptionLoggerAddressProviderMock(address(0));
 
         gateway = new SecuritizeRedemptionGateway(
             dsToken,
@@ -115,7 +131,7 @@ contract SecuritizeRedemptionGatewayUnitTest is Test {
             address(transferMaster),
             address(navProvider),
             address(registryService),
-            address(0) // redemption logger (none)
+            address(addressProvider)
         );
     }
 
@@ -382,6 +398,8 @@ contract SecuritizeRedemptionGatewayUnitTest is Test {
     /// @notice U:[SRG-12]: `redeem` logs redemption when logger is configured
     function test_U_SRG_12_redeem_logs_when_logger_configured() public {
         RedemptionLogger logger = new RedemptionLogger(address(this));
+        RedemptionLoggerAddressProviderMock loggerAddressProvider =
+            new RedemptionLoggerAddressProviderMock(address(logger));
         SecuritizeRedemptionGateway gatewayWithLogger = new SecuritizeRedemptionGateway(
             dsToken,
             stableCoinToken,
@@ -390,7 +408,7 @@ contract SecuritizeRedemptionGatewayUnitTest is Test {
             address(transferMaster),
             address(navProvider),
             address(registryService),
-            address(logger)
+            address(loggerAddressProvider)
         );
         logger.setGatewayAllowed(address(gatewayWithLogger), true);
 

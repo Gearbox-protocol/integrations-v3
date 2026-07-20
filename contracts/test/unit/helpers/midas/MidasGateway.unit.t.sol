@@ -13,8 +13,9 @@ import {MidasRedeemer} from "../../../../helpers/midas/MidasRedeemer.sol";
 import {MidasRedemptionVaultPhantomToken} from "../../../../helpers/midas/MidasRedemptionVaultPhantomToken.sol";
 import {IMidasGateway} from "../../../../interfaces/midas/IMidasGateway.sol";
 import {RedemptionLogger} from "../../../../helpers/RedemptionLogger.sol";
-import {IRedemptionLogger} from "../../../../interfaces/IRedemptionLogger.sol";
+import {IRedemptionLogger, AP_REDEMPTION_LOGGER} from "../../../../interfaces/IRedemptionLogger.sol";
 import {IVersion} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IVersion.sol";
+import {IAddressProvider} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IAddressProvider.sol";
 
 contract MidasDataFeedMock {
     function getDataInBase18() external pure returns (uint256) {
@@ -157,6 +158,19 @@ contract CreditManagerMock {
     }
 }
 
+contract RedemptionLoggerAddressProviderMock is IAddressProvider {
+    address internal _redemptionLogger;
+
+    constructor(address redemptionLogger_) {
+        _redemptionLogger = redemptionLogger_;
+    }
+
+    function getAddressOrRevert(bytes32 key, uint256 version) external view returns (address) {
+        if (key == AP_REDEMPTION_LOGGER && version == 3_10) return _redemptionLogger;
+        revert("Address not found");
+    }
+}
+
 /// @title MidasGateway unit test
 /// @notice U:[MID-G]: Unit tests for MidasGateway
 contract MidasGatewayUnitTest is Test {
@@ -172,6 +186,7 @@ contract MidasGatewayUnitTest is Test {
     address borrower;
     address newAccount;
     address transferMaster;
+    RedemptionLoggerAddressProviderMock addressProvider;
 
     uint256 constant REDEMPTION_DURATION = 1 days;
 
@@ -185,6 +200,7 @@ contract MidasGatewayUnitTest is Test {
         issuanceVault = new MidasIssuanceVaultMock(mToken);
         redemptionVault = new MidasRedemptionVaultMock(mToken, address(dataFeed));
         creditManager = new CreditManagerMock();
+        addressProvider = new RedemptionLoggerAddressProviderMock(address(0));
 
         gateway = new MidasGateway(
             address(issuanceVault),
@@ -194,8 +210,8 @@ contract MidasGatewayUnitTest is Test {
             address(0), // allowed market configurator (none => skip registration check)
             false, // checkBorrowerGreenlist
             REDEMPTION_DURATION,
-            address(0), // redemption logger (none)
-            true // withDelayedWithdrawals
+            true, // withDelayedWithdrawals
+            address(addressProvider)
         );
         transferMaster = gateway.transferMaster();
 
@@ -260,8 +276,8 @@ contract MidasGatewayUnitTest is Test {
             address(0),
             false,
             REDEMPTION_DURATION,
-            address(0),
-            false
+            false, // withDelayedWithdrawals
+            address(addressProvider) // address provider
         );
 
         assertEq(gatewayWithoutPhantomToken.phantomToken(), address(0), "Phantom token should not be deployed");
@@ -281,8 +297,8 @@ contract MidasGatewayUnitTest is Test {
             address(0),
             false,
             REDEMPTION_DURATION,
-            address(0),
-            true
+            true, // withDelayedWithdrawals
+            address(addressProvider) // address provider
         );
     }
 
@@ -300,8 +316,8 @@ contract MidasGatewayUnitTest is Test {
             address(0),
             false,
             REDEMPTION_DURATION,
-            address(0),
-            true
+            true, // withDelayedWithdrawals
+            address(addressProvider) // address provider
         );
 
         assertEq(controlledGateway.accessControl(), accessControl, "Incorrect access control");
@@ -321,8 +337,8 @@ contract MidasGatewayUnitTest is Test {
             address(0),
             false,
             REDEMPTION_DURATION,
-            address(0),
-            true
+            true, // withDelayedWithdrawals
+            address(addressProvider) // address provider
         );
     }
 
@@ -337,8 +353,8 @@ contract MidasGatewayUnitTest is Test {
             address(0),
             true, // checkBorrowerGreenlist with no access control
             REDEMPTION_DURATION,
-            address(0),
-            true
+            true, // withDelayedWithdrawals
+            address(addressProvider) // address provider
         );
     }
 
@@ -533,6 +549,8 @@ contract MidasGatewayUnitTest is Test {
     /// @notice U:[MID-G-15]: `requestRedeem` logs redemption when logger is configured
     function test_U_MID_G_15_requestRedeem_logs_when_logger_configured() public {
         RedemptionLogger logger = new RedemptionLogger(address(this));
+        RedemptionLoggerAddressProviderMock loggerAddressProvider =
+            new RedemptionLoggerAddressProviderMock(address(logger));
         MidasGateway gatewayWithLogger = new MidasGateway(
             address(issuanceVault),
             address(redemptionVault),
@@ -541,8 +559,8 @@ contract MidasGatewayUnitTest is Test {
             address(0),
             false,
             REDEMPTION_DURATION,
-            address(logger),
-            true
+            true, // withDelayedWithdrawals
+            address(loggerAddressProvider)
         );
         logger.setGatewayAllowed(address(gatewayWithLogger), true);
 

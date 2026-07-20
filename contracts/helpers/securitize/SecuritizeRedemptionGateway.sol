@@ -8,11 +8,13 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
+import {IAddressProvider} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IAddressProvider.sol";
+
 import {ISecuritizeRedemptionGateway} from "../../interfaces/securitize/ISecuritizeRedemptionGateway.sol";
 import {ISecuritizeWhitelister} from "../../integrations/securitize/ISecuritizeWhitelister.sol";
 import {ISecuritizeGatewayTransferMaster} from "../../interfaces/securitize/ISecuritizeGatewayTransferMaster.sol";
 import {ISecuritizeRegistryService} from "../../integrations/securitize/ISecuritizeRegistryService.sol";
-import {IRedemptionLogger} from "../../interfaces/IRedemptionLogger.sol";
+import {IRedemptionLogger, AP_REDEMPTION_LOGGER} from "../../interfaces/IRedemptionLogger.sol";
 import {SecuritizeRedeemer} from "./SecuritizeRedeemer.sol";
 import {SecuritizeRedemptionPhantomToken} from "./SecuritizeRedemptionPhantomToken.sol";
 
@@ -60,7 +62,7 @@ contract SecuritizeRedemptionGateway is ISecuritizeRedemptionGateway {
         address _transferMaster,
         address _navProvider,
         address _registryService,
-        address _redemptionLogger
+        address _addressProvider
     ) {
         dsToken = _dsToken;
         stableCoinToken = _stableCoinToken;
@@ -69,11 +71,19 @@ contract SecuritizeRedemptionGateway is ISecuritizeRedemptionGateway {
         transferMaster = _transferMaster;
         navProvider = _navProvider;
         registryService = _registryService;
-        redemptionLogger = _redemptionLogger;
+
         masterRedeemer =
             address(new SecuritizeRedeemer{salt: SALT}(_dsToken, _stableCoinToken, _redemptionAccount, _navProvider));
         phantomToken =
             address(new SecuritizeRedemptionPhantomToken{salt: SALT}(address(this), _dsToken, _stableCoinToken));
+
+        try IAddressProvider(_addressProvider).getAddressOrRevert(AP_REDEMPTION_LOGGER, 3_10) returns (
+            address _redemptionLogger
+        ) {
+            redemptionLogger = _redemptionLogger;
+        } catch {
+            redemptionLogger = address(0);
+        }
     }
 
     /// @notice Redeem DS tokens for stablecoins
