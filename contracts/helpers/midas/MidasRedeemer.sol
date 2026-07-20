@@ -93,6 +93,7 @@ contract MidasRedeemer {
         requestId = IMidasRedemptionVault(midasRedemptionVault).redeemRequest(quoteToken, amountMTokenIn);
         alreadyRedeemed = true;
         redemptionStartTimestamp = block.timestamp;
+        _sweepMToken();
     }
 
     /// @notice Withdraws tokens to the connected account
@@ -159,5 +160,15 @@ contract MidasRedeemer {
         if (tokenUnit == WAD) return amount1e18;
 
         return amount1e18 * tokenUnit / WAD;
+    }
+
+    /// @dev Sweeps the remaining mToken to the account
+    /// @dev Under normal operation, mToken should not remain in the redeemer when not in motion. This returns all remaining mToken
+    ///      to the account in case Midas does not consume the whole amount.
+    function _sweepMToken() internal {
+        uint256 mTokenBalance = IERC20(mToken).balanceOf(address(this));
+        if (mTokenBalance > 0) {
+            IERC20(mToken).safeTransfer(account, mTokenBalance);
+        }
     }
 }

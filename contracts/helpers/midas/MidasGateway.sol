@@ -310,9 +310,18 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
         accountToPendingRedeemers[account].add(redeemer);
     }
 
+    /// @dev Sweeps the remaining tokens to the `to` address
+    /// @dev Under normal operation, tokens should not remain in the gateway when not in motion. This returns both the quote token and the mToken,
+    ///      in case Midas does not consume the whole amount in an instant operation.
     function _sweepTokens(address to) internal {
-        IERC20(quoteToken).safeTransfer(to, IERC20(quoteToken).balanceOf(address(this)));
-        IERC20(mToken).safeTransfer(to, IERC20(mToken).balanceOf(address(this)));
+        uint256 quoteTokenBalance = IERC20(quoteToken).balanceOf(address(this));
+        uint256 mTokenBalance = IERC20(mToken).balanceOf(address(this));
+        if (quoteTokenBalance > 0) {
+            IERC20(quoteToken).safeTransfer(to, quoteTokenBalance);
+        }
+        if (mTokenBalance > 0) {
+            IERC20(mToken).safeTransfer(to, mTokenBalance);
+        }
     }
 
     /// @dev Logs redemption initiation if a logger is configured
