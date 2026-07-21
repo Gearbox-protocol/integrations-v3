@@ -5,7 +5,7 @@ pragma solidity ^0.8.23;
 
 import {IVersion} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IVersion.sol";
 
-bytes32 constant AP_REDEMPTION_LOGGER = "REDEMPTION_LOGGER";
+bytes32 constant AP_REDEMPTION_LOGGER = "LOCAL::REDEMPTION_LOGGER";
 
 /// @title Redemption Logger interface
 interface IRedemptionLogger is IVersion {
