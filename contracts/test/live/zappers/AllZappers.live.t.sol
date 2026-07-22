@@ -6,9 +6,9 @@ pragma solidity ^0.8.23;
 import {SafeERC20} from "@1inch/solidity-utils/contracts/libraries/SafeERC20.sol";
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
-import {IZapper} from "../../../interfaces/zappers/IZapper.sol";
-import {ETH_ADDRESS, IETHZapperDeposits} from "../../../interfaces/zappers/IETHZapperDeposits.sol";
-import {IERC20ZapperDeposits} from "../../../interfaces/zappers/IERC20ZapperDeposits.sol";
+import {IZapper} from "../../../zappers/interfaces/IZapper.sol";
+import {ETH_ADDRESS, IETHZapperDeposits} from "../../../zappers/interfaces/IETHZapperDeposits.sol";
+import {IERC20ZapperDeposits} from "../../../zappers/interfaces/IERC20ZapperDeposits.sol";
 
 import {ZapperLiveTestHelper} from "../../suites/ZapperLiveTestHelper.sol";
 

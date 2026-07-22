@@ -4,7 +4,7 @@
 pragma solidity ^0.8.23;
 
 import {ZapperBase} from "./ZapperBase.sol";
-import {IETHZapperDeposits, ETH_ADDRESS} from "../interfaces/zappers/IETHZapperDeposits.sol";
+import {IETHZapperDeposits, ETH_ADDRESS} from "./interfaces/IETHZapperDeposits.sol";
 
 /// @title ETH zapper base
 /// @notice Base contract for zappers with ETH as input token

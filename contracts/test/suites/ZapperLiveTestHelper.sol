@@ -8,7 +8,7 @@ import {IERC20Permit} from "@openzeppelin/contracts/token/ERC20/extensions/IERC2
 import {PoolV3} from "@gearbox-protocol/core-v3/contracts/pool/PoolV3.sol";
 import "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
 
-import {IZapper} from "../../interfaces/zappers/IZapper.sol";
+import {IZapper} from "../../zappers/interfaces/IZapper.sol";
 
 import {UnderlyingDepositZapper} from "../../zappers/UnderlyingDepositZapper.sol";
 import {UnderlyingFarmingZapper} from "../../zappers/UnderlyingFarmingZapper.sol";

@@ -8,7 +8,7 @@ import {IERC20Permit} from "@openzeppelin/contracts/token/ERC20/extensions/IERC2
 import {SafeERC20} from "@1inch/solidity-utils/contracts/libraries/SafeERC20.sol";
 import {IPoolV3} from "@gearbox-protocol/core-v3/contracts/interfaces/IPoolV3.sol";
 import {IERC20PermitAllowed} from "../integrations/common/interfaces/external/IERC20PermitAllowed.sol";
-import {IZapper} from "../interfaces/zappers/IZapper.sol";
+import {IZapper} from "./interfaces/IZapper.sol";
 
 /// @title Zapper base
 /// @notice Base contract for zappers that combine depositing/redeeming funds to/from a Gearbox pool
