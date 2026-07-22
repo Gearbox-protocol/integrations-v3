@@ -28,6 +28,7 @@ contract MidasLiquidator is IMidasLiquidator {
 
     uint256 public constant override version = 3_11;
 
+    // TODO: add comments to explain how it works
     bool public override isTransferAllowed;
 
     /// @notice Liquidates a credit account that holds pending Midas redemptions
@@ -43,6 +44,7 @@ contract MidasLiquidator is IMidasLiquidator {
         MultiCall[] calldata calls,
         bytes memory lossPolicyData
     ) external override {
+        // Q: Are there any possibbility that the contract could have some money on it?
         if (IMidasGateway(gateway).transferMaster() != address(this)) {
             revert NotValidGatewayException();
         }
@@ -64,6 +66,7 @@ contract MidasLiquidator is IMidasLiquidator {
         _forwardCollateral(creditManager, creditFacade, calls, true);
     }
 
+    // TODO: add comments here to explain how it works
     function _forwardCollateral(
         address creditManager,
         address creditFacade,
@@ -71,11 +74,13 @@ contract MidasLiquidator is IMidasLiquidator {
         bool toLiquidator
     ) internal {
         for (uint256 i; i < calls.length; ++i) {
+            // if (calls[i].target == creditFacade && (bytes4(calls[i].callData) == ICreditFacadeV3Multicall.addCollateral.selector)) {
             if (calls[i].target != creditFacade || calls[i].callData.length < 4) continue;
             if (bytes4(calls[i].callData) != ICreditFacadeV3Multicall.addCollateral.selector) continue;
             (address token, uint256 amount) = abi.decode(calls[i].callData[4:], (address, uint256));
             if (toLiquidator) {
                 IERC20(token).forceApprove(creditManager, 0);
+                /// TODO: why does it send the whole balance without checking amount?
                 uint256 balance = IERC20(token).balanceOf(address(this));
                 if (balance != 0) IERC20(token).safeTransfer(msg.sender, balance);
             } else {

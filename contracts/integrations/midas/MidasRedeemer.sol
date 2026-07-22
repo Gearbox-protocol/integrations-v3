@@ -108,6 +108,7 @@ contract MidasRedeemer {
         (,, uint8 status, uint256 amountMTokenIn,, uint256 tokenOutRate) =
             IMidasRedemptionVault(midasRedemptionVault).redeemRequests(requestId);
 
+        // TODO: use enum instead of "1" here
         if (status == 1 || isManuallyCleared) return 0;
 
         uint256 mTokenRate = IMidasDataFeed(mTokenDataFeed).getDataInBase18();
@@ -128,6 +129,7 @@ contract MidasRedeemer {
         (,, uint8 status, uint256 amountMTokenIn, uint256 mTokenRate, uint256 tokenOutRate) =
             IMidasRedemptionVault(midasRedemptionVault).redeemRequests(requestId);
 
+        // TODO: please use Enum instead of "2" here
         if (status != 2 || isManuallyCleared) {
             revert RequestNotCancelledOrManuallyClearedException();
         }
@@ -137,6 +139,9 @@ contract MidasRedeemer {
         if (amount < minAmount) {
             revert AmountIsLessThanRequiredException();
         }
+
+        // TODO: how it works and whe amount transferred to the redeemer?
+        // TODO: should we forbid to call it not from CA?
 
         IERC20(quoteToken).safeTransferFrom(msg.sender, address(this), amount);
 
@@ -157,6 +162,7 @@ contract MidasRedeemer {
 
         uint256 tokenUnit = 10 ** IERC20Metadata(quoteToken).decimals();
 
+        // TODO: please, use ternary operator here
         if (tokenUnit == WAD) return amount1e18;
 
         return amount1e18 * tokenUnit / WAD;

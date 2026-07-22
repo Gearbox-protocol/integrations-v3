@@ -50,6 +50,7 @@ contract MidasGatewayAdapter is AbstractAdapter, IMidasGatewayAdapter {
 
         _getMaskOrRevert(mToken);
         _getMaskOrRevert(quoteToken);
+        // Checks that the phantom token is added to the CreditManager
         if (phantomToken != address(0)) _getMaskOrRevert(phantomToken);
 
         referrerId = _referrerId;
@@ -87,6 +88,7 @@ contract MidasGatewayAdapter is AbstractAdapter, IMidasGatewayAdapter {
         if (balance > leftoverAmount) {
             unchecked {
                 uint256 amount = balance - leftoverAmount;
+                // TODO: why is it unchecked? Could amount*rateMinRAY overflow?
                 uint256 minReceiveAmount = (amount * rateMinRAY) / RAY;
                 _depositInstant(amount, minReceiveAmount);
             }
@@ -133,6 +135,8 @@ contract MidasGatewayAdapter is AbstractAdapter, IMidasGatewayAdapter {
         if (balance > leftoverAmount) {
             unchecked {
                 uint256 amount = balance - leftoverAmount;
+
+                /// TODO: why is it unchecked? Could amount*rateMinRAY overflow?
                 uint256 minReceiveAmount = (amount * rateMinRAY) / RAY;
                 _redeemInstant(amount, minReceiveAmount);
             }

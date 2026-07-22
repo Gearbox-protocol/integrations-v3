@@ -80,8 +80,11 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
     mapping(address => EnumerableSet.AddressSet) internal accountToRedeemers;
 
     /// @notice Mapping of accounts to corresponding pending redeemer contracts
+
+    /// TODO: is it true that if we took the whole amount once, then it could not be used again?
     mapping(address => EnumerableSet.AddressSet) internal accountToPendingRedeemers;
 
+    /// TODO: add comments to explain how it works
     modifier onlyEligibleAccount() {
         if (!_isCallerEligible(msg.sender)) revert CreditAccountNotEligibleException();
         _;
@@ -118,6 +121,7 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
             revert IncompatibleIssuanceAndRedemptionVaultsException();
         }
 
+        // TODO: lines 124-136 could be dramatically simplified
         address accessControl_;
         if (_isAccessControlled) {
             accessControl_ = IMidasIssuanceVault(_midasIssuanceVault).accessControl();
@@ -139,11 +143,15 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
             : address(0);
         allowedMarketConfigurator = _allowedMarketConfigurator;
         expectedRedemptionDuration = _expectedRedemptionDuration;
+
+        // Getting the redemption logger address from the address provider, if it exists
         try IAddressProvider(_addressProvider).getAddressOrRevert(AP_REDEMPTION_LOGGER, 3_10) returns (
             address _redemptionLogger
         ) {
             redemptionLogger = _redemptionLogger;
         } catch {
+            // TODO: is it needed to avoid warnings?
+            // TODO: why is not to throw an exception?
             redemptionLogger = address(0);
         }
     }
@@ -158,6 +166,7 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
         nonReentrant
         onlyEligibleAccount
     {
+        // TODO: should we check leftover
         IERC20(quoteToken).safeTransferFrom(msg.sender, address(this), amountToken);
 
         IERC20(quoteToken).forceApprove(midasIssuanceVault, amountToken);
@@ -174,6 +183,7 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
     /// @param minReceiveAmount Minimum amount of quote token to receive
     /// @dev Transfers mToken from sender, redeems, and transfers quote token back
     function redeemInstant(uint256 amountMTokenIn, uint256 minReceiveAmount) external nonReentrant onlyEligibleAccount {
+        // TODO: should we check leftover
         IERC20(mToken).safeTransferFrom(msg.sender, address(this), amountMTokenIn);
 
         IERC20(mToken).forceApprove(midasRedemptionVault, amountMTokenIn);
@@ -279,6 +289,8 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
         returns (uint256 pendingAmount, uint256 claimableAmount)
     {
         address[] memory redeemers = accountToPendingRedeemers[account].values();
+
+        // TODO: loops are not consistent across the integration
         for (uint256 i = 0; i < redeemers.length; i++) {
             pendingAmount += MidasRedeemer(redeemers[i]).pendingTokenOutAmount();
             claimableAmount += MidasRedeemer(redeemers[i]).claimableTokenOutAmount();
@@ -330,11 +342,14 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
     /// @dev Converts the token amount to 18 decimals, which is accepted by Midas
     function _convertToE18(uint256 amount) internal view returns (uint256) {
         uint256 tokenUnit = 10 ** IERC20Metadata(quoteToken).decimals();
+
+        // TODO: use ternary operator here instead of if/else
         if (tokenUnit == WAD) return amount;
         return amount * WAD / tokenUnit;
     }
 
     /// @dev Checks if a caller is eligible to interact with the gateway
+    /// TODO: explain why it could not be hacked by creating the smae contracts somewhere else and calling them from there
     function _isCallerEligible(address caller) internal view returns (bool) {
         if (!_isCreditAccount(caller)) return false;
 
@@ -353,6 +368,7 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
 
     /// @dev Checks whether `account` implements `IVersion` and has contract type `CREDIT_ACCOUNT`
     function _isCreditAccount(address account) internal view returns (bool) {
+        /// TODO: Q: what does it check here? How it's possible to use non-credit account here?
         try IVersion(account).contractType() returns (bytes32 contractType_) {
             if (contractType_ != CREDIT_ACCOUNT_TYPE) return false;
         } catch {
@@ -376,6 +392,7 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
 
     /// @dev Grants the GREENLISTED_ROLE to an account if the Midas access control is not set
     function _revokeGreenlistIfRequired(address account) internal {
+        // TODO: use if (accessControl != address(0)) {}
         if (accessControl == address(0)) return;
         IMidasAccessControl(accessControl).revokeRole(GREENLISTED_ROLE, account);
     }
