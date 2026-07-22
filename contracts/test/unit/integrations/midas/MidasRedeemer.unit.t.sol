@@ -8,6 +8,7 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {ERC20Mock} from "@gearbox-protocol/core-v3/contracts/test/mocks/token/ERC20Mock.sol";
 
 import {MidasRedeemer} from "../../../../integrations/midas/MidasRedeemer.sol";
+import {RedemptionStatus} from "../../../../integrations/midas/interfaces/external/IMidasRedemptionVault.sol";
 
 contract MidasDataFeedMock {
     uint256 internal _rate;
@@ -183,8 +184,8 @@ contract MidasRedeemerUnitTest is Test {
     function test_U_MID_R_07_pendingTokenOutAmount_returns_zero() public {
         redeemer.requestRedeem(100e18);
 
-        // status == 1 (processed)
-        vault.setStatus(1, 1);
+        // status == APPROVED (processed)
+        vault.setStatus(1, uint8(RedemptionStatus.APPROVED));
         assertEq(redeemer.pendingTokenOutAmount(), 0, "Should be 0 for processed request");
     }
 
@@ -218,8 +219,8 @@ contract MidasRedeemerUnitTest is Test {
     function test_U_MID_R_11_clearCancelledRequest_works() public {
         redeemer.requestRedeem(100e18);
 
-        // status == 2 (cancelled), rates 1.0 => minAmount == 100e18
-        vault.setStatus(1, 2);
+        // status == REJECTED, rates 1.0 => minAmount == 100e18
+        vault.setStatus(1, uint8(RedemptionStatus.REJECTED));
         vault.setRates(1, 1e18, 1e18);
 
         deal(tokenOut18, address(this), 100e18);
@@ -243,7 +244,7 @@ contract MidasRedeemerUnitTest is Test {
     /// @notice U:[MID-R-13]: `clearCancelledRequest` reverts when supplied amount is too low
     function test_U_MID_R_13_clearCancelledRequest_reverts_when_amount_too_low() public {
         redeemer.requestRedeem(100e18);
-        vault.setStatus(1, 2);
+        vault.setStatus(1, uint8(RedemptionStatus.REJECTED));
         vault.setRates(1, 1e18, 1e18);
 
         vm.expectRevert(MidasRedeemer.AmountIsLessThanRequiredException.selector);
@@ -253,7 +254,7 @@ contract MidasRedeemerUnitTest is Test {
     /// @notice U:[MID-R-14]: `clearCancelledRequest` reverts when already manually cleared
     function test_U_MID_R_14_clearCancelledRequest_reverts_when_already_cleared() public {
         redeemer.requestRedeem(100e18);
-        vault.setStatus(1, 2);
+        vault.setStatus(1, uint8(RedemptionStatus.REJECTED));
         vault.setRates(1, 1e18, 1e18);
 
         deal(tokenOut18, address(this), 200e18);

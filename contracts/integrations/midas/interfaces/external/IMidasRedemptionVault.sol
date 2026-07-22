@@ -1,6 +1,12 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.23;
 
+enum RedemptionStatus {
+    PENDING,
+    APPROVED,
+    REJECTED
+}
+
 interface IMidasRedemptionVault {
     function redeemInstant(address tokenOut, uint256 amountMTokenIn, uint256 minReceiveAmount) external;
     function redeemRequest(address tokenOut, uint256 amountMTokenIn) external returns (uint256);
@@ -11,7 +17,7 @@ interface IMidasRedemptionVault {
         returns (
             address sender,
             address tokenOut,
-            uint8 status,
+            RedemptionStatus status,
             uint256 amountMTokenIn,
             uint256 mTokenRate,
             uint256 tokenOutRate

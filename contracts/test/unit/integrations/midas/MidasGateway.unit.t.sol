@@ -162,6 +162,42 @@ contract CreditManagerMock {
     }
 }
 
+contract ContractsRegisterMock {
+    mapping(address => bool) internal _isCreditManager;
+
+    function setCreditManager(address creditManager, bool isCreditManager_) external {
+        _isCreditManager[creditManager] = isCreditManager_;
+    }
+
+    function isCreditManager(address creditManager) external view returns (bool) {
+        return _isCreditManager[creditManager];
+    }
+}
+
+contract MarketConfiguratorMock {
+    address public immutable contractsRegister;
+
+    constructor(address contractsRegister_) {
+        contractsRegister = contractsRegister_;
+    }
+}
+
+contract MidasAccessControlMock {
+    mapping(bytes32 => mapping(address => bool)) internal _roles;
+
+    function grantRole(bytes32 role, address account) external {
+        _roles[role][account] = true;
+    }
+
+    function revokeRole(bytes32 role, address account) external {
+        _roles[role][account] = false;
+    }
+
+    function hasRole(bytes32 role, address account) external view returns (bool) {
+        return _roles[role][account];
+    }
+}
+
 contract RedemptionLoggerAddressProviderMock is IAddressProvider {
     address internal _redemptionLogger;
 
@@ -312,12 +348,15 @@ contract MidasGatewayUnitTest is Test {
         issuanceVault.setAccessControl(accessControl);
         redemptionVault.setAccessControl(accessControl);
 
+        ContractsRegisterMock contractsRegister = new ContractsRegisterMock();
+        MarketConfiguratorMock marketConfigurator = new MarketConfiguratorMock(address(contractsRegister));
+
         MidasGateway controlledGateway = new MidasGateway(
             address(issuanceVault),
             address(redemptionVault),
             quoteToken,
             true,
-            address(0),
+            address(marketConfigurator),
             false,
             REDEMPTION_DURATION,
             true, // withDelayedWithdrawals
@@ -325,6 +364,9 @@ contract MidasGatewayUnitTest is Test {
         );
 
         assertEq(controlledGateway.accessControl(), accessControl, "Incorrect access control");
+        assertEq(
+            controlledGateway.allowedMarketConfigurator(), address(marketConfigurator), "Incorrect market configurator"
+        );
     }
 
     /// @notice U:[MID-G-2B]: Constructor reverts when vault access controls differ
@@ -338,11 +380,31 @@ contract MidasGatewayUnitTest is Test {
             address(redemptionVault),
             quoteToken,
             true,
-            address(0),
+            address(1),
             false,
             REDEMPTION_DURATION,
             true, // withDelayedWithdrawals
             address(addressProvider) // address provider
+        );
+    }
+
+    /// @notice U:[MID-G-2C]: Constructor reverts when permissioned mode allows arbitrary accounts
+    function test_U_MID_G_02C_constructor_reverts_when_permissioned_without_market_configurator() public {
+        address accessControl = makeAddr("ACCESS_CONTROL");
+        issuanceVault.setAccessControl(accessControl);
+        redemptionVault.setAccessControl(accessControl);
+
+        vm.expectRevert(IMidasGateway.ArbitraryCAAllowedInPermissionedModeException.selector);
+        new MidasGateway(
+            address(issuanceVault),
+            address(redemptionVault),
+            quoteToken,
+            true,
+            address(0), // no market configurator in permissioned mode
+            false,
+            REDEMPTION_DURATION,
+            true,
+            address(addressProvider)
         );
     }
 
@@ -353,7 +415,7 @@ contract MidasGatewayUnitTest is Test {
             address(issuanceVault),
             address(redemptionVault),
             quoteToken,
-            true,
+            false, // not access-controlled => accessControl stays zero
             address(0),
             true, // checkBorrowerGreenlist with no access control
             REDEMPTION_DURATION,
@@ -400,30 +462,63 @@ contract MidasGatewayUnitTest is Test {
         assertEq(IERC20(quoteToken).balanceOf(address(gateway)), 0, "Quote token stuck in gateway");
     }
 
-    /// @notice U:[MID-G-6]: Eligibility-gated functions revert for non-credit-account callers
-    function test_U_MID_G_06_reverts_for_ineligible_caller() public {
+    /// @notice U:[MID-G-6]: Non-access-controlled gateways accept any caller
+    function test_U_MID_G_06_allows_any_caller_without_access_control() public {
+        address notCreditAccount = address(new NonCreditAccountMock());
+        uint256 amountIn = 1000e18;
+        uint256 mTokenOut = 950e18;
+
+        deal(quoteToken, notCreditAccount, amountIn);
+        vm.prank(notCreditAccount);
+        IERC20(quoteToken).approve(address(gateway), amountIn);
+        deal(mToken, address(issuanceVault), mTokenOut);
+        issuanceVault.setMTokenAmountOut(mTokenOut);
+
+        vm.prank(notCreditAccount);
+        gateway.depositInstant(amountIn, 0, bytes32(0));
+
+        assertEq(IERC20(mToken).balanceOf(notCreditAccount), mTokenOut, "Caller did not receive mToken");
+    }
+
+    /// @notice U:[MID-G-6A]: Access-controlled gateways revert for non-credit-account callers
+    function test_U_MID_G_06A_reverts_for_ineligible_caller_when_access_controlled() public {
+        (MidasGateway controlledGateway,) = _deployAccessControlledGateway(false);
+
         address notCreditAccount = address(new NonCreditAccountMock());
 
         vm.prank(notCreditAccount);
         vm.expectRevert(IMidasGateway.CreditAccountNotEligibleException.selector);
-        gateway.depositInstant(1, 0, bytes32(0));
+        controlledGateway.depositInstant(1, 0, bytes32(0));
 
         vm.prank(notCreditAccount);
         vm.expectRevert(IMidasGateway.CreditAccountNotEligibleException.selector);
-        gateway.redeemInstant(1, 0);
+        controlledGateway.redeemInstant(1, 0);
 
         vm.prank(notCreditAccount);
         vm.expectRevert(IMidasGateway.CreditAccountNotEligibleException.selector);
-        gateway.requestRedeem(1, "");
+        controlledGateway.requestRedeem(1, "");
     }
 
-    /// @notice U:[MID-G-7]: Eligibility reverts when borrower is not set
+    /// @notice U:[MID-G-7]: Access-controlled gateways revert when borrower is not set
     function test_U_MID_G_07_reverts_when_borrower_not_set() public {
+        (MidasGateway controlledGateway, ContractsRegisterMock contractsRegister) =
+            _deployAccessControlledGateway(false);
+        contractsRegister.setCreditManager(address(creditManager), true);
+
         CreditAccountMock accountNoBorrower = new CreditAccountMock(address(creditManager));
 
         vm.prank(address(accountNoBorrower));
         vm.expectRevert(IMidasGateway.CreditAccountNotEligibleException.selector);
-        gateway.redeemInstant(1, 0);
+        controlledGateway.redeemInstant(1, 0);
+    }
+
+    /// @notice U:[MID-G-7A]: Access-controlled gateways revert when credit manager is not registered
+    function test_U_MID_G_07A_reverts_when_credit_manager_not_registered() public {
+        (MidasGateway controlledGateway,) = _deployAccessControlledGateway(false);
+
+        vm.prank(address(account));
+        vm.expectRevert(IMidasGateway.CreditAccountNotEligibleException.selector);
+        controlledGateway.redeemInstant(1, 0);
     }
 
     /// @notice U:[MID-G-8]: `requestRedeem` creates a redeemer and forwards the request
@@ -440,7 +535,9 @@ contract MidasGatewayUnitTest is Test {
         assertEq(redeemers.length, 1, "Redeemer not created");
 
         address redeemer = redeemers[0];
-        assertEq(IERC20(mToken).balanceOf(redeemer), 0, "Redeemer did not receive mToken");
+        // Remaining mToken is swept back to the account when the vault does not consume the full amount.
+        // The mock consumes the full amount, so the redeemer balance is zero after the request.
+        assertEq(IERC20(mToken).balanceOf(redeemer), 0, "Redeemer should not retain mToken");
         assertEq(MidasRedeemer(redeemer).account(), address(account), "Redeemer account not set");
         assertEq(MidasRedeemer(redeemer).requestId(), 1, "Request not forwarded to vault");
         assertTrue(MidasRedeemer(redeemer).alreadyRedeemed(), "Redeemer should be marked as redeemed");
@@ -582,5 +679,29 @@ contract MidasGatewayUnitTest is Test {
         assertEq(log.creditAccount, address(account), "Incorrect logged credit account");
         assertEq(log.redeemer, redeemer, "Incorrect logged redeemer");
         assertEq(log.extraData, extraData, "Incorrect logged extraData");
+    }
+
+    function _deployAccessControlledGateway(bool checkBorrowerGreenlist)
+        internal
+        returns (MidasGateway controlledGateway, ContractsRegisterMock contractsRegister)
+    {
+        MidasAccessControlMock accessControl = new MidasAccessControlMock();
+        issuanceVault.setAccessControl(address(accessControl));
+        redemptionVault.setAccessControl(address(accessControl));
+
+        contractsRegister = new ContractsRegisterMock();
+        MarketConfiguratorMock marketConfigurator = new MarketConfiguratorMock(address(contractsRegister));
+
+        controlledGateway = new MidasGateway(
+            address(issuanceVault),
+            address(redemptionVault),
+            quoteToken,
+            true,
+            address(marketConfigurator),
+            checkBorrowerGreenlist,
+            REDEMPTION_DURATION,
+            true,
+            address(addressProvider)
+        );
     }
 }

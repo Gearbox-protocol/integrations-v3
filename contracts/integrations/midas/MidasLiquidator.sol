@@ -28,6 +28,9 @@ contract MidasLiquidator is IMidasLiquidator {
 
     uint256 public constant override version = 3_11;
 
+    /// @notice Flag indicating whether gateways connected to this liquidator can transfer redeemers
+    /// @dev    For safety, redeemers are only allowed to be transferred when strictly required,
+    ///         i.e. during liquidations.
     bool public override isTransferAllowed;
 
     /// @notice Liquidates a credit account that holds pending Midas redemptions
@@ -55,32 +58,23 @@ contract MidasLiquidator is IMidasLiquidator {
 
         address creditFacade = ICreditManagerV3(creditManager).creditFacade();
 
-        _forwardCollateral(creditManager, creditFacade, calls, false);
-
         isTransferAllowed = true;
         ICreditFacadeV3(creditFacade).liquidateCreditAccount(creditAccount, msg.sender, calls, lossPolicyData);
         isTransferAllowed = false;
-
-        _forwardCollateral(creditManager, creditFacade, calls, true);
     }
 
-    function _forwardCollateral(
-        address creditManager,
-        address creditFacade,
-        MultiCall[] calldata calls,
-        bool toLiquidator
-    ) internal {
+    /// @dev Forwards collateral from the liquidator to the credit manager, via this contract
+    /// @dev Since CreditManagerV3 only transfers tokens from the `multicall()` caller, we need to transfer
+    ///      tokens from the liquidator to this contract.
+    function _forwardCollateral(address creditManager, address creditFacade, MultiCall[] calldata calls) internal {
         for (uint256 i; i < calls.length; ++i) {
-            if (calls[i].target != creditFacade || calls[i].callData.length < 4) continue;
-            if (bytes4(calls[i].callData) != ICreditFacadeV3Multicall.addCollateral.selector) continue;
-            (address token, uint256 amount) = abi.decode(calls[i].callData[4:], (address, uint256));
-            if (toLiquidator) {
-                IERC20(token).forceApprove(creditManager, 0);
-                uint256 balance = IERC20(token).balanceOf(address(this));
-                if (balance != 0) IERC20(token).safeTransfer(msg.sender, balance);
-            } else {
+            if (
+                calls[i].target == creditFacade
+                    && (bytes4(calls[i].callData) == ICreditFacadeV3Multicall.addCollateral.selector)
+            ) {
+                (address token, uint256 amount) = abi.decode(calls[i].callData[4:], (address, uint256));
                 IERC20(token).safeTransferFrom(msg.sender, address(this), amount);
-                IERC20(token).forceApprove(creditManager, IERC20(token).balanceOf(address(this)));
+                IERC20(token).forceApprove(creditManager, amount);
             }
         }
     }

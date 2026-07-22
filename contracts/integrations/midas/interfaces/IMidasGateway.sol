@@ -30,6 +30,10 @@ interface IMidasGateway is IVersion {
     error CreditAccountNotEligibleException();
     /// @dev Thrown when attempting to withdraw more tokens than all account's redeemers have
     error InsufficientBalanceException();
+    /// @dev Thrown when attempting to create a gateway for a permissioned mToken that allows arbitrary accounts
+    ///      to interact with it
+    error ArbitraryCAAllowedInPermissionedModeException();
+
     /// @notice Address of the mToken
     function mToken() external view returns (address);
 

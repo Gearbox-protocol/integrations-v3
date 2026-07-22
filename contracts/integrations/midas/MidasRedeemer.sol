@@ -7,7 +7,7 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
-import {IMidasRedemptionVault} from "./interfaces/external/IMidasRedemptionVault.sol";
+import {IMidasRedemptionVault, RedemptionStatus} from "./interfaces/external/IMidasRedemptionVault.sol";
 import {IMidasDataFeed} from "./interfaces/external/IMidasDataFeed.sol";
 
 import {WAD} from "@gearbox-protocol/core-v3/contracts/libraries/Constants.sol";
@@ -105,10 +105,10 @@ contract MidasRedeemer {
 
     /// @notice Returns the expected amount of quote token for the pending redemption request
     function pendingTokenOutAmount() external view returns (uint256) {
-        (,, uint8 status, uint256 amountMTokenIn,, uint256 tokenOutRate) =
+        (,, RedemptionStatus status, uint256 amountMTokenIn,, uint256 tokenOutRate) =
             IMidasRedemptionVault(midasRedemptionVault).redeemRequests(requestId);
 
-        if (status == 1 || isManuallyCleared) return 0;
+        if (status == RedemptionStatus.APPROVED || isManuallyCleared) return 0;
 
         uint256 mTokenRate = IMidasDataFeed(mTokenDataFeed).getDataInBase18();
 
@@ -125,10 +125,10 @@ contract MidasRedeemer {
     /// @dev If Midas rejects a request on accident, this function allows Midas or other interested party
     ///      to gracefully fulfill the request anyway, by manually supplying the required funds to the gateway.
     function clearCancelledRequest(uint256 amount) external {
-        (,, uint8 status, uint256 amountMTokenIn, uint256 mTokenRate, uint256 tokenOutRate) =
+        (,, RedemptionStatus status, uint256 amountMTokenIn, uint256 mTokenRate, uint256 tokenOutRate) =
             IMidasRedemptionVault(midasRedemptionVault).redeemRequests(requestId);
 
-        if (status != 2 || isManuallyCleared) {
+        if (status != RedemptionStatus.REJECTED || isManuallyCleared) {
             revert RequestNotCancelledOrManuallyClearedException();
         }
 
@@ -157,9 +157,7 @@ contract MidasRedeemer {
 
         uint256 tokenUnit = 10 ** IERC20Metadata(quoteToken).decimals();
 
-        if (tokenUnit == WAD) return amount1e18;
-
-        return amount1e18 * tokenUnit / WAD;
+        return tokenUnit == WAD ? amount1e18 : amount1e18 * tokenUnit / WAD;
     }
 
     /// @dev Sweeps the remaining mToken to the account

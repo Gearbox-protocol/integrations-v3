@@ -82,6 +82,11 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
     /// @notice Mapping of accounts to corresponding pending redeemer contracts
     mapping(address => EnumerableSet.AddressSet) internal accountToPendingRedeemers;
 
+    /// @notice Verifies that an account is eligible to interact with the gateway
+    /// @dev The account must adhere to the Credit Account interface (i.e., have a respective credit manager and borrower)
+    /// @dev For access-controlled mTokens, the Credit Account must belong to a specific market configurator,
+    ///      and its borrower may also need to be greenlisted by Midas.
+    /// @dev For non-access-controlled mTokens, any account can interact with the gateway.
     modifier onlyEligibleAccount() {
         if (!_isCallerEligible(msg.sender)) revert CreditAccountNotEligibleException();
         _;
@@ -118,18 +123,23 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
             revert IncompatibleIssuanceAndRedemptionVaultsException();
         }
 
-        address accessControl_;
         if (_isAccessControlled) {
-            accessControl_ = IMidasIssuanceVault(_midasIssuanceVault).accessControl();
-            if (accessControl_ != IMidasRedemptionVault(_midasRedemptionVault).accessControl()) {
+            accessControl = IMidasIssuanceVault(_midasIssuanceVault).accessControl();
+            if (accessControl != IMidasRedemptionVault(_midasRedemptionVault).accessControl()) {
                 revert IncompatibleAccessControlsException();
             }
+        } else {
+            accessControl = address(0);
         }
-        accessControl = accessControl_;
+
         checkBorrowerGreenlist = _checkBorrowerGreenlist;
 
-        if (accessControl_ == address(0) && _checkBorrowerGreenlist) {
+        if (accessControl == address(0) && _checkBorrowerGreenlist) {
             revert AccessControlNotSetException();
+        }
+
+        if (accessControl != address(0) && _allowedMarketConfigurator == address(0)) {
+            revert ArbitraryCAAllowedInPermissionedModeException();
         }
 
         masterRedeemer = address(new MidasRedeemer{salt: SALT}(_midasRedemptionVault, _quoteToken));
@@ -137,15 +147,11 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
         phantomToken = _withDelayedWithdrawals
             ? address(new MidasRedemptionVaultPhantomToken{salt: SALT}(address(this), mToken, _quoteToken))
             : address(0);
+
         allowedMarketConfigurator = _allowedMarketConfigurator;
         expectedRedemptionDuration = _expectedRedemptionDuration;
-        try IAddressProvider(_addressProvider).getAddressOrRevert(AP_REDEMPTION_LOGGER, 3_10) returns (
-            address _redemptionLogger
-        ) {
-            redemptionLogger = _redemptionLogger;
-        } catch {
-            redemptionLogger = address(0);
-        }
+
+        redemptionLogger = IAddressProvider(_addressProvider).getAddressOrRevert(AP_REDEMPTION_LOGGER, 3_10);
     }
 
     /// @notice Performs instant issuance of mToken for quote token
@@ -159,6 +165,7 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
         onlyEligibleAccount
     {
         IERC20(quoteToken).safeTransferFrom(msg.sender, address(this), amountToken);
+        amountToken = IERC20(quoteToken).balanceOf(address(this));
 
         IERC20(quoteToken).forceApprove(midasIssuanceVault, amountToken);
         _grantGreenlistIfRequired(address(this));
@@ -175,6 +182,7 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
     /// @dev Transfers mToken from sender, redeems, and transfers quote token back
     function redeemInstant(uint256 amountMTokenIn, uint256 minReceiveAmount) external nonReentrant onlyEligibleAccount {
         IERC20(mToken).safeTransferFrom(msg.sender, address(this), amountMTokenIn);
+        amountMTokenIn = IERC20(mToken).balanceOf(address(this));
 
         IERC20(mToken).forceApprove(midasRedemptionVault, amountMTokenIn);
         _grantGreenlistIfRequired(address(this));
@@ -330,12 +338,13 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
     /// @dev Converts the token amount to 18 decimals, which is accepted by Midas
     function _convertToE18(uint256 amount) internal view returns (uint256) {
         uint256 tokenUnit = 10 ** IERC20Metadata(quoteToken).decimals();
-        if (tokenUnit == WAD) return amount;
-        return amount * WAD / tokenUnit;
+        return tokenUnit == WAD ? amount : amount * WAD / tokenUnit;
     }
 
     /// @dev Checks if a caller is eligible to interact with the gateway
     function _isCallerEligible(address caller) internal view returns (bool) {
+        if (accessControl == address(0)) return true;
+
         if (!_isCreditAccount(caller)) return false;
 
         address creditManager = ICreditAccountV3(caller).creditManager();
@@ -344,7 +353,7 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
         (,,,,,,, address borrower) = ICreditManagerV3(creditManager).creditAccountInfo(caller);
         if (borrower == address(0)) return false;
 
-        if (allowedMarketConfigurator != address(0) && !_isAccountCreditManagerFromMarketConfigurator(creditManager)) {
+        if (!_isAccountCreditManagerFromMarketConfigurator(creditManager)) {
             return false;
         }
 
@@ -370,13 +379,11 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
 
     /// @dev Grants the GREENLISTED_ROLE to an account if the Midas access control is set
     function _grantGreenlistIfRequired(address account) internal {
-        if (accessControl == address(0)) return;
-        IMidasAccessControl(accessControl).grantRole(GREENLISTED_ROLE, account);
+        if (accessControl != address(0)) IMidasAccessControl(accessControl).grantRole(GREENLISTED_ROLE, account);
     }
 
     /// @dev Grants the GREENLISTED_ROLE to an account if the Midas access control is not set
     function _revokeGreenlistIfRequired(address account) internal {
-        if (accessControl == address(0)) return;
-        IMidasAccessControl(accessControl).revokeRole(GREENLISTED_ROLE, account);
+        if (accessControl != address(0)) IMidasAccessControl(accessControl).revokeRole(GREENLISTED_ROLE, account);
     }
 }
