@@ -9,8 +9,8 @@ import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IER
 
 import {RAY} from "@gearbox-protocol/core-v3/contracts/libraries/Constants.sol";
 
-import {IAToken} from "../../../../integrations/aave/IAToken.sol";
-import {ILendingPool} from "../../../../integrations/aave/ILendingPool.sol";
+import {IAToken} from "../../../../integrations/aave/interfaces/external/IAToken.sol";
+import {ILendingPool} from "../../../../integrations/aave/interfaces/external/ILendingPool.sol";
 
 /// @title AToken mock
 contract ATokenMock is IAToken, ERC20 {

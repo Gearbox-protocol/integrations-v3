@@ -18,14 +18,14 @@ import {
     TokenOutput,
     ApproxParams,
     LimitOrderData
-} from "../../../../integrations/pendle/IPendleRouter.sol";
+} from "../../../../integrations/pendle/interfaces/external/IPendleRouter.sol";
 import {
     IPendleRouterAdapter,
     PendleStatus,
     TokenDiffInput,
     TokenDiffOutput,
     PendlePairStatus
-} from "../../../../interfaces/pendle/IPendleRouterAdapter.sol";
+} from "../../../../integrations/pendle/interfaces/IPendleRouterAdapter.sol";
 import {PendleRouter_Calls, PendleRouter_Multicaller} from "../../../multicall/pendle/PendleRouter_Calls.sol";
 
 import "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";

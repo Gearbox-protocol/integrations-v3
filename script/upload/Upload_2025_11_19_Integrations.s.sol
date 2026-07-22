@@ -4,12 +4,14 @@ pragma solidity ^0.8.23;
 import {Bytecode} from "@gearbox-protocol/permissionless/contracts/interfaces/Types.sol";
 import {UploadBytecode} from "@gearbox-protocol/permissionless/script/UploadBytecode.sol";
 
-import {InfinifiGatewayAdapter} from "../../contracts/adapters/infinifi/InfinifiGatewayAdapter.sol";
-import {InfinifiUnwindingGatewayAdapter} from "../../contracts/adapters/infinifi/InfinifiUnwindingGatewayAdapter.sol";
-import {UniswapV4Adapter} from "../../contracts/adapters/uniswap/UniswapV4.sol";
-import {InfinifiUnwindingGateway} from "../../contracts/helpers/infinifi/InfinifiUnwindingGateway.sol";
-import {InfinifiUnwindingPhantomToken} from "../../contracts/helpers/infinifi/InfinifiUnwindingPhantomToken.sol";
-import {UniswapV4Gateway} from "../../contracts/helpers/uniswap/UniswapV4Gateway.sol";
+import {InfinifiGatewayAdapter} from "../../contracts/integrations/infinifi/InfinifiGatewayAdapter.sol";
+import {
+    InfinifiUnwindingGatewayAdapter
+} from "../../contracts/integrations/infinifi/InfinifiUnwindingGatewayAdapter.sol";
+import {UniswapV4Adapter} from "../../contracts/integrations/uniswap/UniswapV4.sol";
+import {InfinifiUnwindingGateway} from "../../contracts/integrations/infinifi/InfinifiUnwindingGateway.sol";
+import {InfinifiUnwindingPhantomToken} from "../../contracts/integrations/infinifi/InfinifiUnwindingPhantomToken.sol";
+import {UniswapV4Gateway} from "../../contracts/integrations/uniswap/UniswapV4Gateway.sol";
 
 contract Upload_2025_11_19_Integrations is UploadBytecode {
     function _getContracts() internal pure override returns (Bytecode[] memory bytecodes) {

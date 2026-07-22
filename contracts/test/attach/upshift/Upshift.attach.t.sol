@@ -5,12 +5,12 @@ import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 import {MultiCall} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacadeV3.sol";
 
-import {UpshiftVaultAdapter} from "../../../adapters/upshift/UpshiftVaultAdapter.sol";
-import {UpshiftVaultGateway} from "../../../helpers/upshift/UpshiftVaultGateway.sol";
-import {UpshiftVaultWithdrawalPhantomToken} from "../../../helpers/upshift/UpshiftVaultWithdrawalPhantomToken.sol";
+import {UpshiftVaultAdapter} from "../../../integrations/upshift/UpshiftVaultAdapter.sol";
+import {UpshiftVaultGateway} from "../../../integrations/upshift/UpshiftVaultGateway.sol";
+import {UpshiftVaultWithdrawalPhantomToken} from "../../../integrations/upshift/UpshiftVaultWithdrawalPhantomToken.sol";
 
-import {IERC4626Adapter} from "../../../interfaces/erc4626/IERC4626Adapter.sol";
-import {IUpshiftVaultAdapter} from "../../../interfaces/upshift/IUpshiftVaultAdapter.sol";
+import {IERC4626Adapter} from "../../../integrations/erc4626/interfaces/IERC4626Adapter.sol";
+import {IUpshiftVaultAdapter} from "../../../integrations/upshift/interfaces/IUpshiftVaultAdapter.sol";
 
 import {IntegrationsAttachTestBase} from "../IntegrationsAttachTestBase.sol";
 

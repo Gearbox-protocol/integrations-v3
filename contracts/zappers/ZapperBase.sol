@@ -7,7 +7,7 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IERC20Permit} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Permit.sol";
 import {SafeERC20} from "@1inch/solidity-utils/contracts/libraries/SafeERC20.sol";
 import {IPoolV3} from "@gearbox-protocol/core-v3/contracts/interfaces/IPoolV3.sol";
-import {IERC20PermitAllowed} from "../integrations/external/IERC20PermitAllowed.sol";
+import {IERC20PermitAllowed} from "../integrations/common/interfaces/external/IERC20PermitAllowed.sol";
 import {IZapper} from "../interfaces/zappers/IZapper.sol";
 
 /// @title Zapper base
@@ -139,7 +139,8 @@ abstract contract ZapperBase is IZapper {
         bool tokenOutIsPool = tokenOut() == pool;
         bool tokenInIsUnderlying = tokenIn() == underlying;
         uint256 shares = tokenOutIsPool ? tokenOutAmount : _tokenOutToShares(tokenOutAmount, owner); // U:[ZB-5]
-        uint256 assets = IPoolV3(pool).redeem({
+        uint256 assets = IPoolV3(pool)
+            .redeem({
             shares: shares,
             receiver: tokenInIsUnderlying ? receiver : address(this),
             owner: tokenOutIsPool ? owner : address(this)

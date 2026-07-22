@@ -4,7 +4,7 @@ pragma solidity ^0.8.23;
 import {Bytecode} from "@gearbox-protocol/permissionless/contracts/interfaces/Types.sol";
 import {UploadBytecode} from "@gearbox-protocol/permissionless/script/UploadBytecode.sol";
 
-import {UpshiftVaultAdapter} from "../../contracts/adapters/upshift/UpshiftVaultAdapter.sol";
+import {UpshiftVaultAdapter} from "../../contracts/integrations/upshift/UpshiftVaultAdapter.sol";
 
 contract Upload_2025_12_03_Integrations is UploadBytecode {
     function _getContracts() internal pure override returns (Bytecode[] memory bytecodes) {

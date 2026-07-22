@@ -5,7 +5,7 @@ pragma solidity ^0.8.23;
 
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
-import {ICErc20, ICErc20Actions} from "../../../../integrations/compound/ICErc20.sol";
+import {ICErc20, ICErc20Actions} from "../../../../integrations/compound/interfaces/external/ICErc20.sol";
 
 import {CTokenMockBase, MINT_ERROR, REDEEM_ERROR, REDEEM_UNDERLYING_ERROR} from "./CTokenMockBase.sol";
 

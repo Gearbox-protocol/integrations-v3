@@ -7,15 +7,15 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {ICreditFacadeV3} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacadeV3.sol";
 import {ICreditFacadeV3Multicall} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacadeV3Multicall.sol";
-import {IStakingRewards} from "../../../../integrations/sky/IStakingRewards.sol";
-import {IStakingRewardsAdapter} from "../../../../interfaces/sky/IStakingRewardsAdapter.sol";
+import {IStakingRewards} from "../../../../integrations/sky/interfaces/external/IStakingRewards.sol";
+import {IStakingRewardsAdapter} from "../../../../integrations/sky/interfaces/IStakingRewardsAdapter.sol";
 import {
     IPhantomToken,
     IPhantomTokenWithdrawer
 } from "@gearbox-protocol/core-v3/contracts/interfaces/base/IPhantomToken.sol";
 import {PriceFeedParams} from "@gearbox-protocol/core-v3/contracts/interfaces/IPriceOracleV3.sol";
 import {IPriceFeed} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IPriceFeed.sol";
-import {IPhantomTokenAdapter} from "../../../../interfaces/IPhantomTokenAdapter.sol";
+import {IPhantomTokenAdapter} from "../../../../integrations/common/interfaces/IPhantomTokenAdapter.sol";
 
 import {StakingRewards_Calls, StakingRewards_Multicaller} from "../../../multicall/sky/StakingRewards_Calls.sol";
 import {IAdapter} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IAdapter.sol";

@@ -8,7 +8,7 @@ import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IER
 
 import {WAD} from "@gearbox-protocol/core-v3/contracts/libraries/Constants.sol";
 
-import {ICToken} from "../../../../integrations/compound/ICToken.sol";
+import {ICToken} from "../../../../integrations/compound/interfaces/external/ICToken.sol";
 
 uint256 constant MINT_ERROR = 1;
 uint256 constant REDEEM_ERROR = 2;

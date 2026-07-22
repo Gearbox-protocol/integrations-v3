@@ -26,18 +26,22 @@ import {
 import {IntegrationTestHelper} from "@gearbox-protocol/core-v3/contracts/test/helpers/IntegrationTestHelper.sol";
 import {AdapterDeployer} from "./AdapterDeployer.sol";
 
-import {IConvexV1BoosterAdapter} from "../../interfaces/convex/IConvexV1BoosterAdapter.sol";
-import {UniswapV2Adapter} from "../../adapters/uniswap/UniswapV2.sol";
-import {UniswapV3Adapter} from "../../adapters/uniswap/UniswapV3.sol";
-import {VelodromeV2RouterAdapter} from "../../adapters/velodrome/VelodromeV2RouterAdapter.sol";
-import {CamelotV3Adapter} from "../../adapters/camelot/CamelotV3Adapter.sol";
-import {PendleRouterAdapter} from "../../adapters/pendle/PendleRouterAdapter.sol";
+import {IConvexV1BoosterAdapter} from "../../integrations/convex/interfaces/IConvexV1BoosterAdapter.sol";
+import {UniswapV2Adapter} from "../../integrations/uniswap/UniswapV2.sol";
+import {UniswapV3Adapter} from "../../integrations/uniswap/UniswapV3.sol";
+import {VelodromeV2RouterAdapter} from "../../integrations/velodrome/VelodromeV2RouterAdapter.sol";
+import {CamelotV3Adapter} from "../../integrations/camelot/CamelotV3Adapter.sol";
+import {PendleRouterAdapter} from "../../integrations/pendle/PendleRouterAdapter.sol";
 
-import {UniswapV2PairStatus} from "../../interfaces/uniswap/IUniswapV2Adapter.sol";
-import {UniswapV3PoolStatus} from "../../interfaces/uniswap/IUniswapV3Adapter.sol";
-import {VelodromeV2PoolStatus} from "../../interfaces/velodrome/IVelodromeV2RouterAdapter.sol";
-import {CamelotV3PoolStatus} from "../../interfaces/camelot/ICamelotV3Adapter.sol";
-import {PendlePairStatus, PendleStatus, PendleTokenType} from "../../interfaces/pendle/IPendleRouterAdapter.sol";
+import {UniswapV2PairStatus} from "../../integrations/uniswap/interfaces/IUniswapV2Adapter.sol";
+import {UniswapV3PoolStatus} from "../../integrations/uniswap/interfaces/IUniswapV3Adapter.sol";
+import {VelodromeV2PoolStatus} from "../../integrations/velodrome/interfaces/IVelodromeV2RouterAdapter.sol";
+import {CamelotV3PoolStatus} from "../../integrations/camelot/interfaces/ICamelotV3Adapter.sol";
+import {
+    PendlePairStatus,
+    PendleStatus,
+    PendleTokenType
+} from "../../integrations/pendle/interfaces/IPendleRouterAdapter.sol";
 
 import "@gearbox-protocol/core-v3/contracts/test/lib/constants.sol";
 

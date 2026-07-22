@@ -5,7 +5,7 @@ pragma solidity ^0.8.23;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@1inch/solidity-utils/contracts/libraries/SafeERC20.sol";
-import {IwstETH} from "../../integrations/lido/IwstETH.sol";
+import {IwstETH} from "../../integrations/lido/interfaces/external/IwstETH.sol";
 import {ERC20ZapperBase} from "../ERC20ZapperBase.sol";
 import {ZapperBase} from "../ZapperBase.sol";
 

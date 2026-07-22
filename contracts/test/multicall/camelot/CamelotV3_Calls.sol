@@ -4,8 +4,8 @@
 pragma solidity ^0.8.23;
 
 import {MultiCall} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacadeV3.sol";
-import {ICamelotV3Router} from "../../../integrations/camelot/ICamelotV3Router.sol";
-import {ICamelotV3Adapter} from "../../../interfaces/camelot/ICamelotV3Adapter.sol";
+import {ICamelotV3Router} from "../../../integrations/camelot/interfaces/external/ICamelotV3Router.sol";
+import {ICamelotV3Adapter} from "../../../integrations/camelot/interfaces/ICamelotV3Adapter.sol";
 
 interface CamelotV3_Multicaller {}
 

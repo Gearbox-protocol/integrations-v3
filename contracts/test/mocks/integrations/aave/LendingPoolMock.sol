@@ -8,9 +8,9 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import {RAY} from "@gearbox-protocol/core-v3/contracts/libraries/Constants.sol";
 
-import {IAToken} from "../../../../integrations/aave/IAToken.sol";
-import {DataTypes} from "../../../../integrations/aave/DataTypes.sol";
-import {ILendingPool} from "../../../../integrations/aave/ILendingPool.sol";
+import {IAToken} from "../../../../integrations/aave/interfaces/external/IAToken.sol";
+import {DataTypes} from "../../../../integrations/aave/interfaces/external/DataTypes.sol";
+import {ILendingPool} from "../../../../integrations/aave/interfaces/external/ILendingPool.sol";
 
 import {ATokenMock} from "./ATokenMock.sol";
 
@@ -86,10 +86,7 @@ contract LendingPoolMock is ILendingPool, Ownable {
         if (_reserves[asset].aTokenAddress != address(0)) revert ReserveAlreadyExists();
         aToken = address(new ATokenMock(asset));
         _reserves[asset] = ReserveData({
-            aTokenAddress: aToken,
-            liquidityIndex: RAY,
-            interestRate: interestRate,
-            lastUpdate: uint40(block.timestamp)
+            aTokenAddress: aToken, liquidityIndex: RAY, interestRate: interestRate, lastUpdate: uint40(block.timestamp)
         });
     }
 

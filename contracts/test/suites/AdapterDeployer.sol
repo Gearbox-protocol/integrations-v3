@@ -13,33 +13,33 @@ import {AdapterData} from "@gearbox-protocol/sdk-gov/contracts/AdapterData.sol";
 import {SupportedContracts, Contracts} from "@gearbox-protocol/sdk-gov/contracts/SupportedContracts.sol";
 
 import {AdapterType} from "@gearbox-protocol/sdk-gov/contracts/AdapterType.sol";
-import {ICurvePool} from "../../integrations/curve/ICurvePool.sol";
+import {ICurvePool} from "../../integrations/curve/interfaces/external/ICurvePool.sol";
 
 // SIMPLE ADAPTERS
-import {UniswapV2Adapter} from "../../adapters/uniswap/UniswapV2.sol";
-import {UniswapV3Adapter} from "../../adapters/uniswap/UniswapV3.sol";
-import {ConvexV1BoosterAdapter} from "../../adapters/convex/ConvexV1_Booster.sol";
-import {LidoV1Adapter} from "../../adapters/lido/LidoV1.sol";
-import {WstETHV1Adapter} from "../../adapters/lido/WstETHV1.sol";
+import {UniswapV2Adapter} from "../../integrations/uniswap/UniswapV2.sol";
+import {UniswapV3Adapter} from "../../integrations/uniswap/UniswapV3.sol";
+import {ConvexV1BoosterAdapter} from "../../integrations/convex/ConvexV1_Booster.sol";
+import {LidoV1Adapter} from "../../integrations/lido/LidoV1.sol";
+import {WstETHV1Adapter} from "../../integrations/lido/WstETHV1.sol";
 
-import {CurveV1Adapter2Assets} from "../../adapters/curve/CurveV1_2.sol";
-import {CurveV1Adapter3Assets} from "../../adapters/curve/CurveV1_3.sol";
-import {CurveV1Adapter4Assets} from "../../adapters/curve/CurveV1_4.sol";
-import {CurveV1AdapterStableNG} from "../../adapters/curve/CurveV1_StableNG.sol";
+import {CurveV1Adapter2Assets} from "../../integrations/curve/CurveV1_2.sol";
+import {CurveV1Adapter3Assets} from "../../integrations/curve/CurveV1_3.sol";
+import {CurveV1Adapter4Assets} from "../../integrations/curve/CurveV1_4.sol";
+import {CurveV1AdapterStableNG} from "../../integrations/curve/CurveV1_StableNG.sol";
 
-import {CurveV1AdapterStETH} from "../../adapters/curve/CurveV1_stETH.sol";
+import {CurveV1AdapterStETH} from "../../integrations/curve/CurveV1_stETH.sol";
 
-import {ConvexV1BaseRewardPoolAdapter} from "../../adapters/convex/ConvexV1_BaseRewardPool.sol";
+import {ConvexV1BaseRewardPoolAdapter} from "../../integrations/convex/ConvexV1_BaseRewardPool.sol";
 
-import {ERC4626Adapter} from "../../adapters/erc4626/ERC4626Adapter.sol";
+import {ERC4626Adapter} from "../../integrations/erc4626/ERC4626Adapter.sol";
 
-import {VelodromeV2RouterAdapter} from "../../adapters/velodrome/VelodromeV2RouterAdapter.sol";
-import {CamelotV3Adapter} from "../../adapters/camelot/CamelotV3Adapter.sol";
+import {VelodromeV2RouterAdapter} from "../../integrations/velodrome/VelodromeV2RouterAdapter.sol";
+import {CamelotV3Adapter} from "../../integrations/camelot/CamelotV3Adapter.sol";
 
-import {PendleRouterAdapter} from "../../adapters/pendle/PendleRouterAdapter.sol";
+import {PendleRouterAdapter} from "../../integrations/pendle/PendleRouterAdapter.sol";
 
-import {DaiUsdsAdapter} from "../../adapters/sky/DaiUsdsAdapter.sol";
-import {StakingRewardsAdapter} from "../../adapters/sky/StakingRewardsAdapter.sol";
+import {DaiUsdsAdapter} from "../../integrations/sky/DaiUsdsAdapter.sol";
+import {StakingRewardsAdapter} from "../../integrations/sky/StakingRewardsAdapter.sol";
 
 import {TokensTestSuite} from "@gearbox-protocol/core-v3/contracts/test/suites/TokensTestSuite.sol";
 import {Test} from "forge-std/Test.sol";
