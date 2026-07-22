@@ -67,7 +67,7 @@ contract MidasLiquidator is IMidasLiquidator {
     /// @dev Since CreditManagerV3 only transfers tokens from the `multicall()` caller, we need to transfer
     ///      tokens from the liquidator to this contract.
     function _forwardCollateral(address creditManager, address creditFacade, MultiCall[] calldata calls) internal {
-        for (uint256 i; i < calls.length; ++i) {
+        for (uint256 i; i < calls.length; i++) {
             if (
                 calls[i].target == creditFacade
                     && (bytes4(calls[i].callData) == ICreditFacadeV3Multicall.addCollateral.selector)
