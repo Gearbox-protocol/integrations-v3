@@ -58,6 +58,8 @@ contract MidasLiquidator is IMidasLiquidator {
 
         address creditFacade = ICreditManagerV3(creditManager).creditFacade();
 
+        _forwardCollateral(creditManager, creditFacade, calls);
+
         isTransferAllowed = true;
         ICreditFacadeV3(creditFacade).liquidateCreditAccount(creditAccount, msg.sender, calls, lossPolicyData);
         isTransferAllowed = false;
