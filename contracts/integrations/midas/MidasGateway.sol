@@ -123,13 +123,11 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
             revert IncompatibleIssuanceAndRedemptionVaultsException();
         }
 
-        if (_isAccessControlled) {
-            accessControl = IMidasIssuanceVault(_midasIssuanceVault).accessControl();
-            if (accessControl != IMidasRedemptionVault(_midasRedemptionVault).accessControl()) {
-                revert IncompatibleAccessControlsException();
-            }
-        } else {
-            accessControl = address(0);
+        accessControl = _isAccessControlled ? IMidasIssuanceVault(_midasIssuanceVault).accessControl() : address(0);
+        if (
+            accessControl != address(0) && accessControl != IMidasRedemptionVault(_midasRedemptionVault).accessControl()
+        ) {
+            revert IncompatibleAccessControlsException();
         }
 
         checkBorrowerGreenlist = _checkBorrowerGreenlist;

@@ -4,7 +4,6 @@
 pragma solidity ^0.8.23;
 
 import {MultiCall} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacadeV3.sol";
-import {PriceUpdate} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IPriceFeedStore.sol";
 
 import {IMidasTransferMaster} from "./IMidasTransferMaster.sol";
 
