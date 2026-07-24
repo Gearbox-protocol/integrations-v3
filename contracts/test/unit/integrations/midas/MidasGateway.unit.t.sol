@@ -11,7 +11,7 @@ import {ERC20Mock} from "@gearbox-protocol/core-v3/contracts/test/mocks/token/ER
 import {MidasGateway} from "../../../../integrations/midas/MidasGateway.sol";
 import {MidasRedeemer} from "../../../../integrations/midas/MidasRedeemer.sol";
 import {MidasRedemptionVaultPhantomToken} from "../../../../integrations/midas/MidasRedemptionVaultPhantomToken.sol";
-import {IMidasGateway} from "../../../../integrations/midas/interfaces/IMidasGateway.sol";
+import {IMidasGateway, MidasMode} from "../../../../integrations/midas/interfaces/IMidasGateway.sol";
 import {RedemptionLogger} from "../../../../integrations/common/RedemptionLogger.sol";
 import {
     IRedemptionLogger,
@@ -246,9 +246,8 @@ contract MidasGatewayUnitTest is Test {
             address(issuanceVault),
             address(redemptionVault),
             quoteToken,
-            false, // isAccessControlled
+            MidasMode.Permissionless,
             address(0), // allowed market configurator (none => skip registration check)
-            false, // checkBorrowerGreenlist
             REDEMPTION_DURATION,
             true, // withDelayedWithdrawals
             address(addressProvider)
@@ -279,6 +278,7 @@ contract MidasGatewayUnitTest is Test {
         assertEq(gateway.midasRedemptionVault(), address(redemptionVault), "Incorrect redemption vault");
         assertEq(gateway.mToken(), mToken, "Incorrect mToken");
         assertEq(gateway.quoteToken(), quoteToken, "Incorrect quote token");
+        assertTrue(uint8(gateway.mode()) == uint8(MidasMode.Permissionless), "Incorrect mode");
         assertTrue(gateway.phantomToken() != address(0), "Phantom token not deployed");
         assertEq(
             MidasRedemptionVaultPhantomToken(gateway.phantomToken()).gateway(), address(gateway), "Incorrect PT gateway"
@@ -319,9 +319,8 @@ contract MidasGatewayUnitTest is Test {
             address(issuanceVault),
             address(redemptionVault),
             quoteToken,
-            false,
+            MidasMode.Permissionless,
             address(0),
-            false,
             REDEMPTION_DURATION,
             false, // withDelayedWithdrawals
             address(addressProvider) // address provider
@@ -340,9 +339,8 @@ contract MidasGatewayUnitTest is Test {
             address(badIssuanceVault),
             address(redemptionVault),
             quoteToken,
-            false,
+            MidasMode.Permissionless,
             address(0),
-            false,
             REDEMPTION_DURATION,
             true, // withDelayedWithdrawals
             address(addressProvider) // address provider
@@ -362,15 +360,15 @@ contract MidasGatewayUnitTest is Test {
             address(issuanceVault),
             address(redemptionVault),
             quoteToken,
-            true,
+            MidasMode.RestrictedInterface,
             address(marketConfigurator),
-            false,
             REDEMPTION_DURATION,
             true, // withDelayedWithdrawals
             address(addressProvider) // address provider
         );
 
         assertEq(controlledGateway.accessControl(), accessControl, "Incorrect access control");
+        assertTrue(uint8(controlledGateway.mode()) == uint8(MidasMode.RestrictedInterface), "Incorrect mode");
         assertEq(
             controlledGateway.allowedMarketConfigurator(), address(marketConfigurator), "Incorrect market configurator"
         );
@@ -386,9 +384,8 @@ contract MidasGatewayUnitTest is Test {
             address(issuanceVault),
             address(redemptionVault),
             quoteToken,
-            true,
+            MidasMode.RestrictedInterface,
             address(1),
-            false,
             REDEMPTION_DURATION,
             true, // withDelayedWithdrawals
             address(addressProvider) // address provider
@@ -406,25 +403,26 @@ contract MidasGatewayUnitTest is Test {
             address(issuanceVault),
             address(redemptionVault),
             quoteToken,
-            true,
-            address(0), // no market configurator in permissioned mode
-            false,
+            MidasMode.RestrictedInterface,
+            address(0), // no market configurator in non-permissionless mode
             REDEMPTION_DURATION,
             true,
             address(addressProvider)
         );
     }
 
-    /// @notice U:[MID-G-3]: Constructor reverts when greenlist required but no access control set
-    function test_U_MID_G_03_constructor_reverts_on_greenlist_without_access_control() public {
+    /// @notice U:[MID-G-3]: Constructor reverts when non-permissionless mode has no vault access control
+    function test_U_MID_G_03_constructor_reverts_when_access_control_not_set() public {
+        ContractsRegisterMock contractsRegister = new ContractsRegisterMock();
+        MarketConfiguratorMock marketConfigurator = new MarketConfiguratorMock(address(contractsRegister));
+
         vm.expectRevert(IMidasGateway.AccessControlNotSetException.selector);
         new MidasGateway(
             address(issuanceVault),
             address(redemptionVault),
             quoteToken,
-            false, // not access-controlled => accessControl stays zero
-            address(0),
-            true, // checkBorrowerGreenlist with no access control
+            MidasMode.RestrictedInterface,
+            address(marketConfigurator),
             REDEMPTION_DURATION,
             true, // withDelayedWithdrawals
             address(addressProvider) // address provider
@@ -489,7 +487,7 @@ contract MidasGatewayUnitTest is Test {
 
     /// @notice U:[MID-G-6A]: Access-controlled gateways revert for non-credit-account callers
     function test_U_MID_G_06A_reverts_for_ineligible_caller_when_access_controlled() public {
-        (MidasGateway controlledGateway,) = _deployAccessControlledGateway(false);
+        (MidasGateway controlledGateway,) = _deployAccessControlledGateway(MidasMode.RestrictedInterface);
 
         address notCreditAccount = address(new NonCreditAccountMock());
 
@@ -509,7 +507,7 @@ contract MidasGatewayUnitTest is Test {
     /// @notice U:[MID-G-7]: Access-controlled gateways revert when borrower is not set
     function test_U_MID_G_07_reverts_when_borrower_not_set() public {
         (MidasGateway controlledGateway, ContractsRegisterMock contractsRegister) =
-            _deployAccessControlledGateway(false);
+            _deployAccessControlledGateway(MidasMode.RestrictedInterface);
         contractsRegister.setCreditManager(address(creditManager), true);
 
         CreditAccountMock accountNoBorrower = new CreditAccountMock(address(creditManager));
@@ -521,7 +519,7 @@ contract MidasGatewayUnitTest is Test {
 
     /// @notice U:[MID-G-7A]: Access-controlled gateways revert when credit manager is not registered
     function test_U_MID_G_07A_reverts_when_credit_manager_not_registered() public {
-        (MidasGateway controlledGateway,) = _deployAccessControlledGateway(false);
+        (MidasGateway controlledGateway,) = _deployAccessControlledGateway(MidasMode.RestrictedInterface);
 
         vm.prank(address(account));
         vm.expectRevert(IMidasGateway.CreditAccountNotEligibleException.selector);
@@ -706,9 +704,8 @@ contract MidasGatewayUnitTest is Test {
             address(issuanceVault),
             address(redemptionVault),
             quoteToken,
-            false,
+            MidasMode.Permissionless,
             address(0),
-            false,
             REDEMPTION_DURATION,
             true, // withDelayedWithdrawals
             address(loggerAddressProvider)
@@ -731,7 +728,7 @@ contract MidasGatewayUnitTest is Test {
         assertEq(log.extraData, extraData, "Incorrect logged extraData");
     }
 
-    function _deployAccessControlledGateway(bool checkBorrowerGreenlist)
+    function _deployAccessControlledGateway(MidasMode mode_)
         internal
         returns (MidasGateway controlledGateway, ContractsRegisterMock contractsRegister)
     {
@@ -746,9 +743,8 @@ contract MidasGatewayUnitTest is Test {
             address(issuanceVault),
             address(redemptionVault),
             quoteToken,
-            true,
+            mode_,
             address(marketConfigurator),
-            checkBorrowerGreenlist,
             REDEMPTION_DURATION,
             true,
             address(addressProvider)

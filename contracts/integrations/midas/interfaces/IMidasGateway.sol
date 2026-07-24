@@ -9,6 +9,18 @@ uint256 constant MAX_PENDING_REDEEMERS_PER_ACCOUNT = 10;
 
 bytes32 constant CREDIT_ACCOUNT_TYPE = "CREDIT_ACCOUNT";
 
+/// @notice Access mode for a Midas gateway deployment
+enum MidasMode {
+    /// @dev No access control; any account may interact
+    Permissionless,
+    /// @dev Access-controlled vaults; credit accounts must belong to a market configurator,
+    ///      but borrowers are not required to be greenlisted
+    RestrictedInterface,
+    /// @dev Access-controlled vaults; credit accounts must belong to a market configurator
+    ///      and borrowers must be greenlisted
+    Permissioned
+}
+
 /// @title Midas Gateway interface
 /// @notice External interface of the unified Midas gateway that manages both issuances and redemptions
 interface IMidasGateway is IVersion {
@@ -22,7 +34,7 @@ interface IMidasGateway is IVersion {
     error IncompatibleIssuanceAndRedemptionVaultsException();
     /// @dev Thrown when access-controlled issuance and redemption vaults use different access control contracts
     error IncompatibleAccessControlsException();
-    /// @dev Thrown when attempting to instantiate a greenlist-only gateway without setting the access control
+    /// @dev Thrown when a non-permissionless mode is configured but the Midas vaults have no access control
     error AccessControlNotSetException();
     /// @dev Thrown when attempting to create a new redeemer for an account that has too many pending redeemers
     error MaxPendingRedeemersPerAccountException();
@@ -30,7 +42,7 @@ interface IMidasGateway is IVersion {
     error CreditAccountNotEligibleException();
     /// @dev Thrown when attempting to withdraw more tokens than all account's redeemers have
     error InsufficientBalanceException();
-    /// @dev Thrown when attempting to create a gateway for a permissioned mToken that allows arbitrary accounts
+    /// @dev Thrown when attempting to create a gateway for a non-permissionless mode that allows arbitrary accounts
     ///      to interact with it
     error ArbitraryCAAllowedInPermissionedModeException();
 
@@ -48,6 +60,9 @@ interface IMidasGateway is IVersion {
 
     /// @notice Address of the Midas access control contract
     function accessControl() external view returns (address);
+
+    /// @notice Access mode of the gateway
+    function mode() external view returns (MidasMode);
 
     /// @notice Address of the redemption logger contract
     function redemptionLogger() external view returns (address);

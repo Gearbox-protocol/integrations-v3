@@ -143,12 +143,23 @@ contract SecuritizeRedemptionGateway is ISecuritizeRedemptionGateway {
         }
     }
 
+    /// @notice Returns the redeemers for a credit account
+    /// @param account The account to get the redeemers for
+    /// @return redeemers The redeemers for the account
     function getRedeemers(address account) external view returns (address[] memory) {
         return redeemersByAccount[account].values();
     }
 
+    /// @notice Returns the unclaimed redeemers for a credit account
+    /// @param account The account to get the unclaimed redeemers for
+    /// @return unclaimedRedeemers The unclaimed redeemers for the account
     function getUnclaimedRedeemers(address account) external view returns (address[] memory) {
         return unclaimedRedeemers[account].values();
+    }
+
+    /// @notice Returns whether a credit account owner can redeem DS tokens
+    function isVerifiedAccount(address account) external view returns (bool) {
+        return ISecuritizeRegistryService(registryService).isWallet(account);
     }
 
     /// @dev Internal function to get the redeemer for an account, or create a new one if it doesn't exist

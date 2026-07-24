@@ -24,7 +24,12 @@ import {ReentrancyGuardTrait} from "@gearbox-protocol/core-v3/contracts/traits/R
 import {IMidasIssuanceVault} from "./interfaces/external/IMidasIssuanceVault.sol";
 import {IMidasRedemptionVault} from "./interfaces/external/IMidasRedemptionVault.sol";
 import {IMidasAccessControl, GREENLISTED_ROLE} from "./interfaces/external/IMidasAccessControl.sol";
-import {IMidasGateway, MAX_PENDING_REDEEMERS_PER_ACCOUNT, CREDIT_ACCOUNT_TYPE} from "./interfaces/IMidasGateway.sol";
+import {
+    IMidasGateway,
+    MidasMode,
+    MAX_PENDING_REDEEMERS_PER_ACCOUNT,
+    CREDIT_ACCOUNT_TYPE
+} from "./interfaces/IMidasGateway.sol";
 import {IMidasTransferMaster} from "./interfaces/IMidasTransferMaster.sol";
 import {IRedemptionLogger, AP_REDEMPTION_LOGGER} from "../common/interfaces/IRedemptionLogger.sol";
 
@@ -55,8 +60,8 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
     /// @notice Address of the redemption phantom token
     address public immutable phantomToken;
 
-    /// @notice Whether to check that the borrower is greenlisted
-    bool public immutable checkBorrowerGreenlist;
+    /// @notice Access mode of the gateway
+    MidasMode public immutable override mode;
 
     /// @notice Address of the mToken access control contract
     address public immutable accessControl;
@@ -84,9 +89,9 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
 
     /// @notice Verifies that an account is eligible to interact with the gateway
     /// @dev The account must adhere to the Credit Account interface (i.e., have a respective credit manager and borrower)
-    /// @dev For access-controlled mTokens, the Credit Account must belong to a specific market configurator,
-    ///      and its borrower may also need to be greenlisted by Midas.
-    /// @dev For non-access-controlled mTokens, any account can interact with the gateway.
+    /// @dev For RestrictedInterface / Permissioned modes, the Credit Account must belong to a specific market
+    ///      configurator; in Permissioned mode its borrower must also be greenlisted by Midas.
+    /// @dev In Permissionless mode, any account can interact with the gateway.
     modifier onlyEligibleAccount() {
         if (!_isCallerEligible(msg.sender)) revert CreditAccountNotEligibleException();
         _;
@@ -96,9 +101,8 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
     /// @param _midasIssuanceVault Address of the Midas Issuance Vault
     /// @param _midasRedemptionVault Address of the Midas Redemption Vault
     /// @param _quoteToken Address of the quote token used for issuance and redemption
-    /// @param _isAccessControlled Whether to read and validate access control from the Midas vaults
+    /// @param _mode Access mode of the gateway
     /// @param _allowedMarketConfigurator Address of the market configurator of credit accounts that are allowed to interact with the gateway
-    /// @param _checkBorrowerGreenlist Whether to check that the borrower is greenlisted
     /// @param _expectedRedemptionDuration Expected duration of a redemption request (for informational purposes)
     /// @param _withDelayedWithdrawals Whether to deploy a redemption phantom token for delayed withdrawals
     /// @param _addressProvider Address of the Gearbox AddressProviderV3
@@ -106,9 +110,8 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
         address _midasIssuanceVault,
         address _midasRedemptionVault,
         address _quoteToken,
-        bool _isAccessControlled,
+        MidasMode _mode,
         address _allowedMarketConfigurator,
-        bool _checkBorrowerGreenlist,
         uint256 _expectedRedemptionDuration,
         bool _withDelayedWithdrawals,
         address _addressProvider
@@ -116,6 +119,7 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
         midasIssuanceVault = _midasIssuanceVault;
         midasRedemptionVault = _midasRedemptionVault;
         quoteToken = _quoteToken;
+        mode = _mode;
         mToken = IMidasRedemptionVault(_midasRedemptionVault).mToken();
         address issuanceMToken = IMidasIssuanceVault(_midasIssuanceVault).mToken();
 
@@ -123,20 +127,20 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
             revert IncompatibleIssuanceAndRedemptionVaultsException();
         }
 
-        accessControl = _isAccessControlled ? IMidasIssuanceVault(_midasIssuanceVault).accessControl() : address(0);
+        accessControl =
+            _mode == MidasMode.Permissionless ? address(0) : IMidasIssuanceVault(_midasIssuanceVault).accessControl();
+
+        if (_mode != MidasMode.Permissionless && accessControl == address(0)) {
+            revert AccessControlNotSetException();
+        }
+
         if (
             accessControl != address(0) && accessControl != IMidasRedemptionVault(_midasRedemptionVault).accessControl()
         ) {
             revert IncompatibleAccessControlsException();
         }
 
-        checkBorrowerGreenlist = _checkBorrowerGreenlist;
-
-        if (accessControl == address(0) && _checkBorrowerGreenlist) {
-            revert AccessControlNotSetException();
-        }
-
-        if (accessControl != address(0) && _allowedMarketConfigurator == address(0)) {
+        if (_mode != MidasMode.Permissionless && _allowedMarketConfigurator == address(0)) {
             revert ArbitraryCAAllowedInPermissionedModeException();
         }
 
@@ -263,7 +267,8 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
             revert RedeemerTransferNotAllowedException();
         }
 
-        if (checkBorrowerGreenlist && !IMidasAccessControl(accessControl).hasRole(GREENLISTED_ROLE, newAccount)) {
+        if (mode == MidasMode.Permissioned && !IMidasAccessControl(accessControl).hasRole(GREENLISTED_ROLE, newAccount))
+        {
             revert NewAccountNotGreenlistedException();
         }
 
@@ -296,6 +301,11 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
     /// @return redeemers The pending redeemers for the account
     function pendingRedeemers(address account) external view returns (address[] memory redeemers) {
         return accountToPendingRedeemers[account].values();
+    }
+
+    /// @notice Returns whether a credit account owner can mint or redeem mTokens
+    function isVerifiedAccount(address account) external view returns (bool) {
+        return mode != MidasMode.Permissioned || IMidasAccessControl(accessControl).hasRole(GREENLISTED_ROLE, account);
     }
 
     /// @dev Internal function to get the redeemer for an account, or create a new one if it doesn't exist
@@ -341,7 +351,7 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
 
     /// @dev Checks if a caller is eligible to interact with the gateway
     function _isCallerEligible(address caller) internal view returns (bool) {
-        if (accessControl == address(0)) return true;
+        if (mode == MidasMode.Permissionless) return true;
 
         if (!_isCreditAccount(caller)) return false;
 
@@ -355,7 +365,7 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
             return false;
         }
 
-        return !checkBorrowerGreenlist || IMidasAccessControl(accessControl).hasRole(GREENLISTED_ROLE, borrower);
+        return mode != MidasMode.Permissioned || IMidasAccessControl(accessControl).hasRole(GREENLISTED_ROLE, borrower);
     }
 
     /// @dev Checks whether `account` implements `IVersion` and has contract type `CREDIT_ACCOUNT`
