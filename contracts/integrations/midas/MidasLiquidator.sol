@@ -18,8 +18,8 @@ import {IMidasLiquidator} from "./interfaces/IMidasLiquidator.sol";
 /// @notice Acts as the transfer master for Midas gateways, enabling redeemer transfers for the duration of a
 ///         liquidation. Unlike RWA integrations that price pending positions differently for collateral valuation
 ///         and liquidation, Midas values pending redemptions identically in both cases, so this contract performs
-///         no collateral/liquidity math and simply forwards the liquidator-supplied calls while the transfer flag
-///         is raised.
+///         no collateral/liquidity math and simply forwards the liquidator-supplied calls while transfers are
+///         unlocked for the liquidated account.
 contract MidasLiquidator is IMidasLiquidator {
     using SafeERC20 for IERC20;
 
@@ -27,10 +27,10 @@ contract MidasLiquidator is IMidasLiquidator {
 
     uint256 public constant override version = 3_11;
 
-    /// @notice Flag indicating whether gateways connected to this liquidator can transfer redeemers
-    /// @dev    For safety, redeemers are only allowed to be transferred when strictly required,
-    ///         i.e. during liquidations.
-    bool public override isTransferAllowed;
+    /// @notice The address of the account that is currently allowed to transfer redeemers.
+    /// @dev For safety, redeemers are only allowed to be transferred when strictly required,
+    ///      i.e. during liquidations, and only by a specific account.
+    address public override transferableRedeemerOwner;
 
     /// @notice Liquidates a credit account that holds pending Midas redemptions
     /// @param creditAccount Credit account to liquidate
@@ -59,9 +59,13 @@ contract MidasLiquidator is IMidasLiquidator {
 
         _forwardCollateral(creditManager, creditFacade, calls);
 
-        isTransferAllowed = true;
+        transferableRedeemerOwner = creditAccount;
         ICreditFacadeV3(creditFacade).liquidateCreditAccount(creditAccount, msg.sender, calls, lossPolicyData);
-        isTransferAllowed = false;
+        transferableRedeemerOwner = address(0);
+    }
+
+    function isTransferAllowed(address redeemerOwner) external view override returns (bool) {
+        return redeemerOwner == transferableRedeemerOwner;
     }
 
     /// @dev Forwards collateral from the liquidator to the credit manager, via this contract

@@ -97,9 +97,14 @@ contract SecuritizeRedemptionGateway is ISecuritizeRedemptionGateway {
         _logRedemptionIfConfigured(msg.sender, redeemer, extraData);
     }
 
+    /// @notice Transfers a redeemer to a new account
+    /// @param redeemer The redeemer to transfer
+    /// @param newAccount The new account to transfer the redeemer to
+    /// @dev Can only be used when account transfers are unlocked for a specific account - usually during liquidations
+    /// @dev The redeemer is removed forever from unclaimed redeemers, which means it can only be transferred once
     function transferRedeemer(address redeemer, address newAccount) external {
         if (
-            !ISecuritizeGatewayTransferMaster(transferMaster).isTransferAllowed()
+            !ISecuritizeGatewayTransferMaster(transferMaster).isTransferAllowed(msg.sender)
                 || !unclaimedRedeemers[msg.sender].contains(redeemer)
         ) {
             revert RedeemerTransferNotAllowedException();
@@ -112,7 +117,6 @@ contract SecuritizeRedemptionGateway is ISecuritizeRedemptionGateway {
         redeemersByAccount[msg.sender].remove(redeemer);
         unclaimedRedeemers[msg.sender].remove(redeemer);
         redeemersByAccount[newAccount].add(redeemer);
-        unclaimedRedeemers[newAccount].add(redeemer);
 
         SecuritizeRedeemer(redeemer).setAccount(newAccount);
     }

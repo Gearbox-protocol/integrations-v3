@@ -180,13 +180,15 @@ contract MidasRedeemerUnitTest is Test {
         assertEq(redeemer6.pendingTokenOutAmount(), 200e6, "Incorrect pending amount");
     }
 
-    /// @notice U:[MID-R-7]: `pendingTokenOutAmount` returns 0 for non-matching conditions
+    /// @notice U:[MID-R-7]: `pendingTokenOutAmount` returns 0 when request is not pending
     function test_U_MID_R_07_pendingTokenOutAmount_returns_zero() public {
         redeemer.requestRedeem(100e18);
 
-        // status == APPROVED (processed)
         vault.setStatus(1, uint8(RedemptionStatus.APPROVED));
-        assertEq(redeemer.pendingTokenOutAmount(), 0, "Should be 0 for processed request");
+        assertEq(redeemer.pendingTokenOutAmount(), 0, "Should be 0 for approved request");
+
+        vault.setStatus(1, uint8(RedemptionStatus.REJECTED));
+        assertEq(redeemer.pendingTokenOutAmount(), 0, "Should be 0 for rejected request");
     }
 
     /// @notice U:[MID-R-8]: `claimableTokenOutAmount` returns the redeemer's token balance
@@ -199,6 +201,7 @@ contract MidasRedeemerUnitTest is Test {
 
     /// @notice U:[MID-R-9]: `withdraw` transfers tokens to account
     function test_U_MID_R_09_withdraw_works() public {
+        redeemer.requestRedeem(100e18);
         deal(tokenOut18, address(redeemer), 100e18);
 
         redeemer.withdraw(40e18);
@@ -209,59 +212,10 @@ contract MidasRedeemerUnitTest is Test {
 
     /// @notice U:[MID-R-10]: `withdraw` reverts on insufficient balance
     function test_U_MID_R_10_withdraw_reverts_on_insufficient_balance() public {
+        redeemer.requestRedeem(100e18);
         deal(tokenOut18, address(redeemer), 10e18);
 
         vm.expectRevert(MidasRedeemer.InsufficientBalanceException.selector);
         redeemer.withdraw(20e18);
-    }
-
-    /// @notice U:[MID-R-11]: `clearCancelledRequest` works as expected
-    function test_U_MID_R_11_clearCancelledRequest_works() public {
-        redeemer.requestRedeem(100e18);
-
-        // status == REJECTED, rates 1.0 => minAmount == 100e18
-        vault.setStatus(1, uint8(RedemptionStatus.REJECTED));
-        vault.setRates(1, 1e18, 1e18);
-
-        deal(tokenOut18, address(this), 100e18);
-        IERC20(tokenOut18).approve(address(redeemer), 100e18);
-
-        redeemer.clearCancelledRequest(100e18);
-
-        assertTrue(redeemer.isManuallyCleared(), "Should be manually cleared");
-        assertEq(IERC20(tokenOut18).balanceOf(address(redeemer)), 100e18, "Redeemer did not receive funds");
-    }
-
-    /// @notice U:[MID-R-12]: `clearCancelledRequest` reverts when request is not cancelled
-    function test_U_MID_R_12_clearCancelledRequest_reverts_when_not_cancelled() public {
-        redeemer.requestRedeem(100e18);
-
-        // status stays 0 (not cancelled)
-        vm.expectRevert(MidasRedeemer.RequestNotCancelledOrManuallyClearedException.selector);
-        redeemer.clearCancelledRequest(100e18);
-    }
-
-    /// @notice U:[MID-R-13]: `clearCancelledRequest` reverts when supplied amount is too low
-    function test_U_MID_R_13_clearCancelledRequest_reverts_when_amount_too_low() public {
-        redeemer.requestRedeem(100e18);
-        vault.setStatus(1, uint8(RedemptionStatus.REJECTED));
-        vault.setRates(1, 1e18, 1e18);
-
-        vm.expectRevert(MidasRedeemer.AmountIsLessThanRequiredException.selector);
-        redeemer.clearCancelledRequest(99e18);
-    }
-
-    /// @notice U:[MID-R-14]: `clearCancelledRequest` reverts when already manually cleared
-    function test_U_MID_R_14_clearCancelledRequest_reverts_when_already_cleared() public {
-        redeemer.requestRedeem(100e18);
-        vault.setStatus(1, uint8(RedemptionStatus.REJECTED));
-        vault.setRates(1, 1e18, 1e18);
-
-        deal(tokenOut18, address(this), 200e18);
-        IERC20(tokenOut18).approve(address(redeemer), 200e18);
-        redeemer.clearCancelledRequest(100e18);
-
-        vm.expectRevert(MidasRedeemer.RequestNotCancelledOrManuallyClearedException.selector);
-        redeemer.clearCancelledRequest(100e18);
     }
 }

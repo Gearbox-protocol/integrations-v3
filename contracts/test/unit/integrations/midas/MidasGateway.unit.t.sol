@@ -259,9 +259,13 @@ contract MidasGatewayUnitTest is Test {
         creditManager.setBorrower(address(account), borrower);
     }
 
-    function _setTransferAllowed(bool allowed) internal {
-        // `MidasLiquidator.isTransferAllowed` is the sole storage variable (slot 0).
-        vm.store(transferMaster, bytes32(uint256(0)), bytes32(uint256(allowed ? 1 : 0)));
+    function _setTransferAllowedFor(address account_) internal {
+        // `MidasLiquidator.transferableRedeemerOwner` is the sole storage variable (slot 0).
+        vm.store(transferMaster, bytes32(uint256(0)), bytes32(uint256(uint160(account_))));
+    }
+
+    function _clearTransferAllowed() internal {
+        vm.store(transferMaster, bytes32(uint256(0)), bytes32(uint256(0)));
     }
 
     /// @notice U:[MID-G-1]: Constructor works as expected
@@ -584,6 +588,7 @@ contract MidasGatewayUnitTest is Test {
     }
 
     /// @notice U:[MID-G-11]: `transferRedeemer` reassigns ownership when allowed
+    /// @dev Transferred redeemers are removed from pending sets (one-time transfer; collateral zeroed for recipient)
     function test_U_MID_G_11_transferRedeemer_works() public {
         uint256 amountMToken = 100e18;
         deal(mToken, address(account), amountMToken);
@@ -593,16 +598,20 @@ contract MidasGatewayUnitTest is Test {
         gateway.requestRedeem(amountMToken, "");
 
         address redeemer = gateway.pendingRedeemers(address(account))[0];
-        _setTransferAllowed(true);
+        _setTransferAllowedFor(address(account));
 
         vm.prank(address(account));
         gateway.transferRedeemer(redeemer, newAccount);
 
-        assertEq(gateway.pendingRedeemers(address(account)).length, 0, "Redeemer still owned by old account");
-        address[] memory newRedeemers = gateway.pendingRedeemers(newAccount);
-        assertEq(newRedeemers.length, 1, "Redeemer not transferred to new account");
-        assertEq(newRedeemers[0], redeemer, "Incorrect redeemer transferred");
+        assertEq(gateway.pendingRedeemers(address(account)).length, 0, "Redeemer still pending for old account");
+        assertEq(gateway.pendingRedeemers(newAccount).length, 0, "Transferred redeemer should not be pending");
         assertEq(MidasRedeemer(redeemer).account(), newAccount, "Redeemer account not updated");
+
+        // Ownership is retained via accountToRedeemers; new owner can withdraw stranded funds.
+        deal(quoteToken, redeemer, 50e18);
+        vm.prank(newAccount);
+        gateway.withdrawFromRedeemer(redeemer, 50e18);
+        assertEq(IERC20(quoteToken).balanceOf(newAccount), 50e18, "New account did not receive quote token");
     }
 
     /// @notice U:[MID-G-12]: `transferRedeemer` reverts when transfer not allowed
@@ -615,7 +624,24 @@ contract MidasGatewayUnitTest is Test {
         gateway.requestRedeem(amountMToken, "");
 
         address redeemer = gateway.pendingRedeemers(address(account))[0];
-        _setTransferAllowed(false);
+        _clearTransferAllowed();
+
+        vm.prank(address(account));
+        vm.expectRevert(IMidasGateway.RedeemerTransferNotAllowedException.selector);
+        gateway.transferRedeemer(redeemer, newAccount);
+    }
+
+    /// @notice U:[MID-G-12A]: `transferRedeemer` reverts when a different account is unlocked
+    function test_U_MID_G_12A_transferRedeemer_reverts_when_other_account_unlocked() public {
+        uint256 amountMToken = 100e18;
+        deal(mToken, address(account), amountMToken);
+        account.approveToken(mToken, address(gateway), amountMToken);
+
+        vm.prank(address(account));
+        gateway.requestRedeem(amountMToken, "");
+
+        address redeemer = gateway.pendingRedeemers(address(account))[0];
+        _setTransferAllowedFor(newAccount);
 
         vm.prank(address(account));
         vm.expectRevert(IMidasGateway.RedeemerTransferNotAllowedException.selector);
@@ -624,11 +650,32 @@ contract MidasGatewayUnitTest is Test {
 
     /// @notice U:[MID-G-13]: `transferRedeemer` reverts when redeemer is not owned by caller
     function test_U_MID_G_13_transferRedeemer_reverts_when_not_owned() public {
-        _setTransferAllowed(true);
+        _setTransferAllowedFor(address(account));
 
         vm.prank(address(account));
         vm.expectRevert(IMidasGateway.RedeemerTransferNotAllowedException.selector);
         gateway.transferRedeemer(makeAddr("UNKNOWN_REDEEMER"), newAccount);
+    }
+
+    /// @notice U:[MID-G-13A]: `transferRedeemer` can only be used once per redeemer
+    function test_U_MID_G_13A_transferRedeemer_can_only_be_used_once() public {
+        uint256 amountMToken = 100e18;
+        deal(mToken, address(account), amountMToken);
+        account.approveToken(mToken, address(gateway), amountMToken);
+
+        vm.prank(address(account));
+        gateway.requestRedeem(amountMToken, "");
+
+        address redeemer = gateway.pendingRedeemers(address(account))[0];
+        _setTransferAllowedFor(address(account));
+
+        vm.prank(address(account));
+        gateway.transferRedeemer(redeemer, newAccount);
+
+        _setTransferAllowedFor(newAccount);
+        vm.prank(newAccount);
+        vm.expectRevert(IMidasGateway.RedeemerTransferNotAllowedException.selector);
+        gateway.transferRedeemer(redeemer, address(account));
     }
 
     /// @notice U:[MID-G-14]: `requestRedeem` reverts after reaching the max pending redeemers

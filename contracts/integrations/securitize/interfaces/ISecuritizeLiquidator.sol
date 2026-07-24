@@ -3,10 +3,11 @@
 // (c) Gearbox Foundation, 2024.
 pragma solidity ^0.8.23;
 
-import {IVersion} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IVersion.sol";
 import {PriceUpdate} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IPriceFeedStore.sol";
 
-interface ISecuritizeLiquidator is IVersion {
+import {ISecuritizeGatewayTransferMaster} from "./ISecuritizeGatewayTransferMaster.sol";
+
+interface ISecuritizeLiquidator is ISecuritizeGatewayTransferMaster {
     error NotValidGatewayException();
     error UnknownCreditAccountException();
     error AccountHasSufficientLiquidityException();

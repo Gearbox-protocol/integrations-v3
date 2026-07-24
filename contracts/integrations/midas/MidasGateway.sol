@@ -253,11 +253,12 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
     /// @notice Transfers a redeemer to a new account
     /// @param redeemer The redeemer to transfer
     /// @param newAccount The new account to transfer the redeemer to
-    /// @dev Can only be used when account transfers are unlocked - usually during liquidations
+    /// @dev Can only be used when account transfers are unlocked for a specific account - usually during liquidations
+    /// @dev The redeemer is removed forever from pending redeemers, which means it can only be transferred once
     function transferRedeemer(address redeemer, address newAccount) external nonReentrant onlyEligibleAccount {
         if (
             !accountToPendingRedeemers[msg.sender].contains(redeemer)
-                || !IMidasTransferMaster(transferMaster).isTransferAllowed()
+                || !IMidasTransferMaster(transferMaster).isTransferAllowed(msg.sender)
         ) {
             revert RedeemerTransferNotAllowedException();
         }
@@ -270,7 +271,6 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
         accountToPendingRedeemers[msg.sender].remove(redeemer);
 
         accountToRedeemers[newAccount].add(redeemer);
-        accountToPendingRedeemers[newAccount].add(redeemer);
 
         MidasRedeemer(redeemer).setAccount(newAccount);
     }

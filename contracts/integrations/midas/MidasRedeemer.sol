@@ -24,12 +24,6 @@ contract MidasRedeemer {
     /// @notice Thrown when attempting to withdraw more tokens than the redeemer has
     error InsufficientBalanceException();
 
-    /// @notice Thrown when attempting to manually clear a non-eligible request
-    error RequestNotCancelledOrManuallyClearedException();
-
-    /// @notice Thrown when attempting to manually clear a request with an amount that is less than required
-    error AmountIsLessThanRequiredException();
-
     /// @notice The account connected to this redeemer
     address public account;
 
@@ -56,9 +50,6 @@ contract MidasRedeemer {
 
     /// @notice The timestamp when the redemption request was started
     uint256 public redemptionStartTimestamp;
-
-    /// @notice Whether this redemption request was manually cleared
-    bool public isManuallyCleared;
 
     modifier whenNotAlreadyRedeemed() {
         if (alreadyRedeemed) revert AlreadyRedeemedException();
@@ -108,7 +99,7 @@ contract MidasRedeemer {
         (,, RedemptionStatus status, uint256 amountMTokenIn,, uint256 tokenOutRate) =
             IMidasRedemptionVault(midasRedemptionVault).redeemRequests(requestId);
 
-        if (status == RedemptionStatus.APPROVED || isManuallyCleared) return 0;
+        if (status != RedemptionStatus.PENDING) return 0;
 
         uint256 mTokenRate = IMidasDataFeed(mTokenDataFeed).getDataInBase18();
 
@@ -118,29 +109,6 @@ contract MidasRedeemer {
     /// @notice Returns the amount of quote token that can be claimed
     function claimableTokenOutAmount() external view returns (uint256) {
         return IERC20(quoteToken).balanceOf(address(this));
-    }
-
-    /// @notice Clears a cancelled redemption request
-    /// @param amount Amount of output token to supply for the request. Must be at least the amount projected when the request was made.
-    /// @dev If Midas rejects a request on accident, this function allows Midas or other interested party
-    ///      to gracefully fulfill the request anyway, by manually supplying the required funds to the gateway.
-    function clearCancelledRequest(uint256 amount) external {
-        (,, RedemptionStatus status, uint256 amountMTokenIn, uint256 mTokenRate, uint256 tokenOutRate) =
-            IMidasRedemptionVault(midasRedemptionVault).redeemRequests(requestId);
-
-        if (status != RedemptionStatus.REJECTED || isManuallyCleared) {
-            revert RequestNotCancelledOrManuallyClearedException();
-        }
-
-        uint256 minAmount = _calculateTokenOutAmount(amountMTokenIn, mTokenRate, tokenOutRate);
-
-        if (amount < minAmount) {
-            revert AmountIsLessThanRequiredException();
-        }
-
-        IERC20(quoteToken).safeTransferFrom(msg.sender, address(this), amount);
-
-        isManuallyCleared = true;
     }
 
     /// @dev Calculates the output token amount from mToken amount and rates

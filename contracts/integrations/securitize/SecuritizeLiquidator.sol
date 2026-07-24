@@ -37,9 +37,9 @@ contract SecuritizeLiquidator is ISecuritizeLiquidator {
     using CreditLogic for CollateralDebtData;
 
     bytes32 public constant override contractType = "RWA_LIQUIDATOR::SECURITIZE";
-    uint256 public constant override version = 3_10;
+    uint256 public constant override version = 3_11;
 
-    bool public isTransferAllowed;
+    address public override transferableRedeemerOwner;
 
     address public immutable securitizeRWAFactory;
 
@@ -109,9 +109,13 @@ contract SecuritizeLiquidator is ISecuritizeLiquidator {
         IERC20(underlying).safeTransferFrom(msg.sender, address(this), underlyingAmount);
         IERC20(underlying).forceApprove(creditManager, underlyingAmount);
 
-        isTransferAllowed = true;
+        transferableRedeemerOwner = creditAccount;
         ICreditFacadeV3(creditFacade).liquidateCreditAccount(creditAccount, creditAccount, calls, lossPolicyData);
-        isTransferAllowed = false;
+        transferableRedeemerOwner = address(0);
+    }
+
+    function isTransferAllowed(address redeemerOwner) external view override returns (bool) {
+        return redeemerOwner == transferableRedeemerOwner;
     }
 
     function _calcCollateralAndLiquidityValues(
