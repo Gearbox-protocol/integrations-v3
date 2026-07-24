@@ -304,7 +304,7 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
     }
 
     /// @notice Returns whether a credit account owner can mint or redeem mTokens
-    function isVerifiedAccount(address account) external view returns (bool) {
+    function isEligibleAccountOwner(address account) external view returns (bool) {
         return mode != MidasMode.Permissioned || IMidasAccessControl(accessControl).hasRole(GREENLISTED_ROLE, account);
     }
 

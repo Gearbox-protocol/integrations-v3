@@ -158,7 +158,7 @@ contract SecuritizeRedemptionGateway is ISecuritizeRedemptionGateway {
     }
 
     /// @notice Returns whether a credit account owner can redeem DS tokens
-    function isVerifiedAccount(address account) external view returns (bool) {
+    function isEligibleAccountOwner(address account) external view returns (bool) {
         return ISecuritizeRegistryService(registryService).isWallet(account);
     }
 

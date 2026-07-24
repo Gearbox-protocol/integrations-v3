@@ -89,6 +89,10 @@ contract SecuritizeRedemptionGatewayMock is ISecuritizeRedemptionGateway {
         address[] memory empty;
         return empty;
     }
+
+    function isEligibleAccountOwner(address) external pure override returns (bool) {
+        return true;
+    }
 }
 
 /// @title Securitize Redemption Gateway adapter unit test

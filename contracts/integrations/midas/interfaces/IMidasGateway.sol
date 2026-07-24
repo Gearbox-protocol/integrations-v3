@@ -110,4 +110,7 @@ interface IMidasGateway is IVersion {
     /// @param account The account to check
     /// @return redeemers The pending redeemers for the account
     function pendingRedeemers(address account) external view returns (address[] memory redeemers);
+
+    /// @notice Returns whether a credit account owner can mint or redeem mTokens
+    function isEligibleAccountOwner(address account) external view returns (bool);
 }
