@@ -114,7 +114,7 @@ contract MidasRedeemerUnitTest is Test {
         assertEq(redeemer.quoteToken(), tokenOut18, "Incorrect quote token");
         assertEq(redeemer.mTokenDataFeed(), address(dataFeed), "Incorrect data feed");
         assertEq(redeemer.account(), account, "Incorrect account");
-        assertFalse(redeemer.alreadyRedeemed(), "Should not be redeemed yet");
+        assertFalse(redeemer.alreadyRequested(), "Should not have requested yet");
 
         vm.expectRevert(MidasRedeemer.CallerNotGatewayException.selector);
         vm.prank(makeAddr("NOT_GATEWAY"));
@@ -126,16 +126,16 @@ contract MidasRedeemerUnitTest is Test {
         redeemer.requestRedeem(100e18);
 
         assertEq(redeemer.requestId(), 1, "Incorrect requestId");
-        assertTrue(redeemer.alreadyRedeemed(), "Should be marked as redeemed");
+        assertTrue(redeemer.alreadyRequested(), "Should be marked as requested");
         assertEq(IERC20(mToken).allowance(address(redeemer), address(vault)), 100e18, "Vault not approved");
         assertEq(redeemer.redemptionStartTimestamp(), block.timestamp, "Incorrect start timestamp");
     }
 
-    /// @notice U:[MID-R-3]: `requestRedeem` reverts if already redeemed
-    function test_U_MID_R_03_requestRedeem_reverts_if_already_redeemed() public {
+    /// @notice U:[MID-R-3]: `requestRedeem` reverts if already requested
+    function test_U_MID_R_03_requestRedeem_reverts_if_already_requested() public {
         redeemer.requestRedeem(100e18);
 
-        vm.expectRevert(MidasRedeemer.AlreadyRedeemedException.selector);
+        vm.expectRevert(MidasRedeemer.AlreadyRequestedException.selector);
         redeemer.requestRedeem(1e18);
     }
 

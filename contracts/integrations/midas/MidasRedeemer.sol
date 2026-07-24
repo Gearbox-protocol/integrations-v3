@@ -18,8 +18,8 @@ contract MidasRedeemer {
     /// @notice Thrown when attempting to call a function from a caller other than the gateway.
     error CallerNotGatewayException();
 
-    /// @notice Thrown when attempting to redeem from a used redeemer
-    error AlreadyRedeemedException();
+    /// @notice Thrown when attempting to request a redemption from a used redeemer
+    error AlreadyRequestedException();
 
     /// @notice Thrown when attempting to withdraw more tokens than the redeemer has
     error InsufficientBalanceException();
@@ -45,14 +45,14 @@ contract MidasRedeemer {
     /// @notice The request ID for the redemption request
     uint256 public requestId;
 
-    /// @notice Whether this redeemer was already used
-    bool public alreadyRedeemed;
+    /// @notice Whether this redeemer already submitted a redemption request
+    bool public alreadyRequested;
 
     /// @notice The timestamp when the redemption request was started
     uint256 public redemptionStartTimestamp;
 
-    modifier whenNotAlreadyRedeemed() {
-        if (alreadyRedeemed) revert AlreadyRedeemedException();
+    modifier whenNotAlreadyRequested() {
+        if (alreadyRequested) revert AlreadyRequestedException();
         _;
     }
 
@@ -79,10 +79,10 @@ contract MidasRedeemer {
 
     /// @notice Requests a redemption of mToken for quote token
     /// @param amountMTokenIn Amount of mToken to redeem
-    function requestRedeem(uint256 amountMTokenIn) external gatewayOnly whenNotAlreadyRedeemed {
+    function requestRedeem(uint256 amountMTokenIn) external gatewayOnly whenNotAlreadyRequested {
         IERC20(mToken).forceApprove(midasRedemptionVault, amountMTokenIn);
         requestId = IMidasRedemptionVault(midasRedemptionVault).redeemRequest(quoteToken, amountMTokenIn);
-        alreadyRedeemed = true;
+        alreadyRequested = true;
         redemptionStartTimestamp = block.timestamp;
         _sweepMToken();
     }

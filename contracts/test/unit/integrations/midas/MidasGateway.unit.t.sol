@@ -260,12 +260,15 @@ contract MidasGatewayUnitTest is Test {
     }
 
     function _setTransferAllowedFor(address account_) internal {
-        // `MidasLiquidator.transferableRedeemerOwner` is the sole storage variable (slot 0).
-        vm.store(transferMaster, bytes32(uint256(0)), bytes32(uint256(uint160(account_))));
+        // Slot 0 packs `ReentrancyGuardTrait._reentrancyStatus` (uint8, NOT_ENTERED = 1) with
+        // `MidasLiquidator.transferableRedeemerOwner` (address).
+        uint256 packed = uint256(uint8(1)) | (uint256(uint160(account_)) << 8);
+        vm.store(transferMaster, bytes32(uint256(0)), bytes32(packed));
     }
 
     function _clearTransferAllowed() internal {
-        vm.store(transferMaster, bytes32(uint256(0)), bytes32(uint256(0)));
+        // Keep `_reentrancyStatus` as NOT_ENTERED and clear the transferable owner.
+        vm.store(transferMaster, bytes32(uint256(0)), bytes32(uint256(uint8(1))));
     }
 
     /// @notice U:[MID-G-1]: Constructor works as expected
@@ -544,7 +547,7 @@ contract MidasGatewayUnitTest is Test {
         assertEq(IERC20(mToken).balanceOf(redeemer), 0, "Redeemer should not retain mToken");
         assertEq(MidasRedeemer(redeemer).account(), address(account), "Redeemer account not set");
         assertEq(MidasRedeemer(redeemer).requestId(), 1, "Request not forwarded to vault");
-        assertTrue(MidasRedeemer(redeemer).alreadyRedeemed(), "Redeemer should be marked as redeemed");
+        assertTrue(MidasRedeemer(redeemer).alreadyRequested(), "Redeemer should be marked as requested");
     }
 
     /// @notice U:[MID-G-9]: `withdraw` pulls funds from fulfilled redeemers

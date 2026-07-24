@@ -5,6 +5,7 @@ pragma solidity ^0.8.23;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {ReentrancyGuardTrait} from "@gearbox-protocol/core-v3/contracts/traits/ReentrancyGuardTrait.sol";
 
 import {ICreditManagerV3} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditManagerV3.sol";
 import {ICreditFacadeV3, MultiCall} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacadeV3.sol";
@@ -20,7 +21,7 @@ import {IMidasLiquidator} from "./interfaces/IMidasLiquidator.sol";
 ///         and liquidation, Midas values pending redemptions identically in both cases, so this contract performs
 ///         no collateral/liquidity math and simply forwards the liquidator-supplied calls while transfers are
 ///         unlocked for the liquidated account.
-contract MidasLiquidator is IMidasLiquidator {
+contract MidasLiquidator is ReentrancyGuardTrait, IMidasLiquidator {
     using SafeERC20 for IERC20;
 
     bytes32 public constant override contractType = "RWA_LIQUIDATOR::MIDAS";
@@ -44,7 +45,7 @@ contract MidasLiquidator is IMidasLiquidator {
         address gateway,
         MultiCall[] calldata calls,
         bytes memory lossPolicyData
-    ) external override {
+    ) external override nonReentrant {
         if (IMidasGateway(gateway).transferMaster() != address(this)) {
             revert NotValidGatewayException();
         }
