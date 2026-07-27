@@ -5,4 +5,5 @@ interface IMidasIssuanceVault {
     function depositInstant(address tokenIn, uint256 amountToken, uint256 minReceiveAmount, bytes32 referrerId) external;
     function mToken() external view returns (address);
     function accessControl() external view returns (address);
+    function greenlistedRole() external view returns (bytes32);
 }

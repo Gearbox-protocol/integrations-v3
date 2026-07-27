@@ -23,7 +23,7 @@ import {MidasRedemptionVaultPhantomToken} from "./MidasRedemptionVaultPhantomTok
 import {ReentrancyGuardTrait} from "@gearbox-protocol/core-v3/contracts/traits/ReentrancyGuardTrait.sol";
 import {IMidasIssuanceVault} from "./interfaces/external/IMidasIssuanceVault.sol";
 import {IMidasRedemptionVault} from "./interfaces/external/IMidasRedemptionVault.sol";
-import {IMidasAccessControl, GREENLISTED_ROLE} from "./interfaces/external/IMidasAccessControl.sol";
+import {IMidasAccessControl, STANDARD_GREENLISTED_ROLE} from "./interfaces/external/IMidasAccessControl.sol";
 import {
     IMidasGateway,
     MidasMode,
@@ -80,6 +80,9 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
 
     /// @notice Address of the redemption logger contract
     address public immutable redemptionLogger;
+
+    /// @notice Identifier of the vaults' greenlisted role in Midas access control
+    bytes32 public immutable greenlistedRole;
 
     /// @notice Mapping of accounts to corresponding redeemer contracts
     mapping(address => EnumerableSet.AddressSet) internal accountToRedeemers;
@@ -144,6 +147,23 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
             revert ArbitraryCAAllowedInPermissionedModeException();
         }
 
+        if (_mode != MidasMode.Permissionless) {
+            try IMidasIssuanceVault(_midasIssuanceVault).greenlistedRole() returns (bytes32 role) {
+                greenlistedRole = role;
+            } catch {
+                greenlistedRole = STANDARD_GREENLISTED_ROLE;
+            }
+            try IMidasRedemptionVault(_midasRedemptionVault).greenlistedRole() returns (bytes32 role) {
+                if (greenlistedRole != role) {
+                    revert IncompatibleGreenlistedRolesException();
+                }
+            } catch {
+                if (greenlistedRole != STANDARD_GREENLISTED_ROLE) {
+                    revert IncompatibleGreenlistedRolesException();
+                }
+            }
+        }
+
         masterRedeemer = address(new MidasRedeemer{salt: SALT}(_midasRedemptionVault, _quoteToken));
         transferMaster = address(new MidasLiquidator{salt: SALT}());
         phantomToken = _withDelayedWithdrawals
@@ -161,48 +181,58 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
     /// @param minReceiveAmount Minimum amount of mToken to receive
     /// @param referrerId Referrer ID
     /// @dev Transfers input token from sender, issues, and transfers mToken back
+    /// @dev In permissioned mode, the gateway may need a greenlist to simply transfer tokens,
+    ///      hence transfers also fall under the greenlist scope.
     function depositInstant(uint256 amountToken, uint256 minReceiveAmount, bytes32 referrerId)
         external
         nonReentrant
         onlyEligibleAccount
     {
+        _grantGreenlistIfRequired(address(this));
+
         IERC20(quoteToken).safeTransferFrom(msg.sender, address(this), amountToken);
         amountToken = IERC20(quoteToken).balanceOf(address(this));
 
         IERC20(quoteToken).forceApprove(midasIssuanceVault, amountToken);
-        _grantGreenlistIfRequired(address(this));
+
         IMidasIssuanceVault(midasIssuanceVault)
             .depositInstant(quoteToken, _convertToE18(amountToken), minReceiveAmount, referrerId);
-        _revokeGreenlistIfRequired(address(this));
 
         _sweepTokens(msg.sender);
+
+        _revokeGreenlistIfRequired(address(this));
     }
 
     /// @notice Performs instant redemption of mToken for quote token
     /// @param amountMTokenIn Amount of mToken to redeem
     /// @param minReceiveAmount Minimum amount of quote token to receive
     /// @dev Transfers mToken from sender, redeems, and transfers quote token back
+    /// @dev In permissioned mode, the gateway may need a greenlist to simply transfer tokens,
+    ///      hence transfers also fall under the greenlist scope.
     function redeemInstant(uint256 amountMTokenIn, uint256 minReceiveAmount) external nonReentrant onlyEligibleAccount {
+        _grantGreenlistIfRequired(address(this));
         IERC20(mToken).safeTransferFrom(msg.sender, address(this), amountMTokenIn);
         amountMTokenIn = IERC20(mToken).balanceOf(address(this));
 
         IERC20(mToken).forceApprove(midasRedemptionVault, amountMTokenIn);
-        _grantGreenlistIfRequired(address(this));
         IMidasRedemptionVault(midasRedemptionVault)
             .redeemInstant(quoteToken, amountMTokenIn, _convertToE18(minReceiveAmount));
-        _revokeGreenlistIfRequired(address(this));
 
         _sweepTokens(msg.sender);
+
+        _revokeGreenlistIfRequired(address(this));
     }
 
     /// @notice Requests a redemption of mToken for quote token
     /// @param amountMTokenIn Amount of mToken to redeem
     /// @param extraData Additional redemption data to log
+    /// @dev In permissioned mode, the gateway may need a greenlist to simply transfer tokens,
+    ///      hence transfers also fall under the greenlist scope.
     function requestRedeem(uint256 amountMTokenIn, bytes calldata extraData) external nonReentrant onlyEligibleAccount {
         address redeemer = _makeNewRedeemerForAccount(msg.sender);
-        IERC20(mToken).safeTransferFrom(msg.sender, redeemer, amountMTokenIn);
 
         _grantGreenlistIfRequired(redeemer);
+        IERC20(mToken).safeTransferFrom(msg.sender, redeemer, amountMTokenIn);
         MidasRedeemer(redeemer).requestRedeem(amountMTokenIn);
         _revokeGreenlistIfRequired(redeemer);
 
@@ -267,7 +297,7 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
             revert RedeemerTransferNotAllowedException();
         }
 
-        if (mode == MidasMode.Permissioned && !IMidasAccessControl(accessControl).hasRole(GREENLISTED_ROLE, newAccount))
+        if (mode == MidasMode.Permissioned && !IMidasAccessControl(accessControl).hasRole(greenlistedRole, newAccount))
         {
             revert NewAccountNotGreenlistedException();
         }
@@ -278,6 +308,17 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
         accountToRedeemers[newAccount].add(redeemer);
 
         MidasRedeemer(redeemer).setAccount(newAccount);
+    }
+
+    /// @notice Gives an account a greenlisted role
+    /// @dev Some permissioned Midas tokens may require a greenlist for transfers,
+    ///      this function allows an eligible account to give itself a greenlisted role.
+    function receiveGreenlist() external nonReentrant onlyEligibleAccount {
+        if (mode != MidasMode.Permissioned) {
+            revert GreenlistRequestedInNonPermissionedModeException();
+        }
+
+        _grantGreenlistIfRequired(msg.sender);
     }
 
     /// @notice Returns the pending and claimable amounts of quote token for an account, for all currently counted redeemers
@@ -305,7 +346,7 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
 
     /// @notice Returns whether a credit account owner can mint or redeem mTokens
     function isEligibleAccountOwner(address account) external view returns (bool) {
-        return mode != MidasMode.Permissioned || IMidasAccessControl(accessControl).hasRole(GREENLISTED_ROLE, account);
+        return mode != MidasMode.Permissioned || IMidasAccessControl(accessControl).hasRole(greenlistedRole, account);
     }
 
     /// @dev Internal function to get the redeemer for an account, or create a new one if it doesn't exist
@@ -365,7 +406,7 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
             return false;
         }
 
-        return mode != MidasMode.Permissioned || IMidasAccessControl(accessControl).hasRole(GREENLISTED_ROLE, borrower);
+        return mode != MidasMode.Permissioned || IMidasAccessControl(accessControl).hasRole(greenlistedRole, borrower);
     }
 
     /// @dev Checks whether `account` implements `IVersion` and has contract type `CREDIT_ACCOUNT`
@@ -387,11 +428,15 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
 
     /// @dev Grants the GREENLISTED_ROLE to an account if the Midas access control is set
     function _grantGreenlistIfRequired(address account) internal {
-        if (accessControl != address(0)) IMidasAccessControl(accessControl).grantRole(GREENLISTED_ROLE, account);
+        if (accessControl != address(0)) {
+            IMidasAccessControl(accessControl).grantRole(greenlistedRole, account);
+        }
     }
 
     /// @dev Grants the GREENLISTED_ROLE to an account if the Midas access control is not set
     function _revokeGreenlistIfRequired(address account) internal {
-        if (accessControl != address(0)) IMidasAccessControl(accessControl).revokeRole(GREENLISTED_ROLE, account);
+        if (accessControl != address(0)) {
+            IMidasAccessControl(accessControl).revokeRole(greenlistedRole, account);
+        }
     }
 }

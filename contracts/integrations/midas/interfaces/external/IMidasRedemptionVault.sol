@@ -26,4 +26,5 @@ interface IMidasRedemptionVault {
 
     function mTokenDataFeed() external view returns (address);
     function accessControl() external view returns (address);
+    function greenlistedRole() external view returns (bytes32);
 }

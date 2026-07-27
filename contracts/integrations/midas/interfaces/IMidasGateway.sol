@@ -45,6 +45,10 @@ interface IMidasGateway is IVersion {
     /// @dev Thrown when attempting to create a gateway for a non-permissionless mode that allows arbitrary accounts
     ///      to interact with it
     error ArbitraryCAAllowedInPermissionedModeException();
+    /// @dev Thrown when attempting to create a gateway when vaults' greenlisted role identifiers differ
+    error IncompatibleGreenlistedRolesException();
+    /// @dev Thrown when attempting to request a greenlist in a non-permissioned mode
+    error GreenlistRequestedInNonPermissionedModeException();
 
     /// @notice Address of the mToken
     function mToken() external view returns (address);
@@ -66,6 +70,9 @@ interface IMidasGateway is IVersion {
 
     /// @notice Address of the redemption logger contract
     function redemptionLogger() external view returns (address);
+
+    /// @notice Identifier of the vaults' greenlisted role in Midas access control
+    function greenlistedRole() external view returns (bytes32);
 
     /// @notice Performs instant issuance of mToken for quote token
     /// @param amountToken Amount of quote token to deposit
@@ -96,6 +103,9 @@ interface IMidasGateway is IVersion {
     /// @param redeemer The redeemer to transfer
     /// @param newAccount The new account to transfer the redeemer to
     function transferRedeemer(address redeemer, address newAccount) external;
+
+    /// @notice Grants the greenlisted role to the calling eligible credit account
+    function receiveGreenlist() external;
 
     /// @notice Returns the pending and claimable amounts of quote token for an account, across all counted redeemers
     /// @param account Account to check

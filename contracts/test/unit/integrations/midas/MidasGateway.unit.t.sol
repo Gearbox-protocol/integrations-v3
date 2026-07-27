@@ -12,6 +12,7 @@ import {MidasGateway} from "../../../../integrations/midas/MidasGateway.sol";
 import {MidasRedeemer} from "../../../../integrations/midas/MidasRedeemer.sol";
 import {MidasRedemptionVaultPhantomToken} from "../../../../integrations/midas/MidasRedemptionVaultPhantomToken.sol";
 import {IMidasGateway, MidasMode} from "../../../../integrations/midas/interfaces/IMidasGateway.sol";
+import {STANDARD_GREENLISTED_ROLE} from "../../../../integrations/midas/interfaces/external/IMidasAccessControl.sol";
 import {RedemptionLogger} from "../../../../integrations/common/RedemptionLogger.sol";
 import {
     IRedemptionLogger,
@@ -32,6 +33,9 @@ contract MidasIssuanceVaultMock {
     address public accessControl;
     uint256 public mTokenAmountOut;
 
+    bool internal _supportsGreenlistedRole;
+    bytes32 internal _greenlistedRole;
+
     constructor(address _mToken) {
         mToken = _mToken;
     }
@@ -42,6 +46,21 @@ contract MidasIssuanceVaultMock {
 
     function setAccessControl(address accessControl_) external {
         accessControl = accessControl_;
+    }
+
+    function setGreenlistedRole(bytes32 role) external {
+        _supportsGreenlistedRole = true;
+        _greenlistedRole = role;
+    }
+
+    function clearGreenlistedRole() external {
+        _supportsGreenlistedRole = false;
+        _greenlistedRole = bytes32(0);
+    }
+
+    function greenlistedRole() external view returns (bytes32) {
+        if (!_supportsGreenlistedRole) revert("greenlistedRole unsupported");
+        return _greenlistedRole;
     }
 
     function depositInstant(address tokenIn, uint256 amountToken, uint256, bytes32) external {
@@ -76,6 +95,9 @@ contract MidasRedemptionVaultMock {
     uint256 public currentRequestId;
     mapping(uint256 => Request) internal _requests;
 
+    bool internal _supportsGreenlistedRole;
+    bytes32 internal _greenlistedRole;
+
     constructor(address _mToken, address _mTokenDataFeed) {
         mToken = _mToken;
         mTokenDataFeed = _mTokenDataFeed;
@@ -87,6 +109,21 @@ contract MidasRedemptionVaultMock {
 
     function setAccessControl(address accessControl_) external {
         accessControl = accessControl_;
+    }
+
+    function setGreenlistedRole(bytes32 role) external {
+        _supportsGreenlistedRole = true;
+        _greenlistedRole = role;
+    }
+
+    function clearGreenlistedRole() external {
+        _supportsGreenlistedRole = false;
+        _greenlistedRole = bytes32(0);
+    }
+
+    function greenlistedRole() external view returns (bytes32) {
+        if (!_supportsGreenlistedRole) revert("greenlistedRole unsupported");
+        return _greenlistedRole;
     }
 
     function redeemInstant(address tokenOut, uint256 amountMTokenIn, uint256) external {
@@ -369,6 +406,7 @@ contract MidasGatewayUnitTest is Test {
 
         assertEq(controlledGateway.accessControl(), accessControl, "Incorrect access control");
         assertTrue(uint8(controlledGateway.mode()) == uint8(MidasMode.RestrictedInterface), "Incorrect mode");
+        assertEq(controlledGateway.greenlistedRole(), STANDARD_GREENLISTED_ROLE, "Should fall back to standard role");
         assertEq(
             controlledGateway.allowedMarketConfigurator(), address(marketConfigurator), "Incorrect market configurator"
         );
@@ -728,11 +766,215 @@ contract MidasGatewayUnitTest is Test {
         assertEq(log.extraData, extraData, "Incorrect logged extraData");
     }
 
+    /// @notice U:[MID-G-16]: Constructor reads matching custom greenlisted roles from vaults
+    function test_U_MID_G_16_constructor_reads_matching_greenlisted_roles() public {
+        bytes32 customRole = keccak256("CUSTOM_GREENLISTED_ROLE");
+        address accessControl = makeAddr("ACCESS_CONTROL");
+        issuanceVault.setAccessControl(accessControl);
+        redemptionVault.setAccessControl(accessControl);
+        issuanceVault.setGreenlistedRole(customRole);
+        redemptionVault.setGreenlistedRole(customRole);
+
+        ContractsRegisterMock contractsRegister = new ContractsRegisterMock();
+        MarketConfiguratorMock marketConfigurator = new MarketConfiguratorMock(address(contractsRegister));
+
+        MidasGateway controlledGateway = new MidasGateway(
+            address(issuanceVault),
+            address(redemptionVault),
+            quoteToken,
+            MidasMode.RestrictedInterface,
+            address(marketConfigurator),
+            REDEMPTION_DURATION,
+            true,
+            address(addressProvider)
+        );
+
+        assertEq(controlledGateway.greenlistedRole(), customRole, "Incorrect greenlisted role");
+    }
+
+    /// @notice U:[MID-G-17]: Constructor reverts when vault greenlisted roles differ
+    function test_U_MID_G_17_constructor_reverts_on_incompatible_greenlisted_roles() public {
+        address accessControl = makeAddr("ACCESS_CONTROL");
+        issuanceVault.setAccessControl(accessControl);
+        redemptionVault.setAccessControl(accessControl);
+        issuanceVault.setGreenlistedRole(keccak256("ROLE_A"));
+        redemptionVault.setGreenlistedRole(keccak256("ROLE_B"));
+
+        ContractsRegisterMock contractsRegister = new ContractsRegisterMock();
+        MarketConfiguratorMock marketConfigurator = new MarketConfiguratorMock(address(contractsRegister));
+
+        vm.expectRevert(IMidasGateway.IncompatibleGreenlistedRolesException.selector);
+        new MidasGateway(
+            address(issuanceVault),
+            address(redemptionVault),
+            quoteToken,
+            MidasMode.RestrictedInterface,
+            address(marketConfigurator),
+            REDEMPTION_DURATION,
+            true,
+            address(addressProvider)
+        );
+    }
+
+    /// @notice U:[MID-G-18]: Constructor reverts when only one vault exposes a custom greenlisted role
+    function test_U_MID_G_18_constructor_reverts_when_only_one_vault_exposes_greenlisted_role() public {
+        address accessControl = makeAddr("ACCESS_CONTROL");
+        issuanceVault.setAccessControl(accessControl);
+        redemptionVault.setAccessControl(accessControl);
+        issuanceVault.setGreenlistedRole(keccak256("CUSTOM_GREENLISTED_ROLE"));
+        // redemption vault leaves greenlistedRole unsupported => falls back to STANDARD
+
+        ContractsRegisterMock contractsRegister = new ContractsRegisterMock();
+        MarketConfiguratorMock marketConfigurator = new MarketConfiguratorMock(address(contractsRegister));
+
+        vm.expectRevert(IMidasGateway.IncompatibleGreenlistedRolesException.selector);
+        new MidasGateway(
+            address(issuanceVault),
+            address(redemptionVault),
+            quoteToken,
+            MidasMode.RestrictedInterface,
+            address(marketConfigurator),
+            REDEMPTION_DURATION,
+            true,
+            address(addressProvider)
+        );
+    }
+
+    /// @notice U:[MID-G-19]: `receiveGreenlist` grants the greenlisted role in Permissioned mode
+    function test_U_MID_G_19_receiveGreenlist_works_in_permissioned_mode() public {
+        (
+            MidasGateway permissionedGateway,
+            ContractsRegisterMock contractsRegister,
+            MidasAccessControlMock accessControl
+        ) = _deployAccessControlledGatewayWithAC(MidasMode.Permissioned);
+        contractsRegister.setCreditManager(address(creditManager), true);
+        accessControl.grantRole(STANDARD_GREENLISTED_ROLE, borrower);
+
+        assertFalse(accessControl.hasRole(STANDARD_GREENLISTED_ROLE, address(account)), "Account already greenlisted");
+
+        vm.prank(address(account));
+        permissionedGateway.receiveGreenlist();
+
+        assertTrue(accessControl.hasRole(STANDARD_GREENLISTED_ROLE, address(account)), "Account not greenlisted");
+    }
+
+    /// @notice U:[MID-G-20]: `receiveGreenlist` reverts outside Permissioned mode
+    function test_U_MID_G_20_receiveGreenlist_reverts_in_non_permissioned_mode() public {
+        (MidasGateway restrictedGateway, ContractsRegisterMock contractsRegister,) =
+            _deployAccessControlledGatewayWithAC(MidasMode.RestrictedInterface);
+        contractsRegister.setCreditManager(address(creditManager), true);
+
+        vm.prank(address(account));
+        vm.expectRevert(IMidasGateway.GreenlistRequestedInNonPermissionedModeException.selector);
+        restrictedGateway.receiveGreenlist();
+
+        vm.prank(address(account));
+        vm.expectRevert(IMidasGateway.GreenlistRequestedInNonPermissionedModeException.selector);
+        gateway.receiveGreenlist();
+    }
+
+    /// @notice U:[MID-G-21]: `isEligibleAccountOwner` reflects Permissioned greenlist requirements
+    function test_U_MID_G_21_isEligibleAccountOwner_works() public {
+        assertTrue(gateway.isEligibleAccountOwner(borrower), "Permissionless owners should be eligible");
+
+        (MidasGateway restrictedGateway,,) = _deployAccessControlledGatewayWithAC(MidasMode.RestrictedInterface);
+        assertTrue(restrictedGateway.isEligibleAccountOwner(borrower), "RestrictedInterface owners should be eligible");
+
+        (MidasGateway permissionedGateway,, MidasAccessControlMock accessControl) =
+            _deployAccessControlledGatewayWithAC(MidasMode.Permissioned);
+        assertFalse(
+            permissionedGateway.isEligibleAccountOwner(borrower), "Permissioned owner should not be eligible yet"
+        );
+
+        accessControl.grantRole(STANDARD_GREENLISTED_ROLE, borrower);
+        assertTrue(permissionedGateway.isEligibleAccountOwner(borrower), "Greenlisted owner should be eligible");
+    }
+
+    /// @notice U:[MID-G-22]: Permissioned mode rejects non-greenlisted borrowers
+    function test_U_MID_G_22_permissioned_mode_reverts_for_non_greenlisted_borrower() public {
+        (MidasGateway permissionedGateway, ContractsRegisterMock contractsRegister,) =
+            _deployAccessControlledGatewayWithAC(MidasMode.Permissioned);
+        contractsRegister.setCreditManager(address(creditManager), true);
+
+        deal(quoteToken, address(account), 1e18);
+        account.approveToken(quoteToken, address(permissionedGateway), 1e18);
+
+        vm.prank(address(account));
+        vm.expectRevert(IMidasGateway.CreditAccountNotEligibleException.selector);
+        permissionedGateway.depositInstant(1e18, 0, bytes32(0));
+    }
+
+    /// @notice U:[MID-G-23]: `transferRedeemer` reverts when new account is not greenlisted in Permissioned mode
+    function test_U_MID_G_23_transferRedeemer_reverts_when_new_account_not_greenlisted() public {
+        (
+            MidasGateway permissionedGateway,
+            ContractsRegisterMock contractsRegister,
+            MidasAccessControlMock accessControl
+        ) = _deployAccessControlledGatewayWithAC(MidasMode.Permissioned);
+        contractsRegister.setCreditManager(address(creditManager), true);
+        accessControl.grantRole(STANDARD_GREENLISTED_ROLE, borrower);
+
+        uint256 amountMToken = 100e18;
+        deal(mToken, address(account), amountMToken);
+        account.approveToken(mToken, address(permissionedGateway), amountMToken);
+
+        vm.prank(address(account));
+        permissionedGateway.requestRedeem(amountMToken, "");
+
+        address redeemer = permissionedGateway.pendingRedeemers(address(account))[0];
+        // Slot 0 packs reentrancy status with transferableRedeemerOwner on the liquidator.
+        uint256 packed = uint256(uint8(1)) | (uint256(uint160(address(account))) << 8);
+        vm.store(permissionedGateway.transferMaster(), bytes32(uint256(0)), bytes32(packed));
+
+        vm.prank(address(account));
+        vm.expectRevert(IMidasGateway.NewAccountNotGreenlistedException.selector);
+        permissionedGateway.transferRedeemer(redeemer, newAccount);
+    }
+
+    /// @notice U:[MID-G-24]: Instant operations grant and revoke the gateway greenlist around the vault call
+    function test_U_MID_G_24_depositInstant_grants_and_revokes_greenlist() public {
+        (
+            MidasGateway controlledGateway,
+            ContractsRegisterMock contractsRegister,
+            MidasAccessControlMock accessControl
+        ) = _deployAccessControlledGatewayWithAC(MidasMode.RestrictedInterface);
+        contractsRegister.setCreditManager(address(creditManager), true);
+
+        uint256 amountIn = 1000e18;
+        uint256 mTokenOut = 950e18;
+        deal(quoteToken, address(account), amountIn);
+        account.approveToken(quoteToken, address(controlledGateway), amountIn);
+        deal(mToken, address(issuanceVault), mTokenOut);
+        issuanceVault.setMTokenAmountOut(mTokenOut);
+
+        assertFalse(accessControl.hasRole(STANDARD_GREENLISTED_ROLE, address(controlledGateway)));
+
+        vm.prank(address(account));
+        controlledGateway.depositInstant(amountIn, 0, bytes32(0));
+
+        assertFalse(
+            accessControl.hasRole(STANDARD_GREENLISTED_ROLE, address(controlledGateway)),
+            "Gateway greenlist should be revoked after deposit"
+        );
+        assertEq(IERC20(mToken).balanceOf(address(account)), mTokenOut, "Account did not receive mToken");
+    }
+
     function _deployAccessControlledGateway(MidasMode mode_)
         internal
         returns (MidasGateway controlledGateway, ContractsRegisterMock contractsRegister)
     {
-        MidasAccessControlMock accessControl = new MidasAccessControlMock();
+        (controlledGateway, contractsRegister,) = _deployAccessControlledGatewayWithAC(mode_);
+    }
+
+    function _deployAccessControlledGatewayWithAC(MidasMode mode_)
+        internal
+        returns (
+            MidasGateway controlledGateway,
+            ContractsRegisterMock contractsRegister,
+            MidasAccessControlMock accessControl
+        )
+    {
+        accessControl = new MidasAccessControlMock();
         issuanceVault.setAccessControl(address(accessControl));
         redemptionVault.setAccessControl(address(accessControl));
 
