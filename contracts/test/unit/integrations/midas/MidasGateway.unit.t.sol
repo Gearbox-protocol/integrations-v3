@@ -10,6 +10,7 @@ import {ERC20Mock} from "@gearbox-protocol/core-v3/contracts/test/mocks/token/ER
 
 import {MidasGateway} from "../../../../integrations/midas/MidasGateway.sol";
 import {MidasRedeemer} from "../../../../integrations/midas/MidasRedeemer.sol";
+import {MidasSwapper} from "../../../../integrations/midas/MidasSwapper.sol";
 import {MidasRedemptionVaultPhantomToken} from "../../../../integrations/midas/MidasRedemptionVaultPhantomToken.sol";
 import {IMidasGateway, MidasMode} from "../../../../integrations/midas/interfaces/IMidasGateway.sol";
 import {STANDARD_GREENLISTED_ROLE} from "../../../../integrations/midas/interfaces/external/IMidasAccessControl.sol";
@@ -327,6 +328,7 @@ contract MidasGatewayUnitTest is Test {
         assertEq(gateway.expectedRedemptionDuration(), REDEMPTION_DURATION, "Incorrect redemption duration");
         assertEq(gateway.redemptionLogger(), address(0), "Incorrect redemption logger");
         assertTrue(gateway.masterRedeemer() != address(0), "Master redeemer not set");
+        assertTrue(gateway.masterSwapper() != address(0), "Master swapper not set");
     }
 
     /// @notice U:[MID-G-1A]: Phantom token deployed in constructor has correct parameters
@@ -467,7 +469,7 @@ contract MidasGatewayUnitTest is Test {
         );
     }
 
-    /// @notice U:[MID-G-4]: `depositInstant` issues mToken to the account
+    /// @notice U:[MID-G-4]: `depositInstant` issues mToken to the account via a reusable swapper
     function test_U_MID_G_04_depositInstant_works() public {
         uint256 amountIn = 1000e18;
         uint256 mTokenOut = 950e18;
@@ -480,12 +482,17 @@ contract MidasGatewayUnitTest is Test {
         vm.prank(address(account));
         gateway.depositInstant(amountIn, 0, bytes32(0));
 
+        address swapper = gateway.accountToSwapper(address(account));
+        assertTrue(swapper != address(0), "Swapper not created");
+        assertEq(MidasSwapper(swapper).account(), address(account), "Incorrect swapper account");
         assertEq(IERC20(mToken).balanceOf(address(account)), mTokenOut, "Account did not receive mToken");
         assertEq(IERC20(quoteToken).balanceOf(address(issuanceVault)), amountIn, "Vault did not receive quote token");
         assertEq(IERC20(mToken).balanceOf(address(gateway)), 0, "mToken stuck in gateway");
+        assertEq(IERC20(mToken).balanceOf(swapper), 0, "mToken stuck in swapper");
+        assertEq(IERC20(quoteToken).balanceOf(swapper), 0, "Quote token stuck in swapper");
     }
 
-    /// @notice U:[MID-G-5]: `redeemInstant` redeems mToken for output token
+    /// @notice U:[MID-G-5]: `redeemInstant` redeems mToken for output token via a reusable swapper
     function test_U_MID_G_05_redeemInstant_works() public {
         uint256 amountMToken = 100e18;
         uint256 amountQuoteToken = 99e18;
@@ -498,11 +505,14 @@ contract MidasGatewayUnitTest is Test {
         vm.prank(address(account));
         gateway.redeemInstant(amountMToken, 0);
 
+        address swapper = gateway.accountToSwapper(address(account));
+        assertTrue(swapper != address(0), "Swapper not created");
         assertEq(
             IERC20(quoteToken).balanceOf(address(account)), amountQuoteToken, "Account did not receive quote token"
         );
         assertEq(IERC20(mToken).balanceOf(address(redemptionVault)), amountMToken, "Vault did not receive mToken");
         assertEq(IERC20(quoteToken).balanceOf(address(gateway)), 0, "Quote token stuck in gateway");
+        assertEq(IERC20(quoteToken).balanceOf(swapper), 0, "Quote token stuck in swapper");
     }
 
     /// @notice U:[MID-G-6]: Non-access-controlled gateways accept any caller
@@ -931,8 +941,8 @@ contract MidasGatewayUnitTest is Test {
         permissionedGateway.transferRedeemer(redeemer, newAccount);
     }
 
-    /// @notice U:[MID-G-24]: Instant operations grant and revoke the gateway greenlist around the vault call
-    function test_U_MID_G_24_depositInstant_grants_and_revokes_greenlist() public {
+    /// @notice U:[MID-G-24]: Instant operations grant the swapper greenlist once and never revoke it
+    function test_U_MID_G_24_depositInstant_grants_greenlist_permanently() public {
         (
             MidasGateway controlledGateway,
             ContractsRegisterMock contractsRegister,
@@ -942,21 +952,200 @@ contract MidasGatewayUnitTest is Test {
 
         uint256 amountIn = 1000e18;
         uint256 mTokenOut = 950e18;
-        deal(quoteToken, address(account), amountIn);
-        account.approveToken(quoteToken, address(controlledGateway), amountIn);
-        deal(mToken, address(issuanceVault), mTokenOut);
+        deal(quoteToken, address(account), amountIn * 2);
+        account.approveToken(quoteToken, address(controlledGateway), amountIn * 2);
+        deal(mToken, address(issuanceVault), mTokenOut * 2);
         issuanceVault.setMTokenAmountOut(mTokenOut);
-
-        assertFalse(accessControl.hasRole(STANDARD_GREENLISTED_ROLE, address(controlledGateway)));
 
         vm.prank(address(account));
         controlledGateway.depositInstant(amountIn, 0, bytes32(0));
 
-        assertFalse(
-            accessControl.hasRole(STANDARD_GREENLISTED_ROLE, address(controlledGateway)),
-            "Gateway greenlist should be revoked after deposit"
+        address swapper = controlledGateway.accountToSwapper(address(account));
+        assertTrue(
+            accessControl.hasRole(STANDARD_GREENLISTED_ROLE, swapper),
+            "Swapper should be greenlisted after first deposit"
         );
-        assertEq(IERC20(mToken).balanceOf(address(account)), mTokenOut, "Account did not receive mToken");
+
+        vm.prank(address(account));
+        controlledGateway.depositInstant(amountIn, 0, bytes32(0));
+
+        assertTrue(accessControl.hasRole(STANDARD_GREENLISTED_ROLE, swapper), "Swapper greenlist should not be revoked");
+        assertEq(IERC20(mToken).balanceOf(address(account)), mTokenOut * 2, "Account did not receive mToken");
+    }
+
+    /// @notice U:[MID-G-24A]: Redeemers are greenlisted once on creation and never revoked
+    function test_U_MID_G_24A_requestRedeem_grants_greenlist_permanently() public {
+        (
+            MidasGateway controlledGateway,
+            ContractsRegisterMock contractsRegister,
+            MidasAccessControlMock accessControl
+        ) = _deployAccessControlledGatewayWithAC(MidasMode.RestrictedInterface);
+        contractsRegister.setCreditManager(address(creditManager), true);
+
+        uint256 amountMToken = 100e18;
+        deal(mToken, address(account), amountMToken);
+        account.approveToken(mToken, address(controlledGateway), amountMToken);
+
+        vm.prank(address(account));
+        controlledGateway.requestRedeem(amountMToken, "");
+
+        address redeemer = controlledGateway.pendingRedeemers(address(account))[0];
+        assertTrue(
+            accessControl.hasRole(STANDARD_GREENLISTED_ROLE, redeemer), "Redeemer should be greenlisted after request"
+        );
+
+        deal(quoteToken, redeemer, 50e18);
+        redemptionVault.setStatus(1, 1);
+        vm.prank(address(account));
+        controlledGateway.withdraw(50e18);
+
+        assertTrue(
+            accessControl.hasRole(STANDARD_GREENLISTED_ROLE, redeemer),
+            "Redeemer greenlist should not be revoked after withdraw"
+        );
+    }
+
+    /// @notice U:[MID-G-25]: Instant operations reuse a single swapper per account
+    function test_U_MID_G_25_instant_operations_reuse_swapper() public {
+        uint256 amountIn = 1000e18;
+        uint256 mTokenOut = 950e18;
+
+        deal(quoteToken, address(account), amountIn * 2);
+        account.approveToken(quoteToken, address(gateway), amountIn * 2);
+        deal(mToken, address(issuanceVault), mTokenOut * 2);
+        issuanceVault.setMTokenAmountOut(mTokenOut);
+
+        vm.prank(address(account));
+        gateway.depositInstant(amountIn, 0, bytes32(0));
+        address swapper = gateway.accountToSwapper(address(account));
+
+        vm.prank(address(account));
+        gateway.depositInstant(amountIn, 0, bytes32(0));
+
+        assertEq(gateway.accountToSwapper(address(account)), swapper, "Swapper should be reused");
+        assertEq(IERC20(mToken).balanceOf(address(account)), mTokenOut * 2, "Incorrect cumulative mToken balance");
+    }
+
+    /// @notice U:[MID-G-26]: `withdrawFromSwapper` recovers stranded tokens
+    function test_U_MID_G_26_withdrawFromSwapper_works() public {
+        uint256 amountIn = 1000e18;
+        uint256 mTokenOut = 950e18;
+
+        deal(quoteToken, address(account), amountIn);
+        account.approveToken(quoteToken, address(gateway), amountIn);
+        deal(mToken, address(issuanceVault), mTokenOut);
+        issuanceVault.setMTokenAmountOut(mTokenOut);
+
+        vm.prank(address(account));
+        gateway.depositInstant(amountIn, 0, bytes32(0));
+
+        address swapper = gateway.accountToSwapper(address(account));
+        address otherToken = address(new ERC20Mock("OTHER", "OTHER", 18));
+        deal(otherToken, swapper, 42e18);
+
+        vm.prank(address(account));
+        gateway.withdrawFromSwapper(otherToken);
+
+        assertEq(IERC20(otherToken).balanceOf(address(account)), 42e18, "Account did not receive stranded token");
+        assertEq(IERC20(otherToken).balanceOf(swapper), 0, "Token should be fully swept from swapper");
+    }
+
+    /// @notice U:[MID-G-27]: `withdrawFromSwapper` reverts when swapper is not set
+    function test_U_MID_G_27_withdrawFromSwapper_reverts_when_not_set() public {
+        vm.prank(address(account));
+        vm.expectRevert(IMidasGateway.SwapperNotSetException.selector);
+        gateway.withdrawFromSwapper(quoteToken);
+    }
+
+    /// @notice U:[MID-G-28]: Instant deposit uses only the transferred balance delta as vault input
+    function test_U_MID_G_28_depositInstant_uses_balance_delta_only() public {
+        uint256 preexisting = 100e18;
+        uint256 amountIn = 1000e18;
+        uint256 mTokenOut = 950e18;
+
+        // Create the swapper first
+        deal(quoteToken, address(account), amountIn);
+        account.approveToken(quoteToken, address(gateway), type(uint256).max);
+        deal(mToken, address(issuanceVault), mTokenOut * 2);
+        issuanceVault.setMTokenAmountOut(mTokenOut);
+
+        vm.prank(address(account));
+        gateway.depositInstant(amountIn, 0, bytes32(0));
+
+        address swapper = gateway.accountToSwapper(address(account));
+        deal(quoteToken, swapper, preexisting);
+
+        deal(quoteToken, address(account), amountIn);
+        vm.prank(address(account));
+        gateway.depositInstant(amountIn, 0, bytes32(0));
+
+        // Vault should have received only the two explicit deposits, not the preexisting airdrop as input.
+        // First deposit: amountIn; second: amountIn. Preexisting is swept to the account after the second op.
+        assertEq(
+            IERC20(quoteToken).balanceOf(address(issuanceVault)),
+            amountIn * 2,
+            "Vault should not consume preexisting swapper balance"
+        );
+        assertEq(
+            IERC20(quoteToken).balanceOf(address(account)),
+            preexisting,
+            "Preexisting quote balance should be swept to account"
+        );
+        assertEq(IERC20(quoteToken).balanceOf(swapper), 0, "Quote should not remain on swapper");
+    }
+
+    /// @notice U:[MID-G-29]: Instant redeem uses only the transferred balance delta as vault input
+    function test_U_MID_G_29_redeemInstant_uses_balance_delta_only() public {
+        uint256 preexisting = 25e18;
+        uint256 amountMToken = 100e18;
+        uint256 amountQuoteToken = 99e18;
+
+        deal(mToken, address(account), amountMToken);
+        account.approveToken(mToken, address(gateway), type(uint256).max);
+        deal(quoteToken, address(redemptionVault), amountQuoteToken * 2);
+        redemptionVault.setTokenOutAmount(amountQuoteToken);
+
+        vm.prank(address(account));
+        gateway.redeemInstant(amountMToken, 0);
+
+        address swapper = gateway.accountToSwapper(address(account));
+        deal(mToken, swapper, preexisting);
+
+        deal(mToken, address(account), amountMToken);
+        vm.prank(address(account));
+        gateway.redeemInstant(amountMToken, 0);
+
+        assertEq(
+            IERC20(mToken).balanceOf(address(redemptionVault)),
+            amountMToken * 2,
+            "Vault should not consume preexisting swapper balance"
+        );
+        assertEq(
+            IERC20(mToken).balanceOf(address(account)),
+            preexisting,
+            "Preexisting mToken balance should be swept to account"
+        );
+        assertEq(IERC20(mToken).balanceOf(swapper), 0, "mToken should not remain on swapper");
+    }
+
+    /// @notice U:[MID-G-30]: `withdrawFromRedeemer` can sweep stranded mToken with a zero quote amount
+    function test_U_MID_G_30_withdrawFromRedeemer_sweeps_stranded_mToken() public {
+        uint256 amountMToken = 100e18;
+        deal(mToken, address(account), amountMToken);
+        account.approveToken(mToken, address(gateway), amountMToken);
+
+        vm.prank(address(account));
+        gateway.requestRedeem(amountMToken, "");
+
+        address redeemer = gateway.pendingRedeemers(address(account))[0];
+        uint256 stranded = 7e18;
+        deal(mToken, redeemer, stranded);
+
+        vm.prank(address(account));
+        gateway.withdrawFromRedeemer(redeemer, 0);
+
+        assertEq(IERC20(mToken).balanceOf(address(account)), stranded, "Account did not receive stranded mToken");
+        assertEq(IERC20(mToken).balanceOf(redeemer), 0, "Redeemer should not retain stranded mToken");
     }
 
     function _deployAccessControlledGateway(MidasMode mode_)

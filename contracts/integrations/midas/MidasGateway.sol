@@ -4,7 +4,6 @@
 pragma solidity ^0.8.23;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
@@ -15,9 +14,9 @@ import {ICreditManagerV3} from "@gearbox-protocol/core-v3/contracts/interfaces/I
 import {IVersion} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IVersion.sol";
 import {IMarketConfigurator} from "@gearbox-protocol/permissionless/contracts/interfaces/IMarketConfigurator.sol";
 import {IContractsRegister} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IContractsRegister.sol";
-import {WAD} from "@gearbox-protocol/core-v3/contracts/libraries/Constants.sol";
 
 import {MidasRedeemer} from "./MidasRedeemer.sol";
+import {MidasSwapper} from "./MidasSwapper.sol";
 import {MidasLiquidator} from "./MidasLiquidator.sol";
 import {MidasRedemptionVaultPhantomToken} from "./MidasRedemptionVaultPhantomToken.sol";
 import {ReentrancyGuardTrait} from "@gearbox-protocol/core-v3/contracts/traits/ReentrancyGuardTrait.sol";
@@ -69,6 +68,9 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
     /// @notice The master redeemer contract
     address public immutable masterRedeemer;
 
+    /// @notice The master swapper contract
+    address public immutable masterSwapper;
+
     /// @notice Address of the transfer master contract
     address public immutable transferMaster;
 
@@ -89,6 +91,9 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
 
     /// @notice Mapping of accounts to corresponding pending redeemer contracts
     mapping(address => EnumerableSet.AddressSet) internal accountToPendingRedeemers;
+
+    /// @notice Mapping of accounts to their reusable swapper contract
+    mapping(address => address) public override accountToSwapper;
 
     /// @notice Verifies that an account is eligible to interact with the gateway
     /// @dev The account must adhere to the Credit Account interface (i.e., have a respective credit manager and borrower)
@@ -165,6 +170,7 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
         }
 
         masterRedeemer = address(new MidasRedeemer{salt: SALT}(_midasRedemptionVault, _quoteToken));
+        masterSwapper = address(new MidasSwapper{salt: SALT}(_midasIssuanceVault, _midasRedemptionVault, _quoteToken));
         transferMaster = address(new MidasLiquidator{salt: SALT}());
         phantomToken = _withDelayedWithdrawals
             ? address(new MidasRedemptionVaultPhantomToken{salt: SALT}(address(this), mToken, _quoteToken))
@@ -180,61 +186,44 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
     /// @param amountToken Amount of quote token to deposit
     /// @param minReceiveAmount Minimum amount of mToken to receive
     /// @param referrerId Referrer ID
-    /// @dev Transfers input token from sender, issues, and transfers mToken back
-    /// @dev In permissioned mode, the gateway may need a greenlist to simply transfer tokens,
-    ///      hence transfers also fall under the greenlist scope.
+    /// @dev Pulls quote token to the account's swapper, which performs the vault call and sweeps proceeds back
+    /// @dev In permissioned mode, the swapper may need a greenlist to transfer tokens / interact with vaults
     function depositInstant(uint256 amountToken, uint256 minReceiveAmount, bytes32 referrerId)
         external
         nonReentrant
         onlyEligibleAccount
     {
-        _grantGreenlistIfRequired(address(this));
+        address swapper = _getOrCreateSwapper(msg.sender);
 
-        IERC20(quoteToken).safeTransferFrom(msg.sender, address(this), amountToken);
-        amountToken = IERC20(quoteToken).balanceOf(address(this));
-
-        IERC20(quoteToken).forceApprove(midasIssuanceVault, amountToken);
-
-        IMidasIssuanceVault(midasIssuanceVault)
-            .depositInstant(quoteToken, _convertToE18(amountToken), minReceiveAmount, referrerId);
-
-        _sweepTokens(msg.sender);
-
-        _revokeGreenlistIfRequired(address(this));
+        uint256 balanceBefore = IERC20(quoteToken).balanceOf(swapper);
+        IERC20(quoteToken).safeTransferFrom(msg.sender, swapper, amountToken);
+        MidasSwapper(swapper)
+            .depositInstant(IERC20(quoteToken).balanceOf(swapper) - balanceBefore, minReceiveAmount, referrerId);
     }
 
     /// @notice Performs instant redemption of mToken for quote token
     /// @param amountMTokenIn Amount of mToken to redeem
     /// @param minReceiveAmount Minimum amount of quote token to receive
-    /// @dev Transfers mToken from sender, redeems, and transfers quote token back
-    /// @dev In permissioned mode, the gateway may need a greenlist to simply transfer tokens,
-    ///      hence transfers also fall under the greenlist scope.
+    /// @dev Pulls mToken to the account's swapper, which performs the vault call and sweeps proceeds back
+    /// @dev In permissioned mode, the swapper may need a greenlist to transfer tokens / interact with vaults
     function redeemInstant(uint256 amountMTokenIn, uint256 minReceiveAmount) external nonReentrant onlyEligibleAccount {
-        _grantGreenlistIfRequired(address(this));
-        IERC20(mToken).safeTransferFrom(msg.sender, address(this), amountMTokenIn);
-        amountMTokenIn = IERC20(mToken).balanceOf(address(this));
+        address swapper = _getOrCreateSwapper(msg.sender);
 
-        IERC20(mToken).forceApprove(midasRedemptionVault, amountMTokenIn);
-        IMidasRedemptionVault(midasRedemptionVault)
-            .redeemInstant(quoteToken, amountMTokenIn, _convertToE18(minReceiveAmount));
-
-        _sweepTokens(msg.sender);
-
-        _revokeGreenlistIfRequired(address(this));
+        uint256 balanceBefore = IERC20(mToken).balanceOf(swapper);
+        IERC20(mToken).safeTransferFrom(msg.sender, swapper, amountMTokenIn);
+        MidasSwapper(swapper).redeemInstant(IERC20(mToken).balanceOf(swapper) - balanceBefore, minReceiveAmount);
     }
 
     /// @notice Requests a redemption of mToken for quote token
     /// @param amountMTokenIn Amount of mToken to redeem
     /// @param extraData Additional redemption data to log
-    /// @dev In permissioned mode, the gateway may need a greenlist to simply transfer tokens,
+    /// @dev In permissioned mode, the redeemer may need a greenlist to transfer tokens,
     ///      hence transfers also fall under the greenlist scope.
     function requestRedeem(uint256 amountMTokenIn, bytes calldata extraData) external nonReentrant onlyEligibleAccount {
         address redeemer = _makeNewRedeemerForAccount(msg.sender);
 
-        _grantGreenlistIfRequired(redeemer);
         IERC20(mToken).safeTransferFrom(msg.sender, redeemer, amountMTokenIn);
         MidasRedeemer(redeemer).requestRedeem(amountMTokenIn);
-        _revokeGreenlistIfRequired(redeemer);
 
         _logRedemptionIfConfigured(msg.sender, redeemer, extraData);
     }
@@ -282,6 +271,15 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
         ) {
             accountToPendingRedeemers[msg.sender].remove(redeemer);
         }
+    }
+
+    /// @notice Withdraws any token stranded on the caller's swapper to the caller
+    /// @param token Token to withdraw
+    function withdrawFromSwapper(address token) external nonReentrant {
+        address swapper = accountToSwapper[msg.sender];
+        if (swapper == address(0)) revert SwapperNotSetException();
+
+        MidasSwapper(swapper).sweepToken(token);
     }
 
     /// @notice Transfers a redeemer to a new account
@@ -349,6 +347,17 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
         return mode != MidasMode.Permissioned || IMidasAccessControl(accessControl).hasRole(greenlistedRole, account);
     }
 
+    /// @dev Returns the reusable swapper for an account, creating one if needed
+    function _getOrCreateSwapper(address account) internal returns (address swapper) {
+        swapper = accountToSwapper[account];
+        if (swapper == address(0)) {
+            swapper = Clones.clone(masterSwapper);
+            MidasSwapper(swapper).setAccount(account);
+            accountToSwapper[account] = swapper;
+            _grantGreenlistIfRequired(swapper);
+        }
+    }
+
     /// @dev Internal function to get the redeemer for an account, or create a new one if it doesn't exist
     /// @param account The account to get the redeemer for
     function _makeNewRedeemerForAccount(address account) internal returns (address redeemer) {
@@ -361,20 +370,7 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
 
         accountToRedeemers[account].add(redeemer);
         accountToPendingRedeemers[account].add(redeemer);
-    }
-
-    /// @dev Sweeps the remaining tokens to the `to` address
-    /// @dev Under normal operation, tokens should not remain in the gateway when not in motion. This returns both the quote token and the mToken,
-    ///      in case Midas does not consume the whole amount in an instant operation.
-    function _sweepTokens(address to) internal {
-        uint256 quoteTokenBalance = IERC20(quoteToken).balanceOf(address(this));
-        uint256 mTokenBalance = IERC20(mToken).balanceOf(address(this));
-        if (quoteTokenBalance > 0) {
-            IERC20(quoteToken).safeTransfer(to, quoteTokenBalance);
-        }
-        if (mTokenBalance > 0) {
-            IERC20(mToken).safeTransfer(to, mTokenBalance);
-        }
+        _grantGreenlistIfRequired(redeemer);
     }
 
     /// @dev Logs redemption initiation if a logger is configured
@@ -382,12 +378,6 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
         if (redemptionLogger != address(0)) {
             IRedemptionLogger(redemptionLogger).logRedemption(creditAccount, redeemer, extraData);
         }
-    }
-
-    /// @dev Converts the token amount to 18 decimals, which is accepted by Midas
-    function _convertToE18(uint256 amount) internal view returns (uint256) {
-        uint256 tokenUnit = 10 ** IERC20Metadata(quoteToken).decimals();
-        return tokenUnit == WAD ? amount : amount * WAD / tokenUnit;
     }
 
     /// @dev Checks if a caller is eligible to interact with the gateway
@@ -430,13 +420,6 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
     function _grantGreenlistIfRequired(address account) internal {
         if (accessControl != address(0)) {
             IMidasAccessControl(accessControl).grantRole(greenlistedRole, account);
-        }
-    }
-
-    /// @dev Grants the GREENLISTED_ROLE to an account if the Midas access control is not set
-    function _revokeGreenlistIfRequired(address account) internal {
-        if (accessControl != address(0)) {
-            IMidasAccessControl(accessControl).revokeRole(greenlistedRole, account);
         }
     }
 }

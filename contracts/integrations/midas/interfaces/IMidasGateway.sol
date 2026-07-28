@@ -49,6 +49,8 @@ interface IMidasGateway is IVersion {
     error IncompatibleGreenlistedRolesException();
     /// @dev Thrown when attempting to request a greenlist in a non-permissioned mode
     error GreenlistRequestedInNonPermissionedModeException();
+    /// @dev Thrown when attempting to use a swapper that has not been created for the account
+    error SwapperNotSetException();
 
     /// @notice Address of the mToken
     function mToken() external view returns (address);
@@ -74,6 +76,9 @@ interface IMidasGateway is IVersion {
     /// @notice Identifier of the vaults' greenlisted role in Midas access control
     function greenlistedRole() external view returns (bytes32);
 
+    /// @notice Address of the reusable swapper for an account, or zero if none exists yet
+    function accountToSwapper(address account) external view returns (address);
+
     /// @notice Performs instant issuance of mToken for quote token
     /// @param amountToken Amount of quote token to deposit
     /// @param minReceiveAmount Minimum amount of mToken to receive
@@ -98,6 +103,10 @@ interface IMidasGateway is IVersion {
     /// @param redeemer The redeemer to withdraw from
     /// @param amount The amount to withdraw
     function withdrawFromRedeemer(address redeemer, uint256 amount) external;
+
+    /// @notice Withdraws any token stranded on the caller's swapper to the caller
+    /// @param token Token to withdraw
+    function withdrawFromSwapper(address token) external;
 
     /// @notice Transfers a redeemer to a new account
     /// @param redeemer The redeemer to transfer

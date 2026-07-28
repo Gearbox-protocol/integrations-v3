@@ -90,8 +90,11 @@ contract MidasRedeemer {
     /// @notice Withdraws tokens to the connected account
     /// @param amount Amount of quote token to withdraw
     function withdraw(uint256 amount) external gatewayOnly {
-        if (IERC20(quoteToken).balanceOf(address(this)) < amount) revert InsufficientBalanceException();
-        IERC20(quoteToken).safeTransfer(account, amount);
+        if (amount != 0) {
+            if (IERC20(quoteToken).balanceOf(address(this)) < amount) revert InsufficientBalanceException();
+            IERC20(quoteToken).safeTransfer(account, amount);
+        }
+        _sweepMToken();
     }
 
     /// @notice Returns the expected amount of quote token for the pending redemption request

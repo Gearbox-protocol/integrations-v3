@@ -123,12 +123,17 @@ contract MidasRedeemerUnitTest is Test {
 
     /// @notice U:[MID-R-2]: `requestRedeem` works as expected
     function test_U_MID_R_02_requestRedeem_works() public {
+        uint256 leftover = 3e18;
+        deal(mToken, address(redeemer), leftover);
+
         redeemer.requestRedeem(100e18);
 
         assertEq(redeemer.requestId(), 1, "Incorrect requestId");
         assertTrue(redeemer.alreadyRequested(), "Should be marked as requested");
         assertEq(IERC20(mToken).allowance(address(redeemer), address(vault)), 100e18, "Vault not approved");
         assertEq(redeemer.redemptionStartTimestamp(), block.timestamp, "Incorrect start timestamp");
+        assertEq(IERC20(mToken).balanceOf(account), leftover, "Leftover mToken should be swept to account");
+        assertEq(IERC20(mToken).balanceOf(address(redeemer)), 0, "Redeemer should not retain mToken");
     }
 
     /// @notice U:[MID-R-3]: `requestRedeem` reverts if already requested
@@ -199,23 +204,40 @@ contract MidasRedeemerUnitTest is Test {
         assertEq(redeemer.claimableTokenOutAmount(), 123e18, "Incorrect claimable amount");
     }
 
-    /// @notice U:[MID-R-9]: `withdraw` transfers tokens to account
+    /// @notice U:[MID-R-9]: `withdraw` transfers quote token and sweeps stranded mToken
     function test_U_MID_R_09_withdraw_works() public {
         redeemer.requestRedeem(100e18);
         deal(tokenOut18, address(redeemer), 100e18);
+        deal(mToken, address(redeemer), 5e18);
 
         redeemer.withdraw(40e18);
 
         assertEq(IERC20(tokenOut18).balanceOf(account), 40e18, "Account did not receive tokens");
         assertEq(IERC20(tokenOut18).balanceOf(address(redeemer)), 60e18, "Incorrect redeemer balance");
+        assertEq(IERC20(mToken).balanceOf(account), 5e18, "Account did not receive stranded mToken");
+        assertEq(IERC20(mToken).balanceOf(address(redeemer)), 0, "Redeemer should not retain mToken");
     }
 
-    /// @notice U:[MID-R-10]: `withdraw` reverts on insufficient balance
+    /// @notice U:[MID-R-10]: `withdraw` reverts on insufficient quote balance
     function test_U_MID_R_10_withdraw_reverts_on_insufficient_balance() public {
         redeemer.requestRedeem(100e18);
         deal(tokenOut18, address(redeemer), 10e18);
 
         vm.expectRevert(MidasRedeemer.InsufficientBalanceException.selector);
         redeemer.withdraw(20e18);
+    }
+
+    /// @notice U:[MID-R-11]: `withdraw(0)` sweeps stranded mToken without transferring quote
+    function test_U_MID_R_11_withdraw_zero_sweeps_stranded_mToken() public {
+        redeemer.requestRedeem(100e18);
+        deal(tokenOut18, address(redeemer), 25e18);
+        deal(mToken, address(redeemer), 8e18);
+
+        redeemer.withdraw(0);
+
+        assertEq(IERC20(tokenOut18).balanceOf(account), 0, "Quote should not be transferred for zero amount");
+        assertEq(IERC20(tokenOut18).balanceOf(address(redeemer)), 25e18, "Quote should remain on redeemer");
+        assertEq(IERC20(mToken).balanceOf(account), 8e18, "Account did not receive stranded mToken");
+        assertEq(IERC20(mToken).balanceOf(address(redeemer)), 0, "Redeemer should not retain mToken");
     }
 }
