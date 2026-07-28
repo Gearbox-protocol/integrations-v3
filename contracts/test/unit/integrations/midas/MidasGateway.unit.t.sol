@@ -885,19 +885,25 @@ contract MidasGatewayUnitTest is Test {
 
     /// @notice U:[MID-G-21]: `isEligibleAccountOwner` reflects Permissioned greenlist requirements
     function test_U_MID_G_21_isEligibleAccountOwner_works() public {
-        assertTrue(gateway.isEligibleAccountOwner(borrower), "Permissionless owners should be eligible");
+        (bool eligible, address token) = gateway.isEligibleAccountOwner(borrower);
+        assertTrue(eligible, "Permissionless owners should be eligible");
+        assertEq(token, mToken, "Incorrect mToken");
 
         (MidasGateway restrictedGateway,,) = _deployAccessControlledGatewayWithAC(MidasMode.RestrictedInterface);
-        assertTrue(restrictedGateway.isEligibleAccountOwner(borrower), "RestrictedInterface owners should be eligible");
+        (eligible, token) = restrictedGateway.isEligibleAccountOwner(borrower);
+        assertTrue(eligible, "RestrictedInterface owners should be eligible");
+        assertEq(token, mToken, "Incorrect mToken");
 
         (MidasGateway permissionedGateway,, MidasAccessControlMock accessControl) =
             _deployAccessControlledGatewayWithAC(MidasMode.Permissioned);
-        assertFalse(
-            permissionedGateway.isEligibleAccountOwner(borrower), "Permissioned owner should not be eligible yet"
-        );
+        (eligible, token) = permissionedGateway.isEligibleAccountOwner(borrower);
+        assertFalse(eligible, "Permissioned owner should not be eligible yet");
+        assertEq(token, mToken, "Incorrect mToken");
 
         accessControl.grantRole(STANDARD_GREENLISTED_ROLE, borrower);
-        assertTrue(permissionedGateway.isEligibleAccountOwner(borrower), "Greenlisted owner should be eligible");
+        (eligible, token) = permissionedGateway.isEligibleAccountOwner(borrower);
+        assertTrue(eligible, "Greenlisted owner should be eligible");
+        assertEq(token, mToken, "Incorrect mToken");
     }
 
     /// @notice U:[MID-G-22]: Permissioned mode rejects non-greenlisted borrowers

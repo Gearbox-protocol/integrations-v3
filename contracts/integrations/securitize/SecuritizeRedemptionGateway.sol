@@ -157,9 +157,9 @@ contract SecuritizeRedemptionGateway is ISecuritizeRedemptionGateway {
         return unclaimedRedeemers[account].values();
     }
 
-    /// @notice Returns whether a credit account owner can redeem DS tokens
-    function isEligibleAccountOwner(address account) external view returns (bool) {
-        return ISecuritizeRegistryService(registryService).isWallet(account);
+    /// @notice Returns whether a credit account owner can redeem DS tokens, and the DS token address
+    function isEligibleAccountOwner(address account) external view returns (bool, address) {
+        return (ISecuritizeRegistryService(registryService).isWallet(account), address(dsToken));
     }
 
     /// @dev Internal function to get the redeemer for an account, or create a new one if it doesn't exist

@@ -90,8 +90,8 @@ contract SecuritizeRedemptionGatewayMock is ISecuritizeRedemptionGateway {
         return empty;
     }
 
-    function isEligibleAccountOwner(address) external pure override returns (bool) {
-        return true;
+    function isEligibleAccountOwner(address) external view override returns (bool, address) {
+        return (true, _dsToken);
     }
 }
 

@@ -342,9 +342,12 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
         return accountToPendingRedeemers[account].values();
     }
 
-    /// @notice Returns whether a credit account owner can mint or redeem mTokens
-    function isEligibleAccountOwner(address account) external view returns (bool) {
-        return mode != MidasMode.Permissioned || IMidasAccessControl(accessControl).hasRole(greenlistedRole, account);
+    /// @notice Returns whether a credit account owner can mint or redeem mTokens, and the mToken address
+    function isEligibleAccountOwner(address account) external view returns (bool, address) {
+        return (
+            mode != MidasMode.Permissioned || IMidasAccessControl(accessControl).hasRole(greenlistedRole, account),
+            mToken
+        );
     }
 
     /// @dev Returns the reusable swapper for an account, creating one if needed

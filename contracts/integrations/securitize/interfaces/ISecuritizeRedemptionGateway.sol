@@ -26,5 +26,5 @@ interface ISecuritizeRedemptionGateway is IVersion {
     function getRedemptionAmount(address account) external view returns (uint256);
     function getRedeemers(address account) external view returns (address[] memory);
     function getUnclaimedRedeemers(address account) external view returns (address[] memory);
-    function isEligibleAccountOwner(address account) external view returns (bool);
+    function isEligibleAccountOwner(address account) external view returns (bool, address);
 }
