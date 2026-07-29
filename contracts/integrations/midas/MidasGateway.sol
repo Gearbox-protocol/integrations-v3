@@ -338,8 +338,15 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
     /// @notice Returns the pending redeemers for an account
     /// @param account The account to check
     /// @return redeemers The pending redeemers for the account
-    function pendingRedeemers(address account) external view returns (address[] memory redeemers) {
+    function pendingRedeemers(address account) external view returns (address[] memory) {
         return accountToPendingRedeemers[account].values();
+    }
+
+    /// @notice Returns all redeemers for an account
+    /// @param account The account to check
+    /// @return redeemers The redeemers for the account
+    function redeemers(address account) external view returns (address[] memory) {
+        return accountToRedeemers[account].values();
     }
 
     /// @notice Returns whether a credit account owner can mint or redeem mTokens, and the mToken address
