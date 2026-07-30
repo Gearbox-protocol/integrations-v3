@@ -26,9 +26,6 @@ contract MidasIssuanceVaultAdapter is AbstractAdapter, IMidasIssuanceVaultAdapte
     /// @notice mToken
     address public immutable override mToken;
 
-    /// @notice Issuance vault address (same as the adapter's target contract)
-    address public immutable override issuanceVault;
-
     /// @notice Referrer ID used for issuances
     bytes32 public immutable override referrerId;
 
@@ -42,7 +39,6 @@ contract MidasIssuanceVaultAdapter is AbstractAdapter, IMidasIssuanceVaultAdapte
     constructor(address _creditManager, address _issuanceVault, bytes32 _referrerId)
         AbstractAdapter(_creditManager, _issuanceVault)
     {
-        issuanceVault = _issuanceVault;
         mToken = IMidasIssuanceVault(_issuanceVault).mToken();
         referrerId = _referrerId;
 
@@ -121,8 +117,7 @@ contract MidasIssuanceVaultAdapter is AbstractAdapter, IMidasIssuanceVaultAdapte
 
     /// @notice Serialized adapter parameters
     function serialize() external view returns (bytes memory serializedData) {
-        serializedData =
-            abi.encode(creditManager, targetContract, issuanceVault, mToken, referrerId, supportedInputTokens());
+        serializedData = abi.encode(creditManager, targetContract, mToken, referrerId, supportedInputTokens());
     }
 
     // ------------- //

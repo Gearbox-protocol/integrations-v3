@@ -26,9 +26,6 @@ contract MidasRedemptionVaultAdapter is AbstractAdapter, IMidasRedemptionVaultAd
     /// @notice mToken
     address public immutable override mToken;
 
-    /// @notice Redemption vault address (same as the adapter's target contract)
-    address public immutable override redemptionVault;
-
     /// @dev Set of allowed output tokens
     EnumerableSet.AddressSet internal _supportedOutputTokens;
 
@@ -36,7 +33,6 @@ contract MidasRedemptionVaultAdapter is AbstractAdapter, IMidasRedemptionVaultAd
     /// @param _creditManager Credit manager address
     /// @param _redemptionVault Midas redemption vault address
     constructor(address _creditManager, address _redemptionVault) AbstractAdapter(_creditManager, _redemptionVault) {
-        redemptionVault = _redemptionVault;
         mToken = IMidasRedemptionVault(_redemptionVault).mToken();
 
         _getMaskOrRevert(mToken);
@@ -114,7 +110,7 @@ contract MidasRedemptionVaultAdapter is AbstractAdapter, IMidasRedemptionVaultAd
 
     /// @notice Serialized adapter parameters
     function serialize() external view returns (bytes memory serializedData) {
-        serializedData = abi.encode(creditManager, targetContract, redemptionVault, mToken, supportedOutputTokens());
+        serializedData = abi.encode(creditManager, targetContract, mToken, supportedOutputTokens());
     }
 
     // ------------- //

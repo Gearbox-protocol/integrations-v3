@@ -64,7 +64,6 @@ contract MidasIssuanceVaultAdapterUnitTest is AdapterUnitTestHelper {
 
         assertEq(adapter.creditManager(), address(creditManager), "Incorrect creditManager");
         assertEq(adapter.targetContract(), address(issuanceVault), "Incorrect targetContract");
-        assertEq(adapter.issuanceVault(), address(issuanceVault), "Incorrect issuanceVault");
         assertEq(adapter.mToken(), mToken, "Incorrect mToken");
         assertEq(adapter.referrerId(), REFERRER_ID, "Incorrect referrerId");
         assertEq(adapter.contractType(), "ADAPTER::MIDAS_ISSUANCE_VAULT", "Incorrect contractType");
@@ -199,12 +198,11 @@ contract MidasIssuanceVaultAdapterUnitTest is AdapterUnitTestHelper {
     /// @notice U:[MID-IVA-7]: `serialize` works as expected
     function test_U_MID_IVA_07_serialize_works() public view {
         bytes memory serializedData = adapter.serialize();
-        (address cm, address tc, address vault, address mtoken, bytes32 refId, address[] memory allowed) =
-            abi.decode(serializedData, (address, address, address, address, bytes32, address[]));
+        (address cm, address tc, address mtoken, bytes32 refId, address[] memory allowed) =
+            abi.decode(serializedData, (address, address, address, bytes32, address[]));
 
         assertEq(cm, address(creditManager), "Incorrect creditManager in serialized data");
         assertEq(tc, address(issuanceVault), "Incorrect targetContract in serialized data");
-        assertEq(vault, address(issuanceVault), "Incorrect issuanceVault in serialized data");
         assertEq(mtoken, mToken, "Incorrect mToken in serialized data");
         assertEq(refId, REFERRER_ID, "Incorrect referrerId in serialized data");
         assertEq(allowed.length, 1, "Incorrect allowed tokens length");

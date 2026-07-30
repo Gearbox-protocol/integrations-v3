@@ -17,9 +17,6 @@ interface IMidasRedemptionVaultAdapter is IAdapter {
     /// @notice Address of mToken
     function mToken() external view returns (address);
 
-    /// @notice Address of the redemption vault
-    function redemptionVault() external view returns (address);
-
     /// @notice Instantly redeems mToken for an allowed output token
     /// @param tokenOut Output token to receive
     /// @param amountMTokenIn Amount of mToken to redeem

@@ -16,9 +16,6 @@ interface IMidasIssuanceVaultAdapter is IAdapter {
     /// @notice Address of mToken
     function mToken() external view returns (address);
 
-    /// @notice Address of the issuance vault
-    function issuanceVault() external view returns (address);
-
     /// @notice Referrer ID used for issuances
     function referrerId() external view returns (bytes32);
 

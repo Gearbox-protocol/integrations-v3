@@ -62,7 +62,6 @@ contract MidasRedemptionVaultAdapterUnitTest is AdapterUnitTestHelper {
 
         assertEq(adapter.creditManager(), address(creditManager), "Incorrect creditManager");
         assertEq(adapter.targetContract(), address(redemptionVault), "Incorrect targetContract");
-        assertEq(adapter.redemptionVault(), address(redemptionVault), "Incorrect redemptionVault");
         assertEq(adapter.mToken(), mToken, "Incorrect mToken");
         assertEq(adapter.contractType(), "ADAPTER::MIDAS_REDEMPTION_VAULT", "Incorrect contractType");
         assertEq(adapter.version(), 3_11, "Incorrect version");
@@ -194,12 +193,11 @@ contract MidasRedemptionVaultAdapterUnitTest is AdapterUnitTestHelper {
     /// @notice U:[MID-RVA-7]: `serialize` works as expected
     function test_U_MID_RVA_07_serialize_works() public view {
         bytes memory serializedData = adapter.serialize();
-        (address cm, address tc, address vault, address mtoken, address[] memory allowed) =
-            abi.decode(serializedData, (address, address, address, address, address[]));
+        (address cm, address tc, address mtoken, address[] memory allowed) =
+            abi.decode(serializedData, (address, address, address, address[]));
 
         assertEq(cm, address(creditManager), "Incorrect creditManager in serialized data");
         assertEq(tc, address(redemptionVault), "Incorrect targetContract in serialized data");
-        assertEq(vault, address(redemptionVault), "Incorrect redemptionVault in serialized data");
         assertEq(mtoken, mToken, "Incorrect mToken in serialized data");
         assertEq(allowed.length, 1, "Incorrect allowed tokens length");
         assertEq(allowed[0], quoteToken, "Incorrect allowed token");
