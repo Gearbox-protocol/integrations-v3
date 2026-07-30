@@ -16,11 +16,10 @@ import {IMarketConfigurator} from "@gearbox-protocol/permissionless/contracts/in
 import {IContractsRegister} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IContractsRegister.sol";
 
 import {MidasRedeemer} from "./MidasRedeemer.sol";
-import {MidasSwapper} from "./MidasSwapper.sol";
 import {MidasLiquidator} from "./MidasLiquidator.sol";
+import {MidasDegenNFT} from "./MidasDegenNFT.sol";
 import {MidasRedemptionVaultPhantomToken} from "./MidasRedemptionVaultPhantomToken.sol";
 import {ReentrancyGuardTrait} from "@gearbox-protocol/core-v3/contracts/traits/ReentrancyGuardTrait.sol";
-import {IMidasIssuanceVault} from "./interfaces/external/IMidasIssuanceVault.sol";
 import {IMidasRedemptionVault} from "./interfaces/external/IMidasRedemptionVault.sol";
 import {IMidasAccessControl, STANDARD_GREENLISTED_ROLE} from "./interfaces/external/IMidasAccessControl.sol";
 import {
@@ -35,7 +34,7 @@ import {IRedemptionLogger, AP_REDEMPTION_LOGGER} from "../common/interfaces/IRed
 bytes32 constant SALT = keccak256("MidasGateway");
 
 /// @title Midas Gateway
-/// @notice Gateway contract that manages issuances and redemptions from Midas vaults on behalf of Credit Accounts
+/// @notice Gateway that manages delayed Midas redemptions on behalf of Credit Accounts
 /// @dev Can optionally greenlist Credit Accounts and redeemers for permissioned tokens
 contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
     using EnumerableSet for EnumerableSet.AddressSet;
@@ -44,35 +43,29 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
     bytes32 public constant override contractType = "GATEWAY::MIDAS";
     uint256 public constant override version = 3_11;
 
-    /// @notice The mToken issuance vault
-    address public immutable midasIssuanceVault;
-
     /// @notice The mToken redemption vault
-    address public immutable midasRedemptionVault;
+    address public immutable override midasRedemptionVault;
 
     /// @notice Address of the mToken
-    address public immutable mToken;
+    address public immutable override mToken;
 
-    /// @notice Address of the quote token used for issuance and redemption
-    address public immutable quoteToken;
+    /// @notice Address of the quote token used for redemption
+    address public immutable override quoteToken;
 
     /// @notice Address of the redemption phantom token
-    address public immutable phantomToken;
+    address public immutable override phantomToken;
 
     /// @notice Access mode of the gateway
     MidasMode public immutable override mode;
 
     /// @notice Address of the mToken access control contract
-    address public immutable accessControl;
+    address public immutable override accessControl;
 
     /// @notice The master redeemer contract
     address public immutable masterRedeemer;
 
-    /// @notice The master swapper contract
-    address public immutable masterSwapper;
-
     /// @notice Address of the transfer master contract
-    address public immutable transferMaster;
+    address public immutable override transferMaster;
 
     /// @notice Address of the market configurator of credit accounts that are allowed to interact with the gateway
     address public immutable allowedMarketConfigurator;
@@ -81,19 +74,19 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
     uint256 public immutable expectedRedemptionDuration;
 
     /// @notice Address of the redemption logger contract
-    address public immutable redemptionLogger;
+    address public immutable override redemptionLogger;
 
-    /// @notice Identifier of the vaults' greenlisted role in Midas access control
-    bytes32 public immutable greenlistedRole;
+    /// @notice Identifier of the vault's greenlisted role in Midas access control
+    bytes32 public immutable override greenlistedRole;
+
+    /// @notice Address of the Midas Degen NFT, or zero outside Permissioned mode
+    address public immutable override degenNFT;
 
     /// @notice Mapping of accounts to corresponding redeemer contracts
     mapping(address => EnumerableSet.AddressSet) internal accountToRedeemers;
 
     /// @notice Mapping of accounts to corresponding pending redeemer contracts
     mapping(address => EnumerableSet.AddressSet) internal accountToPendingRedeemers;
-
-    /// @notice Mapping of accounts to their reusable swapper contract
-    mapping(address => address) public override accountToSwapper;
 
     /// @notice Verifies that an account is eligible to interact with the gateway
     /// @dev The account must adhere to the Credit Account interface (i.e., have a respective credit manager and borrower)
@@ -106,16 +99,14 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
     }
 
     /// @notice Constructor
-    /// @param _midasIssuanceVault Address of the Midas Issuance Vault
     /// @param _midasRedemptionVault Address of the Midas Redemption Vault
-    /// @param _quoteToken Address of the quote token used for issuance and redemption
+    /// @param _quoteToken Address of the quote token used for redemption
     /// @param _mode Access mode of the gateway
     /// @param _allowedMarketConfigurator Address of the market configurator of credit accounts that are allowed to interact with the gateway
     /// @param _expectedRedemptionDuration Expected duration of a redemption request (for informational purposes)
     /// @param _withDelayedWithdrawals Whether to deploy a redemption phantom token for delayed withdrawals
     /// @param _addressProvider Address of the Gearbox AddressProviderV3
     constructor(
-        address _midasIssuanceVault,
         address _midasRedemptionVault,
         address _quoteToken,
         MidasMode _mode,
@@ -124,28 +115,17 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
         bool _withDelayedWithdrawals,
         address _addressProvider
     ) {
-        midasIssuanceVault = _midasIssuanceVault;
         midasRedemptionVault = _midasRedemptionVault;
         quoteToken = _quoteToken;
         mode = _mode;
         mToken = IMidasRedemptionVault(_midasRedemptionVault).mToken();
-        address issuanceMToken = IMidasIssuanceVault(_midasIssuanceVault).mToken();
 
-        if (mToken != issuanceMToken) {
-            revert IncompatibleIssuanceAndRedemptionVaultsException();
-        }
-
-        accessControl =
-            _mode == MidasMode.Permissionless ? address(0) : IMidasIssuanceVault(_midasIssuanceVault).accessControl();
+        accessControl = _mode == MidasMode.Permissionless
+            ? address(0)
+            : IMidasRedemptionVault(_midasRedemptionVault).accessControl();
 
         if (_mode != MidasMode.Permissionless && accessControl == address(0)) {
             revert AccessControlNotSetException();
-        }
-
-        if (
-            accessControl != address(0) && accessControl != IMidasRedemptionVault(_midasRedemptionVault).accessControl()
-        ) {
-            revert IncompatibleAccessControlsException();
         }
 
         if (_mode != MidasMode.Permissionless && _allowedMarketConfigurator == address(0)) {
@@ -153,65 +133,33 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
         }
 
         if (_mode != MidasMode.Permissionless) {
-            try IMidasIssuanceVault(_midasIssuanceVault).greenlistedRole() returns (bytes32 role) {
+            try IMidasRedemptionVault(_midasRedemptionVault).greenlistedRole() returns (bytes32 role) {
                 greenlistedRole = role;
             } catch {
                 greenlistedRole = STANDARD_GREENLISTED_ROLE;
             }
-            try IMidasRedemptionVault(_midasRedemptionVault).greenlistedRole() returns (bytes32 role) {
-                if (greenlistedRole != role) {
-                    revert IncompatibleGreenlistedRolesException();
-                }
-            } catch {
-                if (greenlistedRole != STANDARD_GREENLISTED_ROLE) {
-                    revert IncompatibleGreenlistedRolesException();
-                }
-            }
         }
 
         masterRedeemer = address(new MidasRedeemer{salt: SALT}(_midasRedemptionVault, _quoteToken));
-        masterSwapper = address(new MidasSwapper{salt: SALT}(_midasIssuanceVault, _midasRedemptionVault, _quoteToken));
         transferMaster = address(new MidasLiquidator{salt: SALT}());
         phantomToken = _withDelayedWithdrawals
             ? address(new MidasRedemptionVaultPhantomToken{salt: SALT}(address(this), mToken, _quoteToken))
             : address(0);
 
+        degenNFT = _mode == MidasMode.Permissioned
+            ? address(new MidasDegenNFT{salt: SALT}(accessControl, greenlistedRole))
+            : address(0);
+
         allowedMarketConfigurator = _allowedMarketConfigurator;
         expectedRedemptionDuration = _expectedRedemptionDuration;
 
-        redemptionLogger = IAddressProvider(_addressProvider).getAddressOrRevert(AP_REDEMPTION_LOGGER, 3_10);
-    }
-
-    /// @notice Performs instant issuance of mToken for quote token
-    /// @param amountToken Amount of quote token to deposit
-    /// @param minReceiveAmount Minimum amount of mToken to receive
-    /// @param referrerId Referrer ID
-    /// @dev Pulls quote token to the account's swapper, which performs the vault call and sweeps proceeds back
-    /// @dev In permissioned mode, the swapper may need a greenlist to transfer tokens / interact with vaults
-    function depositInstant(uint256 amountToken, uint256 minReceiveAmount, bytes32 referrerId)
-        external
-        nonReentrant
-        onlyEligibleAccount
-    {
-        address swapper = _getOrCreateSwapper(msg.sender);
-
-        uint256 balanceBefore = IERC20(quoteToken).balanceOf(swapper);
-        IERC20(quoteToken).safeTransferFrom(msg.sender, swapper, amountToken);
-        MidasSwapper(swapper)
-            .depositInstant(IERC20(quoteToken).balanceOf(swapper) - balanceBefore, minReceiveAmount, referrerId);
-    }
-
-    /// @notice Performs instant redemption of mToken for quote token
-    /// @param amountMTokenIn Amount of mToken to redeem
-    /// @param minReceiveAmount Minimum amount of quote token to receive
-    /// @dev Pulls mToken to the account's swapper, which performs the vault call and sweeps proceeds back
-    /// @dev In permissioned mode, the swapper may need a greenlist to transfer tokens / interact with vaults
-    function redeemInstant(uint256 amountMTokenIn, uint256 minReceiveAmount) external nonReentrant onlyEligibleAccount {
-        address swapper = _getOrCreateSwapper(msg.sender);
-
-        uint256 balanceBefore = IERC20(mToken).balanceOf(swapper);
-        IERC20(mToken).safeTransferFrom(msg.sender, swapper, amountMTokenIn);
-        MidasSwapper(swapper).redeemInstant(IERC20(mToken).balanceOf(swapper) - balanceBefore, minReceiveAmount);
+        try IAddressProvider(_addressProvider).getAddressOrRevert(AP_REDEMPTION_LOGGER, 3_10) returns (
+            address _redemptionLogger
+        ) {
+            redemptionLogger = _redemptionLogger;
+        } catch {
+            redemptionLogger = address(0);
+        }
     }
 
     /// @notice Requests a redemption of mToken for quote token
@@ -231,21 +179,21 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
     /// @notice Withdraws tokens from funded redeemers
     /// @param amount Amount of quote token to withdraw
     function withdraw(uint256 amount) external nonReentrant {
-        address[] memory redeemers = accountToPendingRedeemers[msg.sender].values();
+        address[] memory redeemers_ = accountToPendingRedeemers[msg.sender].values();
         uint256 remainder = amount;
-        for (uint256 i = 0; i < redeemers.length && remainder > 0; i++) {
-            uint256 redeemerBalance = MidasRedeemer(redeemers[i]).claimableTokenOutAmount();
+        for (uint256 i = 0; i < redeemers_.length && remainder > 0; i++) {
+            uint256 redeemerBalance = MidasRedeemer(redeemers_[i]).claimableTokenOutAmount();
             if (remainder < redeemerBalance) {
-                MidasRedeemer(redeemers[i]).withdraw(remainder);
+                MidasRedeemer(redeemers_[i]).withdraw(remainder);
                 remainder = 0;
             } else {
                 if (redeemerBalance > 0) {
-                    MidasRedeemer(redeemers[i]).withdraw(redeemerBalance);
+                    MidasRedeemer(redeemers_[i]).withdraw(redeemerBalance);
                     remainder -= redeemerBalance;
                 }
 
-                if (MidasRedeemer(redeemers[i]).pendingTokenOutAmount() == 0) {
-                    accountToPendingRedeemers[msg.sender].remove(redeemers[i]);
+                if (MidasRedeemer(redeemers_[i]).pendingTokenOutAmount() == 0) {
+                    accountToPendingRedeemers[msg.sender].remove(redeemers_[i]);
                 }
             }
         }
@@ -271,15 +219,6 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
         ) {
             accountToPendingRedeemers[msg.sender].remove(redeemer);
         }
-    }
-
-    /// @notice Withdraws any token stranded on the caller's swapper to the caller
-    /// @param token Token to withdraw
-    function withdrawFromSwapper(address token) external nonReentrant {
-        address swapper = accountToSwapper[msg.sender];
-        if (swapper == address(0)) revert SwapperNotSetException();
-
-        MidasSwapper(swapper).sweepToken(token);
     }
 
     /// @notice Transfers a redeemer to a new account
@@ -328,44 +267,33 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
         view
         returns (uint256 pendingAmount, uint256 claimableAmount)
     {
-        address[] memory redeemers = accountToPendingRedeemers[account].values();
-        for (uint256 i = 0; i < redeemers.length; i++) {
-            pendingAmount += MidasRedeemer(redeemers[i]).pendingTokenOutAmount();
-            claimableAmount += MidasRedeemer(redeemers[i]).claimableTokenOutAmount();
+        address[] memory redeemers_ = accountToPendingRedeemers[account].values();
+        for (uint256 i = 0; i < redeemers_.length; i++) {
+            pendingAmount += MidasRedeemer(redeemers_[i]).pendingTokenOutAmount();
+            claimableAmount += MidasRedeemer(redeemers_[i]).claimableTokenOutAmount();
         }
     }
 
     /// @notice Returns the pending redeemers for an account
     /// @param account The account to check
-    /// @return redeemers The pending redeemers for the account
+    /// @return The pending redeemers for the account
     function pendingRedeemers(address account) external view returns (address[] memory) {
         return accountToPendingRedeemers[account].values();
     }
 
     /// @notice Returns all redeemers for an account
     /// @param account The account to check
-    /// @return redeemers The redeemers for the account
+    /// @return The redeemers for the account
     function redeemers(address account) external view returns (address[] memory) {
         return accountToRedeemers[account].values();
     }
 
-    /// @notice Returns whether a credit account owner can mint or redeem mTokens, and the mToken address
+    /// @notice Returns whether a credit account owner can redeem mTokens, and the mToken address
     function isEligibleAccountOwner(address account) external view returns (bool, address) {
         return (
             mode != MidasMode.Permissioned || IMidasAccessControl(accessControl).hasRole(greenlistedRole, account),
             mToken
         );
-    }
-
-    /// @dev Returns the reusable swapper for an account, creating one if needed
-    function _getOrCreateSwapper(address account) internal returns (address swapper) {
-        swapper = accountToSwapper[account];
-        if (swapper == address(0)) {
-            swapper = Clones.clone(masterSwapper);
-            MidasSwapper(swapper).setAccount(account);
-            accountToSwapper[account] = swapper;
-            _grantGreenlistIfRequired(swapper);
-        }
     }
 
     /// @dev Internal function to get the redeemer for an account, or create a new one if it doesn't exist

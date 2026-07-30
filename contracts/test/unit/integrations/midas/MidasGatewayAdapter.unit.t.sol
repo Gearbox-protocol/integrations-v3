@@ -3,8 +3,6 @@
 // (c) Gearbox Foundation, 2026.
 pragma solidity ^0.8.23;
 
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {RAY} from "@gearbox-protocol/core-v3/contracts/libraries/Constants.sol";
 import {NotImplementedException} from "@gearbox-protocol/core-v3/contracts/interfaces/IExceptions.sol";
 import {ERC20Mock} from "@gearbox-protocol/core-v3/contracts/test/mocks/token/ERC20Mock.sol";
 
@@ -38,8 +36,6 @@ contract MidasGatewayAdapterUnitTest is AdapterUnitTestHelper {
     address quoteToken;
     address phantomToken;
 
-    bytes32 constant REFERRER_ID = bytes32(uint256(0xC0FFEE));
-
     function setUp() public {
         _setUp();
 
@@ -53,7 +49,7 @@ contract MidasGatewayAdapterUnitTest is AdapterUnitTestHelper {
 
         gateway = new MidasGatewayMock(mToken, quoteToken, phantomToken);
 
-        adapter = new MidasGatewayAdapter(address(creditManager), address(gateway), REFERRER_ID);
+        adapter = new MidasGatewayAdapter(address(creditManager), address(gateway));
     }
 
     /// @notice U:[MID-A-1]: Constructor works as expected
@@ -63,7 +59,7 @@ contract MidasGatewayAdapterUnitTest is AdapterUnitTestHelper {
         _readsTokenMask(quoteToken);
         _readsTokenMask(phantomToken);
 
-        adapter = new MidasGatewayAdapter(address(creditManager), address(gateway), REFERRER_ID);
+        adapter = new MidasGatewayAdapter(address(creditManager), address(gateway));
 
         assertEq(adapter.creditManager(), address(creditManager), "Incorrect creditManager");
         assertEq(adapter.targetContract(), address(gateway), "Incorrect targetContract");
@@ -71,7 +67,6 @@ contract MidasGatewayAdapterUnitTest is AdapterUnitTestHelper {
         assertEq(adapter.mToken(), mToken, "Incorrect mToken");
         assertEq(adapter.quoteToken(), quoteToken, "Incorrect quoteToken");
         assertEq(adapter.phantomToken(), phantomToken, "Incorrect phantomToken");
-        assertEq(adapter.referrerId(), REFERRER_ID, "Incorrect referrerId");
     }
 
     /// @notice U:[MID-A-1A]: Constructor works when gateway has no phantom token
@@ -82,25 +77,13 @@ contract MidasGatewayAdapterUnitTest is AdapterUnitTestHelper {
         _readsTokenMask(quoteToken);
 
         MidasGatewayAdapter adapterWithoutPhantomToken =
-            new MidasGatewayAdapter(address(creditManager), address(gatewayWithoutPhantomToken), REFERRER_ID);
+            new MidasGatewayAdapter(address(creditManager), address(gatewayWithoutPhantomToken));
 
         assertEq(adapterWithoutPhantomToken.phantomToken(), address(0), "Incorrect phantomToken");
     }
 
     /// @notice U:[MID-A-2]: Wrapper functions revert on wrong caller
     function test_U_MID_A_02_wrapper_functions_revert_on_wrong_caller() public {
-        _revertsOnNonFacadeCaller();
-        adapter.depositInstant(1000, 0, REFERRER_ID);
-
-        _revertsOnNonFacadeCaller();
-        adapter.depositInstantDiff(1, 0);
-
-        _revertsOnNonFacadeCaller();
-        adapter.redeemInstant(1000, 0);
-
-        _revertsOnNonFacadeCaller();
-        adapter.redeemInstantDiff(1, 0);
-
         _revertsOnNonFacadeCaller();
         adapter.redeemRequest(1000);
 
@@ -117,88 +100,16 @@ contract MidasGatewayAdapterUnitTest is AdapterUnitTestHelper {
         adapter.withdraw(1000);
 
         _revertsOnNonFacadeCaller();
+        adapter.withdrawFromRedeemer(makeAddr("REDEEMER"), 1000);
+
+        _revertsOnNonFacadeCaller();
+        adapter.transferRedeemer(makeAddr("REDEEMER"), makeAddr("NEW_ACCOUNT"));
+
+        _revertsOnNonFacadeCaller();
         adapter.withdrawPhantomToken(phantomToken, 1000);
 
         _revertsOnNonFacadeCaller();
         adapter.depositPhantomToken(phantomToken, 1000);
-    }
-
-    /// @notice U:[MID-A-4]: `depositInstant` works as expected
-    function test_U_MID_A_04_depositInstant_works() public {
-        _executesSwap({
-            tokenIn: quoteToken,
-            callData: abi.encodeCall(IMidasGateway.depositInstant, (1000, 500, REFERRER_ID)),
-            requiresApproval: true
-        });
-
-        vm.prank(creditFacade);
-        bool useSafePrices = adapter.depositInstant(1000, 500, REFERRER_ID);
-        assertFalse(useSafePrices);
-    }
-
-    /// @notice U:[MID-A-6]: `depositInstantDiff` works as expected
-    function test_U_MID_A_06_depositInstantDiff_works() public {
-        deal(quoteToken, creditAccount, 1000);
-        uint256 leftover = 100;
-        uint256 amount = 900;
-        uint256 minReceive = amount * RAY / RAY;
-
-        _executesSwap({
-            tokenIn: quoteToken,
-            callData: abi.encodeCall(IMidasGateway.depositInstant, (amount, minReceive, REFERRER_ID)),
-            requiresApproval: true
-        });
-
-        vm.prank(creditFacade);
-        bool useSafePrices = adapter.depositInstantDiff(leftover, RAY);
-        assertFalse(useSafePrices);
-    }
-
-    /// @notice U:[MID-A-7]: `depositInstantDiff` is a no-op when balance <= leftover
-    function test_U_MID_A_07_depositInstantDiff_noop_when_nothing_to_deposit() public {
-        deal(quoteToken, creditAccount, 100);
-
-        vm.prank(creditFacade);
-        bool useSafePrices = adapter.depositInstantDiff(100, RAY);
-        assertFalse(useSafePrices);
-    }
-
-    /// @notice U:[MID-A-8]: `redeemInstant` works as expected
-    function test_U_MID_A_08_redeemInstant_works() public {
-        _executesSwap({
-            tokenIn: mToken, callData: abi.encodeCall(IMidasGateway.redeemInstant, (1000, 500)), requiresApproval: true
-        });
-
-        vm.prank(creditFacade);
-        bool useSafePrices = adapter.redeemInstant(1000, 500);
-        assertFalse(useSafePrices);
-    }
-
-    /// @notice U:[MID-A-10]: `redeemInstantDiff` works as expected
-    function test_U_MID_A_10_redeemInstantDiff_works() public {
-        deal(mToken, creditAccount, 1000);
-        uint256 leftover = 100;
-        uint256 amount = 900;
-        uint256 minReceive = amount * RAY / RAY;
-
-        _executesSwap({
-            tokenIn: mToken,
-            callData: abi.encodeCall(IMidasGateway.redeemInstant, (amount, minReceive)),
-            requiresApproval: true
-        });
-
-        vm.prank(creditFacade);
-        bool useSafePrices = adapter.redeemInstantDiff(leftover, RAY);
-        assertFalse(useSafePrices);
-    }
-
-    /// @notice U:[MID-A-11]: `redeemInstantDiff` is a no-op when balance <= leftover
-    function test_U_MID_A_11_redeemInstantDiff_noop_when_nothing_to_redeem() public {
-        deal(mToken, creditAccount, 100);
-
-        vm.prank(creditFacade);
-        bool useSafePrices = adapter.redeemInstantDiff(100, RAY);
-        assertFalse(useSafePrices);
     }
 
     /// @notice U:[MID-A-12]: `redeemRequest` works as expected
@@ -273,7 +184,7 @@ contract MidasGatewayAdapterUnitTest is AdapterUnitTestHelper {
     function test_U_MID_A_12E_redeemRequest_reverts_without_phantom_token() public {
         MidasGatewayMock gatewayWithoutPhantomToken = new MidasGatewayMock(mToken, quoteToken, address(0));
         MidasGatewayAdapter adapterWithoutPhantomToken =
-            new MidasGatewayAdapter(address(creditManager), address(gatewayWithoutPhantomToken), REFERRER_ID);
+            new MidasGatewayAdapter(address(creditManager), address(gatewayWithoutPhantomToken));
 
         vm.expectRevert(IMidasGatewayAdapter.PhantomTokenNotSetException.selector);
         vm.prank(creditFacade);
@@ -288,6 +199,37 @@ contract MidasGatewayAdapterUnitTest is AdapterUnitTestHelper {
 
         vm.prank(creditFacade);
         bool useSafePrices = adapter.withdraw(1000);
+        assertFalse(useSafePrices);
+    }
+
+    /// @notice U:[MID-A-14A]: `withdrawFromRedeemer` works as expected
+    function test_U_MID_A_14A_withdrawFromRedeemer_works() public {
+        address redeemer = makeAddr("REDEEMER");
+
+        _executesSwap({
+            tokenIn: address(0),
+            callData: abi.encodeCall(IMidasGateway.withdrawFromRedeemer, (redeemer, 1000)),
+            requiresApproval: false
+        });
+
+        vm.prank(creditFacade);
+        bool useSafePrices = adapter.withdrawFromRedeemer(redeemer, 1000);
+        assertFalse(useSafePrices);
+    }
+
+    /// @notice U:[MID-A-14B]: `transferRedeemer` works as expected
+    function test_U_MID_A_14B_transferRedeemer_works() public {
+        address redeemer = makeAddr("REDEEMER");
+        address newAccount = makeAddr("NEW_ACCOUNT");
+
+        _executesSwap({
+            tokenIn: address(0),
+            callData: abi.encodeCall(IMidasGateway.transferRedeemer, (redeemer, newAccount)),
+            requiresApproval: false
+        });
+
+        vm.prank(creditFacade);
+        bool useSafePrices = adapter.transferRedeemer(redeemer, newAccount);
         assertFalse(useSafePrices);
     }
 
@@ -319,8 +261,8 @@ contract MidasGatewayAdapterUnitTest is AdapterUnitTestHelper {
     /// @notice U:[MID-A-19]: `serialize` works as expected
     function test_U_MID_A_19_serialize_works() public view {
         bytes memory serializedData = adapter.serialize();
-        (address cm, address tc, address gw, address mtoken, address qtoken, address phantom, bytes32 refId) =
-            abi.decode(serializedData, (address, address, address, address, address, address, bytes32));
+        (address cm, address tc, address gw, address mtoken, address qtoken, address phantom) =
+            abi.decode(serializedData, (address, address, address, address, address, address));
 
         assertEq(cm, address(creditManager), "Incorrect creditManager in serialized data");
         assertEq(tc, address(gateway), "Incorrect targetContract in serialized data");
@@ -328,6 +270,5 @@ contract MidasGatewayAdapterUnitTest is AdapterUnitTestHelper {
         assertEq(mtoken, mToken, "Incorrect mToken in serialized data");
         assertEq(qtoken, quoteToken, "Incorrect quoteToken in serialized data");
         assertEq(phantom, phantomToken, "Incorrect phantomToken in serialized data");
-        assertEq(refId, REFERRER_ID, "Incorrect referrerId in serialized data");
     }
 }

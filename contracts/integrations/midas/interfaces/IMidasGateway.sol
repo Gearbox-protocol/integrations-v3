@@ -22,7 +22,7 @@ enum MidasMode {
 }
 
 /// @title Midas Gateway interface
-/// @notice External interface of the unified Midas gateway that manages both issuances and redemptions
+/// @notice External interface of the Midas delayed-redemption gateway
 interface IMidasGateway is IVersion {
     /// @dev Thrown when attempting to transfer a redeemer to a new account without permission
     error RedeemerTransferNotAllowedException();
@@ -30,11 +30,7 @@ interface IMidasGateway is IVersion {
     error NewAccountNotGreenlistedException();
     /// @dev Thrown when a non-owner attempts to manage a redeemer
     error RedeemerNotOwnedByAccountException();
-    /// @dev Thrown when attempting to instantiate a gateway with issuance and redemption vaults that have different mTokens
-    error IncompatibleIssuanceAndRedemptionVaultsException();
-    /// @dev Thrown when access-controlled issuance and redemption vaults use different access control contracts
-    error IncompatibleAccessControlsException();
-    /// @dev Thrown when a non-permissionless mode is configured but the Midas vaults have no access control
+    /// @dev Thrown when a non-permissionless mode is configured but the Midas vault has no access control
     error AccessControlNotSetException();
     /// @dev Thrown when attempting to create a new redeemer for an account that has too many pending redeemers
     error MaxPendingRedeemersPerAccountException();
@@ -45,17 +41,13 @@ interface IMidasGateway is IVersion {
     /// @dev Thrown when attempting to create a gateway for a non-permissionless mode that allows arbitrary accounts
     ///      to interact with it
     error ArbitraryCAAllowedInPermissionedModeException();
-    /// @dev Thrown when attempting to create a gateway when vaults' greenlisted role identifiers differ
-    error IncompatibleGreenlistedRolesException();
     /// @dev Thrown when attempting to request a greenlist in a non-permissioned mode
     error GreenlistRequestedInNonPermissionedModeException();
-    /// @dev Thrown when attempting to use a swapper that has not been created for the account
-    error SwapperNotSetException();
 
     /// @notice Address of the mToken
     function mToken() external view returns (address);
 
-    /// @notice Address of the quote token used for issuance and redemption
+    /// @notice Address of the quote token used for redemption
     function quoteToken() external view returns (address);
 
     /// @notice Address of the redemption phantom token
@@ -73,22 +65,14 @@ interface IMidasGateway is IVersion {
     /// @notice Address of the redemption logger contract
     function redemptionLogger() external view returns (address);
 
-    /// @notice Identifier of the vaults' greenlisted role in Midas access control
+    /// @notice Identifier of the vault's greenlisted role in Midas access control
     function greenlistedRole() external view returns (bytes32);
 
-    /// @notice Address of the reusable swapper for an account, or zero if none exists yet
-    function accountToSwapper(address account) external view returns (address);
+    /// @notice Address of the Midas Degen NFT, or zero outside Permissioned mode
+    function degenNFT() external view returns (address);
 
-    /// @notice Performs instant issuance of mToken for quote token
-    /// @param amountToken Amount of quote token to deposit
-    /// @param minReceiveAmount Minimum amount of mToken to receive
-    /// @param referrerId Referrer ID
-    function depositInstant(uint256 amountToken, uint256 minReceiveAmount, bytes32 referrerId) external;
-
-    /// @notice Performs instant redemption of mToken for quote token
-    /// @param amountMTokenIn Amount of mToken to redeem
-    /// @param minReceiveAmount Minimum amount of quote token to receive
-    function redeemInstant(uint256 amountMTokenIn, uint256 minReceiveAmount) external;
+    /// @notice Address of the Midas redemption vault
+    function midasRedemptionVault() external view returns (address);
 
     /// @notice Requests a redemption of mToken for quote token
     /// @param amountMTokenIn Amount of mToken to redeem
@@ -103,10 +87,6 @@ interface IMidasGateway is IVersion {
     /// @param redeemer The redeemer to withdraw from
     /// @param amount The amount to withdraw
     function withdrawFromRedeemer(address redeemer, uint256 amount) external;
-
-    /// @notice Withdraws any token stranded on the caller's swapper to the caller
-    /// @param token Token to withdraw
-    function withdrawFromSwapper(address token) external;
 
     /// @notice Transfers a redeemer to a new account
     /// @param redeemer The redeemer to transfer
@@ -130,6 +110,11 @@ interface IMidasGateway is IVersion {
     /// @return redeemers The pending redeemers for the account
     function pendingRedeemers(address account) external view returns (address[] memory redeemers);
 
-    /// @notice Returns whether a credit account owner can mint or redeem mTokens, and the mToken address
+    /// @notice Returns all redeemers for an account
+    /// @param account The account to check
+    /// @return redeemers The redeemers for the account
+    function redeemers(address account) external view returns (address[] memory redeemers);
+
+    /// @notice Returns whether a credit account owner can redeem mTokens, and the mToken address
     function isEligibleAccountOwner(address account) external view returns (bool, address);
 }

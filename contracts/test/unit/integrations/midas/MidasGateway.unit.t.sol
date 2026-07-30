@@ -5,12 +5,11 @@ pragma solidity ^0.8.23;
 
 import {Test} from "forge-std/Test.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {ERC20Mock} from "@gearbox-protocol/core-v3/contracts/test/mocks/token/ERC20Mock.sol";
 
 import {MidasGateway} from "../../../../integrations/midas/MidasGateway.sol";
 import {MidasRedeemer} from "../../../../integrations/midas/MidasRedeemer.sol";
-import {MidasSwapper} from "../../../../integrations/midas/MidasSwapper.sol";
+import {MidasDegenNFT} from "../../../../integrations/midas/MidasDegenNFT.sol";
 import {MidasRedemptionVaultPhantomToken} from "../../../../integrations/midas/MidasRedemptionVaultPhantomToken.sol";
 import {IMidasGateway, MidasMode} from "../../../../integrations/midas/interfaces/IMidasGateway.sol";
 import {STANDARD_GREENLISTED_ROLE} from "../../../../integrations/midas/interfaces/external/IMidasAccessControl.sol";
@@ -28,56 +27,7 @@ contract MidasDataFeedMock {
     }
 }
 
-/// @dev Minimal issuance vault: pulls input token from the caller (gateway) and sends back a fixed amount of mToken.
-contract MidasIssuanceVaultMock {
-    address public immutable mToken;
-    address public accessControl;
-    uint256 public mTokenAmountOut;
-
-    bool internal _supportsGreenlistedRole;
-    bytes32 internal _greenlistedRole;
-
-    constructor(address _mToken) {
-        mToken = _mToken;
-    }
-
-    function setMTokenAmountOut(uint256 amount) external {
-        mTokenAmountOut = amount;
-    }
-
-    function setAccessControl(address accessControl_) external {
-        accessControl = accessControl_;
-    }
-
-    function setGreenlistedRole(bytes32 role) external {
-        _supportsGreenlistedRole = true;
-        _greenlistedRole = role;
-    }
-
-    function clearGreenlistedRole() external {
-        _supportsGreenlistedRole = false;
-        _greenlistedRole = bytes32(0);
-    }
-
-    function greenlistedRole() external view returns (bytes32) {
-        if (!_supportsGreenlistedRole) revert("greenlistedRole unsupported");
-        return _greenlistedRole;
-    }
-
-    function depositInstant(address tokenIn, uint256 amountToken, uint256, bytes32) external {
-        uint256 nativeAmount = _fromE18(amountToken, tokenIn);
-        IERC20(tokenIn).transferFrom(msg.sender, address(this), nativeAmount);
-        IERC20(mToken).transfer(msg.sender, mTokenAmountOut);
-    }
-
-    function _fromE18(uint256 amount, address token) internal view returns (uint256) {
-        uint256 tokenUnit = 10 ** IERC20Metadata(token).decimals();
-        if (tokenUnit == 1e18) return amount;
-        return amount * tokenUnit / 1e18;
-    }
-}
-
-/// @dev Minimal redemption vault used both for instant redemptions and redemption requests.
+/// @dev Minimal redemption vault used for redemption requests.
 contract MidasRedemptionVaultMock {
     struct Request {
         address sender;
@@ -253,7 +203,6 @@ contract RedemptionLoggerAddressProviderMock is IAddressProvider {
 /// @notice U:[MID-G]: Unit tests for MidasGateway
 contract MidasGatewayUnitTest is Test {
     MidasGateway gateway;
-    MidasIssuanceVaultMock issuanceVault;
     MidasRedemptionVaultMock redemptionVault;
     MidasDataFeedMock dataFeed;
     CreditManagerMock creditManager;
@@ -275,13 +224,11 @@ contract MidasGatewayUnitTest is Test {
         newAccount = makeAddr("NEW_ACCOUNT");
 
         dataFeed = new MidasDataFeedMock();
-        issuanceVault = new MidasIssuanceVaultMock(mToken);
         redemptionVault = new MidasRedemptionVaultMock(mToken, address(dataFeed));
         creditManager = new CreditManagerMock();
         addressProvider = new RedemptionLoggerAddressProviderMock(address(0));
 
         gateway = new MidasGateway(
-            address(issuanceVault),
             address(redemptionVault),
             quoteToken,
             MidasMode.Permissionless,
@@ -312,7 +259,6 @@ contract MidasGatewayUnitTest is Test {
     function test_U_MID_G_01_constructor_works() public view {
         assertEq(gateway.contractType(), "GATEWAY::MIDAS", "Incorrect contract type");
         assertEq(gateway.version(), 3_11, "Incorrect version");
-        assertEq(gateway.midasIssuanceVault(), address(issuanceVault), "Incorrect issuance vault");
         assertEq(gateway.midasRedemptionVault(), address(redemptionVault), "Incorrect redemption vault");
         assertEq(gateway.mToken(), mToken, "Incorrect mToken");
         assertEq(gateway.quoteToken(), quoteToken, "Incorrect quote token");
@@ -328,7 +274,8 @@ contract MidasGatewayUnitTest is Test {
         assertEq(gateway.expectedRedemptionDuration(), REDEMPTION_DURATION, "Incorrect redemption duration");
         assertEq(gateway.redemptionLogger(), address(0), "Incorrect redemption logger");
         assertTrue(gateway.masterRedeemer() != address(0), "Master redeemer not set");
-        assertTrue(gateway.masterSwapper() != address(0), "Master swapper not set");
+        assertEq(gateway.degenNFT(), address(0), "Degen NFT should not be deployed in Permissionless");
+        assertEq(gateway.accessControl(), address(0), "Access control should be zero in Permissionless");
     }
 
     /// @notice U:[MID-G-1A]: Phantom token deployed in constructor has correct parameters
@@ -355,55 +302,50 @@ contract MidasGatewayUnitTest is Test {
     /// @notice U:[MID-G-1B]: Constructor skips phantom token when delayed withdrawals are disabled
     function test_U_MID_G_01B_constructor_skips_phantom_token_without_delayed_withdrawals() public {
         MidasGateway gatewayWithoutPhantomToken = new MidasGateway(
-            address(issuanceVault),
             address(redemptionVault),
             quoteToken,
             MidasMode.Permissionless,
             address(0),
             REDEMPTION_DURATION,
             false, // withDelayedWithdrawals
-            address(addressProvider) // address provider
+            address(addressProvider)
         );
 
         assertEq(gatewayWithoutPhantomToken.phantomToken(), address(0), "Phantom token should not be deployed");
     }
 
-    /// @notice U:[MID-G-2]: Constructor reverts when issuance/redemption mTokens differ
-    function test_U_MID_G_02_constructor_reverts_on_incompatible_vaults() public {
-        address otherMToken = address(new ERC20Mock("OTHER", "OTHER", 18));
-        MidasIssuanceVaultMock badIssuanceVault = new MidasIssuanceVaultMock(otherMToken);
+    /// @notice U:[MID-G-1C]: Constructor deploys degen NFT only in Permissioned mode
+    function test_U_MID_G_01C_constructor_deploys_degen_nft_in_permissioned_mode() public {
+        (MidasGateway permissionedGateway,, MidasAccessControlMock accessControl) =
+            _deployAccessControlledGatewayWithAC(MidasMode.Permissioned);
 
-        vm.expectRevert(IMidasGateway.IncompatibleIssuanceAndRedemptionVaultsException.selector);
-        new MidasGateway(
-            address(badIssuanceVault),
-            address(redemptionVault),
-            quoteToken,
-            MidasMode.Permissionless,
-            address(0),
-            REDEMPTION_DURATION,
-            true, // withDelayedWithdrawals
-            address(addressProvider) // address provider
-        );
+        assertTrue(permissionedGateway.degenNFT() != address(0), "Degen NFT should be deployed");
+        MidasDegenNFT degenNFT = MidasDegenNFT(permissionedGateway.degenNFT());
+        assertEq(degenNFT.gateway(), address(permissionedGateway), "Incorrect degen NFT gateway");
+        assertEq(degenNFT.accessControl(), address(accessControl), "Incorrect degen NFT access control");
+        assertEq(degenNFT.greenlistedRole(), STANDARD_GREENLISTED_ROLE, "Incorrect degen NFT greenlisted role");
+        assertEq(degenNFT.contractType(), "DEGEN_NFT::MIDAS", "Incorrect degen NFT contract type");
+
+        (MidasGateway restrictedGateway,,) = _deployAccessControlledGatewayWithAC(MidasMode.RestrictedInterface);
+        assertEq(restrictedGateway.degenNFT(), address(0), "Degen NFT should not be deployed in RestrictedInterface");
     }
 
-    /// @notice U:[MID-G-2A]: Constructor reads matching access control from the vaults
-    function test_U_MID_G_02A_constructor_reads_matching_access_control() public {
+    /// @notice U:[MID-G-2A]: Constructor reads access control from the redemption vault
+    function test_U_MID_G_02A_constructor_reads_access_control() public {
         address accessControl = makeAddr("ACCESS_CONTROL");
-        issuanceVault.setAccessControl(accessControl);
         redemptionVault.setAccessControl(accessControl);
 
         ContractsRegisterMock contractsRegister = new ContractsRegisterMock();
         MarketConfiguratorMock marketConfigurator = new MarketConfiguratorMock(address(contractsRegister));
 
         MidasGateway controlledGateway = new MidasGateway(
-            address(issuanceVault),
             address(redemptionVault),
             quoteToken,
             MidasMode.RestrictedInterface,
             address(marketConfigurator),
             REDEMPTION_DURATION,
-            true, // withDelayedWithdrawals
-            address(addressProvider) // address provider
+            true,
+            address(addressProvider)
         );
 
         assertEq(controlledGateway.accessControl(), accessControl, "Incorrect access control");
@@ -412,35 +354,16 @@ contract MidasGatewayUnitTest is Test {
         assertEq(
             controlledGateway.allowedMarketConfigurator(), address(marketConfigurator), "Incorrect market configurator"
         );
-    }
-
-    /// @notice U:[MID-G-2B]: Constructor reverts when vault access controls differ
-    function test_U_MID_G_02B_constructor_reverts_on_incompatible_access_controls() public {
-        issuanceVault.setAccessControl(makeAddr("ISSUANCE_ACCESS_CONTROL"));
-        redemptionVault.setAccessControl(makeAddr("REDEMPTION_ACCESS_CONTROL"));
-
-        vm.expectRevert(IMidasGateway.IncompatibleAccessControlsException.selector);
-        new MidasGateway(
-            address(issuanceVault),
-            address(redemptionVault),
-            quoteToken,
-            MidasMode.RestrictedInterface,
-            address(1),
-            REDEMPTION_DURATION,
-            true, // withDelayedWithdrawals
-            address(addressProvider) // address provider
-        );
+        assertEq(controlledGateway.degenNFT(), address(0), "Degen NFT should not be deployed");
     }
 
     /// @notice U:[MID-G-2C]: Constructor reverts when permissioned mode allows arbitrary accounts
     function test_U_MID_G_02C_constructor_reverts_when_permissioned_without_market_configurator() public {
         address accessControl = makeAddr("ACCESS_CONTROL");
-        issuanceVault.setAccessControl(accessControl);
         redemptionVault.setAccessControl(accessControl);
 
         vm.expectRevert(IMidasGateway.ArbitraryCAAllowedInPermissionedModeException.selector);
         new MidasGateway(
-            address(issuanceVault),
             address(redemptionVault),
             quoteToken,
             MidasMode.RestrictedInterface,
@@ -458,79 +381,29 @@ contract MidasGatewayUnitTest is Test {
 
         vm.expectRevert(IMidasGateway.AccessControlNotSetException.selector);
         new MidasGateway(
-            address(issuanceVault),
             address(redemptionVault),
             quoteToken,
             MidasMode.RestrictedInterface,
             address(marketConfigurator),
             REDEMPTION_DURATION,
-            true, // withDelayedWithdrawals
-            address(addressProvider) // address provider
+            true,
+            address(addressProvider)
         );
-    }
-
-    /// @notice U:[MID-G-4]: `depositInstant` issues mToken to the account via a reusable swapper
-    function test_U_MID_G_04_depositInstant_works() public {
-        uint256 amountIn = 1000e18;
-        uint256 mTokenOut = 950e18;
-
-        deal(quoteToken, address(account), amountIn);
-        account.approveToken(quoteToken, address(gateway), amountIn);
-        deal(mToken, address(issuanceVault), mTokenOut);
-        issuanceVault.setMTokenAmountOut(mTokenOut);
-
-        vm.prank(address(account));
-        gateway.depositInstant(amountIn, 0, bytes32(0));
-
-        address swapper = gateway.accountToSwapper(address(account));
-        assertTrue(swapper != address(0), "Swapper not created");
-        assertEq(MidasSwapper(swapper).account(), address(account), "Incorrect swapper account");
-        assertEq(IERC20(mToken).balanceOf(address(account)), mTokenOut, "Account did not receive mToken");
-        assertEq(IERC20(quoteToken).balanceOf(address(issuanceVault)), amountIn, "Vault did not receive quote token");
-        assertEq(IERC20(mToken).balanceOf(address(gateway)), 0, "mToken stuck in gateway");
-        assertEq(IERC20(mToken).balanceOf(swapper), 0, "mToken stuck in swapper");
-        assertEq(IERC20(quoteToken).balanceOf(swapper), 0, "Quote token stuck in swapper");
-    }
-
-    /// @notice U:[MID-G-5]: `redeemInstant` redeems mToken for output token via a reusable swapper
-    function test_U_MID_G_05_redeemInstant_works() public {
-        uint256 amountMToken = 100e18;
-        uint256 amountQuoteToken = 99e18;
-
-        deal(mToken, address(account), amountMToken);
-        account.approveToken(mToken, address(gateway), amountMToken);
-        deal(quoteToken, address(redemptionVault), amountQuoteToken);
-        redemptionVault.setTokenOutAmount(amountQuoteToken);
-
-        vm.prank(address(account));
-        gateway.redeemInstant(amountMToken, 0);
-
-        address swapper = gateway.accountToSwapper(address(account));
-        assertTrue(swapper != address(0), "Swapper not created");
-        assertEq(
-            IERC20(quoteToken).balanceOf(address(account)), amountQuoteToken, "Account did not receive quote token"
-        );
-        assertEq(IERC20(mToken).balanceOf(address(redemptionVault)), amountMToken, "Vault did not receive mToken");
-        assertEq(IERC20(quoteToken).balanceOf(address(gateway)), 0, "Quote token stuck in gateway");
-        assertEq(IERC20(quoteToken).balanceOf(swapper), 0, "Quote token stuck in swapper");
     }
 
     /// @notice U:[MID-G-6]: Non-access-controlled gateways accept any caller
     function test_U_MID_G_06_allows_any_caller_without_access_control() public {
         address notCreditAccount = address(new NonCreditAccountMock());
-        uint256 amountIn = 1000e18;
-        uint256 mTokenOut = 950e18;
+        uint256 amountMToken = 100e18;
 
-        deal(quoteToken, notCreditAccount, amountIn);
+        deal(mToken, notCreditAccount, amountMToken);
         vm.prank(notCreditAccount);
-        IERC20(quoteToken).approve(address(gateway), amountIn);
-        deal(mToken, address(issuanceVault), mTokenOut);
-        issuanceVault.setMTokenAmountOut(mTokenOut);
+        IERC20(mToken).approve(address(gateway), amountMToken);
 
         vm.prank(notCreditAccount);
-        gateway.depositInstant(amountIn, 0, bytes32(0));
+        gateway.requestRedeem(amountMToken, "");
 
-        assertEq(IERC20(mToken).balanceOf(notCreditAccount), mTokenOut, "Caller did not receive mToken");
+        assertEq(gateway.pendingRedeemers(notCreditAccount).length, 1, "Redeemer not created");
     }
 
     /// @notice U:[MID-G-6A]: Access-controlled gateways revert for non-credit-account callers
@@ -538,14 +411,6 @@ contract MidasGatewayUnitTest is Test {
         (MidasGateway controlledGateway,) = _deployAccessControlledGateway(MidasMode.RestrictedInterface);
 
         address notCreditAccount = address(new NonCreditAccountMock());
-
-        vm.prank(notCreditAccount);
-        vm.expectRevert(IMidasGateway.CreditAccountNotEligibleException.selector);
-        controlledGateway.depositInstant(1, 0, bytes32(0));
-
-        vm.prank(notCreditAccount);
-        vm.expectRevert(IMidasGateway.CreditAccountNotEligibleException.selector);
-        controlledGateway.redeemInstant(1, 0);
 
         vm.prank(notCreditAccount);
         vm.expectRevert(IMidasGateway.CreditAccountNotEligibleException.selector);
@@ -562,7 +427,7 @@ contract MidasGatewayUnitTest is Test {
 
         vm.prank(address(accountNoBorrower));
         vm.expectRevert(IMidasGateway.CreditAccountNotEligibleException.selector);
-        controlledGateway.redeemInstant(1, 0);
+        controlledGateway.requestRedeem(1, "");
     }
 
     /// @notice U:[MID-G-7A]: Access-controlled gateways revert when credit manager is not registered
@@ -571,7 +436,7 @@ contract MidasGatewayUnitTest is Test {
 
         vm.prank(address(account));
         vm.expectRevert(IMidasGateway.CreditAccountNotEligibleException.selector);
-        controlledGateway.redeemInstant(1, 0);
+        controlledGateway.requestRedeem(1, "");
     }
 
     /// @notice U:[MID-G-8]: `requestRedeem` creates a redeemer and forwards the request
@@ -749,13 +614,12 @@ contract MidasGatewayUnitTest is Test {
         RedemptionLoggerAddressProviderMock loggerAddressProvider =
             new RedemptionLoggerAddressProviderMock(address(logger));
         MidasGateway gatewayWithLogger = new MidasGateway(
-            address(issuanceVault),
             address(redemptionVault),
             quoteToken,
             MidasMode.Permissionless,
             address(0),
             REDEMPTION_DURATION,
-            true, // withDelayedWithdrawals
+            true,
             address(loggerAddressProvider)
         );
         logger.setGatewayAllowed(address(gatewayWithLogger), true);
@@ -776,20 +640,17 @@ contract MidasGatewayUnitTest is Test {
         assertEq(log.extraData, extraData, "Incorrect logged extraData");
     }
 
-    /// @notice U:[MID-G-16]: Constructor reads matching custom greenlisted roles from vaults
-    function test_U_MID_G_16_constructor_reads_matching_greenlisted_roles() public {
+    /// @notice U:[MID-G-16]: Constructor reads custom greenlisted role from redemption vault
+    function test_U_MID_G_16_constructor_reads_custom_greenlisted_role() public {
         bytes32 customRole = keccak256("CUSTOM_GREENLISTED_ROLE");
         address accessControl = makeAddr("ACCESS_CONTROL");
-        issuanceVault.setAccessControl(accessControl);
         redemptionVault.setAccessControl(accessControl);
-        issuanceVault.setGreenlistedRole(customRole);
         redemptionVault.setGreenlistedRole(customRole);
 
         ContractsRegisterMock contractsRegister = new ContractsRegisterMock();
         MarketConfiguratorMock marketConfigurator = new MarketConfiguratorMock(address(contractsRegister));
 
         MidasGateway controlledGateway = new MidasGateway(
-            address(issuanceVault),
             address(redemptionVault),
             quoteToken,
             MidasMode.RestrictedInterface,
@@ -802,20 +663,16 @@ contract MidasGatewayUnitTest is Test {
         assertEq(controlledGateway.greenlistedRole(), customRole, "Incorrect greenlisted role");
     }
 
-    /// @notice U:[MID-G-17]: Constructor reverts when vault greenlisted roles differ
-    function test_U_MID_G_17_constructor_reverts_on_incompatible_greenlisted_roles() public {
+    /// @notice U:[MID-G-17]: Constructor falls back to STANDARD_GREENLISTED_ROLE when vault has no custom role
+    function test_U_MID_G_17_constructor_falls_back_to_standard_greenlisted_role() public {
         address accessControl = makeAddr("ACCESS_CONTROL");
-        issuanceVault.setAccessControl(accessControl);
         redemptionVault.setAccessControl(accessControl);
-        issuanceVault.setGreenlistedRole(keccak256("ROLE_A"));
-        redemptionVault.setGreenlistedRole(keccak256("ROLE_B"));
+        // greenlistedRole unsupported => falls back to STANDARD
 
         ContractsRegisterMock contractsRegister = new ContractsRegisterMock();
         MarketConfiguratorMock marketConfigurator = new MarketConfiguratorMock(address(contractsRegister));
 
-        vm.expectRevert(IMidasGateway.IncompatibleGreenlistedRolesException.selector);
-        new MidasGateway(
-            address(issuanceVault),
+        MidasGateway controlledGateway = new MidasGateway(
             address(redemptionVault),
             quoteToken,
             MidasMode.RestrictedInterface,
@@ -824,30 +681,8 @@ contract MidasGatewayUnitTest is Test {
             true,
             address(addressProvider)
         );
-    }
 
-    /// @notice U:[MID-G-18]: Constructor reverts when only one vault exposes a custom greenlisted role
-    function test_U_MID_G_18_constructor_reverts_when_only_one_vault_exposes_greenlisted_role() public {
-        address accessControl = makeAddr("ACCESS_CONTROL");
-        issuanceVault.setAccessControl(accessControl);
-        redemptionVault.setAccessControl(accessControl);
-        issuanceVault.setGreenlistedRole(keccak256("CUSTOM_GREENLISTED_ROLE"));
-        // redemption vault leaves greenlistedRole unsupported => falls back to STANDARD
-
-        ContractsRegisterMock contractsRegister = new ContractsRegisterMock();
-        MarketConfiguratorMock marketConfigurator = new MarketConfiguratorMock(address(contractsRegister));
-
-        vm.expectRevert(IMidasGateway.IncompatibleGreenlistedRolesException.selector);
-        new MidasGateway(
-            address(issuanceVault),
-            address(redemptionVault),
-            quoteToken,
-            MidasMode.RestrictedInterface,
-            address(marketConfigurator),
-            REDEMPTION_DURATION,
-            true,
-            address(addressProvider)
-        );
+        assertEq(controlledGateway.greenlistedRole(), STANDARD_GREENLISTED_ROLE, "Should fall back to standard role");
     }
 
     /// @notice U:[MID-G-19]: `receiveGreenlist` grants the greenlisted role in Permissioned mode
@@ -912,12 +747,12 @@ contract MidasGatewayUnitTest is Test {
             _deployAccessControlledGatewayWithAC(MidasMode.Permissioned);
         contractsRegister.setCreditManager(address(creditManager), true);
 
-        deal(quoteToken, address(account), 1e18);
-        account.approveToken(quoteToken, address(permissionedGateway), 1e18);
+        deal(mToken, address(account), 1e18);
+        account.approveToken(mToken, address(permissionedGateway), 1e18);
 
         vm.prank(address(account));
         vm.expectRevert(IMidasGateway.CreditAccountNotEligibleException.selector);
-        permissionedGateway.depositInstant(1e18, 0, bytes32(0));
+        permissionedGateway.requestRedeem(1e18, "");
     }
 
     /// @notice U:[MID-G-23]: `transferRedeemer` reverts when new account is not greenlisted in Permissioned mode
@@ -945,38 +780,6 @@ contract MidasGatewayUnitTest is Test {
         vm.prank(address(account));
         vm.expectRevert(IMidasGateway.NewAccountNotGreenlistedException.selector);
         permissionedGateway.transferRedeemer(redeemer, newAccount);
-    }
-
-    /// @notice U:[MID-G-24]: Instant operations grant the swapper greenlist once and never revoke it
-    function test_U_MID_G_24_depositInstant_grants_greenlist_permanently() public {
-        (
-            MidasGateway controlledGateway,
-            ContractsRegisterMock contractsRegister,
-            MidasAccessControlMock accessControl
-        ) = _deployAccessControlledGatewayWithAC(MidasMode.RestrictedInterface);
-        contractsRegister.setCreditManager(address(creditManager), true);
-
-        uint256 amountIn = 1000e18;
-        uint256 mTokenOut = 950e18;
-        deal(quoteToken, address(account), amountIn * 2);
-        account.approveToken(quoteToken, address(controlledGateway), amountIn * 2);
-        deal(mToken, address(issuanceVault), mTokenOut * 2);
-        issuanceVault.setMTokenAmountOut(mTokenOut);
-
-        vm.prank(address(account));
-        controlledGateway.depositInstant(amountIn, 0, bytes32(0));
-
-        address swapper = controlledGateway.accountToSwapper(address(account));
-        assertTrue(
-            accessControl.hasRole(STANDARD_GREENLISTED_ROLE, swapper),
-            "Swapper should be greenlisted after first deposit"
-        );
-
-        vm.prank(address(account));
-        controlledGateway.depositInstant(amountIn, 0, bytes32(0));
-
-        assertTrue(accessControl.hasRole(STANDARD_GREENLISTED_ROLE, swapper), "Swapper greenlist should not be revoked");
-        assertEq(IERC20(mToken).balanceOf(address(account)), mTokenOut * 2, "Account did not receive mToken");
     }
 
     /// @notice U:[MID-G-24A]: Redeemers are greenlisted once on creation and never revoked
@@ -1009,129 +812,6 @@ contract MidasGatewayUnitTest is Test {
             accessControl.hasRole(STANDARD_GREENLISTED_ROLE, redeemer),
             "Redeemer greenlist should not be revoked after withdraw"
         );
-    }
-
-    /// @notice U:[MID-G-25]: Instant operations reuse a single swapper per account
-    function test_U_MID_G_25_instant_operations_reuse_swapper() public {
-        uint256 amountIn = 1000e18;
-        uint256 mTokenOut = 950e18;
-
-        deal(quoteToken, address(account), amountIn * 2);
-        account.approveToken(quoteToken, address(gateway), amountIn * 2);
-        deal(mToken, address(issuanceVault), mTokenOut * 2);
-        issuanceVault.setMTokenAmountOut(mTokenOut);
-
-        vm.prank(address(account));
-        gateway.depositInstant(amountIn, 0, bytes32(0));
-        address swapper = gateway.accountToSwapper(address(account));
-
-        vm.prank(address(account));
-        gateway.depositInstant(amountIn, 0, bytes32(0));
-
-        assertEq(gateway.accountToSwapper(address(account)), swapper, "Swapper should be reused");
-        assertEq(IERC20(mToken).balanceOf(address(account)), mTokenOut * 2, "Incorrect cumulative mToken balance");
-    }
-
-    /// @notice U:[MID-G-26]: `withdrawFromSwapper` recovers stranded tokens
-    function test_U_MID_G_26_withdrawFromSwapper_works() public {
-        uint256 amountIn = 1000e18;
-        uint256 mTokenOut = 950e18;
-
-        deal(quoteToken, address(account), amountIn);
-        account.approveToken(quoteToken, address(gateway), amountIn);
-        deal(mToken, address(issuanceVault), mTokenOut);
-        issuanceVault.setMTokenAmountOut(mTokenOut);
-
-        vm.prank(address(account));
-        gateway.depositInstant(amountIn, 0, bytes32(0));
-
-        address swapper = gateway.accountToSwapper(address(account));
-        address otherToken = address(new ERC20Mock("OTHER", "OTHER", 18));
-        deal(otherToken, swapper, 42e18);
-
-        vm.prank(address(account));
-        gateway.withdrawFromSwapper(otherToken);
-
-        assertEq(IERC20(otherToken).balanceOf(address(account)), 42e18, "Account did not receive stranded token");
-        assertEq(IERC20(otherToken).balanceOf(swapper), 0, "Token should be fully swept from swapper");
-    }
-
-    /// @notice U:[MID-G-27]: `withdrawFromSwapper` reverts when swapper is not set
-    function test_U_MID_G_27_withdrawFromSwapper_reverts_when_not_set() public {
-        vm.prank(address(account));
-        vm.expectRevert(IMidasGateway.SwapperNotSetException.selector);
-        gateway.withdrawFromSwapper(quoteToken);
-    }
-
-    /// @notice U:[MID-G-28]: Instant deposit uses only the transferred balance delta as vault input
-    function test_U_MID_G_28_depositInstant_uses_balance_delta_only() public {
-        uint256 preexisting = 100e18;
-        uint256 amountIn = 1000e18;
-        uint256 mTokenOut = 950e18;
-
-        // Create the swapper first
-        deal(quoteToken, address(account), amountIn);
-        account.approveToken(quoteToken, address(gateway), type(uint256).max);
-        deal(mToken, address(issuanceVault), mTokenOut * 2);
-        issuanceVault.setMTokenAmountOut(mTokenOut);
-
-        vm.prank(address(account));
-        gateway.depositInstant(amountIn, 0, bytes32(0));
-
-        address swapper = gateway.accountToSwapper(address(account));
-        deal(quoteToken, swapper, preexisting);
-
-        deal(quoteToken, address(account), amountIn);
-        vm.prank(address(account));
-        gateway.depositInstant(amountIn, 0, bytes32(0));
-
-        // Vault should have received only the two explicit deposits, not the preexisting airdrop as input.
-        // First deposit: amountIn; second: amountIn. Preexisting is swept to the account after the second op.
-        assertEq(
-            IERC20(quoteToken).balanceOf(address(issuanceVault)),
-            amountIn * 2,
-            "Vault should not consume preexisting swapper balance"
-        );
-        assertEq(
-            IERC20(quoteToken).balanceOf(address(account)),
-            preexisting,
-            "Preexisting quote balance should be swept to account"
-        );
-        assertEq(IERC20(quoteToken).balanceOf(swapper), 0, "Quote should not remain on swapper");
-    }
-
-    /// @notice U:[MID-G-29]: Instant redeem uses only the transferred balance delta as vault input
-    function test_U_MID_G_29_redeemInstant_uses_balance_delta_only() public {
-        uint256 preexisting = 25e18;
-        uint256 amountMToken = 100e18;
-        uint256 amountQuoteToken = 99e18;
-
-        deal(mToken, address(account), amountMToken);
-        account.approveToken(mToken, address(gateway), type(uint256).max);
-        deal(quoteToken, address(redemptionVault), amountQuoteToken * 2);
-        redemptionVault.setTokenOutAmount(amountQuoteToken);
-
-        vm.prank(address(account));
-        gateway.redeemInstant(amountMToken, 0);
-
-        address swapper = gateway.accountToSwapper(address(account));
-        deal(mToken, swapper, preexisting);
-
-        deal(mToken, address(account), amountMToken);
-        vm.prank(address(account));
-        gateway.redeemInstant(amountMToken, 0);
-
-        assertEq(
-            IERC20(mToken).balanceOf(address(redemptionVault)),
-            amountMToken * 2,
-            "Vault should not consume preexisting swapper balance"
-        );
-        assertEq(
-            IERC20(mToken).balanceOf(address(account)),
-            preexisting,
-            "Preexisting mToken balance should be swept to account"
-        );
-        assertEq(IERC20(mToken).balanceOf(swapper), 0, "mToken should not remain on swapper");
     }
 
     /// @notice U:[MID-G-30]: `withdrawFromRedeemer` can sweep stranded mToken with a zero quote amount
@@ -1170,14 +850,12 @@ contract MidasGatewayUnitTest is Test {
         )
     {
         accessControl = new MidasAccessControlMock();
-        issuanceVault.setAccessControl(address(accessControl));
         redemptionVault.setAccessControl(address(accessControl));
 
         contractsRegister = new ContractsRegisterMock();
         MarketConfiguratorMock marketConfigurator = new MarketConfiguratorMock(address(contractsRegister));
 
         controlledGateway = new MidasGateway(
-            address(issuanceVault),
             address(redemptionVault),
             quoteToken,
             mode_,
