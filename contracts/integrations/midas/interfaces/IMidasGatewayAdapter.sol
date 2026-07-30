@@ -23,6 +23,9 @@ interface IMidasGatewayAdapter is IAdapter, IPhantomTokenAdapter {
     /// @notice Address of the redemption phantom token
     function phantomToken() external view returns (address);
 
+    /// @notice Grants the greenlisted role to the credit account via the gateway
+    function receiveGreenlist() external returns (bool);
+
     /// @notice Requests a redemption of mToken for quote token
     /// @param amountMTokenIn Amount of mToken to redeem
     function redeemRequest(uint256 amountMTokenIn) external returns (bool);

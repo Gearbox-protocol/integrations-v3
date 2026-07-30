@@ -85,6 +85,9 @@ contract MidasGatewayAdapterUnitTest is AdapterUnitTestHelper {
     /// @notice U:[MID-A-2]: Wrapper functions revert on wrong caller
     function test_U_MID_A_02_wrapper_functions_revert_on_wrong_caller() public {
         _revertsOnNonFacadeCaller();
+        adapter.receiveGreenlist();
+
+        _revertsOnNonFacadeCaller();
         adapter.redeemRequest(1000);
 
         _revertsOnNonFacadeCaller();
@@ -110,6 +113,32 @@ contract MidasGatewayAdapterUnitTest is AdapterUnitTestHelper {
 
         _revertsOnNonFacadeCaller();
         adapter.depositPhantomToken(phantomToken, 1000);
+    }
+
+    /// @notice U:[MID-A-3]: `receiveGreenlist` works as expected
+    function test_U_MID_A_03_receiveGreenlist_works() public {
+        _executesSwap({
+            tokenIn: address(0), callData: abi.encodeCall(IMidasGateway.receiveGreenlist, ()), requiresApproval: false
+        });
+
+        vm.prank(creditFacade);
+        bool useSafePrices = adapter.receiveGreenlist();
+        assertFalse(useSafePrices);
+    }
+
+    /// @notice U:[MID-A-3A]: `receiveGreenlist` works when phantom token is not set
+    function test_U_MID_A_03A_receiveGreenlist_works_without_phantom_token() public {
+        MidasGatewayMock gatewayWithoutPhantomToken = new MidasGatewayMock(mToken, quoteToken, address(0));
+        MidasGatewayAdapter adapterWithoutPhantomToken =
+            new MidasGatewayAdapter(address(creditManager), address(gatewayWithoutPhantomToken));
+
+        _executesSwap({
+            tokenIn: address(0), callData: abi.encodeCall(IMidasGateway.receiveGreenlist, ()), requiresApproval: false
+        });
+
+        vm.prank(creditFacade);
+        bool useSafePrices = adapterWithoutPhantomToken.receiveGreenlist();
+        assertFalse(useSafePrices);
     }
 
     /// @notice U:[MID-A-12]: `redeemRequest` works as expected
@@ -180,15 +209,33 @@ contract MidasGatewayAdapterUnitTest is AdapterUnitTestHelper {
         assertFalse(useSafePrices);
     }
 
-    /// @notice U:[MID-A-12E]: `redeemRequest` reverts when phantom token is not set
-    function test_U_MID_A_12E_redeemRequest_reverts_without_phantom_token() public {
+    /// @notice U:[MID-A-12E]: Delayed-redemption functions revert when phantom token is not set
+    function test_U_MID_A_12E_execution_reverts_without_phantom_token() public {
         MidasGatewayMock gatewayWithoutPhantomToken = new MidasGatewayMock(mToken, quoteToken, address(0));
         MidasGatewayAdapter adapterWithoutPhantomToken =
             new MidasGatewayAdapter(address(creditManager), address(gatewayWithoutPhantomToken));
 
+        vm.startPrank(creditFacade);
+
         vm.expectRevert(IMidasGatewayAdapter.PhantomTokenNotSetException.selector);
-        vm.prank(creditFacade);
         adapterWithoutPhantomToken.redeemRequest(1000);
+
+        vm.expectRevert(IMidasGatewayAdapter.PhantomTokenNotSetException.selector);
+        adapterWithoutPhantomToken.withdraw(1000);
+
+        vm.expectRevert(IMidasGatewayAdapter.PhantomTokenNotSetException.selector);
+        adapterWithoutPhantomToken.withdrawFromRedeemer(makeAddr("REDEEMER"), 1000);
+
+        vm.expectRevert(IMidasGatewayAdapter.PhantomTokenNotSetException.selector);
+        adapterWithoutPhantomToken.transferRedeemer(makeAddr("REDEEMER"), makeAddr("NEW_ACCOUNT"));
+
+        vm.expectRevert(IMidasGatewayAdapter.PhantomTokenNotSetException.selector);
+        adapterWithoutPhantomToken.withdrawPhantomToken(address(0), 1000);
+
+        vm.expectRevert(IMidasGatewayAdapter.PhantomTokenNotSetException.selector);
+        adapterWithoutPhantomToken.depositPhantomToken(address(0), 1000);
+
+        vm.stopPrank();
     }
 
     /// @notice U:[MID-A-14]: `withdraw` works as expected

@@ -30,6 +30,12 @@ contract MidasGatewayAdapter is AbstractAdapter, IMidasGatewayAdapter {
     /// @notice Redemption phantom token
     address public immutable override phantomToken;
 
+    /// @dev Reverts when delayed-redemption functions are called without a phantom token configured
+    modifier whenPhantomTokenSet() {
+        if (phantomToken == address(0)) revert PhantomTokenNotSetException();
+        _;
+    }
+
     /// @notice Constructor
     /// @param _creditManager Credit manager address
     /// @param _gateway Midas gateway address
@@ -44,10 +50,22 @@ contract MidasGatewayAdapter is AbstractAdapter, IMidasGatewayAdapter {
         if (phantomToken != address(0)) _getMaskOrRevert(phantomToken);
     }
 
+    /// @notice Grants the greenlisted role to the credit account via the gateway
+    function receiveGreenlist() external override creditFacadeOnly returns (bool) {
+        _execute(abi.encodeCall(IMidasGateway.receiveGreenlist, ()));
+        return false;
+    }
+
     /// @notice Requests a redemption of mToken for quote token
     /// @param amountMTokenIn Amount of mToken to redeem
     /// @dev Returns `true` to allow safe pricing for the withdrawal phantom token
-    function redeemRequest(uint256 amountMTokenIn) external override creditFacadeOnly returns (bool) {
+    function redeemRequest(uint256 amountMTokenIn)
+        external
+        override
+        creditFacadeOnly
+        whenPhantomTokenSet
+        returns (bool)
+    {
         _redeemRequest(amountMTokenIn, "");
         return true;
     }
@@ -57,6 +75,7 @@ contract MidasGatewayAdapter is AbstractAdapter, IMidasGatewayAdapter {
         external
         override
         creditFacadeOnly
+        whenPhantomTokenSet
         returns (bool)
     {
         _redeemRequest(amountMTokenIn, extraData);
@@ -64,7 +83,13 @@ contract MidasGatewayAdapter is AbstractAdapter, IMidasGatewayAdapter {
     }
 
     /// @inheritdoc IMidasGatewayAdapter
-    function redeemRequestDiff(uint256 leftoverAmount) external override creditFacadeOnly returns (bool) {
+    function redeemRequestDiff(uint256 leftoverAmount)
+        external
+        override
+        creditFacadeOnly
+        whenPhantomTokenSet
+        returns (bool)
+    {
         address creditAccount = _creditAccount();
         uint256 balance = IERC20(mToken).balanceOf(creditAccount);
         if (balance > leftoverAmount) {
@@ -81,6 +106,7 @@ contract MidasGatewayAdapter is AbstractAdapter, IMidasGatewayAdapter {
         external
         override
         creditFacadeOnly
+        whenPhantomTokenSet
         returns (bool)
     {
         address creditAccount = _creditAccount();
@@ -96,13 +122,12 @@ contract MidasGatewayAdapter is AbstractAdapter, IMidasGatewayAdapter {
 
     /// @dev Internal implementation of `redeemRequest`
     function _redeemRequest(uint256 amountMTokenIn, bytes memory extraData) internal {
-        if (phantomToken == address(0)) revert PhantomTokenNotSetException();
         _executeSwapSafeApprove(mToken, abi.encodeCall(IMidasGateway.requestRedeem, (amountMTokenIn, extraData)));
     }
 
     /// @notice Withdraws redeemed tokens from the gateway
     /// @param amount Amount to withdraw
-    function withdraw(uint256 amount) external override creditFacadeOnly returns (bool) {
+    function withdraw(uint256 amount) external override creditFacadeOnly whenPhantomTokenSet returns (bool) {
         _withdraw(amount);
         return false;
     }
@@ -115,7 +140,13 @@ contract MidasGatewayAdapter is AbstractAdapter, IMidasGatewayAdapter {
     /// @notice Withdraws tokens from a specific redeemer
     /// @param redeemer The redeemer to withdraw from
     /// @param amount The amount to withdraw
-    function withdrawFromRedeemer(address redeemer, uint256 amount) external override creditFacadeOnly returns (bool) {
+    function withdrawFromRedeemer(address redeemer, uint256 amount)
+        external
+        override
+        creditFacadeOnly
+        whenPhantomTokenSet
+        returns (bool)
+    {
         _execute(abi.encodeCall(IMidasGateway.withdrawFromRedeemer, (redeemer, amount)));
         return false;
     }
@@ -123,7 +154,13 @@ contract MidasGatewayAdapter is AbstractAdapter, IMidasGatewayAdapter {
     /// @notice Transfers a redeemer to a new account
     /// @param redeemer The redeemer to transfer
     /// @param newAccount The new account to transfer the redeemer to
-    function transferRedeemer(address redeemer, address newAccount) external override creditFacadeOnly returns (bool) {
+    function transferRedeemer(address redeemer, address newAccount)
+        external
+        override
+        creditFacadeOnly
+        whenPhantomTokenSet
+        returns (bool)
+    {
         _execute(abi.encodeCall(IMidasGateway.transferRedeemer, (redeemer, newAccount)));
         return false;
     }
@@ -131,7 +168,13 @@ contract MidasGatewayAdapter is AbstractAdapter, IMidasGatewayAdapter {
     /// @notice Withdraws phantom token balance for its tracked output token
     /// @param token Phantom token address
     /// @param amount Amount to withdraw
-    function withdrawPhantomToken(address token, uint256 amount) external override creditFacadeOnly returns (bool) {
+    function withdrawPhantomToken(address token, uint256 amount)
+        external
+        override
+        creditFacadeOnly
+        whenPhantomTokenSet
+        returns (bool)
+    {
         if (token != phantomToken) revert IncorrectStakedPhantomTokenException();
 
         _withdraw(amount);
@@ -140,7 +183,14 @@ contract MidasGatewayAdapter is AbstractAdapter, IMidasGatewayAdapter {
 
     /// @notice Deposits phantom token (not implemented for redemptions)
     /// @dev Redemptions only support withdrawals, not deposits
-    function depositPhantomToken(address, uint256) external view override creditFacadeOnly returns (bool) {
+    function depositPhantomToken(address, uint256)
+        external
+        view
+        override
+        creditFacadeOnly
+        whenPhantomTokenSet
+        returns (bool)
+    {
         revert NotImplementedException();
     }
 
