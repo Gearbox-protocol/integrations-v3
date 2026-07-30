@@ -128,9 +128,9 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
             revert AccessControlNotSetException();
         }
 
-        // if (_mode != MidasMode.Permissionless && _allowedMarketConfigurator == address(0)) {
-        //     revert ArbitraryCAAllowedInPermissionedModeException();
-        // }
+        if (_mode != MidasMode.Permissionless && _allowedMarketConfigurator == address(0)) {
+            revert ArbitraryCAAllowedInPermissionedModeException();
+        }
 
         if (_mode != MidasMode.Permissionless) {
             try IMidasRedemptionVault(_midasRedemptionVault).greenlistedRole() returns (bytes32 role) {
@@ -153,7 +153,7 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
         allowedMarketConfigurator = _allowedMarketConfigurator;
         expectedRedemptionDuration = _expectedRedemptionDuration;
 
-        // redemptionLogger = IAddressProvider(_addressProvider).getAddressOrRevert(AP_REDEMPTION_LOGGER, 3_10);
+        redemptionLogger = IAddressProvider(_addressProvider).getAddressOrRevert(AP_REDEMPTION_LOGGER, 3_10);
     }
 
     /// @notice Requests a redemption of mToken for quote token
@@ -324,9 +324,9 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
         (,,,,,,, address borrower) = ICreditManagerV3(creditManager).creditAccountInfo(caller);
         if (borrower == address(0)) return false;
 
-        // if (!_isAccountCreditManagerFromMarketConfigurator(creditManager)) {
-        //     return false;
-        // }
+        if (!_isAccountCreditManagerFromMarketConfigurator(creditManager)) {
+            return false;
+        }
 
         return mode != MidasMode.Permissioned || IMidasAccessControl(accessControl).hasRole(greenlistedRole, borrower);
     }
