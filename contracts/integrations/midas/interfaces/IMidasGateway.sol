@@ -4,15 +4,15 @@
 pragma solidity ^0.8.23;
 
 import {IVersion} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IVersion.sol";
+import {ICAChecker} from "../../common/interfaces/ICAChecker.sol";
+import {IRedemptionLogging} from "../../common/interfaces/IRedemptionLogging.sol";
 
 /// @dev Bounds the loops that iterate an account's pending redeemers, `withdraw` above all
 uint256 constant MAX_PENDING_REDEEMERS_PER_ACCOUNT = 10;
 
-bytes32 constant CREDIT_ACCOUNT_TYPE = "CREDIT_ACCOUNT";
-
 /// @notice Access mode for a Midas gateway deployment
 enum MidasMode {
-    /// @dev No access control; any account may interact
+    /// @dev No Midas access control; credit accounts from the allowed market configurator may interact
     Permissionless,
     /// @dev Access-controlled vaults; credit accounts must belong to a market configurator,
     ///      but borrowers are not required to be greenlisted
@@ -24,7 +24,7 @@ enum MidasMode {
 
 /// @title Midas Gateway interface
 /// @notice External interface of the Midas delayed-redemption gateway
-interface IMidasGateway is IVersion {
+interface IMidasGateway is IVersion, ICAChecker, IRedemptionLogging {
     /// @dev Thrown when attempting to transfer a redeemer to a new account without permission
     error RedeemerTransferNotAllowedException();
     /// @dev Thrown when attempting to transfer a redeemer to a new account that is not greenlisted
@@ -35,13 +35,8 @@ interface IMidasGateway is IVersion {
     error AccessControlNotSetException();
     /// @dev Thrown when attempting to create a new redeemer for an account that has too many pending redeemers
     error MaxPendingRedeemersPerAccountException();
-    /// @dev Thrown when an account that is not eligible to interact with the gateway attempts to interact with the gateway
-    error CreditAccountNotEligibleException();
     /// @dev Thrown when attempting to withdraw more tokens than all account's redeemers have
     error InsufficientBalanceException();
-    /// @dev Thrown when attempting to create a gateway for a non-permissionless mode that allows arbitrary accounts
-    ///      to interact with it
-    error ArbitraryCAAllowedInPermissionedModeException();
     /// @dev Thrown when attempting to request a greenlist in a non-permissioned mode
     error GreenlistRequestedInNonPermissionedModeException();
 
@@ -62,9 +57,6 @@ interface IMidasGateway is IVersion {
 
     /// @notice Access mode of the gateway
     function mode() external view returns (MidasMode);
-
-    /// @notice Address of the redemption logger contract
-    function redemptionLogger() external view returns (address);
 
     /// @notice Identifier of the vault's greenlisted role in Midas access control
     function greenlistedRole() external view returns (bytes32);

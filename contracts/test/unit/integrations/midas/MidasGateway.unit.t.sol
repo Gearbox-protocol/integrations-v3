@@ -12,6 +12,7 @@ import {MidasRedeemer} from "../../../../integrations/midas/MidasRedeemer.sol";
 import {MidasDegenNFT} from "../../../../integrations/midas/MidasDegenNFT.sol";
 import {MidasRedemptionVaultPhantomToken} from "../../../../integrations/midas/MidasRedemptionVaultPhantomToken.sol";
 import {IMidasGateway, MidasMode} from "../../../../integrations/midas/interfaces/IMidasGateway.sol";
+import {ICAChecker} from "../../../../integrations/common/interfaces/ICAChecker.sol";
 import {STANDARD_GREENLISTED_ROLE} from "../../../../integrations/midas/interfaces/external/IMidasAccessControl.sol";
 import {RedemptionLogger} from "../../../../integrations/common/RedemptionLogger.sol";
 import {
@@ -207,6 +208,9 @@ contract MidasGatewayUnitTest is Test {
     MidasDataFeedMock dataFeed;
     CreditManagerMock creditManager;
     CreditAccountMock account;
+    ContractsRegisterMock contractsRegister;
+    MarketConfiguratorMock marketConfigurator;
+    RedemptionLogger redemptionLogger;
 
     address mToken;
     address quoteToken;
@@ -226,21 +230,27 @@ contract MidasGatewayUnitTest is Test {
         dataFeed = new MidasDataFeedMock();
         redemptionVault = new MidasRedemptionVaultMock(mToken, address(dataFeed));
         creditManager = new CreditManagerMock();
-        addressProvider = new RedemptionLoggerAddressProviderMock(address(0));
+        redemptionLogger = new RedemptionLogger(address(this));
+        addressProvider = new RedemptionLoggerAddressProviderMock(address(redemptionLogger));
+
+        contractsRegister = new ContractsRegisterMock();
+        marketConfigurator = new MarketConfiguratorMock(address(contractsRegister));
 
         gateway = new MidasGateway(
             address(redemptionVault),
             quoteToken,
             MidasMode.Permissionless,
-            address(0), // allowed market configurator (none => skip registration check)
+            address(marketConfigurator),
             REDEMPTION_DURATION,
             true, // withDelayedWithdrawals
             address(addressProvider)
         );
+        redemptionLogger.setGatewayAllowed(address(gateway), true);
         transferMaster = gateway.transferMaster();
 
         account = new CreditAccountMock(address(creditManager));
         creditManager.setBorrower(address(account), borrower);
+        contractsRegister.setCreditManager(address(creditManager), true);
     }
 
     function _setTransferAllowedFor(address account_) internal {
@@ -272,10 +282,11 @@ contract MidasGatewayUnitTest is Test {
             IVersion(gateway.transferMaster()).contractType(), "RWA_LIQUIDATOR::MIDAS", "Incorrect transfer master type"
         );
         assertEq(gateway.expectedRedemptionDuration(), REDEMPTION_DURATION, "Incorrect redemption duration");
-        assertEq(gateway.redemptionLogger(), address(0), "Incorrect redemption logger");
+        assertEq(gateway.redemptionLogger(), address(redemptionLogger), "Incorrect redemption logger");
         assertTrue(gateway.masterRedeemer() != address(0), "Master redeemer not set");
         assertEq(gateway.degenNFT(), address(0), "Degen NFT should not be deployed in Permissionless");
         assertEq(gateway.accessControl(), address(0), "Access control should be zero in Permissionless");
+        assertEq(gateway.allowedMarketConfigurator(), address(marketConfigurator), "Incorrect market configurator");
     }
 
     /// @notice U:[MID-G-1A]: Phantom token deployed in constructor has correct parameters
@@ -305,7 +316,7 @@ contract MidasGatewayUnitTest is Test {
             address(redemptionVault),
             quoteToken,
             MidasMode.Permissionless,
-            address(0),
+            address(marketConfigurator),
             REDEMPTION_DURATION,
             false, // withDelayedWithdrawals
             address(addressProvider)
@@ -335,9 +346,6 @@ contract MidasGatewayUnitTest is Test {
         address accessControl = makeAddr("ACCESS_CONTROL");
         redemptionVault.setAccessControl(accessControl);
 
-        ContractsRegisterMock contractsRegister = new ContractsRegisterMock();
-        MarketConfiguratorMock marketConfigurator = new MarketConfiguratorMock(address(contractsRegister));
-
         MidasGateway controlledGateway = new MidasGateway(
             address(redemptionVault),
             quoteToken,
@@ -357,17 +365,14 @@ contract MidasGatewayUnitTest is Test {
         assertEq(controlledGateway.degenNFT(), address(0), "Degen NFT should not be deployed");
     }
 
-    /// @notice U:[MID-G-2C]: Constructor reverts when permissioned mode allows arbitrary accounts
-    function test_U_MID_G_02C_constructor_reverts_when_permissioned_without_market_configurator() public {
-        address accessControl = makeAddr("ACCESS_CONTROL");
-        redemptionVault.setAccessControl(accessControl);
-
-        vm.expectRevert(IMidasGateway.ArbitraryCAAllowedInPermissionedModeException.selector);
+    /// @notice U:[MID-G-2C]: Constructor reverts when market configurator is not set
+    function test_U_MID_G_02C_constructor_reverts_when_market_configurator_not_set() public {
+        vm.expectRevert(ICAChecker.MarketConfiguratorNotSetException.selector);
         new MidasGateway(
             address(redemptionVault),
             quoteToken,
-            MidasMode.RestrictedInterface,
-            address(0), // no market configurator in non-permissionless mode
+            MidasMode.Permissionless,
+            address(0),
             REDEMPTION_DURATION,
             true,
             address(addressProvider)
@@ -376,9 +381,6 @@ contract MidasGatewayUnitTest is Test {
 
     /// @notice U:[MID-G-3]: Constructor reverts when non-permissionless mode has no vault access control
     function test_U_MID_G_03_constructor_reverts_when_access_control_not_set() public {
-        ContractsRegisterMock contractsRegister = new ContractsRegisterMock();
-        MarketConfiguratorMock marketConfigurator = new MarketConfiguratorMock(address(contractsRegister));
-
         vm.expectRevert(IMidasGateway.AccessControlNotSetException.selector);
         new MidasGateway(
             address(redemptionVault),
@@ -391,19 +393,13 @@ contract MidasGatewayUnitTest is Test {
         );
     }
 
-    /// @notice U:[MID-G-6]: Non-access-controlled gateways accept any caller
-    function test_U_MID_G_06_allows_any_caller_without_access_control() public {
+    /// @notice U:[MID-G-6]: Gateways revert for non-credit-account callers in all modes
+    function test_U_MID_G_06_reverts_for_non_credit_account_caller() public {
         address notCreditAccount = address(new NonCreditAccountMock());
-        uint256 amountMToken = 100e18;
-
-        deal(mToken, notCreditAccount, amountMToken);
-        vm.prank(notCreditAccount);
-        IERC20(mToken).approve(address(gateway), amountMToken);
 
         vm.prank(notCreditAccount);
-        gateway.requestRedeem(amountMToken, "");
-
-        assertEq(gateway.pendingRedeemers(notCreditAccount).length, 1, "Redeemer not created");
+        vm.expectRevert(ICAChecker.CreditAccountNotEligibleException.selector);
+        gateway.requestRedeem(1, "");
     }
 
     /// @notice U:[MID-G-6A]: Access-controlled gateways revert for non-credit-account callers
@@ -413,30 +409,26 @@ contract MidasGatewayUnitTest is Test {
         address notCreditAccount = address(new NonCreditAccountMock());
 
         vm.prank(notCreditAccount);
-        vm.expectRevert(IMidasGateway.CreditAccountNotEligibleException.selector);
+        vm.expectRevert(ICAChecker.CreditAccountNotEligibleException.selector);
         controlledGateway.requestRedeem(1, "");
     }
 
-    /// @notice U:[MID-G-7]: Access-controlled gateways revert when borrower is not set
+    /// @notice U:[MID-G-7]: Gateways revert when borrower is not set
     function test_U_MID_G_07_reverts_when_borrower_not_set() public {
-        (MidasGateway controlledGateway, ContractsRegisterMock contractsRegister) =
-            _deployAccessControlledGateway(MidasMode.RestrictedInterface);
-        contractsRegister.setCreditManager(address(creditManager), true);
-
         CreditAccountMock accountNoBorrower = new CreditAccountMock(address(creditManager));
 
         vm.prank(address(accountNoBorrower));
-        vm.expectRevert(IMidasGateway.CreditAccountNotEligibleException.selector);
-        controlledGateway.requestRedeem(1, "");
+        vm.expectRevert(ICAChecker.CreditAccountNotEligibleException.selector);
+        gateway.requestRedeem(1, "");
     }
 
-    /// @notice U:[MID-G-7A]: Access-controlled gateways revert when credit manager is not registered
+    /// @notice U:[MID-G-7A]: Gateways revert when credit manager is not registered
     function test_U_MID_G_07A_reverts_when_credit_manager_not_registered() public {
-        (MidasGateway controlledGateway,) = _deployAccessControlledGateway(MidasMode.RestrictedInterface);
+        contractsRegister.setCreditManager(address(creditManager), false);
 
         vm.prank(address(account));
-        vm.expectRevert(IMidasGateway.CreditAccountNotEligibleException.selector);
-        controlledGateway.requestRedeem(1, "");
+        vm.expectRevert(ICAChecker.CreditAccountNotEligibleException.selector);
+        gateway.requestRedeem(1, "");
     }
 
     /// @notice U:[MID-G-8]: `requestRedeem` creates a redeemer and forwards the request
@@ -606,6 +598,9 @@ contract MidasGatewayUnitTest is Test {
 
     /// @notice U:[MID-G-13A]: `transferRedeemer` can only be used once per redeemer
     function test_U_MID_G_13A_transferRedeemer_can_only_be_used_once() public {
+        CreditAccountMock recipient = new CreditAccountMock(address(creditManager));
+        creditManager.setBorrower(address(recipient), makeAddr("RECIPIENT_BORROWER"));
+
         uint256 amountMToken = 100e18;
         deal(mToken, address(account), amountMToken);
         account.approveToken(mToken, address(gateway), amountMToken);
@@ -617,10 +612,10 @@ contract MidasGatewayUnitTest is Test {
         _setTransferAllowedFor(address(account));
 
         vm.prank(address(account));
-        gateway.transferRedeemer(redeemer, newAccount);
+        gateway.transferRedeemer(redeemer, address(recipient));
 
-        _setTransferAllowedFor(newAccount);
-        vm.prank(newAccount);
+        _setTransferAllowedFor(address(recipient));
+        vm.prank(address(recipient));
         vm.expectRevert(IMidasGateway.RedeemerTransferNotAllowedException.selector);
         gateway.transferRedeemer(redeemer, address(account));
     }
@@ -688,7 +683,7 @@ contract MidasGatewayUnitTest is Test {
             address(redemptionVault),
             quoteToken,
             MidasMode.Permissionless,
-            address(0),
+            address(marketConfigurator),
             REDEMPTION_DURATION,
             true,
             address(loggerAddressProvider)
@@ -718,9 +713,6 @@ contract MidasGatewayUnitTest is Test {
         redemptionVault.setAccessControl(accessControl);
         redemptionVault.setGreenlistedRole(customRole);
 
-        ContractsRegisterMock contractsRegister = new ContractsRegisterMock();
-        MarketConfiguratorMock marketConfigurator = new MarketConfiguratorMock(address(contractsRegister));
-
         MidasGateway controlledGateway = new MidasGateway(
             address(redemptionVault),
             quoteToken,
@@ -739,9 +731,6 @@ contract MidasGatewayUnitTest is Test {
         address accessControl = makeAddr("ACCESS_CONTROL");
         redemptionVault.setAccessControl(accessControl);
         // greenlistedRole unsupported => falls back to STANDARD
-
-        ContractsRegisterMock contractsRegister = new ContractsRegisterMock();
-        MarketConfiguratorMock marketConfigurator = new MarketConfiguratorMock(address(contractsRegister));
 
         MidasGateway controlledGateway = new MidasGateway(
             address(redemptionVault),
@@ -822,7 +811,7 @@ contract MidasGatewayUnitTest is Test {
         account.approveToken(mToken, address(permissionedGateway), 1e18);
 
         vm.prank(address(account));
-        vm.expectRevert(IMidasGateway.CreditAccountNotEligibleException.selector);
+        vm.expectRevert(ICAChecker.CreditAccountNotEligibleException.selector);
         permissionedGateway.requestRedeem(1e18, "");
     }
 
@@ -935,5 +924,6 @@ contract MidasGatewayUnitTest is Test {
             true,
             address(addressProvider)
         );
+        redemptionLogger.setGatewayAllowed(address(controlledGateway), true);
     }
 }

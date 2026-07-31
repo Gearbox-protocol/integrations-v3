@@ -8,13 +8,12 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
-import {IAddressProvider} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IAddressProvider.sol";
-
+import {CACheckerTrait} from "../common/CACheckerTrait.sol";
+import {RedemptionLoggingTrait} from "../common/RedemptionLoggingTrait.sol";
 import {ISecuritizeRedemptionGateway} from "./interfaces/ISecuritizeRedemptionGateway.sol";
 import {ISecuritizeWhitelister} from "./interfaces/external/ISecuritizeWhitelister.sol";
 import {ISecuritizeGatewayTransferMaster} from "./interfaces/ISecuritizeGatewayTransferMaster.sol";
 import {ISecuritizeRegistryService} from "./interfaces/external/ISecuritizeRegistryService.sol";
-import {IRedemptionLogger, AP_REDEMPTION_LOGGER} from "../common/interfaces/IRedemptionLogger.sol";
 import {SecuritizeRedeemer} from "./SecuritizeRedeemer.sol";
 import {SecuritizeRedemptionPhantomToken} from "./SecuritizeRedemptionPhantomToken.sol";
 
@@ -22,7 +21,7 @@ bytes32 constant SALT = keccak256("SecuritizeRedemptionGateway");
 
 /// @title SecuritizeRedemptionGateway
 /// @notice Allows Credit Accounts to redeem DS tokens to stablecoins using the EOA redemption flow
-contract SecuritizeRedemptionGateway is ISecuritizeRedemptionGateway {
+contract SecuritizeRedemptionGateway is CACheckerTrait, RedemptionLoggingTrait, ISecuritizeRedemptionGateway {
     using SafeERC20 for IERC20;
     using EnumerableSet for EnumerableSet.AddressSet;
 
@@ -45,8 +44,6 @@ contract SecuritizeRedemptionGateway is ISecuritizeRedemptionGateway {
 
     address public immutable registryService;
 
-    address public immutable redemptionLogger;
-
     address public immutable phantomToken;
 
     mapping(address => EnumerableSet.AddressSet) internal redeemersByAccount;
@@ -62,8 +59,9 @@ contract SecuritizeRedemptionGateway is ISecuritizeRedemptionGateway {
         address _transferMaster,
         address _navProvider,
         address _registryService,
+        address _allowedMarketConfigurator,
         address _addressProvider
-    ) {
+    ) CACheckerTrait(_allowedMarketConfigurator) RedemptionLoggingTrait(_addressProvider) {
         dsToken = _dsToken;
         stableCoinToken = _stableCoinToken;
         redemptionAccount = _redemptionAccount;
@@ -76,25 +74,17 @@ contract SecuritizeRedemptionGateway is ISecuritizeRedemptionGateway {
             address(new SecuritizeRedeemer{salt: SALT}(_dsToken, _stableCoinToken, _redemptionAccount, _navProvider));
         phantomToken =
             address(new SecuritizeRedemptionPhantomToken{salt: SALT}(address(this), _dsToken, _stableCoinToken));
-
-        try IAddressProvider(_addressProvider).getAddressOrRevert(AP_REDEMPTION_LOGGER, 3_10) returns (
-            address _redemptionLogger
-        ) {
-            redemptionLogger = _redemptionLogger;
-        } catch {
-            redemptionLogger = address(0);
-        }
     }
 
     /// @notice Redeem DS tokens for stablecoins
     /// @param dsTokenAmount The amount of DS tokens to redeem
     /// @param extraData Additional redemption data to log
-    function redeem(uint256 dsTokenAmount, bytes calldata extraData) external {
+    function redeem(uint256 dsTokenAmount, bytes calldata extraData) external onlyEligibleAccount {
         if (dsTokenAmount == 0) return;
         address redeemer = _makeNewRedeemerForAccount(msg.sender);
         IERC20(dsToken).safeTransferFrom(msg.sender, redeemer, dsTokenAmount);
         SecuritizeRedeemer(redeemer).redeem(dsTokenAmount);
-        _logRedemptionIfConfigured(msg.sender, redeemer, extraData);
+        _logRedemption(msg.sender, redeemer, extraData);
     }
 
     /// @notice Transfers a redeemer to a new account
@@ -102,7 +92,7 @@ contract SecuritizeRedemptionGateway is ISecuritizeRedemptionGateway {
     /// @param newAccount The new account to transfer the redeemer to
     /// @dev Can only be used when account transfers are unlocked for a specific account - usually during liquidations
     /// @dev The redeemer is removed forever from unclaimed redeemers, which means it can only be transferred once
-    function transferRedeemer(address redeemer, address newAccount) external {
+    function transferRedeemer(address redeemer, address newAccount) external onlyEligibleAccount {
         if (
             !ISecuritizeGatewayTransferMaster(transferMaster).isTransferAllowed(msg.sender)
                 || !unclaimedRedeemers[msg.sender].contains(redeemer)
@@ -175,12 +165,5 @@ contract SecuritizeRedemptionGateway is ISecuritizeRedemptionGateway {
 
         redeemersByAccount[account].add(redeemer);
         unclaimedRedeemers[account].add(redeemer);
-    }
-
-    /// @dev Logs redemption initiation if a logger is configured
-    function _logRedemptionIfConfigured(address creditAccount, address redeemer, bytes calldata extraData) internal {
-        if (redemptionLogger != address(0)) {
-            IRedemptionLogger(redemptionLogger).logRedemption(creditAccount, redeemer, extraData);
-        }
     }
 }

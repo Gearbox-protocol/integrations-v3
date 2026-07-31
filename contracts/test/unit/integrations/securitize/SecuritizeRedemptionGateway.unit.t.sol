@@ -25,6 +25,7 @@ import {
 import {
     ISecuritizeRedemptionGateway
 } from "../../../../integrations/securitize/interfaces/ISecuritizeRedemptionGateway.sol";
+import {ICAChecker} from "../../../../integrations/common/interfaces/ICAChecker.sol";
 import {
     ISecuritizeRegistryService
 } from "../../../../integrations/securitize/interfaces/external/ISecuritizeRegistryService.sol";
@@ -108,6 +109,66 @@ contract SecuritizeGatewayTransferMasterMock is ISecuritizeGatewayTransferMaster
         }
     }
 
+    /// @dev Mimics a Credit Account: reports the expected contract type and a configurable credit manager,
+    ///      and can approve tokens so the gateway can pull them via `transferFrom`.
+    contract CreditAccountMock {
+        bytes32 public constant contractType = "CREDIT_ACCOUNT";
+        uint256 public constant version = 3_10;
+
+        address public immutable creditManager;
+
+        constructor(address _creditManager) {
+            creditManager = _creditManager;
+        }
+
+        function approveToken(address token, address spender, uint256 amount) external {
+            IERC20(token).approve(spender, amount);
+        }
+    }
+
+    /// @dev A contract that reports a non-credit-account contract type, used to exercise the eligibility check.
+    contract NonCreditAccountMock {
+        bytes32 public constant contractType = "NOT_CREDIT_ACCOUNT";
+    }
+
+    contract CreditManagerMock {
+        mapping(address => address) internal _borrowers;
+
+        function setBorrower(address creditAccount, address borrower) external {
+            _borrowers[creditAccount] = borrower;
+        }
+
+        function creditAccountInfo(address creditAccount)
+            external
+            view
+            returns (uint256, uint256, uint128, uint128, uint256, uint16, uint64, address borrower)
+        {
+            borrower = _borrowers[creditAccount];
+
+            return (0, 0, 0, 0, 0, 0, 0, borrower);
+        }
+    }
+
+    contract ContractsRegisterMock {
+        mapping(address => bool) internal _isCreditManager;
+
+        function setCreditManager(address creditManager, bool isCreditManager_) external {
+            _isCreditManager[creditManager] = isCreditManager_;
+        }
+
+        function isCreditManager(address creditManager) external view returns (bool) {
+            return _isCreditManager[creditManager];
+        }
+    }
+
+    contract MarketConfiguratorMock {
+        address public immutable contractsRegister;
+
+        constructor(address contractsRegister_) {
+            contractsRegister = contractsRegister_;
+        }
+    }
+
     /// @title SecuritizeRedemptionGateway unit test
     /// @notice U:[SRG]: Unit tests for SecuritizeRedemptionGateway
     contract SecuritizeRedemptionGatewayUnitTest is Test {
@@ -117,18 +178,23 @@ contract SecuritizeGatewayTransferMasterMock is ISecuritizeGatewayTransferMaster
         SecuritizeGatewayTransferMasterMock transferMaster;
         SecuritizeRegistryServiceMock registryService;
         RedemptionLoggerAddressProviderMock addressProvider;
+        CreditManagerMock creditManager;
+        CreditAccountMock account;
+        ContractsRegisterMock contractsRegister;
+        MarketConfiguratorMock marketConfigurator;
+        RedemptionLogger redemptionLogger;
 
         address dsToken;
         address stableCoinToken;
         address redemptionAccount;
-        address account;
+        address borrower;
         address newAccount;
 
         function setUp() public {
             dsToken = address(new ERC20Mock("DS", "DS", 18));
             stableCoinToken = address(new ERC20Mock("USDC", "USDC", 6));
             redemptionAccount = makeAddr("REDEMPTION_ACCOUNT");
-            account = makeAddr("ACCOUNT");
+            borrower = makeAddr("BORROWER");
             newAccount = makeAddr("NEW_ACCOUNT");
 
             navProvider = new SecuritizeNAVProviderMock(1e18);
@@ -136,7 +202,12 @@ contract SecuritizeGatewayTransferMasterMock is ISecuritizeGatewayTransferMaster
             transferMaster = new SecuritizeGatewayTransferMasterMock();
             registryService = new SecuritizeRegistryServiceMock();
             registryService.setWallet(newAccount, true);
-            addressProvider = new RedemptionLoggerAddressProviderMock(address(0));
+            redemptionLogger = new RedemptionLogger(address(this));
+            addressProvider = new RedemptionLoggerAddressProviderMock(address(redemptionLogger));
+
+            creditManager = new CreditManagerMock();
+            contractsRegister = new ContractsRegisterMock();
+            marketConfigurator = new MarketConfiguratorMock(address(contractsRegister));
 
             gateway = new SecuritizeRedemptionGateway(
                 dsToken,
@@ -146,8 +217,14 @@ contract SecuritizeGatewayTransferMasterMock is ISecuritizeGatewayTransferMaster
                 address(transferMaster),
                 address(navProvider),
                 address(registryService),
+                address(marketConfigurator),
                 address(addressProvider)
             );
+            redemptionLogger.setGatewayAllowed(address(gateway), true);
+
+            account = new CreditAccountMock(address(creditManager));
+            creditManager.setBorrower(address(account), borrower);
+            contractsRegister.setCreditManager(address(creditManager), true);
         }
 
         /// @notice U:[SRG-1]: Constructor works as expected
@@ -160,7 +237,8 @@ contract SecuritizeGatewayTransferMasterMock is ISecuritizeGatewayTransferMaster
             assertEq(gateway.securitizeWhitelister(), address(whitelister));
             assertEq(gateway.transferMaster(), address(transferMaster));
             assertEq(gateway.registryService(), address(registryService));
-            assertEq(gateway.redemptionLogger(), address(0), "Incorrect redemption logger");
+            assertEq(gateway.allowedMarketConfigurator(), address(marketConfigurator), "Incorrect market configurator");
+            assertEq(gateway.redemptionLogger(), address(redemptionLogger), "Incorrect redemption logger");
             assertTrue(gateway.masterRedeemer() != address(0));
             assertTrue(gateway.phantomToken() != address(0), "Phantom token not deployed");
         }
@@ -188,37 +266,69 @@ contract SecuritizeGatewayTransferMasterMock is ISecuritizeGatewayTransferMaster
 
         /// @notice U:[SRG-1A]: zero redeem is a no-op
         function test_U_SRG_01A_redeem_zero_is_noop() public {
-            vm.prank(account);
+            vm.prank(address(account));
             gateway.redeem(0, "");
 
-            assertEq(gateway.getRedeemers(account).length, 0);
-            assertEq(gateway.getUnclaimedRedeemers(account).length, 0);
+            assertEq(gateway.getRedeemers(address(account)).length, 0);
+            assertEq(gateway.getUnclaimedRedeemers(address(account)).length, 0);
             assertEq(whitelister.calls(), 0);
+        }
+
+        /// @notice U:[SRG-1C]: Constructor reverts when market configurator is not set
+        function test_U_SRG_01C_constructor_reverts_when_market_configurator_not_set() public {
+            vm.expectRevert(ICAChecker.MarketConfiguratorNotSetException.selector);
+            new SecuritizeRedemptionGateway(
+                dsToken,
+                stableCoinToken,
+                redemptionAccount,
+                address(whitelister),
+                address(transferMaster),
+                address(navProvider),
+                address(registryService),
+                address(0),
+                address(addressProvider)
+            );
+        }
+
+        /// @notice U:[SRG-1D]: Gateway reverts for non-credit-account callers
+        function test_U_SRG_01D_reverts_for_non_credit_account_caller() public {
+            address notCreditAccount = address(new NonCreditAccountMock());
+
+            vm.prank(notCreditAccount);
+            vm.expectRevert(ICAChecker.CreditAccountNotEligibleException.selector);
+            gateway.redeem(1, "");
+        }
+
+        /// @notice U:[SRG-1E]: Gateway reverts when credit manager is not registered
+        function test_U_SRG_01E_reverts_when_credit_manager_not_registered() public {
+            contractsRegister.setCreditManager(address(creditManager), false);
+
+            vm.prank(address(account));
+            vm.expectRevert(ICAChecker.CreditAccountNotEligibleException.selector);
+            gateway.redeem(1, "");
         }
 
         /// @notice U:[SRG-2]: redeem creates a redeemer and executes redemption flow
         function test_U_SRG_02_redeem_works() public {
             navProvider.setRate(2e18);
-            deal(dsToken, account, 100e18);
+            deal(dsToken, address(account), 100e18);
+            account.approveToken(dsToken, address(gateway), 100e18);
 
-            vm.prank(account);
-            IERC20(dsToken).approve(address(gateway), 100e18);
-
-            vm.prank(account);
+            vm.prank(address(account));
             gateway.redeem(100e18, "");
 
-            address[] memory redeemers = gateway.getRedeemers(account);
+            address[] memory redeemers = gateway.getRedeemers(address(account));
             assertEq(redeemers.length, 1);
 
             address redeemer = redeemers[0];
-            assertEq(gateway.getUnclaimedRedeemers(account).length, 1);
+            assertEq(gateway.getUnclaimedRedeemers(address(account)).length, 1);
             assertEq(whitelister.calls(), 1);
-            assertEq(whitelister.lastCreditAccount(), account);
+            assertEq(whitelister.lastCreditAccount(), address(account));
             assertEq(whitelister.lastHelperAccount(), redeemer);
             assertEq(whitelister.lastToken(), dsToken);
 
             assertEq(IERC20(dsToken).balanceOf(redemptionAccount), 100e18);
-            assertEq(SecuritizeRedeemer(redeemer).account(), account);
+            assertEq(SecuritizeRedeemer(redeemer).account(), address(account));
             assertEq(SecuritizeRedeemer(redeemer).pendingDsTokenAmount(), 100e18);
             assertEq(SecuritizeRedeemer(redeemer).startingNavRate(), 2e18);
             assertTrue(SecuritizeRedeemer(redeemer).alreadyRedeemed());
@@ -226,49 +336,47 @@ contract SecuritizeGatewayTransferMasterMock is ISecuritizeGatewayTransferMaster
 
         /// @notice U:[SRG-3]: redeem creates a new redeemer on each call
         function test_U_SRG_03_redeem_creates_new_redeemer_each_time() public {
-            deal(dsToken, account, 300e18);
+            deal(dsToken, address(account), 300e18);
+            account.approveToken(dsToken, address(gateway), 300e18);
 
-            vm.startPrank(account);
-            IERC20(dsToken).approve(address(gateway), 300e18);
+            vm.startPrank(address(account));
             gateway.redeem(100e18, "");
             gateway.redeem(200e18, "");
             vm.stopPrank();
 
-            address[] memory redeemers = gateway.getRedeemers(account);
+            address[] memory redeemers = gateway.getRedeemers(address(account));
             assertEq(redeemers.length, 2);
             assertTrue(redeemers[0] != redeemers[1]);
-            assertEq(gateway.getUnclaimedRedeemers(account).length, 2);
+            assertEq(gateway.getUnclaimedRedeemers(address(account)).length, 2);
             assertEq(whitelister.calls(), 2);
         }
 
         /// @notice U:[SRG-4]: claim transfers stablecoin and removes redeemer from unclaimed list
         function test_U_SRG_04_claim_works() public {
-            deal(dsToken, account, 100e18);
-            vm.prank(account);
-            IERC20(dsToken).approve(address(gateway), 100e18);
-            vm.prank(account);
+            deal(dsToken, address(account), 100e18);
+            account.approveToken(dsToken, address(gateway), 100e18);
+            vm.prank(address(account));
             gateway.redeem(100e18, "");
 
-            address redeemer = gateway.getRedeemers(account)[0];
+            address redeemer = gateway.getRedeemers(address(account))[0];
             deal(stableCoinToken, redeemer, 123e6);
 
-            vm.prank(account);
+            vm.prank(address(account));
             gateway.claim(_toArray(redeemer));
 
-            assertEq(IERC20(stableCoinToken).balanceOf(account), 123e6);
-            assertEq(gateway.getRedeemers(account).length, 1);
-            assertEq(gateway.getUnclaimedRedeemers(account).length, 0);
+            assertEq(IERC20(stableCoinToken).balanceOf(address(account)), 123e6);
+            assertEq(gateway.getRedeemers(address(account)).length, 1);
+            assertEq(gateway.getUnclaimedRedeemers(address(account)).length, 0);
         }
 
         /// @notice U:[SRG-5]: claim reverts when redeemer is not owned by account
         function test_U_SRG_05_claim_reverts_if_not_owned() public {
-            deal(dsToken, account, 100e18);
-            vm.prank(account);
-            IERC20(dsToken).approve(address(gateway), 100e18);
-            vm.prank(account);
+            deal(dsToken, address(account), 100e18);
+            account.approveToken(dsToken, address(gateway), 100e18);
+            vm.prank(address(account));
             gateway.redeem(100e18, "");
 
-            address redeemer = gateway.getRedeemers(account)[0];
+            address redeemer = gateway.getRedeemers(address(account))[0];
 
             vm.expectRevert(ISecuritizeRedemptionGateway.RedeemerNotOwnedByAccountException.selector);
             vm.prank(newAccount);
@@ -277,10 +385,10 @@ contract SecuritizeGatewayTransferMasterMock is ISecuritizeGatewayTransferMaster
 
         /// @notice U:[SRG-6]: getRedemptionAmount sums over all unclaimed redeemers
         function test_U_SRG_06_getRedemptionAmount_works() public {
-            deal(dsToken, account, 150e18);
-            vm.startPrank(account);
-            IERC20(dsToken).approve(address(gateway), 150e18);
+            deal(dsToken, address(account), 150e18);
+            account.approveToken(dsToken, address(gateway), 150e18);
 
+            vm.startPrank(address(account));
             navProvider.setRate(1e18);
             gateway.redeem(100e18, "");
 
@@ -289,40 +397,39 @@ contract SecuritizeGatewayTransferMasterMock is ISecuritizeGatewayTransferMaster
             vm.stopPrank();
 
             navProvider.setRate(1e18);
-            assertEq(gateway.getRedemptionAmount(account), 150e6);
+            assertEq(gateway.getRedemptionAmount(address(account)), 150e6);
 
-            address redeemerToClaim = gateway.getRedeemers(account)[0];
+            address redeemerToClaim = gateway.getRedeemers(address(account))[0];
             deal(stableCoinToken, redeemerToClaim, 100e6);
-            vm.prank(account);
+            vm.prank(address(account));
             gateway.claim(_toArray(redeemerToClaim));
 
-            assertEq(gateway.getRedemptionAmount(account), 50e6);
+            assertEq(gateway.getRedemptionAmount(address(account)), 50e6);
         }
 
         /// @notice U:[SRG-7]: transferRedeemer reassigns ownership when transfer is allowed
         /// @dev Transferred redeemers are removed from unclaimed sets (one-time transfer; collateral zeroed for recipient)
         function test_U_SRG_07_transferRedeemer_works_when_allowed() public {
-            deal(dsToken, account, 100e18);
-            vm.prank(account);
-            IERC20(dsToken).approve(address(gateway), 100e18);
-            vm.prank(account);
+            deal(dsToken, address(account), 100e18);
+            account.approveToken(dsToken, address(gateway), 100e18);
+            vm.prank(address(account));
             gateway.redeem(100e18, "");
 
-            address redeemer = gateway.getRedeemers(account)[0];
-            transferMaster.setTransferAllowed(account);
+            address redeemer = gateway.getRedeemers(address(account))[0];
+            transferMaster.setTransferAllowed(address(account));
 
-            vm.prank(account);
+            vm.prank(address(account));
             gateway.transferRedeemer(redeemer, newAccount);
 
-            assertEq(gateway.getRedeemers(account).length, 0);
-            assertEq(gateway.getUnclaimedRedeemers(account).length, 0);
+            assertEq(gateway.getRedeemers(address(account)).length, 0);
+            assertEq(gateway.getUnclaimedRedeemers(address(account)).length, 0);
             assertEq(gateway.getRedeemers(newAccount).length, 1);
             assertEq(gateway.getUnclaimedRedeemers(newAccount).length, 0);
             assertEq(gateway.getRedeemers(newAccount)[0], redeemer);
             assertEq(gateway.getRedemptionAmount(newAccount), 0);
 
             assertEq(whitelister.calls(), 1);
-            assertEq(whitelister.lastCreditAccount(), account);
+            assertEq(whitelister.lastCreditAccount(), address(account));
             assertEq(whitelister.lastHelperAccount(), redeemer);
             assertEq(whitelister.lastToken(), dsToken);
 
@@ -335,75 +442,71 @@ contract SecuritizeGatewayTransferMasterMock is ISecuritizeGatewayTransferMaster
 
         /// @notice U:[SRG-7A]: transferRedeemer reverts when new account is not registered
         function test_U_SRG_07A_transferRedeemer_reverts_when_new_account_not_registered() public {
-            deal(dsToken, account, 100e18);
-            vm.prank(account);
-            IERC20(dsToken).approve(address(gateway), 100e18);
-            vm.prank(account);
+            deal(dsToken, address(account), 100e18);
+            account.approveToken(dsToken, address(gateway), 100e18);
+            vm.prank(address(account));
             gateway.redeem(100e18, "");
 
-            address redeemer = gateway.getRedeemers(account)[0];
-            transferMaster.setTransferAllowed(account);
+            address redeemer = gateway.getRedeemers(address(account))[0];
+            transferMaster.setTransferAllowed(address(account));
             address unregisteredAccount = makeAddr("UNREGISTERED_ACCOUNT");
 
             vm.expectRevert(ISecuritizeRedemptionGateway.NewAccountNotRegisteredException.selector);
-            vm.prank(account);
+            vm.prank(address(account));
             gateway.transferRedeemer(redeemer, unregisteredAccount);
         }
 
         /// @notice U:[SRG-8]: transferRedeemer reverts when transfer is not allowed
         function test_U_SRG_08_transferRedeemer_reverts_when_not_allowed() public {
-            deal(dsToken, account, 100e18);
-            vm.prank(account);
-            IERC20(dsToken).approve(address(gateway), 100e18);
-            vm.prank(account);
+            deal(dsToken, address(account), 100e18);
+            account.approveToken(dsToken, address(gateway), 100e18);
+            vm.prank(address(account));
             gateway.redeem(100e18, "");
 
-            address redeemer = gateway.getRedeemers(account)[0];
+            address redeemer = gateway.getRedeemers(address(account))[0];
             transferMaster.setTransferAllowed(address(0));
 
             vm.expectRevert(ISecuritizeRedemptionGateway.RedeemerTransferNotAllowedException.selector);
-            vm.prank(account);
+            vm.prank(address(account));
             gateway.transferRedeemer(redeemer, newAccount);
         }
 
         /// @notice U:[SRG-8A]: transferRedeemer reverts when a different account is unlocked
         function test_U_SRG_08A_transferRedeemer_reverts_when_other_account_unlocked() public {
-            deal(dsToken, account, 100e18);
-            vm.prank(account);
-            IERC20(dsToken).approve(address(gateway), 100e18);
-            vm.prank(account);
+            deal(dsToken, address(account), 100e18);
+            account.approveToken(dsToken, address(gateway), 100e18);
+            vm.prank(address(account));
             gateway.redeem(100e18, "");
 
-            address redeemer = gateway.getRedeemers(account)[0];
+            address redeemer = gateway.getRedeemers(address(account))[0];
             transferMaster.setTransferAllowed(newAccount);
 
             vm.expectRevert(ISecuritizeRedemptionGateway.RedeemerTransferNotAllowedException.selector);
-            vm.prank(account);
+            vm.prank(address(account));
             gateway.transferRedeemer(redeemer, newAccount);
         }
 
         /// @notice U:[SRG-9]: transferRedeemer reverts when redeemer is not owned
         function test_U_SRG_09_transferRedeemer_reverts_if_not_owned() public {
-            transferMaster.setTransferAllowed(account);
+            transferMaster.setTransferAllowed(address(account));
 
             vm.expectRevert(ISecuritizeRedemptionGateway.RedeemerTransferNotAllowedException.selector);
-            vm.prank(account);
+            vm.prank(address(account));
             gateway.transferRedeemer(makeAddr("UNKNOWN_REDEEMER"), newAccount);
         }
 
         /// @notice U:[SRG-10]: claim works after transferRedeemer
         function test_U_SRG_10_claim_works_after_transferRedeemer() public {
-            deal(dsToken, account, 100e18);
-            vm.prank(account);
-            IERC20(dsToken).approve(address(gateway), 100e18);
+            deal(dsToken, address(account), 100e18);
+            account.approveToken(dsToken, address(gateway), 100e18);
 
-            vm.prank(account);
+            vm.prank(address(account));
             gateway.redeem(100e18, "");
 
-            address redeemer = gateway.getRedeemers(account)[0];
-            transferMaster.setTransferAllowed(account);
+            address redeemer = gateway.getRedeemers(address(account))[0];
+            transferMaster.setTransferAllowed(address(account));
 
-            vm.prank(account);
+            vm.prank(address(account));
             gateway.transferRedeemer(redeemer, newAccount);
 
             // Simulate stablecoins already received by the redeemer clone.
@@ -419,29 +522,32 @@ contract SecuritizeGatewayTransferMasterMock is ISecuritizeGatewayTransferMaster
 
         /// @notice U:[SRG-10A]: transferRedeemer can only be used once per redeemer
         function test_U_SRG_10A_transferRedeemer_can_only_be_used_once() public {
-            deal(dsToken, account, 100e18);
-            vm.prank(account);
-            IERC20(dsToken).approve(address(gateway), 100e18);
-            vm.prank(account);
+            CreditAccountMock recipient = new CreditAccountMock(address(creditManager));
+            creditManager.setBorrower(address(recipient), makeAddr("RECIPIENT_BORROWER"));
+            registryService.setWallet(address(recipient), true);
+
+            deal(dsToken, address(account), 100e18);
+            account.approveToken(dsToken, address(gateway), 100e18);
+            vm.prank(address(account));
             gateway.redeem(100e18, "");
 
-            address redeemer = gateway.getRedeemers(account)[0];
-            transferMaster.setTransferAllowed(account);
+            address redeemer = gateway.getRedeemers(address(account))[0];
+            transferMaster.setTransferAllowed(address(account));
 
-            vm.prank(account);
-            gateway.transferRedeemer(redeemer, newAccount);
+            vm.prank(address(account));
+            gateway.transferRedeemer(redeemer, address(recipient));
 
-            transferMaster.setTransferAllowed(newAccount);
+            transferMaster.setTransferAllowed(address(recipient));
             vm.expectRevert(ISecuritizeRedemptionGateway.RedeemerTransferNotAllowedException.selector);
-            vm.prank(newAccount);
-            gateway.transferRedeemer(redeemer, account);
+            vm.prank(address(recipient));
+            gateway.transferRedeemer(redeemer, address(account));
         }
 
         /// @notice U:[SRG-11]: redeem reverts when max unclaimed redeemers is reached
         function test_U_SRG_11_redeem_reverts_on_max_unclaimed_redeemers() public {
-            deal(dsToken, account, 11e18);
-            vm.startPrank(account);
-            IERC20(dsToken).approve(address(gateway), 11e18);
+            deal(dsToken, address(account), 11e18);
+            account.approveToken(dsToken, address(gateway), 11e18);
+            vm.startPrank(address(account));
             for (uint256 i = 0; i < 10; ++i) {
                 gateway.redeem(1e18, "");
             }
@@ -463,21 +569,21 @@ contract SecuritizeGatewayTransferMasterMock is ISecuritizeGatewayTransferMaster
                 address(transferMaster),
                 address(navProvider),
                 address(registryService),
+                address(marketConfigurator),
                 address(loggerAddressProvider)
             );
             logger.setGatewayAllowed(address(gatewayWithLogger), true);
 
-            deal(dsToken, account, 100e18);
-            vm.prank(account);
-            IERC20(dsToken).approve(address(gatewayWithLogger), 100e18);
+            deal(dsToken, address(account), 100e18);
+            account.approveToken(dsToken, address(gatewayWithLogger), 100e18);
 
             bytes memory extraData = abi.encode(uint256(42));
-            vm.prank(account);
+            vm.prank(address(account));
             gatewayWithLogger.redeem(100e18, extraData);
 
-            address redeemer = gatewayWithLogger.getRedeemers(account)[0];
+            address redeemer = gatewayWithLogger.getRedeemers(address(account))[0];
             IRedemptionLogger.RedemptionLog memory log = logger.redemptionLogs(redeemer);
-            assertEq(log.creditAccount, account, "Incorrect logged credit account");
+            assertEq(log.creditAccount, address(account), "Incorrect logged credit account");
             assertEq(log.redeemer, redeemer, "Incorrect logged redeemer");
             assertEq(log.extraData, extraData, "Incorrect logged extraData");
         }

@@ -10,7 +10,7 @@ import {IRedemptionLogger} from "./interfaces/IRedemptionLogger.sol";
 /// @title Redemption Logger
 /// @notice Stores and emits redemption events for off-chain indexing
 contract RedemptionLogger is Ownable, IRedemptionLogger {
-    bytes32 public constant override contractType = "HELPER::REDEMPTION_LOGGER";
+    bytes32 public constant override contractType = "LOGGER::REDEMPTION_LOGGER";
     uint256 public constant override version = 3_10;
 
     mapping(address => RedemptionLog) internal _redemptionLogs;

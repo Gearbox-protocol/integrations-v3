@@ -8,35 +8,28 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
 
-import {IAddressProvider} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IAddressProvider.sol";
 import {ICreditAccountV3} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditAccountV3.sol";
 import {ICreditManagerV3} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditManagerV3.sol";
-import {IVersion} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IVersion.sol";
-import {IMarketConfigurator} from "@gearbox-protocol/permissionless/contracts/interfaces/IMarketConfigurator.sol";
-import {IContractsRegister} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IContractsRegister.sol";
 
 import {MidasRedeemer} from "./MidasRedeemer.sol";
 import {MidasLiquidator} from "./MidasLiquidator.sol";
 import {MidasDegenNFT} from "./MidasDegenNFT.sol";
 import {MidasRedemptionVaultPhantomToken} from "./MidasRedemptionVaultPhantomToken.sol";
 import {ReentrancyGuardTrait} from "@gearbox-protocol/core-v3/contracts/traits/ReentrancyGuardTrait.sol";
+import {CACheckerTrait} from "../common/CACheckerTrait.sol";
+import {RedemptionLoggingTrait} from "../common/RedemptionLoggingTrait.sol";
+import {ICAChecker} from "../common/interfaces/ICAChecker.sol";
 import {IMidasRedemptionVault} from "./interfaces/external/IMidasRedemptionVault.sol";
 import {IMidasAccessControl, STANDARD_GREENLISTED_ROLE} from "./interfaces/external/IMidasAccessControl.sol";
-import {
-    IMidasGateway,
-    MidasMode,
-    MAX_PENDING_REDEEMERS_PER_ACCOUNT,
-    CREDIT_ACCOUNT_TYPE
-} from "./interfaces/IMidasGateway.sol";
+import {IMidasGateway, MidasMode, MAX_PENDING_REDEEMERS_PER_ACCOUNT} from "./interfaces/IMidasGateway.sol";
 import {IMidasTransferMaster} from "./interfaces/IMidasTransferMaster.sol";
-import {IRedemptionLogger, AP_REDEMPTION_LOGGER} from "../common/interfaces/IRedemptionLogger.sol";
 
 bytes32 constant SALT = keccak256("MidasGateway");
 
 /// @title Midas Gateway
 /// @notice Gateway that manages delayed Midas redemptions on behalf of Credit Accounts
 /// @dev Can optionally greenlist Credit Accounts and redeemers for permissioned tokens
-contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
+contract MidasGateway is ReentrancyGuardTrait, CACheckerTrait, RedemptionLoggingTrait, IMidasGateway {
     using EnumerableSet for EnumerableSet.AddressSet;
     using SafeERC20 for IERC20;
 
@@ -67,14 +60,8 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
     /// @notice Address of the transfer master contract
     address public immutable override transferMaster;
 
-    /// @notice Address of the market configurator of credit accounts that are allowed to interact with the gateway
-    address public immutable allowedMarketConfigurator;
-
     /// @notice Expected duration of a redemption request (for informational purposes)
     uint256 public immutable expectedRedemptionDuration;
-
-    /// @notice Address of the redemption logger contract
-    address public immutable override redemptionLogger;
 
     /// @notice Identifier of the vault's greenlisted role in Midas access control
     bytes32 public immutable override greenlistedRole;
@@ -89,16 +76,6 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
     /// @dev Collateral set: the subset of `accountToRedeemers` that the phantom token still prices. A redeemer leaves
     ///      it once fully settled or transferred away, and there is no path back in.
     mapping(address => EnumerableSet.AddressSet) internal accountToPendingRedeemers;
-
-    /// @notice Verifies that an account is eligible to interact with the gateway
-    /// @dev The account must adhere to the Credit Account interface (i.e., have a respective credit manager and borrower)
-    /// @dev For RestrictedInterface / Permissioned modes, the Credit Account must belong to a specific market
-    ///      configurator; in Permissioned mode its borrower must also be greenlisted by Midas.
-    /// @dev In Permissionless mode, any account can interact with the gateway.
-    modifier onlyEligibleAccount() {
-        if (!_isCallerEligible(msg.sender)) revert CreditAccountNotEligibleException();
-        _;
-    }
 
     /// @notice Constructor
     /// @param _midasRedemptionVault Address of the Midas Redemption Vault
@@ -116,7 +93,7 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
         uint256 _expectedRedemptionDuration,
         bool _withDelayedWithdrawals,
         address _addressProvider
-    ) {
+    ) CACheckerTrait(_allowedMarketConfigurator) RedemptionLoggingTrait(_addressProvider) {
         midasRedemptionVault = _midasRedemptionVault;
         quoteToken = _quoteToken;
         mode = _mode;
@@ -128,7 +105,6 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
         } else {
             accessControl = IMidasRedemptionVault(_midasRedemptionVault).accessControl();
             if (accessControl == address(0)) revert AccessControlNotSetException();
-            if (_allowedMarketConfigurator == address(0)) revert ArbitraryCAAllowedInPermissionedModeException();
 
             try IMidasRedemptionVault(_midasRedemptionVault).greenlistedRole() returns (bytes32 role) {
                 greenlistedRole = role;
@@ -148,10 +124,7 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
             ? address(new MidasDegenNFT{salt: SALT}(accessControl, greenlistedRole))
             : address(0);
 
-        allowedMarketConfigurator = _allowedMarketConfigurator;
         expectedRedemptionDuration = _expectedRedemptionDuration;
-
-        redemptionLogger = IAddressProvider(_addressProvider).getAddressOrRevert(AP_REDEMPTION_LOGGER, 3_10);
     }
 
     /// @notice Requests a redemption of mToken for quote token
@@ -164,8 +137,7 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
 
         IERC20(mToken).safeTransferFrom(msg.sender, redeemer, amountMTokenIn);
         MidasRedeemer(redeemer).requestRedeem(amountMTokenIn);
-
-        _logRedemptionIfConfigured(msg.sender, redeemer, extraData);
+        _logRedemption(msg.sender, redeemer, extraData);
     }
 
     /// @notice Withdraws tokens from funded redeemers
@@ -293,6 +265,16 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
         return (_isGreenlistedIfRequired(account), mToken);
     }
 
+    /// @notice Whether `account` is eligible to interact with the gateway
+    /// @dev Extends the base CA/MC check with the Permissioned-mode greenlist requirement on the borrower
+    function isAccountEligible(address account) public view override(CACheckerTrait, ICAChecker) returns (bool) {
+        if (!super.isAccountEligible(account)) return false;
+
+        (,,,,,,, address borrower) =
+            ICreditManagerV3(ICreditAccountV3(account).creditManager()).creditAccountInfo(account);
+        return _isGreenlistedIfRequired(borrower);
+    }
+
     /// @dev Deploys a fresh redeemer clone for `account` and registers it in both sets
     function _makeNewRedeemerForAccount(address account) internal returns (address redeemer) {
         if (accountToPendingRedeemers[account].length() >= MAX_PENDING_REDEEMERS_PER_ACCOUNT) {
@@ -307,57 +289,10 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
         _grantGreenlistIfRequired(redeemer);
     }
 
-    /// @dev Logs redemption initiation if a logger is configured
-    function _logRedemptionIfConfigured(address creditAccount, address redeemer, bytes calldata extraData) internal {
-        if (redemptionLogger != address(0)) {
-            IRedemptionLogger(redemptionLogger).logRedemption(creditAccount, redeemer, extraData);
-        }
-    }
-
-    /// @dev Checks if a caller is eligible to interact with the gateway
-    /// @dev `contractType` and `creditManager` are self-reported, so neither is trusted on its own: the claimed
-    ///      credit manager must vouch for the caller as one of its accounts, and must itself be registered in the
-    ///      allowed market configurator's register. The register is the only trust anchor here — without it the
-    ///      whole chain is forgeable by a contract that answers the same way.
-    function _isCallerEligible(address caller) internal view returns (bool) {
-        if (mode == MidasMode.Permissionless) return true;
-
-        if (!_isCreditAccount(caller)) return false;
-
-        address creditManager = ICreditAccountV3(caller).creditManager();
-        if (creditManager == address(0)) return false;
-
-        (,,,,,,, address borrower) = ICreditManagerV3(creditManager).creditAccountInfo(caller);
-        if (borrower == address(0)) return false;
-
-        if (!_isAccountCreditManagerFromMarketConfigurator(creditManager)) {
-            return false;
-        }
-
-        return _isGreenlistedIfRequired(borrower);
-    }
-
     /// @dev Whether `account` satisfies the gateway's greenlist requirement
     /// @dev Outside Permissioned mode there is no greenlist requirement, so any account satisfies it
     function _isGreenlistedIfRequired(address account) internal view returns (bool) {
         return mode != MidasMode.Permissioned || IMidasAccessControl(accessControl).hasRole(greenlistedRole, account);
-    }
-
-    /// @dev Checks whether `account` implements `IVersion` and has contract type `CREDIT_ACCOUNT`
-    function _isCreditAccount(address account) internal view returns (bool) {
-        try IVersion(account).contractType() returns (bytes32 contractType_) {
-            if (contractType_ != CREDIT_ACCOUNT_TYPE) return false;
-        } catch {
-            return false;
-        }
-
-        return true;
-    }
-
-    /// @dev Checks whether `creditManager` is registered as a credit manager in the market configurator
-    function _isAccountCreditManagerFromMarketConfigurator(address creditManager) internal view returns (bool) {
-        address contractsRegister = IMarketConfigurator(allowedMarketConfigurator).contractsRegister();
-        return IContractsRegister(contractsRegister).isCreditManager(creditManager);
     }
 
     /// @dev Grants the greenlisted role, or does nothing in Permissionless mode where there is no access control

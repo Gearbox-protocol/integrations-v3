@@ -70,6 +70,14 @@ contract SecuritizeRedemptionGatewayMock is ISecuritizeRedemptionGateway {
         return _phantomToken;
     }
 
+    function allowedMarketConfigurator() external pure override returns (address) {
+        return address(0);
+    }
+
+    function isAccountEligible(address) external pure override returns (bool) {
+        return true;
+    }
+
     function redeem(uint256, bytes calldata) external override {}
 
     function claim(address[] calldata) external override {}

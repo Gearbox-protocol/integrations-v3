@@ -4,8 +4,10 @@
 pragma solidity ^0.8.23;
 
 import {IVersion} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IVersion.sol";
+import {ICAChecker} from "../../common/interfaces/ICAChecker.sol";
+import {IRedemptionLogging} from "../../common/interfaces/IRedemptionLogging.sol";
 
-interface ISecuritizeRedemptionGateway is IVersion {
+interface ISecuritizeRedemptionGateway is IVersion, ICAChecker, IRedemptionLogging {
     error RedeemerTransferNotAllowedException();
     error MaxUnclaimedRedeemersPerAccountException();
     error NewAccountNotRegisteredException();
@@ -18,7 +20,6 @@ interface ISecuritizeRedemptionGateway is IVersion {
     function masterRedeemer() external view returns (address);
     function transferMaster() external view returns (address);
     function navProvider() external view returns (address);
-    function redemptionLogger() external view returns (address);
     function phantomToken() external view returns (address);
     function redeem(uint256 dsTokenAmount, bytes calldata extraData) external;
     function claim(address[] calldata redeemers) external;
