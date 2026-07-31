@@ -92,6 +92,7 @@ contract MidasRedeemer {
 
     /// @notice Withdraws tokens to the connected account
     /// @param amount Amount of quote token to withdraw
+    /// @dev Also sweeps any leftover mToken, in case Midas returns mToken to the redeemer for some reason.
     function withdraw(uint256 amount) external gatewayOnly {
         if (amount != 0) {
             if (IERC20(quoteToken).balanceOf(address(this)) < amount) revert InsufficientBalanceException();
@@ -102,8 +103,7 @@ contract MidasRedeemer {
 
     /// @notice Returns the expected amount of quote token for the pending redemption request
     /// @dev Drops to zero as soon as Midas approves or rejects the request. On approval the value reappears as a
-    ///      claimable balance; on rejection Midas returns the mToken here instead, and it is recovered by the
-    ///      account calling `withdrawFromRedeemer` on the gateway, which sweeps it back.
+    ///      claimable balance; on rejection Midas returns nothing.
     function pendingTokenOutAmount() external view returns (uint256) {
         (,, RedemptionStatus status, uint256 amountMTokenIn,, uint256 tokenOutRate) =
             IMidasRedemptionVault(midasRedemptionVault).redeemRequests(requestId);
@@ -133,8 +133,8 @@ contract MidasRedeemer {
         return MidasDecimals.fromE18(quoteToken, amount1e18);
     }
 
-    /// @dev Returns any mToken left here to the account. A redeemer should never sit on mToken between calls, but
-    ///      Midas may not consume the full requested amount, and returns it outright on a rejected request.
+    /// @dev Returns any mToken left here to the account. A redeemer may have leftover mToken if Midas does not
+    ///      consume the whole amount on redemption request, or has some airdrop mechanic.
     function _sweepMToken() internal {
         uint256 mTokenBalance = IERC20(mToken).balanceOf(address(this));
         if (mTokenBalance > 0) {
