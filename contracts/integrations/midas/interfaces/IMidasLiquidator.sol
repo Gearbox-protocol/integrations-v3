@@ -7,10 +7,17 @@ import {MultiCall} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditF
 
 import {IMidasTransferMaster} from "./IMidasTransferMaster.sol";
 
+/// @title Midas liquidator interface
+/// @notice Liquidation entry point that unlocks redeemer transfers for the duration of the liquidation
 interface IMidasLiquidator is IMidasTransferMaster {
     /// @dev Thrown when the passed gateway is not a valid Midas gateway for the liquidated account
     error NotValidGatewayException();
 
+    /// @notice Liquidates a credit account, allowing the liquidator's calls to transfer its redeemers
+    /// @param creditAccount Credit account to liquidate
+    /// @param gateway Midas gateway whose redeemers are transferred during the liquidation
+    /// @param calls Liquidator-supplied multicall forwarded to the credit facade
+    /// @param lossPolicyData Loss policy data forwarded to the credit facade
     function liquidateWithRedeemerTransfers(
         address creditAccount,
         address gateway,

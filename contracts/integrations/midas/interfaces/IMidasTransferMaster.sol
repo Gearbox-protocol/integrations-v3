@@ -5,6 +5,8 @@ pragma solidity ^0.8.23;
 
 import {IVersion} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IVersion.sol";
 
+/// @title Midas transfer master interface
+/// @notice Authority a gateway consults before letting an account transfer its redeemers away
 interface IMidasTransferMaster is IVersion {
     /// @notice The account currently allowed to transfer redeemers, or address(0) if none
     function transferableRedeemerOwner() external view returns (address);

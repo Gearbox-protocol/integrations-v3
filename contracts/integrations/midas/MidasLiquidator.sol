@@ -60,6 +60,7 @@ contract MidasLiquidator is ReentrancyGuardTrait, IMidasLiquidator {
 
         _forwardCollateral(creditManager, creditFacade, calls);
 
+        // redeemer transfers are unlocked for exactly the span of the facade call, and only for this account
         transferableRedeemerOwner = creditAccount;
         ICreditFacadeV3(creditFacade).liquidateCreditAccount(creditAccount, msg.sender, calls, lossPolicyData);
         transferableRedeemerOwner = address(0);

@@ -30,7 +30,8 @@ contract MidasGatewayAdapter is AbstractAdapter, IMidasGatewayAdapter {
     /// @notice Redemption phantom token
     address public immutable override phantomToken;
 
-    /// @dev Reverts when delayed-redemption functions are called without a phantom token configured
+    /// @dev Without a phantom token there is nothing to price pending redemptions with, so a credit account would
+    ///      lose the value of everything it sends to the gateway — the whole delayed flow is disabled instead
     modifier whenPhantomTokenSet() {
         if (phantomToken == address(0)) revert PhantomTokenNotSetException();
         _;
@@ -120,7 +121,6 @@ contract MidasGatewayAdapter is AbstractAdapter, IMidasGatewayAdapter {
         return false;
     }
 
-    /// @dev Internal implementation of `redeemRequest`
     function _redeemRequest(uint256 amountMTokenIn, bytes memory extraData) internal {
         _executeSwapSafeApprove(mToken, abi.encodeCall(IMidasGateway.requestRedeem, (amountMTokenIn, extraData)));
     }
@@ -132,7 +132,6 @@ contract MidasGatewayAdapter is AbstractAdapter, IMidasGatewayAdapter {
         return false;
     }
 
-    /// @dev Internal implementation of `withdraw`
     function _withdraw(uint256 amount) internal {
         _execute(abi.encodeCall(IMidasGateway.withdraw, (amount)));
     }
@@ -181,8 +180,7 @@ contract MidasGatewayAdapter is AbstractAdapter, IMidasGatewayAdapter {
         return false;
     }
 
-    /// @notice Deposits phantom token (not implemented for redemptions)
-    /// @dev Redemptions only support withdrawals, not deposits
+    /// @notice Deposits phantom token — always reverts, a redemption cannot be un-requested
     function depositPhantomToken(address, uint256)
         external
         view

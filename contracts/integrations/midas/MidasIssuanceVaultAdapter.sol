@@ -4,19 +4,21 @@
 pragma solidity ^0.8.23;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
-import {RAY, WAD} from "@gearbox-protocol/core-v3/contracts/libraries/Constants.sol";
+import {RAY} from "@gearbox-protocol/core-v3/contracts/libraries/Constants.sol";
 import {TokenNotAllowedException} from "@gearbox-protocol/core-v3/contracts/interfaces/IExceptions.sol";
 
 import {AbstractAdapter} from "../common/AbstractAdapter.sol";
 
+import {MidasDecimals} from "./MidasDecimals.sol";
 import {IMidasIssuanceVault} from "./interfaces/external/IMidasIssuanceVault.sol";
 import {IMidasIssuanceVaultAdapter} from "./interfaces/IMidasIssuanceVaultAdapter.sol";
 
 /// @title Midas Issuance Vault adapter
 /// @notice Allows Credit Accounts to perform instant Midas issuance directly against the issuance vault
+/// @dev Instant issuance bypasses the gateway entirely — access is enforced by Midas itself, which requires the
+///      credit account to be greenlisted for permissioned mTokens
 contract MidasIssuanceVaultAdapter is AbstractAdapter, IMidasIssuanceVaultAdapter {
     using EnumerableSet for EnumerableSet.AddressSet;
 
@@ -49,6 +51,8 @@ contract MidasIssuanceVaultAdapter is AbstractAdapter, IMidasIssuanceVaultAdapte
     /// @param tokenIn Input token to deposit
     /// @param amountToken Amount of input token to deposit
     /// @param minReceiveAmount Minimum amount of mToken to receive
+    /// @dev The caller-supplied referrer ID is ignored in favour of the immutable `referrerId`, so that all
+    ///      issuances from this adapter are attributed to the same referrer
     function depositInstant(address tokenIn, uint256 amountToken, uint256 minReceiveAmount, bytes32)
         external
         override
@@ -82,7 +86,6 @@ contract MidasIssuanceVaultAdapter is AbstractAdapter, IMidasIssuanceVaultAdapte
         return false;
     }
 
-    /// @dev Internal implementation of `depositInstant`
     function _depositInstant(address tokenIn, uint256 amountToken, uint256 minReceiveAmount) internal {
         if (!_supportedInputTokens.contains(tokenIn)) revert TokenNotAllowedException();
 
@@ -90,15 +93,9 @@ contract MidasIssuanceVaultAdapter is AbstractAdapter, IMidasIssuanceVaultAdapte
             tokenIn,
             abi.encodeCall(
                 IMidasIssuanceVault.depositInstant,
-                (tokenIn, _convertToE18(tokenIn, amountToken), minReceiveAmount, referrerId)
+                (tokenIn, MidasDecimals.toE18(tokenIn, amountToken), minReceiveAmount, referrerId)
             )
         );
-    }
-
-    /// @dev Converts the token amount to 18 decimals, which is accepted by Midas
-    function _convertToE18(address token, uint256 amount) internal view returns (uint256) {
-        uint256 tokenUnit = 10 ** IERC20Metadata(token).decimals();
-        return tokenUnit == WAD ? amount : amount * WAD / tokenUnit;
     }
 
     // ---- //

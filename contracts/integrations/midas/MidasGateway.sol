@@ -82,10 +82,12 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
     /// @notice Address of the Midas Degen NFT, or zero outside Permissioned mode
     address public immutable override degenNFT;
 
-    /// @notice Mapping of accounts to corresponding redeemer contracts
+    /// @dev Ownership set: every redeemer ever created for an account, pruned only when one is transferred away.
+    ///      Membership is what authorizes `withdrawFromRedeemer`, so stranded funds stay recoverable indefinitely.
     mapping(address => EnumerableSet.AddressSet) internal accountToRedeemers;
 
-    /// @notice Mapping of accounts to corresponding pending redeemer contracts
+    /// @dev Collateral set: the subset of `accountToRedeemers` that the phantom token still prices. A redeemer leaves
+    ///      it once fully settled or transferred away, and there is no path back in.
     mapping(address => EnumerableSet.AddressSet) internal accountToPendingRedeemers;
 
     /// @notice Verifies that an account is eligible to interact with the gateway
@@ -120,19 +122,14 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
         mode = _mode;
         mToken = IMidasRedemptionVault(_midasRedemptionVault).mToken();
 
-        accessControl = _mode == MidasMode.Permissionless
-            ? address(0)
-            : IMidasRedemptionVault(_midasRedemptionVault).accessControl();
+        if (_mode == MidasMode.Permissionless) {
+            accessControl = address(0);
+            greenlistedRole = 0;
+        } else {
+            accessControl = IMidasRedemptionVault(_midasRedemptionVault).accessControl();
+            if (accessControl == address(0)) revert AccessControlNotSetException();
+            if (_allowedMarketConfigurator == address(0)) revert ArbitraryCAAllowedInPermissionedModeException();
 
-        if (_mode != MidasMode.Permissionless && accessControl == address(0)) {
-            revert AccessControlNotSetException();
-        }
-
-        if (_mode != MidasMode.Permissionless && _allowedMarketConfigurator == address(0)) {
-            revert ArbitraryCAAllowedInPermissionedModeException();
-        }
-
-        if (_mode != MidasMode.Permissionless) {
             try IMidasRedemptionVault(_midasRedemptionVault).greenlistedRole() returns (bytes32 role) {
                 greenlistedRole = role;
             } catch {
@@ -146,6 +143,7 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
             ? address(new MidasRedemptionVaultPhantomToken{salt: SALT}(address(this), mToken, _quoteToken))
             : address(0);
 
+        // only gates account opening once the market's credit facade is configured to use it
         degenNFT = _mode == MidasMode.Permissioned
             ? address(new MidasDegenNFT{salt: SALT}(accessControl, greenlistedRole))
             : address(0);
@@ -159,8 +157,8 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
     /// @notice Requests a redemption of mToken for quote token
     /// @param amountMTokenIn Amount of mToken to redeem
     /// @param extraData Additional redemption data to log
-    /// @dev In permissioned mode, the redeemer may need a greenlist to transfer tokens,
-    ///      hence transfers also fall under the greenlist scope.
+    /// @dev Every request gets its own redeemer clone, since Midas settles requests independently and a redeemer
+    ///      can only ever hold one of them
     function requestRedeem(uint256 amountMTokenIn, bytes calldata extraData) external nonReentrant onlyEligibleAccount {
         address redeemer = _makeNewRedeemerForAccount(msg.sender);
 
@@ -172,23 +170,29 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
 
     /// @notice Withdraws tokens from funded redeemers
     /// @param amount Amount of quote token to withdraw
+    /// @dev Drains redeemers in set order and reverts if their claimable balances do not add up to `amount`
     function withdraw(uint256 amount) external nonReentrant {
         address[] memory redeemers_ = accountToPendingRedeemers[msg.sender].values();
         uint256 remainder = amount;
-        for (uint256 i = 0; i < redeemers_.length && remainder > 0; i++) {
-            uint256 redeemerBalance = MidasRedeemer(redeemers_[i]).claimableTokenOutAmount();
-            if (remainder < redeemerBalance) {
-                MidasRedeemer(redeemers_[i]).withdraw(remainder);
-                remainder = 0;
-            } else {
-                if (redeemerBalance > 0) {
-                    MidasRedeemer(redeemers_[i]).withdraw(redeemerBalance);
-                    remainder -= redeemerBalance;
-                }
 
-                if (MidasRedeemer(redeemers_[i]).pendingTokenOutAmount() == 0) {
-                    accountToPendingRedeemers[msg.sender].remove(redeemers_[i]);
-                }
+        for (uint256 i = 0; i < redeemers_.length && remainder > 0; i++) {
+            MidasRedeemer redeemer = MidasRedeemer(redeemers_[i]);
+            uint256 claimable = redeemer.claimableTokenOutAmount();
+
+            // the last redeemer only needs to be drained partially, and stays pending with the leftover balance
+            if (remainder < claimable) {
+                redeemer.withdraw(remainder);
+                remainder = 0;
+                break;
+            }
+
+            if (claimable > 0) {
+                redeemer.withdraw(claimable);
+                remainder -= claimable;
+            }
+
+            if (redeemer.pendingTokenOutAmount() == 0) {
+                accountToPendingRedeemers[msg.sender].remove(address(redeemer));
             }
         }
 
@@ -220,18 +224,18 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
     /// @param newAccount The new account to transfer the redeemer to
     /// @dev Can only be used when account transfers are unlocked for a specific account - usually during liquidations
     /// @dev The redeemer is removed forever from pending redeemers, which means it can only be transferred once
+    /// @dev Transfers to self and to the zero address are rejected: both would drop the redeemer from the pending
+    ///      set with no way back, silently removing the position from collateral valuation
     function transferRedeemer(address redeemer, address newAccount) external nonReentrant onlyEligibleAccount {
         if (
-            !accountToPendingRedeemers[msg.sender].contains(redeemer)
+            newAccount == msg.sender || newAccount == address(0)
+                || !accountToPendingRedeemers[msg.sender].contains(redeemer)
                 || !IMidasTransferMaster(transferMaster).isTransferAllowed(msg.sender)
         ) {
             revert RedeemerTransferNotAllowedException();
         }
 
-        if (mode == MidasMode.Permissioned && !IMidasAccessControl(accessControl).hasRole(greenlistedRole, newAccount))
-        {
-            revert NewAccountNotGreenlistedException();
-        }
+        if (!_isGreenlistedIfRequired(newAccount)) revert NewAccountNotGreenlistedException();
 
         accountToRedeemers[msg.sender].remove(redeemer);
         accountToPendingRedeemers[msg.sender].remove(redeemer);
@@ -242,8 +246,8 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
     }
 
     /// @notice Gives an account a greenlisted role
-    /// @dev Some permissioned Midas tokens may require a greenlist for transfers,
-    ///      this function allows an eligible account to give itself a greenlisted role.
+    /// @dev Permissioned mTokens require the greenlist for transfers, so an account needs it before it can
+    ///      hold or move them. The grant is permanent — the gateway never revokes it.
     function receiveGreenlist() external nonReentrant onlyEligibleAccount {
         if (mode != MidasMode.Permissioned) {
             revert GreenlistRequestedInNonPermissionedModeException();
@@ -262,7 +266,7 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
         returns (uint256 pendingAmount, uint256 claimableAmount)
     {
         address[] memory redeemers_ = accountToPendingRedeemers[account].values();
-        for (uint256 i = 0; i < redeemers_.length; i++) {
+        for (uint256 i = 0; i < redeemers_.length; ++i) {
             pendingAmount += MidasRedeemer(redeemers_[i]).pendingTokenOutAmount();
             claimableAmount += MidasRedeemer(redeemers_[i]).claimableTokenOutAmount();
         }
@@ -282,16 +286,14 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
         return accountToRedeemers[account].values();
     }
 
-    /// @notice Returns whether a credit account owner can redeem mTokens, and the mToken address
+    /// @notice Returns whether a credit account owner satisfies the greenlist requirement, and the mToken address
+    /// @dev Answers only the owner-level permission question. It is not the full `onlyEligibleAccount` gate, which
+    ///      additionally requires the *caller* to be a credit account of the allowed market configurator.
     function isEligibleAccountOwner(address account) external view returns (bool, address) {
-        return (
-            mode != MidasMode.Permissioned || IMidasAccessControl(accessControl).hasRole(greenlistedRole, account),
-            mToken
-        );
+        return (_isGreenlistedIfRequired(account), mToken);
     }
 
-    /// @dev Internal function to get the redeemer for an account, or create a new one if it doesn't exist
-    /// @param account The account to get the redeemer for
+    /// @dev Deploys a fresh redeemer clone for `account` and registers it in both sets
     function _makeNewRedeemerForAccount(address account) internal returns (address redeemer) {
         if (accountToPendingRedeemers[account].length() >= MAX_PENDING_REDEEMERS_PER_ACCOUNT) {
             revert MaxPendingRedeemersPerAccountException();
@@ -313,6 +315,10 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
     }
 
     /// @dev Checks if a caller is eligible to interact with the gateway
+    /// @dev `contractType` and `creditManager` are self-reported, so neither is trusted on its own: the claimed
+    ///      credit manager must vouch for the caller as one of its accounts, and must itself be registered in the
+    ///      allowed market configurator's register. The register is the only trust anchor here — without it the
+    ///      whole chain is forgeable by a contract that answers the same way.
     function _isCallerEligible(address caller) internal view returns (bool) {
         if (mode == MidasMode.Permissionless) return true;
 
@@ -328,7 +334,13 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
             return false;
         }
 
-        return mode != MidasMode.Permissioned || IMidasAccessControl(accessControl).hasRole(greenlistedRole, borrower);
+        return _isGreenlistedIfRequired(borrower);
+    }
+
+    /// @dev Whether `account` satisfies the gateway's greenlist requirement
+    /// @dev Outside Permissioned mode there is no greenlist requirement, so any account satisfies it
+    function _isGreenlistedIfRequired(address account) internal view returns (bool) {
+        return mode != MidasMode.Permissioned || IMidasAccessControl(accessControl).hasRole(greenlistedRole, account);
     }
 
     /// @dev Checks whether `account` implements `IVersion` and has contract type `CREDIT_ACCOUNT`
@@ -348,7 +360,7 @@ contract MidasGateway is ReentrancyGuardTrait, IMidasGateway {
         return IContractsRegister(contractsRegister).isCreditManager(creditManager);
     }
 
-    /// @dev Grants the GREENLISTED_ROLE to an account if the Midas access control is set
+    /// @dev Grants the greenlisted role, or does nothing in Permissionless mode where there is no access control
     function _grantGreenlistIfRequired(address account) internal {
         if (accessControl != address(0)) {
             IMidasAccessControl(accessControl).grantRole(greenlistedRole, account);
