@@ -483,6 +483,39 @@ contract MidasGatewayUnitTest is Test {
         assertEq(gateway.pendingRedeemers(address(account)).length, 0, "Redeemer not removed from pending list");
     }
 
+    /// @notice U:[MID-G-9A]: `withdraw` drains redeemers in order and stops on the one that covers the remainder
+    /// @dev The partially drained redeemer keeps its leftover balance and stays pending; the fully
+    ///      drained one is removed since its request is no longer pending
+    function test_U_MID_G_09A_withdraw_drains_redeemers_until_amount_is_covered() public {
+        uint256 amountMToken = 100e18;
+        deal(mToken, address(account), 2 * amountMToken);
+        account.approveToken(mToken, address(gateway), 2 * amountMToken);
+
+        vm.startPrank(address(account));
+        gateway.requestRedeem(amountMToken, "");
+        gateway.requestRedeem(amountMToken, "");
+        vm.stopPrank();
+
+        address[] memory redeemers = gateway.pendingRedeemers(address(account));
+
+        // First request is fulfilled and its redeemer holds less than the withdrawn amount,
+        // second one is still pending with more than the remainder.
+        deal(quoteToken, redeemers[0], 40e18);
+        redemptionVault.setStatus(1, 1);
+        deal(quoteToken, redeemers[1], 60e18);
+
+        vm.prank(address(account));
+        gateway.withdraw(70e18);
+
+        assertEq(IERC20(quoteToken).balanceOf(address(account)), 70e18, "Account did not receive quote token");
+        assertEq(IERC20(quoteToken).balanceOf(redeemers[0]), 0, "First redeemer should be fully drained");
+        assertEq(IERC20(quoteToken).balanceOf(redeemers[1]), 30e18, "Second redeemer should keep the leftover");
+
+        address[] memory pending = gateway.pendingRedeemers(address(account));
+        assertEq(pending.length, 1, "Only the partially drained redeemer should stay pending");
+        assertEq(pending[0], redeemers[1], "Wrong redeemer left pending");
+    }
+
     /// @notice U:[MID-G-10]: `withdraw` reverts when not enough is available
     function test_U_MID_G_10_withdraw_reverts_on_insufficient_balance() public {
         uint256 amountMToken = 100e18;
@@ -590,6 +623,44 @@ contract MidasGatewayUnitTest is Test {
         vm.prank(newAccount);
         vm.expectRevert(IMidasGateway.RedeemerTransferNotAllowedException.selector);
         gateway.transferRedeemer(redeemer, address(account));
+    }
+
+    /// @notice U:[MID-G-13B]: `transferRedeemer` reverts on self-transfer
+    /// @dev Transferring to self would drop the redeemer from the pending set (with no way back)
+    ///      while keeping ownership, silently removing the position from collateral valuation
+    function test_U_MID_G_13B_transferRedeemer_reverts_on_self_transfer() public {
+        uint256 amountMToken = 100e18;
+        deal(mToken, address(account), amountMToken);
+        account.approveToken(mToken, address(gateway), amountMToken);
+
+        vm.prank(address(account));
+        gateway.requestRedeem(amountMToken, "");
+
+        address redeemer = gateway.pendingRedeemers(address(account))[0];
+        _setTransferAllowedFor(address(account));
+
+        vm.prank(address(account));
+        vm.expectRevert(IMidasGateway.RedeemerTransferNotAllowedException.selector);
+        gateway.transferRedeemer(redeemer, address(account));
+    }
+
+    /// @notice U:[MID-G-13C]: `transferRedeemer` reverts when transferring to the zero address
+    /// @dev The redeemer would be frozen forever: withdrawals to the zero address revert and
+    ///      it can no longer be transferred since it is no longer pending
+    function test_U_MID_G_13C_transferRedeemer_reverts_on_zero_new_account() public {
+        uint256 amountMToken = 100e18;
+        deal(mToken, address(account), amountMToken);
+        account.approveToken(mToken, address(gateway), amountMToken);
+
+        vm.prank(address(account));
+        gateway.requestRedeem(amountMToken, "");
+
+        address redeemer = gateway.pendingRedeemers(address(account))[0];
+        _setTransferAllowedFor(address(account));
+
+        vm.prank(address(account));
+        vm.expectRevert(IMidasGateway.RedeemerTransferNotAllowedException.selector);
+        gateway.transferRedeemer(redeemer, address(0));
     }
 
     /// @notice U:[MID-G-14]: `requestRedeem` reverts after reaching the max pending redeemers

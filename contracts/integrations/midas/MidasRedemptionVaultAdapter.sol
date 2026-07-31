@@ -4,19 +4,21 @@
 pragma solidity ^0.8.23;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
-import {RAY, WAD} from "@gearbox-protocol/core-v3/contracts/libraries/Constants.sol";
+import {RAY} from "@gearbox-protocol/core-v3/contracts/libraries/Constants.sol";
 import {TokenNotAllowedException} from "@gearbox-protocol/core-v3/contracts/interfaces/IExceptions.sol";
 
 import {AbstractAdapter} from "../common/AbstractAdapter.sol";
 
+import {MidasDecimals} from "./MidasDecimals.sol";
 import {IMidasRedemptionVault} from "./interfaces/external/IMidasRedemptionVault.sol";
 import {IMidasRedemptionVaultAdapter} from "./interfaces/IMidasRedemptionVaultAdapter.sol";
 
 /// @title Midas Redemption Vault adapter
 /// @notice Allows Credit Accounts to perform instant Midas redemption directly against the redemption vault
+/// @dev Instant redemption bypasses the gateway entirely — access is enforced by Midas itself, which requires the
+///      credit account to be greenlisted for permissioned mTokens. Delayed redemptions go through the gateway.
 contract MidasRedemptionVaultAdapter is AbstractAdapter, IMidasRedemptionVaultAdapter {
     using EnumerableSet for EnumerableSet.AddressSet;
 
@@ -75,7 +77,6 @@ contract MidasRedemptionVaultAdapter is AbstractAdapter, IMidasRedemptionVaultAd
         return false;
     }
 
-    /// @dev Internal implementation of `redeemInstant`
     function _redeemInstant(address tokenOut, uint256 amountMTokenIn, uint256 minReceiveAmount) internal {
         if (!_supportedOutputTokens.contains(tokenOut)) revert TokenNotAllowedException();
 
@@ -83,15 +84,9 @@ contract MidasRedemptionVaultAdapter is AbstractAdapter, IMidasRedemptionVaultAd
             mToken,
             abi.encodeCall(
                 IMidasRedemptionVault.redeemInstant,
-                (tokenOut, amountMTokenIn, _convertToE18(tokenOut, minReceiveAmount))
+                (tokenOut, amountMTokenIn, MidasDecimals.toE18(tokenOut, minReceiveAmount))
             )
         );
-    }
-
-    /// @dev Converts the token amount to 18 decimals, which is accepted by Midas
-    function _convertToE18(address token, uint256 amount) internal view returns (uint256) {
-        uint256 tokenUnit = 10 ** IERC20Metadata(token).decimals();
-        return tokenUnit == WAD ? amount : amount * WAD / tokenUnit;
     }
 
     // ---- //

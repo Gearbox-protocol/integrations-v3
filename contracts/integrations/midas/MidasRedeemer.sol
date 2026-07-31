@@ -4,14 +4,16 @@
 pragma solidity ^0.8.23;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
+import {MidasDecimals} from "./MidasDecimals.sol";
 import {IMidasRedemptionVault, RedemptionStatus} from "./interfaces/external/IMidasRedemptionVault.sol";
 import {IMidasDataFeed} from "./interfaces/external/IMidasDataFeed.sol";
 
-import {WAD} from "@gearbox-protocol/core-v3/contracts/libraries/Constants.sol";
-
+/// @title Midas redeemer
+/// @notice Holds exactly one Midas redemption request on behalf of an account
+/// @dev Deployed as a minimal clone by the gateway, one per request, so that requests settle and can be
+///      transferred independently. All state changes go through the gateway.
 contract MidasRedeemer {
     using SafeERC20 for IERC20;
 
@@ -79,6 +81,7 @@ contract MidasRedeemer {
 
     /// @notice Requests a redemption of mToken for quote token
     /// @param amountMTokenIn Amount of mToken to redeem
+    /// @dev One-shot: `requestId` identifies the single request this clone tracks and must never be overwritten
     function requestRedeem(uint256 amountMTokenIn) external gatewayOnly whenNotAlreadyRequested {
         IERC20(mToken).forceApprove(midasRedemptionVault, amountMTokenIn);
         requestId = IMidasRedemptionVault(midasRedemptionVault).redeemRequest(quoteToken, amountMTokenIn);
@@ -89,6 +92,7 @@ contract MidasRedeemer {
 
     /// @notice Withdraws tokens to the connected account
     /// @param amount Amount of quote token to withdraw
+    /// @dev Also sweeps any leftover mToken, in case Midas returns mToken to the redeemer for some reason.
     function withdraw(uint256 amount) external gatewayOnly {
         if (amount != 0) {
             if (IERC20(quoteToken).balanceOf(address(this)) < amount) revert InsufficientBalanceException();
@@ -98,6 +102,8 @@ contract MidasRedeemer {
     }
 
     /// @notice Returns the expected amount of quote token for the pending redemption request
+    /// @dev Drops to zero as soon as Midas approves or rejects the request. On approval the value reappears as a
+    ///      claimable balance; on rejection Midas returns nothing.
     function pendingTokenOutAmount() external view returns (uint256) {
         (,, RedemptionStatus status, uint256 amountMTokenIn,, uint256 tokenOutRate) =
             IMidasRedemptionVault(midasRedemptionVault).redeemRequests(requestId);
@@ -110,15 +116,13 @@ contract MidasRedeemer {
     }
 
     /// @notice Returns the amount of quote token that can be claimed
+    /// @dev Simply the balance: Midas settles by transferring the output token here, with no callback to hook into
     function claimableTokenOutAmount() external view returns (uint256) {
         return IERC20(quoteToken).balanceOf(address(this));
     }
 
-    /// @dev Calculates the output token amount from mToken amount and rates
-    /// @param amountMTokenIn Amount of mToken
-    /// @param mTokenRate Rate of mToken
-    /// @param tokenOutRate Rate of quote token
-    /// @return Amount of quote token in its native decimals
+    /// @dev Converts an mToken amount into quote token at the given rates
+    /// @return Amount of quote token in its native decimals (Midas quotes everything in 18)
     function _calculateTokenOutAmount(uint256 amountMTokenIn, uint256 mTokenRate, uint256 tokenOutRate)
         internal
         view
@@ -126,14 +130,11 @@ contract MidasRedeemer {
     {
         uint256 amount1e18 = (amountMTokenIn * mTokenRate) / tokenOutRate;
 
-        uint256 tokenUnit = 10 ** IERC20Metadata(quoteToken).decimals();
-
-        return tokenUnit == WAD ? amount1e18 : amount1e18 * tokenUnit / WAD;
+        return MidasDecimals.fromE18(quoteToken, amount1e18);
     }
 
-    /// @dev Sweeps the remaining mToken to the account
-    /// @dev Under normal operation, mToken should not remain in the redeemer when not in motion. This returns all remaining mToken
-    ///      to the account in case Midas does not consume the whole amount.
+    /// @dev Returns any mToken left here to the account. A redeemer may have leftover mToken if Midas does not
+    ///      consume the whole amount on redemption request, or has some airdrop mechanic.
     function _sweepMToken() internal {
         uint256 mTokenBalance = IERC20(mToken).balanceOf(address(this));
         if (mTokenBalance > 0) {

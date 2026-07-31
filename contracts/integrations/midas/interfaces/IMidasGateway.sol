@@ -5,6 +5,7 @@ pragma solidity ^0.8.23;
 
 import {IVersion} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IVersion.sol";
 
+/// @dev Bounds the loops that iterate an account's pending redeemers, `withdraw` above all
 uint256 constant MAX_PENDING_REDEEMERS_PER_ACCOUNT = 10;
 
 bytes32 constant CREDIT_ACCOUNT_TYPE = "CREDIT_ACCOUNT";
