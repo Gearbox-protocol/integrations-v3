@@ -284,7 +284,6 @@ contract MidasGatewayUnitTest is Test {
         assertEq(gateway.expectedRedemptionDuration(), REDEMPTION_DURATION, "Incorrect redemption duration");
         assertEq(gateway.redemptionLogger(), address(redemptionLogger), "Incorrect redemption logger");
         assertTrue(gateway.masterRedeemer() != address(0), "Master redeemer not set");
-        assertEq(gateway.degenNFT(), address(0), "Degen NFT should not be deployed in Permissionless");
         assertEq(gateway.accessControl(), address(0), "Access control should be zero in Permissionless");
         assertEq(gateway.allowedMarketConfigurator(), address(marketConfigurator), "Incorrect market configurator");
     }
@@ -325,20 +324,38 @@ contract MidasGatewayUnitTest is Test {
         assertEq(gatewayWithoutPhantomToken.phantomToken(), address(0), "Phantom token should not be deployed");
     }
 
-    /// @notice U:[MID-G-1C]: Constructor deploys degen NFT only in Permissioned mode
-    function test_U_MID_G_01C_constructor_deploys_degen_nft_in_permissioned_mode() public {
+    /// @notice U:[MID-G-1C]: Separately deployed Degen NFT mirrors gateway access-control params
+    function test_U_MID_G_01C_degen_nft_reads_gateway_params() public {
         (MidasGateway permissionedGateway,, MidasAccessControlMock accessControl) =
             _deployAccessControlledGatewayWithAC(MidasMode.Permissioned);
 
-        assertTrue(permissionedGateway.degenNFT() != address(0), "Degen NFT should be deployed");
-        MidasDegenNFT degenNFT = MidasDegenNFT(permissionedGateway.degenNFT());
+        MidasDegenNFT degenNFT = new MidasDegenNFT(address(permissionedGateway));
+
+        assertEq(degenNFT.contractType(), "DEGEN_NFT::MIDAS", "Incorrect degen NFT contract type");
         assertEq(degenNFT.gateway(), address(permissionedGateway), "Incorrect degen NFT gateway");
+        assertEq(degenNFT.accessControl(), permissionedGateway.accessControl(), "accessControl should match gateway");
+        assertEq(
+            degenNFT.greenlistedRole(), permissionedGateway.greenlistedRole(), "greenlistedRole should match gateway"
+        );
         assertEq(degenNFT.accessControl(), address(accessControl), "Incorrect degen NFT access control");
         assertEq(degenNFT.greenlistedRole(), STANDARD_GREENLISTED_ROLE, "Incorrect degen NFT greenlisted role");
-        assertEq(degenNFT.contractType(), "DEGEN_NFT::MIDAS", "Incorrect degen NFT contract type");
 
-        (MidasGateway restrictedGateway,,) = _deployAccessControlledGatewayWithAC(MidasMode.RestrictedInterface);
-        assertEq(restrictedGateway.degenNFT(), address(0), "Degen NFT should not be deployed in RestrictedInterface");
+        bytes32 customRole = keccak256("CUSTOM_GREENLISTED_ROLE");
+        redemptionVault.setGreenlistedRole(customRole);
+        (MidasGateway customRoleGateway,,) = _deployAccessControlledGatewayWithAC(MidasMode.Permissioned);
+        MidasDegenNFT customRoleDegenNFT = new MidasDegenNFT(address(customRoleGateway));
+
+        assertEq(
+            customRoleDegenNFT.accessControl(),
+            customRoleGateway.accessControl(),
+            "custom accessControl should match gateway"
+        );
+        assertEq(
+            customRoleDegenNFT.greenlistedRole(),
+            customRoleGateway.greenlistedRole(),
+            "custom greenlistedRole should match gateway"
+        );
+        assertEq(customRoleDegenNFT.greenlistedRole(), customRole, "Incorrect custom greenlisted role");
     }
 
     /// @notice U:[MID-G-2A]: Constructor reads access control from the redemption vault
@@ -362,7 +379,6 @@ contract MidasGatewayUnitTest is Test {
         assertEq(
             controlledGateway.allowedMarketConfigurator(), address(marketConfigurator), "Incorrect market configurator"
         );
-        assertEq(controlledGateway.degenNFT(), address(0), "Degen NFT should not be deployed");
     }
 
     /// @notice U:[MID-G-2C]: Constructor reverts when market configurator is not set

@@ -61,9 +61,6 @@ interface IMidasGateway is IVersion, ICAChecker, IRedemptionLogging {
     /// @notice Identifier of the vault's greenlisted role in Midas access control
     function greenlistedRole() external view returns (bytes32);
 
-    /// @notice Address of the Midas Degen NFT, or zero outside Permissioned mode
-    function degenNFT() external view returns (address);
-
     /// @notice Address of the Midas redemption vault
     function midasRedemptionVault() external view returns (address);
 

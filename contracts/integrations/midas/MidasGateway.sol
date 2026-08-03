@@ -13,7 +13,6 @@ import {ICreditManagerV3} from "@gearbox-protocol/core-v3/contracts/interfaces/I
 
 import {MidasRedeemer} from "./MidasRedeemer.sol";
 import {MidasLiquidator} from "./MidasLiquidator.sol";
-import {MidasDegenNFT} from "./MidasDegenNFT.sol";
 import {MidasRedemptionVaultPhantomToken} from "./MidasRedemptionVaultPhantomToken.sol";
 import {ReentrancyGuardTrait} from "@gearbox-protocol/core-v3/contracts/traits/ReentrancyGuardTrait.sol";
 import {CACheckerTrait} from "../common/CACheckerTrait.sol";
@@ -66,9 +65,6 @@ contract MidasGateway is ReentrancyGuardTrait, CACheckerTrait, RedemptionLogging
     /// @notice Identifier of the vault's greenlisted role in Midas access control
     bytes32 public immutable override greenlistedRole;
 
-    /// @notice Address of the Midas Degen NFT, or zero outside Permissioned mode
-    address public immutable override degenNFT;
-
     /// @dev Ownership set: every redeemer ever created for an account, pruned only when one is transferred away.
     ///      Membership is what authorizes `withdrawFromRedeemer`, so stranded funds stay recoverable indefinitely.
     mapping(address => EnumerableSet.AddressSet) internal accountToRedeemers;
@@ -117,11 +113,6 @@ contract MidasGateway is ReentrancyGuardTrait, CACheckerTrait, RedemptionLogging
         transferMaster = address(new MidasLiquidator{salt: SALT}());
         phantomToken = _withDelayedWithdrawals
             ? address(new MidasRedemptionVaultPhantomToken{salt: SALT}(address(this), mToken, _quoteToken))
-            : address(0);
-
-        // only gates account opening once the market's credit facade is configured to use it
-        degenNFT = _mode == MidasMode.Permissioned
-            ? address(new MidasDegenNFT{salt: SALT}(accessControl, greenlistedRole))
             : address(0);
 
         expectedRedemptionDuration = _expectedRedemptionDuration;
