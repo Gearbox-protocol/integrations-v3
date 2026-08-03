@@ -106,7 +106,7 @@ contract SecuritizeLiquidator is ISecuritizeLiquidator {
             msg.sender
         );
 
-        IERC20(underlying).safeTransferFrom(msg.sender, address(this), underlyingAmount);
+        _transferAndWrapStablecoin(underlying, underlyingAmount);
         IERC20(underlying).forceApprove(creditManager, underlyingAmount);
 
         transferableRedeemerOwner = creditAccount;
@@ -213,6 +213,13 @@ contract SecuritizeLiquidator is ISecuritizeLiquidator {
         if (priceUpdates.length == 0) return;
         address priceFeedStore = ICreditFacadeV3(creditFacade).priceFeedStore();
         IPriceFeedStore(priceFeedStore).updatePrices(priceUpdates);
+    }
+
+    function _transferAndWrapStablecoin(address underlying, uint256 underlyingAmount) internal {
+        address stableCoinToken = IERC4626(underlying).asset();
+        IERC20(stableCoinToken).safeTransferFrom(msg.sender, address(this), underlyingAmount);
+        IERC20(stableCoinToken).forceApprove(underlying, underlyingAmount);
+        IERC4626(underlying).deposit(underlyingAmount, address(this));
     }
 
     function _append(MultiCall[] memory calls, MultiCall memory call)
