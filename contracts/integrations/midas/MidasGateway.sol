@@ -212,7 +212,7 @@ contract MidasGateway is ReentrancyGuardTrait, CACheckerTrait, RedemptionLogging
     /// @dev Permissioned mTokens require the greenlist for transfers, so an account needs it before it can
     ///      hold or move them. The grant is permanent — the gateway never revokes it.
     function receiveGreenlist() external nonReentrant onlyEligibleAccount {
-        if (mode != MidasMode.Permissioned) {
+        if (mode == MidasMode.Permissionless) {
             revert GreenlistRequestedInNonPermissionedModeException();
         }
 

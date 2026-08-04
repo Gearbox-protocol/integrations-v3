@@ -779,15 +779,21 @@ contract MidasGatewayUnitTest is Test {
         assertTrue(accessControl.hasRole(STANDARD_GREENLISTED_ROLE, address(account)), "Account not greenlisted");
     }
 
-    /// @notice U:[MID-G-20]: `receiveGreenlist` reverts outside Permissioned mode
-    function test_U_MID_G_20_receiveGreenlist_reverts_in_non_permissioned_mode() public {
-        (MidasGateway restrictedGateway, ContractsRegisterMock contractsRegister,) =
-            _deployAccessControlledGatewayWithAC(MidasMode.RestrictedInterface);
+    /// @notice U:[MID-G-20]: `receiveGreenlist` works in RestrictedInterface and reverts in Permissionless
+    function test_U_MID_G_20_receiveGreenlist_reverts_in_permissionless_mode() public {
+        (
+            MidasGateway restrictedGateway,
+            ContractsRegisterMock contractsRegister,
+            MidasAccessControlMock accessControl
+        ) = _deployAccessControlledGatewayWithAC(MidasMode.RestrictedInterface);
         contractsRegister.setCreditManager(address(creditManager), true);
 
         vm.prank(address(account));
-        vm.expectRevert(IMidasGateway.GreenlistRequestedInNonPermissionedModeException.selector);
         restrictedGateway.receiveGreenlist();
+        assertTrue(
+            accessControl.hasRole(STANDARD_GREENLISTED_ROLE, address(account)),
+            "Account should be greenlisted in RestrictedInterface"
+        );
 
         vm.prank(address(account));
         vm.expectRevert(IMidasGateway.GreenlistRequestedInNonPermissionedModeException.selector);
