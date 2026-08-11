@@ -87,6 +87,9 @@ interface IMidasGateway is IVersion, ICAChecker, IRedemptionLogging {
     function receiveGreenlist() external;
 
     /// @notice Returns the pending and claimable amounts of quote token for an account, across all counted redeemers
+    /// @dev Pending amounts are valued using each redeemer's configured rate source: the live mToken data feed when
+    ///      the gateway was deployed with current-rate pricing, otherwise the initial `mTokenRate` stored on the
+    ///      redemption request.
     /// @param account Account to check
     /// @return pendingAmount Pending amount of quote token
     /// @return claimableAmount Claimable amount of quote token

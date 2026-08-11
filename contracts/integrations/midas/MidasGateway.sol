@@ -80,6 +80,7 @@ contract MidasGateway is ReentrancyGuardTrait, CACheckerTrait, RedemptionLogging
     /// @param _allowedMarketConfigurator Address of the market configurator of credit accounts that are allowed to interact with the gateway
     /// @param _expectedRedemptionDuration Expected duration of a redemption request (for informational purposes)
     /// @param _withDelayedWithdrawals Whether to deploy a redemption phantom token for delayed withdrawals
+    /// @param _priceWithdrawalsByCurrentRate Whether to price withdrawals by current or initial mToken rate
     /// @param _addressProvider Address of the Gearbox AddressProviderV3
     constructor(
         address _midasRedemptionVault,
@@ -88,6 +89,7 @@ contract MidasGateway is ReentrancyGuardTrait, CACheckerTrait, RedemptionLogging
         address _allowedMarketConfigurator,
         uint256 _expectedRedemptionDuration,
         bool _withDelayedWithdrawals,
+        bool _priceWithdrawalsByCurrentRate,
         address _addressProvider
     ) CACheckerTrait(_allowedMarketConfigurator) RedemptionLoggingTrait(_addressProvider) {
         midasRedemptionVault = _midasRedemptionVault;
@@ -109,7 +111,8 @@ contract MidasGateway is ReentrancyGuardTrait, CACheckerTrait, RedemptionLogging
             }
         }
 
-        masterRedeemer = address(new MidasRedeemer{salt: SALT}(_midasRedemptionVault, _quoteToken));
+        masterRedeemer =
+            address(new MidasRedeemer{salt: SALT}(_midasRedemptionVault, _quoteToken, _priceWithdrawalsByCurrentRate));
         transferMaster = address(new MidasLiquidator{salt: SALT}());
         phantomToken = _withDelayedWithdrawals
             ? address(new MidasRedemptionVaultPhantomToken{salt: SALT}(address(this), mToken, _quoteToken))

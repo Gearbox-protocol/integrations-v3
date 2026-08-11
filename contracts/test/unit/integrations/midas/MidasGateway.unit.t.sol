@@ -243,6 +243,7 @@ contract MidasGatewayUnitTest is Test {
             address(marketConfigurator),
             REDEMPTION_DURATION,
             true, // withDelayedWithdrawals
+            true, // priceWithdrawalsByCurrentRate
             address(addressProvider)
         );
         redemptionLogger.setGatewayAllowed(address(gateway), true);
@@ -318,6 +319,7 @@ contract MidasGatewayUnitTest is Test {
             address(marketConfigurator),
             REDEMPTION_DURATION,
             false, // withDelayedWithdrawals
+            true, // priceWithdrawalsByCurrentRate
             address(addressProvider)
         );
 
@@ -370,6 +372,7 @@ contract MidasGatewayUnitTest is Test {
             address(marketConfigurator),
             REDEMPTION_DURATION,
             true,
+            true, // priceWithdrawalsByCurrentRate
             address(addressProvider)
         );
 
@@ -391,6 +394,7 @@ contract MidasGatewayUnitTest is Test {
             address(0),
             REDEMPTION_DURATION,
             true,
+            true, // priceWithdrawalsByCurrentRate
             address(addressProvider)
         );
     }
@@ -405,6 +409,7 @@ contract MidasGatewayUnitTest is Test {
             address(marketConfigurator),
             REDEMPTION_DURATION,
             true,
+            true, // priceWithdrawalsByCurrentRate
             address(addressProvider)
         );
     }
@@ -702,6 +707,7 @@ contract MidasGatewayUnitTest is Test {
             address(marketConfigurator),
             REDEMPTION_DURATION,
             true,
+            true, // priceWithdrawalsByCurrentRate
             address(loggerAddressProvider)
         );
         logger.setGatewayAllowed(address(gatewayWithLogger), true);
@@ -736,6 +742,7 @@ contract MidasGatewayUnitTest is Test {
             address(marketConfigurator),
             REDEMPTION_DURATION,
             true,
+            true, // priceWithdrawalsByCurrentRate
             address(addressProvider)
         );
 
@@ -755,6 +762,7 @@ contract MidasGatewayUnitTest is Test {
             address(marketConfigurator),
             REDEMPTION_DURATION,
             true,
+            true, // priceWithdrawalsByCurrentRate
             address(addressProvider)
         );
 
@@ -944,6 +952,7 @@ contract MidasGatewayUnitTest is Test {
             address(marketConfigurator),
             REDEMPTION_DURATION,
             true,
+            true, // priceWithdrawalsByCurrentRate
             address(addressProvider)
         );
         redemptionLogger.setGatewayAllowed(address(controlledGateway), true);

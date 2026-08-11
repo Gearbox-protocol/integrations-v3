@@ -80,6 +80,40 @@ contract MidasRedemptionVaultMock {
     }
 }
 
+/// @dev ERC20 whose `transfer` can be made to revert (e.g. paused token)
+contract RevertingTransferERC20Mock is ERC20Mock {
+    bool public transfersRevert;
+
+    constructor() ERC20Mock("Reverting mToken", "rMTKN", 18) {}
+
+    function setTransfersRevert(bool value) external {
+        transfersRevert = value;
+    }
+
+    function transfer(address to, uint256 amount) public override returns (bool) {
+        if (transfersRevert) revert("TRANSFER_REVERTED");
+        return super.transfer(to, amount);
+    }
+}
+
+/// @dev Minimal ERC20-like token whose `transfer` returns no boolean (USDT-style ABI)
+contract NoReturnERC20Mock {
+    mapping(address => uint256) public balanceOf;
+
+    function mint(address to, uint256 amount) external {
+        balanceOf[to] += amount;
+    }
+
+    function transfer(address to, uint256 amount) external {
+        uint256 fromBalance = balanceOf[msg.sender];
+        require(fromBalance >= amount, "INSUFFICIENT_BALANCE");
+        unchecked {
+            balanceOf[msg.sender] = fromBalance - amount;
+            balanceOf[to] += amount;
+        }
+    }
+}
+
 /// @title MidasRedeemer unit test
 /// @notice U:[MID-R]: Unit tests for MidasRedeemer
 contract MidasRedeemerUnitTest is Test {
@@ -102,7 +136,7 @@ contract MidasRedeemerUnitTest is Test {
         vault = new MidasRedemptionVaultMock(mToken, address(dataFeed));
 
         // gateway == address(this), since the redeemer records its deployer as the gateway
-        redeemer = new MidasRedeemer(address(vault), tokenOut18);
+        redeemer = new MidasRedeemer(address(vault), tokenOut18, true);
         redeemer.setAccount(account);
     }
 
@@ -115,6 +149,9 @@ contract MidasRedeemerUnitTest is Test {
         assertEq(redeemer.mTokenDataFeed(), address(dataFeed), "Incorrect data feed");
         assertEq(redeemer.account(), account, "Incorrect account");
         assertFalse(redeemer.alreadyRequested(), "Should not have requested yet");
+
+        MidasRedeemer initialRateRedeemer = new MidasRedeemer(address(vault), tokenOut18, false);
+        assertEq(initialRateRedeemer.mTokenDataFeed(), address(0), "Feed should be unset for initial-rate pricing");
 
         vm.expectRevert(MidasRedeemer.CallerNotGatewayException.selector);
         vm.prank(makeAddr("NOT_GATEWAY"));
@@ -160,7 +197,7 @@ contract MidasRedeemerUnitTest is Test {
         vm.stopPrank();
     }
 
-    /// @notice U:[MID-R-5]: `pendingTokenOutAmount` computes expected amount (18-decimal output)
+    /// @notice U:[MID-R-5]: `pendingTokenOutAmount` uses the live feed rate when configured
     function test_U_MID_R_05_pendingTokenOutAmount_works_18_decimals() public {
         redeemer.requestRedeem(100e18);
 
@@ -174,7 +211,7 @@ contract MidasRedeemerUnitTest is Test {
 
     /// @notice U:[MID-R-6]: `pendingTokenOutAmount` converts to output token decimals (6-decimal output)
     function test_U_MID_R_06_pendingTokenOutAmount_works_6_decimals() public {
-        MidasRedeemer redeemer6 = new MidasRedeemer(address(vault), tokenOut6);
+        MidasRedeemer redeemer6 = new MidasRedeemer(address(vault), tokenOut6, true);
         redeemer6.setAccount(account);
         redeemer6.requestRedeem(100e18);
 
@@ -194,6 +231,19 @@ contract MidasRedeemerUnitTest is Test {
 
         vault.setStatus(1, uint8(RedemptionStatus.REJECTED));
         assertEq(redeemer.pendingTokenOutAmount(), 0, "Should be 0 for rejected request");
+    }
+
+    /// @notice U:[MID-R-7A]: `pendingTokenOutAmount` uses the initial request rate when feed is unset
+    function test_U_MID_R_07A_pendingTokenOutAmount_uses_initial_rate_when_feed_unset() public {
+        MidasRedeemer initialRateRedeemer = new MidasRedeemer(address(vault), tokenOut18, false);
+        initialRateRedeemer.setAccount(account);
+        initialRateRedeemer.requestRedeem(100e18);
+
+        vault.setRates(1, 1.5e18, 1e18);
+        dataFeed.setRate(2e18); // should be ignored because feed is unset
+
+        // 100e18 * 1.5e18 / 1e18 = 150e18
+        assertEq(initialRateRedeemer.pendingTokenOutAmount(), 150e18, "Should use initial request rate");
     }
 
     /// @notice U:[MID-R-8]: `claimableTokenOutAmount` returns the redeemer's token balance
@@ -239,5 +289,49 @@ contract MidasRedeemerUnitTest is Test {
         assertEq(IERC20(tokenOut18).balanceOf(address(redeemer)), 25e18, "Quote should remain on redeemer");
         assertEq(IERC20(mToken).balanceOf(account), 8e18, "Account did not receive stranded mToken");
         assertEq(IERC20(mToken).balanceOf(address(redeemer)), 0, "Redeemer should not retain mToken");
+    }
+
+    /// @notice U:[MID-R-12]: `withdraw` still succeeds when mToken sweep transfer reverts
+    function test_U_MID_R_12_withdraw_succeeds_when_mToken_transfer_reverts() public {
+        RevertingTransferERC20Mock revertingMToken = new RevertingTransferERC20Mock();
+        MidasRedemptionVaultMock vaultWithRevertingMToken =
+            new MidasRedemptionVaultMock(address(revertingMToken), address(dataFeed));
+        MidasRedeemer redeemerWithRevertingMToken =
+            new MidasRedeemer(address(vaultWithRevertingMToken), tokenOut18, true);
+        redeemerWithRevertingMToken.setAccount(account);
+
+        uint256 quoteAmount = 40e18;
+        uint256 strandedMToken = 5e18;
+        deal(tokenOut18, address(redeemerWithRevertingMToken), quoteAmount);
+        deal(address(revertingMToken), address(redeemerWithRevertingMToken), strandedMToken);
+        revertingMToken.setTransfersRevert(true);
+
+        redeemerWithRevertingMToken.withdraw(quoteAmount);
+
+        assertEq(IERC20(tokenOut18).balanceOf(account), quoteAmount, "Account did not receive quote token");
+        assertEq(IERC20(tokenOut18).balanceOf(address(redeemerWithRevertingMToken)), 0, "Quote should leave redeemer");
+        assertEq(
+            revertingMToken.balanceOf(address(redeemerWithRevertingMToken)),
+            strandedMToken,
+            "Stranded mToken should remain when transfer reverts"
+        );
+        assertEq(revertingMToken.balanceOf(account), 0, "Account should not receive mToken when transfer reverts");
+    }
+
+    /// @notice U:[MID-R-13]: `_sweepMToken` works for tokens that do not return a boolean on transfer
+    function test_U_MID_R_13_sweepMToken_works_for_no_return_tokens() public {
+        NoReturnERC20Mock noReturnMToken = new NoReturnERC20Mock();
+        MidasRedemptionVaultMock vaultWithNoReturnMToken =
+            new MidasRedemptionVaultMock(address(noReturnMToken), address(dataFeed));
+        MidasRedeemer redeemerWithNoReturnMToken = new MidasRedeemer(address(vaultWithNoReturnMToken), tokenOut18, true);
+        redeemerWithNoReturnMToken.setAccount(account);
+
+        uint256 strandedMToken = 7e18;
+        noReturnMToken.mint(address(redeemerWithNoReturnMToken), strandedMToken);
+
+        redeemerWithNoReturnMToken.withdraw(0);
+
+        assertEq(noReturnMToken.balanceOf(account), strandedMToken, "Account did not receive stranded mToken");
+        assertEq(noReturnMToken.balanceOf(address(redeemerWithNoReturnMToken)), 0, "Redeemer should not retain mToken");
     }
 }

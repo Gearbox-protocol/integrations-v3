@@ -66,11 +66,12 @@ contract MidasRedeemer {
     /// @notice Constructor
     /// @param _midasRedemptionVault Address of the Midas Redemption Vault
     /// @param _quoteToken Address of the quote token redeemed from Midas
-    constructor(address _midasRedemptionVault, address _quoteToken) {
+    constructor(address _midasRedemptionVault, address _quoteToken, bool _priceWithdrawalsByCurrentRate) {
         gateway = msg.sender;
         midasRedemptionVault = _midasRedemptionVault;
         mToken = IMidasRedemptionVault(_midasRedemptionVault).mToken();
-        mTokenDataFeed = IMidasRedemptionVault(_midasRedemptionVault).mTokenDataFeed();
+        mTokenDataFeed =
+            _priceWithdrawalsByCurrentRate ? IMidasRedemptionVault(_midasRedemptionVault).mTokenDataFeed() : address(0);
         quoteToken = _quoteToken;
     }
 
@@ -104,13 +105,17 @@ contract MidasRedeemer {
     /// @notice Returns the expected amount of quote token for the pending redemption request
     /// @dev Drops to zero as soon as Midas approves or rejects the request. On approval the value reappears as a
     ///      claimable balance; on rejection Midas returns nothing.
+    /// @dev Uses the live mToken data feed when configured (`_priceWithdrawalsByCurrentRate`), otherwise the initial
+    ///      `mTokenRate` from the request.
     function pendingTokenOutAmount() external view returns (uint256) {
-        (,, RedemptionStatus status, uint256 amountMTokenIn,, uint256 tokenOutRate) =
+        (,, RedemptionStatus status, uint256 amountMTokenIn, uint256 mTokenRate, uint256 tokenOutRate) =
             IMidasRedemptionVault(midasRedemptionVault).redeemRequests(requestId);
 
         if (status != RedemptionStatus.PENDING) return 0;
 
-        uint256 mTokenRate = IMidasDataFeed(mTokenDataFeed).getDataInBase18();
+        if (mTokenDataFeed != address(0)) {
+            mTokenRate = IMidasDataFeed(mTokenDataFeed).getDataInBase18();
+        }
 
         return _calculateTokenOutAmount(amountMTokenIn, mTokenRate, tokenOutRate);
     }
@@ -134,11 +139,12 @@ contract MidasRedeemer {
     }
 
     /// @dev Returns any mToken left here to the account. A redeemer may have leftover mToken if Midas does not
-    ///      consume the whole amount on redemption request, or has some airdrop mechanic.
+    ///      consume the whole amount on redemption request, or has some airdrop mechanic. The transfer is optional
+    ///      to avoid breaking withdrawals if, e.g., the mToken is paused.
     function _sweepMToken() internal {
         uint256 mTokenBalance = IERC20(mToken).balanceOf(address(this));
         if (mTokenBalance > 0) {
-            IERC20(mToken).safeTransfer(account, mTokenBalance);
+            mToken.call(abi.encodeCall(IERC20.transfer, (account, mTokenBalance)));
         }
     }
 }

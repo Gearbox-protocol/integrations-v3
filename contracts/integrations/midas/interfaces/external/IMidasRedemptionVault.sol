@@ -19,7 +19,7 @@ interface IMidasRedemptionVault {
             address tokenOut,
             RedemptionStatus status,
             uint256 amountMTokenIn,
-            uint256 mTokenRate,
+            uint256 mTokenRate, // rate at request time; used when current-rate pricing is disabled
             uint256 tokenOutRate
         );
     function mToken() external view returns (address);
