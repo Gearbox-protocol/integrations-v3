@@ -277,7 +277,7 @@ contract MidasGatewayAdapterUnitTest is AdapterUnitTestHelper {
 
         vm.prank(creditFacade);
         bool useSafePrices = adapter.transferRedeemer(redeemer, newAccount);
-        assertFalse(useSafePrices);
+        assertTrue(useSafePrices);
     }
 
     /// @notice U:[MID-A-15]: `withdrawPhantomToken` works as expected

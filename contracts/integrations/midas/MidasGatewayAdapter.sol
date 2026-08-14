@@ -161,7 +161,7 @@ contract MidasGatewayAdapter is AbstractAdapter, IMidasGatewayAdapter {
         returns (bool)
     {
         _execute(abi.encodeCall(IMidasGateway.transferRedeemer, (redeemer, newAccount)));
-        return false;
+        return true;
     }
 
     /// @notice Withdraws phantom token balance for its tracked output token

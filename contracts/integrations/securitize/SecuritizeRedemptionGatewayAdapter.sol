@@ -86,12 +86,12 @@ contract SecuritizeRedemptionGatewayAdapter is AbstractAdapter, ISecuritizeRedem
 
     function claim(address[] calldata redeemers) external override creditFacadeOnly returns (bool) {
         _execute(abi.encodeCall(ISecuritizeRedemptionGateway.claim, (redeemers)));
-        return false;
+        return true;
     }
 
     function transferRedeemer(address redeemer, address newAccount) external override creditFacadeOnly returns (bool) {
         _execute(abi.encodeCall(ISecuritizeRedemptionGateway.transferRedeemer, (redeemer, newAccount)));
-        return false;
+        return true;
     }
 
     function withdrawPhantomToken(address, uint256) external view override creditFacadeOnly returns (bool) {

@@ -73,22 +73,22 @@ contract SecuritizeLiquidator is ISecuritizeLiquidator {
 
         address underlying = ICreditManagerV3(creditManager).underlying();
 
-        (,, uint16 liquidationDiscount,,) = ICreditManagerV3(creditManager).fees();
-
         address[] memory redeemers =
             ISecuritizeRedemptionGateway(redemptionGateway).getUnclaimedRedeemers(creditAccount);
 
         uint256 underlyingAmount;
 
         {
+            CollateralDebtData memory cdd = ICreditManagerV3(creditManager)
+                .calcDebtAndCollateral(creditAccount, CollateralCalcTask.DEBT_COLLATERAL);
+
+            uint16 liquidationDiscount = _getLiquidationDiscount(creditManager, cdd);
+
             (uint256 collateralValue, uint256 liquidityAmount) = _calcCollateralAndLiquidityValues(
                 creditAccount, creditManager, underlying, redemptionGateway, redeemers, liquidationDiscount
             );
 
             underlyingAmount = collateralValue * liquidationDiscount / PERCENTAGE_FACTOR;
-
-            CollateralDebtData memory cdd = ICreditManagerV3(creditManager)
-                .calcDebtAndCollateral(creditAccount, CollateralCalcTask.DEBT_COLLATERAL);
 
             if (liquidityAmount >= cdd.calcTotalDebt()) {
                 revert AccountHasSufficientLiquidityException();
@@ -207,6 +207,15 @@ contract SecuritizeLiquidator is ISecuritizeLiquidator {
         }
 
         return calls;
+    }
+
+    function _getLiquidationDiscount(address creditManager, CollateralDebtData memory cdd)
+        internal
+        view
+        returns (uint16)
+    {
+        (,, uint16 liquidationDiscount,, uint16 liquidationDiscountExpired) = ICreditManagerV3(creditManager).fees();
+        return cdd.totalDebtUSD > cdd.twvUSD ? liquidationDiscount : liquidationDiscountExpired;
     }
 
     function _applyPriceUpdates(address creditFacade, PriceUpdate[] memory priceUpdates) internal {
