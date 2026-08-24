@@ -37,7 +37,7 @@ contract SecuritizeLiquidator is ISecuritizeLiquidator {
     using CreditLogic for CollateralDebtData;
 
     bytes32 public constant override contractType = "RWA_LIQUIDATOR::SECURITIZE";
-    uint256 public constant override version = 3_11;
+    uint256 public constant override version = 3_12;
 
     address public override transferableRedeemerOwner;
 
@@ -118,6 +118,22 @@ contract SecuritizeLiquidator is ISecuritizeLiquidator {
         return redeemerOwner == transferableRedeemerOwner;
     }
 
+    /// @dev Calculates the collateral and liquidity values for the liquidation
+    /// @dev There are assumed to be at most 5 tokens on the Credit Account:
+    ///      - underlying
+    ///      - unwrapped underlying
+    ///      - stablecoin used as a base asset for dsToken subscription / redemption
+    ///      - dsToken
+    ///      - redemption phantom token
+    ///      It is also possible for the stablecoin and unwrapped underlying to be the same token.
+    /// @dev The rules for calculating the values is as follows:
+    ///      - Collateral value includes value of all redeemers, the dsToken, and the stableCoinToken if it is not equal
+    ///        to unwrapped underlying
+    ///      - Liquidity value includes all wrapped and unwrapped underlying, as well as the stableCoinToken both on the account
+    ///        and on redeemers. Unwrapped underlying is 1:1 with underlying, so those balances are used as-is. When
+    ///        stableCoinToken differs, its amounts are converted to underlying. Liquidity only determines whether the
+    ///        account can be liquidated without redeemer transfers, so the differing stableCoinToken is still included,
+    ///        as it assumed that it is easily convertible to unwrapped underlying.
     function _calcCollateralAndLiquidityValues(
         address creditAccount,
         address creditManager,
@@ -127,6 +143,7 @@ contract SecuritizeLiquidator is ISecuritizeLiquidator {
         uint16 liquidationDiscount
     ) internal view returns (uint256 collateralValue, uint256 liquidityAmount) {
         address stableCoinToken = ISecuritizeRedemptionGateway(redemptionGateway).stableCoinToken();
+        address unwrappedUnderlying = IERC4626(underlying).asset();
         address dsToken = ISecuritizeRedemptionGateway(redemptionGateway).dsToken();
 
         for (uint256 i = 0; i < redeemers.length; i++) {
@@ -137,15 +154,21 @@ contract SecuritizeLiquidator is ISecuritizeLiquidator {
             liquidityAmount += stablecoinAmount;
         }
 
-        if (IERC4626(underlying).asset() != stableCoinToken) {
-            revert StableCoinIsNotConvertibleException();
-        }
-
-        liquidityAmount += IERC20(underlying).balanceOf(creditAccount);
-        liquidityAmount += IERC20(stableCoinToken).balanceOf(creditAccount);
-        liquidityAmount = liquidityAmount * liquidationDiscount / PERCENTAGE_FACTOR;
-
         address priceOracle = ICreditManagerV3(creditManager).priceOracle();
+        uint256 stableCoinBalance = IERC20(stableCoinToken).balanceOf(creditAccount);
+
+        if (unwrappedUnderlying != stableCoinToken) {
+            collateralValue += stableCoinBalance;
+            collateralValue = IPriceOracleV3(priceOracle).convert(collateralValue, stableCoinToken, underlying);
+
+            liquidityAmount += stableCoinBalance;
+            liquidityAmount = IPriceOracleV3(priceOracle).convert(liquidityAmount, stableCoinToken, underlying);
+            liquidityAmount += IERC20(unwrappedUnderlying).balanceOf(creditAccount);
+        } else {
+            liquidityAmount += stableCoinBalance;
+        }
+        liquidityAmount += IERC20(underlying).balanceOf(creditAccount);
+        liquidityAmount = liquidityAmount * liquidationDiscount / PERCENTAGE_FACTOR;
 
         uint256 dsTokenBalance = IERC20(dsToken).balanceOf(creditAccount);
         collateralValue += IPriceOracleV3(priceOracle).convert(dsTokenBalance, dsToken, underlying);
@@ -194,18 +217,47 @@ contract SecuritizeLiquidator is ISecuritizeLiquidator {
             }
         }
 
-        {
-            uint256 stableCoinBalance =
-                IERC20(ISecuritizeRedemptionGateway(redemptionGateway).stableCoinToken()).balanceOf(creditAccount);
-            address underlyingAdapter = ICreditManagerV3(creditManager).contractToAdapter(underlying);
+        calls = _appendStablecoinUnderlyingCalls(
+            calls, creditAccount, creditManager, creditFacade, redemptionGateway, underlying, to
+        );
+
+        return calls;
+    }
+
+    function _appendStablecoinUnderlyingCalls(
+        MultiCall[] memory calls,
+        address creditAccount,
+        address creditManager,
+        address creditFacade,
+        address redemptionGateway,
+        address underlying,
+        address to
+    ) internal view returns (MultiCall[] memory) {
+        address unwrappedUnderlying = IERC4626(underlying).asset();
+        uint256 unwrappedUnderlyingBalance = IERC20(unwrappedUnderlying).balanceOf(creditAccount);
+        address stableCoinToken = ISecuritizeRedemptionGateway(redemptionGateway).stableCoinToken();
+
+        if (stableCoinToken != unwrappedUnderlying) {
+            uint256 stableCoinBalance = IERC20(stableCoinToken).balanceOf(creditAccount);
             if (stableCoinBalance > 0) {
                 calls = _append(
                     calls,
-                    MultiCall({target: underlyingAdapter, callData: abi.encodeCall(IERC4626Adapter.depositDiff, (1))})
+                    MultiCall({
+                        target: creditFacade,
+                        callData: abi.encodeCall(
+                            ICreditFacadeV3Multicall.withdrawCollateral, (stableCoinToken, stableCoinBalance, to)
+                        )
+                    })
                 );
             }
         }
-
+        if (unwrappedUnderlyingBalance > 0) {
+            address underlyingAdapter = ICreditManagerV3(creditManager).contractToAdapter(underlying);
+            calls = _append(
+                calls,
+                MultiCall({target: underlyingAdapter, callData: abi.encodeCall(IERC4626Adapter.depositDiff, (1))})
+            );
+        }
         return calls;
     }
 

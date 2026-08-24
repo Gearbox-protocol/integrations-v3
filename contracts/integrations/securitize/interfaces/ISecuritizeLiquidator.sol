@@ -11,7 +11,6 @@ interface ISecuritizeLiquidator is ISecuritizeGatewayTransferMaster {
     error NotValidGatewayException();
     error UnknownCreditAccountException();
     error AccountHasSufficientLiquidityException();
-    error StableCoinIsNotConvertibleException();
 
     function liquidatePendingRedemption(
         address creditAccount,
