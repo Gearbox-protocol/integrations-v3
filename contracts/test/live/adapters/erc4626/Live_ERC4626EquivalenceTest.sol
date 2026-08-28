@@ -10,7 +10,7 @@ import {ICreditFacadeV3Multicall} from "@gearbox-protocol/core-v3/contracts/inte
 
 import {IAdapter} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IAdapter.sol";
 import {IERC4626} from "@openzeppelin/contracts/interfaces/IERC4626.sol";
-import {IERC4626Adapter} from "../../../../interfaces/erc4626/IERC4626Adapter.sol";
+import {IERC4626Adapter} from "../../../../integrations/erc4626/interfaces/IERC4626Adapter.sol";
 import {ERC4626_Calls, ERC4626_Multicaller} from "../../../multicall/erc4626/ERC4626_Calls.sol";
 
 import "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";

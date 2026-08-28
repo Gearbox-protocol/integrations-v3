@@ -8,8 +8,8 @@ import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IER
 import {ICreditFacadeV3} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacadeV3.sol";
 import {ICreditFacadeV3Multicall} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacadeV3Multicall.sol";
 
-import {IDaiUsds} from "../../../../integrations/sky/IDaiUsds.sol";
-import {IDaiUsdsAdapter} from "../../../../interfaces/sky/IDaiUsdsAdapter.sol";
+import {IDaiUsds} from "../../../../integrations/sky/interfaces/external/IDaiUsds.sol";
+import {IDaiUsdsAdapter} from "../../../../integrations/sky/interfaces/IDaiUsdsAdapter.sol";
 import {DaiUsds_Calls, DaiUsds_Multicaller} from "../../../multicall/sky/DaiUsds_Calls.sol";
 import {IAdapter} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IAdapter.sol";
 

@@ -10,7 +10,7 @@ import {ACLTrait} from "@gearbox-protocol/core-v3/contracts/traits/ACLTrait.sol"
 import {ContractsRegisterTrait} from "@gearbox-protocol/core-v3/contracts/traits/ContractsRegisterTrait.sol";
 import {SanityCheckTrait} from "@gearbox-protocol/core-v3/contracts/traits/SanityCheckTrait.sol";
 
-import {IZapper} from "../../interfaces/zappers/IZapper.sol";
+import {IZapper} from "../../zappers/interfaces/IZapper.sol";
 
 contract ZapperRegister is IVersion, ACLTrait, ContractsRegisterTrait, SanityCheckTrait {
     using EnumerableSet for EnumerableSet.AddressSet;

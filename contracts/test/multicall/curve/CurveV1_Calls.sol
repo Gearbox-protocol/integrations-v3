@@ -5,11 +5,11 @@ pragma solidity ^0.8.23;
 
 import {MultiCall} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacadeV3.sol";
 
-import {ICurveV1Adapter} from "../../../interfaces/curve/ICurveV1Adapter.sol";
-import {ICurveV1_2AssetsAdapter} from "../../../interfaces/curve/ICurveV1_2AssetsAdapter.sol";
-import {ICurveV1_3AssetsAdapter} from "../../../interfaces/curve/ICurveV1_3AssetsAdapter.sol";
-import {ICurveV1_4AssetsAdapter} from "../../../interfaces/curve/ICurveV1_4AssetsAdapter.sol";
-import {ICurveV1_StableNGAdapter} from "../../../interfaces/curve/ICurveV1_StableNGAdapter.sol";
+import {ICurveV1Adapter} from "../../../integrations/curve/interfaces/ICurveV1Adapter.sol";
+import {ICurveV1_2AssetsAdapter} from "../../../integrations/curve/interfaces/ICurveV1_2AssetsAdapter.sol";
+import {ICurveV1_3AssetsAdapter} from "../../../integrations/curve/interfaces/ICurveV1_3AssetsAdapter.sol";
+import {ICurveV1_4AssetsAdapter} from "../../../integrations/curve/interfaces/ICurveV1_4AssetsAdapter.sol";
+import {ICurveV1_StableNGAdapter} from "../../../integrations/curve/interfaces/ICurveV1_StableNGAdapter.sol";
 
 interface CurveV1Multicaller {}
 

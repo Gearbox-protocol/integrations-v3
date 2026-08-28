@@ -4,15 +4,15 @@ pragma solidity ^0.8.23;
 import {Bytecode} from "@gearbox-protocol/permissionless/contracts/interfaces/Types.sol";
 import {UploadBytecode} from "@gearbox-protocol/permissionless/script/UploadBytecode.sol";
 
-import {SecuritizeOnRampAdapter} from "../../contracts/adapters/securitize/SecuritizeOnRampAdapter.sol";
+import {SecuritizeOnRampAdapter} from "../../contracts/integrations/securitize/SecuritizeOnRampAdapter.sol";
 import {
     SecuritizeRedemptionGatewayAdapter
-} from "../../contracts/adapters/securitize/SecuritizeRedemptionGatewayAdapter.sol";
-import {SecuritizeLiquidator} from "../../contracts/helpers/securitize/SecuritizeLiquidator.sol";
-import {SecuritizeRedemptionGateway} from "../../contracts/helpers/securitize/SecuritizeRedemptionGateway.sol";
+} from "../../contracts/integrations/securitize/SecuritizeRedemptionGatewayAdapter.sol";
+import {SecuritizeLiquidator} from "../../contracts/integrations/securitize/SecuritizeLiquidator.sol";
+import {SecuritizeRedemptionGateway} from "../../contracts/integrations/securitize/SecuritizeRedemptionGateway.sol";
 import {
     SecuritizeRedemptionPhantomToken
-} from "../../contracts/helpers/securitize/SecuritizeRedemptionPhantomToken.sol";
+} from "../../contracts/integrations/securitize/SecuritizeRedemptionPhantomToken.sol";
 import {ERC4626UnderlyingZapper} from "../../contracts/zappers/ERC4626UnderlyingZapper.sol";
 
 contract Upload_2026_05_11_Integrations is UploadBytecode {

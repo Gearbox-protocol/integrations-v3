@@ -6,7 +6,7 @@ pragma solidity ^0.8.23;
 import {Test} from "forge-std/Test.sol";
 import {IERC20Permit} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Permit.sol";
 import {ERC20Mock} from "@gearbox-protocol/core-v3/contracts/test/mocks/token/ERC20Mock.sol";
-import {IERC20PermitAllowed} from "../../../integrations/external/IERC20PermitAllowed.sol";
+import {IERC20PermitAllowed} from "../../../integrations/common/interfaces/external/IERC20PermitAllowed.sol";
 import {PoolV3Mock} from "../../mocks/pool/PoolV3Mock.sol";
 import {ZapperBaseHarness} from "./ZapperBase.harness.sol";
 
@@ -422,7 +422,9 @@ contract ZapperBaseUnitTest is Test {
                 uint256 tokenInAmount = permitType == PermitType.EIP2612
                     ? zapper.redeemWithPermit(cases[i].tokenOutAmount, receiver, 0, 0, bytes32(0), bytes32(0))
                     : permitType == PermitType.DAILike
-                        ? zapper.redeemWithPermitAllowed(cases[i].tokenOutAmount, receiver, 0, 0, 0, bytes32(0), bytes32(0))
+                        ? zapper.redeemWithPermitAllowed(
+                            cases[i].tokenOutAmount, receiver, 0, 0, 0, bytes32(0), bytes32(0)
+                        )
                         : zapper.redeem(cases[i].tokenOutAmount, receiver);
 
                 assertEq(

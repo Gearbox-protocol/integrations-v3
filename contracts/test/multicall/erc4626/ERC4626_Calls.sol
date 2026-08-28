@@ -5,7 +5,7 @@ pragma solidity ^0.8.23;
 
 import {MultiCall} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacadeV3.sol";
 
-import {IERC4626Adapter} from "../../../interfaces/erc4626/IERC4626Adapter.sol";
+import {IERC4626Adapter} from "../../../integrations/erc4626/interfaces/IERC4626Adapter.sol";
 
 interface ERC4626_Multicaller {}
 
@@ -28,15 +28,13 @@ library ERC4626_Calls {
         returns (MultiCall memory)
     {
         return MultiCall({
-            target: address(c),
-            callData: abi.encodeCall(IERC4626Adapter.withdraw, (assets, address(0), address(0)))
+            target: address(c), callData: abi.encodeCall(IERC4626Adapter.withdraw, (assets, address(0), address(0)))
         });
     }
 
     function redeem(ERC4626_Multicaller c, uint256 shares, address, address) internal pure returns (MultiCall memory) {
         return MultiCall({
-            target: address(c),
-            callData: abi.encodeCall(IERC4626Adapter.redeem, (shares, address(0), address(0)))
+            target: address(c), callData: abi.encodeCall(IERC4626Adapter.redeem, (shares, address(0), address(0)))
         });
     }
 
