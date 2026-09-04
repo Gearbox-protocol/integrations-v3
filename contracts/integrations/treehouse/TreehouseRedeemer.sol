@@ -10,6 +10,7 @@ import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {IERC4626} from "@openzeppelin/contracts/interfaces/IERC4626.sol";
 
 import {ITreehouseRedemptionV2, RedemptionInfo, FEE_PRECISION} from "./interfaces/external/ITreehouseRedemptionV2.sol";
+import {ITreehouseRedemptionV3} from "./interfaces/external/ITreehouseRedemptionV3.sol";
 import {IWstETH} from "./interfaces/external/IWstETH.sol";
 
 /// @title Treehouse redeemer
@@ -123,6 +124,14 @@ contract TreehouseRedeemer {
         uint256 redemptionFee = ITreehouseRedemptionV2(redemptionV2).redemptionFee();
 
         return amountWithFee * (FEE_PRECISION - redemptionFee) / FEE_PRECISION;
+    }
+
+    function _getRedemptionFee() internal view returns (uint32 redemptionFee) {
+        redemptionFee = ITreehouseRedemptionV2(redemptionV2).redemptionFee();
+
+        try ITreehouseRedemptionV3(redemptionV2).treasuryFee() returns (uint32 treasuryFee) {
+            redemptionFee += treasuryFee;
+        } catch {}
     }
 
     function _getCurrentAssetsAndBaseRate(uint256 shares)
