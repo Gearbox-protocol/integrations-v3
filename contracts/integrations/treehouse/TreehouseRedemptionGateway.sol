@@ -28,7 +28,7 @@ contract TreehouseRedemptionGateway is RedemptionLoggingTrait, ITreehouseRedempt
     using SafeERC20 for IERC20;
 
     bytes32 public constant override contractType = "GATEWAY::TREEHOUSE_REDEMPTION";
-    uint256 public constant override version = 1_00;
+    uint256 public constant override version = 3_10;
 
     address public immutable redemptionV2;
 
