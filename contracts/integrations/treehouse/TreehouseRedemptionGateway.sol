@@ -13,7 +13,7 @@ import {
     ITreehouseRedemptionGateway,
     MAX_PENDING_REDEEMERS_PER_ACCOUNT
 } from "./interfaces/ITreehouseRedemptionGateway.sol";
-import {ITreehouseRedemptionV2} from "./interfaces/external/ITreehouseRedemptionV2.sol";
+import {ITreehouseRedemptionV3} from "./interfaces/external/ITreehouseRedemptionV3.sol";
 import {ITreehouseTransferMaster} from "./interfaces/ITreehouseTransferMaster.sol";
 import {ITreehouseVault} from "./interfaces/external/ITreehouseVault.sol";
 import {TreehouseRedeemer} from "./TreehouseRedeemer.sol";
@@ -22,7 +22,7 @@ import {TreehouseRedemptionPhantomToken} from "./TreehouseRedemptionPhantomToken
 bytes32 constant SALT = keccak256("TreehouseRedemptionGateway");
 
 /// @title TreehouseRedemptionGateway
-/// @notice Allows Credit Accounts to redeem TAsset to underlying via Treehouse RedemptionV2 contract
+/// @notice Allows Credit Accounts to redeem TAsset to underlying via Treehouse RedemptionV3 contract
 contract TreehouseRedemptionGateway is RedemptionLoggingTrait, ITreehouseRedemptionGateway {
     using EnumerableSet for EnumerableSet.AddressSet;
     using SafeERC20 for IERC20;
@@ -30,7 +30,7 @@ contract TreehouseRedemptionGateway is RedemptionLoggingTrait, ITreehouseRedempt
     bytes32 public constant override contractType = "GATEWAY::TREEHOUSE_REDEMPTION";
     uint256 public constant override version = 3_10;
 
-    address public immutable redemptionV2;
+    address public immutable redemptionV3;
 
     address public immutable tAsset;
 
@@ -46,18 +46,20 @@ contract TreehouseRedemptionGateway is RedemptionLoggingTrait, ITreehouseRedempt
 
     mapping(address => EnumerableSet.AddressSet) internal _accountToPendingRedeemers;
 
-    constructor(address _redemptionV2, address _transferMaster, address _addressProvider)
+    constructor(address _redemptionV3, address _transferMaster, address _addressProvider)
         RedemptionLoggingTrait(_addressProvider)
     {
-        redemptionV2 = _redemptionV2;
-        tAsset = ITreehouseRedemptionV2(_redemptionV2).TASSET();
-        address vault = ITreehouseRedemptionV2(_redemptionV2).VAULT();
+        redemptionV3 = _redemptionV3;
+        tAsset = ITreehouseRedemptionV3(_redemptionV3).TASSET();
+        address vault = ITreehouseRedemptionV3(_redemptionV3).VAULT();
         vaultUnderlying = ITreehouseVault(vault).getUnderlying();
         transferMaster = _transferMaster;
-        masterRedeemer = address(new TreehouseRedeemer{salt: SALT}(redemptionV2, tAsset, vaultUnderlying));
+        masterRedeemer = address(new TreehouseRedeemer{salt: SALT}(redemptionV3, tAsset, vaultUnderlying));
         phantomToken = address(new TreehouseRedemptionPhantomToken{salt: SALT}(address(this), tAsset, vaultUnderlying));
     }
 
+    /// @notice Creates a new redeemer and initiates a redemption for a specific share amount
+    /// @dev Logs supplementary delayed redemption data via RedemptionLogger.
     function redeem(uint256 shares, bytes calldata extraData) external {
         if (shares == 0) return;
         address redeemer = _makeNewRedeemerForAccount(msg.sender);
@@ -66,6 +68,7 @@ contract TreehouseRedemptionGateway is RedemptionLoggingTrait, ITreehouseRedempt
         _logRedemption(msg.sender, redeemer, extraData);
     }
 
+    /// @notice Finalizes a redemption for a specific redeemer
     function finalizeRedeem(address redeemer) external {
         if (!_accountToRedeemers[msg.sender].contains(redeemer)) revert RedeemerNotOwnedByAccountException();
 
@@ -74,6 +77,10 @@ contract TreehouseRedemptionGateway is RedemptionLoggingTrait, ITreehouseRedempt
         _accountToPendingRedeemers[msg.sender].remove(redeemer);
     }
 
+    /// @notice Transfers a redeemer to a new account
+    /// @dev    Treansfers are only allowed for a specific account returned by the transfer master,
+    ///         and only if the redeemer is pending. Since a transfer removes a redeemer from the pending set,
+    ///         transfers are only allowed once.
     function transferRedeemer(address redeemer, address newAccount) external {
         if (
             newAccount == msg.sender || newAccount == address(0)
@@ -90,6 +97,7 @@ contract TreehouseRedemptionGateway is RedemptionLoggingTrait, ITreehouseRedempt
         TreehouseRedeemer(redeemer).setAccount(newAccount);
     }
 
+    /// @notice Returns the total pending and claimable underlying amounts for an account
     function pendingAndClaimableAmounts(address account)
         external
         view

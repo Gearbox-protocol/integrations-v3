@@ -21,8 +21,8 @@ interface ITreehouseRedemptionGateway is IVersion, IRedemptionLogging {
     /// @dev Thrown when attempting to create a new redeemer for an account that has too many pending redeemers
     error MaxPendingRedeemersPerAccountException();
 
-    /// @notice Address of the Treehouse RedemptionV2 contract
-    function redemptionV2() external view returns (address);
+    /// @notice Address of the Treehouse RedemptionV3 contract
+    function redemptionV3() external view returns (address);
 
     /// @notice Address of the TAsset contract
     function tAsset() external view returns (address);

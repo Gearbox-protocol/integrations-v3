@@ -9,14 +9,15 @@ import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {IERC4626} from "@openzeppelin/contracts/interfaces/IERC4626.sol";
 
-import {ITreehouseRedemptionV2, RedemptionInfo, FEE_PRECISION} from "./interfaces/external/ITreehouseRedemptionV2.sol";
-import {ITreehouseRedemptionV3} from "./interfaces/external/ITreehouseRedemptionV3.sol";
+import {ITreehouseRedemptionV3, RedemptionInfo, FEE_PRECISION} from "./interfaces/external/ITreehouseRedemptionV3.sol";
 import {IWstETH} from "./interfaces/external/IWstETH.sol";
 
 /// @title Treehouse redeemer
 /// @notice Holds exactly one Treehouse redemption request on behalf of an account
 /// @dev Deployed as a minimal clone by the gateway, one per request, so that requests settle and can be
 ///      transferred independently. All state changes go through the gateway.
+/// @dev The intended target contract is non-updatable, so changes in the redemption behavior
+///      are not expected.
 contract TreehouseRedeemer {
     using SafeERC20 for IERC20;
     using SafeCast for uint256;
@@ -36,8 +37,8 @@ contract TreehouseRedeemer {
     /// @notice The gateway that is using this redeemer
     address public immutable gateway;
 
-    /// @notice The Treehouse RedemptionV2 contract
-    address public immutable redemptionV2;
+    /// @notice The Treehouse redemptionV3 contract
+    address public immutable redemptionV3;
 
     /// @notice The TAsset contract
     address public immutable tAsset;
@@ -59,12 +60,12 @@ contract TreehouseRedeemer {
     }
 
     /// @notice Constructor
-    /// @param _redemptionV2 Address of the Treehouse RedemptionV2 contract
+    /// @param _redemptionV3 Address of the Treehouse redemptionV3 contract
     /// @param _tAsset Address of the TAsset contract
     /// @param _vaultUnderlying Address of the underlying token of the vault
-    constructor(address _redemptionV2, address _tAsset, address _vaultUnderlying) {
+    constructor(address _redemptionV3, address _tAsset, address _vaultUnderlying) {
         gateway = msg.sender;
-        redemptionV2 = _redemptionV2;
+        redemptionV3 = _redemptionV3;
         tAsset = _tAsset;
         vaultUnderlying = _vaultUnderlying;
     }
@@ -74,66 +75,78 @@ contract TreehouseRedeemer {
         account = _account;
     }
 
+    /// @notice Redeems shares of TAsset for underlying
+    /// @dev Only one redemption is allowed per redeemer
     function redeem(uint256 shares) external gatewayOnly whenNotAlreadyRedeemed {
-        IERC20(tAsset).forceApprove(redemptionV2, shares);
-        ITreehouseRedemptionV2(redemptionV2).redeem(shares.toUint96());
+        IERC20(tAsset).forceApprove(redemptionV3, shares);
+        ITreehouseRedemptionV3(redemptionV3).redeem(shares.toUint96());
         alreadyRedeemed = true;
         _sweepTAsset();
     }
 
+    /// @notice Finalizes the redemption and transfers funds to the connected account
     function finalizeRedeem() external gatewayOnly {
-        ITreehouseRedemptionV2(redemptionV2).finalizeRedeem(0);
+        ITreehouseRedemptionV3(redemptionV3).finalizeRedeem(0);
         IERC20(vaultUnderlying).safeTransfer(account, IERC20(vaultUnderlying).balanceOf(address(this)));
         _sweepTAsset();
     }
 
+    /// @notice Rescues any ERC20 tokens left in the redeemer to the connected account
+    /// @dev    May be used to rescue any tokens stranded on the redeemer, for example,
+    ///         if Treehouse airdrops some rewards on it.
     function rescueToken(address token) external gatewayOnly {
         IERC20(token).safeTransfer(account, IERC20(token).balanceOf(address(this)));
     }
 
+    /// @notice Returns the amount of underlying that is pending redemption
     function pendingAmount() external view returns (uint256) {
-        if (ITreehouseRedemptionV2(redemptionV2).getRedeemLength(address(this)) == 0) return 0;
+        if (ITreehouseRedemptionV3(redemptionV3).getRedeemLength(address(this)) == 0) return 0;
 
-        RedemptionInfo memory redemptionInfo = ITreehouseRedemptionV2(redemptionV2).getRedeemInfo(address(this), 0);
+        RedemptionInfo memory redemptionInfo = ITreehouseRedemptionV3(redemptionV3).getRedeemInfo(address(this), 0);
 
-        if (block.timestamp >= redemptionInfo.startTime + ITreehouseRedemptionV2(redemptionV2).waitingPeriod()) {
+        if (block.timestamp >= redemptionInfo.startTime + ITreehouseRedemptionV3(redemptionV3).waitingPeriod()) {
             return 0;
         }
 
         return _getRedemptionAmount(redemptionInfo);
     }
 
+    /// @notice Returns the amount of underlying that is claimable
     function claimableAmount() external view returns (uint256) {
-        if (ITreehouseRedemptionV2(redemptionV2).getRedeemLength(address(this)) == 0) return 0;
+        if (ITreehouseRedemptionV3(redemptionV3).getRedeemLength(address(this)) == 0) return 0;
 
-        RedemptionInfo memory redemptionInfo = ITreehouseRedemptionV2(redemptionV2).getRedeemInfo(address(this), 0);
+        RedemptionInfo memory redemptionInfo = ITreehouseRedemptionV3(redemptionV3).getRedeemInfo(address(this), 0);
 
-        if (block.timestamp < redemptionInfo.startTime + ITreehouseRedemptionV2(redemptionV2).waitingPeriod()) {
+        if (block.timestamp < redemptionInfo.startTime + ITreehouseRedemptionV3(redemptionV3).waitingPeriod()) {
             return 0;
         }
 
         return _getRedemptionAmount(redemptionInfo);
     }
 
+    /// @dev Computes the amount of underlying that will be returned from an unclaimed redemption
+    /// @dev The redemption amount is calculated as
+    ///      shares * min(current tAsset rate, initial tAsset rate) * min(wstETH rate, initial wstETH rate) /
+    ///      max(initial tAsset rate, initial wstETH rate), to which a fee as also applied. This formula is
+    ///      used both in Treehouse code and documentation.
     function _getRedemptionAmount(RedemptionInfo memory redemptionInfo) internal view returns (uint256) {
         (uint256 currentAssets, uint256 currentBaseRate) = _getCurrentAssetsAndBaseRate(redemptionInfo.shares);
 
         uint256 amountWithFee = Math.min(redemptionInfo.assets, currentAssets)
             * Math.min(redemptionInfo.baseRate, currentBaseRate) / Math.max(redemptionInfo.baseRate, currentBaseRate);
 
-        uint256 redemptionFee = ITreehouseRedemptionV2(redemptionV2).redemptionFee();
+        uint256 redemptionFee = _getRedemptionFee();
 
         return amountWithFee * (FEE_PRECISION - redemptionFee) / FEE_PRECISION;
     }
 
+    /// @dev Computes the total redemption fee
+    /// @dev In TreehouseRedemptionV3, the fee is split into holder and treasury parts.
     function _getRedemptionFee() internal view returns (uint32 redemptionFee) {
-        redemptionFee = ITreehouseRedemptionV2(redemptionV2).redemptionFee();
-
-        try ITreehouseRedemptionV3(redemptionV2).treasuryFee() returns (uint32 treasuryFee) {
-            redemptionFee += treasuryFee;
-        } catch {}
+        return ITreehouseRedemptionV3(redemptionV3).redemptionFee() + ITreehouseRedemptionV3(redemptionV3).treasuryFee();
     }
 
+    /// @dev Computes the current tAsset rate and underlying (wstETH) rate
     function _getCurrentAssetsAndBaseRate(uint256 shares)
         internal
         view
