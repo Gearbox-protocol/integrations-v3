@@ -21,6 +21,9 @@ interface ITreehouseRedemptionGateway is IVersion, IRedemptionLogging {
     /// @dev Thrown when attempting to create a new redeemer for an account that has too many pending redeemers
     error MaxPendingRedeemersPerAccountException();
 
+    /// @dev Thrown when attempting to rescue a token from a redeemer that is still pending
+    error RedeemerStillPendingException();
+
     /// @notice Address of the Treehouse RedemptionV3 contract
     function redemptionV3() external view returns (address);
 
@@ -52,6 +55,11 @@ interface ITreehouseRedemptionGateway is IVersion, IRedemptionLogging {
     /// @param redeemer The redeemer to transfer
     /// @param newAccount The new account to transfer the redeemer to
     function transferRedeemer(address redeemer, address newAccount) external;
+
+    /// @notice Rescues any ERC20 tokens left in the redeemer to the connected account
+    /// @dev    For additional safety, only allows rescuing tokens if the redeemer is no longer used
+    ///         as collateral.
+    function rescueToken(address redeemer, address token) external;
 
     /// @notice Returns the pending and claimable amounts of vault underlying for an account
     /// @param account Account to check

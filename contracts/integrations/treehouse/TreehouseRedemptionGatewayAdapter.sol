@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Gearbox Protocol. Generalized leverage for DeFi protocols
-// (c) Gearbox Foundation, 2024.
+// (c) Gearbox Foundation, 2026.
 pragma solidity ^0.8.23;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -20,15 +20,18 @@ contract TreehouseRedemptionGatewayAdapter is AbstractAdapter, ITreehouseRedempt
     bytes32 public constant override contractType = "ADAPTER::TREEHOUSE_GATEWAY";
     uint256 public constant override version = 3_10;
 
+    /// @notice The address of the TAsset
     address public immutable override tAsset;
 
+    /// @notice The address of the underlying received from tAsset redemptions
     address public immutable override vaultUnderlying;
 
+    /// @notice The address of the phantom token received from tAsset redemptions
     address public immutable override phantomToken;
 
     /// @notice Constructor
     /// @param _creditManager Credit manager address
-    /// @param _targetContract Securitize redemption gateway
+    /// @param _targetContract Treehouse redemption gateway
     constructor(address _creditManager, address _targetContract) AbstractAdapter(_creditManager, _targetContract) {
         tAsset = ITreehouseRedemptionGateway(_targetContract).tAsset();
         vaultUnderlying = ITreehouseRedemptionGateway(_targetContract).vaultUnderlying();
@@ -104,6 +107,11 @@ contract TreehouseRedemptionGatewayAdapter is AbstractAdapter, ITreehouseRedempt
     /// @param newAccount The new account to transfer the redeemer to
     function transferRedeemer(address redeemer, address newAccount) external override creditFacadeOnly returns (bool) {
         _execute(abi.encodeCall(ITreehouseRedemptionGateway.transferRedeemer, (redeemer, newAccount)));
+        return true;
+    }
+
+    function rescueToken(address redeemer, address token) external override creditFacadeOnly returns (bool) {
+        _execute(abi.encodeCall(ITreehouseRedemptionGateway.rescueToken, (redeemer, token)));
         return true;
     }
 

@@ -77,8 +77,17 @@ contract TreehouseRedemptionGateway is RedemptionLoggingTrait, ITreehouseRedempt
         _accountToPendingRedeemers[msg.sender].remove(redeemer);
     }
 
+    /// @notice Rescues any ERC20 tokens left in the redeemer to the connected account
+    /// @dev    For additional safety, only allows rescuing tokens if the redeemer is no longer used
+    ///         as collateral.
+    function rescueToken(address redeemer, address token) external {
+        if (!_accountToRedeemers[msg.sender].contains(redeemer)) revert RedeemerNotOwnedByAccountException();
+        if (_accountToPendingRedeemers[msg.sender].contains(redeemer)) revert RedeemerStillPendingException();
+        TreehouseRedeemer(redeemer).rescueToken(token);
+    }
+
     /// @notice Transfers a redeemer to a new account
-    /// @dev    Treansfers are only allowed for a specific account returned by the transfer master,
+    /// @dev    Transfers are only allowed for a specific account returned by the transfer master,
     ///         and only if the redeemer is pending. Since a transfer removes a redeemer from the pending set,
     ///         transfers are only allowed once.
     function transferRedeemer(address redeemer, address newAccount) external {

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Gearbox Protocol. Generalized leverage for DeFi protocols
-// (c) Gearbox Foundation, 2024.
+// (c) Gearbox Foundation, 2026.
 pragma solidity ^0.8.23;
 
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
@@ -32,9 +32,9 @@ contract TreehouseRedemptionPhantomToken is PhantomERC20, IPhantomToken {
         gateway = _gateway;
     }
 
-    /// @notice Returns the expected amount of quote token from pending redemptions
+    /// @notice Returns the expected amount of vault underlying from pending redemptions
     /// @param account The account for which the calculation is performed
-    /// @return Expected amount of tokenOut that can be withdrawn
+    /// @return Expected amount of underlying that will be received
     function balanceOf(address account) public view override returns (uint256) {
         (uint256 pendingAmount, uint256 claimableAmount) =
             ITreehouseRedemptionGateway(gateway).pendingAndClaimableAmounts(account);

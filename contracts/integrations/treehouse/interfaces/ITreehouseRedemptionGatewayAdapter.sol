@@ -42,4 +42,9 @@ interface ITreehouseRedemptionGatewayAdapter is IPhantomTokenAdapter {
     /// @param redeemer The redeemer to transfer
     /// @param newAccount The new account to transfer the redeemer to
     function transferRedeemer(address redeemer, address newAccount) external returns (bool);
+
+    /// @notice Rescues any ERC20 tokens left in the redeemer to the connected account
+    /// @dev    For additional safety, only allows rescuing tokens if the redeemer is no longer used
+    ///         as collateral.
+    function rescueToken(address redeemer, address token) external returns (bool);
 }

@@ -11,14 +11,16 @@ import {ICreditManagerV3} from "@gearbox-protocol/core-v3/contracts/interfaces/I
 import {ICreditFacadeV3, MultiCall} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacadeV3.sol";
 import {ICreditFacadeV3Multicall} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacadeV3Multicall.sol";
 import {ICreditAccountV3} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditAccountV3.sol";
+import {PriceUpdate} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IPriceFeedStore.sol";
 
+import {LiquidationChecksTrait} from "../common/LiquidationChecksTrait.sol";
 import {ITreehouseRedemptionGateway} from "./interfaces/ITreehouseRedemptionGateway.sol";
 import {ITreehouseLiquidator} from "./interfaces/ITreehouseLiquidator.sol";
 
 /// @title Treehouse liquidator
 /// @notice Acts as the transfer master for Treehouse gateways, enabling redeemer transfers for the duration of a
 ///         liquidation.
-contract TreehouseLiquidator is ReentrancyGuardTrait, ITreehouseLiquidator {
+contract TreehouseLiquidator is ReentrancyGuardTrait, LiquidationChecksTrait, ITreehouseLiquidator {
     using SafeERC20 for IERC20;
 
     bytes32 public constant override contractType = "RWA_LIQUIDATOR::TREEHOUSE";
@@ -30,9 +32,9 @@ contract TreehouseLiquidator is ReentrancyGuardTrait, ITreehouseLiquidator {
     ///      i.e. during liquidations, and only by a specific account.
     address public override transferableRedeemerOwner;
 
-    /// @notice Liquidates a credit account that holds pending Midas redemptions
+    /// @notice Liquidates a credit account that holds pending Treehouse redemptions
     /// @param creditAccount Credit account to liquidate
-    /// @param gateway Midas gateway whose redeemers are transferred during the liquidation
+    /// @param gateway Treehouse gateway whose redeemers are transferred during the liquidation
     /// @param calls Liquidator-supplied multicall forwarded to the credit facade
     /// @param lossPolicyData Loss policy data forwarded to the credit facade
     /// @dev Any collateral the liquidator adds via `addCollateral` calls is pulled from the caller and approved to the
@@ -55,11 +57,18 @@ contract TreehouseLiquidator is ReentrancyGuardTrait, ITreehouseLiquidator {
 
         address creditFacade = ICreditManagerV3(creditManager).creditFacade();
 
+        (MultiCall[] memory remainingCalls, PriceUpdate[] memory priceUpdates) =
+            _cutOnDemandPriceUpdates(creditFacade, calls);
+
+        _applyPriceUpdates(creditFacade, priceUpdates);
+
+        _revertIfNotAllowedToLiquidate(creditFacade, creditManager, creditAccount, msg.sender, lossPolicyData);
+
         _forwardCollateral(creditManager, creditFacade, calls);
 
         // redeemer transfers are unlocked for exactly the span of the facade call, and only for this account
         transferableRedeemerOwner = creditAccount;
-        ICreditFacadeV3(creditFacade).liquidateCreditAccount(creditAccount, msg.sender, calls, lossPolicyData);
+        ICreditFacadeV3(creditFacade).liquidateCreditAccount(creditAccount, msg.sender, remainingCalls, lossPolicyData);
         transferableRedeemerOwner = address(0);
     }
 
