@@ -4,10 +4,10 @@ pragma solidity ^0.8.23;
 import {Bytecode} from "@gearbox-protocol/permissionless/contracts/interfaces/Types.sol";
 import {UploadBytecode} from "@gearbox-protocol/permissionless/script/UploadBytecode.sol";
 
-import {BalancerV3RouterAdapter} from "../../contracts/adapters/balancer/BalancerV3RouterAdapter.sol";
-import {BalancerV3WrapperAdapter} from "../../contracts/adapters/balancer/BalancerV3WrapperAdapter.sol";
-import {PendleRouterAdapter} from "../../contracts/adapters/pendle/PendleRouterAdapter.sol";
-import {BalancerV3RouterGateway} from "../../contracts/helpers/balancer/BalancerV3RouterGateway.sol";
+import {BalancerV3RouterAdapter} from "../../contracts/integrations/balancer/BalancerV3RouterAdapter.sol";
+import {BalancerV3WrapperAdapter} from "../../contracts/integrations/balancer/BalancerV3WrapperAdapter.sol";
+import {PendleRouterAdapter} from "../../contracts/integrations/pendle/PendleRouterAdapter.sol";
+import {BalancerV3RouterGateway} from "../../contracts/integrations/balancer/BalancerV3RouterGateway.sol";
 
 contract Upload_2025_10_22_Integrations is UploadBytecode {
     function _getContracts() internal pure override returns (Bytecode[] memory bytecodes) {

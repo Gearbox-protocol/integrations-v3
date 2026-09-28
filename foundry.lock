@@ -8,7 +8,7 @@
   "lib/@gearbox-protocol/core-v3": {
     "tag": {
       "name": "v1.52.0",
-      "rev": "5144d61af7d117f86d3fa9b4e2aa05535e2e5433"
+      "rev": "bea9d96bef8a3842555a7e0cda5b36e1946a6739"
     }
   },
   "lib/@gearbox-protocol/permissionless": {

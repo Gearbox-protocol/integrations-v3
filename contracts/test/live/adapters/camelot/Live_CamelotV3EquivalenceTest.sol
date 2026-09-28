@@ -5,8 +5,11 @@ pragma solidity ^0.8.23;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {ICreditFacadeV3} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacadeV3.sol";
-import {ICamelotV3Router} from "../../../../integrations/camelot/ICamelotV3Router.sol";
-import {ICamelotV3Adapter, ICamelotV3AdapterTypes} from "../../../../interfaces/camelot/ICamelotV3Adapter.sol";
+import {ICamelotV3Router} from "../../../../integrations/camelot/interfaces/external/ICamelotV3Router.sol";
+import {
+    ICamelotV3Adapter,
+    ICamelotV3AdapterTypes
+} from "../../../../integrations/camelot/interfaces/ICamelotV3Adapter.sol";
 
 import "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
 import {Contracts} from "@gearbox-protocol/sdk-gov/contracts/SupportedContracts.sol";

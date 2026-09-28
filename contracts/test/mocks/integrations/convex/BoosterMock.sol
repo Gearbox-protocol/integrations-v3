@@ -3,7 +3,7 @@
 // (c) Gearbox Foundation, 2024.
 pragma solidity ^0.8.23;
 
-import {IBooster} from "../../../../integrations/convex/IBooster.sol";
+import {IBooster} from "../../../../integrations/convex/interfaces/external/IBooster.sol";
 
 contract BoosterMock {
     address public minter;

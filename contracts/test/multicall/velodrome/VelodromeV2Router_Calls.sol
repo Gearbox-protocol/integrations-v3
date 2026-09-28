@@ -4,8 +4,8 @@
 pragma solidity ^0.8.23;
 
 import {MultiCall} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacadeV3.sol";
-import {IVelodromeV2RouterAdapter} from "../../../interfaces/velodrome/IVelodromeV2RouterAdapter.sol";
-import {Route} from "../../../integrations/velodrome/IVelodromeV2Router.sol";
+import {IVelodromeV2RouterAdapter} from "../../../integrations/velodrome/interfaces/IVelodromeV2RouterAdapter.sol";
+import {Route} from "../../../integrations/velodrome/interfaces/external/IVelodromeV2Router.sol";
 
 interface VelodromeV2Router_Multicaller {}
 
@@ -21,7 +21,8 @@ library VelodromeV2Router_Calls {
         return MultiCall({
             target: address(c),
             callData: abi.encodeCall(
-                IVelodromeV2RouterAdapter.swapExactTokensForTokens, (amountIn, amountOutMin, routes, address(0), deadline)
+                IVelodromeV2RouterAdapter.swapExactTokensForTokens,
+                (amountIn, amountOutMin, routes, address(0), deadline)
             )
         });
     }

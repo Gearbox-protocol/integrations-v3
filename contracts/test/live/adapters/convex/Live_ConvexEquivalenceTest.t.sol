@@ -7,18 +7,20 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {ICreditFacadeV3} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacadeV3.sol";
 import {ICreditFacadeV3Multicall} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacadeV3Multicall.sol";
-import {IBaseRewardPool} from "../../../../integrations/convex/IBaseRewardPool.sol";
-import {IRewards} from "../../../../integrations/convex/IRewards.sol";
-import {IBooster} from "../../../../integrations/convex/IBooster.sol";
-import {IConvexV1BaseRewardPoolAdapter} from "../../../../interfaces/convex/IConvexV1BaseRewardPoolAdapter.sol";
-import {ConvexStakedPositionToken} from "../../../../helpers/convex/ConvexV1_StakedPositionToken.sol";
+import {IBaseRewardPool} from "../../../../integrations/convex/interfaces/external/IBaseRewardPool.sol";
+import {IRewards} from "../../../../integrations/convex/interfaces/external/IRewards.sol";
+import {IBooster} from "../../../../integrations/convex/interfaces/external/IBooster.sol";
+import {
+    IConvexV1BaseRewardPoolAdapter
+} from "../../../../integrations/convex/interfaces/IConvexV1BaseRewardPoolAdapter.sol";
+import {ConvexStakedPositionToken} from "../../../../integrations/convex/ConvexV1_StakedPositionToken.sol";
 import {
     IPhantomToken,
     IPhantomTokenWithdrawer
 } from "@gearbox-protocol/core-v3/contracts/interfaces/base/IPhantomToken.sol";
 import {PriceFeedParams} from "@gearbox-protocol/core-v3/contracts/interfaces/IPriceOracleV3.sol";
 import {IPriceFeed} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IPriceFeed.sol";
-import {IPhantomTokenAdapter} from "../../../../interfaces/IPhantomTokenAdapter.sol";
+import {IPhantomTokenAdapter} from "../../../../integrations/common/interfaces/IPhantomTokenAdapter.sol";
 
 import {
     ConvexV1_BaseRewardPoolCalls,

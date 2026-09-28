@@ -5,7 +5,9 @@ pragma solidity ^0.8.23;
 
 import {MultiCall} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacadeV3.sol";
 
-import {IConvexV1BaseRewardPoolAdapter} from "../../../interfaces/convex/IConvexV1BaseRewardPoolAdapter.sol";
+import {
+    IConvexV1BaseRewardPoolAdapter
+} from "../../../integrations/convex/interfaces/IConvexV1BaseRewardPoolAdapter.sol";
 
 interface ConvexV1_BaseRewardPoolMulticaller {}
 
@@ -20,8 +22,7 @@ library ConvexV1_BaseRewardPoolCalls {
         returns (MultiCall memory)
     {
         return MultiCall({
-            target: address(c),
-            callData: abi.encodeCall(IConvexV1BaseRewardPoolAdapter.stakeDiff, (leftoverAmount))
+            target: address(c), callData: abi.encodeCall(IConvexV1BaseRewardPoolAdapter.stakeDiff, (leftoverAmount))
         });
     }
 
@@ -31,8 +32,7 @@ library ConvexV1_BaseRewardPoolCalls {
         returns (MultiCall memory)
     {
         return MultiCall({
-            target: address(c),
-            callData: abi.encodeCall(IConvexV1BaseRewardPoolAdapter.withdraw, (amount, claim))
+            target: address(c), callData: abi.encodeCall(IConvexV1BaseRewardPoolAdapter.withdraw, (amount, claim))
         });
     }
 

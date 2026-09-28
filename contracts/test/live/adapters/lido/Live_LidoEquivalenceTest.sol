@@ -7,8 +7,8 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {ICreditFacadeV3} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacadeV3.sol";
 import {ICreditFacadeV3Multicall} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacadeV3Multicall.sol";
 
-import {ILidoV1Adapter} from "../../../../interfaces/lido/ILidoV1Adapter.sol";
-import {LidoV1Gateway} from "../../../../helpers/lido/LidoV1_WETHGateway.sol";
+import {ILidoV1Adapter} from "../../../../integrations/lido/interfaces/ILidoV1Adapter.sol";
+import {LidoV1Gateway} from "../../../../integrations/lido/LidoV1_WETHGateway.sol";
 import {LidoV1_Calls, LidoV1_Multicaller} from "../../../multicall/lido/LidoV1_Calls.sol";
 
 import "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";

@@ -6,9 +6,16 @@ pragma solidity ^0.8.23;
 import {MultiCall} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacadeV3.sol";
 
 import {
-    IPendleRouterAdapter, TokenDiffInput, TokenDiffOutput
-} from "../../../interfaces/pendle/IPendleRouterAdapter.sol";
-import {TokenInput, TokenOutput, ApproxParams, LimitOrderData} from "../../../integrations/pendle/IPendleRouter.sol";
+    IPendleRouterAdapter,
+    TokenDiffInput,
+    TokenDiffOutput
+} from "../../../integrations/pendle/interfaces/IPendleRouterAdapter.sol";
+import {
+    TokenInput,
+    TokenOutput,
+    ApproxParams,
+    LimitOrderData
+} from "../../../integrations/pendle/interfaces/external/IPendleRouter.sol";
 
 interface PendleRouter_Multicaller {}
 
@@ -25,7 +32,8 @@ library PendleRouter_Calls {
         return MultiCall({
             target: address(c),
             callData: abi.encodeCall(
-                IPendleRouterAdapter.swapExactTokenForPt, (receiver, market, minPtOut, guessPtOut, input, limitOrderData)
+                IPendleRouterAdapter.swapExactTokenForPt,
+                (receiver, market, minPtOut, guessPtOut, input, limitOrderData)
             )
         });
     }
@@ -39,7 +47,9 @@ library PendleRouter_Calls {
     ) internal pure returns (MultiCall memory) {
         return MultiCall({
             target: address(c),
-            callData: abi.encodeCall(IPendleRouterAdapter.swapDiffTokenForPt, (market, minRateRAY, guessPtOut, diffInput))
+            callData: abi.encodeCall(
+                IPendleRouterAdapter.swapDiffTokenForPt, (market, minRateRAY, guessPtOut, diffInput)
+            )
         });
     }
 

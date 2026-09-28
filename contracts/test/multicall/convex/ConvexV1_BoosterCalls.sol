@@ -5,7 +5,7 @@ pragma solidity ^0.8.23;
 
 import {MultiCall} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacadeV3.sol";
 
-import {IConvexV1BoosterAdapter} from "../../../interfaces/convex/IConvexV1BoosterAdapter.sol";
+import {IConvexV1BoosterAdapter} from "../../../integrations/convex/interfaces/IConvexV1BoosterAdapter.sol";
 
 interface ConvexV1_BoosterMulticaller {}
 
@@ -16,8 +16,7 @@ library ConvexV1_BoosterCalls {
         returns (MultiCall memory)
     {
         return MultiCall({
-            target: address(c),
-            callData: abi.encodeCall(IConvexV1BoosterAdapter.deposit, (pid, amount, stake))
+            target: address(c), callData: abi.encodeCall(IConvexV1BoosterAdapter.deposit, (pid, amount, stake))
         });
     }
 
@@ -47,8 +46,7 @@ library ConvexV1_BoosterCalls {
         returns (MultiCall memory)
     {
         return MultiCall({
-            target: address(c),
-            callData: abi.encodeCall(IConvexV1BoosterAdapter.withdrawDiff, (pid, leftoverAmount))
+            target: address(c), callData: abi.encodeCall(IConvexV1BoosterAdapter.withdrawDiff, (pid, leftoverAmount))
         });
     }
 }

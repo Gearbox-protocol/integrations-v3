@@ -5,8 +5,8 @@ pragma solidity ^0.8.23;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {ICreditFacadeV3} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacadeV3.sol";
-import {IUniswapV2Router02} from "../../../../integrations/uniswap/IUniswapV2Router02.sol";
-import {IUniswapV2Adapter} from "../../../../interfaces/uniswap/IUniswapV2Adapter.sol";
+import {IUniswapV2Router02} from "../../../../integrations/uniswap/interfaces/external/IUniswapV2Router02.sol";
+import {IUniswapV2Adapter} from "../../../../integrations/uniswap/interfaces/IUniswapV2Adapter.sol";
 
 import "@gearbox-protocol/sdk-gov/contracts/Tokens.sol";
 import {Contracts} from "@gearbox-protocol/sdk-gov/contracts/SupportedContracts.sol";

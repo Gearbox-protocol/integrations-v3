@@ -4,7 +4,7 @@
 pragma solidity ^0.8.23;
 
 import {ZapperBase} from "./ZapperBase.sol";
-import {IERC20ZapperDeposits} from "../interfaces/zappers/IERC20ZapperDeposits.sol";
+import {IERC20ZapperDeposits} from "./interfaces/IERC20ZapperDeposits.sol";
 
 /// @title ERC20 zapper base
 /// @notice Base contract for zappers with ERC20 input token

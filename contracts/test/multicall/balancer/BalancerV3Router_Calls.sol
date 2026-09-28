@@ -5,7 +5,7 @@ pragma solidity ^0.8.23;
 
 import {MultiCall} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacadeV3.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {IBalancerV3RouterAdapter} from "../../../interfaces/balancer/IBalancerV3RouterAdapter.sol";
+import {IBalancerV3RouterAdapter} from "../../../integrations/balancer/interfaces/IBalancerV3RouterAdapter.sol";
 
 interface BalancerV3Router_Multicaller {}
 

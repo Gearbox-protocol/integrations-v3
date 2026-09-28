@@ -1,0 +1,31 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+// Gearbox Protocol. Generalized leverage for DeFi protocols
+// (c) Gearbox Foundation, 2024.
+pragma solidity ^0.8.23;
+
+import {IVersion} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IVersion.sol";
+import {ICAChecker} from "../../common/interfaces/ICAChecker.sol";
+import {IRedemptionLogging} from "../../common/interfaces/IRedemptionLogging.sol";
+
+interface ISecuritizeRedemptionGateway is IVersion, ICAChecker, IRedemptionLogging {
+    error RedeemerTransferNotAllowedException();
+    error MaxUnclaimedRedeemersPerAccountException();
+    error NewAccountNotRegisteredException();
+    error RedeemerNotOwnedByAccountException();
+
+    function dsToken() external view returns (address);
+    function stableCoinToken() external view returns (address);
+    function redemptionAccount() external view returns (address);
+    function securitizeWhitelister() external view returns (address);
+    function masterRedeemer() external view returns (address);
+    function transferMaster() external view returns (address);
+    function navProvider() external view returns (address);
+    function phantomToken() external view returns (address);
+    function redeem(uint256 dsTokenAmount, bytes calldata extraData) external;
+    function claim(address[] calldata redeemers) external;
+    function transferRedeemer(address redeemer, address newAccount) external;
+    function getRedemptionAmount(address account) external view returns (uint256);
+    function getRedeemers(address account) external view returns (address[] memory);
+    function getUnclaimedRedeemers(address account) external view returns (address[] memory);
+    function isEligibleAccountOwner(address account) external view returns (bool, address);
+}

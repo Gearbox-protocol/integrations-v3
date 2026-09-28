@@ -1,0 +1,150 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+// Gearbox Protocol. Generalized leverage for DeFi protocols
+// (c) Gearbox Foundation, 2026.
+pragma solidity ^0.8.23;
+
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+
+import {MidasDecimals} from "./MidasDecimals.sol";
+import {IMidasRedemptionVault, RedemptionStatus} from "./interfaces/external/IMidasRedemptionVault.sol";
+import {IMidasDataFeed} from "./interfaces/external/IMidasDataFeed.sol";
+
+/// @title Midas redeemer
+/// @notice Holds exactly one Midas redemption request on behalf of an account
+/// @dev Deployed as a minimal clone by the gateway, one per request, so that requests settle and can be
+///      transferred independently. All state changes go through the gateway.
+contract MidasRedeemer {
+    using SafeERC20 for IERC20;
+
+    /// @notice Thrown when attempting to call a function from a caller other than the gateway.
+    error CallerNotGatewayException();
+
+    /// @notice Thrown when attempting to request a redemption from a used redeemer
+    error AlreadyRequestedException();
+
+    /// @notice Thrown when attempting to withdraw more tokens than the redeemer has
+    error InsufficientBalanceException();
+
+    /// @notice The account connected to this redeemer
+    address public account;
+
+    /// @notice The gateway that is using this redeemer
+    address public immutable gateway;
+
+    /// @notice The mToken redemption vault
+    address public immutable midasRedemptionVault;
+
+    /// @notice The data feed for the mToken
+    address public immutable mTokenDataFeed;
+
+    /// @notice Address of the mToken
+    address public immutable mToken;
+
+    /// @notice Address of the quote token redeemed from Midas
+    address public immutable quoteToken;
+
+    /// @notice The request ID for the redemption request
+    uint256 public requestId;
+
+    /// @notice Whether this redeemer already submitted a redemption request
+    bool public alreadyRequested;
+
+    /// @notice The timestamp when the redemption request was started
+    uint256 public redemptionStartTimestamp;
+
+    modifier whenNotAlreadyRequested() {
+        if (alreadyRequested) revert AlreadyRequestedException();
+        _;
+    }
+
+    modifier gatewayOnly() {
+        if (msg.sender != gateway) revert CallerNotGatewayException();
+        _;
+    }
+
+    /// @notice Constructor
+    /// @param _midasRedemptionVault Address of the Midas Redemption Vault
+    /// @param _quoteToken Address of the quote token redeemed from Midas
+    constructor(address _midasRedemptionVault, address _quoteToken, bool _priceWithdrawalsByCurrentRate) {
+        gateway = msg.sender;
+        midasRedemptionVault = _midasRedemptionVault;
+        mToken = IMidasRedemptionVault(_midasRedemptionVault).mToken();
+        mTokenDataFeed =
+            _priceWithdrawalsByCurrentRate ? IMidasRedemptionVault(_midasRedemptionVault).mTokenDataFeed() : address(0);
+        quoteToken = _quoteToken;
+    }
+
+    /// @notice Sets the account for this redeemer
+    function setAccount(address _account) external gatewayOnly {
+        account = _account;
+    }
+
+    /// @notice Requests a redemption of mToken for quote token
+    /// @param amountMTokenIn Amount of mToken to redeem
+    /// @dev One-shot: `requestId` identifies the single request this clone tracks and must never be overwritten
+    function requestRedeem(uint256 amountMTokenIn) external gatewayOnly whenNotAlreadyRequested {
+        IERC20(mToken).forceApprove(midasRedemptionVault, amountMTokenIn);
+        requestId = IMidasRedemptionVault(midasRedemptionVault).redeemRequest(quoteToken, amountMTokenIn);
+        alreadyRequested = true;
+        redemptionStartTimestamp = block.timestamp;
+        _sweepMToken();
+    }
+
+    /// @notice Withdraws tokens to the connected account
+    /// @param amount Amount of quote token to withdraw
+    /// @dev Also sweeps any leftover mToken, in case Midas returns mToken to the redeemer for some reason.
+    function withdraw(uint256 amount) external gatewayOnly {
+        if (amount != 0) {
+            if (IERC20(quoteToken).balanceOf(address(this)) < amount) revert InsufficientBalanceException();
+            IERC20(quoteToken).safeTransfer(account, amount);
+        }
+        _sweepMToken();
+    }
+
+    /// @notice Returns the expected amount of quote token for the pending redemption request
+    /// @dev Drops to zero as soon as Midas approves or rejects the request. On approval the value reappears as a
+    ///      claimable balance; on rejection Midas returns nothing.
+    /// @dev Uses the live mToken data feed when configured (`_priceWithdrawalsByCurrentRate`), otherwise the initial
+    ///      `mTokenRate` from the request.
+    function pendingTokenOutAmount() external view returns (uint256) {
+        (,, RedemptionStatus status, uint256 amountMTokenIn, uint256 mTokenRate, uint256 tokenOutRate) =
+            IMidasRedemptionVault(midasRedemptionVault).redeemRequests(requestId);
+
+        if (status != RedemptionStatus.PENDING) return 0;
+
+        if (mTokenDataFeed != address(0)) {
+            mTokenRate = IMidasDataFeed(mTokenDataFeed).getDataInBase18();
+        }
+
+        return _calculateTokenOutAmount(amountMTokenIn, mTokenRate, tokenOutRate);
+    }
+
+    /// @notice Returns the amount of quote token that can be claimed
+    /// @dev Simply the balance: Midas settles by transferring the output token here, with no callback to hook into
+    function claimableTokenOutAmount() external view returns (uint256) {
+        return IERC20(quoteToken).balanceOf(address(this));
+    }
+
+    /// @dev Converts an mToken amount into quote token at the given rates
+    /// @return Amount of quote token in its native decimals (Midas quotes everything in 18)
+    function _calculateTokenOutAmount(uint256 amountMTokenIn, uint256 mTokenRate, uint256 tokenOutRate)
+        internal
+        view
+        returns (uint256)
+    {
+        uint256 amount1e18 = (amountMTokenIn * mTokenRate) / tokenOutRate;
+
+        return MidasDecimals.fromE18(quoteToken, amount1e18);
+    }
+
+    /// @dev Returns any mToken left here to the account. A redeemer may have leftover mToken if Midas does not
+    ///      consume the whole amount on redemption request, or has some airdrop mechanic. The transfer is optional
+    ///      to avoid breaking withdrawals if, e.g., the mToken is paused.
+    function _sweepMToken() internal {
+        uint256 mTokenBalance = IERC20(mToken).balanceOf(address(this));
+        if (mTokenBalance > 0) {
+            mToken.call(abi.encodeCall(IERC20.transfer, (account, mTokenBalance)));
+        }
+    }
+}
