@@ -134,6 +134,8 @@ contract MidasGateway is ReentrancyGuardTrait, CACheckerTrait, RedemptionLogging
         _logRedemption(msg.sender, redeemer, extraData);
     }
 
+    function requestRedeemHybrid(uint256 amountMTokenIn, uint256 instantShare, uint256 )
+
     /// @notice Withdraws tokens from funded redeemers
     /// @param amount Amount of quote token to withdraw
     /// @dev Drains redeemers in set order and reverts if their claimable balances do not add up to `amount`

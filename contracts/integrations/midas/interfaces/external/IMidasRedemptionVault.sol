@@ -10,6 +10,14 @@ enum RedemptionStatus {
 interface IMidasRedemptionVault {
     function redeemInstant(address tokenOut, uint256 amountMTokenIn, uint256 minReceiveAmount) external;
     function redeemRequest(address tokenOut, uint256 amountMTokenIn) external returns (uint256);
+    function redeemRequest(
+        address tokenOut,
+        uint256 amountMTokenIn,
+        address recipientRequest,
+        uint256 instantShare,
+        uint256 minReceiveAmountInstantShare,
+        address recipientInstant
+    ) external returns (uint256, uint256);
     function currentRequestId() external view returns (uint256);
     function redeemRequests(uint256 requestId)
         external
