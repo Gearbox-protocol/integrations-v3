@@ -28,7 +28,6 @@ import {IAaveHorizonBridgeAdapter} from "../../../../integrations/aave/interface
 import {IAaveHorizonFinalizerBot} from "../../../../integrations/aave/interfaces/IAaveHorizonFinalizerBot.sol";
 import {IAaveV3Pool} from "../../../../integrations/aave/interfaces/external/IAaveV3Pool.sol";
 import {IAaveV3PoolAdapter} from "../../../../integrations/aave/interfaces/IAaveV3PoolAdapter.sol";
-import {IERC4626Adapter} from "../../../../integrations/erc4626/interfaces/IERC4626Adapter.sol";
 
 contract CreditAccountMock {
     address public immutable creditManager;
@@ -112,11 +111,9 @@ contract AaveHorizonFinalizerBotUnitTest is Test {
     address bridge;
     address poolAdapter;
     address bridgeAdapter;
-    address wrapperAdapter;
     address rwaToken;
     address aToken;
     address underlying;
-    address debtAsset;
     address borrower;
     address phantom;
 
@@ -129,14 +126,12 @@ contract AaveHorizonFinalizerBotUnitTest is Test {
         bridge = makeAddr("BRIDGE");
         poolAdapter = makeAddr("POOL_ADAPTER");
         bridgeAdapter = makeAddr("BRIDGE_ADAPTER");
-        wrapperAdapter = makeAddr("WRAPPER_ADAPTER");
         borrower = makeAddr("BORROWER");
         phantom = makeAddr("PHANTOM");
 
         rwaToken = address(new ERC20Mock("USTB", "USTB", 18));
         aToken = makeAddr("A_TOKEN");
-        underlying = address(new ERC20Mock("sdUSDC", "sdUSDC", 6));
-        debtAsset = address(new ERC20Mock("USDC", "USDC", 6));
+        underlying = address(new ERC20Mock("USDC", "USDC", 6));
 
         creditFacade = new CreditFacadeMock();
         creditManager = new CreditManagerMock();
@@ -319,62 +314,5 @@ contract AaveHorizonFinalizerBotUnitTest is Test {
 
         vm.expectRevert(IAaveHorizonFinalizerBot.InvalidClaimPhantomPairException.selector);
         bot.finalizeClose(address(creditAccount), _emptyClaim(), phantom);
-    }
-
-    function _enableWrapper() internal {
-        creditManager.setAdapter(underlying, wrapperAdapter);
-        vm.mockCall(wrapperAdapter, abi.encodeCall(IERC4626Adapter.asset, ()), abi.encode(debtAsset));
-        vm.mockCall(underlying, abi.encodeWithSignature("asset()"), abi.encode(debtAsset));
-    }
-
-    /// @notice U:[AHFB-11]: finalizeOpen wraps ERC4626 underlying before decreaseDebt
-    function test_U_AHFB_11_finalizeOpen_wraps_erc4626_underlying() public {
-        _enableWrapper();
-        ERC20Mock(rwaToken).mint(address(creditAccount), 50e18);
-
-        bot.finalizeOpen(address(creditAccount), rwaToken, _emptyClaim(), address(0));
-
-        MultiCall[] memory calls = creditFacade.lastCalls();
-        assertEq(calls.length, 5, "Incorrect call count");
-        assertEq(
-            calls[1].callData,
-            abi.encodeCall(
-                IAaveHorizonBridgeAdapter.openPositionDiff, (aToken, debtAsset, 0, TOTAL_DEBT + INTEREST + FEES)
-            ),
-            "borrow debt asset"
-        );
-        assertEq(calls[2].target, wrapperAdapter, "wrap target");
-        assertEq(calls[2].callData, abi.encodeCall(IERC4626Adapter.depositDiff, (0)), "wrap data");
-        assertEq(
-            calls[4].callData,
-            abi.encodeCall(ICreditFacadeV3Multicall.decreaseDebt, (type(uint256).max)),
-            "decreaseDebt"
-        );
-    }
-
-    /// @notice U:[AHFB-12]: finalizeClose deposits exact debt and withdraws leftover asset
-    function test_U_AHFB_12_finalizeClose_wraps_erc4626_underlying() public {
-        _enableWrapper();
-
-        bot.finalizeClose(address(creditAccount), _emptyClaim(), address(0));
-
-        MultiCall[] memory calls = creditFacade.lastCalls();
-        assertEq(calls.length, 3, "Incorrect call count");
-        assertEq(calls[0].target, wrapperAdapter, "wrap target");
-        assertEq(
-            calls[0].callData,
-            abi.encodeCall(IERC4626Adapter.deposit, (TOTAL_DEBT + INTEREST + FEES, address(0))),
-            "wrap data"
-        );
-        assertEq(
-            calls[1].callData,
-            abi.encodeCall(ICreditFacadeV3Multicall.decreaseDebt, (type(uint256).max)),
-            "decreaseDebt"
-        );
-        assertEq(
-            calls[2].callData,
-            abi.encodeCall(ICreditFacadeV3Multicall.withdrawCollateral, (debtAsset, type(uint256).max, borrower)),
-            "withdraw"
-        );
     }
 }

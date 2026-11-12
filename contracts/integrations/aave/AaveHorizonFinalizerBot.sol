@@ -4,7 +4,6 @@
 pragma solidity ^0.8.23;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {IERC4626} from "@openzeppelin/contracts/interfaces/IERC4626.sol";
 
 import {IBot} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IBot.sol";
 import {IStateSerializer} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IStateSerializer.sol";
@@ -29,7 +28,6 @@ import {
 } from "@gearbox-protocol/core-v3/contracts/interfaces/IExceptions.sol";
 import {ReentrancyGuardTrait} from "@gearbox-protocol/core-v3/contracts/traits/ReentrancyGuardTrait.sol";
 
-import {IERC4626Adapter} from "../erc4626/interfaces/IERC4626Adapter.sol";
 import {IAaveHorizonBridgeAdapter} from "./interfaces/IAaveHorizonBridgeAdapter.sol";
 import {IAaveHorizonFinalizerBot} from "./interfaces/IAaveHorizonFinalizerBot.sol";
 import {IAaveV3Pool} from "./interfaces/external/IAaveV3Pool.sol";
@@ -37,9 +35,8 @@ import {IAaveV3PoolAdapter} from "./interfaces/IAaveV3PoolAdapter.sol";
 
 /// @title Aave Horizon Finalizer Bot
 /// @notice Finalizes open/close of Horizon-backed Gearbox positions via `botMulticall`
-/// @dev If the credit manager underlying is an ERC4626 vault (e.g. `DefaultRWAUnderlying`) with a configured
-///      adapter, Aave borrows/repays use the vault's `asset`, and the bot wraps via `depositDiff` before
-///      `decreaseDebt`. Assumes a 1:1 vault (borrow amount equals Gearbox total debt).
+/// @dev Uses the CM borrower as the economic owner. For Securitize (wallet borrower + ERC4626 underlying),
+///      use `AaveHorizonSecuritizeFinalizerBot` instead.
 contract AaveHorizonFinalizerBot is IAaveHorizonFinalizerBot, ReentrancyGuardTrait {
     /// @inheritdoc IVersion
     uint256 public constant override version = 3_11;
@@ -106,14 +103,11 @@ contract AaveHorizonFinalizerBot is IAaveHorizonFinalizerBot, ReentrancyGuardTra
         address creditFacade = ICreditManagerV3(creditManager).creditFacade();
         address underlying = ICreditManagerV3(creditManager).underlying();
         address owner = _getOwner(creditManager, creditAccount);
-        address wrapperAdapter = _getWrapperAdapter(creditManager, underlying);
-        uint256 totalDebt = _getTotalDebt(creditManager, creditAccount);
 
         bool hasClaim = !_isClaimEmpty(claimCall);
         bool hasPhantom = withdrawPhantomToken != address(0);
-        bool hasWrap = wrapperAdapter != address(0);
 
-        MultiCall[] memory calls = new MultiCall[](2 + (hasClaim ? 1 : 0) + (hasWrap ? 1 : 0) + (hasPhantom ? 1 : 0));
+        MultiCall[] memory calls = new MultiCall[](2 + (hasClaim ? 1 : 0) + (hasPhantom ? 1 : 0));
         uint256 i;
 
         if (hasClaim) {
@@ -129,13 +123,6 @@ contract AaveHorizonFinalizerBot is IAaveHorizonFinalizerBot, ReentrancyGuardTra
             });
         }
 
-        // Wrap Aave debt token into CM underlying before repay, when underlying is an ERC4626 vault
-        if (hasWrap) {
-            calls[i++] = MultiCall({
-                target: wrapperAdapter, callData: abi.encodeCall(IERC4626Adapter.deposit, (totalDebt, address(0)))
-            });
-        }
-
         calls[i++] = MultiCall({
             target: creditFacade, callData: abi.encodeCall(ICreditFacadeV3Multicall.decreaseDebt, (type(uint256).max))
         });
@@ -143,8 +130,7 @@ contract AaveHorizonFinalizerBot is IAaveHorizonFinalizerBot, ReentrancyGuardTra
         calls[i] = MultiCall({
             target: creditFacade,
             callData: abi.encodeCall(
-                ICreditFacadeV3Multicall.withdrawCollateral,
-                (hasWrap ? IERC4626(underlying).asset() : underlying, type(uint256).max, owner)
+                ICreditFacadeV3Multicall.withdrawCollateral, (underlying, type(uint256).max, owner)
             )
         });
 
@@ -163,14 +149,17 @@ contract AaveHorizonFinalizerBot is IAaveHorizonFinalizerBot, ReentrancyGuardTra
         uint256 totalDebt,
         bool hasClaim
     ) internal view returns (MultiCall[] memory calls) {
+        address creditFacade = ICreditManagerV3(creditManager).creditFacade();
+        address underlying = ICreditManagerV3(creditManager).underlying();
+
         address poolAdapter = ICreditManagerV3(creditManager).contractToAdapter(pool);
         address bridgeAdapter = ICreditManagerV3(creditManager).contractToAdapter(bridge);
         if (poolAdapter == address(0) || bridgeAdapter == address(0)) revert AdapterNotFoundException();
 
-        (address debtToken, address wrapperAdapter) = _resolveDebtToken(creditManager);
-        bool hasWrap = wrapperAdapter != address(0);
+        address aToken = IAaveV3Pool(pool).getReserveAToken(rwaToken);
+        address quotedToken = depositPhantomToken != address(0) ? depositPhantomToken : rwaToken;
 
-        calls = new MultiCall[](4 + (hasClaim ? 1 : 0) + (hasWrap ? 1 : 0));
+        calls = new MultiCall[](4 + (hasClaim ? 1 : 0));
         uint256 i;
 
         if (hasClaim) {
@@ -181,22 +170,11 @@ contract AaveHorizonFinalizerBot is IAaveHorizonFinalizerBot, ReentrancyGuardTra
         calls[i++] =
             MultiCall({target: poolAdapter, callData: abi.encodeCall(IAaveV3PoolAdapter.supplyDiff, (rwaToken, 0))});
 
-        // Move all resulting aTokens to the owner and borrow Aave debt token into the CA
+        // Move all resulting aTokens to the owner and borrow full CA debt
         calls[i++] = MultiCall({
             target: bridgeAdapter,
-            callData: abi.encodeCall(
-                IAaveHorizonBridgeAdapter.openPositionDiff,
-                (IAaveV3Pool(pool).getReserveAToken(rwaToken), debtToken, 0, totalDebt)
-            )
+            callData: abi.encodeCall(IAaveHorizonBridgeAdapter.openPositionDiff, (aToken, underlying, 0, totalDebt))
         });
-
-        // Wrap into CM underlying when it is an ERC4626 on top of the Aave debt token
-        if (hasWrap) {
-            calls[i++] = MultiCall({target: wrapperAdapter, callData: abi.encodeCall(IERC4626Adapter.depositDiff, (0))});
-        }
-
-        address creditFacade = ICreditManagerV3(creditManager).creditFacade();
-        address quotedToken = depositPhantomToken != address(0) ? depositPhantomToken : rwaToken;
 
         calls[i++] = MultiCall({
             target: creditFacade,
@@ -206,22 +184,6 @@ contract AaveHorizonFinalizerBot is IAaveHorizonFinalizerBot, ReentrancyGuardTra
         calls[i] = MultiCall({
             target: creditFacade, callData: abi.encodeCall(ICreditFacadeV3Multicall.decreaseDebt, (type(uint256).max))
         });
-    }
-
-    /// @dev Resolves the Aave debt token and optional ERC4626 wrapper adapter for the CM underlying
-    function _resolveDebtToken(address creditManager)
-        internal
-        view
-        returns (address debtToken, address wrapperAdapter)
-    {
-        address underlying = ICreditManagerV3(creditManager).underlying();
-        wrapperAdapter = _getWrapperAdapter(creditManager, underlying);
-        debtToken = wrapperAdapter == address(0) ? underlying : IERC4626Adapter(wrapperAdapter).asset();
-    }
-
-    /// @dev Returns the ERC4626 adapter for `underlying` when the CM underlying is a vault wrapper; otherwise zero
-    function _getWrapperAdapter(address creditManager, address underlying) internal view returns (address) {
-        return ICreditManagerV3(creditManager).contractToAdapter(underlying);
     }
 
     function _isClaimEmpty(MultiCall calldata claimCall) internal pure returns (bool) {

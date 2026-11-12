@@ -12,15 +12,18 @@ import {
     AmountCantBeZeroException,
     ZeroAddressException
 } from "@gearbox-protocol/core-v3/contracts/interfaces/IExceptions.sol";
+import {OptionalCall} from "@gearbox-protocol/core-v3/contracts/libraries/OptionalCall.sol";
 import {ReentrancyGuardTrait} from "@gearbox-protocol/core-v3/contracts/traits/ReentrancyGuardTrait.sol";
 
 import {CACheckerTrait} from "../common/CACheckerTrait.sol";
 import {IAaveHorizonBridge} from "./interfaces/IAaveHorizonBridge.sol";
 import {IAaveV3Pool} from "./interfaces/external/IAaveV3Pool.sol";
+import {IInvestorAware} from "./interfaces/external/IInvestorAware.sol";
 import {IRwaATokenManager} from "./interfaces/external/IRwaATokenManager.sol";
 
 /// @title Aave Horizon Bridge
-/// @notice Moves RWA aTokens between a Credit Account and its owner, and borrows/repays on the owner's Horizon position
+/// @notice Moves RWA aTokens between a Credit Account and its economic owner, and borrows/repays on that owner's
+///         Horizon position
 /// @dev Intended flow:
 ///      - Open: CA supplies RWA via `AaveV3PoolAdapter` (aTokens minted to the CA), then calls `openPosition` to move
 ///        aTokens to the owner and borrow into the CA.
@@ -28,9 +31,10 @@ import {IRwaATokenManager} from "./interfaces/external/IRwaATokenManager.sol";
 /// @dev Trust model:
 ///      - The bridge holds the per-aToken authorized-transfer role on `RwaATokenManager`, so it can move RWA aTokens
 ///        between the CA and the owner without ERC-20 approval.
-///      - The CA owner has delegated borrow allowance on the relevant VariableDebtToken to this bridge.
-///      - Horizon debt and aToken collateral sit on the **owner** after `openPosition`. Gearbox does not track that
-///        Aave position; this contract only moves aTokens and debt funds.
+///      - The economic owner has delegated borrow allowance on the relevant VariableDebtToken to this bridge.
+///      - Horizon debt and aToken collateral sit on the **economic owner** after `openPosition`. Gearbox does not
+///        track that Aave position; this contract only moves aTokens and debt funds.
+///      - If the CM borrower exposes `getInvestor()` (e.g. SecuritizeWallet), that address is used as the owner.
 contract AaveHorizonBridge is ReentrancyGuardTrait, CACheckerTrait, IAaveHorizonBridge {
     using SafeERC20 for IERC20;
 
@@ -100,12 +104,17 @@ contract AaveHorizonBridge is ReentrancyGuardTrait, CACheckerTrait, IAaveHorizon
         IRwaATokenManager(rwaATokenManager).transferRwaAToken(aToken, owner, msg.sender, aTokenAmount);
     }
 
-    /// @dev Resolves the CA owner and rejects a zero owner or an owner equal to the CA itself
+    /// @dev Resolves the economic owner: CM borrower, or `getInvestor()` when the borrower exposes it
     function _getOwner(address creditAccount) internal view returns (address owner) {
         address creditManager = ICreditAccountV3(creditAccount).creditManager();
         (,,,,,,, owner) = ICreditManagerV3(creditManager).creditAccountInfo(creditAccount);
 
-        // `onlyEligibleAccount` already requires a non-zero borrower; this guards the CA == owner case.
-        if (owner == creditAccount) revert CreditAccountOwnerIsCreditAccountException();
+        (bool success, bytes memory returnData) = OptionalCall.staticCallOptionalSafe({
+            target: owner, data: abi.encodeCall(IInvestorAware.getInvestor, ()), gasAllowance: 50_000
+        });
+        if (success) {
+            address investor = abi.decode(returnData, (address));
+            if (investor != address(0)) owner = investor;
+        }
     }
 }

@@ -16,6 +16,7 @@ import {
 import {AaveHorizonBridge} from "../../../../integrations/aave/AaveHorizonBridge.sol";
 import {IAaveHorizonBridge} from "../../../../integrations/aave/interfaces/IAaveHorizonBridge.sol";
 import {IAaveV3Pool} from "../../../../integrations/aave/interfaces/external/IAaveV3Pool.sol";
+import {IInvestorAware} from "../../../../integrations/aave/interfaces/external/IInvestorAware.sol";
 import {ICAChecker} from "../../../../integrations/common/interfaces/ICAChecker.sol";
 
 /// @dev Unrestricted mint/burn ERC20 for aToken mocking
@@ -283,5 +284,23 @@ contract AaveHorizonBridgeUnitTest is Test {
         assertEq(IERC20(aToken).balanceOf(borrower), 0, "Owner should have no aTokens");
         assertEq(IERC20(aToken).balanceOf(address(account)), ATOKEN_AMOUNT, "CA should receive aTokens");
         assertEq(IERC20(debtToken).allowance(address(bridge), address(pool)), 0, "Repay allowance should be cleared");
+    }
+
+    /// @notice U:[AHB-8]: openPosition uses getInvestor() when borrower exposes it
+    function test_U_AHB_08_open_position_uses_investor_when_available() public {
+        address wallet = makeAddr("WALLET");
+        address investor = makeAddr("INVESTOR");
+        creditManager.setBorrower(address(account), wallet);
+        vm.mockCall(wallet, abi.encodeCall(IInvestorAware.getInvestor, ()), abi.encode(investor));
+
+        MintableToken(aToken).mint(address(account), ATOKEN_AMOUNT);
+
+        vm.prank(address(account));
+        bridge.openPosition(aToken, debtToken, ATOKEN_AMOUNT, BORROW_AMOUNT);
+
+        assertEq(IERC20(aToken).balanceOf(investor), ATOKEN_AMOUNT, "Investor should hold aTokens");
+        assertEq(IERC20(aToken).balanceOf(wallet), 0, "Wallet should not hold aTokens");
+        assertEq(pool.variableDebt(debtToken, investor), BORROW_AMOUNT, "Investor should hold debt");
+        assertEq(pool.variableDebt(debtToken, wallet), 0, "Wallet should not hold debt");
     }
 }
