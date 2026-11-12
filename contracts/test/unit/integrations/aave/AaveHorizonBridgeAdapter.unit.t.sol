@@ -62,6 +62,9 @@ contract AaveHorizonBridgeAdapterUnitTest is AdapterUnitTestHelper {
         adapter.openPosition(aToken, debtToken, 0, 0);
 
         _revertsOnNonFacadeCaller();
+        adapter.openPositionDiff(aToken, debtToken, 0, 0);
+
+        _revertsOnNonFacadeCaller();
         adapter.closePosition(aToken, debtToken, 0, 0);
     }
 
@@ -75,6 +78,21 @@ contract AaveHorizonBridgeAdapterUnitTest is AdapterUnitTestHelper {
 
         vm.prank(creditFacade);
         bool useSafePrices = adapter.openPosition(aToken, debtToken, 1000, 500);
+        assertFalse(useSafePrices);
+    }
+
+    /// @notice U:[AHBA-3A]: `openPositionDiff` works as expected
+    function test_U_AHBA_03A_openPositionDiff_works_as_expected() public diffTestCases {
+        deal({token: aToken, to: creditAccount, give: diffMintedAmount});
+
+        _executesSwap({
+            tokenIn: aToken,
+            callData: abi.encodeCall(IAaveHorizonBridge.openPosition, (aToken, debtToken, diffInputAmount, 500)),
+            requiresApproval: false
+        });
+
+        vm.prank(creditFacade);
+        bool useSafePrices = adapter.openPositionDiff(aToken, debtToken, diffLeftoverAmount, 500);
         assertFalse(useSafePrices);
     }
 

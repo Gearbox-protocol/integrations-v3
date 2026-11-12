@@ -43,6 +43,15 @@ interface IAaveHorizonBridgeAdapter is IAdapter {
         external
         returns (bool useSafePrices);
 
+    /// @notice Same as `openPosition`, moving the entire aToken balance except `leftoverAmount`
+    /// @param aToken RWA aToken held by the CA
+    /// @param debtToken Asset to borrow
+    /// @param leftoverAmount Amount of aTokens to keep on the credit account
+    /// @param borrowAmount Amount of `debtToken` to borrow into the CA
+    function openPositionDiff(address aToken, address debtToken, uint256 leftoverAmount, uint256 borrowAmount)
+        external
+        returns (bool useSafePrices);
+
     /// @notice Repays the owner's debt from the CA and moves aTokens back to the CA
     /// @param aToken RWA aToken to return to the CA
     /// @param debtToken Asset used to repay

@@ -3,6 +3,7 @@
 // (c) Gearbox Foundation, 2026.
 pragma solidity ^0.8.23;
 
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 import {TokenNotAllowedException} from "@gearbox-protocol/core-v3/contracts/interfaces/IExceptions.sol";
@@ -40,6 +41,29 @@ contract AaveHorizonBridgeAdapter is AbstractAdapter, IAaveHorizonBridgeAdapter 
         external
         override
         creditFacadeOnly
+        returns (bool)
+    {
+        return _openPosition(aToken, debtToken, aTokenAmount, borrowAmount);
+    }
+
+    /// @inheritdoc IAaveHorizonBridgeAdapter
+    function openPositionDiff(address aToken, address debtToken, uint256 leftoverAmount, uint256 borrowAmount)
+        external
+        override
+        creditFacadeOnly
+        returns (bool)
+    {
+        uint256 balance = IERC20(aToken).balanceOf(_creditAccount());
+        if (balance <= leftoverAmount) return false;
+
+        unchecked {
+            return _openPosition(aToken, debtToken, balance - leftoverAmount, borrowAmount);
+        }
+    }
+
+    /// @dev Shared open implementation
+    function _openPosition(address aToken, address debtToken, uint256 aTokenAmount, uint256 borrowAmount)
+        internal
         returns (bool)
     {
         _validateTokens(aToken, debtToken);
