@@ -6,42 +6,60 @@ on:
       - "main"
       - "dev"
 
-env:
-  HUSKY: 0
-  CI: true
+permissions: {}
+
+# An interrupted semantic-release leaves a tag with no release behind it.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
-  release:
+  zizmor:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read # checkout
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # No code scanning upload, so findings become annotations and fail the job.
+      - uses: zizmorcore/zizmor-action@45d7276c9ca790aabd705e31ca99c6185c3e76dd # v0.8.1
+        with:
+          # Pinned, so a new audit cannot start failing releases with nothing changed here.
+          version: "1.32.0"
+          advanced-security: false
+          annotations: true
+
+  release:
+    needs: [zizmor]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write # create tag and GitHub release
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
-          submodules: recursive
-
-      - uses: actions/setup-node@v4
-        with:
-          cache: "yarn"
-          node-version-file: ".nvmrc"
+          persist-credentials: false
 
       - name: Install Foundry
-        uses: foundry-rs/foundry-toolchain@v1
+        uses: foundry-rs/foundry-toolchain@dba66c27052e63476d886f22216e119ba7e615bf # v1.9.2
+        with:
+          version: v1.9.0
+          # A job that releases restores no cache a PR run could have written.
+          cache: false
 
-      - name: Configure access to private npm packages
-        run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > .npmrc
-
-      # prepare script runs before publish, and it needs husky
       - name: Install dependencies
-        run: |
-          forge install
-          yarn install --frozen-lockfile
+        run: forge install
 
-      - name: Build
-        run: yarn build
+      - name: Compile contracts
+        run: forge build
+        timeout-minutes: 10
 
       - name: Semantic Release
-        uses: cycjimmy/semantic-release-action@v4
+        uses: cycjimmy/semantic-release-action@ad51787758d9654d5a75150a89a6fa9b3ccef95e # v8.1.4
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          GITHUB_TOKEN: ${{ github.token }}

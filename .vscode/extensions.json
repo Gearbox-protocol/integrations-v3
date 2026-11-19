@@ -1,7 +1,3 @@
 {
-  "recommendations": [
-    "esbenp.prettier-vscode",
-    "JuanBlanco.solidity",
-    "dbaeumer.vscode-eslint"
-  ]
+  "recommendations": ["JuanBlanco.solidity"]
 }
