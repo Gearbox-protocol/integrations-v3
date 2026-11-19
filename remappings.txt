@@ -2,4 +2,3 @@ forge-std/=lib/@gearbox-protocol/permissionless/lib/forge-std/src/
 @1inch/=lib/@1inch/
 @openzeppelin/=lib/@gearbox-protocol/permissionless/lib/@openzeppelin/
 @gearbox-protocol=lib/@gearbox-protocol/
-@redstone-finance=node_modules/@redstone-finance/
