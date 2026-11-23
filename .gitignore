@@ -1,12 +1,6 @@
-# Dependencies
-node_modules/
-
 # Compiler files
 cache/
 out/
-dist/
-**/*.generated.*
-**/generated/
 
 # Broadcast logs
 /broadcast
@@ -19,3 +13,5 @@ docs/
 
 # Logs
 *.log
+
+.vscode/mise-tools/
