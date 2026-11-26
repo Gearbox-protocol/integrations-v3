@@ -22,9 +22,9 @@ enum MidasMode {
     Permissioned
 }
 
-/// @title Midas Gateway interface
+/// @title Midas Redemption Gateway interface
 /// @notice External interface of the Midas delayed-redemption gateway
-interface IMidasGateway is IVersion, ICAChecker, IRedemptionLogging {
+interface IMidasRedemptionGateway is IVersion, ICAChecker, IRedemptionLogging {
     /// @dev Thrown when attempting to transfer a redeemer to a new account without permission
     error RedeemerTransferNotAllowedException();
     /// @dev Thrown when attempting to transfer a redeemer to a new account that is not greenlisted
@@ -68,6 +68,13 @@ interface IMidasGateway is IVersion, ICAChecker, IRedemptionLogging {
     /// @param amountMTokenIn Amount of mToken to redeem
     /// @param extraData Additional redemption data to log
     function requestRedeem(uint256 amountMTokenIn, bytes calldata extraData) external;
+
+    function requestRedeemHybrid(
+        uint256 amountMTokenIn,
+        uint256 instantShare,
+        uint256 minReceiveAmountInstantShare,
+        bytes calldata extraData
+    ) external;
 
     /// @notice Withdraws tokens from fulfilled redemption requests
     /// @param amount Amount of quote token to withdraw

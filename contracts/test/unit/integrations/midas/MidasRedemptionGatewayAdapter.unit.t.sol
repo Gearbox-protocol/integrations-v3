@@ -6,15 +6,17 @@ pragma solidity ^0.8.23;
 import {NotImplementedException} from "@gearbox-protocol/core-v3/contracts/interfaces/IExceptions.sol";
 import {ERC20Mock} from "@gearbox-protocol/core-v3/contracts/test/mocks/token/ERC20Mock.sol";
 
-import {MidasGatewayAdapter} from "../../../../integrations/midas/MidasGatewayAdapter.sol";
-import {IMidasGatewayAdapter} from "../../../../integrations/midas/interfaces/IMidasGatewayAdapter.sol";
-import {IMidasGateway} from "../../../../integrations/midas/interfaces/IMidasGateway.sol";
+import {MidasRedemptionGatewayAdapter} from "../../../../integrations/midas/MidasRedemptionGatewayAdapter.sol";
+import {
+    IMidasRedemptionGatewayAdapter
+} from "../../../../integrations/midas/interfaces/IMidasRedemptionGatewayAdapter.sol";
+import {IMidasRedemptionGateway} from "../../../../integrations/midas/interfaces/IMidasRedemptionGateway.sol";
 import {IPhantomTokenAdapter} from "../../../../integrations/common/interfaces/IPhantomTokenAdapter.sol";
 
 import {AdapterUnitTestHelper} from "../AdapterUnitTestHelper.sol";
 
 /// @dev Minimal gateway mock - the adapter reads immutable token addresses from it.
-contract MidasGatewayMock {
+contract MidasRedemptionGatewayMock {
     address public immutable mToken;
     address public immutable quoteToken;
     address public immutable phantomToken;
@@ -27,10 +29,10 @@ contract MidasGatewayMock {
 }
 
 /// @title Midas Gateway adapter unit test
-/// @notice U:[MID-A]: Unit tests for MidasGatewayAdapter
-contract MidasGatewayAdapterUnitTest is AdapterUnitTestHelper {
-    MidasGatewayAdapter adapter;
-    MidasGatewayMock gateway;
+/// @notice U:[MID-A]: Unit tests for MidasRedemptionGatewayAdapter
+contract MidasRedemptionGatewayAdapterUnitTest is AdapterUnitTestHelper {
+    MidasRedemptionGatewayAdapter adapter;
+    MidasRedemptionGatewayMock gateway;
 
     address mToken;
     address quoteToken;
@@ -47,9 +49,9 @@ contract MidasGatewayAdapterUnitTest is AdapterUnitTestHelper {
         phantomToken = makeAddr("PHANTOM_TOKEN");
         creditManager.setMask(phantomToken, 1 << 8);
 
-        gateway = new MidasGatewayMock(mToken, quoteToken, phantomToken);
+        gateway = new MidasRedemptionGatewayMock(mToken, quoteToken, phantomToken);
 
-        adapter = new MidasGatewayAdapter(address(creditManager), address(gateway));
+        adapter = new MidasRedemptionGatewayAdapter(address(creditManager), address(gateway));
     }
 
     /// @notice U:[MID-A-1]: Constructor works as expected
@@ -59,7 +61,7 @@ contract MidasGatewayAdapterUnitTest is AdapterUnitTestHelper {
         _readsTokenMask(quoteToken);
         _readsTokenMask(phantomToken);
 
-        adapter = new MidasGatewayAdapter(address(creditManager), address(gateway));
+        adapter = new MidasRedemptionGatewayAdapter(address(creditManager), address(gateway));
 
         assertEq(adapter.creditManager(), address(creditManager), "Incorrect creditManager");
         assertEq(adapter.targetContract(), address(gateway), "Incorrect targetContract");
@@ -71,13 +73,14 @@ contract MidasGatewayAdapterUnitTest is AdapterUnitTestHelper {
 
     /// @notice U:[MID-A-1A]: Constructor works when gateway has no phantom token
     function test_U_MID_A_01A_constructor_works_without_phantom_token() public {
-        MidasGatewayMock gatewayWithoutPhantomToken = new MidasGatewayMock(mToken, quoteToken, address(0));
+        MidasRedemptionGatewayMock gatewayWithoutPhantomToken =
+            new MidasRedemptionGatewayMock(mToken, quoteToken, address(0));
 
         _readsTokenMask(mToken);
         _readsTokenMask(quoteToken);
 
-        MidasGatewayAdapter adapterWithoutPhantomToken =
-            new MidasGatewayAdapter(address(creditManager), address(gatewayWithoutPhantomToken));
+        MidasRedemptionGatewayAdapter adapterWithoutPhantomToken =
+            new MidasRedemptionGatewayAdapter(address(creditManager), address(gatewayWithoutPhantomToken));
 
         assertEq(adapterWithoutPhantomToken.phantomToken(), address(0), "Incorrect phantomToken");
     }
@@ -118,7 +121,9 @@ contract MidasGatewayAdapterUnitTest is AdapterUnitTestHelper {
     /// @notice U:[MID-A-3]: `receiveGreenlist` works as expected
     function test_U_MID_A_03_receiveGreenlist_works() public {
         _executesSwap({
-            tokenIn: address(0), callData: abi.encodeCall(IMidasGateway.receiveGreenlist, ()), requiresApproval: false
+            tokenIn: address(0),
+            callData: abi.encodeCall(IMidasRedemptionGateway.receiveGreenlist, ()),
+            requiresApproval: false
         });
 
         vm.prank(creditFacade);
@@ -128,12 +133,15 @@ contract MidasGatewayAdapterUnitTest is AdapterUnitTestHelper {
 
     /// @notice U:[MID-A-3A]: `receiveGreenlist` works when phantom token is not set
     function test_U_MID_A_03A_receiveGreenlist_works_without_phantom_token() public {
-        MidasGatewayMock gatewayWithoutPhantomToken = new MidasGatewayMock(mToken, quoteToken, address(0));
-        MidasGatewayAdapter adapterWithoutPhantomToken =
-            new MidasGatewayAdapter(address(creditManager), address(gatewayWithoutPhantomToken));
+        MidasRedemptionGatewayMock gatewayWithoutPhantomToken =
+            new MidasRedemptionGatewayMock(mToken, quoteToken, address(0));
+        MidasRedemptionGatewayAdapter adapterWithoutPhantomToken =
+            new MidasRedemptionGatewayAdapter(address(creditManager), address(gatewayWithoutPhantomToken));
 
         _executesSwap({
-            tokenIn: address(0), callData: abi.encodeCall(IMidasGateway.receiveGreenlist, ()), requiresApproval: false
+            tokenIn: address(0),
+            callData: abi.encodeCall(IMidasRedemptionGateway.receiveGreenlist, ()),
+            requiresApproval: false
         });
 
         vm.prank(creditFacade);
@@ -144,7 +152,9 @@ contract MidasGatewayAdapterUnitTest is AdapterUnitTestHelper {
     /// @notice U:[MID-A-12]: `redeemRequest` works as expected
     function test_U_MID_A_12_redeemRequest_works() public {
         _executesSwap({
-            tokenIn: mToken, callData: abi.encodeCall(IMidasGateway.requestRedeem, (1000, "")), requiresApproval: true
+            tokenIn: mToken,
+            callData: abi.encodeCall(IMidasRedemptionGateway.requestRedeem, (1000, "")),
+            requiresApproval: true
         });
 
         vm.prank(creditFacade);
@@ -158,7 +168,7 @@ contract MidasGatewayAdapterUnitTest is AdapterUnitTestHelper {
 
         _executesSwap({
             tokenIn: mToken,
-            callData: abi.encodeCall(IMidasGateway.requestRedeem, (1000, extraData)),
+            callData: abi.encodeCall(IMidasRedemptionGateway.requestRedeem, (1000, extraData)),
             requiresApproval: true
         });
 
@@ -174,7 +184,9 @@ contract MidasGatewayAdapterUnitTest is AdapterUnitTestHelper {
         uint256 amount = 900;
 
         _executesSwap({
-            tokenIn: mToken, callData: abi.encodeCall(IMidasGateway.requestRedeem, (amount, "")), requiresApproval: true
+            tokenIn: mToken,
+            callData: abi.encodeCall(IMidasRedemptionGateway.requestRedeem, (amount, "")),
+            requiresApproval: true
         });
 
         vm.prank(creditFacade);
@@ -191,7 +203,7 @@ contract MidasGatewayAdapterUnitTest is AdapterUnitTestHelper {
 
         _executesSwap({
             tokenIn: mToken,
-            callData: abi.encodeCall(IMidasGateway.requestRedeem, (amount, extraData)),
+            callData: abi.encodeCall(IMidasRedemptionGateway.requestRedeem, (amount, extraData)),
             requiresApproval: true
         });
 
@@ -211,28 +223,29 @@ contract MidasGatewayAdapterUnitTest is AdapterUnitTestHelper {
 
     /// @notice U:[MID-A-12E]: Delayed-redemption functions revert when phantom token is not set
     function test_U_MID_A_12E_execution_reverts_without_phantom_token() public {
-        MidasGatewayMock gatewayWithoutPhantomToken = new MidasGatewayMock(mToken, quoteToken, address(0));
-        MidasGatewayAdapter adapterWithoutPhantomToken =
-            new MidasGatewayAdapter(address(creditManager), address(gatewayWithoutPhantomToken));
+        MidasRedemptionGatewayMock gatewayWithoutPhantomToken =
+            new MidasRedemptionGatewayMock(mToken, quoteToken, address(0));
+        MidasRedemptionGatewayAdapter adapterWithoutPhantomToken =
+            new MidasRedemptionGatewayAdapter(address(creditManager), address(gatewayWithoutPhantomToken));
 
         vm.startPrank(creditFacade);
 
-        vm.expectRevert(IMidasGatewayAdapter.PhantomTokenNotSetException.selector);
+        vm.expectRevert(IMidasRedemptionGatewayAdapter.PhantomTokenNotSetException.selector);
         adapterWithoutPhantomToken.redeemRequest(1000);
 
-        vm.expectRevert(IMidasGatewayAdapter.PhantomTokenNotSetException.selector);
+        vm.expectRevert(IMidasRedemptionGatewayAdapter.PhantomTokenNotSetException.selector);
         adapterWithoutPhantomToken.withdraw(1000);
 
-        vm.expectRevert(IMidasGatewayAdapter.PhantomTokenNotSetException.selector);
+        vm.expectRevert(IMidasRedemptionGatewayAdapter.PhantomTokenNotSetException.selector);
         adapterWithoutPhantomToken.withdrawFromRedeemer(makeAddr("REDEEMER"), 1000);
 
-        vm.expectRevert(IMidasGatewayAdapter.PhantomTokenNotSetException.selector);
+        vm.expectRevert(IMidasRedemptionGatewayAdapter.PhantomTokenNotSetException.selector);
         adapterWithoutPhantomToken.transferRedeemer(makeAddr("REDEEMER"), makeAddr("NEW_ACCOUNT"));
 
-        vm.expectRevert(IMidasGatewayAdapter.PhantomTokenNotSetException.selector);
+        vm.expectRevert(IMidasRedemptionGatewayAdapter.PhantomTokenNotSetException.selector);
         adapterWithoutPhantomToken.withdrawPhantomToken(address(0), 1000);
 
-        vm.expectRevert(IMidasGatewayAdapter.PhantomTokenNotSetException.selector);
+        vm.expectRevert(IMidasRedemptionGatewayAdapter.PhantomTokenNotSetException.selector);
         adapterWithoutPhantomToken.depositPhantomToken(address(0), 1000);
 
         vm.stopPrank();
@@ -241,7 +254,9 @@ contract MidasGatewayAdapterUnitTest is AdapterUnitTestHelper {
     /// @notice U:[MID-A-14]: `withdraw` works as expected
     function test_U_MID_A_14_withdraw_works() public {
         _executesSwap({
-            tokenIn: address(0), callData: abi.encodeCall(IMidasGateway.withdraw, (1000)), requiresApproval: false
+            tokenIn: address(0),
+            callData: abi.encodeCall(IMidasRedemptionGateway.withdraw, (1000)),
+            requiresApproval: false
         });
 
         vm.prank(creditFacade);
@@ -255,7 +270,7 @@ contract MidasGatewayAdapterUnitTest is AdapterUnitTestHelper {
 
         _executesSwap({
             tokenIn: address(0),
-            callData: abi.encodeCall(IMidasGateway.withdrawFromRedeemer, (redeemer, 1000)),
+            callData: abi.encodeCall(IMidasRedemptionGateway.withdrawFromRedeemer, (redeemer, 1000)),
             requiresApproval: false
         });
 
@@ -271,7 +286,7 @@ contract MidasGatewayAdapterUnitTest is AdapterUnitTestHelper {
 
         _executesSwap({
             tokenIn: address(0),
-            callData: abi.encodeCall(IMidasGateway.transferRedeemer, (redeemer, newAccount)),
+            callData: abi.encodeCall(IMidasRedemptionGateway.transferRedeemer, (redeemer, newAccount)),
             requiresApproval: false
         });
 
@@ -283,7 +298,9 @@ contract MidasGatewayAdapterUnitTest is AdapterUnitTestHelper {
     /// @notice U:[MID-A-15]: `withdrawPhantomToken` works as expected
     function test_U_MID_A_15_withdrawPhantomToken_works() public {
         _executesSwap({
-            tokenIn: address(0), callData: abi.encodeCall(IMidasGateway.withdraw, (1000)), requiresApproval: false
+            tokenIn: address(0),
+            callData: abi.encodeCall(IMidasRedemptionGateway.withdraw, (1000)),
+            requiresApproval: false
         });
 
         vm.prank(creditFacade);

@@ -64,7 +64,7 @@ contract MidasRedemptionVaultAdapterUnitTest is AdapterUnitTestHelper {
         assertEq(adapter.targetContract(), address(redemptionVault), "Incorrect targetContract");
         assertEq(adapter.mToken(), mToken, "Incorrect mToken");
         assertEq(adapter.contractType(), "ADAPTER::MIDAS_REDEMPTION_VAULT", "Incorrect contractType");
-        assertEq(adapter.version(), 3_11, "Incorrect version");
+        assertEq(adapter.version(), 3_12, "Incorrect version");
         assertEq(adapter.supportedOutputTokens().length, 0, "Should start with no allowed tokens");
     }
 
@@ -84,8 +84,11 @@ contract MidasRedemptionVaultAdapterUnitTest is AdapterUnitTestHelper {
 
         _executesSwap({
             tokenIn: mToken,
-            callData: abi.encodeCall(
-                IMidasRedemptionVault.redeemInstant, (quoteToken, amountMTokenIn, minReceiveAmount)
+            callData: abi.encodeWithSelector(
+                bytes4(keccak256("redeemInstant(address,uint256,uint256)")),
+                quoteToken,
+                amountMTokenIn,
+                minReceiveAmount
             ),
             requiresApproval: true
         });
@@ -107,7 +110,9 @@ contract MidasRedemptionVaultAdapterUnitTest is AdapterUnitTestHelper {
 
         _executesSwap({
             tokenIn: mToken,
-            callData: abi.encodeCall(IMidasRedemptionVault.redeemInstant, (usdc, amountMTokenIn, minReceiveAmountE18)),
+            callData: abi.encodeWithSelector(
+                bytes4(keccak256("redeemInstant(address,uint256,uint256)")), usdc, amountMTokenIn, minReceiveAmountE18
+            ),
             requiresApproval: true
         });
 
@@ -132,7 +137,9 @@ contract MidasRedemptionVaultAdapterUnitTest is AdapterUnitTestHelper {
 
         _executesSwap({
             tokenIn: mToken,
-            callData: abi.encodeCall(IMidasRedemptionVault.redeemInstant, (quoteToken, amount, minReceive)),
+            callData: abi.encodeWithSelector(
+                bytes4(keccak256("redeemInstant(address,uint256,uint256)")), quoteToken, amount, minReceive
+            ),
             requiresApproval: true
         });
 

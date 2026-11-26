@@ -73,10 +73,10 @@ contract MidasRedemptionVaultMock {
     function redeemRequests(uint256 requestId)
         external
         view
-        returns (address, address, uint8, uint256, uint256, uint256)
+        returns (address, address, uint8, uint256, uint256, uint256, uint256, uint256, uint256, uint256)
     {
         Request memory r = _requests[requestId];
-        return (r.sender, r.tokenOut, r.status, r.amountMTokenIn, r.mTokenRate, r.tokenOutRate);
+        return (r.sender, r.tokenOut, r.status, r.amountMTokenIn, r.mTokenRate, r.tokenOutRate, 0, 0, 0, 0);
     }
 }
 

@@ -9,7 +9,7 @@ import {ERC20Mock} from "@gearbox-protocol/core-v3/contracts/test/mocks/token/ER
 import {MidasRedemptionVaultPhantomToken} from "../../../../integrations/midas/MidasRedemptionVaultPhantomToken.sol";
 
 /// @dev Minimal gateway exposing only what the phantom token reads.
-contract MidasGatewayMock {
+contract MidasRedemptionGatewayMock {
     address public immutable mToken;
     address public immutable quoteToken;
     uint256 public pendingAmount;
@@ -34,7 +34,7 @@ contract MidasGatewayMock {
 /// @notice U:[MID-PT]: Unit tests for MidasRedemptionVaultPhantomToken
 contract MidasRedemptionVaultPhantomTokenUnitTest is Test {
     MidasRedemptionVaultPhantomToken phantomToken;
-    MidasGatewayMock gateway;
+    MidasRedemptionGatewayMock gateway;
 
     address mToken;
     address quoteToken;
@@ -43,14 +43,14 @@ contract MidasRedemptionVaultPhantomTokenUnitTest is Test {
         mToken = address(new ERC20Mock("mTBILL", "mTBILL", 18));
         quoteToken = address(new ERC20Mock("USD Coin", "USDC", 6));
 
-        gateway = new MidasGatewayMock(mToken, quoteToken);
+        gateway = new MidasRedemptionGatewayMock(mToken, quoteToken);
         phantomToken = new MidasRedemptionVaultPhantomToken(address(gateway), mToken, quoteToken);
     }
 
     /// @notice U:[MID-PT-1]: Constructor works as expected
     function test_U_MID_PT_01_constructor_works() public view {
         assertEq(phantomToken.contractType(), "PHANTOM_TOKEN::MIDAS_REDEMPTION", "Incorrect contract type");
-        assertEq(phantomToken.version(), 3_11, "Incorrect version");
+        assertEq(phantomToken.version(), 3_12, "Incorrect version");
         assertEq(phantomToken.gateway(), address(gateway), "Incorrect gateway");
         assertEq(phantomToken.underlying(), quoteToken, "Incorrect underlying");
         assertEq(phantomToken.decimals(), 6, "Incorrect decimals");

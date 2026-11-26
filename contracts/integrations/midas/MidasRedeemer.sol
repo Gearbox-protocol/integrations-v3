@@ -90,27 +90,24 @@ contract MidasRedeemer {
         redemptionStartTimestamp = block.timestamp;
         _sweepMToken();
     }
-    
+
     /// @notice Requests a redemption of mToken for quote token, with non-zero instant share
     /// @param amountMTokenIn Amount of mToken to redeem
     /// @param instantShare Fraction (in bp) of the amount to redeem instantly
     /// @param minReceiveAmountInstantShare Minimum amount of quote token to receive for the instant share
+    /// @dev Instant share is sent directly to `account`; delayed share recipient is this redeemer
     function requestRedeemHybrid(uint256 amountMTokenIn, uint256 instantShare, uint256 minReceiveAmountInstantShare)
         external
         gatewayOnly
         whenNotAlreadyRequested
     {
-        uint256 instantAmount;
         IERC20(mToken).forceApprove(midasRedemptionVault, amountMTokenIn);
-        (requestId, instantAmount) = IMidasRedemptionVault(midasRedemptionVault)
+        (requestId,) = IMidasRedemptionVault(midasRedemptionVault)
             .redeemRequest(
-                quoteToken, amountMTokenIn, address(this), instantShare, minReceiveAmountInstantShare, address(this)
+                quoteToken, amountMTokenIn, address(this), instantShare, minReceiveAmountInstantShare, account
             );
         alreadyRequested = true;
         redemptionStartTimestamp = block.timestamp;
-        if (instantAmount > 0) {
-            IERC20(quoteToken).safeTransfer(account, instantAmount);
-        }
         _sweepMToken();
     }
 
@@ -131,7 +128,7 @@ contract MidasRedeemer {
     /// @dev Uses the live mToken data feed when configured (`_priceWithdrawalsByCurrentRate`), otherwise the initial
     ///      `mTokenRate` from the request.
     function pendingTokenOutAmount() external view returns (uint256) {
-        (,, RedemptionStatus status, uint256 amountMTokenIn, uint256 mTokenRate, uint256 tokenOutRate) =
+        (,, RedemptionStatus status, uint256 amountMToken, uint256 mTokenRate, uint256 tokenOutRate,,,,) =
             IMidasRedemptionVault(midasRedemptionVault).redeemRequests(requestId);
 
         if (status != RedemptionStatus.PENDING) return 0;
@@ -140,7 +137,7 @@ contract MidasRedeemer {
             mTokenRate = IMidasDataFeed(mTokenDataFeed).getDataInBase18();
         }
 
-        return _calculateTokenOutAmount(amountMTokenIn, mTokenRate, tokenOutRate);
+        return _calculateTokenOutAmount(amountMToken, mTokenRate, tokenOutRate);
     }
 
     /// @notice Returns the amount of quote token that can be claimed

@@ -67,7 +67,7 @@ contract MidasIssuanceVaultAdapterUnitTest is AdapterUnitTestHelper {
         assertEq(adapter.mToken(), mToken, "Incorrect mToken");
         assertEq(adapter.referrerId(), REFERRER_ID, "Incorrect referrerId");
         assertEq(adapter.contractType(), "ADAPTER::MIDAS_ISSUANCE_VAULT", "Incorrect contractType");
-        assertEq(adapter.version(), 3_11, "Incorrect version");
+        assertEq(adapter.version(), 3_12, "Incorrect version");
         assertEq(adapter.supportedInputTokens().length, 0, "Should start with no allowed tokens");
     }
 
@@ -87,8 +87,12 @@ contract MidasIssuanceVaultAdapterUnitTest is AdapterUnitTestHelper {
 
         _executesSwap({
             tokenIn: quoteToken,
-            callData: abi.encodeCall(
-                IMidasIssuanceVault.depositInstant, (quoteToken, amountToken, minReceiveAmount, REFERRER_ID)
+            callData: abi.encodeWithSelector(
+                bytes4(keccak256("depositInstant(address,uint256,uint256,bytes32)")),
+                quoteToken,
+                amountToken,
+                minReceiveAmount,
+                REFERRER_ID
             ),
             requiresApproval: true
         });
@@ -110,8 +114,12 @@ contract MidasIssuanceVaultAdapterUnitTest is AdapterUnitTestHelper {
 
         _executesSwap({
             tokenIn: usdc,
-            callData: abi.encodeCall(
-                IMidasIssuanceVault.depositInstant, (usdc, amountTokenE18, minReceiveAmount, REFERRER_ID)
+            callData: abi.encodeWithSelector(
+                bytes4(keccak256("depositInstant(address,uint256,uint256,bytes32)")),
+                usdc,
+                amountTokenE18,
+                minReceiveAmount,
+                REFERRER_ID
             ),
             requiresApproval: true
         });
@@ -137,7 +145,13 @@ contract MidasIssuanceVaultAdapterUnitTest is AdapterUnitTestHelper {
 
         _executesSwap({
             tokenIn: quoteToken,
-            callData: abi.encodeCall(IMidasIssuanceVault.depositInstant, (quoteToken, amount, minReceive, REFERRER_ID)),
+            callData: abi.encodeWithSelector(
+                bytes4(keccak256("depositInstant(address,uint256,uint256,bytes32)")),
+                quoteToken,
+                amount,
+                minReceive,
+                REFERRER_ID
+            ),
             requiresApproval: true
         });
 

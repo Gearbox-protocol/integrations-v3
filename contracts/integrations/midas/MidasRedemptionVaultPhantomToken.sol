@@ -6,14 +6,14 @@ pragma solidity ^0.8.23;
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {PhantomERC20} from "../common/PhantomERC20.sol";
 import {IPhantomToken} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IPhantomToken.sol";
-import {IMidasGateway} from "./interfaces/IMidasGateway.sol";
+import {IMidasRedemptionGateway} from "./interfaces/IMidasRedemptionGateway.sol";
 
 /// @title Midas Redemption Vault phantom token
 /// @notice Phantom ERC-20 token that represents expected redemption amounts for a gateway's quote token
 contract MidasRedemptionVaultPhantomToken is PhantomERC20, IPhantomToken {
     bytes32 public constant override contractType = "PHANTOM_TOKEN::MIDAS_REDEMPTION";
 
-    uint256 public constant override version = 3_11;
+    uint256 public constant override version = 3_12;
 
     address public immutable gateway;
 
@@ -37,7 +37,7 @@ contract MidasRedemptionVaultPhantomToken is PhantomERC20, IPhantomToken {
     /// @return Expected amount of tokenOut that can be withdrawn
     function balanceOf(address account) public view override returns (uint256) {
         (uint256 pendingAmount, uint256 claimableAmount) =
-            IMidasGateway(gateway).pendingAndClaimableTokenOutAmounts(account);
+            IMidasRedemptionGateway(gateway).pendingAndClaimableTokenOutAmounts(account);
 
         return pendingAmount + claimableAmount;
     }

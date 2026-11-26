@@ -20,7 +20,7 @@ contract MidasAccessControlMock {
     }
 }
 
-contract MidasGatewayMockForDegenNFT {
+contract MidasRedemptionGatewayMockForDegenNFT {
     address public accessControl;
     bytes32 public greenlistedRole;
 
@@ -34,7 +34,7 @@ contract MidasGatewayMockForDegenNFT {
 /// @notice U:[MID-DNFT]: Unit tests for MidasDegenNFT
 contract MidasDegenNFTUnitTest is Test {
     MidasDegenNFT degenNFT;
-    MidasGatewayMockForDegenNFT gateway;
+    MidasRedemptionGatewayMockForDegenNFT gateway;
     MidasAccessControlMock accessControl;
 
     address greenlistedUser;
@@ -45,7 +45,7 @@ contract MidasDegenNFTUnitTest is Test {
         greenlistedUser = makeAddr("GREENLISTED_USER");
         nonGreenlistedUser = makeAddr("NON_GREENLISTED_USER");
 
-        gateway = new MidasGatewayMockForDegenNFT(address(accessControl), STANDARD_GREENLISTED_ROLE);
+        gateway = new MidasRedemptionGatewayMockForDegenNFT(address(accessControl), STANDARD_GREENLISTED_ROLE);
         degenNFT = new MidasDegenNFT(address(gateway));
 
         accessControl.grantRole(STANDARD_GREENLISTED_ROLE, greenlistedUser);

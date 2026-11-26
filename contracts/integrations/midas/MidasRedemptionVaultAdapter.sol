@@ -23,7 +23,7 @@ contract MidasRedemptionVaultAdapter is AbstractAdapter, IMidasRedemptionVaultAd
     using EnumerableSet for EnumerableSet.AddressSet;
 
     bytes32 public constant override contractType = "ADAPTER::MIDAS_REDEMPTION_VAULT";
-    uint256 public constant override version = 3_11;
+    uint256 public constant override version = 3_12;
 
     /// @notice mToken
     address public immutable override mToken;
@@ -82,9 +82,11 @@ contract MidasRedemptionVaultAdapter is AbstractAdapter, IMidasRedemptionVaultAd
 
         _executeSwapSafeApprove(
             mToken,
-            abi.encodeCall(
-                IMidasRedemptionVault.redeemInstant,
-                (tokenOut, amountMTokenIn, MidasDecimals.toE18(tokenOut, minReceiveAmount))
+            abi.encodeWithSelector(
+                bytes4(keccak256("redeemInstant(address,uint256,uint256)")),
+                tokenOut,
+                amountMTokenIn,
+                MidasDecimals.toE18(tokenOut, minReceiveAmount)
             )
         );
     }

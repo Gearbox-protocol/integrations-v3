@@ -6,7 +6,7 @@ pragma solidity ^0.8.23;
 import {IDegenNFT} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IDegenNFT.sol";
 
 import {IMidasAccessControl} from "./interfaces/external/IMidasAccessControl.sol";
-import {IMidasGateway} from "./interfaces/IMidasGateway.sol";
+import {IMidasRedemptionGateway} from "./interfaces/IMidasRedemptionGateway.sol";
 
 /// @title Midas Degen NFT
 /// @notice Permission gate for opening Credit Accounts against permissioned Midas markets
@@ -29,8 +29,8 @@ contract MidasDegenNFT is IDegenNFT {
 
     constructor(address gateway_) {
         gateway = gateway_;
-        accessControl = IMidasGateway(gateway_).accessControl();
-        greenlistedRole = IMidasGateway(gateway_).greenlistedRole();
+        accessControl = IMidasRedemptionGateway(gateway_).accessControl();
+        greenlistedRole = IMidasRedemptionGateway(gateway_).greenlistedRole();
     }
 
     /// @notice Reverts unless `from` is greenlisted by Midas

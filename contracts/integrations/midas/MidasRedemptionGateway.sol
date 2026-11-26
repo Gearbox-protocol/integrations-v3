@@ -20,20 +20,29 @@ import {RedemptionLoggingTrait} from "../common/RedemptionLoggingTrait.sol";
 import {ICAChecker} from "../common/interfaces/ICAChecker.sol";
 import {IMidasRedemptionVault} from "./interfaces/external/IMidasRedemptionVault.sol";
 import {IMidasAccessControl, STANDARD_GREENLISTED_ROLE} from "./interfaces/external/IMidasAccessControl.sol";
-import {IMidasGateway, MidasMode, MAX_PENDING_REDEEMERS_PER_ACCOUNT} from "./interfaces/IMidasGateway.sol";
+import {
+    IMidasRedemptionGateway,
+    MidasMode,
+    MAX_PENDING_REDEEMERS_PER_ACCOUNT
+} from "./interfaces/IMidasRedemptionGateway.sol";
 import {IMidasTransferMaster} from "./interfaces/IMidasTransferMaster.sol";
 
-bytes32 constant SALT = keccak256("MidasGateway");
+bytes32 constant SALT = keccak256("MidasRedemptionGateway");
 
-/// @title Midas Gateway
+/// @title Midas Redemption Gateway
 /// @notice Gateway that manages delayed Midas redemptions on behalf of Credit Accounts
 /// @dev Can optionally greenlist Credit Accounts and redeemers for permissioned tokens
-contract MidasGateway is ReentrancyGuardTrait, CACheckerTrait, RedemptionLoggingTrait, IMidasGateway {
+contract MidasRedemptionGateway is
+    ReentrancyGuardTrait,
+    CACheckerTrait,
+    RedemptionLoggingTrait,
+    IMidasRedemptionGateway
+{
     using EnumerableSet for EnumerableSet.AddressSet;
     using SafeERC20 for IERC20;
 
-    bytes32 public constant override contractType = "GATEWAY::MIDAS";
-    uint256 public constant override version = 3_11;
+    bytes32 public constant override contractType = "GATEWAY::MIDAS_REDEMPTION";
+    uint256 public constant override version = 3_13;
 
     /// @notice The mToken redemption vault
     address public immutable override midasRedemptionVault;
@@ -134,7 +143,25 @@ contract MidasGateway is ReentrancyGuardTrait, CACheckerTrait, RedemptionLogging
         _logRedemption(msg.sender, redeemer, extraData);
     }
 
-    function requestRedeemHybrid(uint256 amountMTokenIn, uint256 instantShare, uint256 )
+    /// @notice Requests a redemption of mToken for quote token with part of redemption immediately fulfilled
+    /// @param amountMTokenIn Amount of mToken to redeem
+    /// @param instantShare Fraction (in bp) of the amount to redeem instantly
+    /// @param minReceiveAmountInstantShare Minimum amount of quote token to receive for the instant share
+    /// @param extraData Additional redemption data to log
+    /// @dev Every request gets its own redeemer clone, since Midas settles requests independently and a redeemer
+    ///      can only ever hold one of them
+    function requestRedeemHybrid(
+        uint256 amountMTokenIn,
+        uint256 instantShare,
+        uint256 minReceiveAmountInstantShare,
+        bytes calldata extraData
+    ) external nonReentrant onlyEligibleAccount {
+        address redeemer = _makeNewRedeemerForAccount(msg.sender);
+
+        IERC20(mToken).safeTransferFrom(msg.sender, redeemer, amountMTokenIn);
+        MidasRedeemer(redeemer).requestRedeemHybrid(amountMTokenIn, instantShare, minReceiveAmountInstantShare);
+        _logRedemption(msg.sender, redeemer, extraData);
+    }
 
     /// @notice Withdraws tokens from funded redeemers
     /// @param amount Amount of quote token to withdraw

@@ -6,10 +6,10 @@ This integration enables Gearbox Credit Accounts (CAs) to onramp into Midas mTok
 
 Scope covered in this spec:
 
-- `MidasGateway`
+- `MidasRedemptionGateway`
 - `MidasRedeemer`
 - `MidasRedemptionVaultPhantomToken`
-- `MidasGatewayAdapter`
+- `MidasRedemptionGatewayAdapter`
 - `MidasLiquidator`
 
 The design combines immediate issuance/redemption (onramp/offramp) with delayed redemption requests (offramp). For delayed redemptions, each request is represented by a dedicated redeemer clone and collateralized via a per-output-token phantom token.
@@ -34,7 +34,7 @@ For Gearbox integration, this spec assumes:
 
 Main components:
 
-- **Adapter**: unified `MidasGatewayAdapter` called by `CreditFacade` during `multicall`; routes execution through `CreditManager` to the CA, which calls the gateway.
+- **Adapter**: unified `MidasRedemptionGatewayAdapter` called by `CreditFacade` during `multicall`; routes execution through `CreditManager` to the CA, which calls the gateway.
 - **Gateway**: fixed adapter target that orchestrates issuance, instant redemption, delayed redemption, and redeemer lifecycle.
 - **Redeemer clones**: one clone per delayed redemption request, each holding request-level state (`requestId`, pending/claimable balances).
 - **Phantom token**: one constructor-deployed token per gateway; exposes aggregate pending + claimable redemption value as collateral.
@@ -43,14 +43,14 @@ Main components:
 High-level data flow:
 
 1. Onramp (instant issuance):
-   - User submits `MidasGatewayAdapter.depositInstant/depositInstantDiff` via `CreditFacade.multicall`.
+   - User submits `MidasRedemptionGatewayAdapter.depositInstant/depositInstantDiff` via `CreditFacade.multicall`.
    - Adapter approves quote token and calls gateway `depositInstant`.
    - Gateway pulls `quoteToken` from CA, issues mToken via Midas issuance vault, returns mToken to CA.
 2. Offramp (instant redemption):
-   - User submits `MidasGatewayAdapter.redeemInstant/redeemInstantDiff` via `CreditFacade.multicall`.
+   - User submits `MidasRedemptionGatewayAdapter.redeemInstant/redeemInstantDiff` via `CreditFacade.multicall`.
    - Gateway pulls mToken from CA, redeems via Midas redemption vault, returns `quoteToken` to CA.
 3. Offramp (delayed redemption request):
-   - User submits `MidasGatewayAdapter.redeemRequest/redeemRequestDiff` via `CreditFacade.multicall`.
+   - User submits `MidasRedemptionGatewayAdapter.redeemRequest/redeemRequestDiff` via `CreditFacade.multicall`.
    - Gateway clones a new `MidasRedeemer`, links it to CA, transfers mToken into it, and calls redeemer `requestRedeem`.
    - Redeemer submits redemption request to Midas redemption vault and records `requestId`.
 4. Offramp settlement:
@@ -99,7 +99,7 @@ Security and pricing rationale:
 - Claimable amount is always the actual on-chain balance, so already-received settlement is never understated.
 - Request-level separation prevents cross-request state contamination and enables selective transfer/liquidation.
 
-### `MidasGateway`
+### `MidasRedemptionGateway`
 
 Purpose:
 
@@ -159,7 +159,7 @@ Purpose:
 
 Key behavior:
 
-- One phantom token per gateway when delayed withdrawals are enabled, deployed in `MidasGateway` constructor.
+- One phantom token per gateway when delayed withdrawals are enabled, deployed in `MidasRedemptionGateway` constructor.
 - Underlying token metadata comes from `quoteToken` (name, symbol, decimals).
 - `balanceOf(account)` = `pendingAmount + claimableAmount` from `gateway.pendingAndClaimableTokenOutAmounts(account)`.
 - Non-transferable phantom semantics inherited from `PhantomERC20`.
@@ -170,7 +170,7 @@ Audit relevance:
 - Collateral value depends on gateway/redeemer valuation logic, especially mToken data feed correctness and Midas vault request status handling.
 - Each gateway tracks exactly one quote-token redemption leg.
 
-### `MidasGatewayAdapter`
+### `MidasRedemptionGatewayAdapter`
 
 Purpose:
 

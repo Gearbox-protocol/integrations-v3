@@ -20,9 +20,25 @@ import {PriceOracleMock} from "@gearbox-protocol/core-v3/contracts/test/mocks/or
 
 import {MidasAliasedLossPolicyV3} from "../../../../integrations/midas/MidasAliasedLossPolicyV3.sol";
 import {RedemptionStatus} from "../../../../integrations/midas/interfaces/external/IMidasRedemptionVault.sol";
+import {DepositStatus} from "../../../../integrations/midas/interfaces/external/IMidasDepositVault.sol";
 
 contract MidasPhantomTokenMock {
     bytes32 public constant contractType = "PHANTOM_TOKEN::MIDAS_REDEMPTION";
+    address public immutable gateway;
+    address public immutable underlying;
+
+    constructor(address gateway_, address underlying_) {
+        gateway = gateway_;
+        underlying = underlying_;
+    }
+
+    function getPhantomTokenInfo() external view returns (address, address) {
+        return (gateway, underlying);
+    }
+}
+
+contract MidasDepositPhantomTokenMock {
+    bytes32 public constant contractType = "PHANTOM_TOKEN::MIDAS_DEPOSIT";
     address public immutable gateway;
     address public immutable underlying;
 
@@ -51,7 +67,7 @@ contract NonMidasPhantomTokenMock {
     }
 }
 
-contract MidasGatewayMockForLossPolicy {
+contract MidasRedemptionGatewayMockForLossPolicy {
     address public midasRedemptionVault;
     mapping(address => address[]) internal _pendingRedeemers;
 
@@ -89,9 +105,53 @@ contract MidasRedemptionVaultMockForLossPolicy {
     function redeemRequests(uint256 requestId)
         external
         view
-        returns (address, address, RedemptionStatus, uint256, uint256, uint256)
+        returns (address, address, RedemptionStatus, uint256, uint256, uint256, uint256, uint256, uint256, uint256)
     {
-        return (address(0), address(0), _status[requestId], 0, 0, 0);
+        return (address(0), address(0), _status[requestId], 0, 0, 0, 0, 0, 0, 0);
+    }
+}
+
+contract MidasDepositGatewayMockForLossPolicy {
+    address public midasDepositVault;
+    mapping(address => address[]) internal _pendingDepositors;
+
+    function setMidasDepositVault(address vault_) external {
+        midasDepositVault = vault_;
+    }
+
+    function setPendingDepositors(address account, address[] memory depositors) external {
+        delete _pendingDepositors[account];
+        for (uint256 i; i < depositors.length; ++i) {
+            _pendingDepositors[account].push(depositors[i]);
+        }
+    }
+
+    function pendingDepositors(address account) external view returns (address[] memory) {
+        return _pendingDepositors[account];
+    }
+}
+
+contract MidasDepositorMockForLossPolicy {
+    uint256 public requestId;
+
+    constructor(uint256 requestId_) {
+        requestId = requestId_;
+    }
+}
+
+contract MidasDepositVaultMockForLossPolicy {
+    mapping(uint256 => DepositStatus) internal _status;
+
+    function setStatus(uint256 requestId, DepositStatus status) external {
+        _status[requestId] = status;
+    }
+
+    function mintRequests(uint256 requestId)
+        external
+        view
+        returns (address, address, DepositStatus, uint256, uint256, uint256, uint256, uint256, uint256)
+    {
+        return (address(0), address(0), _status[requestId], 0, 0, 0, 0, 0, 0);
     }
 }
 
@@ -110,7 +170,7 @@ contract MidasAliasedLossPolicyV3UnitTest is Test {
     PoolMock poolMock;
     PriceOracleMock priceOracleMock;
 
-    MidasGatewayMockForLossPolicy gateway;
+    MidasRedemptionGatewayMockForLossPolicy gateway;
     MidasRedemptionVaultMockForLossPolicy vault;
     MidasPhantomTokenMock midasPhantom;
     NonMidasPhantomTokenMock otherPhantom;
@@ -139,7 +199,7 @@ contract MidasAliasedLossPolicyV3UnitTest is Test {
 
         lossPolicy = new MidasAliasedLossPolicyV3(address(poolMock), address(addressProviderMock));
 
-        gateway = new MidasGatewayMockForLossPolicy();
+        gateway = new MidasRedemptionGatewayMockForLossPolicy();
         vault = new MidasRedemptionVaultMockForLossPolicy();
         gateway.setMidasRedemptionVault(address(vault));
 
@@ -179,7 +239,7 @@ contract MidasAliasedLossPolicyV3UnitTest is Test {
 
     /// @notice U:[MID-ALP-1]: Constructor and serialize work as expected
     function test_U_MID_ALP_01_constructor_and_serialize_work() public view {
-        assertEq(lossPolicy.version(), 3_11, "Incorrect version");
+        assertEq(lossPolicy.version(), 3_12, "Incorrect version");
         assertEq(lossPolicy.contractType(), "LOSS_POLICY::MIDAS_ALIASED", "Incorrect contract type");
         assertTrue(lossPolicy.checksEnabled(), "Checks should be enabled");
         assertEq(lossPolicy.pool(), address(poolMock), "Incorrect pool");
@@ -267,6 +327,41 @@ contract MidasAliasedLossPolicyV3UnitTest is Test {
                 creditAccount, caller, ILossPolicy.Params({totalDebtUSD: 1, twvUSD: 0, extraData: ""})
             ),
             "Forbidden mode should block"
+        );
+    }
+
+    /// @notice U:[MID-ALP-8]: Rejected pending depositor blocks loss liquidation
+    function test_U_MID_ALP_08_rejected_pending_depositor_blocks_liquidation() public {
+        MidasDepositGatewayMockForLossPolicy depositGateway = new MidasDepositGatewayMockForLossPolicy();
+        MidasDepositVaultMockForLossPolicy depositVault = new MidasDepositVaultMockForLossPolicy();
+        depositGateway.setMidasDepositVault(address(depositVault));
+
+        MidasDepositPhantomTokenMock depositPhantom =
+            new MidasDepositPhantomTokenMock(address(depositGateway), address(underlying));
+        MidasDepositorMockForLossPolicy depositor = new MidasDepositorMockForLossPolicy(7);
+
+        address[] memory depositors = new address[](1);
+        depositors[0] = address(depositor);
+        depositGateway.setPendingDepositors(creditAccount, depositors);
+        depositVault.setStatus(7, DepositStatus.REJECTED);
+
+        uint256 depositTokenMask = 8;
+        vm.mockCall(
+            creditManager,
+            abi.encodeCall(ICreditManagerV3.enabledTokensMaskOf, (creditAccount)),
+            abi.encode(UNDERLYING_TOKEN_MASK | depositTokenMask)
+        );
+        vm.mockCall(
+            creditManager,
+            abi.encodeCall(ICreditManagerV3.getTokenByMask, (depositTokenMask)),
+            abi.encode(depositPhantom)
+        );
+
+        assertFalse(
+            lossPolicy.isLiquidatableWithLoss(
+                creditAccount, caller, ILossPolicy.Params({totalDebtUSD: 1, twvUSD: 0, extraData: ""})
+            ),
+            "Should block on rejected deposit"
         );
     }
 }

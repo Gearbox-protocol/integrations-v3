@@ -12,30 +12,31 @@ import {ICreditFacadeV3, MultiCall} from "@gearbox-protocol/core-v3/contracts/in
 import {ICreditFacadeV3Multicall} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditFacadeV3Multicall.sol";
 import {ICreditAccountV3} from "@gearbox-protocol/core-v3/contracts/interfaces/ICreditAccountV3.sol";
 
-import {IMidasGateway} from "./interfaces/IMidasGateway.sol";
+import {IMidasRedemptionGateway} from "./interfaces/IMidasRedemptionGateway.sol";
 import {IMidasLiquidator} from "./interfaces/IMidasLiquidator.sol";
 
 /// @title Midas liquidator
-/// @notice Acts as the transfer master for Midas gateways, enabling redeemer transfers for the duration of a
-///         liquidation. Unlike RWA integrations that price pending positions differently for collateral valuation
-///         and liquidation, Midas values pending redemptions identically in both cases, so this contract performs
-///         no collateral/liquidity math and simply forwards the liquidator-supplied calls while transfers are
-///         unlocked for the liquidated account.
+/// @notice Acts as the transfer master for Midas redemption and deposit gateways, enabling redeemer/depositor
+///         transfers for the duration of a liquidation. Unlike RWA integrations that price pending positions
+///         differently for collateral valuation and liquidation, Midas values pending requests identically in both
+///         cases, so this contract performs no collateral/liquidity math and simply forwards the liquidator-supplied
+///         calls while transfers are unlocked for the liquidated account.
+/// @dev A single liquidator instance can be shared by redemption and deposit gateways for the same market.
 contract MidasLiquidator is ReentrancyGuardTrait, IMidasLiquidator {
     using SafeERC20 for IERC20;
 
     bytes32 public constant override contractType = "RWA_LIQUIDATOR::MIDAS";
 
-    uint256 public constant override version = 3_11;
+    uint256 public constant override version = 3_12;
 
-    /// @notice The address of the account that is currently allowed to transfer redeemers.
-    /// @dev For safety, redeemers are only allowed to be transferred when strictly required,
-    ///      i.e. during liquidations, and only by a specific account.
+    /// @notice The address of the account that is currently allowed to transfer redeemers/depositors.
+    /// @dev For safety, transfers are only allowed when strictly required, i.e. during liquidations, and only for a
+    ///      specific account.
     address public override transferableRedeemerOwner;
 
-    /// @notice Liquidates a credit account that holds pending Midas redemptions
+    /// @notice Liquidates a credit account that holds pending Midas redemptions or deposits
     /// @param creditAccount Credit account to liquidate
-    /// @param gateway Midas gateway whose redeemers are transferred during the liquidation
+    /// @param gateway Midas gateway whose redeemers/depositors are transferred during the liquidation
     /// @param calls Liquidator-supplied multicall forwarded to the credit facade
     /// @param lossPolicyData Loss policy data forwarded to the credit facade
     /// @dev Any collateral the liquidator adds via `addCollateral` calls is pulled from the caller and approved to the
@@ -46,7 +47,7 @@ contract MidasLiquidator is ReentrancyGuardTrait, IMidasLiquidator {
         MultiCall[] calldata calls,
         bytes memory lossPolicyData
     ) external override nonReentrant {
-        if (IMidasGateway(gateway).transferMaster() != address(this)) {
+        if (IMidasRedemptionGateway(gateway).transferMaster() != address(this)) {
             revert NotValidGatewayException();
         }
 
@@ -60,7 +61,7 @@ contract MidasLiquidator is ReentrancyGuardTrait, IMidasLiquidator {
 
         _forwardCollateral(creditManager, creditFacade, calls);
 
-        // redeemer transfers are unlocked for exactly the span of the facade call, and only for this account
+        // redeemer/depositor transfers are unlocked for exactly the span of the facade call, and only for this account
         transferableRedeemerOwner = creditAccount;
         ICreditFacadeV3(creditFacade).liquidateCreditAccount(creditAccount, msg.sender, calls, lossPolicyData);
         transferableRedeemerOwner = address(0);

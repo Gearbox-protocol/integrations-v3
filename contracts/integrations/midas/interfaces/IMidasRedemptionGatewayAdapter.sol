@@ -6,9 +6,9 @@ pragma solidity ^0.8.23;
 import {IAdapter} from "@gearbox-protocol/core-v3/contracts/interfaces/base/IAdapter.sol";
 import {IPhantomTokenAdapter} from "../../common/interfaces/IPhantomTokenAdapter.sol";
 
-/// @title Midas Gateway adapter interface
-/// @notice Delayed-redemption adapter for the Midas gateway
-interface IMidasGatewayAdapter is IAdapter, IPhantomTokenAdapter {
+/// @title Midas Redemption Gateway adapter interface
+/// @notice Delayed-redemption adapter for the Midas redemption gateway
+interface IMidasRedemptionGatewayAdapter is IAdapter, IPhantomTokenAdapter {
     error PhantomTokenNotSetException();
 
     /// @notice Address of mToken
@@ -43,6 +43,46 @@ interface IMidasGatewayAdapter is IAdapter, IPhantomTokenAdapter {
     /// @param leftoverAmount Amount of mToken to keep in the account
     /// @param extraData Additional redemption data to log
     function redeemRequestDiff(uint256 leftoverAmount, bytes calldata extraData) external returns (bool);
+
+    /// @notice Requests a redemption of mToken for quote token with part of redemption immediately fulfilled
+    /// @param amountMTokenIn Amount of mToken to redeem
+    /// @param instantShare Fraction (in bp) of the amount to redeem instantly
+    /// @param minReceiveAmountInstantShare Minimum amount of quote token to receive for the instant share
+    function redeemRequestHybrid(uint256 amountMTokenIn, uint256 instantShare, uint256 minReceiveAmountInstantShare)
+        external
+        returns (bool);
+
+    /// @notice Requests a redemption of mToken for quote token with part of redemption immediately fulfilled
+    /// @param amountMTokenIn Amount of mToken to redeem
+    /// @param instantShare Fraction (in bp) of the amount to redeem instantly
+    /// @param minReceiveAmountInstantShare Minimum amount of quote token to receive for the instant share
+    /// @param extraData Additional redemption data to log
+    function redeemRequestHybrid(
+        uint256 amountMTokenIn,
+        uint256 instantShare,
+        uint256 minReceiveAmountInstantShare,
+        bytes calldata extraData
+    ) external returns (bool);
+
+    /// @notice Requests a redemption of the entire mToken balance, except the specified amount, with part of redemption immediately fulfilled
+    /// @param leftoverAmount Amount of mToken to keep in the account
+    /// @param instantShare Fraction (in bp) of the amount to redeem instantly
+    /// @param minReceiveAmountInstantShare Minimum amount of quote token to receive for the instant share
+    function redeemRequestHybridDiff(uint256 leftoverAmount, uint256 instantShare, uint256 minReceiveAmountInstantShare)
+        external
+        returns (bool);
+
+    /// @notice Requests a redemption of the entire mToken balance, except the specified amount, with part of redemption immediately fulfilled
+    /// @param leftoverAmount Amount of mToken to keep in the account
+    /// @param instantShare Fraction (in bp) of the amount to redeem instantly
+    /// @param minReceiveAmountInstantShare Minimum amount of quote token to receive for the instant share
+    /// @param extraData Additional redemption data to log
+    function redeemRequestHybridDiff(
+        uint256 leftoverAmount,
+        uint256 instantShare,
+        uint256 minReceiveAmountInstantShare,
+        bytes calldata extraData
+    ) external returns (bool);
 
     /// @notice Withdraws redeemed tokens from the gateway
     /// @param amount Amount to withdraw

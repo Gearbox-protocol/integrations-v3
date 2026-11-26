@@ -6,17 +6,18 @@ pragma solidity ^0.8.23;
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import {NotImplementedException} from "@gearbox-protocol/core-v3/contracts/interfaces/IExceptions.sol";
+import {RAY, PERCENTAGE_FACTOR} from "@gearbox-protocol/core-v3/contracts/libraries/Constants.sol";
 
 import {AbstractAdapter} from "../common/AbstractAdapter.sol";
 
-import {IMidasGateway} from "./interfaces/IMidasGateway.sol";
-import {IMidasGatewayAdapter} from "./interfaces/IMidasGatewayAdapter.sol";
+import {IMidasRedemptionGateway} from "./interfaces/IMidasRedemptionGateway.sol";
+import {IMidasRedemptionGatewayAdapter} from "./interfaces/IMidasRedemptionGatewayAdapter.sol";
 
-/// @title Midas Gateway adapter
-/// @notice Implements delayed-redemption logic for the Midas gateway and handles redemption phantom tokens
-contract MidasGatewayAdapter is AbstractAdapter, IMidasGatewayAdapter {
-    bytes32 public constant override contractType = "ADAPTER::MIDAS_GATEWAY";
-    uint256 public constant override version = 3_11;
+/// @title Midas Redemption Gateway adapter
+/// @notice Implements delayed-redemption logic for the Midas redemption gateway and handles redemption phantom tokens
+contract MidasRedemptionGatewayAdapter is AbstractAdapter, IMidasRedemptionGatewayAdapter {
+    bytes32 public constant override contractType = "ADAPTER::MIDAS_REDEEM_GATEWAY";
+    uint256 public constant override version = 3_13;
 
     /// @notice mToken
     address public immutable override mToken;
@@ -42,9 +43,9 @@ contract MidasGatewayAdapter is AbstractAdapter, IMidasGatewayAdapter {
     /// @param _gateway Midas gateway address
     constructor(address _creditManager, address _gateway) AbstractAdapter(_creditManager, _gateway) {
         gateway = _gateway;
-        mToken = IMidasGateway(_gateway).mToken();
-        quoteToken = IMidasGateway(_gateway).quoteToken();
-        phantomToken = IMidasGateway(_gateway).phantomToken();
+        mToken = IMidasRedemptionGateway(_gateway).mToken();
+        quoteToken = IMidasRedemptionGateway(_gateway).quoteToken();
+        phantomToken = IMidasRedemptionGateway(_gateway).phantomToken();
 
         _getMaskOrRevert(mToken);
         _getMaskOrRevert(quoteToken);
@@ -53,7 +54,7 @@ contract MidasGatewayAdapter is AbstractAdapter, IMidasGatewayAdapter {
 
     /// @notice Grants the greenlisted role to the credit account via the gateway
     function receiveGreenlist() external override creditFacadeOnly returns (bool) {
-        _execute(abi.encodeCall(IMidasGateway.receiveGreenlist, ()));
+        _execute(abi.encodeCall(IMidasRedemptionGateway.receiveGreenlist, ()));
         return false;
     }
 
@@ -71,7 +72,7 @@ contract MidasGatewayAdapter is AbstractAdapter, IMidasGatewayAdapter {
         return true;
     }
 
-    /// @inheritdoc IMidasGatewayAdapter
+    /// @inheritdoc IMidasRedemptionGatewayAdapter
     function redeemRequest(uint256 amountMTokenIn, bytes calldata extraData)
         external
         override
@@ -83,7 +84,7 @@ contract MidasGatewayAdapter is AbstractAdapter, IMidasGatewayAdapter {
         return true;
     }
 
-    /// @inheritdoc IMidasGatewayAdapter
+    /// @inheritdoc IMidasRedemptionGatewayAdapter
     function redeemRequestDiff(uint256 leftoverAmount)
         external
         override
@@ -102,7 +103,7 @@ contract MidasGatewayAdapter is AbstractAdapter, IMidasGatewayAdapter {
         return false;
     }
 
-    /// @inheritdoc IMidasGatewayAdapter
+    /// @inheritdoc IMidasRedemptionGatewayAdapter
     function redeemRequestDiff(uint256 leftoverAmount, bytes calldata extraData)
         external
         override
@@ -122,7 +123,90 @@ contract MidasGatewayAdapter is AbstractAdapter, IMidasGatewayAdapter {
     }
 
     function _redeemRequest(uint256 amountMTokenIn, bytes memory extraData) internal {
-        _executeSwapSafeApprove(mToken, abi.encodeCall(IMidasGateway.requestRedeem, (amountMTokenIn, extraData)));
+        _executeSwapSafeApprove(
+            mToken, abi.encodeCall(IMidasRedemptionGateway.requestRedeem, (amountMTokenIn, extraData))
+        );
+    }
+
+    function redeemRequestHybrid(uint256 amountMTokenIn, uint256 instantShare, uint256 minReceiveAmountInstantShare)
+        external
+        override
+        creditFacadeOnly
+        whenPhantomTokenSet
+        returns (bool)
+    {
+        _redeemRequestHybrid(amountMTokenIn, instantShare, minReceiveAmountInstantShare, "");
+        return true;
+    }
+
+    function redeemRequestHybrid(
+        uint256 amountMTokenIn,
+        uint256 instantShare,
+        uint256 minReceiveAmountInstantShare,
+        bytes memory extraData
+    ) external override creditFacadeOnly whenPhantomTokenSet returns (bool) {
+        _redeemRequestHybrid(amountMTokenIn, instantShare, minReceiveAmountInstantShare, extraData);
+        return true;
+    }
+
+    function redeemRequestHybridDiff(uint256 leftoverAmount, uint256 instantShare, uint256 minInstantRateRAY)
+        external
+        override
+        creditFacadeOnly
+        whenPhantomTokenSet
+        returns (bool)
+    {
+        address creditAccount = _creditAccount();
+        uint256 balance = IERC20(mToken).balanceOf(creditAccount);
+        if (balance > leftoverAmount) {
+            unchecked {
+                _redeemRequestHybrid(
+                    balance - leftoverAmount,
+                    instantShare,
+                    _getMinInstantAmount(balance - leftoverAmount, instantShare, minInstantRateRAY),
+                    ""
+                );
+            }
+            return true;
+        }
+        return false;
+    }
+
+    function redeemRequestHybridDiff(
+        uint256 leftoverAmount,
+        uint256 instantShare,
+        uint256 minInstantRateRAY,
+        bytes memory extraData
+    ) external override creditFacadeOnly whenPhantomTokenSet returns (bool) {
+        address creditAccount = _creditAccount();
+        uint256 balance = IERC20(mToken).balanceOf(creditAccount);
+        if (balance > leftoverAmount) {
+            unchecked {
+                _redeemRequestHybrid(
+                    balance - leftoverAmount,
+                    instantShare,
+                    _getMinInstantAmount(balance - leftoverAmount, instantShare, minInstantRateRAY),
+                    extraData
+                );
+            }
+            return true;
+        }
+        return false;
+    }
+
+    function _redeemRequestHybrid(
+        uint256 amountMTokenIn,
+        uint256 instantShare,
+        uint256 minReceiveAmountInstantShare,
+        bytes memory extraData
+    ) internal {
+        _executeSwapSafeApprove(
+            mToken,
+            abi.encodeCall(
+                IMidasRedemptionGateway.requestRedeemHybrid,
+                (amountMTokenIn, instantShare, minReceiveAmountInstantShare, extraData)
+            )
+        );
     }
 
     /// @notice Withdraws redeemed tokens from the gateway
@@ -133,7 +217,7 @@ contract MidasGatewayAdapter is AbstractAdapter, IMidasGatewayAdapter {
     }
 
     function _withdraw(uint256 amount) internal {
-        _execute(abi.encodeCall(IMidasGateway.withdraw, (amount)));
+        _execute(abi.encodeCall(IMidasRedemptionGateway.withdraw, (amount)));
     }
 
     /// @notice Withdraws tokens from a specific redeemer
@@ -146,7 +230,7 @@ contract MidasGatewayAdapter is AbstractAdapter, IMidasGatewayAdapter {
         whenPhantomTokenSet
         returns (bool)
     {
-        _execute(abi.encodeCall(IMidasGateway.withdrawFromRedeemer, (redeemer, amount)));
+        _execute(abi.encodeCall(IMidasRedemptionGateway.withdrawFromRedeemer, (redeemer, amount)));
         return false;
     }
 
@@ -160,7 +244,7 @@ contract MidasGatewayAdapter is AbstractAdapter, IMidasGatewayAdapter {
         whenPhantomTokenSet
         returns (bool)
     {
-        _execute(abi.encodeCall(IMidasGateway.transferRedeemer, (redeemer, newAccount)));
+        _execute(abi.encodeCall(IMidasRedemptionGateway.transferRedeemer, (redeemer, newAccount)));
         return true;
     }
 
@@ -195,5 +279,13 @@ contract MidasGatewayAdapter is AbstractAdapter, IMidasGatewayAdapter {
     /// @notice Serialized adapter parameters
     function serialize() external view returns (bytes memory serializedData) {
         serializedData = abi.encode(creditManager, targetContract, gateway, mToken, quoteToken, phantomToken);
+    }
+
+    function _getMinInstantAmount(uint256 amountMTokenIn, uint256 instantShare, uint256 minInstantRateRAY)
+        internal
+        pure
+        returns (uint256)
+    {
+        return (amountMTokenIn * instantShare * minInstantRateRAY) / (PERCENTAGE_FACTOR * RAY);
     }
 }

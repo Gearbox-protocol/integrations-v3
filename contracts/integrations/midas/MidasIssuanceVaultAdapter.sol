@@ -23,7 +23,7 @@ contract MidasIssuanceVaultAdapter is AbstractAdapter, IMidasIssuanceVaultAdapte
     using EnumerableSet for EnumerableSet.AddressSet;
 
     bytes32 public constant override contractType = "ADAPTER::MIDAS_ISSUANCE_VAULT";
-    uint256 public constant override version = 3_11;
+    uint256 public constant override version = 3_12;
 
     /// @notice mToken
     address public immutable override mToken;
@@ -91,9 +91,12 @@ contract MidasIssuanceVaultAdapter is AbstractAdapter, IMidasIssuanceVaultAdapte
 
         _executeSwapSafeApprove(
             tokenIn,
-            abi.encodeCall(
-                IMidasIssuanceVault.depositInstant,
-                (tokenIn, MidasDecimals.toE18(tokenIn, amountToken), minReceiveAmount, referrerId)
+            abi.encodeWithSelector(
+                bytes4(keccak256("depositInstant(address,uint256,uint256,bytes32)")),
+                tokenIn,
+                MidasDecimals.toE18(tokenIn, amountToken),
+                minReceiveAmount,
+                referrerId
             )
         );
     }
